@@ -58,12 +58,13 @@ for i in range(main_start, len(lines)):
 
 STYLE = r"""
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { height: 100%; }
+html, body { min-height: 100vh; }
 body {
     font-family: -apple-system, 'Microsoft YaHei', sans-serif;
     line-height: 1.8; color: #333; background: #fafafa;
     display: flex; flex-direction: column;
 }
+html { overflow-y: scroll; }
 
 /* ===== Cover Info Table ===== */
 .cover-info { background: rgba(79,195,247,0.08); border: 1px solid rgba(79,195,247,0.2); border-radius: 8px; margin: 1.5em auto; width: auto; min-width: 280px; max-width: 520px; }
@@ -204,8 +205,11 @@ ul, ol { margin: 0.5em 0; padding-left: 2em; }
 li { margin: 0.3em 0; }
 
 /* ===== TOC Page ===== */
-#toc-page { page-break-after: always; background: #fff; min-height: 100vh; padding: 20px 0; }
+#toc-page { background: #fff; padding: 20px 0; }
 #toc-page a:hover { background: #f0f4f8 !important; text-decoration: none; }
+@media (min-width: 769px) {
+  #toc-page > div { margin-left: 280px !important; }
+}
 @media print {
   #toc-page { page-break-after: always; }
   #cover { page-break-after: always; }
