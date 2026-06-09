@@ -67,6 +67,17 @@ H2 Database 是由 Thomas Mueller（原 Hypersonic SQL 创始人）开发的纯 
 
 从上表可见，H2 在功能完整性上显著领先于其他 Java 嵌入式数据库。其核心优势在于：纯 Java 零依赖（对比 SQLite 需要 JNI 绑定）、多协议支持（独有的 PostgreSQL 线协议兼容）、全面的 SQL'99+ 标准支持（窗口函数、CTE、JSON、GIS），以及 MVCC 事务引擎带来更好的并发性能。HSQLDB 与 H2 同源（同为 Thomas Mueller 早期作品），但 H2 在生态活跃度和功能演进速度上更具优势。
 
+> **性能参考**: H2 官方文档《Performance》(`h2/src/docsrc/html/performance.html#performance_comparison`)
+> 包含 H2 与 HSQLDB、Derby、PostgreSQL、MySQL 在嵌入式和 C/S 模式下的详细性能对比
+> （Simple/BenchA/BenchB/BenchC 四种测试场景）。测试结果显示 H2 在嵌入式模式下
+> 每秒可执行约 158,000 条语句（HSQLDB 约 85,000，Derby 约 35,000），
+> 在 C/S 模式下每秒约 12,300 条语句。需注意该测试为单连接基准测试，实际性能取决于
+> 应用场景和配置调优。
+>
+> 官方文档中还包含了数据库性能调优指南（`performance.html#database_performance_tuning`）、
+> 内置分析器使用说明（`performance.html#built_in_profiler`）以及
+> 数据存储与索引的工作原理（`performance.html#storage_and_indexes`）。
+
 **图 1-3: 三种部署模式架构对比**
 
 ```text
