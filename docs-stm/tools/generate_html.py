@@ -224,15 +224,14 @@ for level, title, anchor, _ in toc_entries:
     indent = f'toc-h{level}'
     toc_html += f'<a class="{indent}" href="#{anchor}">{md_to_html(title)}</a>\n'
 
-# Build TOC page entries (h1-h2 only for a clean structural overview)
-toc_page_entries = [e for e in toc_entries if e[0] <= 2]
+# Build TOC page entries (h1-h4 full structure, matching sidebar TOC)
+toc_page_entries = [e for e in toc_entries if e[0] <= 4]
 
 # Build TOC page HTML (full-width, placed between cover and content)
 toc_page_html = '<section id="toc-page">\n'
 toc_page_html += '  <div style="max-width:720px;margin:0 auto;padding:40px 20px;">\n'
 toc_page_html += '    <h1 style="text-align:center;border:none;color:#1565C0;margin-bottom:30px;">目录</h1>\n'
 toc_page_html += '    <hr style="width:60px;margin:0 auto 30px;border-color:#1565C0;">\n'
-toc_page_html += '    <p style="text-align:center;color:#888;font-size:13px;margin-bottom:20px;">完整目录结构请参见左侧导航栏</p>\n'
 toc_page_html += '    <nav id="toc-page-nav">\n'
 for level, title, anchor, _ in toc_page_entries:
     indent_px = 0 if level == 1 else (level - 1) * 20
