@@ -19,3 +19,8 @@
 /h2web/
 .pmd
 docs/html/testOutput.html
+docs-stm/*.pdf
+docs-stm/*.html
+docs-stm/*.log
+*.zip
+mdpdf.log
