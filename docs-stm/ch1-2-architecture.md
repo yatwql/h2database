@@ -16,6 +16,9 @@ H2 Database 是由 Thomas Mueller（原 Hypersonic SQL 创始人）开发的纯 
 - **多协议接入**：JDBC 原生驱动、PostgreSQL 线协议（PgServer）、HTTP 管理控制台（WebServer）
 - **兼容模式**：可模拟 Oracle、MySQL、PostgreSQL、Microsoft SQL Server 等方言
 - **纯 Java**：所有 I/O、网络、加密、压缩均基于标准 Java API，平台无关
+- **多层安全**：AES 加密存储、SHA-256 密码哈希、PBKDF2 密钥派生、XTS-AES 磁盘加密、
+  SSL/TLS 链路加密、SQL 注入防护（`ALLOW_LITERALS NONE`）、
+  远程访问保护、类加载限制
 
 **图 1-1: H2 数据库版本演进时间线**
 

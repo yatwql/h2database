@@ -1597,6 +1597,28 @@ H2 的分层选择代表了"可维护性优先"的设计哲学——在嵌入式
 
 ---
 
+### 12.1.5 安全机制
+
+H2 提供了多层安全防护（详见官方文档 `security.html`、`advanced.html#sql_injection`、
+`advanced.html#remote_access` 和 `advanced.html#security_protocols`）：
+
+- **存储加密**：使用 XTS-AES 模式加密整个数据库文件，密钥通过 PBKDF2 从口令派生
+  （详见 `org/h2/store/fs/FilePathEncrypt.java`）。
+- **传输加密**：SSL/TLS 加密客户端-服务器通信。
+- **SQL 注入防护**：支持 `SET ALLOW_LITERALS NONE` 禁止 SQL 语句中的字面量，
+  强制使用参数化查询（详见官方文档 `advanced.html#sql_injection`）。
+- **访问控制**：基于角色的授权机制（GRANT/REVOKE），支持模式级别的权限隔离。
+- **远程访问保护**：默认禁用远程连接，可通过 `-tcpAllowOthers` 等参数显式开启
+  （详见官方文档 `advanced.html#remote_access`）。
+- **类加载限制**：可限制用户定义函数和触发器可加载的 Java 类
+  （详见官方文档 `advanced.html#restricting_classes`）。
+
+> **参考**: H2 官方文档《Security》(`h2/src/docsrc/html/security.html`)
+> 完整安全特性列表。官方《Advanced》文档中对 SQL 注入防护、远程访问保护
+> 和安全协议有更详细的配置说明。
+
+---
+
 ## 12.2 H2 与其他数据库的设计差异
 
 **图 12-7: 多维能力对比 (1-5 分, 分数越高越强)**
