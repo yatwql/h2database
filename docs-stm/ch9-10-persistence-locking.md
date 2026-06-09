@@ -4,7 +4,7 @@ H2 Database 从 1.4.x 版本开始实验性支持 MVStore，在 v2.0 中取代 P
 
 本章内容与第6章《H2 数据库核心算法分析》中的 B-Tree 索引、Copy-on-Write 版本管理及 MVCC 多版本控制等算法紧密关联（详见第6章《H2 数据库核心算法分析》第6.1-6.3节）。同时，第5章第5.5节（事务提交/回滚流程）与本章的 Undo Log 机制直接相关（详见第5章《核心流程解读》第5.5-5.6节）。锁与并发控制部分可结合第8章查询优化器中的并发访问模式理解。
 
-本章将深入剖析 MVStore 持久化引擎的架构设计与实现细节。9.1 节概述 MVStore 的总体架构、生命周期和版本控制机制；9.2 节详述 B-Tree 与 Page 的内部结构和序列化格式；9.3 节解析 Chunk 的文件布局与空间分配策略；9.4 节说明 Undo Log 机制及崩溃安全保障；9.5 节介绍检查点触发逻辑与后台写入线程。第10章将在此基础上进一步讨论锁与并发控制机制。10.8 节从 ACID 视角总结 H2 的事务保证。
+本章将深入剖析 MVStore 持久化引擎的架构设计与实现细节。9.1 节概述 MVStore 的总体架构、生命周期和版本控制机制；9.2 节详述 B-Tree 与 Page 的内部结构和序列化格式；9.3 节解析 Chunk 的文件布局与空间分配策略；9.4 节说明 Undo Log 机制及崩溃安全保障；9.5 节介绍检查点触发逻辑与后台写入线程；9.6 节详述 MVStore 的二进制文件格式（file header、chunk、page 三级的布局与编码）。第10章将在此基础上进一步讨论锁与并发控制机制。10.8 节从 ACID 视角总结 H2 的事务保证。
 
 ## 9.1 MVStore 总体架构
 
@@ -2084,14 +2084,160 @@ private long store(boolean syncWrite) {
 ```
 **图 9-28: 后台线程调度时间线**
 
-## 9.6 恢复机制
+## 9.6 MVStore 文件格式详解
 
-如图 9-28 所示，MVStore 的恢复机制利用了两个冗余副本的 store header 和 chunk footer 中的校验和。恢复过程不需要 replay undo log，而是直接从最新的完整 chunk 重建 B-Tree。
+本节基于官方文档 `mvstore.html#fileFormat` 的说明，深入 MVStore 的二进制文件布局。
+理解文件格式对于调试持久化问题、分析存储空间使用和进行数据恢复至关重要。
 
-### 9.6.1 恢复流程
+### 9.6.1 文件整体布局
+
+MVStore 的数据文件由两个冗余的 file header 和一系列 chunk 组成：
 
 ```text
-本节速览：9.6.1 恢复流程
+[ File Header 1 ] [ File Header 2 ] [ Chunk ] [ Chunk ] ... [ Chunk ]
+    4 KB             4 KB             可变大小    可变大小      可变大小
+```
+
+> **参考**: H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#fileFormat`)
+> 其中的"File Format"节详细描述了文件、chunk、page 三级的二进制布局。
+
+### 9.6.2 File Header 格式
+
+每个 file header 固定为 4096 字节（一个 block，匹配磁盘扇区大小）。header 以 key-value 文本形式存储：
+
+```text
+H:2,block:2,blockSize:1000,chunk:7,created:1441235ef73,format:1,version:7,fletcher:3044e6cc
+```
+
+各字段含义如下：
+
+| 字段 | 示例值 | 说明 |
+|------|--------|------|
+| H | 2 | 固定标识 "H:2" 表示 H2 数据库文件 |
+| block | 2 | 最新 chunk 的起始 block 号（不一定是最新版本） |
+| blockSize | 1000 | block 大小（十六进制），1000₁₆ = 4096 字节 |
+| chunk | 7 | chunk ID（通常等于 version，但可能回卷） |
+| created | 1441235ef73 | 文件创建时间（1970 年以来的毫秒数） |
+| format | 1 | 文件格式版本号（当前为 1） |
+| version | 7 | 该 chunk 的版本号 |
+| fletcher | 3044e6cc | Fletcher-32 checksum |
+
+打开文件时，两个 header 都被读取并校验 checksum：
+- 如果两个 header 都有效，使用版本号更新的那个。
+- 最新 chunk 的定位：先尝试 file header 中记录的 block，再从文件末尾的 chunk footer 反向查找。
+- 如果 header 中的 chunk id/block/version 不可用，从文件最后一个 chunk 开始搜索。
+
+### 9.6.3 Chunk 格式
+
+每个 chunk 对应一个版本，由 header、若干 page 和 footer 组成：
+
+```text
+[ Chunk Header ] [ Page ] [ Page ] ... [ Page ] [ Chunk Footer ]
+   可变大小        可变大小  可变大小             128 bytes
+```
+
+Chunk header 示例：
+```text
+chunk:1,block:2,len:1,map:6,max:1c0,next:3,pages:2,root:4000004f8c,time:1fc,version:1
+```
+
+Chunk footer 示例：
+```text
+chunk:1,block:2,version:1,fletcher:aed9a4f6
+```
+
+| 字段 | header/footer | 说明 |
+|------|--------------|------|
+| chunk | 两者 | chunk ID |
+| block | header | chunk 起始 block 号（×blockSize=文件位置） |
+| len | header | chunk 占用的 block 数 |
+| map | header | 最新 map 的 ID（新建 map 时递增） |
+| max | header | 所有 page 最大长度之和 |
+| next | header | 预测的下一个 chunk 起始 block |
+| pages | header | chunk 中包含的 page 数 |
+| root | header | 元数据 root page 的位置 |
+| time | header | chunk 写入时间（文件创建后的毫秒数） |
+| version | 两者 | 该 chunk 代表的版本号 |
+| fletcher | footer | footer 的 Fletcher-32 checksum |
+
+关键设计要点：
+
+1. **append-only**：chunk 从不原地更新。每次 commit 写入一个新 chunk。
+2. **COW**：修改 page 时，旧 page 保留在原 chunk 中，新 page 写入新 chunk，父 page 递归复制更新。
+3. **45 秒保留**：chunk 被标记为 free 后，默认至少保留 45 秒才被覆写，确保旧版本可读。
+4. **空间回收**：live page 最少的 chunk 被优先 compact（重新写入新 chunk 后释放旧空间）。
+5. **next 链**：file header 不一定会指向最新 chunk，而是通过 chunk 的 next 字段形成链，最长 20 跳后强制更新 header。
+
+### 9.6.4 Page 格式
+
+每个 page 以二进制格式存储（不可直接阅读），使用变长编码优化空间：
+
+```text
+┌─────────────────────────────────────────────────────────┐
+│  Page 二进制布局                                           │
+├──────────────┬──────────┬───────────────────────────────┤
+│  字段         │  类型     │  说明                          │
+├──────────────┼──────────┼───────────────────────────────┤
+│  length      │  int(4)  │  page 字节总长度                │
+│  checksum    │ short(2) │ chunk id xor 块内偏移 xor 长度  │
+│  mapId       │  VarInt   │ 所属 map 的 ID                 │
+│  len         │  VarInt   │ page 中键的数量                 │
+│  type        │  byte(1)  │ 0=leaf, 1=internal, +2=LZF    │
+│  children    │  long[]   │ 内部节点: 子 page 位置数组      │
+│  childCounts │ VarLong[] │ 内部节点: 各子树条目计数        │
+│  keys        │  byte[]   │ 键序列（按数据类型序列化）      │
+│  values      │  byte[]   │ 叶子节点: 值序列                │
+└──────────────┴──────────┴───────────────────────────────┘
+```
+
+**Page Pointer 编码（64-bit）：** 指向其他 page 的引用被编码为一个 64-bit long：
+
+```text
+┌─────26 bits─────┬──────32 bits──────┬───5 bits───┬──1 bit───┐
+│    Chunk ID     │  Chunk 内偏移      │  长度代码    │ 类型     │
+│    (26 bit)     │   (32 bit)        │  (5 bit)   │ (1 bit)  │
+└─────────────────┴───────────────────┴────────────┴──────────┘
+```
+
+- 26 bit chunk ID：最多支持 6710 万个 chunk
+- 32 bit 偏移：支持最大 chunk 大小为 4 GB
+- 5 bit 长度代码：0=32B, 1=48B, 2=64B, 3=96B, ..., 31=>1MB（读取 page 时只需一次 I/O，除超大 page 外）
+- 1 bit 类型：0=叶子, 1=内部节点
+- 不包含绝对文件位置，因此 chunk 可在文件内移动而不需修改 page pointer
+
+**Counted B-Tree：** 内部节点中的 `childCounts` 数组记录了每个子树的总条目数。这一设计使得：
+- 可以高效地通过索引访问条目（`getIndex(key)`）
+- 可以快速计算两个键之间的中位数
+- 可以高效地对 range 进行计数
+- Iterator 支持快速 skip
+
+### 9.6.5 元数据 Map
+
+每个 chunk 的最后一页是元数据 map 的 root page，其位置记录在 chunk header 的 `root` 字段中。
+元数据 map 存储以下信息：
+
+- `chunk.<id>`: chunk 元数据（同上 header 内容 + live page 数 + live 最大长度）
+- `map.<id>`: map 元数据（name、createVersion、type）
+
+```text
+Chunk N 的元数据 root page（chunk header 的 root 字段指向这里）
+  ├── "chunk.N" → {... chunk 元数据 ...}
+  ├── "map.0"   → {name: "meta", createVersion: 0, type: ...}
+  ├── "map.1"   → {name: "data", createVersion: 1, type: ...}
+  └── ...
+```
+
+> **参考**: H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#fileFormat`)
+> 的"Metadata Map"子节，详细说明了元数据 map 的键值格式。
+
+## 9.7 恢复机制
+
+如图 9-28 所示的 MVStore 恢复机制利用了两个冗余副本的 store header 和 chunk footer 中的校验和。恢复过程不需要 replay undo log，而是直接从最新的完整 chunk 重建 B-Tree。
+
+### 9.7.1 恢复流程
+
+```text
+本节速览：9.7.1 恢复流程
 
   ┌────────────┐
   │ 关注对象   │
@@ -2140,10 +2286,10 @@ private long store(boolean syncWrite) {
 ```
 **图 9-29: 崩溃恢复流程**
 
-### 9.6.2 Store Header 读取
+### 9.7.2 Store Header 读取
 
 ```text
-本节速览：9.6.2 Store Header 读取
+本节速览：9.7.2 Store Header 读取
 
   ┌────────────┐
   │ 关注对象   │
@@ -2177,10 +2323,10 @@ private long store(boolean syncWrite) {
 
 两份 header 保证了在写入 header 过程中发生崩溃时，至少有一份是完整的。
 
-### 9.6.3 TransactionStore 的恢复
+### 9.7.3 TransactionStore 的恢复
 
 ```text
-本节速览：9.6.3 TransactionStore 的恢复
+本节速览：9.7.3 TransactionStore 的恢复
 
   ┌────────────┐
   │ 关注对象   │
@@ -2232,10 +2378,10 @@ void commit(Transaction t, boolean recovery) {
 
 `committingTransactions` BitSet 是并发控制的关键：当另一个事务读取数据时，如果发现某条记录的操作 ID 属于 `committingTransactions` 中的事务，就会认为该记录已提交，读取 `getCurrentValue()`；否则视为未提交，读取 `getCommittedValue()`。
 
-### 9.6.4 详细恢复流程（含代码路径）
+### 9.7.4 详细恢复流程（含代码路径）
 
 ```text
-本节速览：9.6.4 详细恢复流程（含代码路径）
+本节速览：9.7.4 详细恢复流程（含代码路径）
 
   ┌────────────┐
   │ 关注对象   │
@@ -2319,10 +2465,10 @@ MVStore 的恢复过程在 `MVStore.java` 的构造方法和 `SingleFileStore.st
 ```
 **图 9-30: MVStore 恢复流程详细步骤与代码路径**
 
-### 9.6.5 事务恢复决策树
+### 9.7.5 事务恢复决策树
 
 ```text
-本节速览：9.6.5 事务恢复决策树
+本节速览：9.7.5 事务恢复决策树
 
   ┌────────────┐
   │ 关注对象   │
@@ -2389,10 +2535,10 @@ MVStore 的恢复过程在 `MVStore.java` 的构造方法和 `SingleFileStore.st
 ```
 **图 9-31: 事务恢复决策树**
 
-### 9.6.6 VersionedBitSet 恢复状态机
+### 9.7.6 VersionedBitSet 恢复状态机
 
 ```text
-本节速览：9.6.6 VersionedBitSet 恢复状态机
+本节速览：9.7.6 VersionedBitSet 恢复状态机
 
   ┌────────────┐
   │ 关注对象   │
@@ -2458,10 +2604,10 @@ MVStore 的恢复过程在 `MVStore.java` 的构造方法和 `SingleFileStore.st
 ```
 **图 9-32: VersionedBitSet 恢复状态机**
 
-### 9.6.7 崩溃场景与恢复策略矩阵
+### 9.7.7 崩溃场景与恢复策略矩阵
 
 ```text
-本节速览：9.6.7 崩溃场景与恢复策略矩阵
+本节速览：9.7.7 崩溃场景与恢复策略矩阵
 
   ┌────────────┐
   │ 关注对象   │
@@ -2523,14 +2669,14 @@ MVStore 的恢复过程在 `MVStore.java` 的构造方法和 `SingleFileStore.st
 ```
 **图 9-33: 崩溃场景与恢复策略矩阵**
 
-## 9.7 压缩与加密
+## 9.8 压缩与加密
 
 如图 9-33 所示，MVStore 支持可选的页面级压缩和文件级加密。
 
-### 9.7.1 压缩
+### 9.8.1 压缩
 
 ```text
-本节速览：9.7.1 压缩
+本节速览：9.8.1 压缩
 
   ┌────────────┐
   │ 关注对象   │
@@ -2563,10 +2709,10 @@ MVStore 的恢复过程在 `MVStore.java` 的构造方法和 `SingleFileStore.st
 
 值得注意的是，**压缩是机会主义的**：只有当压缩后的数据长度加上头部开销确实小于原始数据时，才存储压缩版本。这确保了即使是不可压缩的数据也不会膨胀。
 
-### 9.7.2 加密
+### 9.8.2 加密
 
 ```text
-本节速览：9.7.2 加密
+本节速览：9.8.2 加密
 
   ┌────────────┐
   │ 关注对象   │
@@ -2619,10 +2765,10 @@ try {
 
 加密密钥在使用后立即被清除（用 0 填充），防止密钥残留在内存中。文件一旦加密，整个文件（包括 store header）都是加密的，因此即使文件被窃取也无法读取。
 
-### 9.7.3 压缩流水线
+### 9.8.3 压缩流水线
 
 ```text
-本节速览：9.7.3 压缩流水线
+本节速览：9.8.3 压缩流水线
 
   ┌────────────┐
   │ 关注对象   │
@@ -2718,10 +2864,10 @@ MVStore 的压缩发生在 Page 序列化的最后阶段。以下流程图展示
 ```
 **图 9-34: MVStore 压缩流水线**
 
-### 9.7.4 XTS-AES 加密/解密流程
+### 9.8.4 XTS-AES 加密/解密流程
 
 ```text
-本节速览：9.7.4 XTS-AES 加密/解密流程
+本节速览：9.8.4 XTS-AES 加密/解密流程
 
   ┌────────────┐
   │ 关注对象   │
@@ -2809,10 +2955,10 @@ MVStore 的压缩发生在 Page 序列化的最后阶段。以下流程图展示
 ```
 **图 9-35: XTS-AES 加密/解密流程**
 
-### 9.7.5 性能权衡分析
+### 9.8.5 性能权衡分析
 
 ```text
-本节速览：9.7.5 性能权衡分析
+本节速览：9.8.5 性能权衡分析
 
   ┌────────────┐
   │ 关注对象   │
@@ -2880,7 +3026,7 @@ MVStore 的压缩发生在 Page 序列化的最后阶段。以下流程图展示
 ```
 **图 9-36: 压缩与加密性能权衡分析**
 
-## 9.8 本章小结
+## 9.9 本章小结
 
 如图 9-36 所示，本章从存储引擎的视角，深入剖析了 H2 Database 的 MVStore 持久化机制，涵盖文件结构、数据组织、事务保证、崩溃恢复及安全存储等核心议题。
 
