@@ -194,7 +194,52 @@ pre {
     border: 1px solid #d0d5dd; border-left: 4px solid #1565C0;
     margin: 1em 0; color: #1a1a2e;
 }
-pre code { background: none; padding: 0; color: inherit; }
+pre code { background: none; padding: 0; color: inherit; display: block; }
+
+/* Code block: line numbers & copy button */
+.pre-wrap { display: flex; position: relative; }
+.line-nums {
+    text-align: right; user-select: none; color: #999;
+    border-right: 1px solid #ddd; margin-right: 8px;
+    min-width: 28px; font-size: 11px; line-height: 1.0;
+    background: #edeff2; padding: 12px 6px 12px 12px;
+    flex-shrink: 0; border-radius: 3px 0 0 3px; overflow: hidden;
+}
+.code-content { flex: 1; overflow-x: auto; padding: 12px 0; }
+.code-content code { padding: 0; }
+.copy-btn {
+    position: absolute; top: 4px; right: 4px; z-index: 10;
+    background: rgba(255,255,255,0.85); border: 1px solid #d0d5dd;
+    border-radius: 4px; padding: 2px 8px; font-size: 11px;
+    cursor: pointer; color: #555; opacity: 0; transition: opacity 0.2s;
+}
+.pre-wrap:hover .copy-btn { opacity: 1; }
+.copy-btn:hover { background: #e3f2fd; border-color: #1565C0; color: #1565C0; }
+
+/* Breadcrumb navigation */
+#breadcrumb {
+    font-size: 13px; color: #888; margin-bottom: 1em; padding: 6px 0;
+    border-bottom: 1px solid #eee; display: flex; flex-wrap: wrap; gap: 4px;
+}
+#breadcrumb .sep { color: #ccc; margin: 0 4px; }
+#breadcrumb a { color: #1565C0; text-decoration: none; }
+#breadcrumb a:hover { text-decoration: underline; }
+#breadcrumb .current { color: #555; font-weight: 500; }
+
+/* Chapter navigation */
+#chapter-nav {
+    margin-top: 3em; padding-top: 1.5em; border-top: 2px solid #e0e0e0;
+    display: flex; justify-content: space-between; gap: 20px;
+}
+#chapter-nav a {
+    display: inline-block; padding: 8px 16px; border: 1px solid #d0d5dd;
+    border-radius: 6px; color: #1565C0; text-decoration: none;
+    font-size: 14px; transition: all 0.2s; max-width: 45%;
+}
+#chapter-nav a:hover { background: #e3f2fd; border-color: #1565C0; }
+#chapter-nav .nav-label { font-size: 11px; color: #999; display: block; }
+#chapter-nav .nav-title { font-weight: 500; }
+
 table { border-collapse: collapse; width: 100%; margin: 1em 0; }
 th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
 th { background: #1565C0; color: white; font-weight: 600; position: sticky; top: 0; }
@@ -430,6 +475,8 @@ HTML = f"""<!DOCTYPE html>
   </main>
 </div>
 <script>
+// Scroll spy for sidebar
+(function() {{
 const observer = new IntersectionObserver((entries) => {{
     entries.forEach(entry => {{
         if (entry.isIntersecting) {{
@@ -441,6 +488,147 @@ const observer = new IntersectionObserver((entries) => {{
     }});
 }}, {{ rootMargin: '-20% 0px -70% 0px' }});
 document.querySelectorAll('h1[id],h2[id],h3[id],h4[id]').forEach(h => observer.observe(h));
+}})();
+
+// Code block: line numbers + copy button
+(function() {{
+document.querySelectorAll('pre').forEach(pre => {{
+    const code = pre.querySelector('code');
+    if (!code || !code.textContent.trim()) return;
+    const lines = code.innerHTML.split('\n');
+    const count = lines.length;
+
+    // Create line numbers
+    const lineNum = document.createElement('div');
+    lineNum.className = 'line-nums';
+    let nums = '';
+    for (let i = 1; i <= count; i++) {{
+        nums += i + '\n';
+    }}
+    lineNum.textContent = nums;
+
+    // Wrap code in code-content div
+    const codeContent = document.createElement('div');
+    codeContent.className = 'code-content';
+    code.parentNode.insertBefore(codeContent, code);
+    codeContent.appendChild(code);
+
+    // Wrap everything in pre-wrap
+    const wrap = document.createElement('div');
+    wrap.className = 'pre-wrap';
+    pre.insertBefore(wrap, pre.firstChild);
+    wrap.appendChild(lineNum);
+    wrap.appendChild(codeContent);
+
+    // Copy button
+    const btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.textContent = '复制';
+    btn.onclick = function() {{
+        const text = code.textContent;
+        if (navigator.clipboard) {{
+            navigator.clipboard.writeText(text).then(() => {{
+                btn.textContent = '已复制';
+                setTimeout(() => {{ btn.textContent = '复制'; }}, 2000);
+            }});
+        }} else {{
+            // Fallback for file:// protocol
+            const ta = document.createElement('textarea');
+            ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+            document.body.appendChild(ta); ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            btn.textContent = '已复制';
+            setTimeout(() => {{ btn.textContent = '复制'; }}, 2000);
+        }}
+    }};
+    wrap.appendChild(btn);
+}});
+}})();
+
+// Breadcrumb navigation
+(function() {{
+const content = document.getElementById('content');
+if (!content) return;
+const headings = content.querySelectorAll('h1[id],h2[id],h3[id]');
+if (headings.length === 0) return;
+
+const breadcrumb = document.createElement('div');
+breadcrumb.id = 'breadcrumb';
+
+function updateBreadcrumb() {{
+    let trail = [];
+    headings.forEach(h => {{
+        const rect = h.getBoundingClientRect();
+        if (rect.top <= 120) {{
+            const level = parseInt(h.tagName.substring(1));
+            trail = trail.filter(t => t.level < level);
+            trail.push({{ level: level, id: h.id, text: h.textContent.trim() }});
+        }}
+    }});
+    let html = '<a href="#content">首页</a>';
+    trail.forEach((item, i) => {{
+        html += '<span class="sep">›</span>';
+        if (i === trail.length - 1) {{
+            html += `<span class="current">${{item.text.replace(/^第\\d+章/, '')}}</span>`;
+        }} else {{
+            html += `<a href="#${{item.id}}">${{item.text.replace(/^第\\d+章/, '')}}</a>`;
+        }}
+    }});
+    breadcrumb.innerHTML = html;
+}}
+
+updateBreadcrumb();
+window.addEventListener('scroll', updateBreadcrumb);
+content.insertBefore(breadcrumb, content.firstChild);
+}})();
+
+// Chapter navigation (prev/next)
+(function() {{
+const chapters = [
+  {{ id: '第1章-总体架构', title: '总体架构与分层模块划分' }},
+  {{ id: '第2章-分层模块划分', title: '分层模块划分' }},
+  {{ id: '第3章-核心包结构', title: '核心包结构' }},
+  {{ id: '第4章-核心模块详解', title: '核心模块详解' }},
+  {{ id: '第5章-核心流程解读', title: '核心流程解读' }},
+  {{ id: '第6章-h2-数据库核心算法分析', title: 'H2 数据库核心算法分析' }},
+  {{ id: '第7章-sql-执行全流程', title: 'SQL 执行全流程' }},
+  {{ id: '第8章-查询优化器', title: '查询优化器' }},
+  {{ id: '第9章-持久化引擎深度解析', title: '持久化引擎深度解析' }},
+  {{ id: '第10章-锁实现与并发控制', title: '锁实现与并发控制' }},
+  {{ id: '第11章-核心源代码导读指引', title: '开发指南与调试' }},
+  {{ id: '第12章-总结', title: '总结与对比' }},
+];
+const nav = document.createElement('div');
+nav.id = 'chapter-nav';
+
+function updateNav() {{
+  let currentIdx = -1;
+  chapters.forEach((ch, i) => {{
+    const el = document.getElementById(ch.id);
+    if (el) {{
+      const rect = el.getBoundingClientRect();
+      if (rect.top <= window.innerHeight / 2) currentIdx = i;
+    }}
+  }});
+  let prevHtml = '', nextHtml = '';
+  if (currentIdx > 0) {{
+    prevHtml = `<a href="#${{chapters[currentIdx-1].id}}"><span class="nav-label">‹ 上一章</span><span class="nav-title">${{chapters[currentIdx-1].title}}</span></a>`;
+  }} else {{
+    prevHtml = `<span class="nav-disabled"><span class="nav-label">‹ 上一章</span></span>`;
+  }}
+  if (currentIdx >= 0 && currentIdx < chapters.length - 1) {{
+    nextHtml = `<a href="#${{chapters[currentIdx+1].id}}"><span class="nav-label">下一章 ›</span><span class="nav-title">${{chapters[currentIdx+1].title}}</span></a>`;
+  }} else {{
+    nextHtml = `<span class="nav-disabled"><span class="nav-label">下一章 ›</span></span>`;
+  }}
+  nav.innerHTML = prevHtml + nextHtml;
+}}
+
+updateNav();
+window.addEventListener('scroll', updateNav);
+content.appendChild(nav);
+}})();
 </script>
 </body>
 </html>"""
