@@ -8,6 +8,7 @@
 > - 熟悉 Page 的二进制格式和 64-bit Page Pointer 编码
 > - 了解检查点和后台写入线程的触发机制
 > - 掌握 MVStore 文件的三级布局（File Header/Chunk/Page）
+> **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 H2 Database 从 1.4.x 版本开始实验性支持 MVStore，在 v2.0 中取代 PageStore 成为默认存储引擎。MVStore 是一种 log-structured（日志结构）、append-only（仅追加写入）、基于 B-Tree 的键值存储系统。其设计思想受 RethinkDB 的存储引擎和经典的 LSM-Tree 启发，但与 LSM-Tree 不同的是，MVStore 不使用单独的写前日志（WAL），而是通过原子性的 chunk 写入和版本化的 B-Tree 根指针来实现崩溃安全和事务持久性。
 

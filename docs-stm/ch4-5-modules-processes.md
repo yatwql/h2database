@@ -7,6 +7,7 @@
 > - 掌握 Expression 层的表达式树结构与求值机制
 > - 熟悉 Table/Index 层的抽象层次和实现类
 > - 了解 TransactionStore 的事务存储机制
+> **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 ## 4.1 数据库全局中枢
 
