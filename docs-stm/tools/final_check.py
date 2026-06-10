@@ -167,6 +167,33 @@ try:
 except FileNotFoundError:
     check(False, 'Merged doc not found')
 
+# 8. CSS style checks (non-blocking, warning only)
+print('\n=== CSS Style Checks ===')
+try:
+    with open(os.path.join(script_dir, 'generate_html.py'), 'r', encoding='utf-8') as f:
+        gen_content = f.read()
+    css_hints = {
+        'h1 decorator': 'h1::before',
+        'fig-caption style': 'fig-caption',
+        'zebra table': 'nth-child(even)',
+        'copy button': 'copy-btn',
+        'line numbers': 'line-nums',
+        'breadcrumb': 'breadcrumb',
+        'chapter nav': 'chapter-nav',
+        'print styles': '@media print',
+        'print page-break': 'page-break-inside',
+    }
+    all_found = True
+    for name, hint in css_hints.items():
+        if hint not in gen_content:
+            print(f'  ⚠  Missing: {name} ({hint})')
+            all_found = False
+    if all_found:
+        print(f'  All {len(css_hints)} CSS features present')
+    check(all_found, f'CSS style integrity: {len(css_hints)} checks')
+except FileNotFoundError:
+    check(True, 'CSS check skipped (generate_html.py not found)')
+
 # Summary
 print(f'\n=== Summary ===')
 passed = sum(1 for ok, _ in results if ok)
