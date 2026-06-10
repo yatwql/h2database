@@ -42,13 +42,15 @@ docs-stm/
   ch11-12-guide-summary.md
   back/                      # Book back matter (glossary, references, index)
   management/                # Project management documents
+  ├── README.md
   ├── requirements.md
   ├── plan.md
   ├── testplan.md
   ├── changelog.md
   └── review-findings.md
   h2-source-code-analysis.md
-  tools/
+  h2-source-code-analysis.html    # Generated, gitignored
+  tools/                     # 12 delivery scripts
 ```
 
 Generated HTML/PDF outputs are ignored by git and should be regenerated from source when needed.
@@ -65,6 +67,13 @@ python docs-stm/tools/_audit_smart.py
 python docs-stm/tools/final_check.py
 ```
 
+Optional post-pipeline checks:
+```bash
+python docs-stm/tools/check_style.py        # Writing style audit (advisory)
+python docs-stm/tools/build_glossary.py     # Regenerate glossary draft
+python docs-stm/tools/build_index.py        # Regenerate index draft
+```
+
 PDF generation is on demand only and should be the final delivery step:
 
 ```bash
@@ -79,7 +88,7 @@ python docs-stm/tools/verify_pdf.py
 - ASCII diagrams use ` ```text ` fences; Java snippets use ` ```java `; SQL snippets use ` ```sql `.
 - Source paths use `org/h2/...` format, not `h2/src/main/...`.
 - Cross references use `详见第X章《章节标题》` and must match actual H1 titles.
-- Management document versions stay aligned across `cover.md`, `requirements.md`, `plan.md`, `testplan.md`, and `changelog.md`.
+- Management document versions stay aligned across `docs-stm/cover.md` and `docs-stm/management/{requirements,plan,testplan,changelog}.md`.
 
 ## Management Document Authority
 
