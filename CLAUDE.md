@@ -30,6 +30,7 @@ Canonical documentation files are in `docs-stm/`:
 ```text
 docs-stm/
   cover.md
+  front/                     # Book front matter (preface, copyright, reading guide)
   ch1-2-architecture.md
   ch3-packages.md
   ch4-5-modules-processes.md
@@ -39,11 +40,13 @@ docs-stm/
   ch7-8-sql-optimizer.md
   ch9-10-persistence-locking.md
   ch11-12-guide-summary.md
-  requirements.md
-  plan.md
-  testplan.md
-  changelog.md
-  review-findings.md
+  back/                      # Book back matter (glossary, references, index)
+  management/                # Project management documents
+  ├── requirements.md
+  ├── plan.md
+  ├── testplan.md
+  ├── changelog.md
+  └── review-findings.md
   h2-source-code-analysis.md
   tools/
 ```
@@ -82,15 +85,15 @@ python docs-stm/tools/verify_pdf.py
 
 - `requirements.md`: current scope and deliverables only.
 - `plan.md`: current workflow, maintenance strategy, risks, and future work only.
-- `testplan.md`: quality gates and verification commands; this is the authoritative validation reference.
-- `changelog.md`: version history.
-- `review-findings.md`: review issue tracker and closure state only.
+- `docs-stm/management/testplan.md`: quality gates and verification commands; this is the authoritative validation reference.
+- `docs-stm/management/changelog.md`: version history.
+- `docs-stm/management/review-findings.md`: review issue tracker and closure state only.
 
 Avoid duplicating long command blocks or historical issue details across management documents. Prefer references to the authoritative file above.
 
 ## Review Workflow
 
-For formal documentation reviews, use four perspectives in parallel: architect, documentation engineer, programmer/source-reference reviewer, and book editor. Track findings in `docs-stm/review-findings.md` with CRITICAL/HIGH/MEDIUM/LOW severity, and record completed changes in `docs-stm/changelog.md`.
+For formal documentation reviews, use four perspectives in parallel: architect, documentation engineer, programmer/source-reference reviewer, and book editor. Track findings in `docs-stm/management/review-findings.md` with CRITICAL/HIGH/MEDIUM/LOW severity, and record completed changes in `docs-stm/management/changelog.md`.
 
 ## Cleanup Rules
 

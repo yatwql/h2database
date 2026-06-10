@@ -10,9 +10,9 @@
 文档已完成并进入维护阶段：
 
 - 12 章源码分析内容已交付。
-- 正式源码、管理文档和交付工具统一位于 `docs-stm/`。
+- 正式源码、管理文档和交付工具统一位于 `docs-stm/`（管理文档位于 `docs-stm/management/`）。
 - 标准 MD/HTML 验证链路通过；PDF 按需生成。
-- 已记录审查问题均在 `docs-stm/review-findings.md` 中关闭。
+- 已记录审查问题均在 `docs-stm/management/review-findings.md` 中关闭。
 
 当前统计以 `docs-stm/cover.md` 和 `docs-stm/tools/final_check.py` 输出为准，避免在多个管理文档中重复维护数字。
 
@@ -31,17 +31,18 @@ docs-stm/
   ch9-10-persistence-locking.md
   ch11-12-guide-summary.md
   h2-source-code-analysis.md
-  requirements.md
-  plan.md
-  testplan.md
-  changelog.md
-  review-findings.md
+  management/
+  ├── requirements.md
+  ├── plan.md
+  ├── testplan.md
+  ├── changelog.md
+  └── review-findings.md
   tools/
 ```
 
 ## 3. 验证流程
 
-标准验证流程和 PDF 交付命令详见 `docs-stm/testplan.md` 第1节。本章节不重复维护。
+标准验证流程和 PDF 交付命令详见 `docs-stm/management/testplan.md` 第1节。本章节不重复维护。
 
 ## 4. 已完成阶段
 
@@ -55,7 +56,7 @@ docs-stm/
 | Phase 6 | 工具迁移到 `docs-stm/tools/` | ✅ 完成 |
 | Phase 7 | 管理文档职责收敛与冲突清理 | ✅ 完成 |
 
-详细历史见 `docs-stm/changelog.md`。
+详细历史见 `docs-stm/management/changelog.md`。
 
 ## 5. 管理文档职责
 
@@ -63,7 +64,7 @@ docs-stm/
 
 ## 6. 维护策略
 
-- 发现新问题时先登记到 `docs-stm/review-findings.md`，修复完成后同步记录到 `docs-stm/changelog.md`。
+- 发现新问题时先登记到 `docs-stm/management/review-findings.md`，修复完成后同步记录到 `docs-stm/management/changelog.md`。
 - 不保留一次性修复脚本、临时压缩包、`__pycache__` 或外部 session 文件。
 - 本项目 session 文件只保留在仓库 `.claude/` 目录中。
 

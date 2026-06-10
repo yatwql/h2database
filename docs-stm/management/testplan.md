@@ -85,4 +85,4 @@ python docs-stm/tools/verify_pdf.py
 
 - 每次文档变更后运行标准流程。
 - 每次正式归档或发布前运行 PDF 验证。
-- 每次发现新问题时登记到 `docs-stm/review-findings.md`，修复后同步更新 `docs-stm/changelog.md`。
+- 每次发现新问题时登记到 `docs-stm/management/review-findings.md`，修复后同步更新 `docs-stm/management/changelog.md`。

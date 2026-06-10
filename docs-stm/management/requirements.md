@@ -19,7 +19,7 @@
 | HTML | `docs-stm/h2-source-code-analysis.html` | 按需生成，带侧边栏 TOC，git 忽略 |
 | PDF | `docs-stm/h2-source-code-analysis.pdf` | 按需生成，带大纲和可点击目录，git 忽略 |
 | 工具脚本 | `docs-stm/tools/` | 正式生成、审计和验证工具 |
-| 管理文档 | `docs-stm/requirements.md`, `plan.md`, `testplan.md`, `changelog.md`, `review-findings.md` | 当前需求、计划、质量门禁、历史和问题追踪 |
+| 管理文档 | `docs-stm/management/requirements.md`, `plan.md`, `testplan.md`, `changelog.md`, `review-findings.md` | 当前需求、计划、质量门禁、历史和问题追踪 |
 
 当前统计数据以 `docs-stm/cover.md` 自动更新结果和 `docs-stm/tools/final_check.py` 输出为准。
 
@@ -37,7 +37,7 @@
 
 ## 4. 质量需求
 
-质量门禁以 `docs-stm/testplan.md` 为唯一权威来源。本文件只保留需求摘要：
+质量门禁以 `docs-stm/management/testplan.md` 为唯一权威来源。本文件只保留需求摘要：
 
 - 章节完整：12 章齐全，H1 格式一致。
 - 图表完整：内容型小节至少 2 图，模板型小节至少 1 图。
@@ -48,7 +48,7 @@
 
 ## 5. 验证流程
 
-验证流程以 `docs-stm/testplan.md` 第1节为准。本章节只保持引用关系，不重复维护命令。
+验证流程以 `docs-stm/management/testplan.md` 第1节为准。本章节只保持引用关系，不重复维护命令。
 
 ## 6. 非目标
 
@@ -58,4 +58,4 @@
 
 ## 7. 版本历史
 
-完整版本历史见 `docs-stm/changelog.md`。
+完整版本历史见 `docs-stm/management/changelog.md`。
