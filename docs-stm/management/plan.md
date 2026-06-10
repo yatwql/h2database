@@ -21,6 +21,10 @@
 ```text
 docs-stm/
   cover.md
+  front/                     # 书籍前件
+  ├── preface.md             # 前言
+  ├── copyright.md           # 版权页
+  └── how-to-read.md         # 阅读指南
   ch1-2-architecture.md
   ch3-packages.md
   ch4-5-modules-processes.md
@@ -30,14 +34,19 @@ docs-stm/
   ch7-8-sql-optimizer.md
   ch9-10-persistence-locking.md
   ch11-12-guide-summary.md
-  h2-source-code-analysis.md
-  management/
+  back/                      # 书籍后件
+  ├── glossary.md            # 术语表（38 条）
+  ├── references.md          # 参考文献（20 条）
+  └── index.md               # 概念索引（86 条）
+  management/                # 管理文档
+  ├── README.md              # 管理文档索引
   ├── requirements.md
   ├── plan.md
   ├── testplan.md
   ├── changelog.md
   └── review-findings.md
-  tools/
+  h2-source-code-analysis.md
+  tools/                     # 共 12 个脚本
 ```
 
 ## 3. 验证流程

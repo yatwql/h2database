@@ -6,7 +6,7 @@
 
 ## [v4.24] — 2026-06-10
 
-### 书籍结构化升级：前件/后件/章节模板
+### 书籍结构化升级：前件/后件/章节模板 + 排版增强 + 工具链
 
 #### Added
 - **管理文档迁移**：5 个管理文档从 `docs-stm/` 迁入 `docs-stm/management/`，新增 `management/README.md` 索引
@@ -19,15 +19,23 @@
   - `references.md` — 参考文献（20 条，含官方文档/学术论文/技术参考/对比数据库文档）
   - `index.md` — 概念索引（86 条，覆盖概念/API 类名/算法名→章节映射）
 - **章节模板标准化**：全部 12 章新增统一格式的章首引导块（本章导读/前置知识/章节要点）、章末小结标准化、延展阅读小节
+- **CSS-only 排版增强**（U8a）：章首页 `h1::before` 渐变分隔线、`.fig-caption` 图注蓝色边栏样式、`@media print` 打印优化、表格 `tr:hover` 高亮、间距调整
+- **JS 注入增强**（U8b）：代码块行号、复制按钮（支持 file:// 降级）、面包屑导航（滚动更新 H1→H2→H3）、上下章导航按钮
+- **PDF 排版增强**（U8c）：页眉/页脚（"第 N 页 / 共 M 页"）、章首页 `page-break-before`
+- **排版检查项**（U8d）：`final_check.py` 新增 CSS 样式完整性检查（9 项）
+- **术语首次出现标注**（P2-2）：7 个章节的引导块末尾添加指向术语表的 `> **术语参考**` 链接
+- **`build_glossary.py` / `build_index.py`**（P2-1）：辅助脚本，从正文提取术语和索引草稿
+- **`check_style.py`**（P2-3）：写作风格检查器（口语化模式/长句/中英混合代码检测）
 
 #### Changed
 - **工具链升级**：`rebuild_merged.py`、`final_check.py`、`cover_stats.py` 自动发现 `front/` 和 `back/` 目录，支持前后件合并
 - **章节小结标准化**：ch6-1/ch6-2/ch6-3 的非标准小结标题统一为 `N.x 本章小结` 格式
+- **`final_check.py` 扩展**：从 55 项增至 82 项，新增 CSS 检查、脚本语法验证、风格检查
 
 #### 生成产物
-- **合并文档**：docs-stm/h2-source-code-analysis.md（36,434 行）
+- **合并文档**：docs-stm/h2-source-code-analysis.md（36,441 行）
 - **HTML 文档**：docs-stm/h2-source-code-analysis.html（551 TOC，0 断裂）
-- **最终核验**：final_check 79/79
+- **最终核验**：final_check 82/82
 
 ---
 
