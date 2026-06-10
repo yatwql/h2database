@@ -1,5 +1,14 @@
 # 第9章 持久化引擎深度解析
 
+> **本章导读**: 本章深入分析 H2 的 MVStore 持久化引擎，从总体架构、Chunk 文件布局、Page 格式到检查点机制和文件格式（File Header、Chunk、Page 三级二进制布局）。MVStore 是 H2 v2.0 重构的核心，理解本章内容对于掌握 H2 的性能特性和存储原理至关重要。
+> **前置知识**: 第6章§6.1-6.3（B-Tree、Copy-on-Write、MVCC 基础）；第6章§6.4-6.7（Chunk/LIRS/FreeSpace/MVStore 平衡）；第5章§5.5-5.6（事务提交/回滚）
+> **章节要点**:
+> - 理解 MVStore 的日志结构存储架构
+> - 掌握 Chunk 的格式、写入和回收生命周期
+> - 熟悉 Page 的二进制格式和 64-bit Page Pointer 编码
+> - 了解检查点和后台写入线程的触发机制
+> - 掌握 MVStore 文件的三级布局（File Header/Chunk/Page）
+
 H2 Database 从 1.4.x 版本开始实验性支持 MVStore，在 v2.0 中取代 PageStore 成为默认存储引擎。MVStore 是一种 log-structured（日志结构）、append-only（仅追加写入）、基于 B-Tree 的键值存储系统。其设计思想受 RethinkDB 的存储引擎和经典的 LSM-Tree 启发，但与 LSM-Tree 不同的是，MVStore 不使用单独的写前日志（WAL），而是通过原子性的 chunk 写入和版本化的 B-Tree 根指针来实现崩溃安全和事务持久性。
 
 本章内容与第6章《H2 数据库核心算法分析》中的 B-Tree 索引、Copy-on-Write 版本管理及 MVCC 多版本控制等算法紧密关联（详见第6章《H2 数据库核心算法分析》第6.1-6.3节）。同时，第5章第5.5节（事务提交/回滚流程）与本章的 Undo Log 机制直接相关（详见第5章《核心流程解读》第5.5-5.6节）。锁与并发控制部分可结合第8章查询优化器中的并发访问模式理解。
@@ -3212,6 +3221,14 @@ MVStore 的压缩发生在 Page 序列化的最后阶段。以下流程图展示
 ---
 
 # 第10章 锁实现与并发控制
+
+> **本章导读**: 本章分析 H2 的锁机制和并发控制实现，涵盖表级锁的实现细节、事务隔离级别、MVCC 并发控制以及锁超时和死锁检测等实用主题。
+> **前置知识**: 第6章§6.3（MVCC 多版本并发控制）；第5章§5.5（事务提交/回滚与 Undo Log）；第7章（SQL 执行流程中的锁获取）
+> **章节要点**:
+> - 理解 H2 的表级锁实现和锁升级机制
+> - 掌握 5 种事务隔离级别的行为差异
+> - 熟悉 MVCC 模式下读写不互斥的实现
+> - 了解锁超时、死锁检测等实用机制
 
 H2 Database 的 MVStore 引擎实现了多层次的并发控制机制：表级锁、行级 MVCC、CAS 无锁读和文件级锁，共同构成了完整的并发控制体系。
 
@@ -6486,3 +6503,12 @@ H2 官方文档在《Advanced》一章中专门讨论了 ACID 的支持范围（
 - RootReference CAS 无锁读机制基于 AtomicReference 与三级退避策略，实现了 B-Tree 根引用的无锁更新，使读操作完全无阻塞，是高并发读取性能的核心支撑。
 - 文件级锁通过锁文件心跳机制或 TCP Socket 连接保证多进程互斥访问，阻止第二个进程打开同一数据库文件，从根本上防止数据损坏。
 - 五层并发控制架构体现了关注点分离的设计原则，各层专注于解决特定粒度的并发问题，层次叠加提供了从进程级到行级的多重保护，是 H2 在高并发 OLTP 场景下保证 ACID 语义的关键所在。
+
+## 10.x 延展阅读
+
+- H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#fileFormat`) — MVStore 文件格式（File/Chunk/Page 三级）
+- H2 官方文档《Advanced》(`h2/src/docsrc/html/advanced.html#acid`) — ACID 特性与持久性讨论
+- H2 官方文档《Advanced》(`h2/src/docsrc/html/advanced.html#durability_problems`) — 持久性已知问题
+- 本书第6章§6.1-6.3 — B-Tree/COW/MVCC 算法基础
+- 本书第6章§6.4-6.7 — Chunk/LIRS/FreeSpace/MVStore 平衡算法
+- 本书第8章§8.x — 查询优化中的并发访问模式

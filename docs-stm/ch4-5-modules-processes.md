@@ -1,5 +1,13 @@
 # 第4章 核心模块深度解读
 
+> **本章导读**: 本章深入分析 H2 的 Command、Expression 和 Table/Index 三个核心层的模块设计和类职责。同时介绍 TransactionStore 事务存储和 MVMap 数据结构的实现机制。
+> **前置知识**: 第2章《分层模块划分》§2.4-2.8（Command/Expression/Table-Index 层概览）；第3章《核心包结构》§3.5-3.6（对应包的类结构）
+> **章节要点**:
+> - 理解 Command 接口的设计模式和命令分类
+> - 掌握 Expression 层的表达式树结构与求值机制
+> - 熟悉 Table/Index 层的抽象层次和实现类
+> - 了解 TransactionStore 的事务存储机制
+
 ## 4.1 数据库全局中枢
 
 **核心文件**: `org/h2/engine/Database.java` (2520 行)
@@ -1793,6 +1801,14 @@ public void removeRow(SessionLocal session, Row row) {
 
 
 # 第5章 核心流程解读
+
+> **本章导读**: 本章逐一分析 H2 的 9 个核心流程：SELECT、INSERT、UPDATE、DELETE、COMMIT、ROLLBACK、COMPACT、CHUNK、READ。每个流程按照流程图→核心逻辑阐述→关键代码引用的标准化模板进行组织。
+> **前置知识**: 第4章《核心模块详解》（各流程依赖的模块实现）；第2章§2.3-2.4（Engine/Command 层入口）
+> **章节要点**:
+> - 掌握 9 个核心流程的执行链路
+> - 理解各流程的关键数据结构和算法
+> - 熟悉流程间的依赖关系和触发条件
+> - 了解流程对应的核心源码文件和方法
 
 > 本章追踪 9 个核心流程的完整执行路径。各核心算法的基础原理详见第6章《H2 数据库核心算法分析》。SQL 语句的解析与优化细节见第7章《SQL 执行全流程》和第8章《查询优化器深度解读》，事务提交与持久化机制见第9章《持久化引擎深度解析》和第10章《锁实现与并发控制》。
 
@@ -3847,6 +3863,15 @@ MVSecondaryIndex.find(session, searchRow)
 ## 5.10 本章小结
 
 如图 5-46 所示，本章追踪了 H2 中九个核心流程：SELECT/INSERT/UPDATE/DELETE 四大 SQL 操作、COMMIT/ROLLBACK 事务控制、Compaction 空间回收、Chunk 压缩整理以及数据读取流程。每个流程均按照"流程图→核心逻辑阐述→关键代码引用"的标准化模板展开，展示了 SQL 语句从解析到存储层的完整生命周期。
+
+
+## 5.11 延展阅读
+
+- H2 官方文档《Advanced》(`h2/src/docsrc/html/advanced.html`) — 事务隔离级别与 MVCC 行为详细说明
+- H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#transactions`) — MVStore 事务机制
+- 本书第7章《SQL 执行全流程》 — SELECT/INSERT/UPDATE/DELETE 的执行计划生成和执行
+- 本书第9章《持久化引擎深度解析》 — COMMIT/ROLLBACK/COMPACT 的磁盘交互
+- 本书第10章《锁与并发控制》 — 流程执行中的锁获取和释放
 
 
 ---

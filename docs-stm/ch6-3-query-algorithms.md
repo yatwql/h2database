@@ -3431,11 +3431,15 @@ SQL 语句从 JDBC 到执行的完整解析路径及各个组件的职责:
 
 ---
 
-## 第6章小结
+## 6.11 本章小结
 
-本篇重点剖析了 H2 查询引擎的三大核心算法：查询优化器的连接顺序选择（Brute Force / Greedy / Genetic 三种策略）、R-Tree 空间索引（MVRTreeMap 实现的多维区间检索）以及 SQL 解析器的递归下降解析流程（Parser/Tokenizer 协同工作）。查询优化器通过代价模型评估不同连接顺序，R-Tree 通过最小外接矩形（MBR）层次结构加速空间查询，Parser 自顶向下递归匹配 SQL 语法规则。
+查询优化器通过基于代价的连接顺序选择、索引条件评估和表达式优化，将声明式 SQL 转化为高效的执行计划。R-Tree 空间索引为多维数据提供了高效的范围查询能力。递归下降解析器以其可读性强、易于调试的特点，将 SQL 文本转化为语法树。这三个查询算法与前三篇的数据结构和存储算法一起，构成了 H2 从 SQL 解析到数据访问的完整链路。
 
-这一小结同时也是第 6 章的**全章收束**。第 6 章三篇内容共同形成从底层到上层的算法链路：数据结构篇说明“页、树、版本”的内存组织；存储算法篇说明“Chunk、缓存、空闲空间、平衡”的落盘与维护；查询算法篇说明“优化器、R-Tree、Parser”如何把 SQL 请求映射到这些结构上。读者可以按这个顺序理解 H2 的核心路径：SQL 文本先被 Parser 转成语法结构，再由 Optimizer/R-Tree 选择访问策略，最终落到 MVMap/Page/Chunk/MVCC 这些底层算法上。
+## 6.x 延展阅读
 
-> **后续阅读指引**：第 7-8 章会从端到端 SQL 执行链路和优化器实现继续展开，第 9-10 章会进一步深入 MVStore 持久化、恢复、锁和并发控制。
+- H2 官方文档《Performance》(`h2/src/docsrc/html/performance.html#explain_plan`) — EXPLAIN PLAN 使用说明
+- H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#r_tree`) — MVRTreeMap 使用示例
+- 本书第7章《SQL 执行全流程》 — 执行计划的生成和执行
+- 本书第8章《查询优化器》 — 代价估算和 Join 顺序优化的详细分析
+- 论文: Guttman, "R-Trees: A Dynamic Index Structure for Spatial Searching" (1984)
 

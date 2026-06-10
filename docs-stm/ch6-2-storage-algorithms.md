@@ -4597,9 +4597,13 @@ H2 的合并只在"删除后仅剩一个子节点"时触发（树深度折叠）
 ```
 
 ---
-## 存储算法篇小结
+## 6.8 本章小结
 
-本篇分析了 H2 存储引擎的四类核心算法：Chunk 压缩整理、LIRS 缓存替换、空闲空间管理（FreeSpaceBitSet）以及 MVStore 平衡机制。Chunk 压缩通过两阶段整理（识别 + 重写）回收碎片空间；LIRS 利用 LIR/HIR 双集合抵抗顺序扫描污染；FreeSpaceBitSet 以比特位图管理数据文件中的空闲块；MVStore 平衡机制在 B+Tree 节点溢出或不足时触发分裂与合并，维持树结构稳定。
+Chunk 的压缩整理、LIRS 缓存替换、Free Space 分配回收和 MVStore 平衡机制共同构成了 MVStore 存储引擎的自动维护体系。Chunk 的 append-only 写入和定期 compact 平衡了写入性能和空间利用率；LIRS 通过区分近期访问和频繁访问的 page 来抵抗扫描污染；Free Space 的空间位图管理和 MVStore 的自动平衡确保存储系统在长时间运行后仍能保持稳定性能。
 
-这一篇的重点是把前一篇的“页、树、版本”落到文件、缓存和空间回收层面。读完本篇后，读者已经具备理解查询算法篇的必要背景：优化器和索引选择最终都会落到这些页面、缓存和存储结构上。
+## 6.x 延展阅读
 
+- H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#logStructured`) — Log Structured 存储设计
+- H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#caching`) — LIRS 缓存机制
+- 本书第9章《持久化引擎深度解析》 — Chunk 格式和文件布局详解
+- 论文: Jiang & Zhang, "LIRS: An Efficient Low Inter-reference Recency Set Replacement Policy" (2002)
