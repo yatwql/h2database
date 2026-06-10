@@ -172,7 +172,12 @@ html { overflow-y: scroll; }
     #toggle-sidebar { display: block; }
 }
 h1, h2, h3, h4 { color: #1565C0; margin-top: 1.5em; margin-bottom: 0.5em; font-family: 'Microsoft YaHei', SimSun, -apple-system, sans-serif; }
-h1 { font-size: 1.8em; border-bottom: 2px solid #1565C0; padding-bottom: 8px; }
+#content h1 { font-size: 1.8em; border-bottom: 2px solid #1565C0; padding-bottom: 8px; position: relative; padding-top: 0.3em; }
+#content h1::before {
+    content: ''; display: block; width: 60px; height: 4px;
+    background: linear-gradient(90deg, #1565C0, #4fc3f7);
+    border-radius: 3px; margin-bottom: 10px;
+}
 h2 { font-size: 1.4em; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; }
 h3 { font-size: 1.15em; }
 h4 { font-size: 1.05em; color: #333; }
@@ -192,8 +197,18 @@ pre {
 pre code { background: none; padding: 0; color: inherit; }
 table { border-collapse: collapse; width: 100%; margin: 1em 0; }
 th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
-th { background: #1565C0; color: white; font-weight: 600; }
+th { background: #1565C0; color: white; font-weight: 600; position: sticky; top: 0; }
 tr:nth-child(even) { background: #f9f9f9; }
+tr:hover { background: #eef4fb; }
+
+/* ===== Figure Captions ===== */
+strong.fig-caption {
+    display: block; margin: 0.5em 0 1em; padding: 6px 12px;
+    background: #f0f6ff; border-left: 3px solid #1565C0;
+    border-radius: 0 4px 4px 0; font-size: 0.92em; color: #1a3a5c;
+    line-height: 1.6;
+}
+
 blockquote {
     border-left: 4px solid #1565C0; margin: 1em 0;
     padding: 0.5em 1em; background: #f5f5f5; color: #555;
@@ -213,6 +228,12 @@ li { margin: 0.3em 0; }
 @media print {
   #toc-page { page-break-after: always; }
   #cover { page-break-after: always; }
+  #sidebar { display: none; }
+  #content { margin-left: 0; max-width: 100%; padding: 20px 36px; }
+  pre, table { page-break-inside: avoid; }
+  h1, h2, h3, h4 { page-break-after: avoid; }
+  pre { font-size: 10px; }
+  @page { margin: 15mm 10mm; }
 }
 """
 
@@ -309,7 +330,12 @@ for line in lines[main_start:]:
         content_html += '<hr>\n'
         continue
 
-    content_html += f'<p>{md_to_html(stripped)}</p>\n'
+    # Figure caption: detect **图 X-Y: Title** pattern
+    if stripped.startswith('**图 ') and stripped.endswith('**'):
+        inner = stripped[2:-2]
+        content_html += f'<strong class="fig-caption">{md_to_html(inner)}</strong>\n'
+    else:
+        content_html += f'<p>{md_to_html(stripped)}</p>\n'
 
 if in_pre:
     content_html += '</code></pre>\n'
