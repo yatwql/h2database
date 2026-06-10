@@ -9,13 +9,24 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 repo_root = os.path.normpath(os.path.join(script_dir, '..', '..'))
 docs_dir = os.path.join(repo_root, 'docs-stm')
 
-source_files = [
-    'cover.md', 'ch1-2-architecture.md', 'ch3-packages.md',
-    'ch4-5-modules-processes.md', 'ch6-1-data-structures.md',
-    'ch6-2-storage-algorithms.md', 'ch6-3-query-algorithms.md',
-    'ch7-8-sql-optimizer.md', 'ch9-10-persistence-locking.md',
-    'ch11-12-guide-summary.md'
-]
+import glob as _glob
+
+# Front matter (preface, copyright, reading guide)
+front_dir = os.path.join(docs_dir, 'front')
+front_files = sorted(_glob.glob(os.path.join(front_dir, '*.md'))) if os.path.isdir(front_dir) else []
+
+# Back matter (glossary, references, index)
+back_dir = os.path.join(docs_dir, 'back')
+back_files = sorted(_glob.glob(os.path.join(back_dir, '*.md'))) if os.path.isdir(back_dir) else []
+
+source_files = ['cover.md'] + \
+    [os.path.relpath(f, docs_dir) for f in front_files] + \
+    ['ch1-2-architecture.md', 'ch3-packages.md',
+     'ch4-5-modules-processes.md', 'ch6-1-data-structures.md',
+     'ch6-2-storage-algorithms.md', 'ch6-3-query-algorithms.md',
+     'ch7-8-sql-optimizer.md', 'ch9-10-persistence-locking.md',
+     'ch11-12-guide-summary.md'] + \
+    [os.path.relpath(f, docs_dir) for f in back_files]
 
 total_lines = 0
 total_figs = 0

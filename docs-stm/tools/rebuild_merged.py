@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """Rebuild h2-source-code-analysis.md from chapter files."""
-import os, sys
+import os, sys, glob
 sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 repo_root = os.path.normpath(os.path.join(script_dir, '..', '..'))
 docs_dir = os.path.join(repo_root, 'docs-stm')
+
+# Collect front matter (preface, copyright, reading guide)
+front_dir = os.path.join(docs_dir, 'front')
+front_matter = sorted(glob.glob(os.path.join(front_dir, '*.md'))) if os.path.isdir(front_dir) else []
 
 chapter_names = [
     'cover.md',
@@ -19,7 +23,12 @@ chapter_names = [
     'ch9-10-persistence-locking.md',
     'ch11-12-guide-summary.md',
 ]
-chapters = [os.path.join(docs_dir, name) for name in chapter_names]
+
+# Collect back matter (glossary, references, index)
+back_dir = os.path.join(docs_dir, 'back')
+back_matter = sorted(glob.glob(os.path.join(back_dir, '*.md'))) if os.path.isdir(back_dir) else []
+
+chapters = front_matter + [os.path.join(docs_dir, name) for name in chapter_names] + back_matter
 
 output = os.path.join(docs_dir, 'h2-source-code-analysis.md')
 

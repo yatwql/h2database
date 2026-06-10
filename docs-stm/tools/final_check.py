@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 """Comprehensive final delivery check for H2 documentation."""
-import re, os
+import re, os, glob
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 repo_root = os.path.normpath(os.path.join(script_dir, '..', '..'))
 docs_dir = os.path.join(repo_root, 'docs-stm')
+
+# Collect front/ and back/ contents (if they exist)
+front_dir = os.path.join(docs_dir, 'front')
+back_dir = os.path.join(docs_dir, 'back')
+front_matter = sorted(glob.glob(os.path.join(front_dir, '*.md'))) if os.path.isdir(front_dir) else []
+back_matter = sorted(glob.glob(os.path.join(back_dir, '*.md'))) if os.path.isdir(back_dir) else []
 
 chapter_names = [
     'ch1-2-architecture.md',
@@ -17,7 +23,7 @@ chapter_names = [
     'ch9-10-persistence-locking.md',
     'ch11-12-guide-summary.md',
 ]
-CHAPTERS = [os.path.join(docs_dir, name) for name in chapter_names]
+CHAPTERS = front_matter + [os.path.join(docs_dir, name) for name in chapter_names] + back_matter
 
 results = []
 
@@ -72,13 +78,16 @@ for f in CHAPTERS:
     curr_ch = int(ch_match.group(1)) if ch_match else 0
     # Valid refs: should reference OTHER chapters
     valid = [r for r in sorted(all_refs) if r != curr_ch]
-    # Should reference at least 2 other chapters
-    if len(valid) >= 2:
+    # Non-chapter files (front/back matter) may have zero refs
+    is_chapter = bool(ch_match)
+    if is_chapter and len(valid) >= 2:
         check(True, f'{f}: refs to ch{",".join(str(v) for v in valid)}')
     elif len(valid) == 1:
         check(True, f'{f}: refs to ch{valid[0]} (minimal)')
-    else:
+    elif is_chapter:
         check(False, f'{f}: ZERO cross-chapter refs')
+    else:
+        check(True, f'{f}: book front/back matter (skipped cross-ref check)')
 
 # 3. Code fence balance
 print('\n=== Code Fence Balance ===')
