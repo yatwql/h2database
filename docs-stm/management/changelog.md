@@ -4,6 +4,33 @@
 
 ---
 
+## [v4.24] — 2026-06-10
+
+### 书籍结构化升级：前件/后件/章节模板
+
+#### Added
+- **管理文档迁移**：5 个管理文档从 `docs-stm/` 迁入 `docs-stm/management/`，新增 `management/README.md` 索引
+- **书籍前件体系**（`docs-stm/front/`）：
+  - `preface.md` — 前言（写作动机、目标读者、内容概要、致谢）
+  - `copyright.md` — 版权页（许可证声明、版本信息、免责声明）
+  - `how-to-read.md` — 阅读指南（章节依赖图、3 种推荐阅读路径）
+- **书籍后件体系**（`docs-stm/back/`）：
+  - `glossary.md` — 术语表（38 条核心术语，中英文对照，标注首次出现章节）
+  - `references.md` — 参考文献（20 条，含官方文档/学术论文/技术参考/对比数据库文档）
+  - `index.md` — 概念索引（86 条，覆盖概念/API 类名/算法名→章节映射）
+- **章节模板标准化**：全部 12 章新增统一格式的章首引导块（本章导读/前置知识/章节要点）、章末小结标准化、延展阅读小节
+
+#### Changed
+- **工具链升级**：`rebuild_merged.py`、`final_check.py`、`cover_stats.py` 自动发现 `front/` 和 `back/` 目录，支持前后件合并
+- **章节小结标准化**：ch6-1/ch6-2/ch6-3 的非标准小结标题统一为 `N.x 本章小结` 格式
+
+#### 生成产物
+- **合并文档**：docs-stm/h2-source-code-analysis.md（36,434 行）
+- **HTML 文档**：docs-stm/h2-source-code-analysis.html（551 TOC，0 断裂）
+- **最终核验**：final_check 79/79
+
+---
+
 ## [v4.23] — 2026-06-10
 
 ### 官方文档交叉引用与内容增强
