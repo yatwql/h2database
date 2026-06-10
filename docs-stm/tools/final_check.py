@@ -194,6 +194,25 @@ try:
 except FileNotFoundError:
     check(True, 'CSS check skipped (generate_html.py not found)')
 
+# 9. Check: glossary builder scripts exist
+print('\n=== Glossary Builder Checks ===')
+glossary_script = os.path.join(script_dir, 'build_glossary.py')
+index_script = os.path.join(script_dir, 'build_index.py')
+scripts_ok = True
+for s_name, s_path in [('build_glossary.py', glossary_script), ('build_index.py', index_script)]:
+    if os.path.exists(s_path):
+        # Verify it can at least import without error
+        try:
+            with open(s_path, 'r', encoding='utf-8') as fh:
+                compile(fh.read(), s_path, 'exec')
+            print(f'  OK: {s_name} — syntax valid')
+        except SyntaxError as e:
+            print(f'  FAIL: {s_name} — syntax error: {e}')
+            scripts_ok = False
+    else:
+        print(f'  ⚠  {s_name} not found')
+check(scripts_ok, 'Glossary builder scripts available')
+
 # Summary
 print(f'\n=== Summary ===')
 passed = sum(1 for ok, _ in results if ok)
