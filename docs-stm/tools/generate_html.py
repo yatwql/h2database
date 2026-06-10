@@ -172,7 +172,7 @@ html { overflow-y: scroll; }
     #toggle-sidebar { display: block; }
 }
 h1, h2, h3, h4 { color: #1565C0; margin-top: 1.5em; margin-bottom: 0.5em; font-family: 'Microsoft YaHei', SimSun, -apple-system, sans-serif; }
-#content h1 { font-size: 1.8em; border-bottom: 2px solid #1565C0; padding-bottom: 8px; position: relative; padding-top: 0.3em; }
+#content h1 { font-size: 1.8em; border-bottom: 2px solid #1565C0; padding-bottom: 8px; position: relative; padding-top: 0.3em; page-break-before: always; }
 #content h1::before {
     content: ''; display: block; width: 60px; height: 4px;
     background: linear-gradient(90deg, #1565C0, #4fc3f7);

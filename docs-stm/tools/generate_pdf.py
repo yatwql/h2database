@@ -163,7 +163,9 @@ try:
                 'right': '15mm',
             },
             print_background=True,
-            display_header_footer=False,
+            display_header_footer=True,
+            header_template='<div style="font-size:8px;color:#999;text-align:center;width:100%;border-bottom:1px solid #ddd;padding:2px 15mm;">H2 Database 源码分析</div>',
+            footer_template='<div style="font-size:8px;color:#999;text-align:center;width:100%;border-top:1px solid #ddd;padding:4px 15mm;">第 <span class="pageNumber"></span> 页 / 共 <span class="totalPages"></span> 页</div>',
             prefer_css_page_size=False,
         )
 
