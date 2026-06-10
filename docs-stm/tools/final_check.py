@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Comprehensive final delivery check for H2 documentation."""
-import re, os, glob
+import re, os, glob, subprocess, sys
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 repo_root = os.path.normpath(os.path.join(script_dir, '..', '..'))
@@ -186,7 +186,7 @@ try:
     all_found = True
     for name, hint in css_hints.items():
         if hint not in gen_content:
-            print(f'  ⚠  Missing: {name} ({hint})')
+            print(f'  [WARN]  Missing: {name} ({hint})')
             all_found = False
     if all_found:
         print(f'  All {len(css_hints)} CSS features present')
@@ -210,8 +210,43 @@ for s_name, s_path in [('build_glossary.py', glossary_script), ('build_index.py'
             print(f'  FAIL: {s_name} — syntax error: {e}')
             scripts_ok = False
     else:
-        print(f'  ⚠  {s_name} not found')
+        print(f'  [WARN]  {s_name} not found')
 check(scripts_ok, 'Glossary builder scripts available')
+
+# 10. Style check (advisory)
+print('\n=== Style Check ===')
+style_script = os.path.join(script_dir, 'check_style.py')
+style_ok = True
+if os.path.exists(style_script):
+    try:
+        result = subprocess.run(
+            [sys.executable, style_script],
+            capture_output=True, text=True, encoding='utf-8', timeout=30
+        )
+        # Check for final warning count
+        style_warnings = 0
+        for line in result.stderr.split('\n'):
+            pass
+        for line in result.stdout.split('\n'):
+            m = re.search(r'(\d+) style warnings', line)
+            if m:
+                style_warnings = int(m.group(1))
+                break
+        if style_warnings == 0:
+            print(f'  OK: No style issues ({style_warnings} warnings)')
+        else:
+            print(f'  [WARN]  {style_warnings} style warnings — review suggested')
+            # Print first 3 warnings
+            for line in result.stdout.split('\n'):
+                if '[' in line and ']' in line and 'LONG' not in line:
+                    print(f'    {line.strip()}')
+        check(True, f'Style check: {style_warnings} warnings (advisory)')
+    except Exception as e:
+        print(f'  [WARN]  Style check skipped: {e}')
+        check(True, 'Style check skipped')
+else:
+    print('  [WARN]  check_style.py not found')
+    check(True, 'Style check skipped')
 
 # Summary
 print(f'\n=== Summary ===')
