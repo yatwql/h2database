@@ -1474,7 +1474,7 @@ MVStore 是 H2 v2.x 的存储引擎核心，实现了多版本并发控制（MVC
 
 MVStore 的核心设计理念是**无锁读取 + COW 写入**（`org/h2/mvstore/MVStore.java:230`）。`RootReference` 使用了 `AtomicReference`（`org/h2/mvstore/MVMap.java:45`），读操作通过 `getRoot()` 获取一个稳定的 B-Tree 快照引用，写操作创建新 Page 路径后通过 `compareAndSet()` 原子更新根引用。这种方式保证了读操作永远不会被写操作阻塞，实现了读写并发无冲突。
 
-以下代码展示了直接使用 MVStore API 进行键值存储的完整流程——这体现了第2.1.1节提到的 JDBC 层之上的八层架构中，最底层存储引擎的实际编程接口：
+以下代码展示了直接使用 MVStore API 读写键值对存储的完整流程——这体现了第2.1.1节提到的 JDBC 层之上的八层架构中，最底层存储引擎的实际编程接口：
 
 ```java
 // 直接使用 MVStore 存储引擎（绕过 JDBC 和 SQL 层）
