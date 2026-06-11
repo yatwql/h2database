@@ -1137,6 +1137,81 @@ H2 支持通过 `org.h2.Driver.trace` 开启 JDBC 追踪日志。也可以通过
   └──────────────────────────────────────────────────────┘
 ```
 
+以下代码展示了使用 H2 内嵌模式编写的完整 JUnit 测试——这是理解 H2 测试框架的最佳起点：
+
+```java
+import org.h2.jdbcx.JdbcConnectionPool;
+import org.junit.*;
+import java.sql.*;
+import static org.junit.Assert.*;
+
+public class H2EmbeddedTest {
+    private static JdbcConnectionPool pool;
+
+    @BeforeClass
+    public static void setUpPool() {
+        pool = JdbcConnectionPool.create(
+            "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "sa", "");
+    }
+
+    @Before
+    public void createTable() throws SQLException {
+        try (Connection conn = pool.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(
+                "CREATE TABLE IF NOT EXISTS items (" +
+                "  id INT PRIMARY KEY AUTO_INCREMENT," +
+                "  name VARCHAR(50)," +
+                "  price DECIMAL(10,2)" +
+                ")");
+        }
+    }
+
+    @Test
+    public void testInsertAndQuery() throws SQLException {
+        try (Connection conn = pool.getConnection()) {
+            PreparedStatement ps = conn.prepareStatement(
+                "INSERT INTO items(name, price) VALUES(?, ?)");
+            ps.setString(1, "Widget");
+            ps.setBigDecimal(2, new BigDecimal("9.99"));
+            int updated = ps.executeUpdate();
+            assertEquals(1, updated);
+        }
+        try (Connection conn = pool.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                 "SELECT * FROM items WHERE price < 10")) {
+            assertTrue(rs.next());
+            assertEquals("Widget", rs.getString("name"));
+        }
+    }
+
+    @Test
+    public void testTransactionRollback() throws SQLException {
+        try (Connection conn = pool.getConnection()) {
+            conn.setAutoCommit(false);
+            Statement stmt = conn.createStatement();
+            stmt.execute("INSERT INTO items VALUES(99, 'Rollback Test', 0)");
+            conn.rollback();
+        }
+        try (Connection conn = pool.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                 "SELECT COUNT(*) FROM items WHERE id = 99")) {
+            rs.next();
+            assertEquals(0, rs.getInt(1));
+        }
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        pool.dispose();
+    }
+}
+```
+
+上述测试覆盖了从 JDBC 层到 MVStore 层的完整调用链，对应第 11.1 节的功能文件索引。写入操作触发 COW B-Tree 路径复制和 Chunk 追加，事务回滚通过 Undo Log 逆序恢复旧版本，查询通过 TransactionMap 的版本链检查实现快照隔离。
+
 ## 11.4 本章小结
 
 如图 11-11 所示，第 11 章提供了系统性的 H2 源码研读指引。11.1 按功能分类建立了从 JDBC 层到 MVStore 存储引擎的完整文件索引，11.2 推荐了"宏观 → SQL → 存储 → 高级"的四阶段递进阅读顺序，11.3 给出了从金字塔测试到断点追踪的实操调试方案。本章的导读路径为第 12 章深入架构权衡和多方向研读奠定了文件级索引基础——有了文件地图和阅读顺序后，读者可以更有针对性地阅读第 12 章中对应方向的深度分析。

@@ -3876,6 +3876,7 @@ MVSecondaryIndex.find(session, searchRow)
 
 如图 5-46 所示，本章追踪了 H2 中九个核心流程：SELECT/INSERT/UPDATE/DELETE 四大 SQL 操作、COMMIT/ROLLBACK 事务控制、Compaction 空间回收、Chunk 压缩整理以及数据读取流程。每个流程均按照"流程图→核心逻辑阐述→关键代码引用"的标准化模板展开，展示了 SQL 语句从解析到存储层的完整生命周期。
 
+本章涉及的所有基础算法——B-Tree 查找插入、Copy-on-Write 版本管理、MVCC 可见性判断——将在第6章《H2 数据库核心算法分析》中深入展开。理解本章的流程有助于把握第6章各算法的应用场景。
 
 ## 5.11 延展阅读
 
