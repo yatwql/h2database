@@ -38,6 +38,7 @@ PDF 生成较慢；日常编辑只要求标准流程通过。
 | HTML TOC | TOC 与内容标题 1:1，零断链 | `final_check.py` |
 | 合并文档 | 源文件总行数与合并文档一致 | `final_check.py` |
 | 编码 | Markdown 和 HTML 均为有效 UTF-8 | `final_check.py` |
+| 索引完整性 | 索引 ≥ 120 条；每章 ≥ 5 条；章节引用对应实际内容 | `final_check.py`, `build_index.py --coverage` |
 | 版本统计 | cover 统计先更新；管理文档版本一致 | `cover_stats.py`, 人工核对 |
 
 标准流程必须达到 `final_check.py` 全部检查通过。
