@@ -68,6 +68,26 @@
 
 ---
 
+## [v4.28] — 2026-06-11
+
+### 术语体系完善 (U1)
+
+#### Added
+- **术语表扩充**：从 50 条扩展至 73 条，新增 BackgroundWriter、CBO、CommandContainer、Compact、DbSettings、FileStore、Genetic Algorithm、Hybrid Strategy、IndexCondition、LocalResult、Maven、Meta Lock、Mode、PageSplit、RollbackDecisionMaker、Single Writer、SmallLRUCache、Tokenizer、TransactionMap、TxDecisionMaker、VersionedValue、Write Amplification 等 23 条术语，覆盖全部 12 章，每章 ≥ 3 条
+
+#### Changed
+- **LSM-Tree 条目修复**：移除误拼接的 LOB 描述（历史 bug）
+- **术语表计数修正**：原计数 38 实际为 50，修正为 73
+
+#### Added
+- **`_annotate_terms.py --report-missing/--check`**：新增扫描章节文件中未收录于术语表的粗体术语，`--check` 模式在发现缺失时以退出码 1 告警
+- **`build_glossary.py --coverage`**：新增按章节统计术语覆盖率的报告模式
+
+#### Changed
+- **testplan.md**：质量门禁新增"术语表完整性：每章 ≥ 3 条"，验证命令为 `build_glossary.py --coverage` + `_annotate_terms.py --check`
+
+---
+
 ## [v4.26] — 2026-06-11
 
 ### 写作风格增强：check_style INFO 修复 + 阅读体验优化
