@@ -159,6 +159,7 @@ html { overflow-y: scroll; }
 #content {
     margin-left: 280px; flex: 1; max-width: 960px;
     padding: 40px 48px; background: #fff; min-height: 100vh;
+    scroll-padding-left: 290px; scroll-padding-top: 20px;
 }
 #toggle-sidebar {
     display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
@@ -171,7 +172,7 @@ html { overflow-y: scroll; }
     #content { margin-left: 0; padding: 48px 20px 20px; }
     #toggle-sidebar { display: block; }
 }
-h1, h2, h3, h4 { color: #1565C0; margin-top: 1.5em; margin-bottom: 0.5em; font-family: 'Microsoft YaHei', SimSun, -apple-system, sans-serif; }
+h1, h2, h3, h4 { color: #1565C0; margin-top: 1.5em; margin-bottom: 0.5em; font-family: 'Microsoft YaHei', SimSun, -apple-system, sans-serif; scroll-margin-left: 290px; scroll-margin-top: 20px; }
 #content h1 { font-size: 1.8em; border-bottom: 2px solid #1565C0; padding-bottom: 8px; position: relative; padding-top: 0.3em; page-break-before: always; }
 #content h1::before {
     content: ''; display: block; width: 60px; height: 4px;
