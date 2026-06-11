@@ -277,6 +277,45 @@ else:
     check(False, 'Index file not found')
     index_ok = False
 
+# 12. Glossary content validation
+print('\n=== Glossary Content ===')
+glossary_path = os.path.join(docs_dir, 'back', 'glossary.md')
+glossary_ok = True
+if os.path.exists(glossary_path):
+    with open(glossary_path, 'r', encoding='utf-8') as fh:
+        glossary_content = fh.read()
+
+    # Count entries
+    glossary_entries = [line.strip() for line in glossary_content.split('\n') if line.strip().startswith('- **')]
+    entry_count = len(glossary_entries)
+    check(entry_count >= 60, f'Glossary: {entry_count} entries (target: >= 60)')
+
+    # Validate every entry has at least one chapter reference
+    no_ref_entries = []
+    for entry in glossary_entries:
+        if not re.search(r'第(\d+)章', entry):
+            no_ref_entries.append(entry[:60])
+
+    if no_ref_entries:
+        glossary_ok = False
+        check(False, f'Glossary: {len(no_ref_entries)} entries missing chapter references')
+        for e in no_ref_entries[:5]:
+            print(f'  MISSING CHAPTER REF: {e}')
+    else:
+        check(True, f'All {entry_count} glossary entries have chapter references')
+
+    # Validate chapter numbers (must be 1-12)
+    all_refs = re.findall(r'第(\d+)章', glossary_content)
+    invalid_refs = sorted(set(int(ch) for ch in all_refs if int(ch) not in range(1, 13)))
+    if invalid_refs:
+        glossary_ok = False
+        check(False, f'Glossary references invalid chapters: {invalid_refs}')
+    else:
+        check(True, 'Glossary chapter refs are valid')
+else:
+    check(False, 'Glossary file not found')
+    glossary_ok = False
+
 # 10. Style check (advisory)
 print('\n=== Style Check ===')
 style_script = os.path.join(script_dir, 'check_style.py')

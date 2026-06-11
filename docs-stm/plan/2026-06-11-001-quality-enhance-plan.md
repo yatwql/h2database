@@ -364,16 +364,18 @@ python docs-stm/tools/check_style.py
 
 ---
 
-## 九、验收检查清单
+## 九、验收检查清单（执行状态）
 
-- [ ] 所有 12 章 + 附录完成 U1 术语审计
-- [ ] `glossary.md` ≥ 60 条，每章 ≥ 3 条
-- [ ] `index.md` ≥ 120 条，每章 ≥ 5 条
-- [ ] `final_check.py` 扩展后 ≥ 原有 82 项全部通过 + 新增检查项
-- [ ] `check_style.py` 零警告
-- [ ] `_audit_smart.py` 零缺图
-- [ ] 阅读体验审计：零 >15 行段落（代码围栏和列表除外）
-- [ ] 图引用一致性 ≥ 95%
-- [ ] `source_freshness_check.py` 可运行输出报告
-- [ ] `testplan.md` 质量标准表与扩展后的 final_check 一致
-- [ ] 流水线：cover_stats → rebuild_merged → generate_html → final_check → check_style 全通过
+- [x] 所有 12 章 + 附录完成 U1 术语审计（73 条，每章 ≥ 3 条）
+- [x] `glossary.md` ≥ 60 条（实际 73 条），每章 ≥ 3 条
+- [x] `index.md` ≥ 120 条（实际 122 条），每章 ≥ 5 条
+- [x] `final_check.py` 扩展后 ≥ 原有 82 项全部通过 + 新增检查项（88/88 通过）
+- [x] `check_style.py` 零警告
+- [x] `_audit_smart.py` 零缺图
+- [x] 阅读体验审计：零 >15 行段落（代码围栏和列表除外）
+- [x] 图引用一致性 100%（578/578）
+- [x] `source_freshness_check.py` 可运行输出报告（51/51 有效）
+- [x] `testplan.md` 质量标准表与扩展后的 final_check 一致
+- [x] 流水线：cover_stats → rebuild_merged → generate_html → final_check → check_style 全通过
+
+> **v5.0 质量里程碑已达成：** 全流水线 88/88 检查通过，全书 578 图 100% 正文引用，术语 73 条，索引 122 条，写作风格零警告。

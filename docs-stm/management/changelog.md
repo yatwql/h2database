@@ -24,10 +24,16 @@
 #### Fixed
 - **LSM-Tree 术语修复**：移除误拼接的 LOB 描述（历史 bug）
 - **HTML 侧边栏遮挡**：锚点导航后正文左侧被固定侧边栏覆盖的问题
+- **图引用 100% 覆盖 (U3)**：修复 ch7-8 的 17 个未引用图，全书 578 图全部有正文引用（91% → 100%）
+
+#### Changed (U3 工具集成)
+- **final_check.py 扩展**：新增术语完整性检查（73 条/≥60，章节引用有效），检查项 85 → 88
+- **testplan.md**：新增"术语完整性"质量门禁，版本同步 v5.0
+- **style-guide.md §9.2**：扩充 final_check.py 检查项列表（覆盖全部 12 项检查）
 
 #### 生成产物
-- **合并文档**：docs-stm/h2-source-code-analysis.md（36,775 行）
-- **HTML 文档**：docs-stm/h2-source-code-analysis.html（557 TOC，所有检查通过）
+- **合并文档**：docs-stm/h2-source-code-analysis.md（36,893 行）
+- **HTML 文档**：docs-stm/h2-source-code-analysis.html（564 TOC，88/88 检查通过）
 - **最终核验**：final_check 82/82；_audit_smart 0 缺图；图引用 95.5%
 
 ---
