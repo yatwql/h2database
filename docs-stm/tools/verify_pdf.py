@@ -18,8 +18,6 @@ html = HTML.read_text(encoding='utf-8')
 
 html_headings = re.findall(r'<h([1-4])\s+id="[^"]*"[^>]*>(.*?)</h\1>', html, re.S)
 html_heading_titles = [re.sub(r'<[^>]+>', '', raw).strip() for _, raw in html_headings]
-# Printed TOC page shows h1-h2 only (structural overview)
-toc_heading_titles = [t for (lv, _), t in zip(html_headings, html_heading_titles) if int(lv) <= 2]
 
 toc_match = re.search(r'<nav id="toc-page-nav">([\s\S]*?)</nav>', html)
 toc_count = len(re.findall(r'<a\b', toc_match.group(1))) if toc_match else 0
@@ -58,8 +56,8 @@ toc_link_annots.sort(key=lambda item: item[0])
 failures: list[str] = []
 if len(outline_titles) != len(html_heading_titles):
     failures.append(f'outline/html heading mismatch: {len(outline_titles)} vs {len(html_heading_titles)}')
-if toc_count != len(toc_heading_titles):
-    failures.append(f'HTML printed TOC/html heading (h1-h2) mismatch: {toc_count} vs {len(toc_heading_titles)}')
+if toc_count != len(html_heading_titles):
+    failures.append(f'HTML printed TOC/html heading mismatch: {toc_count} vs {len(html_heading_titles)}')
 if outline_titles != html_heading_titles:
     first = next((i for i, (a, b) in enumerate(zip(outline_titles, html_heading_titles)) if a != b), None)
     failures.append(f'outline/html title order mismatch at index {first}: {outline_titles[first] if first is not None else "n/a"} != {html_heading_titles[first] if first is not None else "n/a"}')
