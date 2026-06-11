@@ -252,16 +252,12 @@ if os.path.exists(index_path):
     # Validate chapter references match real files
     chapter_files_map = {}
     for f in CHAPTERS:
-        # Handle combined file names like ch1-2-architecture.md or ch11-12-guide-summary.md
-        cm = re.match(r'.*ch(\d+)-(\d+)-', os.path.basename(f))
-        if cm:
-            start_ch, end_ch = int(cm.group(1)), int(cm.group(2))
-            for ch in range(start_ch, end_ch + 1):
-                chapter_files_map[ch] = f
-        else:
-            cm = re.match(r'.*ch(\d+)-', os.path.basename(f))
-            if cm:
-                chapter_files_map[int(cm.group(1))] = f
+        with open(f, 'r', encoding='utf-8') as fh:
+            content = fh.read()
+        # Find ALL H1 chapter headings in the file (handles combined files)
+        for cm in re.finditer(r'^# 第(\d+)章', content, re.MULTILINE):
+            ch = int(cm.group(1))
+            chapter_files_map[ch] = f
 
     # Find all chapter-number references in index entries
     index_ch_refs = set()
