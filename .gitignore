@@ -24,3 +24,4 @@ docs-stm/*.html
 docs-stm/*.log
 *.zip
 mdpdf.log
+__pycache__/

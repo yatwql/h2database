@@ -29,11 +29,14 @@
   - 代码/数据围栏修复 7 处：将 4 个章节中溢出代码围栏的算法跟踪数据和性能统计表补入 ` ```text ` 围栏，消除误检
 - **交叉引用格式优化**：延展阅读节中 3 处 URL 引用格式调整为"描述优先"结构（描述在前、URL 在后），提升句首多样性
 
-#### 生成产物
-- **合并文档**：docs-stm/h2-source-code-analysis.md（36,511 行，+3 行）
-- **最终核验**：final_check 82/82（不变）；check_style 0 WARN（不变），10 INFO（工具限制，均为 `.java`/`.html` 句点分割假阳性）
-- **术语表**：docs-stm/back/glossary.md（47 条）
-- **管理文档**：docs-stm/management/phase3-audit.md（阶段三审计报告）
+#### 后续轮次（工具增强 + 流程图 + 风格指南 + 管理文档审计）
+- **check_style.py 工具增强**：修复 `.java`/`.html` 句点假阳性——在句式单调检测中增加反引号内句点保护和文件扩展名句点保护，将剩余 10 条 INFO 假阳性清零
+- **句式单调样式修复**：路径 B/C/D 的"第一步→第四步"枚举改为"先从→接着→然后→最后"自然语序；ch9-10 写入步骤改为"序列化→持久化→生成→追加"动词多样化
+- **最终核验**：check_style 0 WARN + 0 INFO（全零通过）
+- **ch6-3 §6.8.4 补图**：新增贪心选择逐轮填充流程 ASCII 图，该节满足 2 图建议
+- **写作风格指南**：新增 `docs-stm/management/style-guide.md`，覆盖术语选用、句式风格、段落组织、代码注释、交叉引用、排版规范、引导块结构 7 个维度
+- **写作风格增强计划归档**：`docs-stm/management/writing-style-enhance-plan.md` 移至 `management/archive/`
+- **管理文档冲突修复**：requirements.md/plan.md 版本号 v4.25→v4.26；plan.md 术语表 38→47 条、工具 12→16 个；plan.md 新增 Phase 8 写作风格增强完成
 
 ---
 

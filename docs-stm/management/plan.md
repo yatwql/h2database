@@ -1,7 +1,7 @@
 # H2 Database 源码分析 — 实施计划
 
 > 最后更新：2026-06-11
-> 版本：v4.25
+> 版本：v4.26
 
 ---
 
@@ -35,7 +35,7 @@ docs-stm/
   ch9-10-persistence-locking.md
   ch11-12-guide-summary.md
   back/                      # 书籍后件
-  ├── glossary.md            # 术语表（38 条）
+  ├── glossary.md            # 术语表（47 条）
   ├── references.md          # 参考文献（20 条）
   └── index.md               # 概念索引（86 条）
   management/                # 管理文档
@@ -46,7 +46,7 @@ docs-stm/
   ├── changelog.md
   └── review-findings.md
   h2-source-code-analysis.md
-  tools/                     # 共 12 个脚本
+  tools/                     # 共 16 个脚本
 ```
 
 ## 3. 验证流程
@@ -64,6 +64,7 @@ docs-stm/
 | Phase 5 | 多轮审查与质量修复 | ✅ 完成 |
 | Phase 6 | 工具迁移到 `docs-stm/tools/` | ✅ 完成 |
 | Phase 7 | 管理文档职责收敛与冲突清理 | ✅ 完成 |
+| Phase 8 | 写作风格增强（工具增强 + 逐章润色 + 一致性审计 + 阅读体验优化） | ✅ 完成 |
 
 详细历史见 `docs-stm/management/changelog.md`。
 

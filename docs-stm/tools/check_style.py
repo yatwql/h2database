@@ -100,9 +100,26 @@ def detect_sentence_monotony(lines, fname):
         if not para_text.strip():
             continue
 
+        # Protect periods inside backtick code spans from false sentence splitting
+        # e.g., `Tokenizer.java` should not cause a sentence boundary
+        protected_text = re.sub(
+            r'`([^`]+)`',
+            lambda m: '`' + m.group(1).replace('.', chr(0)) + '`',
+            para_text.strip()
+        )
+        # Also protect periods in bare file extensions outside backticks
+        protected_text = re.sub(
+            r'(\w+)\.(java|html?|md|py|xml|json|txt|sql|php|css|js|ts)',
+            lambda m: m.group(1) + chr(0) + m.group(2),
+            protected_text
+        )
+
         # Split into sentences by Chinese/English punctuation
-        sentences = re.split(r'(?<=[。！？.!?])\s*', para_text.strip())
+        sentences = re.split(r'(?<=[。！？.!?])\s*', protected_text)
         sentences = [s.strip() for s in sentences if len(s.strip()) > 5]
+
+        # Restore protected periods
+        sentences = [s.replace(chr(0), '.') for s in sentences]
 
         if len(sentences) < 3:
             continue  # Need at least 3 sentences to detect monotony

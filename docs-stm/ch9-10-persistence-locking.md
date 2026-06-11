@@ -1144,10 +1144,10 @@ chunk:3,len:47,version:42,fletcher:0x12345678
 Footer 中的 Fletcher32 校验和用于检测 chunk 是否完整写入。在 `SingleFileStore` 中，写入 chunk 的流程（`FileStore.java` 第 1467-1517 行 `serializeToBuffer()`）为：
 
 1. 在 buffer 头部预留 header 空间
-2. 递归写入所有脏页面的序列化数据
-3. 写入 Layout Map 根页面（`layoutRoot.writeUnsavedRecursive()`）
-4. 写入 Table of Content（ToC）
-5. 写入 footer，计算并校验
+2. 序列化所有脏页面，递归写入
+3. 持久化 Layout Map 根页面（`layoutRoot.writeUnsavedRecursive()`）
+4. 生成 Table of Content（ToC）
+5. 追加 footer 并校验
 6. 对齐到 block 边界
 
 **Table of Content（ToC）** 是 Chunk 中所有页面的索引，每个页面对应一个 `long` 值，编码了 `mapId + offset + length + type`。ToC 的作用是在崩溃恢复时快速枚举和校验所有页面。

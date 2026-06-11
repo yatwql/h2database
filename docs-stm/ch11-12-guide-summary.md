@@ -2082,15 +2082,15 @@ H2 提供了多层安全防护（详见官方文档 `security.html` 和 `advance
 
 **路径 B 详解 —— 功能扩展路径**：
 
-以 SQL 词法分析为起点，逐步深入语法解析和命令执行。第一步，阅读 `Tokenizer.java`，理解 `readToken()` 方法如何将 `SELECT * FROM t WHERE id = 1` 分解为 10 个 Token：`SELECT`、`*`、`FROM`、`t`、`WHERE`、`id`、`=`、`1`。第二步，深入 `Parser.java` 的 `parseSelect()` 方法，理解递归下降解析的过程——`parseSelect()` 调用 `parseFrom()`，`parseFrom()` 调用 `parseWhere()`，`parseWhere()` 调用 `parseExpression()`，形成层层嵌套的调用链。第三步，研究 `Command.java` 及其子类的 `update()` 和 `query()` 方法，理解解析后的 AST 如何转换为可执行的数据库操作。第四步，分析 `expression/Expression.java` 及其子类，理解条件表达式如何在 WHERE、HAVING、ON 子句中递归求值。这条路径可以帮助你在 5 天内完成第一个 SQL 功能扩展——例如添加一个新的内置函数。
+以 SQL 词法分析为起点，逐步深入语法解析和命令执行。先从阅读 `Tokenizer.java` 开始，理解 `readToken()` 方法如何将 `SELECT * FROM t WHERE id = 1` 分解为 10 个 Token：`SELECT`、`*`、`FROM`、`t`、`WHERE`、`id`、`=`、`1`。接着深入 `Parser.java` 的 `parseSelect()` 方法，理解递归下降解析的过程——`parseSelect()` 调用 `parseFrom()`，`parseFrom()` 调用 `parseWhere()`，`parseWhere()` 调用 `parseExpression()`，形成层层嵌套的调用链。然后研究 `Command.java` 及其子类的 `update()` 和 `query()` 方法，理解解析后的 AST 如何转换为可执行的数据库操作。最后分析 `expression/Expression.java` 及其子类，理解条件表达式如何在 WHERE、HAVING、ON 子句中递归求值。这条路径可以帮助你在 5 天内完成第一个 SQL 功能扩展——例如添加一个新的内置函数。
 
 **路径 C 详解 —— 问题排查方向**：
 
-以数据库引擎初始化为起点，逐步深入事务和并发相关代码。排查问题时最常用的是"逆向追踪法"——从异常栈顶开始，逐层向下追溯根因。第一步，阅读 `Engine.java` 的 `openSession()` 方法，理解会话的创建和数据库实例化管理。第二步，阅读 `SessionLocal.java`，重点关注事务的 begin/commit/rollback 生命周期，以及会话级别的锁管理。第三步，阅读 `mvstore/tx/Transaction.java` 和 `TransactionMap.java`，理解版本链的创建和可见性判断逻辑。这是 Bug 最密集的区域——版本链遍历时的空指针、可见性判断的边界条件、并发提交时的 CAS 竞争。第四步，阅读 `db/MVTable.java` 中的行级锁实现，理解排他锁（X Lock）和共享锁（S Lock）的申请和释放。这条路径教你如何通过设置断点和逐步调试来定位并发相关 Bug。常见排查场景包括：查询返回不一致结果（检查 TransactionMap 可见性判断）、死锁（检查 MVTable 锁顺序）、内存泄漏（检查 Compaction 回收逻辑）。
+以数据库引擎初始化为起点，逐步深入事务和并发相关代码。排查问题时最常用的是"逆向追踪法"——从异常栈顶开始，逐层向下追溯根因。首先阅读 `Engine.java` 的 `openSession()` 方法，理解会话的创建和数据库实例化管理。接着研究 `SessionLocal.java`，重点关注事务的 begin/commit/rollback 生命周期，以及会话级别的锁管理。然后分析 `mvstore/tx/Transaction.java` 和 `TransactionMap.java`，理解版本链的创建和可见性判断逻辑。这是 Bug 最密集的区域——版本链遍历时的空指针、可见性判断的边界条件、并发提交时的 CAS 竞争。最后深入 `db/MVTable.java` 中的行级锁实现，理解排他锁（X Lock）和共享锁（S Lock）的申请和释放。这条路径教你如何通过设置断点和逐步调试来定位并发相关 Bug。常见排查场景包括：查询返回不一致结果（检查 TransactionMap 可见性判断）、死锁（检查 MVTable 锁顺序）、内存泄漏（检查 Compaction 回收逻辑）。
 
 **路径 D 详解 —— 系统学习方向**：
 
-这是最推荐的入门路径，适合希望系统掌握 H2 实现原理的读者。第一阶段（架构概览），阅读第 1-2 章的架构文档，理解 H2 的整体模块划分和数据流——从 JDBC 接口到 SQL 解析、查询优化、存储引擎、事务管理。第二阶段（SQL 层），阅读 `Parser.java` 的 SQL 解析过程和 `Optimizer.java` 的查询优化逻辑，建立对"关系型查询"的代码级理解。第三阶段（存储层），深入 `MVMap.java` 和 `MVStore.java` 的核心方法——这是 H2 最具特色的部分，COW B-Tree 的无锁并发和 Log-Structured 的顺序写入。第四阶段（高级特性），探索空间索引（`MVRTreeMap.java`）、文件系统抽象（`FilePath.java` 及其子类）、透明加密（`FilePathEncrypt.java`）等高级模块。这条路径走完，你将建立起完整的数据库内核知识体系，为深入其他数据库（PostgreSQL、MySQL、SQLite）打下坚实基础。
+这是最推荐的入门路径，适合希望系统掌握 H2 实现原理的读者。先从架构概览开始（第一阶段），阅读第 1-2 章的架构文档，理解 H2 的整体模块划分和数据流——从 JDBC 接口到 SQL 解析、查询优化、存储引擎、事务管理。进入 SQL 层（第二阶段），阅读 `Parser.java` 的 SQL 解析过程和 `Optimizer.java` 的查询优化逻辑，建立对"关系型查询"的代码级理解。推进到存储层（第三阶段），深入 `MVMap.java` 和 `MVStore.java` 的核心方法——这是 H2 最具特色的部分，COW B-Tree 的无锁并发和 Log-Structured 的顺序写入。最后探索高级特性（第四阶段），包括空间索引（`MVRTreeMap.java`）、文件系统抽象（`FilePath.java` 及其子类）、透明加密（`FilePathEncrypt.java`）等模块。这条路径走完，你将建立起完整的数据库内核知识体系，为深入其他数据库（PostgreSQL、MySQL、SQLite）打下坚实基础。
 
 ---
 
