@@ -41,25 +41,26 @@ for f in CHAPTERS:
     figs = re.findall(r'\*\*图 (\d+)-(\d+[a-z]*):', content)
     for ch, num in figs:
         base_num = int(re.search(r'\d+', num).group())
-        global_by_ch.setdefault(int(ch), []).append((f, base_num))
+        global_by_ch.setdefault(int(ch), []).append((f, base_num, num))  # full num for uniqueness, base_num for range
 # Verify each chapter's figures: unique, complete, and (ideally) in-order
 for ch in sorted(global_by_ch):
     entries = global_by_ch[ch]
     file_label = ', '.join(sorted(set(e[0] for e in entries)))
-    nums = [e[1] for e in entries]
-    unique = len(set(nums)) == len(nums)
-    sorted_unique = sorted(set(nums))
-    complete = sorted_unique == list(range(1, len(sorted_unique) + 1))
-    in_order = nums == list(range(1, len(nums)+1))
+    base_nums = [e[1] for e in entries]
+    full_nums = [e[2] for e in entries]
+    unique = len(set(full_nums)) == len(full_nums)
+    sorted_bases = sorted(set(base_nums))
+    complete = sorted_bases == list(range(1, len(sorted_bases) + 1))
+    in_order = base_nums == list(range(1, len(base_nums)+1))
 
     passed = unique and complete
-    msg_parts = [f'ch{ch} ({file_label}): {len(nums)} figures']
+    msg_parts = [f'ch{ch} ({file_label}): {len(full_nums)} figures']
     if not unique:
         msg_parts.append('DUPLICATE numbers found!')
     elif not complete:
-        msg_parts.append(f'gaps in numbering (has {len(sorted_unique)} unique, expected {sorted_unique[-1]})')
+        msg_parts.append(f'gaps in numbering (has {len(sorted_bases)} unique, expected {sorted_bases[-1]})')
     elif not in_order:
-        out_of_order = sum(1 for a, e in zip(nums, range(1, len(nums)+1)) if a != e)
+        out_of_order = sum(1 for a, e in zip(base_nums, range(1, len(base_nums)+1)) if a != e)
         msg_parts.append(f'all unique+complete, {out_of_order} out-of-order inserts')
     else:
         msg_parts.append('all sequential')
