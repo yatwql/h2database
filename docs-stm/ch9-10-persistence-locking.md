@@ -6528,7 +6528,7 @@ H2 官方文档在《Advanced》一章中专门讨论了 ACID 的支持范围（
 
 ## 附：源码版本变更说明（v2.4.240 → v2.4.249-SNAPSHOT）
 
-以下为本版本与 2.4.240 之间影响第9-10章的关键变更摘要（43 次提交，79 个文件）。
+以下为本版本与 2.4.240 之间影响第9-10章的关键变更摘要（44 次提交，81 个文件）。
 
 ### MVStore 核心层
 
@@ -6555,6 +6555,7 @@ H2 官方文档在《Advanced》一章中专门讨论了 ACID 的支持范围（
 - **CommitDecisionMaker（新增）**：实现 page-level 决策机制，以页为单位批量处理提交逻辑，而非逐条处理 undo log 条目。通过 `haveSeenEntry(int entryId)` 实现同一条目的去重，配合 `VersionedValueCommitted.getInstance(value, entryId)` 将条目标记为已提交。
 - **等待事务提前通知**：`TransactionStore.commit()` 在 undo log 回放前即调用 `notifyAllWaitingTransactions()`，使受阻塞的事务更早被唤醒。
 - **MAX_OPEN_TRANSACTIONS 默认值调整**：从 65535 降为 255，现可通过 `h2.maxOpenTransactions` 系统属性配置。`undoLogs` 数组大小调整为 `MAX_OPEN_TRANSACTIONS + 1`。
+- **恢复工具 maxOpenTransactions 覆盖**：`0d35069eb` 在 `DirectRecover.java` 和 `Recover.java` 的 `main()` 入口处通过 `System.setProperty("h2.maxOpenTransactions", "65535")` 将上限恢复为 65535。此变更为以命令行的方式运行恢复工具时默认放宽限制，不影响嵌入式运行。
 - **VersionedBitSet 重写**：不再继承 `java.util.BitSet`，改为不可变的 `long[]` 包装类。`clone()` 调用全部移除，通过构造器 `VersionedBitSet(VersionedBitSet, int)` 创建新实例并翻转指定位。
 - **BitSetHelper（新增）**：提供基于 `long[]` 的最小 BitSet 功能（get/flip/nextSetBit/nextClearBit/length），通过不可变模式保证线程安全。
 - **committingTransactions 类型迁移**：`TransactionStore.committingTransactions` 从 `BitSet` 改为 `long[]`，波及 `TransactionMap`、`Snapshot`、`Transaction` 等 7 个文件。`Snapshot.hashCode()` 改用 `System.identityHashCode()`。

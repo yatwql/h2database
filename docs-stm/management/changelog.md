@@ -4,6 +4,17 @@
 
 ---
 
+## [v4.29] — 2026-06-11
+
+### _audit_smart 附录豁免 + 恢复工具 maxOpenTransactions 覆盖
+
+#### Added
+- **恢复工具 maxOpenTransactions 覆盖**：ch9-10 附录事务子系统新增 `0d35069eb` 提交记录（`DirectRecover.java` 和 `Recover.java` 的 `main()` 入口通过 `System.setProperty("h2.maxOpenTransactions", "65535")` 恢复上限）
+- **_audit_smart.py 附录豁免**：新增 `build_exempt_ranges()` 函数，`###` 子章节若位于 `## 附：` 标题下则跳过图数检查
+
+#### Changed
+- **cover.md**：v4.28 → v4.29
+
 ## [v4.28] — 2026-06-11
 
 ### 源码变更附录 + 4 人并行审查第6轮 + 交叉引用修复 + 附录技术修正

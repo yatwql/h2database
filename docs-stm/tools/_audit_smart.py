@@ -41,6 +41,20 @@ def count_diagrams(text):
 
 all_gaps = []
 
+# Build exemption ranges: ### sections under ## 附：(appendix) headings
+def build_exempt_ranges(headings, lines):
+    """Return list of (start, end) line ranges that are exempt from diagram counting."""
+    exempt = []
+    for idx, (line_num, level, title) in enumerate(headings):
+        if level == 2 and title.startswith('附：'):
+            end = len(lines)
+            for next_idx in range(idx + 1, len(headings)):
+                if headings[next_idx][1] <= 2:
+                    end = headings[next_idx][0]
+                    break
+            exempt.append((line_num, end))
+    return exempt
+
 for filepath in CHAPTERS:
     short = os.path.basename(filepath)
     with open(filepath, 'r', encoding='utf-8') as f:
@@ -52,9 +66,16 @@ for filepath in CHAPTERS:
         if m:
             headings.append((i, len(m.group(1)), m.group(2)))
 
+    # Build exemption ranges for appendix sub-sections
+    exempt_ranges = build_exempt_ranges(headings, lines)
+
     # Process ### headings, aggregating #### children
     for idx, (line_num, level, title) in enumerate(headings):
         if level != 3:
+            continue
+
+        # Skip sections under appendix (## 附：) headings
+        if any(start <= line_num < end_r for start, end_r in exempt_ranges):
             continue
 
         # Find end boundary: next heading at level <= 3 (### or ## or #)
