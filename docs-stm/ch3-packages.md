@@ -2172,6 +2172,43 @@ LZF 压缩示例 ("ABCABCABCD"):
 
 如图 3-52 所示，H2 大量使用了经典的设计模式来实现关注点分离、可扩展性和可测试性。`store.fs` 的策略模式使得新增文件系统后端（如云存储）只需实现 `FilePath` 接口；`expression` 的访问者模式使得添加新的表达式处理逻辑（如类型检查、权限验证）无需修改 Expression 子类；`command` 的模板方法模式将 SQL 执行的通用流程（权限检查、锁获取、日志记录）固化在 `Prepared` 基类中，子类只需实现具体的业务逻辑。
 
+以下 Java 代码展示了各层包之间的典型调用链——从 JDBC 层到 MVStore 层的逐层委派：
+
+```java
+// 各层调用的典型链路（简化，省略异常处理）
+import org.h2.jdbc.*;
+import org.h2.engine.*;
+import org.h2.command.*;
+import org.h2.table.*;
+import org.h2.mvstore.*;
+import java.sql.*;
+
+// JDBC 层：应用程序入口
+Connection conn = DriverManager.getConnection("jdbc:h2:mem:test");
+// 内部委派至 JdbcConnection → SessionLocal
+
+// Engine 层：会话管理
+Statement stat = conn.createStatement();
+// SessionLocal.prepareLocal() 调用 Parser 解析 SQL
+
+// Command 层：SQL 解析与编译
+ResultSet rs = stat.executeQuery("SELECT * FROM test WHERE id = 1");
+// → Parser.parseSelect() → Select.prepare() → Optimizer 优化
+
+// Table/Index 层：存储抽象
+// Select.query() → TableFilter.next() → Index.find(cursor, conditions)
+// MVTable.getIndexes() 返回 MVPrimaryIndex / MVSecondaryIndex 列表
+
+// MVStore 层：键值存储
+// MVPrimaryIndex.find() → TransactionMap.get(key) → MVMap.get(key)
+// → B-Tree 遍历: RootReference → Page → 二分查找 → 返回 Value
+
+// FileSystem 层：文件 I/O
+// MVStore.commit() → FileStore.write(pageBuffer) → FileChannel.write(buf)
+```
+
+以上链路对应了图 3-50 的包间依赖关系，每个箭头都是代码层面 `import` 关系的具象体现。
+
 ---
 
 ## 3.13 本章小结
@@ -2215,7 +2252,7 @@ org.h2.tools            │ ~20   │ Server, Shell, Recover
 
 如图 3-53 所示，注：以上为核心包不完全统计，完整H2源码包含843个Java文件。
 
-各包之间严格的单向依赖关系是 H2 架构设计的核心约束，也是理解整个代码库的导航地图。后续章节将深入核心模块的源码实现和关键算法。
+各包之间严格的单向依赖关系是 H2 架构设计的核心约束，也是理解整个代码库的导航地图。本章对每个核心包的结构分析为后续第4-5章《核心模块与流程》的深度源码解读奠定了基础——第4-5章将在本章包级分析的基础上，深入追踪 Command/Expression 模块的运行时行为和核心数据流。
 
 ## 3.14 延展阅读
 

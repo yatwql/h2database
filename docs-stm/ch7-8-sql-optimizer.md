@@ -8041,6 +8041,8 @@ SQL WHERE 子句
 2. **代价模型**：`Plan.calculateCost()` 使用复合乘法公式 `cost = cost + cost × item_cost` 累计估计，无效计划标记为无穷大代价
 3. **索引选择**：`TableFilter.getBestPlanItem()` 通过掩码匹配 `IndexCondition` 与索引列，选取 `Index.getCost()` 最低的索引，并通过代价调整使条件更多的表优先执行
 
+上述 SQL 执行流程和查询优化器的工作建立在存储引擎的持久化机制和并发控制之上。第9-10章《持久化引擎与锁实现》将深入 MVStore 的文件格式、Chunk 生命周期、崩溃恢复以及五层并发控制模型，揭示执行计划落盘和并发访问的底层保障。
+
 ---
 
 ## 8.9 延展阅读
