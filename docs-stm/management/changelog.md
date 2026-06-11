@@ -4,6 +4,31 @@
 
 ---
 
+## [v4.27] — 2026-06-11
+
+### 图 6-72b 补充 + check_style 重构 + PDF 更新 + 全局清理
+
+#### Added
+- **图 6-72b 贪心 vs 全局最优路径对比**：ch6-3 §6.8.4 新增 ASCII 对比图，直观展示贪心算法局部最优困境
+- **第5轮审查记录**：review-findings.md 新增第5轮写作风格增强审查跟踪
+
+#### Changed
+- **check_style.py 重构**：将 `run_standard_checks()` 中的 5 类检测模式（口语化、冗余副词、空泛修饰、长句、中英混排）抽取为独立 `detect_*()` 函数，模块化程度与其余 6 个检测模块一致
+- **final_check.py 图号检测修复**：字母后缀图号（如 6-72b）因 `base_num` 提取将字母后缀剥离导致误判为重复编号。修复：全量编号字符串用于去重，`base_num` 仅用于顺序连续性检查
+- **写作风格指南扩展**：`style-guide.md` 新增常见反例章节和更多句式对比
+- **PDF 重新生成**：收录图 6-72b 及最新内容变化
+
+#### 临时文件清理
+- **全局 ~/.claude 清理**：删除 history.jsonl、settings.json.tmp、.last-cleanup、file-history/、sessions/、session-env/、shell-snapshots/、tasks/、backups/ 等所有会话临时目录和文件
+
+#### 生成产物
+- **合并文档**：docs-stm/h2-source-code-analysis.md（36,555 行）
+- **HTML 文档**：docs-stm/h2-source-code-analysis.html（557 TOC，0 断裂）
+- **PDF 文档**：docs-stm/h2-source-code-analysis.pdf（重新生成）
+- **最终核验**：final_check 82/82；check_style 0/0
+
+---
+
 ## [v4.26] — 2026-06-11
 
 ### 写作风格增强：check_style INFO 修复 + 阅读体验优化

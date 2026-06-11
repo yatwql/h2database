@@ -371,95 +371,114 @@ def calculate_readability_metrics(lines, fname):
     chapter_stats[fname]['sentences'] = sentence_count
 
 
-def run_standard_checks(lines, fname):
-    """Existing colloquial/length/mixed checks (from original check_style.py)."""
+def detect_colloquial(lines, fname):
+    """Detect colloquial/informal expressions in chapter text."""
+    patterns = [
+        (r'说白了', '口语化表达"说白了"，建议替换为"换言之"或删除'),
+        (r'你会发现', '口语化表达"你会发现"，建议使用"可以观察到"'),
+        (r'我们来看', '口语化表达"我们来看"，建议使用"本节分析"'),
+        (r'其实就', '口语化表达"其实就"，建议删除"其实"'),
+        (r'显而易见', '过于绝对，建议使用"不难看出"'),
+        (r'值得一提的是', '冗余表达，建议直接陈述'),
+        (r'毫无疑问', '过于绝对，建议使用"显然"'),
+        (r'众所周知', '学术写作应避免"众所周知"，直接陈述事实'),
+        (r'总的来说', '口语化总结，建议使用"综上所述"'),
+    ]
     in_fence = False
     for i, line in enumerate(lines, 1):
         stripped = line.strip()
-
         if stripped.startswith('```'):
-            in_fence = not in_fence
-            continue
-        if in_fence:
-            continue
-        if re.match(r'^#{1,4}\s', stripped):
-            continue
-        if not stripped:
-            continue
-        if stripped.startswith('>'):
-            continue
-        if stripped == '---':
-            continue
-        if re.match(r'^\|.*\|$', stripped):
-            continue
-
-        # 1. Colloquial patterns
-        colloquial = [
-            (r'说白了', '口语化表达"说白了"，建议替换为"换言之"或删除'),
-            (r'你会发现', '口语化表达"你会发现"，建议使用"可以观察到"'),
-            (r'我们来看', '口语化表达"我们来看"，建议使用"本节分析"'),
-            (r'其实就', '口语化表达"其实就"，建议删除"其实"'),
-            (r'显而易见', '过于绝对，建议使用"不难看出"'),
-            (r'值得一提的是', '冗余表达，建议直接陈述'),
-        ]
-        for pattern, msg in colloquial:
+            in_fence = not in_fence; continue
+        if in_fence or not stripped: continue
+        if re.match(r'^#{1,4}\s', stripped): continue
+        if stripped.startswith('>') or stripped == '---': continue
+        if re.match(r'^\|.*\|$', stripped): continue
+        for pattern, msg in patterns:
             if re.search(pattern, stripped):
                 warn(fname, i, msg)
 
-        # 1b. Additional colloquial/informal
-        additional_informal = [
-            (r'说白了', None),  # already handled above
-            (r'毫无疑问', '过于绝对，建议使用"显然"'),
-            (r'众所周知', '学术写作应避免"众所周知"，直接陈述事实'),
-            (r'总的来说', '口语化总结，建议使用"综上所述"'),
-        ]
-        for pattern, msg in additional_informal:
-            if pattern not in [p for p, _ in colloquial]:
-                if re.search(pattern, stripped):
-                    warn(fname, i, msg)
 
-        # 2. Redundant adverbs
-        redundant_adverbs = [
-            (r'实际上', '冗余副词"实际上"，建议直接陈述'),
-            (r'基本上', '冗余副词"基本上"，建议直接陈述'),
-            (r'本质上', '冗余副词"本质上"，建议直接陈述'),
-            (r'其实\b', '冗余副词"其实"，建议直接陈述或删除'),
-        ]
-        for pattern, msg in redundant_adverbs:
+def detect_redundant_adverbs(lines, fname):
+    """Detect redundant adverbs that should be replaced with direct statements."""
+    patterns = [
+        (r'实际上', '冗余副词"实际上"，建议直接陈述'),
+        (r'基本上', '冗余副词"基本上"，建议直接陈述'),
+        (r'本质上', '冗余副词"本质上"，建议直接陈述'),
+        (r'其实\b', '冗余副词"其实"，建议直接陈述或删除'),
+    ]
+    in_fence = False
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if stripped.startswith('```'):
+            in_fence = not in_fence; continue
+        if in_fence or not stripped: continue
+        if re.match(r'^#{1,4}\s', stripped): continue
+        if stripped.startswith('>') or stripped == '---': continue
+        if re.match(r'^\|.*\|$', stripped): continue
+        for pattern, msg in patterns:
             if re.search(pattern, stripped):
                 warn(fname, i, msg, level='INFO')
 
-        # 3. Vague modifiers
-        vague_modifiers = [
-            (r'非常[一-鿿]', '空泛修饰"非常X"，建议使用更具体的描述'),
-            (r'十分[一-鿿]', '空泛修饰"十分X"，建议使用更具体的描述'),
-            (r'极其[一-鿿]', '空泛修饰"极其X"，建议使用更具体的描述'),
-            (r'相当[一-鿿]{1,2}[的\w]', '空泛修饰"相当X"，建议使用更具体的描述'),
-        ]
-        for pattern, msg in vague_modifiers:
+
+def detect_vague_modifiers(lines, fname):
+    """Detect vague modifiers like '非常', '十分', '极其', '相当' that lack specificity."""
+    patterns = [
+        (r'非常[一-鿿]', '空泛修饰"非常X"，建议使用更具体的描述'),
+        (r'十分[一-鿿]', '空泛修饰"十分X"，建议使用更具体的描述'),
+        (r'极其[一-鿿]', '空泛修饰"极其X"，建议使用更具体的描述'),
+        (r'相当[一-鿿]{1,2}[的\w]', '空泛修饰"相当X"，建议使用更具体的描述'),
+    ]
+    in_fence = False
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if stripped.startswith('```'):
+            in_fence = not in_fence; continue
+        if in_fence or not stripped: continue
+        if re.match(r'^#{1,4}\s', stripped): continue
+        if stripped.startswith('>') or stripped == '---': continue
+        if re.match(r'^\|.*\|$', stripped): continue
+        for pattern, msg in patterns:
             if re.search(pattern, stripped):
                 warn(fname, i, msg, level='INFO')
 
-        # 4. Overly long sentences (>80 Chinese characters without punctuation)
+
+def detect_long_sentences(lines, fname):
+    """Detect overly long sentences (>60 Chinese chars without punctuation)."""
+    in_fence = False
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if stripped.startswith('```'):
+            in_fence = not in_fence; continue
+        if in_fence or not stripped: continue
+        if re.match(r'^#{1,4}\s', stripped): continue
+        if stripped.startswith('>') or stripped == '---': continue
+        if re.match(r'^\|.*\|$', stripped): continue
         segments = re.split(r'[，。；！？、]', stripped)
         for seg in segments:
             seg = seg.strip()
             cn_chars = len(re.findall(r'[一-鿿]', seg))
             if cn_chars > 60 and len(seg) > 100:
-                warn(
-                    fname, i,
-                    f'长句（{cn_chars} 个中文字符）："{seg[:50]}..."',
-                    level='INFO'
-                )
+                warn(fname, i, '长句（%d 个中文字符）："%s"...' % (cn_chars, seg[:50]), level='INFO')
                 chapter_stats[fname]['long_sentences'].append((i, cn_chars))
 
-        # 5. Inline code spans with Chinese (mixed language)
+
+def detect_mixed_code(lines, fname):
+    """Detect inline code spans containing mixed Chinese and English."""
+    in_fence = False
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if stripped.startswith('```'):
+            in_fence = not in_fence; continue
+        if in_fence or not stripped: continue
+        if re.match(r'^#{1,4}\s', stripped): continue
+        if stripped.startswith('>') or stripped == '---': continue
+        if re.match(r'^\|.*\|$', stripped): continue
         for m in re.finditer(r'`([^`]+)`', stripped):
             code_content = m.group(1)
             has_cn = bool(re.search(r'[一-鿿]', code_content))
             has_en = bool(re.search(r'[a-zA-Z]', code_content))
             if has_cn and has_en:
-                warn(fname, i, f'中英混合内联代码: `{code_content[:40]}`')
+                warn(fname, i, '中英混合内联代码: `%s`' % code_content[:40])
 
 
 # ======================================================================
@@ -474,10 +493,14 @@ for fpath in chapter_files:
     # Remove trailing newlines for consistent processing
     lines = [l.rstrip('\n\r') for l in lines]
 
-    # Run standard checks (original colloquial/length/mixed)
-    run_standard_checks(lines, fname)
+    # Run all detection modules (colloquial/redundant/vague/length/mixed)
+    detect_colloquial(lines, fname)
+    detect_redundant_adverbs(lines, fname)
+    detect_vague_modifiers(lines, fname)
+    detect_long_sentences(lines, fname)
+    detect_mixed_code(lines, fname)
 
-    # Run new advanced checks
+    # Run advanced checks
     detect_sentence_monotony(lines, fname)
     detect_repeated_connectors(lines, fname)
     detect_weak_verb_xing(lines, fname)
