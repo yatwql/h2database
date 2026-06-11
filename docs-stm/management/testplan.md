@@ -86,3 +86,4 @@ python docs-stm/tools/verify_pdf.py
 - 每次文档变更后运行标准流程。
 - 每次正式归档或发布前运行 PDF 验证。
 - 每次发现新问题时登记到 `docs-stm/management/review-findings.md`，修复后同步更新 `docs-stm/management/changelog.md`。
+- 建议每月运行一次 `python docs-stm/tools/source_freshness_check.py` 检查源码引用保鲜状态（非阻塞性检查，仅提示）。

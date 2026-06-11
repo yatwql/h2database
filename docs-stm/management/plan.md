@@ -46,7 +46,7 @@ docs-stm/
   ├── changelog.md
   └── review-findings.md
   h2-source-code-analysis.md
-  tools/                     # 共 16 个脚本
+  tools/                     # 共 17 个脚本
 ```
 
 ## 3. 验证流程
@@ -77,6 +77,7 @@ docs-stm/
 - 发现新问题时先登记到 `docs-stm/management/review-findings.md`，修复完成后同步记录到 `docs-stm/management/changelog.md`。
 - 不保留一次性修复脚本、临时压缩包、`__pycache__` 或外部 session 文件。
 - 本项目 session 文件只保留在仓库 `.claude/` 目录中。
+- 建议每月运行一次 `python docs-stm/tools/source_freshness_check.py` 检查源码引用保鲜状态，防止 H2 源码变更导致行号/类名引用过时。
 
 ## 7. 后续增强项
 
