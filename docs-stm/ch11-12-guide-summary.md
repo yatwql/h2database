@@ -1155,6 +1155,7 @@ H2 支持通过 `org.h2.Driver.trace` 开启 JDBC 追踪日志。也可以通过
 
 > **参考**: H2 官方文档《Features》(`h2/src/docsrc/html/features.html#feature_list`)
 > 官方完整特性列表，可与本书分析内容对照阅读。
+> **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 ## 12.1 架构设计权衡
 
