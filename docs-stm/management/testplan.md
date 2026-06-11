@@ -29,19 +29,18 @@ PDF 生成较慢；日常编辑只要求标准流程通过。
 
 ## 2. 质量门禁
 
-| 类别 | 通过标准 | 验证方式 | 门禁级别 |
-|------|----------|----------|----------|
-| 章节结构 | 12 章齐全，H1/H2/H3/H4 层级连续 | `final_check.py` | P0 |
-| 图号 | 每章图号唯一且完整；允许历史补号导致非严格位置顺序 | `final_check.py` | P0 |
-| 图表覆盖 | 内容型 `###` 小节 ≥ 2 图；模板型小节 ≥ 1 图 | `_audit_smart.py` | P1 |
-| 代码围栏 | 所有围栏成对；HTML `<pre><code>` 平衡 | `generate_html.py`, `final_check.py` | P0 |
-| HTML TOC | TOC 与内容标题 1:1，零断链 | `final_check.py` | P0 |
-| 合并文档 | 源文件总行数与合并文档一致 | `final_check.py` | P0 |
-| 编码 | Markdown 和 HTML 均为有效 UTF-8 | `final_check.py` | P0 |
-| 版本统计 | cover 统计先更新；管理文档版本一致 | `cover_stats.py`, 人工核对 | P1 |
-| 术语表完整性 | 术语表 ≥ 60 条；每章 ≥ 3 条 | `build_glossary.py --coverage`, `_annotate_terms.py --check` | P1 |
-| 图引用一致性 | 每图至少 1 处正文引用（"如图 X-Y 所示"），覆盖率 ≥ 95% | `_audit_smart.py --fig-refs` | P1 |
-| 框线闭合完整性 | ASCII 框图框字符配对闭合（┌/┐, └/┘ 等） | `readability_check.py --figures` | P2 |
+| 类别 | 通过标准 | 验证方式 |
+|------|----------|----------|
+| 章节结构 | 12 章齐全，H1/H2/H3/H4 层级连续 | `final_check.py` |
+| 图号 | 每章图号唯一且完整；允许历史补号导致非严格位置顺序 | `final_check.py` |
+| 图表覆盖 | 内容型 `###` 小节 ≥ 2 图；模板型小节 ≥ 1 图 | `_audit_smart.py` |
+| 代码围栏 | 所有围栏成对；HTML `<pre><code>` 平衡 | `generate_html.py`, `final_check.py` |
+| HTML TOC | TOC 与内容标题 1:1，零断链 | `final_check.py` |
+| 合并文档 | 源文件总行数与合并文档一致 | `final_check.py` |
+| 编码 | Markdown 和 HTML 均为有效 UTF-8 | `final_check.py` |
+| 索引完整性 | 索引 ≥ 120 条；每章 ≥ 5 条；章节引用对应实际内容 | `final_check.py`, `build_index.py --coverage` |
+| 术语完整性 | 术语 ≥ 60 条；每条有对应章节引用；引用章节号有效 | `final_check.py` |
+| 版本统计 | cover 统计先更新；管理文档版本一致 | `cover_stats.py`, 人工核对 |
 
 标准流程必须达到 `final_check.py` 全部检查通过。
 
@@ -89,4 +88,3 @@ python docs-stm/tools/verify_pdf.py
 - 每次文档变更后运行标准流程。
 - 每次正式归档或发布前运行 PDF 验证。
 - 每次发现新问题时登记到 `docs-stm/management/review-findings.md`，修复后同步更新 `docs-stm/management/changelog.md`。
-- 建议每月运行一次 `python docs-stm/tools/source_freshness_check.py` 检查源码引用保鲜状态（非阻塞性检查，仅提示）。

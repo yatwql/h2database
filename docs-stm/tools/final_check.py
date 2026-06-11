@@ -214,6 +214,108 @@ for s_name, s_path in [('build_glossary.py', glossary_script), ('build_index.py'
         print(f'  [WARN]  {s_name} not found')
 check(scripts_ok, 'Glossary builder scripts available')
 
+# 11. Index integrity check
+print('\n=== Index Integrity ===')
+index_path = os.path.join(docs_dir, 'back', 'index.md')
+index_ok = True
+if os.path.exists(index_path):
+    with open(index_path, 'r', encoding='utf-8') as fh:
+        index_content = fh.read()
+
+    # Count entries
+    index_entries = [line.strip() for line in index_content.split('\n') if line.strip().startswith('- ')]
+    entry_count = len(index_entries)
+    check(entry_count >= 120, f'Index: {entry_count} entries (target: >= 120)')
+
+    # Count per-chapter entries
+    per_chapter = {i: 0 for i in range(1, 13)}
+    for entry in index_entries:
+        refs = re.findall(r'§(\d+)\.', entry)
+        refs += re.findall(r'第(\d+)章', entry)
+        for ref in set(refs):
+            ch = int(ref)
+            if 1 <= ch <= 12:
+                per_chapter[ch] += 1
+
+    # Check every chapter has >= 5 entries
+    low_chapters = []
+    for ch, count in sorted(per_chapter.items()):
+        if count < 5:
+            low_chapters.append(f'ch{ch}({count})')
+            index_ok = False
+
+    if low_chapters:
+        check(False, f'Index chapters below threshold: {", ".join(low_chapters)} (need >= 5)')
+    else:
+        check(True, f'All chapters have >= 5 index entries')
+
+    # Validate chapter references match real files
+    chapter_files_map = {}
+    for f in CHAPTERS:
+        with open(f, 'r', encoding='utf-8') as fh:
+            content = fh.read()
+        # Find ALL H1 chapter headings in the file (handles combined files)
+        for cm in re.finditer(r'^# 第(\d+)章', content, re.MULTILINE):
+            ch = int(cm.group(1))
+            chapter_files_map[ch] = f
+
+    # Find all chapter-number references in index entries
+    index_ch_refs = set()
+    for entry in index_entries:
+        refs = re.findall(r'§(\d+)\.', entry)
+        refs += re.findall(r'第(\d+)章', entry)
+        for r in refs:
+            index_ch_refs.add(int(r))
+
+    missing_refs = [ch for ch in index_ch_refs if ch not in chapter_files_map]
+    if missing_refs:
+        index_ok = False
+        check(False, f'Index references non-existent chapters: {missing_refs}')
+    else:
+        check(True, f'Index chapter refs valid (covers chapters {sorted(chapter_files_map.keys())})')
+else:
+    check(False, 'Index file not found')
+    index_ok = False
+
+# 12. Glossary content validation
+print('\n=== Glossary Content ===')
+glossary_path = os.path.join(docs_dir, 'back', 'glossary.md')
+glossary_ok = True
+if os.path.exists(glossary_path):
+    with open(glossary_path, 'r', encoding='utf-8') as fh:
+        glossary_content = fh.read()
+
+    # Count entries
+    glossary_entries = [line.strip() for line in glossary_content.split('\n') if line.strip().startswith('- **')]
+    entry_count = len(glossary_entries)
+    check(entry_count >= 60, f'Glossary: {entry_count} entries (target: >= 60)')
+
+    # Validate every entry has at least one chapter reference
+    no_ref_entries = []
+    for entry in glossary_entries:
+        if not re.search(r'第(\d+)章', entry):
+            no_ref_entries.append(entry[:60])
+
+    if no_ref_entries:
+        glossary_ok = False
+        check(False, f'Glossary: {len(no_ref_entries)} entries missing chapter references')
+        for e in no_ref_entries[:5]:
+            print(f'  MISSING CHAPTER REF: {e}')
+    else:
+        check(True, f'All {entry_count} glossary entries have chapter references')
+
+    # Validate chapter numbers (must be 1-12)
+    all_refs = re.findall(r'第(\d+)章', glossary_content)
+    invalid_refs = sorted(set(int(ch) for ch in all_refs if int(ch) not in range(1, 13)))
+    if invalid_refs:
+        glossary_ok = False
+        check(False, f'Glossary references invalid chapters: {invalid_refs}')
+    else:
+        check(True, 'Glossary chapter refs are valid')
+else:
+    check(False, 'Glossary file not found')
+    glossary_ok = False
+
 # 10. Style check (advisory)
 print('\n=== Style Check ===')
 style_script = os.path.join(script_dir, 'check_style.py')

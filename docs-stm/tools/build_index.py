@@ -8,6 +8,7 @@ Scans all chapter files and extracts:
 3. Maps each entry to its chapter and section
 
 Outputs a draft index.md that can be edited and refined.
+Use --coverage to show per-chapter entry density report.
 """
 import re, os, sys, glob
 sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
@@ -15,6 +16,9 @@ sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
 script_dir = os.path.dirname(os.path.abspath(__file__))
 docs_dir = os.path.normpath(os.path.join(script_dir, '..'))
 chapter_files = sorted(glob.glob(os.path.join(docs_dir, 'ch[0-9]*.md')))
+
+# Check for --coverage flag
+show_coverage = '--coverage' in sys.argv
 
 # Track section numbering across files
 current_ch = 0
@@ -96,7 +100,38 @@ for term, ch, sec, etype in entries:
 # Sort: alphabetical by term, then by chapter
 sorted_entries = sorted(unique_entries, key=lambda e: (e[0].lower(), e[1]))
 
-# Output the index draft
+# --coverage mode: print per-chapter density report and exit
+if show_coverage:
+    per_chapter = {}
+    for term, ch, sec, etype in sorted_entries:
+        per_chapter.setdefault(ch, []).append((term, sec, etype))
+
+    print('# 索引覆盖率报告')
+    print()
+    total = len(sorted_entries)
+    all_ok = True
+    for ch in sorted(per_chapter):
+        cnt = len(per_chapter[ch])
+        status = 'OK' if cnt >= 5 else 'LOW'
+        if cnt < 5:
+            all_ok = False
+        print(f'| 第{ch}章 | {cnt:2d} 条 | {status} |')
+        for term, sec, etype in sorted(per_chapter[ch], key=lambda x: x[0].lower()):
+            marker = '#' if etype == 'heading' else '*'
+            print(f'|   | {marker} {term} ({sec}) |')
+        print()
+
+    print(f'---')
+    print(f'总计: {total} 条候选条目')
+    print(f'零覆盖率章节: {"无" if all_ok else "存在"}')
+    print()
+    if all_ok:
+        print('**结论**: 所有章节均有≥5条候选条目，覆盖率合格。')
+    else:
+        print('**警告**: 存在低于5条候选项的章节，建议补充。')
+    sys.exit(0)
+
+# Normal mode: output the index draft
 print('# 概念索引（自动生成草稿）')
 print()
 print('> 关键概念和术语的章节位置索引。条目按字母顺序排列。')
