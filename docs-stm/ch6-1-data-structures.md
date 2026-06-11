@@ -7,9 +7,9 @@
 > - 掌握 Copy-on-Write 在 B-Tree 版本管理中的应用
 > - 熟悉 MVCC 多版本并发控制的基本原理
 > - 了解这些算法在 H2 中的具体实现位置
+> **术语参考**: 本篇涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 > 本章深入剖析 H2 数据库 MVStore 存储引擎中的 10 个核心算法。每个算法涵盖原理、实现位置、应用场景、优缺点和设计权衡。算法的持久化落地和并发控制详见第9章《持久化引擎深度解析》和第10章《锁实现与并发控制》。本章所有算法均来源于 H2 数据库开源项目（https://github.com/h2database/h2database）的 master 分支源码。
-> **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 本章 10 个算法分布在 3 个子文件中：
 
@@ -618,20 +618,18 @@ operate(key, value, decisionMaker)  ← MVMap.java:147-150
 | `mvstore/MVMap.java` | `DecisionMaker.decide()` | 1724-1813 | 分裂/合并逻辑 |
 
 关键行号：
-- `Page.get()`（二分查找递归遍历）：`Page.java:235-245`
 
 ```text
-- `MVMap.put()` → `operate()`：`MVMap.java:147-150`
-```
-- 分裂触发条件：`MVMap.java:1776-1778`
-- 分裂执行（median split）：`MVMap.java:1780-1801`
-- 根节点升级：`MVMap.java:1785-1793`
-- 树深度折叠（merge）：`MVMap.java:1738-1762`
-- `Page.binarySearch()`：`Page.java:200-215`
-- `Page.split(int at)`：`Page.java:424`（抽象方法）
+Page.get()（二分查找递归遍历）：Page.java:235-245
+MVMap.put() → operate()：MVMap.java:147-150
+分裂触发条件：MVMap.java:1776-1778
+分裂执行（median split）：MVMap.java:1780-1801
+根节点升级：MVMap.java:1785-1793
+树深度折叠（merge）：MVMap.java:1738-1762
+Page.binarySearch()：Page.java:200-215
+Page.split(int at)：Page.java:424（抽象方法）
 
-```text
-- `keysPerPage` 获取：`MVStore.getKeysPerPage()` → 默认 48
+keysPerPage 获取：MVStore.getKeysPerPage() → 默认 48
 ```
 
 ### 6.1.6 应用场景
@@ -2834,7 +2832,7 @@ B-Tree 作为 H2 索引的核心数据结构，通过多路分支和平衡策略
 
 ---
 
-## 6.x 延展阅读
+## 6.5 延展阅读
 
 - H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#versions`) — MVStore 版本管理机制
 - 本书第6.4-6.7节《存储算法》 — Chunk/LIRS/FreeSpace/MVStore 平衡算法

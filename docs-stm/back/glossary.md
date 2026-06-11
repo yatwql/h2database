@@ -14,6 +14,7 @@
 
 ## C
 
+- **CAS (Compare-And-Swap)**: 比较并交换，一种无锁同步原语，通过 AtomicReference 实现 B-Tree 根引用的原子更新，是 MVCC 无锁读取的核心支撑（第1章, 第10章）
 - **Chunk**: MVStore 中一次 commit 写入的所有数据的集合，包含 header、若干 page 和 footer（第6章 §6.4, 第9章）
 - **COW / Copy-on-Write**: 写时复制策略：修改数据时不直接覆盖原数据，而是将修改后的数据写入新位置，父节点递归复制更新（第6章 §6.2）
 - **Counted B-Tree**: 在内部节点中记录子树条目数的 B-Tree 变种，支持高效的索引访问和范围计数（第9章）
@@ -22,6 +23,7 @@
 ## D
 
 - **DDL**: Data Definition Language，数据定义语言（CREATE, ALTER, DROP 等）（第5章）
+- **Deadlock**: 死锁，两个或多个事务互相等待对方释放锁而导致的无限阻塞状态，H2 通过超时检测和等待图分析来识别和处理死锁（第10章）
 - **DML**: Data Manipulation Language，数据操作语言（SELECT, INSERT, UPDATE, DELETE 等）（第5章）
 
 ## F
@@ -37,6 +39,7 @@
 
 ## I
 
+- **IOT / Index-Organized Table**: 索引组织表，数据行以索引树（B-Tree）的形式直接存储在叶子节点中的表结构（第3章）
 - **ISODEBUG**: H2 的调试工具，通过 `ISODEBUG` 变量控制调试信息的输出级别（第11章）
 
 ## J
@@ -48,6 +51,7 @@
 
 - **LIRS**: Low Inter-reference Recency Set，低互引用最近集缓存替换算法，比 LRU 更能抵抗扫描污染（第6章 §6.5）
 - **LOB**: Large Object，大对象（CLOB/BLOB），H2 对大对象的存储有独立处理机制（第7章）
+- **LSM-Tree / Log-Structured Merge-Tree**: 日志结构合并树，一种针对写入优化的数据结构，通过分层合并将随机写转换为顺序写（第1章, 第9章），大对象（CLOB/BLOB），H2 对大对象的存储有独立处理机制（第7章）
 - **Log-Structured Storage**: 日志结构存储，按写入顺序追加数据而非原地更新的存储方式（第6章）
 
 ## M
@@ -71,12 +75,16 @@
 
 - **R-Tree**: 空间索引结构，用于多维数据的范围查询和最近邻查询（第6章 §6.9）
 - **Recursive Descent Parser**: 递归下降解析器，H2 的 SQL 解析器采用这种经典的手写解析方式（第8章）
+- **Read Committed**: 读已提交，SQL 标准定义的一种事务隔离级别，仅允许读取已提交的数据（第10章）
+- **Repeatable Read**: 可重复读，SQL 标准定义的一种事务隔离级别，保证同一事务内多次读取同一数据的结果一致（第10章）
 - **Root Reference**: MVStore 中指向 root page 的引用，用于定位 B-Tree 的根节点（第9章）
 
 ## S
 
 - **Savepoint**: 保存点，事务中的一个中间状态标记，支持回滚到指定保存点（第5章）
+- **Serializable**: 可串行化，SQL 标准中最严格的事务隔离级别，保证并发事务的执行结果与某种串行执行顺序一致（第10章）
 - **Session**: H2 中的会话抽象，代表一个数据库连接及其关联的状态（第2章）
+- **Snapshot Isolation**: 快照隔离，一种多版本并发控制（MVCC）隔离级别，事务读取一致性快照，写操作采用 first-committer-wins 策略（第10章）
 - **SocketConnect**: H2 网络模式下客户端连接远程数据库的方式（第2章）
 
 ## T
@@ -93,6 +101,10 @@
 ## V
 
 - **VarInt / VarLong**: 变长整数编码，MVStore 用于优化 page 中整型字段的空间占用（第9章）
+
+## W
+
+- **WAL / Write-Ahead Log**: 预写日志，在写入数据前先将修改记录到日志文件中的策略。MVStore 采用隐式日志方式（通过 B-Tree 版本化根指针 + 原子 Chunk 写入），不依赖传统 WAL（第9章）
 
 ---
 

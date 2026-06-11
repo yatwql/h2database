@@ -414,6 +414,7 @@ Optimizer.calculateBestPlan() 决策树：
 
 Hybrid 策略的贪心填充阶段（以 N=10, m=2 为例）：
 
+```text
   前 2 个位置已由暴力枚举固定：
     plan = [t5, t2, ?, ?, ?, ?, ?, ?, ?, ?]
             ↑---暴力枚举部分---↑
@@ -442,6 +443,7 @@ Hybrid 策略的贪心填充阶段（以 N=10, m=2 为例）：
     尝试每个 filter 在第 4 位:
       [t5, t2, t3, t1, ...] → cost = 250
       [t5, t2, t3, t4, ...] → cost = 210
+```
       [t5, t2, t3, t6, ...] → cost = 230
       [t5, t2, t3, t7, ...] → cost = 195  ← 最优
       ...
@@ -1038,7 +1040,7 @@ H2 优化器根据查询表数自动选择优化策略的完整流程:
 
 **为什么不用动态规划（如 System R 算法）：**
 
-System R 的动态规划算法复杂度约 O(3^N)，对 10+ 张表仍然过大。H2 的混合策略实际上是"有限暴力 + 贪心 + 随机搜索"的务实选择。
+System R 的动态规划算法复杂度约 O(3^N)，对 10+ 张表仍然过大。H2 的混合策略是"有限暴力 + 贪心 + 随机搜索"的务实选择。
 
 ```text
 各算法复杂度对比 (N = 表数):
@@ -1175,7 +1177,7 @@ System R 动态规划 vs H2 混合策略的实现细节对比:
 
 ### 6.9.1 核心描述
 
-R-Tree 是一种**平衡树**，用于索引多维空间数据（如地理坐标、矩形区域）。`MVRTreeMap` 扩展了 `MVMap`，覆盖其 B-Tree 操作为空间感知版本。R-Tree 的核心思想是利用空间邻近性——空间上接近的对象被组织在同一个树节点中，每个节点对应一个最小外包矩形（MBR, Minimum Bounding Rectangle）。R-Tree 在 SQL 查询中的具体应用详见第7章《SQL 执行全流程》。
+R-Tree 是一种**平衡树**，用于索引多维空间数据（如地理坐标、矩形区域）。扩展类 `MVRTreeMap` 覆盖了 `MVMap` 的 B-Tree 操作，替换为空间感知版本。其核心思想是利用空间邻近性——空间上接近的对象被组织在同一个树节点中，每个节点对应一个最小外包矩形（MBR, Minimum Bounding Rectangle）。R-Tree 在 SQL 查询中的具体应用详见第7章《SQL 执行全流程》。
 
 **空间键（Spatial）：**
 
@@ -2450,17 +2452,17 @@ Tokenizer 在处理完整 SQL 语句时的状态流转和 Token 序列:
 ```
 
   扫描器分类统计:
-    扫描类型             调次数  处理时间    占比
 
 ```text
+    扫描类型             调次数  处理时间    占比
     ─────────────────────────────────────────────
-```
     scanIdentifierOrKeyword  4    ~2 μs    40%
     scanNumber               1    ~0.5 μs  10%
     scanString               0    0         0%
     scanQuotedIdentifier     0    0         0%
     单字符 Token             6    ~0.3 μs  50%
     skipWhitespace           5    ~0.2 μs  忽略
+```
 
   性能特征:
     整个 SQL 解析的 Tokenize 阶段通常 < 10 μs
@@ -3436,7 +3438,7 @@ SQL 语句从 JDBC 到执行的完整解析路径及各个组件的职责:
 
 查询优化器通过基于代价的连接顺序选择、索引条件评估和表达式优化，将声明式 SQL 转化为高效的执行计划。R-Tree 空间索引为多维数据提供了高效的范围查询能力。递归下降解析器以其可读性强、易于调试的特点，将 SQL 文本转化为语法树。这三个查询算法与前三篇的数据结构和存储算法一起，构成了 H2 从 SQL 解析到数据访问的完整链路。
 
-## 6.x 延展阅读
+## 6.12 延展阅读
 
 - H2 官方文档《Performance》(`h2/src/docsrc/html/performance.html#explain_plan`) — EXPLAIN PLAN 使用说明
 - H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#r_tree`) — MVRTreeMap 使用示例

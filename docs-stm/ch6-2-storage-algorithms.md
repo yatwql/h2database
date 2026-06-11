@@ -768,7 +768,7 @@ Phase 2 压缩 (compactMoveChunks):
 | 碎片 | 需后台整理 | 少整理 |
 | 崩溃恢复 | 天然支持（日志式） | 需额外 WAL |
 
-H2 选择 append-only + 后台整理。顺序写提供更好的 I/O 性能，后台整理在空闲时回收空间。`getMovePriority()` 被设计为优先移动"孤岛"块——被大片空闲包围的小块数据，最大化每次移动的收益。
+H2 选择 append-only + 后台整理。顺序写提供更好的 I/O 性能，后台整理在空闲时回收空间。`getMovePriority()` 的设计策略是优先移动"孤岛"块——被大片空闲包围的小块数据，最大化每次移动的收益。
 
 ```text
 Append-only + Compaction vs. In-place Update 的决策树：
@@ -880,7 +880,7 @@ LIRS 使用两个数据结构来管理条目：
 Stack S (栈):
   存储: LIR 条目 + 最近引用的 Resident HIR 条目
   顺序: 栈顶 = 最近引用，栈底 = 最久未引用
-  规则: LIR 条目永不被驱逐出 Stack，HIR 条目在栈底时可能被驱逐
+  规则: LIR 条目常驻 Stack，HIR 条目在栈底时可能淘汰出栈
 
 Queue Q (队列):
   存储: Resident HIR 条目 + Non-Resident HIR 条目
@@ -3601,11 +3601,14 @@ totalCount == 1 触发条件在不同数据量下的触发概率:
 ```
 
   100 万条记录的实际场景:
+
+```text
     删除 50 万条 -> 剩余 50 万条 -> 永不触发合并
     删除 90 万条 -> 剩余 10 万条 -> 永不触发合并
     删除 99 万条 -> 剩余 1 万条 -> 几乎为 0 概率
     删除 99.9 万条 -> 剩余 1000 条 -> 0.1% 概率
     删除 99.99 万条 -> 剩余 100 条 -> 1% 概率
+```
 
   合并策略对比总结:
 
@@ -3778,7 +3781,7 @@ H2 保守合并策略 vs 提前合并策略的详细对比分析:
 
     等等, 为什么 totalCount=1 但 N2 还有 2 个键?
 
-    实际上 totalCount 是整个树的条目总数
+    totalCount 是整个树的条目总数
     totalCount=1 表示整棵树只剩 1 个有效条目
     那为什么 N2 还有 2 个键?
 
@@ -4413,25 +4416,22 @@ H2 MVStore B-Tree 与传统 B+Tree、COW B-Tree 的分裂/合并策略对比:
 
   合并策略对比:
 
-    特性            H2 MVStore B-Tree      传统 B+Tree          COW B-Tree
-
 ```text
+    特性            H2 MVStore B-Tree      传统 B+Tree          COW B-Tree
     ────────────────────────────────────────────────────────────────────────────
-```
     触发条件        totalCount == 1         节点填充率 < 50%     树折叠
     触发频率        极低                    中                    低
     合并范围        整棵树折叠              相邻节点合并          整棵树折叠
     写放大          极小                    中                    高
     空间回收        不主动                  主动                  不主动
     实现复杂度      简单                    复杂 (需处理兄弟节点)  简单
+```
 
   整体性能特征对比:
 
-    指标            H2 MVStore B-Tree      传统 B+Tree          COW B-Tree
-
 ```text
+    指标            H2 MVStore B-Tree      传统 B+Tree          COW B-Tree
     ────────────────────────────────────────────────────────────────────────────
-```
     写入吞吐        中等 (受 COW 影响)       高 (原地更新)         低 (完整版本)
     点查延迟        低 (6.1-5 μs 缓存命中)    低 (6.1-3 μs)           低 (6.1-5 μs)
     范围扫描        高 (顺序写入)            中 (随机写入)          高 (顺序写入)
@@ -4440,20 +4440,20 @@ H2 MVStore B-Tree 与传统 B+Tree、COW B-Tree 的分裂/合并策略对比:
     恢复时间        快 (最后 Chunk)          慢 (wal 重放)         快 (最后版本)
     并发读          MVCC 无锁                需要读锁              MVCC 无锁
     存储效率        中 (COW 旧版本)          高 (只存当前值)       低 (多版本)
+```
 
   场景推荐:
 
-    场景            推荐                   原因
-
 ```text
+    场景            推荐                   原因
     ────────────────────────────────────────────────────────────
-```
     嵌入式数据库     H2 MVStore            低碎片, 快速恢复, 低内存
     OLTP 高并发      传统 B+Tree           低写放大, 高吞吐
     版本化存储       COW B-Tree            天然版本支持
     写密集型         传统 B+Tree           无 COW 开销
     读密集型         COW B-Tree            MVCC 无锁读取
     混合负载         H2 MVStore            平衡的读写性能
+```
 
 ### 6.7.9 设计权衡
 
@@ -4602,7 +4602,7 @@ H2 的合并只在"删除后仅剩一个子节点"时触发（树深度折叠）
 
 Chunk 的压缩整理、LIRS 缓存替换、Free Space 分配回收和 MVStore 平衡机制共同构成了 MVStore 存储引擎的自动维护体系。Chunk 的 append-only 写入和定期 compact 平衡了写入性能和空间利用率；LIRS 通过区分近期访问和频繁访问的 page 来抵抗扫描污染；Free Space 的空间位图管理和 MVStore 的自动平衡确保存储系统在长时间运行后仍能保持稳定性能。
 
-## 6.x 延展阅读
+## 6.9 延展阅读
 
 - H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#logStructured`) — Log Structured 存储设计
 - H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#caching`) — LIRS 缓存机制

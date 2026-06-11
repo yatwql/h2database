@@ -1800,6 +1800,14 @@ public void removeRow(SessionLocal session, Row row) {
 
 本章深入分析了 H2 Database 的六个核心模块：Database 全局入口、Session 会话管理、MVStore 存储引擎、MVMap B-Tree 映射、TransactionStore 事务协调、MVTable 表操作封装。每层围绕核心数据结构和关键源码展开，从顶层入口到底层存储构成了完整的模块链路。
 
+## 4.8 延展阅读
+
+- H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html`) — MVStore 体系结构与 B-Tree 实现参考
+- H2 官方文档《Advanced》(`h2/src/docsrc/html/advanced.html#transaction_isolation`) — 事务隔离级别与 MVCC 行为说明
+- 本书第5章《核心流程解读》 — 各模块在 9 个核心流程中的协作方式
+- 本书第6章§6.1-6.3 — B-Tree/CoW/MVCC 算法基础
+- 本书第9章《持久化引擎深度解析》 — MVStore 的 Chunk 存储与恢复细节
+
 
 # 第5章 核心流程解读
 
@@ -1810,9 +1818,9 @@ public void removeRow(SessionLocal session, Row row) {
 > - 理解各流程的关键数据结构和算法
 > - 熟悉流程间的依赖关系和触发条件
 > - 了解流程对应的核心源码文件和方法
+> **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 > 本章追踪 9 个核心流程的完整执行路径。各核心算法的基础原理详见第6章《H2 数据库核心算法分析》。SQL 语句的解析与优化细节见第7章《SQL 执行全流程》和第8章《查询优化器深度解读》，事务提交与持久化机制见第9章《持久化引擎深度解析》和第10章《锁实现与并发控制》。
-> **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 ## 5.1 SELECT 查询流程
 
@@ -3727,6 +3735,7 @@ MVMap.get(key)
 **图 5-42: Page 结构层级**
 
 #### 5.9.3.2 读取完整调用链
+```text
 JdbcResultSet.next()
   → 遍历 ResultInterface
     → LocalResult.next()
@@ -3743,6 +3752,7 @@ TransactionMap.get(key)  [TransactionMap.java:511]
 MVPrimaryIndex.find(session, searchRow)
   → dataMap.map.get(key)     ← 直接读取
   → dataMap.getFromSnapshot(key)  ← MVCC 可见性检查
+```
 
 MVSecondaryIndex.find(session, searchRow)
   → indexMap.map.get(key)    ← 二级索引读取
