@@ -4,6 +4,34 @@
 
 ---
 
+## [v5.0] — 2026-06-11
+
+### 质量提升工程：术语体系 + 阅读体验 + 图表质量 + 源码保鲜 + 索引完善
+
+#### Added
+- **术语表扩充** (U1)：从 50 条扩展至 73 条，覆盖全部 12 章，每章 ≥ 3 条；新增 `_annotate_terms.py --report-missing/--check` 和 `build_glossary.py --coverage`
+- **阅读体验优化** (U4)：6 处章节过渡语句（章末小结→下章定向引导）；3 个完整 Java 代码示例（MVStore API、依赖调用链、JUnit 测试）；写作风格指南新增 §11 段落与过渡
+- **图表质量提升** (U5)：`_audit_smart.py --fig-refs` 图引用一致性检查；`readability_check.py --figures` 框线闭合验证；图引用覆盖率从 22.7% 提升至 95.5%（552/578）；修复 3 处过短图注
+- **源码引用保鲜** (U6)：新增 `source_freshness_check.py` 工具，验证 51 处源码引用全部有效（100%）
+- **HTML TOC 遮挡修复**：`scroll-margin-left: 290px` / `scroll-padding-left: 290px` 防止固定侧边栏遮挡锚点正文
+- **质量门禁扩展**：testplan.md 新增 术语表完整性/图引用一致性/框线闭合完整性 三门禁，引入 P0/P1/P2 三级分层
+
+#### Changed
+- **cover.md**：v4.29 → v5.0（36,595 → 36,775 行）
+- **管理文档版本同步**：cover/requirements/plan/testplan/changelog 统一升级至 v5.0
+- **工具脚本**：`_audit_smart.py` 新增 `--fig-refs` 模式；`readability_check.py` 新增框线闭合检测；新增 `source_freshness_check.py`（17 脚本）
+
+#### Fixed
+- **LSM-Tree 术语修复**：移除误拼接的 LOB 描述（历史 bug）
+- **HTML 侧边栏遮挡**：锚点导航后正文左侧被固定侧边栏覆盖的问题
+
+#### 生成产物
+- **合并文档**：docs-stm/h2-source-code-analysis.md（36,775 行）
+- **HTML 文档**：docs-stm/h2-source-code-analysis.html（557 TOC，所有检查通过）
+- **最终核验**：final_check 82/82；_audit_smart 0 缺图；图引用 95.5%
+
+---
+
 ## [v4.29] — 2026-06-11
 
 ### _audit_smart 附录豁免 + 恢复工具 maxOpenTransactions 覆盖
