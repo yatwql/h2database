@@ -1351,7 +1351,7 @@ Log-Structured 存储受启发于 LSM-Tree (Log-Structured Merge-Tree) 的设计
 
 3. **空间放大**：Log-Structured 存储的新数据总是追加写入，旧版本数据不会被立即覆盖。空间放大率 = 磁盘占用 / 实际数据大小。H2 通过 Compaction 控制空间放大率在 1.2-1.5x 左右，Compaction 触发阈值和策略由 `MVStore` 的配置参数控制。
 
-4. **Compaction 策略**：MVStore 的 Compaction 选择"存活率低"的 Chunk 进行合并。存活率 = Chunk 中仍被引用的数据比例。当一个 Chunk 中大部分数据已被更新或删除（即成为"垃圾"），Compaction 将该 Chunk 中剩余的存活数据读取出来，写入新的 Chunk，然后回收原 Chunk 的空间。这与 Java GC 中的"复制收集器"非常相似。
+4. **Compaction 策略**：MVStore 的 Compaction 选择"存活率低"的 Chunk 合并。存活率 = Chunk 中仍被引用的数据比例。当一个 Chunk 中大部分数据已被更新或删除（即成为"垃圾"），Compaction 将该 Chunk 中剩余的存活数据读取出来，写入新的 Chunk，然后回收原 Chunk 的空间。这与 Java GC 中的"复制收集器"非常相似。
 
 5. **写放大权衡**：
    - COW B-Tree 写放大：~4x （来自 B-Tree 路径复制）
@@ -2140,7 +2140,7 @@ H2 提供了多层安全防护（详见官方文档 `security.html`、`advanced.
 
 **调试场景 C 详解 —— COW B-Tree 观察**：
 
-在 `MVMap.put()` 设置断点，运行插入操作：`INSERT INTO t VALUES(1, 'Alice')`。当断点触发时，注意观察 `key` 和 `value` 参数。Step Into 进入 `writeOrDeleteRow()`，这里可以看到 COW 的核心逻辑：首先调用 `readRoot()` 获取当前根节点，然后从根到叶子递归查找目标位置，当发现叶子页已满时执行页分裂。在 `Page` 类的写入方法中设置断点，观察旧的叶子页如何被复制为新的叶子页（COW 复制过程）——新旧页面的 `getKeyCount()` 应完全相同，但对象地址不同。重点观察 `setRoot()` 方法的调用。在调用前后，分别记录 `System.identityHashCode(rootReference.get())` 的值。你会发现两个值不同——因为 CAS 已经将根引用指向了新构建的 B-Tree 根节点。通过对比新旧根节点的 `getKeyCount()` 和子节点指针，可以直观地看到 COW 创建的"新路径"和保留的"旧路径"。
+在 `MVMap.put()` 设置断点，运行插入操作：`INSERT INTO t VALUES(1, 'Alice')`。当断点触发时，注意观察 `key` 和 `value` 参数。Step Into 进入 `writeOrDeleteRow()`，这里可以看到 COW 的核心逻辑：首先调用 `readRoot()` 获取当前根节点，然后从根到叶子递归查找目标位置，当发现叶子页已满时执行页分裂。在 `Page` 类的写入方法中设置断点，观察旧的叶子页如何被复制为新的叶子页（COW 复制过程）——新旧页面的 `getKeyCount()` 应完全相同，但对象地址不同。重点观察 `setRoot()` 方法的调用。在调用前后，分别记录 `System.identityHashCode(rootReference.get())` 的值。两个值不同——因为 CAS 已经将根引用指向了新构建的 B-Tree 根节点。通过对比新旧根节点的 `getKeyCount()` 和子节点指针，可以直观地看到 COW 创建的"新路径"和保留的"旧路径"。
 
 ---
 
@@ -2285,7 +2285,7 @@ H2 提供了多层安全防护（详见官方文档 `security.html`、`advanced.
 
 **调试技巧**：条件断点（右键断点设置 `key.equals(42)`）可以只关注目标数据；断点日志（Log message to console）适合追踪高频方法如 `MVMap.get()` 而不中断执行；Evaluate Expression（Alt+F8）可以在断点暂停时调用任意方法，例如 `System.identityHashCode(rootReference.get())` 确认对象地址变化。Frame 切换可以在 Debugger 面板中快速跳转到调用栈的不同层级。
 
-建议首次在 IntelliJ 中打开 H2 项目后，先依次打开 `Tokenizer.java`（词法分析）、`MVMap.java`（B-Tree 接口）、`MVStore.java`（存储引擎提交路径）、`TransactionMap.java`（事务分界）阅读 Javadoc，建立整体印象后再选择 12.4.2 中的调试场景进行逐步追踪。
+建议首次在 IntelliJ 中打开 H2 项目后，先依次打开 `Tokenizer.java`（词法分析）、`MVMap.java`（B-Tree 接口）、`MVStore.java`（存储引擎提交路径）、`TransactionMap.java`（事务分界）阅读 Javadoc，建立整体印象后再选择 12.4.2 中的调试场景逐步追踪。
 
 ---
 

@@ -152,7 +152,7 @@ def detect_sentence_monotony(lines, fname):
 
 def detect_repeated_connectors(lines, fname):
     """Detect repeated use of same connector within adjacent sentences."""
-    connector_words = ['同时', '另外', '此外', '而且', '并且', '因此', '然而']
+    connector_words = ['同时', '另外', '此外', '而且', '并且', '因此', '然而', '但是', '不过']
     in_fence = False
 
     for i, line in enumerate(lines, 1):
@@ -171,12 +171,20 @@ def detect_repeated_connectors(lines, fname):
 
         # Check for repeated connectors within the same line
         for connector in connector_words:
-            # Count occurrences in this line (ignore in code fences)
-            count = len(re.findall(re.escape(connector), stripped))
-            if count >= 2 and len(stripped) < 200:
+            # Find all occurrences with their positions
+            positions = [m.start() for m in re.finditer(re.escape(connector), stripped)]
+            if len(positions) >= 2:
+                # For "同时", only flag if occurrences are close (same clause context)
+                # It has legitimate dual meanings (also vs concurrently)
+                if connector in ('同时', '因此', '然而', '而且', '并且'):
+                    # Check if occurrences are within the same clause (~40 chars)
+                    close_pairs = sum(1 for i in range(len(positions)-1)
+                                      if positions[i+1] - positions[i] < 40)
+                    if close_pairs == 0:
+                        continue  # Legitimate different usages/contexts
                 warn(
                     fname, i,
-                    f'重复连接词：本行使用"{connector}" {count} 次，建议替换为不同连接词',
+                    f'重复连接词：本行使用"{connector}" {len(positions)} 次，建议替换为不同连接词',
                     level='WARN'
                 )
 
@@ -184,7 +192,7 @@ def detect_repeated_connectors(lines, fname):
 def detect_weak_verb_xing(lines, fname):
     """Detect '进行' + verb constructions ('进行分析', '进行讨论')."""
     in_fence = False
-    pattern = re.compile(r'进行[的]?[一-鿿]{2,4}')
+    pattern = re.compile(r'(?<!正在)进行[的]?[一-鿿]{2,4}')
 
     for i, line in enumerate(lines, 1):
         stripped = line.strip()

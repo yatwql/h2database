@@ -226,7 +226,7 @@ private final Set<SessionLocal> userSessions;
 ```
 **图 4-7: 方法调用层次**
 ### 4.1.5 元数据锁 (Meta Lock)
-如图 4-7 所示，Database 内部维护了一个用于元数据并发控制的锁机制，通过 `META_LOCK_DEBUGGING` ThreadLocal 进行调试跟踪。
+如图 4-7 所示，Database 内部维护了一个用于元数据并发控制的锁机制，通过 `META_LOCK_DEBUGGING` ThreadLocal 调试跟踪。
 
 ```text
   线程请求元数据操作

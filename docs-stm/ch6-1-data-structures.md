@@ -637,7 +637,7 @@ operate(key, value, decisionMaker)  ← MVMap.java:147-150
 ### 6.1.6 应用场景
 - **MVMap 的所有读写操作**：`get()`、`put()`、`remove()`、`cursor()` 均基于 B-Tree 遍历
 - **元数据存储**：MVStore 的布局信息、Chunk 信息均存储在 MVMap 中
-- **事务系统**：`TransactionMap` 底层委托给 MVMap 进行操作
+- **事务系统**：`TransactionMap` 底层委托给 MVMap 完成操作
 - **空间索引**：`MVRTreeMap` 继承 MVMap 并覆盖 B-Tree 操作为空间感知版本
 - **游标遍历**：所有范围查询通过 B-Tree 的叶子节点链表实现顺序访问
 
@@ -2830,7 +2830,7 @@ undo log vs. 多版本存储 (MVTO) 对比：
 
 ## 6.4 本章小结
 
-B-Tree 作为 H2 索引的核心数据结构，通过多路分支和平衡策略实现了高效的键值查找和范围扫描。Copy-on-Write 与 B-Tree 的结合使得 MVStore 能够在无锁读的同时进行版本管理，是 H2 高并发读性能的基础。MVCC 则在事务层面提供了读写不互斥的隔离保证。这三个基础算法构成了理解 H2 后续存储和查询算法的必要前提。
+B-Tree 作为 H2 索引的核心数据结构，通过多路分支和平衡策略实现了高效的键值查找和范围扫描。Copy-on-Write 与 B-Tree 的结合使得 MVStore 能够在无锁读的同时管理版本，是 H2 高并发读性能的基础。MVCC 则在事务层面提供了读写不互斥的隔离保证。这三个基础算法构成了理解 H2 后续存储和查询算法的必要前提。
 
 ---
 
