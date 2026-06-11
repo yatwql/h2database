@@ -1,7 +1,7 @@
 # H2 Database 源码分析 — 质量标准与测试计划
 
-> 版本：v4.24
-> 最后更新：2026-06-10
+> 版本：v4.25
+> 最后更新：2026-06-11
 
 ---
 
@@ -39,6 +39,7 @@ PDF 生成较慢；日常编辑只要求标准流程通过。
 | 合并文档 | 源文件总行数与合并文档一致 | `final_check.py` |
 | 编码 | Markdown 和 HTML 均为有效 UTF-8 | `final_check.py` |
 | 版本统计 | cover 统计先更新；管理文档版本一致 | `cover_stats.py`, 人工核对 |
+| 术语表完整性 | 术语表 ≥ 60 条；每章 ≥ 3 条 | `build_glossary.py --coverage`, `_annotate_terms.py --check` |
 
 标准流程必须达到 `final_check.py` 全部检查通过。
 
