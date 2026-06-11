@@ -12,7 +12,7 @@
 
 H2 Database 从 1.4.x 版本开始实验性支持 MVStore，在 v2.0 中取代 PageStore 成为默认存储引擎。MVStore 是一种 log-structured（日志结构）、append-only（仅追加写入）、基于 B-Tree 的键值存储系统。其设计思想受 RethinkDB 的存储引擎和经典的 LSM-Tree 启发，但与 LSM-Tree 不同的是，MVStore 不使用单独的写前日志（WAL），而是通过原子性的 chunk 写入和版本化的 B-Tree 根指针来实现崩溃安全和事务持久性。
 
-本章内容与第6章《H2 数据库核心算法分析》中的 B-Tree 索引、Copy-on-Write 版本管理及 MVCC 多版本控制等算法紧密关联（详见第6章《H2 数据库核心算法分析》第6.1-6.3节）。同时，第5章第5.5节（事务提交/回滚流程）与本章的 Undo Log 机制直接相关（详见第5章《核心流程解读》第5.5-5.6节）。锁与并发控制部分可结合第8章查询优化器中的并发访问模式理解。
+本章内容与第6章《H2 数据库核心算法分析》中的 B-Tree 索引、Copy-on-Write 版本管理及 MVCC 多版本控制等算法紧密关联（详见第6章《H2 数据库核心算法分析》第6.1-6.3节）。同时，第5章第5.5节（事务提交/回滚流程）与本章的 Undo Log 机制直接相关（详见第5章《核心流程解读》第5.5-5.6节）。锁与并发控制部分可结合第7章§7.1.5 的 Session 锁机制与线程模型理解。
 
 本章将深入剖析 MVStore 持久化引擎的架构设计与实现细节。9.1 概述 MVStore 的总体架构、生命周期和版本控制机制；9.2 详述 B-Tree 与 Page 的内部结构和序列化格式；9.3 解析 Chunk 的文件布局与空间分配策略；9.4 说明 Undo Log 机制及崩溃安全保障；9.5 介绍检查点触发逻辑与后台写入线程；9.6 详述 MVStore 的二进制文件格式（file header、chunk、page 三级的布局与编码）。第10章将在此基础上进一步讨论锁与并发控制机制。10.8 从 ACID 视角总结 H2 的事务保证。
 
@@ -2413,7 +2413,7 @@ Chunk N 的元数据 root page（chunk header 的 root 字段指向这里）
 
 ## 9.7 恢复机制
 
-如图 9-28 所示的 MVStore 恢复机制利用了两个冗余副本的 store header 和 chunk footer 中的校验和。恢复过程不需要 replay undo log，而是直接从最新的完整 chunk 重建 B-Tree。
+MVStore 恢复机制利用了两个冗余副本的 store header（Block 0/1）和 chunk footer 中的 fletcher 校验和。恢复过程不需要 replay undo log，而是直接从最新的完整 chunk 重建 B-Tree（详细流程见图 9-33 至图 9-35）。
 
 ### 9.7.1 恢复流程
 
@@ -6522,4 +6522,42 @@ H2 官方文档在《Advanced》一章中专门讨论了 ACID 的支持范围（
 - 持久性已知问题：H2 官方文档《Advanced》(`h2/src/docsrc/html/advanced.html#durability_problems`)
 - 本书第6章§6.1-6.3 — B-Tree/COW/MVCC 算法基础
 - 本书第6章§6.4-6.7 — Chunk/LIRS/FreeSpace/MVStore 平衡算法
-- 本书第8章§8.x — 查询优化中的并发访问模式
+- 本书第7章§7.1.5 — Session 锁机制与线程模型
+
+---
+
+## 附：源码版本变更说明（v2.4.240 → v2.4.249-SNAPSHOT）
+
+以下为本版本与 2.4.240 之间影响第9-10章的关键变更摘要（43 次提交，79 个文件）。
+
+### MVStore 核心层
+
+> 对应源文件：`org/h2/mvstore/MVStore.java`、`MVMap.java`、`FileStore.java`
+
+- **panicException 改为 AtomicReference**：原先为 `volatile` 字段，现改为 `AtomicReference` + `compareAndSet`，确保仅捕获首个 panic 异常。新增 `panic(Throwable)` 重载作为标准入口。后台线程在 panic 状态下不再调用 `closeImmediately()`，仅通过 `handleException()` 记录。
+- **closeStore() 序列变更**：`commit()` 移至 maps 关闭循环之后；状态转换从 `if (state == STATE_OPEN)` 守卫改为 `assert state == STATE_OPEN` + 无条件转换。新增 `closingThreadId` 追踪。
+- **`isClosed()` 自旋等待**：若发现其他线程正在执行 `closeStore()`，当前线程将以 `Thread.sleep(millis++)` 从 1ms 递增等待（1ms, 2ms, 3ms...），仅在 `closingThreadId != Thread.currentThread().getId()`（不同线程）时触发。
+- **commit() 防重入**：通过快照记录 `versionAtStart`，若在锁重入时版本已变化（通过 `beforeWrite` 触发），则跳过本次提交，防止嵌套提交。
+- **MVMap.operate() 简化**：所有页面操作逻辑（拆分、删除、复制、根分裂）从 `operate()` 内联代码移至 `DecisionMaker.decide(CursorPos, K, V)` 方法。`operate()` 仅负责任务重试/中止/应用循环。
+- **tryLock() CPU 感知退避**：根据 `Runtime.getRuntime().availableProcessors()` 自适应旋转等待。前 `CPU_COUNT` 次使用 `Thread.onSpinWait()`，随后 `Thread.yield()`，再降级为 `lock.wait(1)`（原为 `lock.wait(5)`）。移除 `Thread.sleep(contention)`。
+- **CursorPos 树遍历路径重用**：`traverseDown()` 新增 `existing CursorPos` 参数。重试时可复用上次遍历路径。若页面键数组未变（`sameKeys()` 引用相等性检查），连二分查找结果也可重用。
+- **Page 批量删除**：`Page.remove(long positionsToRemove)` 新增位掩码批量删除方法，可在一次操作中移除多个键值对。
+- **编译压缩优化**：`TransactionStore.java` 中 `isTransactionClosed(transactionId)` 的条件判断简化为 `transactionId <= maxTransactionId`，减少冗余方法调用。相关提交标题所提 "CompactRowFactory" 实为单行简化的编译优化，并非新增独立类。
+- **FileStore 流水线重构**：新增 `recentlySaved` 队列（`LinkedBlockingQueue<Chunk>`），chunk 元数据提交至 layout map 被延迟到下一个 chunk 创建时。`saveRecentChunksInLayout(long version)` 作为刷新方法，由 `stop()` 在最终提交前调用，确保 layout map 完整。修复因 layout map 不完整导致的 ChunkNotFound 问题。
+- **moveChunk 错误恢复**：移动操作失败时恢复 chunk 原始 block 位置并释放新分配空间。
+- **isBackupThread 判定移除**：原 `isBackupThread` 逻辑（v2.4.240 中用于标识备份压缩线程）已被 H2_THREAD_GROUP 的线程分组机制替代，后台线程的身份识别统一基于线程组归属。
+
+### 事务子系统
+
+> 对应源文件：`org/h2/mvstore/tx/TransactionStore.java`、`Transaction.java`、`CommitDecisionMaker.java`（新增）等
+
+- **TransactionStore 状态机**：引入显式状态常量（`private static final int`，OPEN→INITIALIZING→READY→CLOSING→CLOSED = 0→4），配合 `AtomicInteger` 替代原先的 `boolean init` 标志。`init()` 和 `close()` 均使用 CAS 原子转换，防止并发竞态。
+- **CommitDecisionMaker（新增）**：实现 page-level 决策机制，以页为单位批量处理提交逻辑，而非逐条处理 undo log 条目。通过 `haveSeenEntry(int entryId)` 实现同一条目的去重，配合 `VersionedValueCommitted.getInstance(value, entryId)` 将条目标记为已提交。
+- **等待事务提前通知**：`TransactionStore.commit()` 在 undo log 回放前即调用 `notifyAllWaitingTransactions()`，使受阻塞的事务更早被唤醒。
+- **MAX_OPEN_TRANSACTIONS 默认值调整**：从 65535 降为 255，现可通过 `h2.maxOpenTransactions` 系统属性配置。`undoLogs` 数组大小调整为 `MAX_OPEN_TRANSACTIONS + 1`。
+- **VersionedBitSet 重写**：不再继承 `java.util.BitSet`，改为不可变的 `long[]` 包装类。`clone()` 调用全部移除，通过构造器 `VersionedBitSet(VersionedBitSet, int)` 创建新实例并翻转指定位。
+- **BitSetHelper（新增）**：提供基于 `long[]` 的最小 BitSet 功能（get/flip/nextSetBit/nextClearBit/length），通过不可变模式保证线程安全。
+- **committingTransactions 类型迁移**：`TransactionStore.committingTransactions` 从 `BitSet` 改为 `long[]`，波及 `TransactionMap`、`Snapshot`、`Transaction` 等 7 个文件。`Snapshot.hashCode()` 改用 `System.identityHashCode()`。
+- **VersionedValue 序列化格式变更**：序列化从 "先写 operationId varLong" 改为 "先写 flags 字节"——根据 flags 决定后续字段（operationId/entryId/value/committedValue）的存在。已持久化的旧版本（v2.4.240）数据文件不兼容此格式。**架构影响**：此变更意味着 v2.4.249-SNAPSHOT 无法直接读取 v2.4.240 创建的 MVStore 数据文件，需通过数据迁移或 DDL 重新导入。
+- **事务恢复排序**：非正常关闭后的残余事务按提交序列号（commitment order）排序注册，确保重放顺序正确。
+- **死锁修复**：`saveChunkMetadataChanges()` 去除忙等轮询；`acceptChunkOccupancyChanges()` 将未分配 chunk 的 `RemovedPageInfo` 压回队列。`Transaction.waitForThisToEnd()` 新增 `STATUS_COMMITTED` 检查。

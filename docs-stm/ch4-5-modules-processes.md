@@ -1,7 +1,7 @@
 # 第4章 核心模块深度解读
 
 > **本章导读**: 本章深入分析 H2 的 Command、Expression 和 Table/Index 三个核心层的模块设计和类职责。同时介绍 TransactionStore 事务存储和 MVMap 数据结构的实现机制。
-> **前置知识**: 第2章《分层模块划分》§2.4-2.8（Command/Expression/Table-Index 层概览）；第3章《核心包结构》§3.5-3.6（对应包的类结构）
+> **前置知识**: 第2章《分层模块划分》§2.4-2.8（Command/Expression/Table-Index 层概览）；第3章《核心包结构详解》§3.5-3.6（对应包的类结构）
 > **章节要点**:
 > - 理解 Command 接口的设计模式和命令分类
 > - 掌握 Expression 层的表达式树结构与求值机制
@@ -1812,7 +1812,7 @@ public void removeRow(SessionLocal session, Row row) {
 # 第5章 核心流程解读
 
 > **本章导读**: 本章逐一分析 H2 的 9 个核心流程：SELECT、INSERT、UPDATE、DELETE、COMMIT、ROLLBACK、COMPACT、CHUNK、READ。每个流程按照流程图→核心逻辑阐述→关键代码引用的标准化模板进行组织。
-> **前置知识**: 第4章《核心模块详解》（各流程依赖的模块实现）；第2章§2.3-2.4（Engine/Command 层入口）
+> **前置知识**: 第4章《核心模块深度解读》（各流程依赖的模块实现）；第2章§2.3-2.4（Engine/Command 层入口）
 > **章节要点**:
 > - 掌握 9 个核心流程的执行链路
 > - 理解各流程的关键数据结构和算法

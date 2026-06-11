@@ -3487,6 +3487,6 @@ SQL 语句从 JDBC 到执行的完整解析路径及各个组件的职责:
 - H2 官方文档《Performance》(`h2/src/docsrc/html/performance.html#explain_plan`) — EXPLAIN PLAN 使用说明
 - H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#r_tree`) — MVRTreeMap 使用示例
 - 本书第7章《SQL 执行全流程》 — 执行计划的生成和执行
-- 本书第8章《查询优化器》 — 代价估算和 Join 顺序优化的详细分析
+- 本书第8章《查询优化器深度解读》 — 代价估算和 Join 顺序优化的详细分析
 - 论文: Guttman, "R-Trees: A Dynamic Index Structure for Spatial Searching" (1984)
 

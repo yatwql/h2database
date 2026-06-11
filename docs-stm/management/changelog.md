@@ -4,6 +4,34 @@
 
 ---
 
+## [v4.28] — 2026-06-11
+
+### 源码变更附录 + 4 人并行审查第6轮 + 交叉引用修复 + 附录技术修正
+
+#### Added
+- **ch9-10 源码版本变更附录**：新增「附：源码版本变更说明（v2.4.240 → v2.4.249-SNAPSHOT）」附录，记录 43 次提交、79 个文件中的关键变更摘要，涵盖 MVStore 核心层（panicException AtomicReference、closeStore 序列变更、commit 防重入、MVMap.operate 简化、tryLock CPU 退避、FileStore 流水线重构等）和事务子系统（TransactionStore 状态机、CommitDecisionMaker、VersionedBitSet 重写、VersionedValue 序列化格式变更等）
+- **cover.md 源码变更行**：封面新增「源码变更：2026-05-25（基于上游 v2.4.240 的 43 次提交更新）」信息
+
+#### Fixed
+- **CompactRowFactory 描述修正**：经源码验证无此类，修正为提交中实际行的条件简化（`isTransactionClosed()` 简化为 `transactionId <= maxTransactionId`）
+- **`isClosed()` 自旋等待描述修正**：补充 `Thread.sleep(millis++)` 递增等待及同线程免自旋条件
+- **TransactionStore 状态机措辞**：将"显式状态枚举"修正为"显式状态常量（`private static final int` + `AtomicInteger`）"
+- **VersionedValue 序列化架构影响**：补充不兼容性对数据文件的影响说明
+- **isBackupThread 描述补充**：注明 v2.4.240 上下文
+- **图 9-28 引用修正**：§9.7 恢复机制引用改为指向 §9.7 内的图 9-33/9-34/9-35
+
+#### Cross-Reference 修复
+- **第3章跨章引用统一**：`第3章《核心包结构》` → `第3章《核心包结构详解》`（ch1-2、ch4-5、ch11-12 共 5 处）
+- **第4章跨章引用统一**：`第4章《核心模块详解》` → `第4章《核心模块深度解读》`（ch4-5、ch7-8 共 2 处）
+- **第8章跨章引用统一**：`第8章《查询优化器》` → `第8章《查询优化器深度解读》`（ch6-3 共 1 处）
+- **§8.x 无效引用修复**：ch9-10 延展阅读中 `本书第8章§8.x` 改为 `本书第7章§7.1.5 — Session 锁机制与线程模型`
+- **ch9-10 导读引用修正**：`可结合第8章查询优化器中的并发访问模式理解` 改为 `可结合第7章§7.1.5 的 Session 锁机制与线程模型理解`
+
+#### Changed
+- **管理文档版本同步**：cover/requirements/plan/testplan/changelog 统一升级至 v4.28
+
+---
+
 ## [v4.27] — 2026-06-11
 
 ### 图 6-72b 补充 + check_style 重构 + PDF 更新 + 全局清理
