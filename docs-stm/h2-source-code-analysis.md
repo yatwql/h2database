@@ -499,7 +499,7 @@ SQL: "SELECT t.name, COUNT(*) FROM teams t JOIN members m
   空白 = 无直接依赖关系
 ```
 
-如图 1-7 所示，该矩阵清晰地展示了 H2 的层间依赖是单向且严格分层的：每一层只依赖其正下方的层，不存在跳层依赖或反向依赖。例如，JDBC 层不会直接调用 MVStore 层，Engine 层不会直接调用 FileSystem 层。这种设计保证了各层的可替换性和可测试性。
+如图 1-7 所示，该矩阵清晰地展示了 H2 的层间依赖是单向且严格分层的：每一层只依赖该层正下方的层，不存在跳层依赖或反向依赖。例如，JDBC 层不会直接调用 MVStore 层，Engine 层不会直接调用 FileSystem 层。这种设计保证了各层的可替换性和可测试性。
 
 **图 1-7: 各层内部组件与接口模式**
 
@@ -3401,7 +3401,7 @@ TransactionMap.get(key)
   PREPARED → ROLLEDBACK: prepareRollback(), 中止准备
 ```
 
-如图 3-28 所示，如图 3-27 所示，Transaction 的状态转换是线性的，一旦转换到终态（COMMITTED 或 ROLLEDBACK）就不会再改变。`VersionedValue` 记录了每个键值对的版本链——每个版本都关联了一个事务 ID 和提交时间戳。当 `TransactionMap.get()` 被调用时，它会沿着版本链查找对当前事务可见的最新版本。可见性规则的核心是快照隔离：一个事务只能看到在其快照时间戳之前已提交的更改，以及自己所做的未提交更改。
+如图 3-27 和 3-28 所示，Transaction 的状态转换是线性的，一旦转换到终态（COMMITTED 或 ROLLEDBACK）就不会再改变。`VersionedValue` 记录了每个键值对的版本链——每个版本都关联了一个事务 ID 和提交时间戳。当 `TransactionMap.get()` 被调用时，它会沿着版本链查找对当前事务可见的最新版本。可见性规则的核心是快照隔离：一个事务只能看到该事务的快照时间戳之前已提交的更改，以及自己所做的未提交更改。
 
 **图 3-28: 并发事务冲突检测**
 

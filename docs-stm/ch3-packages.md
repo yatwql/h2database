@@ -1079,7 +1079,7 @@ TransactionMap.get(key)
   PREPARED → ROLLEDBACK: prepareRollback(), 中止准备
 ```
 
-如图 3-28 所示，如图 3-27 所示，Transaction 的状态转换是线性的，一旦转换到终态（COMMITTED 或 ROLLEDBACK）就不会再改变。`VersionedValue` 记录了每个键值对的版本链——每个版本都关联了一个事务 ID 和提交时间戳。当 `TransactionMap.get()` 被调用时，它会沿着版本链查找对当前事务可见的最新版本。可见性规则的核心是快照隔离：一个事务只能看到在其快照时间戳之前已提交的更改，以及自己所做的未提交更改。
+如图 3-27 和 3-28 所示，Transaction 的状态转换是线性的，一旦转换到终态（COMMITTED 或 ROLLEDBACK）就不会再改变。`VersionedValue` 记录了每个键值对的版本链——每个版本都关联了一个事务 ID 和提交时间戳。当 `TransactionMap.get()` 被调用时，它会沿着版本链查找对当前事务可见的最新版本。可见性规则的核心是快照隔离：一个事务只能看到该事务的快照时间戳之前已提交的更改，以及自己所做的未提交更改。
 
 **图 3-28: 并发事务冲突检测**
 

@@ -34,7 +34,8 @@
 #### 生成产物
 - **合并文档**：docs-stm/h2-source-code-analysis.md（36,893 行）
 - **HTML 文档**：docs-stm/h2-source-code-analysis.html（564 TOC，88/88 检查通过）
-- **最终核验**：final_check 82/82；_audit_smart 0 缺图；图引用 95.5%
+- **PDF 文档**：docs-stm/h2-source-code-analysis.pdf（641 页，564 outline，重新生成）
+- **最终核验**：final_check 88/88；check_style 0 WARN/0 INFO；图引用 100%（578/578）；PDF verify 通过
 
 ---
 
