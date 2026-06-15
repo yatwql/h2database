@@ -4612,7 +4612,33 @@ H2 的合并只在"删除后仅剩一个子节点"时触发（树深度折叠）
 
 Chunk 的压缩整理、LIRS 缓存替换、Free Space 分配回收和 MVStore 平衡机制共同构成了 MVStore 存储引擎的自动维护体系。Chunk 的 append-only 写入和定期 compact 平衡了写入性能和空间利用率；LIRS 通过区分近期访问和频繁访问的 page 来抵抗扫描污染；Free Space 的空间位图管理和 MVStore 的自动平衡确保存储系统在长时间运行后仍能保持稳定性能。
 
-## 6.9 延展阅读
+## 6.9 延伸思考
+
+本节从 Chunk 整理、LIRS 缓存、Free Space 与 MVStore 自动平衡四个角度，引导你把存储算法的关键决策迁移到自己的工程场景。
+
+**1. 🟢★ 描述 Chunk 作为"逻辑事务单元"的语义，并解释为何 MVStore 在崩溃恢复时以 Chunk 为最小回滚粒度。**
+
+> 提示：从 Chunk 头尾校验和、append-only 写入的原子性、以及 nextChunk 链的可截断性三个角度切入。
+> 回顾：§6.4 Chunk 整理算法、§6.4.2 Chunk 文件结构
+
+**2. 🟢★ 解释 LIRS 双队列（Stack S 与 Queue Q）如何区分"近期重用"页与"一次性访问"页。**
+
+> 提示：关注 LIR 与 HIR 块在两个队列之间的迁移路径，以及 Stack 修剪过程中冷页的淘汰时机。
+> 回顾：§6.5 LIRS 缓存替换、§6.5.2 双队列结构
+
+**3. 🔵★★ 若把 LIRS 替换为纯 LRU，全表扫描型查询的命中率会出现何种变化趋势？请结合扫描污染分析。**
+
+> 提示：LRU 缺乏对一次性访问的隔离，扫描页会逐出热点;对比 LIRS 中 HIR 队列对扫描页的截留作用。
+> 回顾：§6.5 LIRS 缓存替换、§6.5.4 扫描抗性
+
+**4. 🟠★★★ 在百万级 Chunk 数据库上运行 `MVStoreTool simulateCrash`,再用 `dump` 子命令观察 Chunk 链的截断点;同时估算 FreeSpaceBitSet 在该规模下的内存占用与分配查找成本。**
+
+> 提示：dump 输出可定位 nextChunk 链的有效末端;位图大小约为总块数除以 8 字节,查找代价随游标推进与碎片率上升。
+> 回顾：§6.4 Chunk 整理算法、§6.6 Free Space 位图、§6.7 MVStore 自动平衡
+
+---
+
+## 6.10 延展阅读
 
 - H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#logStructured`) — Log Structured 存储设计
 - H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#caching`) — LIRS 缓存机制

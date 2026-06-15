@@ -361,6 +361,29 @@ if os.path.exists(cluster_tool):
 else:
     check(False, 'Cluster audit tool missing')
 
+# 11c. v5.6 chapter exercises (style-guide §12). Each chapter must end with
+# a 延伸思考 section containing >= 3 well-formed exercises; the book total
+# must be >= 50 across all 14 chapter slots.
+print('\n=== Chapter Exercises (style-guide §12) ===')
+exercises_tool = os.path.join(script_dir, '_audit_exercises.py')
+if os.path.exists(exercises_tool):
+    try:
+        res = subprocess.run(
+            [sys.executable, exercises_tool, '--json'],
+            capture_output=True, text=True, encoding='utf-8',
+        )
+        import json as _json2
+        payload = _json2.loads(res.stdout) if res.stdout else {}
+        total = payload.get('exercises_total', 0)
+        ok = payload.get('chapters_pass', 0)
+        all_ch = payload.get('chapters_total', 0)
+        check(ok == all_ch and total >= 50,
+              f'延伸思考: {ok}/{all_ch} chapters pass; total exercises {total} (floor 50)')
+    except Exception as exc:
+        check(False, f'Exercise audit failed to run: {exc}')
+else:
+    check(False, 'Exercise audit tool missing')
+
 # 12. Glossary content validation
 # v6.0 supports multi-line entries with the **章节**: ... line on a separate
 # row. Parse entries as blocks delimited by `- **Term**:` markers, so that the

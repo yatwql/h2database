@@ -1,6 +1,6 @@
 # H2 Database 源码分析 — 质量标准与测试计划
 
-> 版本：v5.5
+> 版本：v5.6
 > 最后更新：2026-06-15
 
 ---
@@ -42,6 +42,7 @@ PDF 生成较慢；日常编辑只要求标准流程通过。
 | 索引层级（v6.0） | 主条目 ≥ 150；子条目 ≥ 50；see-also ≥ 30；总条目 ≥ 250；see-also 全部解析；子条目章节 ∈ 1-12 | `final_check.py`、`build_index.py --hierarchy-check`、`_audit_index_xrefs.py` |
 | 图注动宾结构（v6.0） | 全书图注以批准动词起首；长度 ∈ [8, 30] 字；无模糊后缀；strict 阈值下违规 = 0 | `_audit_captions.py --threshold strict` |
 | 图簇桥接（v6.0） | 3+ 张图在 ≤ 40 行内连续出现的"图簇"，前置一句桥接叙事点名所有图 | `_audit_figure_clusters.py --window 40 --needs-bridge`（应输出空清单） |
+| 延伸思考（v6.0） | 14 章节槽全部含 `## N.X 延伸思考` 小节；每章 ≥ 3 题；每题含难度/题型 emoji + 提示行 + 含锚点的回顾行；全书 ≥ 50 题 | `final_check.py`、`_audit_exercises.py` |
 | 术语完整性 | 术语 ≥ 100 条；每条有对应章节引用；引用章节号有效；see-also 双向闭合 | `final_check.py`、`_annotate_terms.py --check-related`、`build_glossary.py --validate` |
 | 版本统计 | cover 统计先更新；管理文档版本一致 | `cover_stats.py`, 人工核对 |
 

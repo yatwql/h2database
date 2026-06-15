@@ -1818,7 +1818,31 @@ public void removeRow(SessionLocal session, Row row) {
 
 本章深入分析了 H2 Database 的六个核心模块：Database 全局入口、Session 会话管理、MVStore 存储引擎、MVMap B-Tree 映射、TransactionStore 事务协调、MVTable 表操作封装。每层围绕核心数据结构和关键源码展开，从顶层入口到底层存储构成了完整的模块链路。
 
-## 4.8 延展阅读
+## 4.8 延伸思考
+
+下面 4 道自查题用来检验读者是否能把本章六大模块的职责切分迁移到其他场景。
+
+**1. 🟢★ 用一句话概括 SessionLocal 持有的核心状态，并说明为什么会话本身并不直接持有"当前事务"对象。**
+
+> 提示：把 SessionLocal 与 TransactionStore.Transaction 之间的引用方向看清楚，事务生命周期由谁创建、谁结束。
+> 回顾：§4.2 SessionLocal — 会话管理、§4.5 TransactionStore — 事务协调器
+
+**2. 🟢★ 用层次关系图说明 TransactionStore、MVStore、MVMap 三者的依赖与组合方式，并指出 TransactionStore 为什么不能直接复用 MVMap 而要包装出自己的 TransactionMap。**
+
+> 提示：从可见性判断、Undo Log、VersionedValue 这三件事入手，思考事务语义在哪一层加入。
+> 回顾：§4.3 MVStore — 存储引擎核心、§4.4 MVMap — 并发 B-Tree 映射、§4.5 TransactionStore — 事务协调器
+
+**3. 🔵★★ 假设把 MVMap 的 `RootReference` 由 `AtomicReference` 改为普通 `volatile` 字段，仅保留可见性而放弃 CAS。这会破坏哪些既有不变量？请至少给出两条结构性理由。**
+
+> 提示：聚焦 Copy-on-Write 提交点的写入冲突检测，并联想多个写线程同时尝试替换根节点时的中间状态。
+> 回顾：§4.4 MVMap — 并发 B-Tree 映射、§4.6 MVTable — 表与锁管理
+
+**4. 🟠★★★ 在 IntelliJ IDEA 中以 `SessionLocal.commit()` 为入口设置断点，运行一次最小提交脚本（一次 INSERT + COMMIT），记录从 SessionLocal 到 TransactionStore 再到 MVStore 的实际调用栈，并对照本章描述指出至少一个本章未显式列出的中间方法。**
+
+> 提示：结合 IDE 的 Call Hierarchy 与运行期堆栈双视图核对；注意 commit 路径上对 Undo Log 的清理调用顺序。
+> 回顾：§4.2 SessionLocal — 会话管理、§4.5 TransactionStore — 事务协调器、第4章
+
+## 4.9 延展阅读
 
 - H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html`) — MVStore 体系结构与 B-Tree 实现参考
 - H2 官方文档《Advanced》(`h2/src/docsrc/html/advanced.html#transaction_isolation`) — 事务隔离级别与 MVCC 行为说明
@@ -3908,7 +3932,31 @@ MVSecondaryIndex.find(session, searchRow)
 
 本章涉及的所有基础算法——B-Tree 查找插入、Copy-on-Write 版本管理、MVCC 可见性判断——将在第6章《H2 数据库核心算法分析》中深入展开。理解本章的流程有助于把握第6章各算法的应用场景。
 
-## 5.11 延展阅读
+## 5.11 延伸思考
+
+下面 4 道自查题帮助读者把九个核心流程的状态机与不变量内化为可应用的判断力。
+
+**1. 🟢★ 描述 INSERT 流程中 Undo Log 与 VersionedValue 的写入顺序，并解释为什么这一顺序对崩溃恢复至关重要。**
+
+> 提示：从"先记录回滚信息，再发布新版本"这一通用规则出发；注意 commit 之前 VersionedValue 对其他事务尚不可见。
+> 回顾：§5.2 INSERT 写入流程、§5.5 事务提交 (COMMIT)
+
+**2. 🟢★ 比较 ROLLBACK 与 COMMIT 在状态机上的对称差异：两者从同一中间状态出发，最终如何走向相反的终态？**
+
+> 提示：聚焦 Undo Log 的"回放方向"以及对 VersionedValue 中 committed 字段的处理；可画一个简单的状态迁移图。
+> 回顾：§5.5 事务提交 (COMMIT)、§5.6 事务回滚 (ROLLBACK)
+
+**3. 🔵★★ 若 Compaction 与 COMMIT 并发执行，哪些不变量必须由实现保护？请至少给出两条，并说明 H2 如何通过现有机制保证它们成立。**
+
+> 提示：思考 Chunk 重写过程中"正在写入的版本"是否可被搬迁；关注根节点指针的发布点与可见性。
+> 回顾：§5.5 事务提交 (COMMIT)、§5.7 空间整理 (Compaction)、§5.8 Chunk 压缩整理流程
+
+**4. 🟠★★★ 在 H2 测试目录下编写一个用例，向数据文件目录所在磁盘注入"磁盘满"故障（可用 mock FileSystem 或预先填满的临时分区），观察 ROLLBACK 失败时 H2 进入的恢复路径，并记录最终落盘状态。**
+
+> 提示：先定位 `org.h2.store.fs` 中的可注入接口，再结合 §5.6 的失败处理分支判断 H2 是抛异常还是把数据库标记为只读。
+> 回顾：§5.6 事务回滚 (ROLLBACK)、§5.9 数据读取流程、第5章
+
+## 5.12 延展阅读
 
 - H2 官方文档《Advanced》(`h2/src/docsrc/html/advanced.html`) — 事务隔离级别与 MVCC 行为详细说明
 - H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#transactions`) — MVStore 事务机制

@@ -9,7 +9,7 @@
 
 **H2 Database** 采用 Mozilla Public License 2.0（MPL 2.0）开源许可证发布。本书的分析内容基于 H2 源码，遵循 MPL 2.0 许可证的条款。
 
-**本书版本**: v5.5 · 2026-06-15  
+**本书版本**: v5.6 · 2026-06-15  
 **源码版本**: H2 Database 2.4.249-SNAPSHOT  
 **源码地址**: https://github.com/h2database/h2database
 

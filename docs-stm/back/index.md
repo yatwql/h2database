@@ -142,7 +142,7 @@
 
 - Engine 类 — §2.3, §3.3
   see also: Database, ConnectionInfo
-- Expression 层 — §2.6, §4.2
+- Expression 层 — §2.3, §4.2
   - 继承体系 — §4.2.1
   - getValue 接口 — §4.2.2
   - 表达式即执行计划 — §6.10.4
@@ -435,7 +435,7 @@
   see also: PageSplit, B-Tree
 - 锁超时 — §10.3
   see also: Deadlock, LOCK_TIMEOUT
-- 数据流图 — §1.5
+- 数据流图 — §1.2
 - 视图 — §3.3
 
 ## T

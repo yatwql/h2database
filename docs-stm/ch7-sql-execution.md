@@ -3642,7 +3642,31 @@ DataType.compareWithConversion() 类型转换矩阵
 
 第 7 章完整追踪了一条 SQL 语句从 JDBC 接口到存储层的全链路执行流程。核心内容包括：JDBC 入口层的两种语句执行方式（Statement 与 PreparedStatement）及其性能差异、Session 层的缓存与锁机制、Parser 递归下降解析的三阶段管道（词法分析、语法分析、命令包装）、Command 框架的统一执行抽象、以及表达式求值的多态分发与短路求值策略。本章的流程分析为第 8 章深入查询优化器提供了执行层面的基础铺垫——理解 SQL 如何被解析和执行，是理解查询优化器如何选择最优执行计划的前提。
 
-## 7.8 延展阅读
+## 7.8 延伸思考
+
+本章追踪了 SQL 从 JDBC 入口到表达式求值的全链路，下列题目帮助读者把"流程图"转化为对每个环节关键决策的判断力。
+
+**1. 🟢★ 描述 SmallLRUCache 在 SessionLocal 上的命中与失效路径，指出哪些操作会让缓存条目失效。**
+
+> 提示：从 PreparedStatement 的复用场景出发，关注 schema 变更、参数化查询的复用条件。
+> 回顾：§7.3 缓存机制
+
+**2. 🟢★ CommandContainer 的 query 与 update 双入口分别返回什么类型？为什么要在同一容器上同时暴露两条路径？**
+
+> 提示：留意 ResultInterface 与 long updateCount 的语义差异，以及 JDBC 接口对二者的不同期待。
+> 回顾：§7.4 Command 执行框架
+
+**3. 🔵★★ 若把 H2 当前"AST 即执行计划"的设计改为"AST + 独立执行计划"双层结构，会带来哪些运行时与维护成本？请至少给出两条结构性代价。**
+
+> 提示：从对象数量、缓存粒度、优化器与执行器的解耦收益与成本三方面切入。
+> 回顾：§7.2 SQL 解析、§7.5 全链路 ASCII 序列图
+
+**4. 🟠★★★ 在本地用 `EXPLAIN PLAN FOR` 跑一条带 JOIN 与子查询的复杂语句，对照 Optimizer 输出与 §7.6 表达式求值的实际分发路径，找出至少一处"AST 子树"与"输出计划文本"在求值顺序上不完全一致的地方。**
+
+> 提示：关注 ConditionAndOr 的短路求值与 Optimizer 重排后的连接顺序，对比解析树与最终执行树的差异。
+> 回顾：§7.6 表达式求值、§7.5 全链路 ASCII 序列图
+
+## 7.9 延展阅读
 
 - H2 官方文档《SQL Grammar》(`h2/src/docsrc/html/grammar.html`) — H2 SQL 语法完整参考
 - H2 官方文档《Functions》(`h2/src/docsrc/html/functions.html`) — 内置函数列表与说明

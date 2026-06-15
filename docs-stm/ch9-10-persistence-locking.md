@@ -3221,7 +3221,31 @@ MVStore 的压缩发生在 Page 序列化的最后阶段。以下流程图展示
 - 崩溃恢复依赖双冗余 Store Header 与 Chunk Footer 中的 Fletcher 校验和，从最新完整 Chunk 重建 B-Tree，并利用 Undo Log 回滚未提交事务，从而保证完整性与一致性。
 - 压缩与加密是 MVStore 的可选安全与存储优化机制：压缩支持 LZF 与 Deflate 两级，采用机会主义策略确保不引起空间膨胀；加密采用 XTS-AES 模式，密钥生命周期结束后立即清除，防止敏感信息残留。
 
-## 9.10 延展阅读
+## 9.10 延伸思考
+
+理解 MVStore 的写入与恢复机制后，下面四题帮助读者将"无 WAL 的崩溃安全"这一设计哲学落到具体场景。
+
+**1. 🟢★ 描述 MVStore 文件头部双副本（block 0 与 block 1）的仲裁规则：当两份 Store Header 出现差异时，恢复流程依据哪些字段决定使用哪一份？**
+
+> 提示：关注 `version`、`fletcher` 校验和、以及 chunk 链表回扫的协同；不完整的副本会被怎样判定。
+> 回顾：§9.6、§9.7
+
+**2. 🟢★ Chunk Footer 的 Fletcher-32 校验失败后，恢复流程的回退路径是怎样的？为什么仅靠 Footer 校验就能识别"半写"问题？**
+
+> 提示：从 Chunk 末尾顺序写入、Footer 是 Chunk 完整性的最后一道证据切入。
+> 回顾：§9.3、§9.7
+
+**3. 🔵★★ 为什么 MVStore 不需要显式的 WAL（Write-Ahead Log）就能保证崩溃安全？请与 PostgreSQL 的 redo log 设计做对比，指出二者在写放大与恢复时长上的权衡。**
+
+> 提示：从 Copy-on-Write + 原子 Chunk 提交的语义、与基于 redo 日志重放的语义对照入手；考虑 BackgroundWriter `autoCommitDelay` 阈值对崩溃丢失窗口的影响。
+> 回顾：§9.4、§9.5
+
+**4. 🟠★★★ 在测试沙箱中用 `simulateCrash`（或在 `MVStoreTool` 帮助下截断文件尾部）制造一次只完成 Chunk Header、未写入 Footer 的"半成品 Chunk"，重启后观察 Recover 的决策日志，并解释为什么先前的版本仍然可读。**
+
+> 提示：定位 `org/h2/mvstore/MVStoreTool.java` 与 `Recover.java` 的入口；结合 `chunks` 链表回扫与 `lastChunk` 选择逻辑。
+> 回顾：§9.7、第9章
+
+## 9.11 延展阅读
 
 - 文件格式与 Page/Chunk 布局：H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#fileFormat`)
 - LIRS 缓存与压缩策略：H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#caching`)
@@ -6519,7 +6543,31 @@ H2 官方文档在《Advanced》一章中专门讨论了 ACID 的支持范围（
 
 至此，全书从架构设计、包结构、核心流程、算法原理到持久化与并发控制的完整技术脉络已经展开。第11-12章《核心源码导读与全书总结》将转换视角，从读者实践出发，提供高效的源码阅读路线、调试环境搭建方法和测试框架使用指南，帮助读者将前10章的知识转化为实际的源码分析能力。
 
-## 10.10 延展阅读
+## 10.10 延伸思考
+
+掌握 H2 五层并发控制后，下面四题帮助读者把"层次化锁 + MVCC"的整体策略迁移到隔离级别与跨进程访问的具体取舍。
+
+**1. 🟢★ 解释 RootReference 的 CAS 在何时失败、何时自旋：写入者发现 CAS 失败后，是直接重试还是先重新构造新 page 链？**
+
+> 提示：从 `RootReference.appendCounter`、`MVMap.setNewRoot()` 的失败分支与重试循环切入；注意失败次数与让出策略。
+> 回顾：§10.5
+
+**2. 🟢★ Snapshot Isolation 的 first-committer-wins 与 SQL 标准的 Serializable 在写偏斜（write skew）一类异常上有什么本质差异？为什么 Snapshot 不能阻止它？**
+
+> 提示：从两个并发事务读到同一快照、各自更新不相交行的场景考虑；与 Serializable 必须串行化的语义对照。
+> 回顾：§10.4、§10.8
+
+**3. 🔵★★ 死锁检测的等待图遍历最坏复杂度是多少？H2 在牺牲者选择上倾向回滚哪一类事务，背后的动因是什么？**
+
+> 提示：从 `Session.checkDeadlock()` 的 BFS/DFS 形态、活跃事务规模 N 与边数 E 的关系入手；牺牲者选择关注事务大小与 SQL 文本可恢复性。
+> 回顾：§10.3
+
+**4. 🟠★★★ SOCKET 锁与 FILE 锁哪一种支持跨容器（同主机不同 Docker 容器挂载同一卷）场景？请用一个最小复现步骤验证另一种为何不可靠。**
+
+> 提示：聚焦 `org/h2/store/FileLock.java` 中 `LOCK_SOCKET`/`LOCK_FILE`/`LOCK_FS` 三种实现的依赖差异；测试时关注容器内 PID 与时间戳的可见性。
+> 回顾：§10.6、第10章
+
+## 10.11 延展阅读
 
 - 文件格式（File/Chunk/Page 三级）：H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#fileFormat`)
 - ACID 特性与持久性讨论：H2 官方文档《Advanced》(`h2/src/docsrc/html/advanced.html#acid`)
