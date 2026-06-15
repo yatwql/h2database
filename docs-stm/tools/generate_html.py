@@ -142,14 +142,58 @@ html { overflow-y: scroll; }
     position: fixed; left: 0; top: 0; bottom: 0; width: 280px;
     background: #1a1a2e; color: #ccc; overflow-y: auto;
     padding: 20px 0; z-index: 100;
+    transition: opacity 0.25s ease, visibility 0.25s ease,
+                transform 0.3s ease;
 }
+/* Hide the sidebar while reader is on cover or TOC page so it doesn't
+   overlay the centered cover title and full-width table of contents.
+   The sidebar reappears once the main content (#page-wrap) scrolls into
+   view — handled by IntersectionObserver in the script below. */
+body.intro-mode #sidebar { opacity: 0; visibility: hidden; pointer-events: none; }
+body.intro-mode #toggle-sidebar { display: none; }
+body.intro-mode #toc-page > div { margin-left: 0 !important; }
+body.intro-mode #sidebar-expand { display: none; }
+
+/* Desktop collapse: the TOC header row (#sidebar-toggle) acts as the
+   collapse trigger. When collapsed, #sidebar slides off-screen to the
+   left and #content drops its left margin to widen the reading area;
+   the floating chevron #sidebar-expand at the top-left lets the reader
+   bring the sidebar back. State persists in localStorage. */
+#sidebar-expand {
+    position: fixed; top: 12px; left: 12px; z-index: 150;
+    width: 32px; height: 32px; padding: 0;
+    background: #1a1a2e; color: #ccc;
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 4px;
+    cursor: pointer; font-size: 16px; line-height: 30px;
+    display: none; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: background 0.15s, color 0.15s;
+}
+#sidebar-expand:hover { background: #4fc3f7; color: #fff; border-color: #4fc3f7; }
+body.sidebar-collapsed #sidebar { transform: translateX(-280px); }
+body.sidebar-collapsed #content { margin-left: 0; max-width: 1100px; }
+body.sidebar-collapsed #sidebar-expand { display: flex; }
 #sidebar::-webkit-scrollbar { width: 5px; }
 #sidebar::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
-#sidebar h2 {
-    color: #eee; font-size: 14px; padding: 0 16px 12px;
-    border-bottom: 1px solid #333; margin: 0 12px 8px;
-    letter-spacing: 1px; text-transform: uppercase;
+/* TOC header row doubles as the collapse toggle — much clearer
+   affordance than a tiny corner button. The chevron rotates 180° when
+   the sidebar is collapsed (it's now reachable only via #sidebar-expand,
+   but rotating in advance keeps the icon consistent across states). */
+#sidebar-toggle {
+    display: flex; align-items: center; gap: 8px;
+    width: calc(100% - 24px); margin: 0 12px 8px; padding: 6px 12px 12px;
+    background: transparent; border: none; border-bottom: 1px solid #333;
+    color: #eee; font-size: 14px; letter-spacing: 1px; text-transform: uppercase;
+    text-align: left; cursor: pointer; font-family: inherit;
+    transition: color 0.15s, background 0.15s;
 }
+#sidebar-toggle:hover { color: #4fc3f7; background: rgba(79,195,247,0.05); }
+#sidebar-toggle .chev {
+    display: inline-block; font-size: 18px; line-height: 1;
+    transition: transform 0.3s ease;
+}
+#sidebar-toggle .lbl { flex: 1; }
+body.sidebar-collapsed #sidebar-toggle .chev { transform: rotate(180deg); }
 #sidebar a {
     display: block; color: #aaa; text-decoration: none;
     padding: 4px 16px 4px 12px; font-size: 13px;
@@ -167,6 +211,7 @@ html { overflow-y: scroll; }
     margin-left: 280px; flex: 1; max-width: 960px;
     padding: 40px 48px; background: #fff; min-height: 100vh;
     scroll-padding-left: 290px; scroll-padding-top: 20px;
+    transition: margin-left 0.3s ease, max-width 0.3s ease;
 }
 #toggle-sidebar {
     display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
@@ -178,6 +223,14 @@ html { overflow-y: scroll; }
     #sidebar.open { left: 0; }
     #content { margin-left: 0; padding: 48px 20px 20px; }
     #toggle-sidebar { display: block; }
+    /* On mobile the hamburger toggle handles show/hide; suppress the
+       desktop expand chevron to avoid two competing affordances. The
+       sidebar header (#sidebar-toggle) stays visible since it's the
+       TOC title; we just neutralise its collapse behaviour on mobile. */
+    #sidebar-expand { display: none !important; }
+    #sidebar-toggle { cursor: default; }
+    #sidebar-toggle:hover { color: #eee; background: transparent; }
+    #sidebar-toggle .chev { display: none; }
 }
 h1, h2, h3, h4 { color: #1565C0; margin-top: 1.5em; margin-bottom: 0.5em; font-family: 'Microsoft YaHei', SimSun, -apple-system, sans-serif; scroll-margin-left: 290px; scroll-margin-top: 20px; }
 #content h1 { font-size: 1.8em; border-bottom: 2px solid #1565C0; padding-bottom: 8px; position: relative; padding-top: 0.3em; page-break-before: always; }
@@ -299,7 +352,16 @@ def md_to_html(text):
     return text
 
 # Build TOC HTML (sidebar)
-toc_html = '<h2>TOC</h2>\n'
+# The TOC header is the click target for collapsing the sidebar — making
+# the whole row clickable instead of a tiny chevron at the corner is far
+# easier to discover. Chevron rotates 180° when collapsed (handled in CSS
+# via `body.sidebar-collapsed #sidebar-toggle .chev`).
+toc_html = (
+    '<button id="sidebar-toggle" type="button" '
+    'aria-label="收起或展开目录侧栏" title="点击收起/展开目录（快捷键 [）">'
+    '<span class="chev">‹</span><span class="lbl">TOC · 目录</span>'
+    '</button>\n'
+)
 for level, title, anchor, _ in toc_entries:
     indent = f'toc-h{level}'
     toc_html += f'<a class="{indent}" href="#{anchor}">{md_to_html(title)}</a>\n'
@@ -507,6 +569,7 @@ HTML = f"""<!DOCTYPE html>
 <div style="position:absolute;left:0;top:0;width:1px;height:1px;overflow:hidden;" aria-hidden="true">__CONTENT_START__</div>
 <div id="page-wrap" class="page-wrap">
   <button id="toggle-sidebar" onclick="document.getElementById('sidebar').classList.toggle('open')">TOC</button>
+  <button id="sidebar-expand" type="button" aria-label="展开目录侧栏" title="展开目录侧栏（快捷键 [）">›</button>
   <nav id="sidebar">
   {toc_html}
   </nav>
@@ -515,6 +578,65 @@ HTML = f"""<!DOCTYPE html>
   </main>
 </div>
 <script>
+// Desktop sidebar collapse/expand: clicking the TOC header bar at the
+// top of the sidebar slides it off-screen to widen the reading area; a
+// floating chevron at top-left brings it back. The choice persists in
+// localStorage so the reader's preference survives page reloads.
+//
+// Implementation note: handlers are attached via document-level event
+// delegation (using closest() to find the trigger). This is robust to
+// late-injected DOM, IIFE ordering, and any framework that swaps button
+// nodes — direct addEventListener bindings can silently fall off when
+// the original button is replaced.
+(function() {{
+    const body = document.body;
+    const KEY = 'h2-doc-sidebar-collapsed';
+    if (localStorage.getItem(KEY) === '1') {{
+        body.classList.add('sidebar-collapsed');
+    }}
+    function setCollapsed(collapsed) {{
+        body.classList.toggle('sidebar-collapsed', collapsed);
+        try {{ localStorage.setItem(KEY, collapsed ? '1' : '0'); }} catch (e) {{ /* private mode */ }}
+    }}
+    document.addEventListener('click', (e) => {{
+        const t = e.target;
+        if (!t || !t.closest) return;
+        if (t.closest('#sidebar-toggle')) {{ e.preventDefault(); setCollapsed(true); return; }}
+        if (t.closest('#sidebar-expand')) {{ e.preventDefault(); setCollapsed(false); return; }}
+    }});
+    // Keyboard shortcut: '[' toggles the sidebar (ignored when typing in form fields).
+    document.addEventListener('keydown', (e) => {{
+        if (e.key !== '[' || e.ctrlKey || e.metaKey || e.altKey) return;
+        const tag = (e.target && e.target.tagName) || '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
+        setCollapsed(!body.classList.contains('sidebar-collapsed'));
+    }});
+}})();
+
+// Intro mode: hide the sidebar while the reader is on cover/TOC pages so
+// the fixed-left sidebar doesn't overlay centered cover content or the
+// full-width TOC. Sidebar reappears once main content enters the viewport.
+(function() {{
+    const body = document.body;
+    const pageWrap = document.getElementById('page-wrap');
+    if (!pageWrap) return;
+    body.classList.add('intro-mode');
+    const introObserver = new IntersectionObserver((entries) => {{
+        entries.forEach(entry => {{
+            // Once #page-wrap (the main content container) enters the
+            // viewport at all, leave intro mode and show the sidebar.
+            if (entry.isIntersecting) {{
+                body.classList.remove('intro-mode');
+            }} else if (entry.boundingClientRect.top > 0) {{
+                // #page-wrap has scrolled below the viewport again
+                // (reader scrolled back up to cover/TOC) — re-hide sidebar.
+                body.classList.add('intro-mode');
+            }}
+        }});
+    }}, {{ rootMargin: '0px 0px -20% 0px' }});
+    introObserver.observe(pageWrap);
+}})();
+
 // Scroll spy for sidebar
 (function() {{
 const observer = new IntersectionObserver((entries) => {{
@@ -535,7 +657,7 @@ document.querySelectorAll('h1[id],h2[id],h3[id],h4[id]').forEach(h => observer.o
 document.querySelectorAll('pre').forEach(pre => {{
     const code = pre.querySelector('code');
     if (!code || !code.textContent.trim()) return;
-    const lines = code.innerHTML.split('\n');
+    const lines = code.innerHTML.split('\\n');
     const count = lines.length;
 
     // Create line numbers
@@ -543,7 +665,7 @@ document.querySelectorAll('pre').forEach(pre => {{
     lineNum.className = 'line-nums';
     let nums = '';
     for (let i = 1; i <= count; i++) {{
-        nums += i + '\n';
+        nums += i + '\\n';
     }}
     lineNum.textContent = nums;
 

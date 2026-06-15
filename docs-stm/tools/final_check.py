@@ -25,6 +25,8 @@ chapter_names = [
     'ch11-12-guide-summary.md',
     # v5.4 — Phase D end-to-end case studies appendix.
     'appendix-a-case-studies.md',
+    # v6.x — Source-code version-change notes (lifted out of appendix A).
+    'appendix-b-version-changes.md',
 ]
 CHAPTERS = front_matter + [os.path.join(docs_dir, name) for name in chapter_names] + back_matter
 # Drop any chapter file that does not yet exist (Phase D appendix may be

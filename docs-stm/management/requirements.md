@@ -1,8 +1,8 @@
 # H2 Database 源码分析 — 需求文档
 
-> 版本：v5.0
-> 状态：已交付，维护中
-> 最后更新：2026-06-11
+> 版本：v5.8
+> 状态：已交付，v6.0 维护与增强中
+> 最后更新：2026-06-15
 
 ---
 
@@ -15,13 +15,15 @@
 | 产物 | 路径 | 说明 |
 |------|------|------|
 | 源章节 | `docs-stm/ch*.md` | 10 个源文件覆盖 12 章 |
+| 附录 | `docs-stm/appendix-a-case-studies.md`、`docs-stm/appendix-b-version-changes.md` | 端到端案例研究（A）、源码版本变更说明（B） |
+| 前/后件 | `docs-stm/front/`、`docs-stm/back/` | 前言、版权、阅读指南；术语表、参考文献、索引 |
 | 合并 Markdown | `docs-stm/h2-source-code-analysis.md` | 标准可提交交付物，由源章节生成 |
 | HTML | `docs-stm/h2-source-code-analysis.html` | 按需生成，带侧边栏 TOC，git 忽略 |
 | PDF | `docs-stm/h2-source-code-analysis.pdf` | 按需生成，带大纲和可点击目录，git 忽略 |
 | 工具脚本 | `docs-stm/tools/` | 正式生成、审计和验证工具 |
-| 管理文档 | `docs-stm/management/requirements.md`, `plan.md`, `testplan.md`, `changelog.md`, `review-findings.md` | 当前需求、计划、质量门禁、历史和问题追踪 |
+| 管理文档 | `docs-stm/management/` | 当前需求、计划、质量门禁、变更记录、审查问题、写作风格指南 |
 
-当前统计数据以 `docs-stm/cover.md` 自动更新结果和 `docs-stm/tools/final_check.py` 输出为准。
+当前统计数据以 `docs-stm/cover.md` 自动更新结果和 `docs-stm/tools/final_check.py` 输出为准；本文件不重复维护数字。
 
 ## 3. 内容范围
 
@@ -34,12 +36,13 @@
 - B-Tree、Copy-on-Write、MVCC、Chunk、LIRS、FreeSpace、MVStore 平衡、Optimizer、R-Tree、Recursive Descent Parser 等核心算法。
 - SQL 执行、查询优化、持久化、恢复、锁和并发控制。
 - 源码阅读路线、调试入口和总结。
+- 端到端案例研究（附录 A）与跨小版本源码变更（附录 B）。
 
 ## 4. 质量需求
 
 质量门禁以 `docs-stm/management/testplan.md` 为唯一权威来源。本文件只保留需求摘要：
 
-- 章节完整：12 章齐全，H1 格式一致。
+- 章节完整：12 章 + 2 附录齐全，H1 格式一致。
 - 图表完整：内容型小节至少 2 图，模板型小节至少 1 图。
 - 源码引用：关键论述包含文件名和行号，路径使用 `org/h2/...` 格式。
 - 格式一致：图注、代码围栏、跨章引用和标题层级符合约定。

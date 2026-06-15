@@ -28,7 +28,9 @@ source_files = ['cover.md'] + \
      'ch9-10-persistence-locking.md',
      'ch11-12-guide-summary.md',
      # v5.4 — Phase D end-to-end case studies appendix.
-     'appendix-a-case-studies.md'] + \
+     'appendix-a-case-studies.md',
+     # v6.x — Source-code version-change notes (lifted out of appendix A).
+     'appendix-b-version-changes.md'] + \
     [os.path.relpath(f, docs_dir) for f in back_files]
 
 total_lines = 0

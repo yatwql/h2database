@@ -1,6 +1,6 @@
 # H2 Database 源码分析 — 质量标准与测试计划
 
-> 版本：v5.6
+> 版本：v5.8
 > 最后更新：2026-06-15
 
 ---
@@ -60,12 +60,14 @@ PDF 生成较慢；日常编辑只要求标准流程通过。
 
 ## 4. PDF 专项门禁
 
+### 4.1 标准 PDF（日常交付）
+
 正式 PDF 交付必须满足：
 
 - PDF 文件重新生成自当前 HTML。
 - PDF Document Outline 与 HTML 标题一致。
 - 正文前目录条目可点击并指向有效页面。
-- Outline 标题不得包含“代码片段”、源码文件名、源码位置或行号范围。
+- Outline 标题不得包含"代码片段"、源码文件名、源码位置或行号范围。
 
 验证命令为：
 
@@ -74,6 +76,25 @@ python docs-stm/tools/generate_pdf.py
 python docs-stm/tools/add_pdf_toc_links.py
 python docs-stm/tools/verify_pdf.py
 ```
+
+### 4.2 印刷级 PDF（v6.0 / Phase G 起，可选交付）
+
+印刷级 PDF 是日常 PDF 的并行产出，用于实体印刷或正式归档场景。要求：
+
+- 印刷级 PDF 与日常 PDF 文件分离（`h2-source-code-analysis.pdf` 与 `h2-source-code-analysis-print.pdf`），互不覆盖
+- 每章 H1 在印刷级 PDF 上独占一页（chapter cover），含装饰性渐变条与底分隔线
+- 目录页每条 TOC 条目以"标题 ………… 页码"虚线对齐渲染
+- 页眉左侧含"H2 Database 源码分析"，右侧含版本标识；页脚居中含"第 N 页 / 共 M 页"
+- 所有 H1-H4 在 PDF Outline 中可点击跳转
+- 印刷级 PDF 文件大小 ≤ 标准 PDF 1.5 倍
+
+验证命令：
+
+```bash
+python docs-stm/tools/pdf_print_grade.py
+```
+
+视觉验证：在 Chrome / Adobe Reader 中检查 (a) 章首装饰条 (b) TOC 虚线对齐 (c) 页眉/页脚一致出现。
 
 ## 5. 拒绝标准
 

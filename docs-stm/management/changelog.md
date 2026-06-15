@@ -4,6 +4,219 @@
 
 ---
 
+## [v5.8] — 2026-06-15
+
+### Phase G 起步：印刷级 PDF 渲染管道
+
+> v6.0 计划的第七阶段交付，对应 U19 实施单元。本阶段独立于日常 PDF 流水线，按用户决策点 4.6"印刷级 PDF 增量推进，不阻塞 MD/HTML 流水线"——印刷级 PDF 是并行产出而非替换。
+
+#### Added — 新工具
+- **`docs-stm/tools/pdf_print_grade.py`**（新建，~250 行）：印刷级 PDF 渲染管道
+  - Step 1：调用 `generate_html.py` 确保 HTML 最新
+  - Step 2：临时副本注入印刷级 CSS（`@media print` 作用域）后由 Playwright/Chromium 渲染至 `h2-source-code-analysis-print.pdf`，输出文件与日常 PDF（`h2-source-code-analysis.pdf`）独立，互不覆盖
+  - Step 3：用 pypdf 添加可点击章节书签（与 generate_pdf.py 共用 `__hdr_N__` ASCII 标记策略）
+
+#### Added — 印刷级排版要素（@media print）
+- **章首装饰页**：每个 H1 设 `page-break-before: always` + `padding-top: 100px` + 上方渐变条 `::before` + 下方分割线 `::after`，居中放大字体形成"chapter cover"效果
+- **TOC 虚线对齐**：目录页每条 `<a>` 转为 flex 布局，`::after` 注入大量句点 `..............` 配合 `overflow:hidden` 形成动态虚线长度；title / dot leader / page number 通过 `order: 1/2/3` 对齐
+- **印刷级页眉页脚**：页眉左侧 `H2 Database 源码分析` + 右侧 `印刷版 v5.8`；页脚居中 `第 N 页 / 共 M 页`，均带细分隔线
+- **孤标题保护**：`h2/h3/h4 { page-break-after: avoid }` 避免页底落单
+
+#### Changed — 测试计划新增 §4.2
+- `docs-stm/management/testplan.md`：
+  - §4 拆分为 §4.1 标准 PDF（日常）+ §4.2 印刷级 PDF（v6.0 / Phase G 起，可选交付）
+  - §4.2 列出 7 项印刷级要求（独立文件 / 章首独立成页 / TOC 虚线 / 页眉页脚 / Outline 可点击 / 文件大小 ≤ 标准 1.5 倍 / 视觉验证清单）
+  - 验证命令：`python docs-stm/tools/pdf_print_grade.py`
+
+#### Changed — 版本号同步至 v5.8
+- `cover.md`：v5.7 → v5.8
+- `management/requirements.md`：v5.7 → v5.8
+- `management/plan.md`：v5.7 → v5.8；阶段进展段追加"v5.8（Phase G 起步）"行
+- `management/testplan.md`：v5.7 → v5.8
+- `management/style-guide.md`：v5.7 → v5.8（含 §10 文档版本号）
+
+#### Notes — Phase G 当前覆盖与剩余工作
+- 已交付：章首装饰页 / TOC 虚线 / 印刷级页眉页脚 / 章节 Outline / 与日常 PDF 独立产出
+- 推迟到 Phase H（U20-U21）一并处理：
+  - 完整的"Per-chapter running header"（动态显示当前章名）—— 需要 paged.js named-string 或类似机制；Chromium-Playwright 不直接支持，按 plan §4.6 的"印刷级增量推进"策略分批
+  - `verify_pdf.py --print-grade` 子命令、`generate_pdf.py --print-grade` 同等接口（plan U19 列出但本批未实现），保留以独立脚本形式提供
+- 本批不引入 final_check.py 新检查项（plan §4.8"新检查全部从 P2 起步"；印刷级 PDF 走人工视觉验证起步）
+
+---
+
+## [v5.7] — 2026-06-15
+
+### 第一部分：拆分附录 — 版本变更说明独立为附录 B
+
+> 用户反馈：附录 A《端到端案例研究》定位是"沿时间轴串联读、写、恢复路径"的叙事性附录，
+> 此前 `A.4 源码版本变更说明`（v2.4.240 → v2.4.249-SNAPSHOT 关键变更摘要）作为子节并入其中
+> 与附录主旨不符。本次将其上提为独立的附录 B（版本轴维度的参考性附录），与附录 A 并列。
+
+#### Added — 新文件
+- **`docs-stm/appendix-b-version-changes.md`**（41 行，新建）
+  - `# 附录 B：源码版本变更说明（v2.4.240 → v2.4.249-SNAPSHOT）`
+  - `## B.1 MVStore 核心层`（12 项变更）
+  - `## B.2 事务子系统`（11 项变更）
+  - 文首引言改写：明确本附录定位（版本轴）与附录 A（时间轴）并列；引用 §9 与 §10 各节源文件表格
+
+#### Changed — 引用更新
+- `docs-stm/appendix-a-case-studies.md`：删除 `## A.4` 三级小节及其 36 行内容；案例 C 末尾的"下一节 A.4（如有）"展望句改写为"如需进一步在版本维度上对照同一路径在不同小版本的实现差异，请参阅附录 B"
+- `docs-stm/front/preface.md`：
+  - "本书共 12 章 + **1 附录**" → "**2 附录**"；附录列表新增"附录 B 源码版本变更说明"行
+  - 「跨版本注记」与「版本时间窗口」段落的"附录 A.4"全部更正为"附录 B"
+  - 提交统计 `43 次提交涉及 79 个文件` 与正文 `44 次提交涉及 81 个文件` 对齐
+- `docs-stm/front/how-to-read.md`：
+  - 章节依赖示意图末尾的"附录 A 端到端案例"框扩展为同时包含"附录 B 版本变更说明"
+  - 章节先决条件矩阵新增"附录 B"行（前置：第9-10章；可跳过条件：仅在跨小版本对照源码差异时需要参阅）
+  - 章节估读时长表新增"附录 B"行（约 5 分钟）
+- `docs-stm/back/index.md`：「附录」节新增"源码版本变更说明 — 附录 B"主条目，含 B.1 / B.2 两个子条目；see-also 指向 MVStore / TransactionStore / MVCC
+
+#### Changed — 工具链
+- `docs-stm/tools/rebuild_merged.py`：`chapter_names` 列表在 `appendix-a-case-studies.md` 之后追加 `appendix-b-version-changes.md`
+- `docs-stm/tools/cover_stats.py`：`source_files` 列表同步追加 `appendix-b-version-changes.md`，确保 cover.md 行数统计覆盖附录 B
+- `docs-stm/tools/final_check.py`：`chapter_names` 列表同步追加 `appendix-b-version-changes.md`，确保"Chapter files (+cover) ↔ Merged"行数核对包含附录 B
+
+### 第二部分：管理文档核对 — 去除冗余、解决冲突
+
+> 用户反馈：要求核对 `docs-stm/management/` 下管理文档，去除冗余内容、解决冲突部分。
+> 本次审计发现版本号漂移、统计数字过期、目录树缺新文件、阶段进度未同步等问题，集中归一。
+
+#### Changed — 版本号与状态对齐
+- `requirements.md` 头部版本 v5.0 → v5.7；状态描述明确为"已交付，v6.0 维护与增强中"；最后更新日期 2026-06-11 → 2026-06-15
+- `plan.md` 头部版本 v5.0 → v5.7；最后更新 2026-06-11 → 2026-06-15
+- `style-guide.md` 头部版本 v6.0 → v5.7；§10 "当前 v5.0" → "当前 v5.7"
+
+#### Changed — 移除过期统计与冗余信息
+- `plan.md`：
+  - 目录树补 `front/` `back/` `appendix-a-case-studies.md` `appendix-b-version-changes.md` `plan/`；删除"`glossary.md (47 条)`""`index.md (86 条)`""`tools/ 共 17 个脚本`"等过期内嵌数字（统一指向 cover.md / final_check.py）
+  - 阶段表精简：移除 Phase 1–11 详细列表，归并为"v1.0–v5.0"与"v5.1–v5.7"两段叙述；详情指向 `changelog.md` 与 `plan/2026-06-15-001-*.md`
+  - 维护策略中的"每月运行一次 source_freshness_check.py"调整为"在 H2 上游版本升级或源码大改后运行"，避免与实际维护节奏脱钩
+- `requirements.md`：
+  - 交付物表新增"附录"行（A/B）与"前/后件"行；管理文档行展开为目录引用，避免与 README.md 重复列举具体文件名
+  - 内容范围新增"端到端案例研究（附录 A）与跨小版本源码变更（附录 B）"
+  - 质量需求"12 章齐全"→"12 章 + 2 附录齐全"
+
+#### Changed — README.md 与目录现实对齐
+- `README.md` 文档表新增 `style-guide.md` `baseline-*.json` `captions-baseline-*.json`；`archive/` 描述补"历史审计快照"
+- 目录结构图：补 `appendix-a-case-studies.md` `appendix-b-version-changes.md` `plan/` `style-guide.md` `baseline-*.json`；说明文字与 plan.md 对齐
+
+#### Changed — review-findings.md 阶段进度同步
+- v6.0 阶段问题清单从 R7-1..R7-3（占位）扩充为 R7-1..R7-8，覆盖 Phase A（v5.1）至附录 A/B 拆分（v5.7）的全部已关闭问题
+- "当前未解决问题"段：截至 v5.2 → 截至 v5.7；Phase A-B 已完成 → Phase A-F + 附录 A/B 拆分均已完成
+
+#### Moved — 历史审计文档归档
+- `phase3-audit.md`（v4.25 时期阶段三术语/引导块/延展阅读审计快照）→ `archive/phase3-audit-v4.25.md`
+  - 该文档基线为 v4.25，其问题已在 v4.x → v5.0 期间全部关闭，归档以避免与当前管理文档混淆
+
+### 第三部分：修正 HTML 封面/目录被左侧 TOC 遮挡
+
+> 用户反馈：在 HTML 版本浏览封面与目录页时，左侧固定 TOC 侧边栏会遮挡居中的封面标题与全宽目录内容。
+
+#### Fixed — 封面/目录"intro 模式"
+- `docs-stm/tools/generate_html.py`：
+  - CSS：`#sidebar` 添加 `transition: opacity/visibility`；新增 `body.intro-mode` 选择器：在 intro-mode 下隐藏 `#sidebar`（`opacity:0; visibility:hidden; pointer-events:none`）与 `#toggle-sidebar`，并将 `#toc-page > div` 的 `margin-left` 从 280px 重置为 0
+  - JS：脚本顶部新增 IntersectionObserver。`<body>` 默认带 `intro-mode` 类；观察主内容容器 `#page-wrap` 进入视口时移除该类（露出侧栏），主内容滚出视口（读者回滚到封面/目录）时再次加上
+  - 净效果：浏览封面与目录时 TOC 隐去、视野完全释放给主体；下滚到正文后侧栏自动出现并保持原有滚动定位行为
+- 不影响打印样式（`@media print` 下原本就 `#sidebar { display: none }`）
+
+### 第六部分：TOC 收起/展开点击失效的根因修复（事件委托）
+
+> 用户反馈：第四部分修复 JS 语法错误后，键盘快捷键 `[` 已能切换并显示浮动 `›` 按钮，但点击 `›` 按钮无效；TOC 表头条点击同样无响应。
+
+#### Fixed — 切换为 document 级事件委托
+- `docs-stm/tools/generate_html.py`：重写 sidebar 收起/展开 IIFE，原直接 `addEventListener` 改为 `document.addEventListener('click', ...)` 内部用 `closest('#sidebar-toggle')` / `closest('#sidebar-expand')` 进行命中判定
+- 收益：
+  - 点击 `<button>` 内嵌的 `<span class="chev">` 或 `<span class="lbl">` 也能正确命中（事件冒泡到 document）
+  - 不依赖 IIFE 执行顺序与按钮节点身份；任何后续脚本若替换/重建按钮 DOM，handler 仍生效
+  - `e.preventDefault()` 显式阻止 `<button>` 默认行为（虽然此处无表单，但作为防御性约束）
+- 同时为 `localStorage` 写入加 `try/catch`（隐私模式下不抛异常）
+
+#### Pipeline 状态
+- `final_check.py`：106/106 ✅
+- 生成的 JS 通过 `node -c` 语法校验 ✅
+- HTML：616 TOC entries，2,192 fence lines
+
+---
+
+### 第五部分：术语表/概念索引/参考文献 升级为附录 C/D/E
+
+> 用户反馈：附录 B 后的术语表、概念索引、参考文献三个后件应当与 A、B 并列归属到附录体系，分别成为附录 C、D、E。
+
+#### Changed — 后件 H1 标题
+- `docs-stm/back/glossary.md`：`# 术语表` → `# 附录 C：术语表`
+- `docs-stm/back/index.md`：`# 概念索引` → `# 附录 D：概念索引`
+- `docs-stm/back/references.md`：`# 参考文献` → `# 附录 E：参考文献`
+
+#### Changed — 前件交叉引用
+- `docs-stm/cover.md`：副标题"12 章 + 2 附录" → "12 章 + 5 附录"；行数自动更新为 39,779
+- `docs-stm/front/preface.md`：
+  - "本书共 12 章 + 2 附录" → "12 章 + 5 附录"
+  - 章节摘要表新增三行：附录 C 术语表 / 附录 D 概念索引 / 附录 E 参考文献
+- `docs-stm/front/how-to-read.md`：
+  - 章节依赖示意图末尾的附录框追加 C/D/E 三行
+  - 章节先决条件矩阵追加 C/D/E 三行（前置：无；可跳过条件：均为速查工具按需使用）
+  - 章节估读时长表追加 C/D/E 三行（速查为主）
+
+#### Notes — 不需要改动的位置
+- 各章引言中的"详见书末[术语表](back/glossary.md)"沿用"术语表"作为通用名称（链接路径与文件名都没变），无需改写
+- 后件 markdown 文件名（`glossary.md` / `index.md` / `references.md`）不变；只改 H1。这样工具脚本（`build_glossary.py` / `build_index.py` / `_audit_index_xrefs.py` / `_annotate_terms.py` 等）所有路径引用全部沿用，无连锁修改
+
+#### Pipeline 状态
+- `final_check.py`：106/106 ✅
+- `_audit_smart.py`：0 sections needing more diagrams ✅
+- `check_style.py`：0 WARN / 0 INFO ✅
+- 合并文档：39,777 行（+12 行 = 5 个新 H1 标题）；cover 统计 39,779 行（+2 行末换行差异）
+- HTML：616 TOC entries（不变；H1 数量未变化），2,192 fence lines；侧栏 TOC 与目录页均显示 `附录 A/B/C/D/E` 五条 H1 顶级条目
+
+---
+
+### 第四部分：HTML 桌面端 TOC 可点击收起/展开
+
+> 用户反馈（三次迭代）：希望左侧 TOC 在桌面浏览器中可点击收起/展开，从而扩大正文阅读宽度；并希望"点击"这一交互更明显可见；Firefox 中三种方式都无法切换 → 实际是 `<script>` 块存在 JS 语法错误，整段脚本拒绝执行。
+
+#### Fixed — 修复阻塞整个 `<script>` 块的 JS 语法错误（根因）
+- `docs-stm/tools/generate_html.py` 内 `HTML = f"""..."""` 大 f-string 在两处把 JS 字符串 `'\n'` 写成裸 `'\n'`，Python f-string 求值后变成"单引号 + 真实换行符 + 单引号"——这是无效 JS 字符串字面量，整段 `<script>` 在浏览器（Firefox 严格遵守规范、Chrome 同样）解析阶段就抛 `SyntaxError`，整段后续 JS 全部不执行（IntersectionObserver、TOC 收起/展开、复制按钮、面包屑、章节导航 …… 全部失效）：
+  ```
+  // 错误：f-string 把 \n 求值为真实换行
+  const lines = code.innerHTML.split('\n');   // 输出: split('<LF>')
+  nums += i + '\n';                            // 输出: i + '<LF>'
+  // 修复：用 \\n，Python 转义为 \n，再被 JS 读到为换行符
+  const lines = code.innerHTML.split('\\n');
+  nums += i + '\\n';
+  ```
+- 该 bug 已存在于此前 commit（`7ecddc8e7` HEAD），此前未被发现是因为复制按钮、TOC 收起等都不是 final_check.py 验证项；用户反馈"按你说的三种方式都无法切换"是首次触发该路径的真实使用反馈
+- 修复后生成的 JS 通过 `node -c` 语法校验
+
+#### Added — 桌面收起/展开切换（最终设计：整条 TOC 表头即为切换按钮）
+- `docs-stm/tools/generate_html.py`：
+  - 标记演进：
+    - 初版：在 `#sidebar` 顶部右上放置 24×24 的 `‹` 收起按钮（`#sidebar-collapse`），不够显眼
+    - 终版：原 `<h2>TOC</h2>` 表头改为 `<button id="sidebar-toggle">` 整条 flex 行，左侧 `‹` 旋转 chevron + 右侧 `TOC · 目录` 文字标签；整条横栏可点击，hover 时高亮变青蓝色，明确传达"可点击"语义；收起后 chevron 自动旋转 180°（视觉与浮动展开按钮 `›` 一致）
+  - 视口左上保留浮动 `<button id="sidebar-expand">›</button>`（默认 `display:none`，收起后才浮现）作为读者从全屏阅读状态唤回 TOC 的入口
+  - CSS：
+    - `#sidebar` `transition` 追加 `transform 0.3s ease`
+    - `body.sidebar-collapsed #sidebar { transform: translateX(-280px) }` 让侧栏滑出视口
+    - `body.sidebar-collapsed #content { margin-left: 0; max-width: 1100px }` 让正文向左铺满，并把最大阅读宽度从 960px 提升至 1100px
+    - `body.sidebar-collapsed #sidebar-expand { display: flex }` 浮动展开按钮浮现于左上角
+    - `body.sidebar-collapsed #sidebar-toggle .chev { transform: rotate(180deg) }` chevron 同步翻转
+    - `#content` 加 `transition: margin-left/max-width 0.3s` 平滑过渡
+    - `body.intro-mode` 下 `#sidebar-expand` 隐藏，避免与封面/目录 intro 模式冲突
+    - `@media (max-width:768px)`：移动端原有汉堡按钮已能切换，桌面 `#sidebar-expand` 与 `#sidebar-toggle .chev` 均隐去，`#sidebar-toggle` cursor 还原为 default，使其在移动端单纯作为 TOC 表头展示
+  - JS：
+    - 启动时读 `localStorage('h2-doc-sidebar-collapsed')` 恢复用户上次选择
+    - `#sidebar-toggle` click → `body.classList.add('sidebar-collapsed')` + 写入 localStorage
+    - `#sidebar-expand` click → 反向操作
+    - 键盘快捷键：按 `[` 切换收起/展开（在 INPUT/TEXTAREA/contentEditable 内不响应）
+
+#### Pipeline 状态（v5.7 四部分合计）
+- `final_check.py`：106/106 ✅
+- `_audit_smart.py`：0 sections needing more diagrams ✅
+- `check_style.py`：0 WARN / 0 INFO ✅
+- 合并文档：39,765 行（cover 统计 39,767 = 39,765 + 2 行换行差异，在容差内）
+- HTML：616 TOC entries，2,192 fence lines；已注入 `intro-mode` 类与 IntersectionObserver；桌面端可通过 `TOC · 目录` 表头条 / `›` 浮动按钮 / `[` 键三种方式切换 TOC 收起/展开（状态写入 localStorage，27 处 `sidebar-toggle/expand/collapsed` 标识已写入 HTML）
+
+---
+
 ## [v5.6] — 2026-06-15
 
 ### 工业级技术书籍质量提升 — Phase F：延伸思考

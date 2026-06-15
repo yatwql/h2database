@@ -1,30 +1,27 @@
 # H2 Database 源码分析 — 实施计划
 
-> 最后更新：2026-06-11
-> 版本：v5.0
+> 版本：v5.8
+> 最后更新：2026-06-15
 
 ---
 
 ## 1. 当前状态
 
-文档已完成并进入维护阶段：
+文档已完成 v5.x 多轮质量增强，目前处于 v6.0「工业级技术书籍质量提升」推进阶段：
 
-- 12 章源码分析内容已交付。
-- 正式源码、管理文档和交付工具统一位于 `docs-stm/`（管理文档位于 `docs-stm/management/`）。
+- 12 章 + 2 附录已交付（附录 A 端到端案例研究、附录 B 源码版本变更说明）。
+- 正式源码、管理文档与交付工具统一位于 `docs-stm/`。
 - 标准 MD/HTML 验证链路通过；PDF 按需生成。
-- 已记录审查问题均在 `docs-stm/management/review-findings.md` 中关闭。
+- 全部历史审查问题均在 `docs-stm/management/review-findings.md` 中关闭；v6.0 各阶段进度同样维护在该文件中。
 
-当前统计以 `docs-stm/cover.md` 和 `docs-stm/tools/final_check.py` 输出为准，避免在多个管理文档中重复维护数字。
+具体统计（行数、图数、术语表/索引条目数、工具脚本数）以 `docs-stm/cover.md` 自动更新结果与 `docs-stm/tools/final_check.py` 输出为准，本文件不再重复维护数字。
 
 ## 2. 正式目录
 
 ```text
 docs-stm/
   cover.md
-  front/                     # 书籍前件
-  ├── preface.md             # 前言
-  ├── copyright.md           # 版权页
-  └── how-to-read.md         # 阅读指南
+  front/                     # 书籍前件（preface, copyright, how-to-read）
   ch1-2-architecture.md
   ch3-packages.md
   ch4-5-modules-processes.md
@@ -35,53 +32,37 @@ docs-stm/
   ch8-query-optimizer.md
   ch9-10-persistence-locking.md
   ch11-12-guide-summary.md
-  back/                      # 书籍后件
-  ├── glossary.md            # 术语表（47 条）
-  ├── references.md          # 参考文献（20 条）
-  └── index.md               # 概念索引（86 条）
-  management/                # 管理文档
-  ├── README.md              # 管理文档索引
-  ├── requirements.md
-  ├── plan.md
-  ├── testplan.md
-  ├── changelog.md
-  └── review-findings.md
-  h2-source-code-analysis.md
-  tools/                     # 共 17 个脚本
+  appendix-a-case-studies.md
+  appendix-b-version-changes.md
+  back/                      # 书籍后件（glossary, references, index）
+  management/                # 管理文档（README, requirements, plan, testplan, changelog, review-findings, style-guide, baseline-*.json）
+  plan/                      # 阶段性实施计划（版本路线、详细 PRD/任务清单）
+  h2-source-code-analysis.md # 合并 Markdown 交付物
+  tools/                     # 正式生成、审计与验证脚本
 ```
 
 ## 3. 验证流程
 
-标准验证流程和 PDF 交付命令详见 `docs-stm/management/testplan.md` 第1节。本章节不重复维护。
+标准验证流程与 PDF 交付命令详见 `docs-stm/management/testplan.md` 第 1 节。本章节不重复维护命令清单。
 
-## 4. 已完成阶段
+## 4. 阶段进展
 
-| 阶段 | 内容 | 状态 |
-|------|------|------|
-| Phase 1 | 需求确认、源码探索、章节结构设计 | ✅ 完成 |
-| Phase 2 | 12 章并行撰写 | ✅ 完成 |
-| Phase 3 | 合并 Markdown、HTML/PDF 生成工具 | ✅ 完成 |
-| Phase 4 | 图表覆盖、章节结构、TOC 审查 | ✅ 完成 |
-| Phase 5 | 多轮审查与质量修复 | ✅ 完成 |
-| Phase 6 | 工具迁移到 `docs-stm/tools/` | ✅ 完成 |
-| Phase 7 | 管理文档职责收敛与冲突清理 | ✅ 完成 |
-| Phase 8 | 写作风格增强（工具增强 + 逐章润色 + 一致性审计 + 阅读体验优化） | ✅ 完成 |
-| Phase 9 | 质量提升工程：术语体系完善 (U1) + 概念索引完善 (U2) + 工具集成 (U3) | 🔄 U2 进行中 |
-| Phase 10 | 质量提升工程：阅读体验优化 (U4) + 图表质量提升 (U5) | ✅ 完成 |
-| Phase 11 | 质量提升工程：源码引用保鲜 (U6) | ✅ 完成 |
+- v1.0 – v5.0：12 章并行撰写、合并/HTML/PDF 工具链、图表与结构审查、工具迁移到 `docs-stm/tools/`、管理文档职责收敛、写作风格增强。
+- v5.1 – v5.7（v6.0 推进中）：基线度量、ch7-8 拆分、前后件深度化、端到端案例研究附录、图注与图簇桥接质量、章末延伸思考、附录 A/B 拆分、HTML 视觉与交互修复、后件升级为附录 C/D/E。
+- v5.8（Phase G 起步）：印刷级 PDF 渲染管道（独立产出）—— 章首装饰页、TOC 虚线对齐、印刷级页眉页脚。
 
-详细历史见 `docs-stm/management/changelog.md`。
+每个版本的具体增量、工具新增、文件变更记录均在 `docs-stm/management/changelog.md` 中维护；v6.0 阶段路线见 `docs-stm/plan/2026-06-15-001-feat-industrial-book-quality-plan.md`。
 
 ## 5. 管理文档职责
 
-管理文档职责分配见 `CLAUDE.md` 中的「Management Document Authority」节。核心原则：同一事实只维护在一个权威位置。
+管理文档职责分配见 `docs-stm/management/README.md` 与项目根 `CLAUDE.md` 的「Management Document Authority」节。核心原则：同一事实只维护在一个权威位置。
 
 ## 6. 维护策略
 
 - 发现新问题时先登记到 `docs-stm/management/review-findings.md`，修复完成后同步记录到 `docs-stm/management/changelog.md`。
 - 不保留一次性修复脚本、临时压缩包、`__pycache__` 或外部 session 文件。
 - 本项目 session 文件只保留在仓库 `.claude/` 目录中。
-- 建议每月运行一次 `python docs-stm/tools/source_freshness_check.py` 检查源码引用保鲜状态，防止 H2 源码变更导致行号/类名引用过时。
+- 建议在 H2 上游版本升级或源码大改后，运行 `python docs-stm/tools/source_freshness_check.py` 检查源码引用保鲜状态。
 
 ## 7. 后续增强项
 

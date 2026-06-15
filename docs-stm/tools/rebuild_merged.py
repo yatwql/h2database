@@ -27,6 +27,9 @@ chapter_names = [
     # Inserted between the last chapter and back-matter so PDF outline
     # and HTML TOC list it as a top-level entry alongside the 12 chapters.
     'appendix-a-case-studies.md',
+    # v6.x — Source-code version-change notes lifted out of appendix A.
+    # Appendix A is narrative (time-axis); appendix B is reference (version-axis).
+    'appendix-b-version-changes.md',
 ]
 
 # Collect back matter (glossary, references, index)

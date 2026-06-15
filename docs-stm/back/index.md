@@ -1,4 +1,4 @@
-# 概念索引
+# 附录 D：概念索引
 
 > 关键概念、API 类名和算法名的章节位置索引。条目按字母顺序排列；中文词条单列于末尾。
 > 主条目以 `- 名称 — 章节` 形式；子条目缩进两空格；`see also:` 行列出相关索引项。
@@ -578,6 +578,10 @@
   see also: 端到端 SELECT 案例, 端到端 COMMIT 案例, 端到端崩溃恢复案例
 - ASCII 序列图全链路视图 — 附录 A.1
   see also: 全链路追踪
+- 源码版本变更说明 — 附录 B
+  - MVStore 核心层变更（panicException、closeStore、tryLock CPU 退避、FileStore 流水线）— 附录 B.1
+  - 事务子系统变更（TransactionStore 状态机、CommitDecisionMaker、VersionedBitSet、VersionedValue 序列化）— 附录 B.2
+  see also: MVStore, TransactionStore, MVCC
 
 ---
 

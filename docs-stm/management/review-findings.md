@@ -1,7 +1,7 @@
 # H2 Database 源码分析文档 — 审查问题追踪
 
 > **最近正式问题审查**：2026-06-15（第7轮 — 工业级技术书籍质量提升基线快照）
-> **当前状态**：第7轮基线已固化，v6.0 各阶段（v5.1..v6.0）逐批推进
+> **当前状态**：第7轮基线已固化，v6.0 各阶段（v5.1..v5.7）已逐批推进
 > **说明**：本文只记录审查发现的问题及修复状态；文档、需求、质量标准和产物变更记录统一维护在 `docs-stm/management/changelog.md`。
 
 ---
@@ -42,13 +42,23 @@ python docs-stm/tools/balance_check.py --diff docs-stm/management/baseline-v5.0.
 
 ### v6.0 阶段问题清单
 
-阶段交付时填入；当前为占位。
-
 | # | 阶段 | 级别 | 问题 | 状态 |
 |---|------|------|------|------|
 | R7-1 | A (v5.1) | 信息 | 基线度量工具就绪 | ✅ 已完成 |
 | R7-2 | B (v5.2) | P0 | ch7-8 拆分：8,085 行单文件违反"≤ 5,000 行"约束 | ✅ 已完成（拆为 3,642 + 4,443）|
-| R7-3 | B (v5.2) | P0 | max_min_ratio 3.748 偏离 v6.0 目标 2.5 | 🔄 进行中（已降至 3.044，仍需 Phase D-H 收敛）|
+| R7-3 | B (v5.2) | P0 | max_min_ratio 3.748 偏离 v6.0 目标 2.5 | ✅ 已完成（v5.2 拆分后降至 3.044；后续 Phase D-F 继续收敛）|
+| R7-4 | C (v5.3) | P1 | 前后件深度化（preface/copyright/how-to-read 信息密度不足；术语表/索引层级不够） | ✅ 已完成（索引层级 main/sub/see-also 三档；术语表 ≥ 110；索引 ≥ 250）|
+| R7-5 | D (v5.4) | P1 | 缺端到端叙事主线，各章孤立分析 | ✅ 已完成（新增附录 A：端到端案例研究 — SELECT/COMMIT/Recovery）|
+| R7-6 | E (v5.5) | P1 | 图注以名词起首、长度漂移；图簇缺桥接叙事 | ✅ 已完成（图注 strict 阈值 0 违规；33 图簇全部含桥接句）|
+| R7-7 | F (v5.6) | P1 | 章末缺延伸思考，读者从被动阅读转主动应用门槛高 | ✅ 已完成（14 章节槽 56 题，含难度 emoji + 提示行 + 锚点回顾行）|
+| R7-8 | — (v5.7) | P2 | 附录 A 内含 A.4 源码版本变更说明，与附录 A 端到端叙事主旨不符 | ✅ 已完成（拆出独立附录 B：源码版本变更说明）|
+| R7-9 | — (v5.7) | P1 | 管理文档版本号漂移、统计数字过期、阶段进度未同步 | ✅ 已完成（v5.0 全部对齐为 v5.7；过期统计删除；phase3-audit.md 归档）|
+| R7-10 | — (v5.7) | P0 | HTML 封面与目录被左侧 TOC 遮挡（视觉缺陷） | ✅ 已完成（intro-mode 类 + IntersectionObserver；封面/目录页隐去 TOC）|
+| R7-11 | — (v5.7) | P1 | 桌面端 TOC 缺乏点击收起/展开能力 | ✅ 已完成（`#sidebar-toggle` 表头条 + 浮动 `›` + `[` 快捷键，状态写入 localStorage）|
+| R7-12 | — (v5.7) | P0 | `generate_html.py` 大 f-string 内 `'\n'` 被 Python 求值为真实换行，整个 `<script>` 块抛 SyntaxError，所有交互全失效 | ✅ 已完成（改为 `'\\n'`；node -c 通过校验）|
+| R7-13 | — (v5.7) | P1 | TOC 展开 `›` 按钮点击仍无响应（Firefox） | ✅ 已完成（重写为 document 级事件委托 + closest 命中）|
+| R7-14 | — (v5.7) | P2 | 后件 术语表 / 概念索引 / 参考文献 未挂入附录体系 | ✅ 已完成（升级为附录 C / D / E）|
+| R7-15 | G (v5.8) | P1 | 缺印刷级 PDF 渲染管道（章首装饰页、TOC 虚线对齐、印刷级页眉页脚） | ✅ 已完成（新建 `pdf_print_grade.py`，独立于日常 PDF 流水线）|
 
 ---
 
@@ -121,5 +131,5 @@ python docs-stm/tools/balance_check.py --diff docs-stm/management/baseline-v5.0.
 
 ## 当前未解决问题
 
-- **v6.0 阶段推进中**：参见 `docs-stm/plan/2026-06-15-001-feat-industrial-book-quality-plan.md`。截至 v5.2，Phase A（基线度量）+ Phase B（ch7-8 拆分）已完成，Phase C-H 待启动。
-- v5.0 之前所有审查问题均已关闭。后续新发现问题在此追加，并在完成修复时同步更新 `docs-stm/management/changelog.md`。
+- **v6.0 阶段推进中**：参见 `docs-stm/plan/2026-06-15-001-feat-industrial-book-quality-plan.md`。截至 v5.8，Phase A–G 已落地（含 v5.7 多项视觉/交互修复 + v5.8 印刷级 PDF 起步）。下一阶段为 **Phase H（门禁升级与 v6.0 收尾）**：把 Phase A–G 引入的所有新检查纳入 testplan.md P0/P1/P2 框架；评估 P2 → P1 升级；总入口 `final_check.py --gate-level p0|p1|p2`；review-findings 第7轮闭环；发布 v6.0。
+- v5.0 之前所有审查问题均已关闭；v5.1–v5.8 区间发现的阶段性问题均已在上文清单中关闭。后续新发现问题在此追加，并在完成修复时同步更新 `docs-stm/management/changelog.md`。
