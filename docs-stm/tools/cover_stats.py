@@ -26,7 +26,9 @@ source_files = ['cover.md'] + \
      'ch6-2-storage-algorithms.md', 'ch6-3-query-algorithms.md',
      'ch7-sql-execution.md', 'ch8-query-optimizer.md',
      'ch9-10-persistence-locking.md',
-     'ch11-12-guide-summary.md'] + \
+     'ch11-12-guide-summary.md',
+     # v5.4 — Phase D end-to-end case studies appendix.
+     'appendix-a-case-studies.md'] + \
     [os.path.relpath(f, docs_dir) for f in back_files]
 
 total_lines = 0
@@ -40,8 +42,12 @@ for fname in source_files:
     with open(path, 'r', encoding='utf-8') as f:
         text = f.read()
     lines = len(text.splitlines())
+    # Numeric chapter figures: **图 7-3:**.
     figs = len(re.findall(r'^\*\*图 \d+-\d+:', text, re.MULTILINE))
     figs += len(re.findall(r'^图 \d+-\d+:', text, re.MULTILINE))
+    # Appendix figures use a letter prefix: **图 A-1:**.
+    figs += len(re.findall(r'^\*\*图 [A-Z]-\d+:', text, re.MULTILINE))
+    figs += len(re.findall(r'^图 [A-Z]-\d+:', text, re.MULTILINE))
     refs = len(re.findall(r'\.java:\d+', text))
     total_lines += lines
     total_figs += figs

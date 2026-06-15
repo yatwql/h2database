@@ -23,6 +23,10 @@ chapter_names = [
     'ch8-query-optimizer.md',
     'ch9-10-persistence-locking.md',
     'ch11-12-guide-summary.md',
+    # v5.4 — Phase D end-to-end case studies appendix.
+    # Inserted between the last chapter and back-matter so PDF outline
+    # and HTML TOC list it as a top-level entry alongside the 12 chapters.
+    'appendix-a-case-studies.md',
 ]
 
 # Collect back matter (glossary, references, index)
@@ -30,6 +34,17 @@ back_dir = os.path.join(docs_dir, 'back')
 back_matter = sorted(glob.glob(os.path.join(back_dir, '*.md'))) if os.path.isdir(back_dir) else []
 
 chapters = front_matter + [os.path.join(docs_dir, name) for name in chapter_names] + back_matter
+
+# Tolerate the appendix file being absent during phased delivery: while U10/U11/
+# U12 are mid-flight the file may not exist yet. Drop missing entries with a
+# warning so pipeline runs that build only the merged doc still succeed.
+existing_chapters = []
+for path in chapters:
+    if os.path.exists(path):
+        existing_chapters.append(path)
+    else:
+        print(f'  [skip missing] {path}')
+chapters = existing_chapters
 
 output = os.path.join(docs_dir, 'h2-source-code-analysis.md')
 

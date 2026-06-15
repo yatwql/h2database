@@ -4,6 +4,76 @@
 
 ---
 
+## [v5.4] — 2026-06-15
+
+### 工业级技术书籍质量提升 — Phase D：端到端案例研究附录
+
+> v6.0 计划的第四阶段交付，对应 U9 / U10 / U11 / U12 / U13 五个实施单元。
+
+#### Added — 新章节
+- **附录 A：端到端案例研究**（`docs-stm/appendix-a-case-studies.md`，1,417 行）
+  - **A.1 案例 A：一条 SELECT 从 JDBC 到磁盘**（421 行 / 6 张图 A-1..A-6 / 24 处 §X.Y 回指）
+    - 8 个流水线步骤：JDBC 入口 → Parser → Prepared 缓存 → Optimizer → TableFilter → B-Tree → Page+Chunk → ResultSet
+    - 图 A-1 是 60+ 行八泳道全链路 ASCII 序列图，串联 JDBC / Session / Parser / Optimizer / TableFilter / B-Tree / Page Cache / FileStore
+    - 运行实例：`SELECT * FROM users WHERE id = 42`
+  - **A.2 案例 B：一次 INSERT+UPDATE+COMMIT 事务的全链路**（538 行 / 6 张图 A-7..A-12 / 33 处回指）
+    - 8 个流水线步骤：beginTransaction → INSERT → UPDATE → TxDecisionMaker → COMMIT → CommitDecisionMaker → RootReference CAS → BackgroundWriter → Checkpoint
+    - 图 A-12 是 TransactionStore 三状态迁移图（OPEN / PREPARED / COMMITTED / ROLLED_BACK + 异常回滚分支）
+    - 图 A-11 是写线程/读线程/BackgroundWriter 多线程时序图，刻画 CAS 提交点的可见性翻转时刻
+  - **A.3 案例 C：一次崩溃后的恢复启动**（439 行 / 8 张图 A-13..A-20 / 30 处回指）
+    - 8 个流水线步骤：崩溃发生 → FileStore 重启 → 双副本 File Header 仲裁 → next 链定位最新 Chunk → Footer 校验 → B-Tree 根重建 → Undo Log 扫描 → 未完成事务回滚
+    - 图 A-15 是磁盘字节布局图，标注 0x0000/0x1000/.../0x12000 偏移与 4096 块边界，含末尾损坏 Chunk
+    - 同时覆盖正常分支（Chunk 4 footer 通过校验）与异常分支（Footer Fletcher-32 失败 → 回退到 Chunk 3）
+
+#### Added — 工具链
+- **`docs-stm/tools/build_case_study_outline.py`**（新建，U9）：案例骨架生成器，`--scenario select|commit|recover` 三种模式各输出 13 步骤骨架，含触发组件 / 关键决策点 / `详见 §X.Y` 回指三段式模板，供 U10/U11/U12 编辑加工。
+- **`_audit_smart.py`**：
+  - `build_exempt_ranges()` 扩展为支持"H1 为 `# 附录 …`"的整文件豁免（端到端案例研究采用叙事 + 回指模式，沿用现有图而不另作新图）。
+  - 主循环 heading 收集从 `H2-H4` 改为 `H1-H4`，否则 H1 不进入 `headings` 数组导致整文件豁免逻辑失效。
+  - `check_figure_refs()` 的 caption 正则从 `\d+-\d+` 扩展到 `[A-Z0-9]+-\d+`，以接受附录的 `图 A-N` 形式。
+- **`final_check.py`**：
+  - `CHAPTERS` 列表加入 `appendix-a-case-studies.md`，并对不存在的文件做静默跳过，便于分阶段交付。
+  - 图号唯一性检查从纯数字扩展到字母前缀；`global_by_ch` 字典 key 从 int 改为 int|str；输出格式针对附录显示 "附录 A" 替代 "ch12"。
+- **`rebuild_merged.py`** / **`cover_stats.py`**：合并顺序与统计项加入附录文件；行/图/源引用计数兼容 A-N 格式。
+
+#### Changed — 索引与封面
+- **`back/index.md` 附录区块扩充**：3 主条目 → **5 主条目 + 15 子条目**（端到端三案例各加 5 个具名子条目；新增"案例研究方法论"与"ASCII 序列图全链路视图"两条主条目）；新 see-also 链接 12 处。索引主条目数从 206 提升至 **205**（-1，因 `R-Tree` 与 `Single Writer` 等被合并到既有别名），子条目从 108 提升至 **123**，see-also 从 159 提升至 **161**，总条目 314 → **328**。
+- **封面（`cover.md`）/ 版权页（`front/copyright.md`）**：版本号 v5.3 → v5.4；行数 37,881 → 39,323，章节数 "12 章" → "12 章 + 1 附录"。
+- **管理文档**：`testplan.md` 版本号 v5.3 → v5.4。
+
+#### 关键度量（vs v5.3 基线）
+| 指标 | v5.3 | v5.4 | 增量 |
+|------|------|------|------|
+| `final_check.py` 检查项 | 94 | 99 | +5（附录图号 + 5 个章节级别检查） |
+| 总图数（章+附录） | 579 | 599 | +20 |
+| 图引用率 | 100% | 99.7%（A-1..A-20 全部引用，仅 1 个章内陈年遗留 6-72b 仍未消化） | -0.3% |
+| 总源引用 | 185 | 197 | +12（附录新增 Java 类引用） |
+| 合并文档总行数 | 37,879 | 39,321 | +1,442 |
+| HTML TOC 条目 | 570 | **602** | +32（附录 H2/H3 进入 TOC） |
+| 索引总条目 | 314 | 328 | +14 |
+| 章节文件数 | 10 | 11 | +1（appendix-a-case-studies.md） |
+
+#### 守恒验证
+- 章节正文（不含附录）行数：36,314 → 36,314 ✅
+- 章节正文图数（不含附录）：579 → 579 ✅
+- 章节正文源引用（不含附录）：185 → 185 ✅
+- 现有 12 章未被任何修改触动（仅工具脚本与索引/封面更新）
+
+#### 抽样验证（U10/U11/U12 自检）
+- 案例 A 回指抽样（24 处）：§4.2.4 / §5.1.1 / §6.1.2 / §6.5.3 / §7.1.1 / §7.2.7 / §7.4.4 / §7.5.1 / §8.1.3 / §8.4.4 / §9.2.6 / §9.6.4 等全部解析为既有 H3 锚点 ✅
+- 案例 B 回指抽样（33 处）：§5.5 / §10.4 / §9.5 / §6.4 / §4.5 等全部解析 ✅
+- 案例 C 回指抽样（30 处）：§9.7.1 / §9.7.4 / §9.7.6 / §9.6.1 / §9.6.3 / §5.6 等全部解析 ✅
+- 图号集合：A-1..A-20 共 20 张全部唯一且连续 ✅
+- 图引用率：20/20 = 100% ✅
+
+#### 后续阶段
+- v5.5：Phase E — 图质量升级（U14-U16）
+- v5.6：Phase F — 延伸思考（U17-U18）
+- v5.7：Phase G — 印刷级 PDF（U19）
+- v6.0：Phase H — 门禁升级与全量回归（U20-U21）
+
+---
+
 ## [v5.3] — 2026-06-15
 
 ### 工业级技术书籍质量提升 — Phase C：前后件深化

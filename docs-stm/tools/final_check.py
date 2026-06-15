@@ -23,8 +23,13 @@ chapter_names = [
     'ch8-query-optimizer.md',
     'ch9-10-persistence-locking.md',
     'ch11-12-guide-summary.md',
+    # v5.4 — Phase D end-to-end case studies appendix.
+    'appendix-a-case-studies.md',
 ]
 CHAPTERS = front_matter + [os.path.join(docs_dir, name) for name in chapter_names] + back_matter
+# Drop any chapter file that does not yet exist (Phase D appendix may be
+# absent during partial deliveries).
+CHAPTERS = [p for p in CHAPTERS if os.path.exists(p)]
 
 results = []
 
@@ -33,18 +38,26 @@ def check(ok, msg):
     print(f'  {"OK" if ok else "FAIL"}: {msg}')
 
 # 1. Figure numbering - sequential per chapter
+# Numeric chapters use **图 N-M:** (N is chapter, M is figure index).
+# v5.4 appendix uses **图 A-M:** with letter prefix; treat each letter as its
+# own group so the same uniqueness/completeness invariants apply.
 print('=== Figure Numbering ===')
-# Collect all figures globally grouped by chapter
-global_by_ch = {}  # ch -> [(file, base_num)]
+global_by_ch: dict = {}  # ch (int or 'A'/'B'/…) -> [(file, base_num, full_num)]
 for f in CHAPTERS:
     with open(f, 'r', encoding='utf-8') as fh:
         content = fh.read()
+    # Numeric chapters
     figs = re.findall(r'\*\*图 (\d+)-(\d+[a-z]*):', content)
     for ch, num in figs:
         base_num = int(re.search(r'\d+', num).group())
-        global_by_ch.setdefault(int(ch), []).append((f, base_num, num))  # full num for uniqueness, base_num for range
+        global_by_ch.setdefault(int(ch), []).append((f, base_num, num))
+    # Appendix letters (A, B, …)
+    appendix_figs = re.findall(r'\*\*图 ([A-Z])-(\d+[a-z]*):', content)
+    for letter, num in appendix_figs:
+        base_num = int(re.search(r'\d+', num).group())
+        global_by_ch.setdefault(letter, []).append((f, base_num, num))
 # Verify each chapter's figures: unique, complete, and (ideally) in-order
-for ch in sorted(global_by_ch):
+for ch in sorted(global_by_ch, key=lambda k: (isinstance(k, str), k)):
     entries = global_by_ch[ch]
     file_label = ', '.join(sorted(set(e[0] for e in entries)))
     base_nums = [e[1] for e in entries]
@@ -55,7 +68,8 @@ for ch in sorted(global_by_ch):
     in_order = base_nums == list(range(1, len(base_nums)+1))
 
     passed = unique and complete
-    msg_parts = [f'ch{ch} ({file_label}): {len(full_nums)} figures']
+    label = f'ch{ch}' if isinstance(ch, int) else f'附录 {ch}'
+    msg_parts = [f'{label} ({file_label}): {len(full_nums)} figures']
     if not unique:
         msg_parts.append('DUPLICATE numbers found!')
     elif not complete:

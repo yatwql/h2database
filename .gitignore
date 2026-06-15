@@ -26,3 +26,4 @@ docs-stm/*.log
 mdpdf.log
 __pycache__/
 .claude/worktrees/
+.claude/scratch/

@@ -19,19 +19,24 @@ chapter_names = [
     "ch8-query-optimizer.md",
     "ch9-10-persistence-locking.md",
     "ch11-12-guide-summary.md",
+    # v5.4 — Phase D end-to-end case studies appendix.
+    "appendix-a-case-studies.md",
 ]
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 repo_root = os.path.normpath(os.path.join(script_dir, '..', '..'))
 docs_dir = os.path.join(repo_root, 'docs-stm')
 CHAPTERS = [os.path.join(docs_dir, name) for name in chapter_names]
+# Tolerate the appendix file being absent during phased delivery.
+CHAPTERS = [p for p in CHAPTERS if os.path.exists(p)]
 
 DIAGRAM_MARKERS = ['┌', '└', '├', '│', '▼', '▲', '→']
 
 # --- Figure reference check (--fig-refs) ---
 def check_figure_refs():
     """Scan all figures, count references, report coverage per file."""
-    CAPTION_RE = re.compile(r'^\*\*图 (\d+-\d+):(.+?)\*\*$')
+    # Accepts both numeric (7-3) and appendix-style (A-1) figure IDs.
+    CAPTION_RE = re.compile(r'^\*\*图 ([A-Z0-9]+-\d+[a-z]*):(.+?)\*\*$')
     total_figs = 0
     total_refd = 0
 
@@ -115,8 +120,22 @@ def count_diagrams(text):
 
 # --- Build exemption ranges for ## 附：(appendix) headings ---
 def build_exempt_ranges(headings, lines):
-    """Return list of (start, end) line ranges exempt from diagram counting."""
+    """Return list of (start, end) line ranges exempt from diagram counting.
+
+    Two flavours of exemption:
+      1. `## 附：…` sub-section inside a regular chapter (in-chapter appendix).
+      2. v5.4 端到端案例研究附录: the file's H1 is `# 附录 …`, in which case
+         the entire file is narrative — case studies legitimately reuse
+         existing chapter figures via §X.Y back-refs and don't need fresh
+         diagrams in every ### subsection. Skip the whole file.
+    """
     exempt = []
+    file_is_appendix = any(
+        level == 1 and title.lstrip().startswith('附录')
+        for _, level, title in headings
+    )
+    if file_is_appendix and headings:
+        return [(0, len(lines))]
     for idx, (line_num, level, title) in enumerate(headings):
         if level == 2 and title.startswith('附：'):
             end = len(lines)
@@ -142,7 +161,9 @@ if __name__ == '__main__':
 
         headings = []
         for i, line in enumerate(lines):
-            m = re.match(r'^(#{2,4})\s+(.+)$', line)
+            # Include H1 so build_exempt_ranges can detect appendix files
+            # whose top-level heading is `# 附录 …`.
+            m = re.match(r'^(#{1,4})\s+(.+)$', line)
             if m:
                 headings.append((i, len(m.group(1)), m.group(2)))
 

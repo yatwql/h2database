@@ -554,11 +554,30 @@
 ## 附录
 
 - 端到端 SELECT 案例 — 附录 A.1
-  see also: SELECT 流程, Parser, Optimizer
+  - JDBC → SessionLocal 入口 — 附录 A.1.1
+  - Parser 词法切分与递归下降 — 附录 A.1.2
+  - Optimizer 代价矩阵选择 — 附录 A.1.4
+  - B-Tree 路径下降与 Page Pointer — 附录 A.1.6
+  - LIRS 缓存命中模式 — 附录 A.1.7
+  see also: SELECT 流程, Parser 递归下降解析, Optimizer 查询优化, LIRS 缓存替换
 - 端到端 COMMIT 案例 — 附录 A.2
-  see also: TransactionStore, COMMIT 流程
+  - INSERT/UPDATE Undo Log 累积 — 附录 A.2.2
+  - TxDecisionMaker 写冲突 — 附录 A.2.3
+  - CommitDecisionMaker Undo Log 翻转 — 附录 A.2.5
+  - RootReference CAS 提交点 — 附录 A.2.6
+  - BackgroundWriter 后台落盘 — 附录 A.2.7
+  see also: TransactionStore, COMMIT 流程, MVCC, 快照隔离
 - 端到端崩溃恢复案例 — 附录 A.3
-  see also: Recover, File Header, Chunk
+  - File Header 双副本仲裁 — 附录 A.3.3
+  - Chunk Footer Fletcher-32 校验 — 附录 A.3.5
+  - layoutMap 驱动的 root 回填 — 附录 A.3.6
+  - 未完成事务回滚 — 附录 A.3.7
+  - Chunk 校验失败异常分支 — 附录 A.3.5
+  see also: Recover 工具, File Header 格式, Chunk 文件格式, RollbackDecisionMaker
+- 案例研究方法论 — 附录 A
+  see also: 端到端 SELECT 案例, 端到端 COMMIT 案例, 端到端崩溃恢复案例
+- ASCII 序列图全链路视图 — 附录 A.1
+  see also: 全链路追踪
 
 ---
 
