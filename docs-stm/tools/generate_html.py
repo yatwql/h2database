@@ -104,8 +104,15 @@ html { overflow-y: scroll; }
 }
 #cover .meta {
     color: rgba(255,255,255,0.6); font-size: 0.95em;
-    letter-spacing: 2px; margin-bottom: 2.5em; position: relative;
+    letter-spacing: 2px; margin-bottom: 1.5em; position: relative;
 }
+#cover .author {
+    color: rgba(255,255,255,0.85); font-size: 0.95em;
+    line-height: 1.8; margin-bottom: 2em; position: relative;
+}
+#cover .author p { margin: 0.2em 0; }
+#cover .author a { color: #90caf9; text-decoration: none; border-bottom: 1px dotted rgba(144,202,249,0.5); }
+#cover .author a:hover { color: #fff; border-bottom-color: #fff; }
 #cover .desc {
     max-width: 600px; color: rgba(255,255,255,0.75);
     font-size: 1em; line-height: 2; margin-bottom: 1.5em; position: relative;
@@ -284,6 +291,8 @@ li { margin: 0.3em 0; }
 """
 
 def md_to_html(text):
+    # Inline link [label](url)
+    text = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2">\1</a>', text)
     text = re.sub(r'`([^`]+)`', r'<code>\1</code>', text)
     text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
     text = re.sub(r'(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)', r'<em>\1</em>', text)
@@ -401,6 +410,15 @@ for cl in cover_lines:
 cover_desc = ''
 cover_meta = ''
 cover_tags = []
+# v5.6: capture author block lines (one or two `**Name:** value` lines under
+# the version meta). They live above the description paragraph and must
+# render visibly on the title page so HTML readers see authorship just like
+# the printed cover. Both `cover.md` and `front/copyright.md` carry author
+# lines (intentional — copyright stays formal, cover stays the public face)
+# so deduplicate by stripping markdown emphasis + colon variants when
+# comparing.
+cover_author_lines: list[str] = []
+seen_author_keys: set[str] = set()
 for cl in cover_lines:
     cl = cl.strip()
     if cl.startswith('版本 '):
@@ -409,6 +427,26 @@ for cl in cover_lines:
         cover_desc = cl
     elif cl.startswith('共 '):
         cover_tags = [t.strip() for t in cl.split('·')]
+    elif cl.startswith('**作者') or cl.startswith('**联系邮箱'):
+        # Build a normalised dedup key. Two on-disk forms exist:
+        #   `**作者**: 其·龙` (colon outside bold, copyright style)
+        #   `**作者：其·龙**` (colon inside bold, cover style)
+        # Normalise both to "作者:其·龙" so they compare equal.
+        key = re.sub(r'\*+', '', cl)
+        key = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', key)  # [text](url) → text
+        key = key.replace('：', ':')
+        key = re.sub(r'\s*:\s*', ':', key)  # squeeze whitespace around colon
+        key = re.sub(r'\s+', ' ', key).strip().lower()
+        if key not in seen_author_keys:
+            seen_author_keys.add(key)
+            cover_author_lines.append(cl)
+
+cover_author_html = ''
+if cover_author_lines:
+    cover_author_html = '<div class="author">\n'
+    for line in cover_author_lines:
+        cover_author_html += f'    <p>{md_to_html(line)}</p>\n'
+    cover_author_html += '  </div>\n'
 
 cover_tag_html = ''
 if cover_tags:
@@ -459,6 +497,7 @@ HTML = f"""<!DOCTYPE html>
   <h2>{cover_subtitle}</h2>
   <div class="divider"></div>
   <div class="meta">{md_to_html(cover_meta)}</div>
+  {cover_author_html}
   <div class="desc">{md_to_html(cover_desc)}</div>
   {cover_info_table}
   {cover_tag_html}
