@@ -6,6 +6,44 @@
 
 ## [v6.1] — 2026-06-15
 
+### 管理文档核对（2026-06-15 第二次）：清扫附录 C/D/E 升级遗留与 v6.1 措辞漂移
+
+> 用户反馈：核对管理文档，去除冗余内容、解决冲突部分。
+
+#### Changed — 附录 C/D/E 升级遗留同步
+- `requirements.md` §2 交付物表：
+  - 旧"附录"行（仅 A、B）+ "前/后件"合并行 → 拆为附录 A/B/C/D/E 五行 + 单独的"前件"行
+  - 附录 C/D/E 各自标注路径（`back/glossary.md` / `back/index.md` / `back/references.md`）和定位说明
+- `requirements.md` §4 质量需求："12 章 + 2 附录齐全" → "12 章 + 5 附录齐全"
+- `plan.md` §1 当前状态："12 章 + 2 附录已交付" → "12 章 + 5 附录已交付（A/B/C/D/E）"
+- `plan.md` §2 正式目录：补全 `appendix-a-case-studies.md` / `appendix-b-version-changes.md` / `back/glossary.md`（C） / `back/index.md`（D） / `back/references.md`（E）五行注释
+- `README.md` 目录结构图：删除"`back/` 书籍后件"占位行，按 C/D/E 三行展开
+
+#### Changed — v6.1 措辞漂移修复
+- `requirements.md` 头部状态："已交付（v6.0 + EPUB 输出形态）" → "已交付（v6.0 工业级里程碑 + v6.1 EPUB 输出形态）"
+- `plan.md` §1 当前状态："目前处于 v6.0 推进阶段" → "已发布 v6.0 工业级里程碑，并在 v6.1 扩展了 EPUB 交付形态"
+- `plan.md` §1 第三条："PDF 按需生成" → "PDF / 印刷级 PDF / EPUB 按需生成"
+- `plan.md` §4 阶段进展："v5.1 – v5.7（v6.0 推进中）" 拆为两条：v5.1–v5.6（Phase A–F） + v5.7（独立小节，对应附录拆分 + HTML UX + 后件升级 + 管理文档归一）
+- `testplan.md` §4.3 EPUB："v6.0 起" → "v6.1 起"
+- `testplan.md` §4.3 末尾"按 plan §4.6 / §4.8" → "与印刷级 PDF 一致"（消除虚引用）
+- `testplan.md` §7 候选升级清单："v6.1+ 评估" → "v6.2+ 评估"
+- `testplan.md` §7 门禁演进史新增 v6.1 EPUB 视觉验证行（人工，不接入 final_check.py）
+
+#### Changed — README.md 文档表更精确
+- `testplan.md` 权威内容："质量门禁、拒绝标准" → "P0/P1/P2 门禁分级、交付形态门禁、门禁演进史、拒绝标准"
+- `changelog.md` 权威内容追补"含 v6.0 工业级里程碑总览"
+- `review-findings.md` 权威内容明确包含 R7-1..R7-17、R8-1 范围
+- `style-guide.md` 权威内容补"图注动宾、图簇桥接、延伸思考、端到端案例叙事"以匹配 §12-§14 实际范围
+
+#### Pipeline 状态
+- `final_check.py`：106/106 ✅
+- `_audit_smart.py`：0 sections needing more diagrams ✅
+- `check_style.py`：0 WARN / 0 INFO ✅
+
+---
+
+## [v6.1] — 2026-06-15
+
 ### 新增交付形态：EPUB（按需输出）
 
 > 用户反馈：交付文档增加 EPUB 输出形态，按需生成，仅在交付的最后阶段产出。

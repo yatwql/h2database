@@ -6,10 +6,10 @@
 |------|------|---------|
 | `requirements.md` | 当前需求、交付物、内容范围 | 需求摘要、非目标、版本历史引用 |
 | `plan.md` | 当前实施计划、维护策略、风险 | 已完成阶段、后续增强项、维护策略 |
-| `testplan.md` | 质量标准与验证流程 | 权威验证命令、质量门禁、拒绝标准 |
-| `changelog.md` | 版本变更记录 | 从 v1.0 至今的完整版本历史 |
-| `review-findings.md` | 审查问题追踪 | 各轮审查发现的问题清单及修复状态、v6.0 阶段问题清单 |
-| `style-guide.md` | 写作风格指南 | 术语选用、句式风格、图注、图簇、延伸思考等约定 |
+| `testplan.md` | 质量标准与验证流程 | 权威验证命令、P0/P1/P2 门禁分级、交付形态门禁、门禁演进史、拒绝标准 |
+| `changelog.md` | 版本变更记录 | 从 v1.0 至今的完整版本历史；含 v6.0 工业级里程碑总览 |
+| `review-findings.md` | 审查问题追踪 | 各轮审查发现的问题清单及修复状态；v6.0 各阶段问题清单（R7-1..R7-17、R8-1） |
+| `style-guide.md` | 写作风格指南 | 术语选用、句式风格、图注动宾、图簇桥接、延伸思考、端到端案例叙事等约定 |
 | `baseline-*.json` | 基线度量快照 | `balance_check.py --baseline` 写入，作为 v6.0 各阶段对照基准 |
 | `captions-baseline-*.json` | 图注质量基线快照 | `_audit_captions.py` 输出的图注度量基线 |
 | `archive/` | 已归档计划与历史审计 | 已完成阶段的旧版计划文档、历史审计快照 |
@@ -38,10 +38,12 @@ docs-stm/
 │   └── archive/                   — 已归档计划与历史审计
 ├── plan/                          — 阶段性实施计划（版本路线 PRD/任务清单）
 ├── front/                         — 书籍前件（前言、版权、阅读指南）
-├── back/                          — 书籍后件（术语表、参考文献、索引）
 ├── ch*.md                         — 12 章源章节文件（10 个源文件）
 ├── appendix-a-case-studies.md     — 附录 A：端到端案例研究
 ├── appendix-b-version-changes.md  — 附录 B：源码版本变更说明
+├── back/glossary.md               — 附录 C：术语表
+├── back/index.md                  — 附录 D：概念索引
+├── back/references.md             — 附录 E：参考文献
 ├── cover.md                       — 封面与统计数据
 ├── h2-source-code-analysis.md     — 合并 Markdown 交付物
 └── tools/                         — 正式生成、审计和验证工具

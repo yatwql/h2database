@@ -1,8 +1,8 @@
 # H2 Database 源码分析 — 需求文档
 
 > 版本：v6.1
-> 状态：已交付（v6.0 + EPUB 输出形态）
-> 最后更新：2026-06-15
+> 状态：已交付（v6.0 工业级里程碑 + v6.1 EPUB 输出形态）
+> 最后更新:2026-06-15
 
 ---
 
@@ -15,8 +15,12 @@
 | 产物 | 路径 | 说明 |
 |------|------|------|
 | 源章节 | `docs-stm/ch*.md` | 10 个源文件覆盖 12 章 |
-| 附录 | `docs-stm/appendix-a-case-studies.md`、`docs-stm/appendix-b-version-changes.md` | 端到端案例研究（A）、源码版本变更说明（B） |
-| 前/后件 | `docs-stm/front/`、`docs-stm/back/` | 前言、版权、阅读指南；术语表、参考文献、索引 |
+| 附录 A 端到端案例研究 | `docs-stm/appendix-a-case-studies.md` | SELECT / COMMIT / 崩溃恢复三案例 |
+| 附录 B 源码版本变更说明 | `docs-stm/appendix-b-version-changes.md` | v2.4.240 → v2.4.249-SNAPSHOT 关键变更 |
+| 附录 C 术语表 | `docs-stm/back/glossary.md` | 113 条术语、章节索引、see-also |
+| 附录 D 概念索引 | `docs-stm/back/index.md` | 主条目 + 子条目 + see-also 三档层级 |
+| 附录 E 参考文献 | `docs-stm/back/references.md` | 官方文档、论文、技术资料分类清单 |
+| 前件 | `docs-stm/front/` | 前言、版权页、阅读指南 |
 | 合并 Markdown | `docs-stm/h2-source-code-analysis.md` | 标准可提交交付物，由源章节生成 |
 | HTML | `docs-stm/h2-source-code-analysis.html` | 按需生成，带侧边栏 TOC，git 忽略 |
 | PDF | `docs-stm/h2-source-code-analysis.pdf` | 按需生成，带大纲和可点击目录，git 忽略 |
@@ -44,7 +48,7 @@
 
 质量门禁以 `docs-stm/management/testplan.md` 为唯一权威来源。本文件只保留需求摘要：
 
-- 章节完整：12 章 + 2 附录齐全，H1 格式一致。
+- 章节完整：12 章 + 5 附录齐全，H1 格式一致。
 - 图表完整：内容型小节至少 2 图，模板型小节至少 1 图。
 - 源码引用：关键论述包含文件名和行号，路径使用 `org/h2/...` 格式。
 - 格式一致：图注、代码围栏、跨章引用和标题层级符合约定。
