@@ -24,7 +24,8 @@ source_files = ['cover.md'] + \
     ['ch1-2-architecture.md', 'ch3-packages.md',
      'ch4-5-modules-processes.md', 'ch6-1-data-structures.md',
      'ch6-2-storage-algorithms.md', 'ch6-3-query-algorithms.md',
-     'ch7-8-sql-optimizer.md', 'ch9-10-persistence-locking.md',
+     'ch7-sql-execution.md', 'ch8-query-optimizer.md',
+     'ch9-10-persistence-locking.md',
      'ch11-12-guide-summary.md'] + \
     [os.path.relpath(f, docs_dir) for f in back_files]
 

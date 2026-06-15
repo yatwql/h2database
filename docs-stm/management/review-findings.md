@@ -47,6 +47,8 @@ python docs-stm/tools/balance_check.py --diff docs-stm/management/baseline-v5.0.
 | # | 阶段 | 级别 | 问题 | 状态 |
 |---|------|------|------|------|
 | R7-1 | A (v5.1) | 信息 | 基线度量工具就绪 | ✅ 已完成 |
+| R7-2 | B (v5.2) | P0 | ch7-8 拆分：8,085 行单文件违反"≤ 5,000 行"约束 | ✅ 已完成（拆为 3,642 + 4,443）|
+| R7-3 | B (v5.2) | P0 | max_min_ratio 3.748 偏离 v6.0 目标 2.5 | 🔄 进行中（已降至 3.044，仍需 Phase D-H 收敛）|
 
 ---
 
@@ -119,5 +121,5 @@ python docs-stm/tools/balance_check.py --diff docs-stm/management/baseline-v5.0.
 
 ## 当前未解决问题
 
-- **v6.0 阶段推进中**：参见 `docs-stm/plan/2026-06-15-001-feat-industrial-book-quality-plan.md`。截至 v5.1，Phase A（基线度量）已完成，Phase B-H 待启动。
+- **v6.0 阶段推进中**：参见 `docs-stm/plan/2026-06-15-001-feat-industrial-book-quality-plan.md`。截至 v5.2，Phase A（基线度量）+ Phase B（ch7-8 拆分）已完成，Phase C-H 待启动。
 - v5.0 之前所有审查问题均已关闭。后续新发现问题在此追加，并在完成修复时同步更新 `docs-stm/management/changelog.md`。

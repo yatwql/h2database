@@ -21,7 +21,8 @@ DOCS = [
     DOCS_DIR / 'ch6-1-data-structures.md',
     DOCS_DIR / 'ch6-2-storage-algorithms.md',
     DOCS_DIR / 'ch6-3-query-algorithms.md',
-    DOCS_DIR / 'ch7-8-sql-optimizer.md',
+    DOCS_DIR / 'ch7-sql-execution.md',
+    DOCS_DIR / 'ch8-query-optimizer.md',
     DOCS_DIR / 'ch9-10-persistence-locking.md',
     DOCS_DIR / 'ch11-12-guide-summary.md',
 ]

@@ -31,7 +31,8 @@ docs-stm/
   ch6-1-data-structures.md
   ch6-2-storage-algorithms.md
   ch6-3-query-algorithms.md
-  ch7-8-sql-optimizer.md
+  ch7-sql-execution.md
+  ch8-query-optimizer.md
   ch9-10-persistence-locking.md
   ch11-12-guide-summary.md
   back/                      # 书籍后件

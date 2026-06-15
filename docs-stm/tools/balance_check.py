@@ -50,9 +50,7 @@ CHAPTER_FILES: list[tuple[str, list[int]]] = [
     ("ch6-1-data-structures.md", [6]),
     ("ch6-2-storage-algorithms.md", [6]),
     ("ch6-3-query-algorithms.md", [6]),
-    # v5.x: ch7-8 仍合并为单文件；v5.2 拆分后会变为 ch7- + ch8-。
-    # 工具按"实际存在的文件"决定，缺失的跳过，新增的自动纳入。
-    ("ch7-8-sql-optimizer.md", [7, 8]),
+    # v5.2 起 ch7-8 拆分为 ch7- + ch8- 两个独立文件。
     ("ch7-sql-execution.md", [7]),
     ("ch8-query-optimizer.md", [8]),
     ("ch9-10-persistence-locking.md", [9, 10]),
