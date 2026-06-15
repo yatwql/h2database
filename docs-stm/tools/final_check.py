@@ -319,6 +319,48 @@ else:
     check(False, 'Index file not found')
     index_ok = False
 
+# 11b. v5.5 figure caption + cluster gates (P2 advisory).
+# Run them as separate checks so authors see the diagnostic at the same
+# place as other quality gates. Failure does not regress index_ok; only
+# missing tools count as hard failures.
+print('\n=== Figure Caption Quality (style-guide §14) ===')
+caption_tool = os.path.join(script_dir, '_audit_captions.py')
+if os.path.exists(caption_tool):
+    try:
+        res = subprocess.run(
+            [sys.executable, caption_tool, '--threshold', 'strict'],
+            capture_output=True, text=True, encoding='utf-8',
+        )
+        # _audit_captions exits 0 when violations <= fail_at; strict has
+        # fail_at=0, so exit 0 ⇔ zero violations.
+        check(res.returncode == 0, 'Figure captions: strict 0 violations (verb-leading, 8-30 chars)')
+    except Exception as exc:
+        check(False, f'Caption audit failed to run: {exc}')
+else:
+    check(False, 'Caption audit tool missing')
+
+print('\n=== Figure Cluster Bridges (style-guide §13.6) ===')
+cluster_tool = os.path.join(script_dir, '_audit_figure_clusters.py')
+if os.path.exists(cluster_tool):
+    try:
+        # Walk the JSON form so we can decide based on `unbridged` count
+        # rather than relying on the script's own exit code (which currently
+        # always returns 0 — the cluster audit is informational by design).
+        res = subprocess.run(
+            [sys.executable, cluster_tool, '--window', '40', '--json'],
+            capture_output=True, text=True, encoding='utf-8',
+        )
+        import json as _json
+        payload = _json.loads(res.stdout) if res.stdout else {}
+        unbridged = payload.get('unbridged', 0)
+        total = payload.get('total_clusters', 0)
+        check(unbridged == 0,
+              f'Figure clusters: {total} clusters, {unbridged} without bridge sentence')
+    except Exception as exc:
+        check(False, f'Cluster audit failed to run: {exc}')
+else:
+    check(False, 'Cluster audit tool missing')
+
 # 12. Glossary content validation
 # v6.0 supports multi-line entries with the **章节**: ... line on a separate
 # row. Parse entries as blocks delimited by `- **Term**:` markers, so that the

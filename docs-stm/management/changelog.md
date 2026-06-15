@@ -4,6 +4,80 @@
 
 ---
 
+## [v5.5] — 2026-06-15
+
+### 工业级技术书籍质量提升 — Phase E：图质量升级
+
+> v6.0 计划的第五阶段交付，对应 U14 / U15 / U16 三个实施单元。
+
+#### Added — 工具链
+- **`docs-stm/tools/_audit_captions.py`**（新建，U14）：图注质量审计器。三档阈值（strict/normal/loose）；按 `NO_VERB / TOO_SHORT / TOO_LONG / VAGUE` 四类标注违规；支持 `--target <glob>` 限定单文件、`--json` 机读输出、`--diff <baseline.json>` 对照修复进度。代码块内的形似行通过逐行 fence 跟踪显式跳过。
+- **`docs-stm/tools/_audit_figure_clusters.py`**（新建，U16）：图簇检测器。识别 3+ 张图在 ≤ 40 行内连续出现的图簇；启发式扫描首图前 8 行非空内容判定是否已有桥接（"以下三张图"/"下面三张"/"三张图共同"等）；`--has-bridge`/`--needs-bridge` 输出双向清单；`--json` 机读。
+
+#### Added — 风格规范扩展
+- **`docs-stm/management/style-guide.md` §13.6 图簇桥接叙事**：把 v5.5 引入的图簇桥接成文规范。固化四种桥接句式（共同视角式/维度并列式/层次拆解式/顺序串联式）、桥接位置、反例与检查命令。
+
+#### Changed — 全书图注修复（U15，11 个章节文件 × 11 个并行 sub-agent）
+- **章节文件批量改写**：590 条违规图注全部改写完成，**0 条 strict 违规**剩余。
+  | 文件 | 修复条数 | 主要类型 |
+  |------|---------|----------|
+  | `ch4-5-modules-processes.md` | 105 | NO_VERB=78, TOO_SHORT=26, TOO_LONG=1 |
+  | `ch8-query-optimizer.md` | 100 | NO_VERB=87, TOO_LONG=12, TOO_SHORT=1 |
+  | `ch7-sql-execution.md` | 81 | NO_VERB=66, TOO_LONG=14, TOO_SHORT=1 |
+  | `ch9-10-persistence-locking.md` | 76 | NO_VERB=64, TOO_SHORT=10, TOO_LONG=2 |
+  | `ch3-packages.md` | 53 | NO_VERB=49, TOO_LONG=4 |
+  | `ch6-2-storage-algorithms.md` | 44 | NO_VERB=38, TOO_SHORT=4, TOO_LONG=2 |
+  | `ch6-3-query-algorithms.md` | 39 | NO_VERB=38, TOO_SHORT=1 |
+  | `ch1-2-architecture.md` | 32 | NO_VERB=32 |
+  | `ch11-12-guide-summary.md` | 26 | NO_VERB=22, TOO_LONG=3, TOO_SHORT=1 |
+  | `ch6-1-data-structures.md` | 23 | NO_VERB=20, TOO_SHORT=3 |
+  | `appendix-a-case-studies.md` | 11 | NO_VERB=8, TOO_LONG=3 |
+  | **合计** | **590** | **NO_VERB=502 / TOO_SHORT=47 / TOO_LONG=41** |
+- 图号/位置/数量全部守恒：所有改写仅修改 `**图 X-Y: …**` 行的 Title 文本，前缀字节级不变；图号集合修改前后完全一致。
+- 修复样例：
+  - `节点分裂` → `展示 B-Tree 节点分裂时父节点的递归更新`
+  - `MVStore 架构` → `概览 MVStore 四层组件结构`
+  - `H2 ACID 特性支持矩阵` → `汇总 H2 各隔离级别的 ACID 支持情况`
+  - `锁文件格式详解` → `拆解 SQLite 风格锁文件的字段布局`
+  - `并发控制层次结构` → `梳理 H2 并发控制的五层调用关系`
+
+#### Changed — 全书图簇桥接（U16，5 个并行 sub-agent）
+- **图簇识别**：`_audit_figure_clusters.py --window 40` 在 8 个文件中识别出 33 处图簇，覆盖 ch1-2 / ch3 / ch4-5 / ch6-2 / ch7 / ch8 / ch9-10 / ch11-12 / appendix。
+- **桥接补全**：33/33 图簇全部添加 1 句桥接叙事，均通过 `--has-bridge` 检测。最大簇含 10 张图（ch4-5 §4.2 `4-5..4-14`），用"下面 N 张图分别从 …"句式覆盖。
+- 桥接句不增加新图、不修改现有图，仅在簇首图标题之上插入 1-2 句叙事。
+
+#### Changed — 质量门禁集成
+- **`final_check.py`**：新增两个 P2 advisory 检查段：
+  - `Figure Caption Quality (style-guide §14)`：透传 `_audit_captions.py --threshold strict` 退出码。
+  - `Figure Cluster Bridges (style-guide §13.6)`：解析 `_audit_figure_clusters.py --json` 的 `unbridged` 字段。
+  - 检查项总数：99 → **101 项全部通过**。
+- **`testplan.md`**：质量门禁表新增「图注动宾结构（v6.0）」与「图簇桥接（v6.0）」两行。
+
+#### 关键度量（vs v5.4 基线）
+| 指标 | v5.4 | v5.5 | 增量 |
+|------|------|------|------|
+| `final_check.py` 检查项 | 99 | 101 | +2（caption + cluster gates） |
+| 图注 strict 违规 | 590 | **0** | -590（-100%） |
+| 图簇覆盖率（已桥接 / 总数） | 0 / 33 | 33 / 33（100%） | +33 |
+| 工具脚本数 | 19 | **21** | +2（_audit_captions、_audit_figure_clusters） |
+| 合并文档行数 | 39,321 | 39,413 | +92（33 句桥接叙事） |
+| 总图数 | 599 | 599 | 不变（仅文本改写） |
+| 图引用率 | 99.7% | 99.8% | 持平（chronic 6-72b 未消化） |
+| HTML TOC 条目 | 602 | 602 | 不变 |
+
+#### 守恒验证
+- 章节正文图数：579 → 579 ✅
+- 章节正文源引用：185 → 185 ✅
+- 图号集合（v5.4 → v5.5）：完全一致 ✅
+- v5.4 已交付的图都"看起来"在原位（仅 Title 文本改写）
+
+#### 后续阶段
+- v5.6：Phase F — 延伸思考（U17-U18）
+- v5.7：Phase G — 印刷级 PDF（U19）
+- v6.0：Phase H — 门禁升级与全量回归（U20-U21）
+
+---
+
 ## [v5.4] — 2026-06-15
 
 ### 工业级技术书籍质量提升 — Phase D：端到端案例研究附录

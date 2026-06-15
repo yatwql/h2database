@@ -1,0 +1,4728 @@
+{
+  "threshold": "strict",
+  "min_chars": 8,
+  "max_chars": 30,
+  "count": 590,
+  "violations": [
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 32,
+      "fig_id": "1-1",
+      "title": "H2 数据库版本演进时间线",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 53,
+      "fig_id": "1-2",
+      "title": "H2 与同类嵌入式数据库特性对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 90,
+      "fig_id": "1-3",
+      "title": "三种部署模式架构对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 151,
+      "fig_id": "1-4",
+      "title": "架构分层总览（含子层细化）",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 247,
+      "fig_id": "1-5",
+      "title": "SQL 查询跨层数据流",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 307,
+      "fig_id": "1-6",
+      "title": "SQL 执行全流程层间交互矩阵",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 339,
+      "fig_id": "1-7",
+      "title": "各层内部组件与接口模式",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 399,
+      "fig_id": "1-8",
+      "title": "\"小而全\"设计权衡对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 430,
+      "fig_id": "1-9",
+      "title": "各设计决策间的依赖与影响",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 535,
+      "fig_id": "2-1",
+      "title": "JDBC 层入口类调用关系",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 575,
+      "fig_id": "2-2",
+      "title": "JDBC 层接口实现层次",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 636,
+      "fig_id": "2-3",
+      "title": "Server 层多协议架构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 702,
+      "fig_id": "2-4",
+      "title": "Service 接口与实现层次",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 775,
+      "fig_id": "2-5",
+      "title": "Engine 层对象生命周期",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 830,
+      "fig_id": "2-6",
+      "title": "Engine 层类层次结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 907,
+      "fig_id": "2-7",
+      "title": "Parser 解析流程与 SQL 语法树",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 960,
+      "fig_id": "2-8",
+      "title": "Command 层类继承层次",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 1055,
+      "fig_id": "2-9",
+      "title": "Expression 核心接口与三层求值流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 1111,
+      "fig_id": "2-10",
+      "title": "Expression 完整类继承层次",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 1194,
+      "fig_id": "2-11",
+      "title": "Table 类完整继承层次",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 1285,
+      "fig_id": "2-12",
+      "title": "Index 条件匹配与索引选择流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 1366,
+      "fig_id": "2-13",
+      "title": "MVStore 核心架构与数据流",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 1425,
+      "fig_id": "2-14",
+      "title": "Page (B-Tree 节点) 内部结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 1542,
+      "fig_id": "2-15",
+      "title": "FilePath 策略模式实现",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 1597,
+      "fig_id": "2-16",
+      "title": "FilePath 类继承层次",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 1685,
+      "fig_id": "2-17",
+      "title": "完整包间依赖图（含所有主要子包）",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 1764,
+      "fig_id": "2-18",
+      "title": "包间依赖检测规则",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 1849,
+      "fig_id": "2-19",
+      "title": "关键接口与实现类的映射关系",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 1918,
+      "fig_id": "2-20",
+      "title": "接口继承层次总览",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 1996,
+      "fig_id": "2-21",
+      "title": "PageStore 与 MVStore 架构对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 2039,
+      "fig_id": "2-22",
+      "title": "MVStore 替换 PageStore — 迁移影响范围",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch1-2-architecture.md",
+      "line": 2086,
+      "fig_id": "2-23",
+      "title": "MVStore 性能特征对比 (并发读写场景)",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 41,
+      "fig_id": "11-1",
+      "title": "H2 源码包依赖关系地图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 315,
+      "fig_id": "11-2",
+      "title": "SELECT 查询路径追踪流程图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 660,
+      "fig_id": "11-3",
+      "title": "MVStore 文件存储布局",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 710,
+      "fig_id": "11-4",
+      "title": "四阶段阅读路线图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 786,
+      "fig_id": "11-5",
+      "title": "各阶段技能图谱（前置要求与收获）",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 824,
+      "fig_id": "11-6",
+      "title": "阅读阶段文件依赖与交叉引用图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 907,
+      "fig_id": "11-7",
+      "title": "测试金字塔",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 951,
+      "fig_id": "11-8",
+      "title": "H2 Console 架构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 991,
+      "fig_id": "11-9",
+      "title": "断点追踪流程图 —— 追踪一条 SQL 的完整生命周期",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 1061,
+      "fig_id": "11-10",
+      "title": "关键调试入口速查图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 1104,
+      "fig_id": "11-11",
+      "title": "断点调试建议步骤",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 1252,
+      "fig_id": "12-1",
+      "title": "COW B-Tree vs In-place B-Tree 对比",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 1319,
+      "fig_id": "12-2",
+      "title": "COW B-Tree 写入放大随时间的变化",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 1369,
+      "fig_id": "12-3",
+      "title": "Log-Structured vs Traditional Page Store 写入对比",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 1449,
+      "fig_id": "12-4",
+      "title": "MVStore Compaction 生命周期",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 1491,
+      "fig_id": "12-5",
+      "title": "CAS + Single Writer vs Read-Write Locks 并发模型",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 1568,
+      "fig_id": "12-6",
+      "title": "TransactionMap 分层 vs 嵌入式版本链",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 1718,
+      "fig_id": "12-14",
+      "title": "H2 六层安全防护体系",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 1739,
+      "fig_id": "12-15",
+      "title": "安全机制调用链路",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 1762,
+      "fig_id": "12-7",
+      "title": "多维能力对比 (1-5 分, 分数越高越强)",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 1831,
+      "fig_id": "12-8",
+      "title": "四大嵌入式数据库架构并排对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 1885,
+      "fig_id": "12-9",
+      "title": "源码学习路径图 —— 从入门到贡献的四阶段路径",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 1968,
+      "fig_id": "12-10",
+      "title": "H2 组件到计算机科学概念映射",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 2079,
+      "fig_id": "12-11",
+      "title": "四条研读路径总览 —— 根据目标选择入口",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 2176,
+      "fig_id": "12-12",
+      "title": "三大调试场景的整体调用链路",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "line": 2249,
+      "fig_id": "12-13",
+      "title": "五项动手练习的难度分布与前置依赖",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 18,
+      "fig_id": "3-1",
+      "title": "org.h2 包分层依赖关系图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 60,
+      "fig_id": "3-2",
+      "title": "核心包编译期依赖关系矩阵",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 83,
+      "fig_id": "3-3",
+      "title": "H2 五层体系架构分层",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 185,
+      "fig_id": "3-4",
+      "title": "JDBC 全调用栈（关注调用链的宏观阶段：连接→编译→执行→结果）",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 209,
+      "fig_id": "3-5",
+      "title": "JDBC 方法到引擎层的完整委托链（图3-4的细化展开，遍历每个 JDBC 方法的内部委托路径）",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 262,
+      "fig_id": "3-6",
+      "title": "engine 包内类关系",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 278,
+      "fig_id": "3-7",
+      "title": "Database 生命周期状态图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 313,
+      "fig_id": "3-8",
+      "title": "Session 状态与事务协调",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 379,
+      "fig_id": "3-9",
+      "title": "SQL 解析与执行流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 402,
+      "fig_id": "3-10",
+      "title": "Parser 命令树层次结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 423,
+      "fig_id": "3-11",
+      "title": "DML / DDL / Query 执行路径对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 445,
+      "fig_id": "3-12",
+      "title": "命令缓存与重新编译机制",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 503,
+      "fig_id": "3-13",
+      "title": "expression 子包结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 534,
+      "fig_id": "3-14",
+      "title": "Expression 求值流程与类型提升",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 596,
+      "fig_id": "3-15",
+      "title": "Table 类层次结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 612,
+      "fig_id": "3-16",
+      "title": "TableFilter 连接执行时序",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 649,
+      "fig_id": "3-17",
+      "title": "H2 支持的连接策略对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 690,
+      "fig_id": "3-18",
+      "title": "索引扫描策略决策树",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 729,
+      "fig_id": "3-19",
+      "title": "主键索引与二级索引的数据流向",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 793,
+      "fig_id": "3-20",
+      "title": "MVMap 写入流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 816,
+      "fig_id": "3-21",
+      "title": "B-Tree 结构与页分裂",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 852,
+      "fig_id": "3-22",
+      "title": "Chunk 磁盘布局",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 888,
+      "fig_id": "3-23",
+      "title": "Checkpoint 与 Background Writer 流程",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 959,
+      "fig_id": "3-24",
+      "title": "关系模型到 MVMap 的映射",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 972,
+      "fig_id": "3-25",
+      "title": "SQL INSERT 到 MVMap 的完整映射链",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1033,
+      "fig_id": "3-26",
+      "title": "TransactionMap 可见性判断流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1051,
+      "fig_id": "3-27",
+      "title": "事务状态机（详见第4章《核心模块深度解读》图4-38的详细版本）",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1084,
+      "fig_id": "3-28",
+      "title": "并发事务冲突检测",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1133,
+      "fig_id": "3-29",
+      "title": "CacheLongKeyLIRS 内部数据结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1168,
+      "fig_id": "3-30",
+      "title": "LRU vs LIRS 缓存策略对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1225,
+      "fig_id": "3-31",
+      "title": "R-Tree 空间索引结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1270,
+      "fig_id": "3-32",
+      "title": "R-Tree 空间查询与 MBR 剪枝流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1350,
+      "fig_id": "3-33",
+      "title": "FilePath 文件系统栈",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1362,
+      "fig_id": "3-34",
+      "title": "FilePath 装饰器模式层次",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1412,
+      "fig_id": "3-35",
+      "title": "多协议服务器架构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1426,
+      "fig_id": "3-36",
+      "title": "TcpServer 线程模型与请求处理流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1486,
+      "fig_id": "3-37",
+      "title": "数据类型自动转换流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1504,
+      "fig_id": "3-38",
+      "title": "Value 类型层次结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1555,
+      "fig_id": "3-39",
+      "title": "常见类型转换矩阵",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1598,
+      "fig_id": "3-40",
+      "title": "LocalResult 结果集构造与迭代",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1659,
+      "fig_id": "3-41",
+      "title": "加密与认证全流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1672,
+      "fig_id": "3-42",
+      "title": "认证与加密的安全架构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1730,
+      "fig_id": "3-43",
+      "title": "tools 包工具分类与用途",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1772,
+      "fig_id": "3-44",
+      "title": "Recover 工具数据恢复流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1826,
+      "fig_id": "3-45",
+      "title": "util 工具类分类与用途",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1877,
+      "fig_id": "3-46",
+      "title": "压缩在写入路径中的位置",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1919,
+      "fig_id": "3-47",
+      "title": "LZF 与 Deflate 压缩算法特性对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 1959,
+      "fig_id": "3-48",
+      "title": "SQL 兼容模式架构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 2013,
+      "fig_id": "3-49",
+      "title": "模式函数注册与运行时解析",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 2060,
+      "fig_id": "3-50",
+      "title": "包间完整依赖关系图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 2109,
+      "fig_id": "3-51",
+      "title": "层间依赖矩阵统计",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 2140,
+      "fig_id": "3-52",
+      "title": "包间依赖中的设计模式分布",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch3-packages.md",
+      "line": 2228,
+      "fig_id": "3-53",
+      "title": "各包源码规模统计",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 40,
+      "fig_id": "4-1",
+      "title": "核心职责层次",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 61,
+      "fig_id": "4-2",
+      "title": "核心职责时序",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 106,
+      "fig_id": "4-3",
+      "title": "关键字段分组",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 118,
+      "fig_id": "4-4",
+      "title": "字段依赖关系",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 169,
+      "fig_id": "4-5",
+      "title": "Database 数据流",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 208,
+      "fig_id": "4-6",
+      "title": "关键方法调用链路",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 227,
+      "fig_id": "4-7",
+      "title": "方法调用层次",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 252,
+      "fig_id": "4-8",
+      "title": "Meta Lock 获取流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 263,
+      "fig_id": "4-9",
+      "title": "Meta Lock 调试信息流",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 294,
+      "fig_id": "4-10",
+      "title": "核心职责层次",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 319,
+      "fig_id": "4-11",
+      "title": "SessionLocal 数据流",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 362,
+      "fig_id": "4-12",
+      "title": "关键字段分组",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 381,
+      "fig_id": "4-13",
+      "title": "SessionLocal 字段依赖",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 430,
+      "fig_id": "4-14",
+      "title": "SessionLocal 状态机详细",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 488,
+      "fig_id": "4-15",
+      "title": "关键方法调用流",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 501,
+      "fig_id": "4-16",
+      "title": "commit vs rollback 对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 547,
+      "fig_id": "4-17",
+      "title": "核心设计概览",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 568,
+      "fig_id": "4-18",
+      "title": "写前日志 (WAL) 流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 616,
+      "fig_id": "4-19",
+      "title": "关键字段分组",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 632,
+      "fig_id": "4-20",
+      "title": "字段间数据流",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 694,
+      "fig_id": "4-21",
+      "title": "MVStore 写入流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 719,
+      "fig_id": "4-22",
+      "title": "关键方法流程对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 739,
+      "fig_id": "4-23",
+      "title": "方法调用层次",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 770,
+      "fig_id": "4-24",
+      "title": "Chunk 生命周期",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 781,
+      "fig_id": "4-25",
+      "title": "Chunk 状态与空间管理",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 824,
+      "fig_id": "4-26",
+      "title": "无锁读 + COW 写",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 837,
+      "fig_id": "4-27",
+      "title": "COW B-Tree 修改示意",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 864,
+      "fig_id": "4-53",
+      "title": "CAS 重试循环",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 908,
+      "fig_id": "4-28",
+      "title": "RootReference 版本链",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 927,
+      "fig_id": "4-29",
+      "title": "RootReference 内存布局",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1014,
+      "fig_id": "4-30",
+      "title": "operate() CAS 循环流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1040,
+      "fig_id": "4-31",
+      "title": "operate() 锁升级策略",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1084,
+      "fig_id": "4-32",
+      "title": "B-Tree 读写轨迹",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1120,
+      "fig_id": "4-33",
+      "title": "读写决策流程",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1174,
+      "fig_id": "4-34",
+      "title": "核心数据结构关系",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1191,
+      "fig_id": "4-35",
+      "title": "数组索引映射关系",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1212,
+      "fig_id": "4-54",
+      "title": "事务生命周期与 BitSet 状态变化",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1254,
+      "fig_id": "4-36",
+      "title": "Undo Log 与数据映射关系",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1274,
+      "fig_id": "4-37",
+      "title": "Undo Log 编码格式",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1333,
+      "fig_id": "4-38",
+      "title": "TransactionStore 事务生命周期",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1391,
+      "fig_id": "4-39",
+      "title": "commit 流程步骤",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1433,
+      "fig_id": "4-40",
+      "title": "rollbackTo 流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1446,
+      "fig_id": "4-41",
+      "title": "commit vs rollback 对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1481,
+      "fig_id": "4-42",
+      "title": "VersionedBitSet COW 机制",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1501,
+      "fig_id": "4-43",
+      "title": "快照一致性保证",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1544,
+      "fig_id": "4-44",
+      "title": "MVTable 锁模型结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1567,
+      "fig_id": "4-45",
+      "title": "锁获取/释放流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1597,
+      "fig_id": "4-46",
+      "title": "锁升级状态机",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1611,
+      "fig_id": "4-47",
+      "title": "锁兼容性矩阵",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1648,
+      "fig_id": "4-48",
+      "title": "死锁检测 DFS 算法",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1669,
+      "fig_id": "4-49",
+      "title": "死锁等待图",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1723,
+      "fig_id": "4-50",
+      "title": "MVTable 锁定与索引更新流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1786,
+      "fig_id": "4-51",
+      "title": "数据变更方法调用链对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1795,
+      "fig_id": "4-52",
+      "title": "索引更新方向",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1914,
+      "fig_id": "5-1",
+      "title": "SELECT 查询类型分发树",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1973,
+      "fig_id": "5-2",
+      "title": "关键文件调用链",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 1996,
+      "fig_id": "5-3",
+      "title": "优化器与执行计划",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2036,
+      "fig_id": "5-4",
+      "title": "queryWithoutCache 执行上下文",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2058,
+      "fig_id": "5-5",
+      "title": "LazyResultQueryFlat 工作原理",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2121,
+      "fig_id": "5-6",
+      "title": "INSERT VALUES vs INSERT SELECT 对比",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2184,
+      "fig_id": "5-7",
+      "title": "INSERT 关键调用链",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2199,
+      "fig_id": "5-8",
+      "title": "触发器执行顺序",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2268,
+      "fig_id": "5-9",
+      "title": "insertRows 分支逻辑",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2294,
+      "fig_id": "5-10",
+      "title": "INSERT 状态变化",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2352,
+      "fig_id": "5-11",
+      "title": "UPDATE 两阶段执行",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2408,
+      "fig_id": "5-12",
+      "title": "UPDATE 文件依赖关系",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2429,
+      "fig_id": "5-13",
+      "title": "UPDATE 前后行状态",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2469,
+      "fig_id": "5-14",
+      "title": "updateRow 索引更新细节",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2487,
+      "fig_id": "5-15",
+      "title": "索引更新策略",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2542,
+      "fig_id": "5-16",
+      "title": "DELETE 两阶段执行 (与 UPDATE 同模式)",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2599,
+      "fig_id": "5-47",
+      "title": "DELETE 文件引用层级",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2610,
+      "fig_id": "5-17",
+      "title": "DELETE 索引遍历方向",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2640,
+      "fig_id": "5-48",
+      "title": "DELETE 完整调用链",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2671,
+      "fig_id": "5-18",
+      "title": "删除标记 → 物理回收",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2683,
+      "fig_id": "5-19",
+      "title": "逻辑删除 vs 物理删除",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2769,
+      "fig_id": "5-20",
+      "title": "COMMIT 三阶段",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2814,
+      "fig_id": "5-21",
+      "title": "VersionedValue 状态变迁",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2832,
+      "fig_id": "5-22",
+      "title": "MVCC 可见性规则",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2875,
+      "fig_id": "5-23",
+      "title": "CommitDecisionMaker 决策树",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2891,
+      "fig_id": "5-24",
+      "title": "CDM 执行过程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 2984,
+      "fig_id": "5-25",
+      "title": "ROLLBACK 三阶段",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3004,
+      "fig_id": "5-26",
+      "title": "rollbackTo 恢复策略",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3082,
+      "fig_id": "5-27",
+      "title": "RDM 决策树",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3097,
+      "fig_id": "5-28",
+      "title": "Undo Log 遍历方向",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3174,
+      "fig_id": "5-29",
+      "title": "Compaction 触发决策树",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3203,
+      "fig_id": "5-30",
+      "title": "FreeSpaceBitSet 位图示意",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3219,
+      "fig_id": "5-31",
+      "title": "填充率与压缩决策",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3238,
+      "fig_id": "5-50",
+      "title": "Chunk 填充率与 compact 选择",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3269,
+      "fig_id": "5-49",
+      "title": "Compaction 类层次结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3287,
+      "fig_id": "5-32",
+      "title": "关键文件调用链",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3327,
+      "fig_id": "5-51",
+      "title": "空间整理效果指标",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3395,
+      "fig_id": "5-33",
+      "title": "Chunk 压缩 6 步流程概览",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3410,
+      "fig_id": "5-34",
+      "title": "Chunk 选择优先级",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3478,
+      "fig_id": "5-35",
+      "title": "doHousekeeping 决策流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3493,
+      "fig_id": "5-36",
+      "title": "两种整理策略对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3577,
+      "fig_id": "5-37",
+      "title": "MVCC 可见性判断流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3596,
+      "fig_id": "5-38",
+      "title": "useSnapshot 一致性自旋",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3638,
+      "fig_id": "5-39",
+      "title": "可见性决策树",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3659,
+      "fig_id": "5-40",
+      "title": "读已提交隔离级别示意图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3707,
+      "fig_id": "5-41",
+      "title": "B-Tree 搜索路径示例",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3735,
+      "fig_id": "5-42",
+      "title": "Page 结构层级",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3785,
+      "fig_id": "5-43",
+      "title": "读取调用栈层次",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3808,
+      "fig_id": "5-44",
+      "title": "主索引 vs 二级索引读取路径",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3854,
+      "fig_id": "5-45",
+      "title": "useSnapshot 自旋锁原理",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "line": 3871,
+      "fig_id": "5-46",
+      "title": "快照一致性场景",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 152,
+      "fig_id": "6-1",
+      "title": "三层 B-Tree 完整结构示意图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 233,
+      "fig_id": "6-2",
+      "title": "页面分裂过程（前 → 中 → 后）",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 310,
+      "fig_id": "6-3",
+      "title": "二分查找下降过程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 395,
+      "fig_id": "6-4",
+      "title": "COW 写路径传播示意图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 957,
+      "fig_id": "6-5",
+      "title": "COW 更新前后对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 1038,
+      "fig_id": "6-6",
+      "title": "RootReference CAS 更新序列",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 1135,
+      "fig_id": "6-7",
+      "title": "读写路径对比",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 1233,
+      "fig_id": "6-8",
+      "title": "读写路径在并发场景下的资源争用对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 1301,
+      "fig_id": "6-9",
+      "title": "写放大与内存开销示意图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 1377,
+      "fig_id": "6-10",
+      "title": "COW 内存分配与 GC 回收的生命周期",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 1440,
+      "fig_id": "6-11",
+      "title": "COW vs In-place 的延迟分布瀑布图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 1493,
+      "fig_id": "6-12",
+      "title": "COW 写操作的完整调用链",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 1535,
+      "fig_id": "6-13",
+      "title": "COW 相关类的职责与协作时序",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 1786,
+      "fig_id": "6-14",
+      "title": "COW vs In-place 在时间维度的行为对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 1902,
+      "fig_id": "6-15",
+      "title": "VersionedValue 详细结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 1991,
+      "fig_id": "6-16",
+      "title": "快照隔离可见性决策树",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 2074,
+      "fig_id": "6-17",
+      "title": "不同隔离级别的快照创建时机对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 2130,
+      "fig_id": "6-18",
+      "title": "写冲突时间线",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 2228,
+      "fig_id": "6-19",
+      "title": "事务冲突检测与解决流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 2294,
+      "fig_id": "6-20",
+      "title": "隔离级别对比",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 2390,
+      "fig_id": "6-21",
+      "title": "四种隔离级别的并发问题对比矩阵",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 2438,
+      "fig_id": "6-22",
+      "title": "隔离级别选择决策流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "line": 2704,
+      "fig_id": "6-23",
+      "title": "MVCC 综合得分雷达图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 82,
+      "fig_id": "6-24",
+      "title": "Chunk 在文件中的布局（压缩前）",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 160,
+      "fig_id": "6-25",
+      "title": "Phase 1 压缩——重写低填充率 Chunk",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 263,
+      "fig_id": "6-26",
+      "title": "Phase 2 压缩——移动 Chunk + 截断文件",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 357,
+      "fig_id": "6-27",
+      "title": "FreeSpaceBitSet 状态转换",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 447,
+      "fig_id": "6-28",
+      "title": "外部碎片 vs 内部碎片的消除方式对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 721,
+      "fig_id": "6-29",
+      "title": "压缩频率与写入负载的平衡关系",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 940,
+      "fig_id": "6-30",
+      "title": "LIRS 数据结构与状态流转",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 1016,
+      "fig_id": "6-31",
+      "title": "LIRS Stack + Queue 稳态结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 1113,
+      "fig_id": "6-32",
+      "title": "缓存访问流程",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 1199,
+      "fig_id": "6-33",
+      "title": "缓存驱逐决策树",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 1277,
+      "fig_id": "6-34",
+      "title": "LRU vs LIRS 对比——扫描抗性演示",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 1475,
+      "fig_id": "6-35",
+      "title": "LIRS vs LRU vs LFU 命中率对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 1548,
+      "fig_id": "6-36",
+      "title": "缓存算法选择决策树",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 1590,
+      "fig_id": "6-37",
+      "title": "缓存算法适用场景分布",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 1733,
+      "fig_id": "6-38",
+      "title": "BitSet 空间管理的层次结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 1794,
+      "fig_id": "6-39",
+      "title": "first-fit 分配 vs 最佳分配策略对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 1840,
+      "fig_id": "6-40",
+      "title": "BitSet 空闲/占用位图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 1920,
+      "fig_id": "6-41",
+      "title": "分配扫描算法流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 1988,
+      "fig_id": "6-42",
+      "title": "文件块分配与释放对位图的影响",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 2030,
+      "fig_id": "6-43",
+      "title": "first-fit vs next-fit vs best-fit 分配路径",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 2081,
+      "fig_id": "6-44",
+      "title": "碎片检测状态机",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 2166,
+      "fig_id": "6-45",
+      "title": "failureFlags 寄存器状态跟踪实例",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 2219,
+      "fig_id": "6-46",
+      "title": "移动优先级计算",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 2301,
+      "fig_id": "6-47",
+      "title": "不同 Chunk 分布的移动优先级对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 2394,
+      "fig_id": "6-48",
+      "title": "FreeSpaceBitSet 类在 MVStore 架构中的位置",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 2542,
+      "fig_id": "6-49",
+      "title": "空间管理方案场景适用性对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 2662,
+      "fig_id": "6-50",
+      "title": "Tokenizer/Parser 两阶段架构的职责分离",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 2713,
+      "fig_id": "6-51",
+      "title": "解析器设计决策的长期影响",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 2896,
+      "fig_id": "6-52",
+      "title": "分裂与合并的非对称性对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 2897,
+      "fig_id": "6-53",
+      "title": "树高度与数据量的关系及 keysPerPage 的影响",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 3110,
+      "fig_id": "6-54",
+      "title": "叶子页面分裂前后对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 3203,
+      "fig_id": "6-55",
+      "title": "根节点分裂创建新层",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 3297,
+      "fig_id": "6-56",
+      "title": "自底向上分裂传播的示例",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 3298,
+      "fig_id": "6-57",
+      "title": "根节点分裂与容量增长的关系",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 3421,
+      "fig_id": "6-58",
+      "title": "合并时树折叠过程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 3547,
+      "fig_id": "6-59",
+      "title": "删除操作触发树折叠的完整路径",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 3548,
+      "fig_id": "6-60",
+      "title": "合并策略的保守性分析",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 3549,
+      "fig_id": "6-61",
+      "title": "合并策略的保守性对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 3590,
+      "fig_id": "6-62",
+      "title": "合并触发条件概率分析",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 3831,
+      "fig_id": "6-63",
+      "title": "内存阈值触发分裂",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 4116,
+      "fig_id": "6-64",
+      "title": "不同负载下分裂/合并的行为模式",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 4117,
+      "fig_id": "6-65",
+      "title": "参数调优对分裂/合并行为的影响",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 4362,
+      "fig_id": "6-66",
+      "title": "分裂/合并策略在 B-Tree 变体间的对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "line": 4363,
+      "fig_id": "6-67",
+      "title": "B-Tree 平衡策略的优缺点维度评分",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 135,
+      "fig_id": "6-68",
+      "title": "三层优化策略的适用区间可视化",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 184,
+      "fig_id": "6-69",
+      "title": "策略选择决策树",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 276,
+      "fig_id": "6-70",
+      "title": "各策略的搜索空间与最优性保证",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 325,
+      "fig_id": "6-71",
+      "title": "暴力枚举排列示意图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 413,
+      "fig_id": "6-72",
+      "title": "贪心选择流程（Hybrid 策略的剩余部分）",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 520,
+      "fig_id": "6-72b",
+      "title": "贪心 vs 全局最优路径对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 551,
+      "fig_id": "6-73",
+      "title": "遗传算法突变操作",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 645,
+      "fig_id": "6-74",
+      "title": "遗传算法收敛过程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 697,
+      "fig_id": "6-75",
+      "title": "突变 vs 完全重排的探索效率对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 872,
+      "fig_id": "6-76",
+      "title": "不同查询规模下的策略选择分布",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 903,
+      "fig_id": "6-77",
+      "title": "优化前后的查询执行性能对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 973,
+      "fig_id": "6-78",
+      "title": "优化器策略的质量-时间权衡",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 1010,
+      "fig_id": "6-79",
+      "title": "优化器策略选择流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 1113,
+      "fig_id": "6-80",
+      "title": "各优化算法的复杂度增长曲线",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 1152,
+      "fig_id": "6-81",
+      "title": "动态规划 vs H2 混合策略的实现对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 1342,
+      "fig_id": "6-82",
+      "title": "2D R-Tree 空间结构示意",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 1408,
+      "fig_id": "6-83",
+      "title": "线性分裂 vs 二次分裂对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 1490,
+      "fig_id": "6-84",
+      "title": "Linear vs Quadratic 种子选择对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 1491,
+      "fig_id": "6-85",
+      "title": "分裂结果的质量差异",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 1650,
+      "fig_id": "6-86",
+      "title": "空间查询遍历路径",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 1732,
+      "fig_id": "6-87",
+      "title": "MVRTreeMap 在 MVStore 中的完整类关系",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 1837,
+      "fig_id": "6-88",
+      "title": "R-Tree 范围查询与最近邻查询路径",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 1838,
+      "fig_id": "6-89",
+      "title": "R-Tree 适用场景评分矩阵",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 1988,
+      "fig_id": "6-90",
+      "title": "R-Tree 各维度性能衰减与替代方案",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 1989,
+      "fig_id": "6-91",
+      "title": "R-Tree 不同维度的 MBR 重叠可视化",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 2361,
+      "fig_id": "6-92",
+      "title": "Tokenizer 字符分派图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 2464,
+      "fig_id": "6-93",
+      "title": "Tokenizer 扫描过程的字符级状态转换",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 2524,
+      "fig_id": "6-94",
+      "title": "递归下降调用树——SELECT 解析",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 2639,
+      "fig_id": "6-95",
+      "title": "INSERT/UPDATE/DELETE 的递归下降解析对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 2734,
+      "fig_id": "6-96",
+      "title": "表达式解析层次结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 2839,
+      "fig_id": "6-97",
+      "title": "解析器错误处理流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 2893,
+      "fig_id": "6-98",
+      "title": "两遍解析错误报告的完整调用流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 2894,
+      "fig_id": "6-99",
+      "title": "解析错误类型与期望 Token 生成决策",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 3077,
+      "fig_id": "6-100",
+      "title": "Parser 类的整体结构与内部协作",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 3195,
+      "fig_id": "6-101",
+      "title": "解析器在 H2 执行引擎中的完整调用路径",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 3303,
+      "fig_id": "6-102",
+      "title": "手工解析器 vs ANTLR 生成解析器对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 3304,
+      "fig_id": "6-103",
+      "title": "手工解析器 vs ANTLR 生成解析器决策矩阵",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 3425,
+      "fig_id": "6-104",
+      "title": "Tokenizer/Parser 两阶段架构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "line": 3461,
+      "fig_id": "6-105",
+      "title": "手工 vs ANTLR 解析器对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 67,
+      "fig_id": "7-1",
+      "title": "JdbcStatement.executeQuery 执行流程与锁生命周期",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 107,
+      "fig_id": "7-2",
+      "title": "JDBC 层各组件职责与调用关系",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 163,
+      "fig_id": "7-3",
+      "title": "Statement 与 PreparedStatement 执行路径对比",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 216,
+      "fig_id": "7-4",
+      "title": "入口调用链的层次职责划分",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 222,
+      "fig_id": "7-5",
+      "title": "从 JDBC 客户端接口到 Store 存储引擎的完整分层架构",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 294,
+      "fig_id": "7-65",
+      "title": "JDBC 层与内核通信架构分层图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 352,
+      "fig_id": "7-6",
+      "title": "各层间数据传递与格式转换",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 356,
+      "fig_id": "7-7",
+      "title": "两种 JDBC 语句的内部处理差异",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 410,
+      "fig_id": "7-66",
+      "title": "Statement 与 PreparedStatement 生命周期对比",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 442,
+      "fig_id": "7-8",
+      "title": "执行次数增长下的开销对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 447,
+      "fig_id": "7-9",
+      "title": "H2 的 session 级锁竞争机制",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 479,
+      "fig_id": "7-67",
+      "title": "Session 锁机制与并发控制示意图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 541,
+      "fig_id": "7-10",
+      "title": "锁可重入性在子查询中的应用",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 604,
+      "fig_id": "7-11",
+      "title": "prepareCommand 方法执行流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 640,
+      "fig_id": "7-12",
+      "title": "锁在 Session 方法调用链中的传递路径",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 708,
+      "fig_id": "7-13",
+      "title": "prepareLocal 快慢路径对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 772,
+      "fig_id": "7-14",
+      "title": "Parser.prepareCommand SQL 关键字分发结构",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 844,
+      "fig_id": "7-15",
+      "title": "SQL 解析三阶段管道",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 922,
+      "fig_id": "7-16",
+      "title": "parseQuery 内部方法调用与对象创建时序",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 929,
+      "fig_id": "7-17",
+      "title": "解析器内部的方法调用链",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 976,
+      "fig_id": "7-77",
+      "title": "递归下降解析器调用栈结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1026,
+      "fig_id": "7-18",
+      "title": "递归下降解析方法嵌套深度",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1030,
+      "fig_id": "7-19",
+      "title": "词法分析器 Token 流生成过程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1093,
+      "fig_id": "7-78",
+      "title": "词法分析器 Tokenizer 工作流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1154,
+      "fig_id": "7-20",
+      "title": "Token 生成示例 — 从 SQL 文本到 Token 流",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1161,
+      "fig_id": "7-21",
+      "title": "从 SQL 文本到 AST 的完整构建过程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1207,
+      "fig_id": "7-79",
+      "title": "抽象语法树（AST）构建过程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1282,
+      "fig_id": "7-22",
+      "title": "SQL 到执行计划的对象变换链",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1354,
+      "fig_id": "7-23",
+      "title": "查询缓存结构及在 Session 中的位置",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1395,
+      "fig_id": "7-24",
+      "title": "SmallLRUCache 驱逐过程示例 (maxSize=4)",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1420,
+      "fig_id": "7-25",
+      "title": "缓存失效的三种场景",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1470,
+      "fig_id": "7-26",
+      "title": "DDL 缓存失效跨 Session 传播流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1521,
+      "fig_id": "7-27",
+      "title": "prepareLocal 三路分支决策与耗时占比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1527,
+      "fig_id": "7-28",
+      "title": "SmallLRUCache 内部数据结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1572,
+      "fig_id": "7-80",
+      "title": "SmallLRUCache 内部双向链表结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1630,
+      "fig_id": "7-29",
+      "title": "SmallLRUCache get/put 操作流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1636,
+      "fig_id": "7-30",
+      "title": "`prepareLocal()` 中的缓存逻辑展开为完整的决策流程",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1693,
+      "fig_id": "7-68",
+      "title": "缓存完整决策流程图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1739,
+      "fig_id": "7-31",
+      "title": "缓存决策关键检查点总结",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1745,
+      "fig_id": "7-32",
+      "title": "DDL 操作从执行到缓存失效的完整传播路径",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1789,
+      "fig_id": "7-69",
+      "title": "DDL 操作传播与缓存失效时序",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1839,
+      "fig_id": "7-33",
+      "title": "modificationMetaID 版本号生命周期",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1886,
+      "fig_id": "7-34",
+      "title": "CommandContainer 结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1940,
+      "fig_id": "7-35",
+      "title": "CommandContainer.query() 执行阶段",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 1992,
+      "fig_id": "7-36",
+      "title": "update 与 query 执行路径对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2034,
+      "fig_id": "7-37",
+      "title": "ResultWithGeneratedKeys 内部结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2101,
+      "fig_id": "7-38",
+      "title": "重新编译七步流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2164,
+      "fig_id": "7-39",
+      "title": "Command 执行框架方法调用全景",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2171,
+      "fig_id": "7-40",
+      "title": "Command 框架中各个类的继承与组合关系",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2224,
+      "fig_id": "7-70",
+      "title": "Command 类继承层次结构图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2260,
+      "fig_id": "7-41",
+      "title": "Command/Prepared 方法实现矩阵",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2266,
+      "fig_id": "7-42",
+      "title": "`CommandContainer.query()` 的完整内部执行路径",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2328,
+      "fig_id": "7-71",
+      "title": "CommandContainer.query() 完整内部执行路径",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2386,
+      "fig_id": "7-43",
+      "title": "query() 五阶段耗时与风险分析",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2392,
+      "fig_id": "7-44",
+      "title": "`recompileIfRequired()` 的完整决策逻辑",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2446,
+      "fig_id": "7-72",
+      "title": "recompileIfRequired 重新编译决策树",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2495,
+      "fig_id": "7-45",
+      "title": "重新编译触发条件与缓存交互",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2585,
+      "fig_id": "7-46",
+      "title": "上述序列图按组件划分为五个泳道，展示每个阶段的参与者和数据流动",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2641,
+      "fig_id": "7-73",
+      "title": "SQL 全链路执行阶段泳道图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2676,
+      "fig_id": "7-47",
+      "title": "组件在准备/执行阶段中的角色定位",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2682,
+      "fig_id": "7-48",
+      "title": "准备阶段和执行阶段之间的数据依赖关系",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2710,
+      "fig_id": "7-74",
+      "title": "准备阶段与执行阶段数据依赖关系",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2747,
+      "fig_id": "7-49",
+      "title": "准备产物到执行消费映射表",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2811,
+      "fig_id": "7-50",
+      "title": "执行阶段性能热点分布",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2876,
+      "fig_id": "7-51",
+      "title": "表达式多态分发机制详解",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2940,
+      "fig_id": "7-52",
+      "title": "ExpressionColumn.getValue() 执行路径",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 2980,
+      "fig_id": "7-53",
+      "title": "ColumnResolver 绑定链 — 从列名到值的完整链路",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 3037,
+      "fig_id": "7-54",
+      "title": "Comparison.getValue() 数据流",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 3084,
+      "fig_id": "7-55",
+      "title": "三值逻辑 (NULL 处理) 在比较中的传播路径",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 3131,
+      "fig_id": "7-56",
+      "title": "短路求值真值表",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 3187,
+      "fig_id": "7-57",
+      "title": "Subquery.getValue() 递归执行过程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 3261,
+      "fig_id": "7-58",
+      "title": "表达式求值三阶段",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 3267,
+      "fig_id": "7-59",
+      "title": "Expression 类体系全貌",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 3339,
+      "fig_id": "7-81",
+      "title": "Expression 类继承层次结构图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 3374,
+      "fig_id": "7-60",
+      "title": "Expression 子类求值特征对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 3380,
+      "fig_id": "7-61",
+      "title": "一条复杂 WHERE 条件的递归求值完整过程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 3450,
+      "fig_id": "7-75",
+      "title": "表达式树递归求值过程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 3506,
+      "fig_id": "7-62",
+      "title": "表达式树深度优先遍历求值",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 3512,
+      "fig_id": "7-63",
+      "title": "短路求值的控制流和数据类型转换在表达式求值中的作用",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 3581,
+      "fig_id": "7-76",
+      "title": "短路求值与类型转换机制",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "line": 3625,
+      "fig_id": "7-64",
+      "title": "DataType.compareWithConversion 类型转换矩阵",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 73,
+      "fig_id": "8-1",
+      "title": "Optimizer 核心字段与用途",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 104,
+      "fig_id": "8-2",
+      "title": "Optimizer 字段的运行时关系",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 153,
+      "fig_id": "8-3",
+      "title": "Optimizer 对象生命周期",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 183,
+      "fig_id": "8-4",
+      "title": "Optimizer 构造与 Select.preparePlan() 的交互",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 253,
+      "fig_id": "8-5",
+      "title": "optimize() 两阶段流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 289,
+      "fig_id": "8-6",
+      "title": "optimize() parse 参数的作用",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 349,
+      "fig_id": "8-7",
+      "title": "三种策略对比",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 379,
+      "fig_id": "8-8",
+      "title": "calculateBestPlan() 完整决策流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 425,
+      "fig_id": "8-9",
+      "title": "canStop() 判定流程与效果",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 464,
+      "fig_id": "8-10",
+      "title": "canStop() 在实际搜索中的表现分析",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 468,
+      "fig_id": "8-11",
+      "title": "Optimizer 及其核心协作对象的完整关系网络",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 549,
+      "fig_id": "8-82",
+      "title": "Optimizer 整体架构与对象关系图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 592,
+      "fig_id": "8-12",
+      "title": "Optimizer 运行时协作时序",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 602,
+      "fig_id": "8-13",
+      "title": "三种策略在 `calculateBestPlan()` 中的协作关系",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 646,
+      "fig_id": "8-83",
+      "title": "三种策略协作流程图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 677,
+      "fig_id": "8-14",
+      "title": "三种策略特性对比表",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 681,
+      "fig_id": "8-15",
+      "title": "`canStop()` 方法的完整决策过程及其对搜索行为的影响",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 741,
+      "fig_id": "8-84",
+      "title": "提前终止机制决策树",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 809,
+      "fig_id": "8-16",
+      "title": "canStop() 在不同查询类型中的效果对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 896,
+      "fig_id": "8-17",
+      "title": "暴力枚举执行流程图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 942,
+      "fig_id": "8-18",
+      "title": "排列生成迭代过程 — Permutations 内部状态变化",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1056,
+      "fig_id": "8-19",
+      "title": "混合策略执行流程图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1145,
+      "fig_id": "8-20",
+      "title": "遗传算法决策流程图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1222,
+      "fig_id": "8-21",
+      "title": "策略选择场景示例图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1226,
+      "fig_id": "8-22",
+      "title": "以 4 表连接为例，`calculateBruteForceAll()` 生成和评估所有排列的过程",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1264,
+      "fig_id": "8-85",
+      "title": "暴力枚举排列生成可视化",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1311,
+      "fig_id": "8-23",
+      "title": "暴力枚举代价分布与搜索效率分析",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1355,
+      "fig_id": "8-24",
+      "title": "头表选择对查询效率的影响 — 行传递量对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1359,
+      "fig_id": "8-25",
+      "title": "以 10 表连接为例，混合策略 `calculateBruteForceSome()` 的执行过程",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1401,
+      "fig_id": "8-86",
+      "title": "混合策略算法流程详图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1433,
+      "fig_id": "8-26",
+      "title": "暴力枚举 vs 混合策略搜索空间对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1437,
+      "fig_id": "8-27",
+      "title": "遗传算法在搜索最优连接顺序时，解空间中的进化轨迹",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1480,
+      "fig_id": "8-87",
+      "title": "遗传算法进化过程可视化",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1534,
+      "fig_id": "8-28",
+      "title": "遗传算法收敛速度与效果分析",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1587,
+      "fig_id": "8-29",
+      "title": "遗传算法操作算子 — 交换与洗牌对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1638,
+      "fig_id": "8-30",
+      "title": "Plan 类在优化过程中的角色",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1673,
+      "fig_id": "8-31",
+      "title": "Plan 对象的创建 → 评估 → 选择完整流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1760,
+      "fig_id": "8-32",
+      "title": "calculateCost() 代价累加过程详解",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1794,
+      "fig_id": "8-33",
+      "title": "无效计划判定 — Join Condition 不可求值检测",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1842,
+      "fig_id": "8-34",
+      "title": "PlanItem 与 Plan、TableFilter 的关系",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1906,
+      "fig_id": "8-35",
+      "title": "代价模型核心公式对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1912,
+      "fig_id": "8-36",
+      "title": "`Plan.calculateCost()` 的复合乘法公式展开为逐步累加的树形图",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 1964,
+      "fig_id": "8-88",
+      "title": "代价复合乘法公式可视化",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2007,
+      "fig_id": "8-37",
+      "title": "复合乘法公式展开与物理含义",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2013,
+      "fig_id": "8-38",
+      "title": "`PlanItem` 对象的完整结构及其在嵌套连接中的递归关系",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2065,
+      "fig_id": "8-89",
+      "title": "PlanItem 结构详细图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2100,
+      "fig_id": "8-39",
+      "title": "PlanItem 执行路径与代价分配",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2104,
+      "fig_id": "8-40",
+      "title": "`calculateCost()` 中判定计划有效性的完整流程",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2184,
+      "fig_id": "8-90",
+      "title": "无效计划判定流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2231,
+      "fig_id": "8-41",
+      "title": "依赖关系与搜索空间缩减",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2286,
+      "fig_id": "8-42",
+      "title": "getBestPlanItem() 代价调整机制",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2329,
+      "fig_id": "8-43",
+      "title": "嵌套连接与普通连接的递归计算路径",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2374,
+      "fig_id": "8-44",
+      "title": "IndexCondition 类型与掩码取值",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2422,
+      "fig_id": "8-45",
+      "title": "条件提取完整流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2457,
+      "fig_id": "8-46",
+      "title": "索引代价估算示例",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2495,
+      "fig_id": "8-47",
+      "title": "索引选择性比较 — 不同查询条件的匹配行占比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2566,
+      "fig_id": "8-48",
+      "title": "索引选择决策流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2618,
+      "fig_id": "8-49",
+      "title": "索引覆盖扫描 vs 非覆盖扫描对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2624,
+      "fig_id": "8-50",
+      "title": "`masks` 数组与索引列的匹配过程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2686,
+      "fig_id": "8-91",
+      "title": "索引条件掩码匹配过程详细图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2719,
+      "fig_id": "8-51",
+      "title": "索引掩码匹配效率分析",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2725,
+      "fig_id": "8-52",
+      "title": "在多种查询条件下，不同索引的代价对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2772,
+      "fig_id": "8-92",
+      "title": "索引选择代价比较图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2807,
+      "fig_id": "8-53",
+      "title": "索引代价选择案例分析",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2811,
+      "fig_id": "8-54",
+      "title": "索引覆盖扫描与普通索引访问的执行路径差异",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2875,
+      "fig_id": "8-93",
+      "title": "索引覆盖扫描与回表访问对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 2911,
+      "fig_id": "8-55",
+      "title": "索引覆盖扫描判断与收益分析",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3022,
+      "fig_id": "8-56",
+      "title": "TableFilter.next() 完整执行流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3086,
+      "fig_id": "8-57",
+      "title": "TableFilter JOIN 链表结构与执行模型",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3144,
+      "fig_id": "8-58",
+      "title": "两阶段条件求值效率分析",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3150,
+      "fig_id": "8-59",
+      "title": "以状态机形式展示 TableFilter 的生命周期",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3221,
+      "fig_id": "8-94",
+      "title": "TableFilter 完整生命周期状态机",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3277,
+      "fig_id": "8-60",
+      "title": "TableFilter 状态转移场景示例",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3283,
+      "fig_id": "8-61",
+      "title": "3 表嵌套循环连接的物理执行过程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3353,
+      "fig_id": "8-95",
+      "title": "Nested Loop Join 3 表执行模型",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3402,
+      "fig_id": "8-62",
+      "title": "Nested Loop Join 索引 vs 全表扫描代价对比",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3406,
+      "fig_id": "8-63",
+      "title": "INNER JOIN 与 LEFT JOIN 在 TableFilter 处理路径上的差异",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3469,
+      "fig_id": "8-96",
+      "title": "内外连接处理路径对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3511,
+      "fig_id": "8-64",
+      "title": "INNER JOIN vs LEFT JOIN 结果对比示例",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3560,
+      "fig_id": "8-65",
+      "title": "索引设计原则详解",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3592,
+      "fig_id": "8-66",
+      "title": "LIKE 模式与索引使用对照",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3641,
+      "fig_id": "8-67",
+      "title": "JOIN 顺序优化可视化",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3683,
+      "fig_id": "8-68",
+      "title": "IN 列表优化原理",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3736,
+      "fig_id": "8-69",
+      "title": "EXPLAIN 输出解读与诊断",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3775,
+      "fig_id": "8-70",
+      "title": "EXPLAIN 输出结构分解 — 注释字段含义",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3822,
+      "fig_id": "8-71",
+      "title": "常见优化问题诊断流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3859,
+      "fig_id": "8-72",
+      "title": "优化优先级排序 — 不同优化手段的性价比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3865,
+      "fig_id": "8-73",
+      "title": "基于查询模式的索引设计决策流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3926,
+      "fig_id": "8-97",
+      "title": "索引设计完整决策树",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3962,
+      "fig_id": "8-74",
+      "title": "索引设计决策速查表",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 3968,
+      "fig_id": "8-75",
+      "title": "通过 EXPLAIN 输出的注释解读 H2 的执行计划",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 4035,
+      "fig_id": "8-98",
+      "title": "执行计划可视化解构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 4076,
+      "fig_id": "8-76",
+      "title": "EXPLAIN 输出快速解读卡",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 4082,
+      "fig_id": "8-77",
+      "title": "查询优化器的完整工作流总结为从 SQL 到执行计划的流水线",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 4136,
+      "fig_id": "8-99",
+      "title": "优化器完整工作流与调优总结",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 4166,
+      "fig_id": "8-78",
+      "title": "优化效果量化对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 4213,
+      "fig_id": "8-79",
+      "title": "优化器全流程总览",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 4299,
+      "fig_id": "8-80",
+      "title": "第 8 章讨论的所有优化器组件集成为一个完整的架构视图，展示从查询接收到执行计划产出的完整数据流",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 4376,
+      "fig_id": "8-100",
+      "title": "优化器全流程集成架构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "line": 4415,
+      "fig_id": "8-81",
+      "title": "优化器核心数据流",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 82,
+      "fig_id": "9-1",
+      "title": "MVStore 整体架构图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 158,
+      "fig_id": "9-2",
+      "title": "MVStore 构造与初始化流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 223,
+      "fig_id": "9-3",
+      "title": "MVStore 内部组件关系图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 274,
+      "fig_id": "9-4",
+      "title": "MVStore 生命周期状态图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 366,
+      "fig_id": "9-5",
+      "title": "MVStore 写入缓冲管理图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 427,
+      "fig_id": "9-6",
+      "title": "MVStore 版本控制图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 518,
+      "fig_id": "9-7",
+      "title": "Page 对象字段内存布局及状态转换",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 554,
+      "fig_id": "9-8",
+      "title": "Page 磁盘序列化格式 (H2 使用大端序 big-endian)",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 655,
+      "fig_id": "9-9",
+      "title": "页面压缩写入决策流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 683,
+      "fig_id": "9-10",
+      "title": "B-Tree 分裂示意图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 747,
+      "fig_id": "9-11",
+      "title": "Leaf vs NonLeaf 节点对比图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 830,
+      "fig_id": "9-12",
+      "title": "Page.read() 反序列化流程图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 909,
+      "fig_id": "9-13",
+      "title": "Page.write() 序列化流程图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 974,
+      "fig_id": "9-14",
+      "title": "Page 内存生命周期与驱逐流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 1069,
+      "fig_id": "9-15",
+      "title": "Chunk 核心字段分类与关系图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 1122,
+      "fig_id": "9-16",
+      "title": "MVStore 文件布局",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 1231,
+      "fig_id": "9-17",
+      "title": "Store Header 详细格式",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 1307,
+      "fig_id": "9-18",
+      "title": "Chunk 生命周期状态图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 1368,
+      "fig_id": "9-19",
+      "title": "Chunk 空间分配与回收策略",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 1422,
+      "fig_id": "9-20",
+      "title": "MVStore 写入路径（事务层 + MVStore 层）",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 1516,
+      "fig_id": "9-21",
+      "title": "传统 WAL 与 MVStore 隐式日志对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 1604,
+      "fig_id": "9-22",
+      "title": "MVStore 原子提交流程与崩溃安全",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 1659,
+      "fig_id": "9-23",
+      "title": "Undo Log 在崩溃恢复中的角色",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 1735,
+      "fig_id": "9-24",
+      "title": "后台自动提交流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 1897,
+      "fig_id": "9-25",
+      "title": "检查点触发条件与决策逻辑",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 1963,
+      "fig_id": "9-26",
+      "title": "检查点执行前后状态对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 2034,
+      "fig_id": "9-27",
+      "title": "脏页收集流程图",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 2095,
+      "fig_id": "9-28",
+      "title": "后台线程调度时间线",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 2120,
+      "fig_id": "9-29",
+      "title": "MVStore 文件三级层次结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 2144,
+      "fig_id": "9-30",
+      "title": "文件打开与最新 Chunk 定位流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 2204,
+      "fig_id": "9-31",
+      "title": "File Header 双冗余与写入策略",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 2271,
+      "fig_id": "9-32",
+      "title": "Chunk COW 更新机制",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 2468,
+      "fig_id": "9-33",
+      "title": "崩溃恢复流程",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 2647,
+      "fig_id": "9-34",
+      "title": "MVStore 恢复流程详细步骤与代码路径",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 2717,
+      "fig_id": "9-35",
+      "title": "事务恢复决策树",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 2786,
+      "fig_id": "9-36",
+      "title": "VersionedBitSet 恢复状态机",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 2851,
+      "fig_id": "9-37",
+      "title": "崩溃场景与恢复策略矩阵",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 3046,
+      "fig_id": "9-38",
+      "title": "MVStore 压缩流水线",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 3137,
+      "fig_id": "9-39",
+      "title": "XTS-AES 加密/解密流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 3208,
+      "fig_id": "9-40",
+      "title": "压缩与加密性能权衡分析",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 3342,
+      "fig_id": "10-1",
+      "title": "MVTable 锁数据结构关系图",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 3396,
+      "fig_id": "10-2",
+      "title": "MVTable 锁状态机",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 3662,
+      "fig_id": "10-3",
+      "title": "共享锁获取流程",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 3760,
+      "fig_id": "10-4",
+      "title": "排他锁竞争流程",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 3839,
+      "fig_id": "10-5",
+      "title": "锁超时处理流程",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 3907,
+      "fig_id": "10-6",
+      "title": "锁升级流程",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 3989,
+      "fig_id": "10-7",
+      "title": "VersionedValue 结构与 operationId 编码",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 4037,
+      "fig_id": "10-8",
+      "title": "行级数据可见性判断",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 4274,
+      "fig_id": "10-9",
+      "title": "useSnapshot() 原子对捕获机制",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 4349,
+      "fig_id": "10-10",
+      "title": "TxDecisionMaker.decide() 完整决策树",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 4461,
+      "fig_id": "10-11",
+      "title": "DFS 死锁检测算法执行流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 4507,
+      "fig_id": "10-12",
+      "title": "死锁检测示例",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 4623,
+      "fig_id": "10-13",
+      "title": "DFS 锁等待图遍历 — 3 个 Session 死锁",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 4698,
+      "fig_id": "10-14",
+      "title": "死锁解除与事务回滚流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 4744,
+      "fig_id": "10-15",
+      "title": "隔离级别实现对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 4842,
+      "fig_id": "10-16",
+      "title": "TransactionMap 迭代器实现对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 4973,
+      "fig_id": "10-17",
+      "title": "TransactionMap 迭代器选择决策树",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 5047,
+      "fig_id": "10-18",
+      "title": "隔离级别对比实验",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 5108,
+      "fig_id": "10-19",
+      "title": "快照创建时机（按隔离级别）",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 5210,
+      "fig_id": "10-20",
+      "title": "RootReference 不可变对象结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 5260,
+      "fig_id": "10-21",
+      "title": "无锁写入流程 (CAS 循环)",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 5461,
+      "fig_id": "10-22",
+      "title": "CAS 重试循环与三级退避策略",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 5545,
+      "fig_id": "10-23",
+      "title": "读路径 vs 写路径对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 5631,
+      "fig_id": "10-24",
+      "title": "RootReference 锁状态与转换",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 5725,
+      "fig_id": "10-25",
+      "title": "文件锁四种模式选择决策树",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 5769,
+      "fig_id": "10-26",
+      "title": "FILE 模式锁流程",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 5804,
+      "fig_id": "10-27",
+      "title": "SOCKET 模式锁验证",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 5946,
+      "fig_id": "10-28",
+      "title": "文件锁心跳机制",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 6018,
+      "fig_id": "10-29",
+      "title": "SOCKET 锁 vs FILE 锁对比",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 6092,
+      "fig_id": "10-30",
+      "title": "锁文件格式详解",
+      "kind": "TOO_SHORT",
+      "suggestion": "扩展至 ≥ 8 字，补充对象与限定语"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 6171,
+      "fig_id": "10-31",
+      "title": "并发控制层次结构",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 6222,
+      "fig_id": "10-32",
+      "title": "五层并发控制请求处理路径",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 6292,
+      "fig_id": "10-33",
+      "title": "各层冲突预防矩阵",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 6384,
+      "fig_id": "10-34",
+      "title": "并发控制各层性能权衡分析",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 6461,
+      "fig_id": "10-35",
+      "title": "五层并发控制总结",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "line": 6474,
+      "fig_id": "10-36",
+      "title": "H2 ACID 特性支持矩阵",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "appendix-a-case-studies.md",
+      "line": 34,
+      "fig_id": "A-1",
+      "title": "串联 SELECT 从 JDBC 入口到 FileStore 的八泳道执行轨迹",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "appendix-a-case-studies.md",
+      "line": 312,
+      "fig_id": "A-5",
+      "title": "拆解 Page Pointer 64 位字段：chunkId、offset、length、type",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "appendix-a-case-studies.md",
+      "line": 914,
+      "fig_id": "A-12",
+      "title": "展示 TransactionStore 三主状态迁移与回滚分支",
+      "kind": "TOO_LONG",
+      "suggestion": "压缩至 ≤ 30 字，把次要语境移到正文"
+    },
+    {
+      "file": "appendix-a-case-studies.md",
+      "line": 1011,
+      "fig_id": "A-13",
+      "title": "崩溃前后内存与磁盘状态对照",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "appendix-a-case-studies.md",
+      "line": 1052,
+      "fig_id": "A-14",
+      "title": "FileStore 重启与锁获取顺序",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "appendix-a-case-studies.md",
+      "line": 1100,
+      "fig_id": "A-15",
+      "title": "磁盘字节布局（含末尾损坏 Chunk）",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "appendix-a-case-studies.md",
+      "line": 1149,
+      "fig_id": "A-16",
+      "title": "next 链扫描决策路径",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "appendix-a-case-studies.md",
+      "line": 1197,
+      "fig_id": "A-17",
+      "title": "Chunk Footer 校验与分支收敛",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "appendix-a-case-studies.md",
+      "line": 1237,
+      "fig_id": "A-18",
+      "title": "layoutMap 驱动的 root 回填",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "appendix-a-case-studies.md",
+      "line": 1290,
+      "fig_id": "A-19",
+      "title": "未完成事务回滚序列",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    },
+    {
+      "file": "appendix-a-case-studies.md",
+      "line": 1347,
+      "fig_id": "A-20",
+      "title": "恢复决策汇总矩阵",
+      "kind": "NO_VERB",
+      "suggestion": "前置动词（展示 / 对比 / 拆解 / 标注 / 追踪 …）"
+    }
+  ]
+}
