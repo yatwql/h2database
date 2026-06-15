@@ -4,6 +4,85 @@
 
 ---
 
+## [v6.0] — 2026-06-15
+
+### 工业级技术书籍质量提升 — 总体里程碑（Phase A → H）
+
+> 自 v5.0（2026-06-11）以来累计 8 个阶段、~30 个实施单元；最终一里程碑由 Phase H（U20-U21）合上：把 v5.x 引入的所有新检查统一纳入 P0/P1/P2 门禁框架，发布 v6.0。
+
+#### Highlights — v5.0 → v6.0 对照
+
+| 维度 | v5.0 基线 | v6.0 实测 | Δ |
+|------|-----------|-----------|---|
+| 章节文件数 | 9 | 10（ch7-8 拆分） + 5 附录 | +1 章节 +5 附录 |
+| 章节总行数 | 36,314 | 39,779 | **+3,465** |
+| ASCII 图数 | 579 | 598 | **+19** |
+| 源码引用 | 185 | 197 | **+12** |
+| 术语表条目 | 73（v5.0 实测）/ 77（基线 hit） | 113 | **+40** |
+| 概念索引条目 | 122（v5.0 实测）/ 141（基线 hit） | 209 主条目 + 子条目（合计 331） | **+87 主条目** |
+| `final_check.py` 检查项 | 88/88 | 106/106 | **+18 项** |
+| 章节均衡 max_min_ratio | 3.748 | 3.044（已超 v6.0 软目标 2.7 的容差范围；plan §4.9 豁免不阻塞 v6.0） | 改善 18.8% |
+| 工具脚本数 | 17 | 24（含 v6.0 新建：balance_check, _audit_captions, _audit_figure_clusters, _audit_exercises, _audit_index_xrefs, pdf_print_grade, source_freshness_check 等） | **+7** |
+
+#### Phase A → H 路线图
+
+| 阶段 | 版本 | 主要交付 |
+|------|------|----------|
+| Phase A | v5.1 | 度量基线工具 `balance_check.py`，固化 baseline-v5.0.json |
+| Phase B | v5.2 | ch7-8 拆分（8,085 行 → 3,642 + 4,443）；max_min_ratio 3.748 → 3.044 |
+| Phase C | v5.3 | 前后件深度化：preface / copyright / how-to-read / glossary / index 三档层级化 |
+| Phase D | v5.4 | 附录 A：端到端案例研究（SELECT / COMMIT / Recovery 三案例） |
+| Phase E | v5.5 | 图注动宾结构（strict 0 违规）+ 图簇桥接（33 簇全部含桥接句） |
+| Phase F | v5.6 | 章末延伸思考（14 章节槽 56 题，难度 emoji + 提示行 + 锚点回顾行） |
+| — | v5.7 | 附录 A/B 拆分；管理文档归一；HTML 视觉/交互修复（intro-mode / 收起展开 / 事件委托 / JS 语法 bug 修复 / 后件升级为附录 C/D/E） |
+| Phase G | v5.8 | 印刷级 PDF（章首装饰、TOC 虚线、独立产出 `*-print.pdf`） |
+| Phase H | v6.0 | 门禁分级 P0/P1/P2 + `final_check.py --gate-level` 入口 + 门禁演进史 + v6.0 全量回归发布 |
+
+#### Added — Phase H 工具能力（U20）
+- `docs-stm/tools/final_check.py`：
+  - 顶部新增 `argparse` 解析 `--gate-level p0|p1|p2`；默认 p2 = 全量
+  - 引入模块级 `SECTION_LEVEL` 与 `section(level, name)` 辅助函数；`check()` 通过 `gate(SECTION_LEVEL)` 跳过当前级别外的检查项
+  - 15 处 `print('=== ... ===')` 替换为 `section('pX', '...')`；为每个区段标注级别
+  - 输出形式：每个 section 标题后追加 `(p0|p1|p2)` 标识；超出门禁的区段在标题行追加 `[SKIP — outside p?]`
+- 三档运行结果：
+  - `--gate-level p0` → 93/93 通过（基础完整性 + 渲染正确性）
+  - `--gate-level p1` → 102/102 通过（再加索引 + 术语 + 工具脚本）
+  - `--gate-level p2`（默认） → 106/106 通过（再加图注 / 图簇 / 延伸思考 / 写作风格）
+
+#### Changed — testplan.md 升级为门禁框架（U20）
+- §2 重构为「2.1 门禁分级 + 2.2 各检查项及其级别」两小节，所有检查项明确标注 P0/P1/P2 列
+- 新增 §7 门禁演进史，记录每项检查的"起始级别 → 当前级别"演进、升级判定规则、当前 P2 候选升级清单
+- 索引层级（v5.3 起 P2 试运营）经 v5.7 / v5.8 两版本周期 0 误报后正式升级 P1
+- 图注动宾、图簇桥接、延伸思考保留 P2，待下一工具迭代周期评估
+
+#### Changed — 版本号同步（U21）
+- `cover.md`：v5.8 → **v6.0**
+- `management/requirements.md`：v5.8 → **v6.0**；状态从"已交付，v6.0 维护与增强中"改为"已交付"
+- `management/plan.md`：v5.8 → **v6.0**；阶段进展段追加 v6.0（Phase H 收尾）行
+- `management/testplan.md`：v5.8 → **v6.0**
+- `management/style-guide.md`：v5.8 → **v6.0**
+
+#### Pipeline 状态（v6.0 发布）
+- `final_check.py`（默认 p2）：106/106 ✅
+- `final_check.py --gate-level p1`：102/102 ✅
+- `final_check.py --gate-level p0`：93/93 ✅
+- `_audit_smart.py`：0 sections needing more diagrams ✅
+- `check_style.py`：0 WARN / 0 INFO ✅
+- 合并文档：39,777 行；HTML 616 TOC entries / 2,192 fence lines
+
+#### Notes — v6.0 之后路线图（plan.md §7）
+- API 文档索引（P3）
+- 交互式图表（P3）
+- 英文版翻译（P4）
+- CI 集成（P4）
+- 印刷级 PDF：per-chapter running header + `verify_pdf.py --print-grade` 自动化（plan U19 推迟项；待 paged.js 或同等方案到位后接入）
+
+#### Closed — 第7轮审查
+- review-findings.md R7-1..R7-15 全部关闭；"当前未解决问题"段更新为 v6.0 已交付，后续仅追加新发现
+- v6.0 发布后该轮闭环；下一次正式审查启动时（如 v6.1+）开第8轮
+
+---
+
 ## [v5.8] — 2026-06-15
 
 ### Phase G 起步：印刷级 PDF 渲染管道

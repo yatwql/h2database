@@ -2,7 +2,7 @@
 
 ## H2 Database 源码全面分析与解读
 
-版本 v5.8 · 2026-06-15 · 39,779 行 · 12 章 + 5 附录
+版本 v6.0 · 2026-06-15 · 39,779 行 · 12 章 + 5 附录
 
 **作者：其·龙（Stallman Wang）**
 **联系邮箱：[stallman.wang@foxmail.com](mailto:stallman.wang@foxmail.com)**

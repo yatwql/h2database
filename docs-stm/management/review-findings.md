@@ -1,7 +1,7 @@
 # H2 Database 源码分析文档 — 审查问题追踪
 
 > **最近正式问题审查**：2026-06-15（第7轮 — 工业级技术书籍质量提升基线快照）
-> **当前状态**：第7轮基线已固化，v6.0 各阶段（v5.1..v5.7）已逐批推进
+> **当前状态**：第7轮已闭环，v6.0（Phase A → H 全部 8 阶段）已发布
 > **说明**：本文只记录审查发现的问题及修复状态；文档、需求、质量标准和产物变更记录统一维护在 `docs-stm/management/changelog.md`。
 
 ---
@@ -59,6 +59,8 @@ python docs-stm/tools/balance_check.py --diff docs-stm/management/baseline-v5.0.
 | R7-13 | — (v5.7) | P1 | TOC 展开 `›` 按钮点击仍无响应（Firefox） | ✅ 已完成（重写为 document 级事件委托 + closest 命中）|
 | R7-14 | — (v5.7) | P2 | 后件 术语表 / 概念索引 / 参考文献 未挂入附录体系 | ✅ 已完成（升级为附录 C / D / E）|
 | R7-15 | G (v5.8) | P1 | 缺印刷级 PDF 渲染管道（章首装饰页、TOC 虚线对齐、印刷级页眉页脚） | ✅ 已完成（新建 `pdf_print_grade.py`，独立于日常 PDF 流水线）|
+| R7-16 | H (v6.0) | P1 | `final_check.py` 缺 P0/P1/P2 门禁分级入口；testplan.md 仅平铺列表 | ✅ 已完成（`--gate-level` 入口；testplan §2 重构 + §7 门禁演进史）|
+| R7-17 | H (v6.0) | P0 | v6.0 全量回归发布 | ✅ 已完成（cover/requirements/plan/testplan/style-guide 全部 v6.0；changelog v6.0 总览条目；三档门禁全部通过）|
 
 ---
 
@@ -131,5 +133,6 @@ python docs-stm/tools/balance_check.py --diff docs-stm/management/baseline-v5.0.
 
 ## 当前未解决问题
 
-- **v6.0 阶段推进中**：参见 `docs-stm/plan/2026-06-15-001-feat-industrial-book-quality-plan.md`。截至 v5.8，Phase A–G 已落地（含 v5.7 多项视觉/交互修复 + v5.8 印刷级 PDF 起步）。下一阶段为 **Phase H（门禁升级与 v6.0 收尾）**：把 Phase A–G 引入的所有新检查纳入 testplan.md P0/P1/P2 框架；评估 P2 → P1 升级；总入口 `final_check.py --gate-level p0|p1|p2`；review-findings 第7轮闭环；发布 v6.0。
-- v5.0 之前所有审查问题均已关闭；v5.1–v5.8 区间发现的阶段性问题均已在上文清单中关闭。后续新发现问题在此追加，并在完成修复时同步更新 `docs-stm/management/changelog.md`。
+- **v6.0 已发布**：Phase A–H 全部 8 阶段交付，参见 `docs-stm/plan/2026-06-15-001-feat-industrial-book-quality-plan.md` 与 `changelog.md` v6.0 总览条目。第 7 轮审查至此闭环。
+- 下一阶段为 **v6.0 后维护期**（plan.md §7 后续增强项 P3/P4）：API 文档索引、交互式图表、英文版翻译、CI 集成；印刷级 PDF per-chapter running header（待 paged.js 或同等方案）。
+- 后续新发现问题在此追加。下一轮正式审查启动时另开第 8 轮清单。

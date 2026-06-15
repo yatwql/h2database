@@ -1,6 +1,6 @@
 # H2 Database 源码分析 — 质量标准与测试计划
 
-> 版本：v5.8
+> 版本：v6.0
 > 最后更新：2026-06-15
 
 ---
@@ -29,24 +29,48 @@ PDF 生成较慢；日常编辑只要求标准流程通过。
 
 ## 2. 质量门禁
 
-| 类别 | 通过标准 | 验证方式 |
-|------|----------|----------|
-| 章节结构 | 12 章齐全，H1/H2/H3/H4 层级连续 | `final_check.py` |
-| 图号 | 每章图号唯一且完整；允许历史补号导致非严格位置顺序 | `final_check.py` |
-| 图表覆盖 | 内容型 `###` 小节 ≥ 2 图；模板型小节 ≥ 1 图 | `_audit_smart.py` |
-| 代码围栏 | 所有围栏成对；HTML `<pre><code>` 平衡 | `generate_html.py`, `final_check.py` |
-| HTML TOC | TOC 与内容标题 1:1，零断链 | `final_check.py` |
-| 合并文档 | 源文件总行数与合并文档一致 | `final_check.py` |
-| 编码 | Markdown 和 HTML 均为有效 UTF-8 | `final_check.py` |
-| 索引完整性 | 索引 ≥ 120 条；每章 ≥ 5 条；章节引用对应实际内容 | `final_check.py`, `build_index.py --coverage` |
-| 索引层级（v6.0） | 主条目 ≥ 150；子条目 ≥ 50；see-also ≥ 30；总条目 ≥ 250；see-also 全部解析；子条目章节 ∈ 1-12 | `final_check.py`、`build_index.py --hierarchy-check`、`_audit_index_xrefs.py` |
-| 图注动宾结构（v6.0） | 全书图注以批准动词起首；长度 ∈ [8, 30] 字；无模糊后缀；strict 阈值下违规 = 0 | `_audit_captions.py --threshold strict` |
-| 图簇桥接（v6.0） | 3+ 张图在 ≤ 40 行内连续出现的"图簇"，前置一句桥接叙事点名所有图 | `_audit_figure_clusters.py --window 40 --needs-bridge`（应输出空清单） |
-| 延伸思考（v6.0） | 14 章节槽全部含 `## N.X 延伸思考` 小节；每章 ≥ 3 题；每题含难度/题型 emoji + 提示行 + 含锚点的回顾行；全书 ≥ 50 题 | `final_check.py`、`_audit_exercises.py` |
-| 术语完整性 | 术语 ≥ 100 条；每条有对应章节引用；引用章节号有效；see-also 双向闭合 | `final_check.py`、`_annotate_terms.py --check-related`、`build_glossary.py --validate` |
-| 版本统计 | cover 统计先更新；管理文档版本一致 | `cover_stats.py`, 人工核对 |
+### 2.1 门禁分级（v6.0 / Phase H 起）
 
-标准流程必须达到 `final_check.py` 全部检查通过。
+`final_check.py` 的检查项按"阻塞级别"分为 P0 / P1 / P2 三档：
+
+| 级别 | 含义 | 阻塞级别 |
+|------|------|----------|
+| **P0** | 基础完整性 + 渲染正确性 | 任何交付（含日常） |
+| **P1** | 内容质量 + 工具可用性 | 正式发布 |
+| **P2** | v6.0 起的"叙事质量"门禁，处于试运营评估期 | 可选；当前已全部通过 |
+
+`final_check.py` 命令行控制：
+
+```bash
+python docs-stm/tools/final_check.py                  # 默认 p2 = 全量
+python docs-stm/tools/final_check.py --gate-level p1  # p0 + p1
+python docs-stm/tools/final_check.py --gate-level p0  # 仅 p0
+```
+
+### 2.2 各检查项及其级别
+
+| 类别 | 通过标准 | 验证方式 | 级别 |
+|------|----------|----------|------|
+| 章节结构 | 12 章 + 5 附录齐全，H1/H2/H3/H4 层级连续 | `final_check.py`（heading hierarchy） | P0 |
+| 图号 | 每章图号唯一且完整；允许历史补号导致非严格位置顺序 | `final_check.py`（figure numbering） | P0 |
+| 图表覆盖 | 内容型 `###` 小节 ≥ 2 图；模板型小节 ≥ 1 图 | `_audit_smart.py` | P0 |
+| 代码围栏 | 所有围栏成对；HTML `<pre><code>` 平衡 | `final_check.py`（code fence balance / HTML TOC） | P0 |
+| 跨章引用 | 章节互引 ≥ 1；前后件免检 | `final_check.py`（cross-references） | P0 |
+| HTML TOC | TOC 与内容标题 1:1，零断链 | `final_check.py`（HTML TOC） | P0 |
+| 合并文档 | 源文件总行数与合并文档一致 | `final_check.py`（merged doc） | P0 |
+| 编码 | Markdown 和 HTML 均为有效 UTF-8 | `final_check.py`（UTF-8 encoding） | P0 |
+| CSS 渲染钩子 | generate_html.py 含 9 项关键 CSS 标记（h1 装饰、复制按钮、面包屑等） | `final_check.py`（CSS style checks） | P0 |
+| 索引完整性 | 索引 ≥ 120 条；每章 ≥ 5 条；章节引用对应实际内容 | `final_check.py`（index integrity） | P1 |
+| 索引层级 | 主条目 ≥ 150；子条目 ≥ 50；see-also ≥ 30；see-also 全部解析；子条目章节 ∈ 1-12 | `final_check.py`、`build_index.py --hierarchy-check`、`_audit_index_xrefs.py` | P1 |
+| 术语完整性 | 术语 ≥ 60 条；每条有对应章节引用；引用章节号 ∈ 1-12 | `final_check.py`（glossary content） | P1 |
+| 工具脚本可用性 | `build_glossary.py` / `build_index.py` 语法有效 | `final_check.py`（glossary builder checks） | P1 |
+| 图注动宾结构 | 全书图注以批准动词起首；长度 ∈ [8, 30] 字；无模糊后缀；strict 阈值下违规 = 0 | `_audit_captions.py --threshold strict` | P2 |
+| 图簇桥接 | 3+ 张图在 ≤ 40 行内连续出现的"图簇"，前置一句桥接叙事点名所有图 | `_audit_figure_clusters.py --window 40 --needs-bridge`（应输出空清单） | P2 |
+| 延伸思考 | 14 章节槽全部含 `## N.X 延伸思考` 小节；每章 ≥ 3 题；每题含难度/题型 emoji + 提示行 + 含锚点的回顾行；全书 ≥ 50 题 | `final_check.py`、`_audit_exercises.py` | P2 |
+| 写作风格审计 | `check_style.py` 0 WARN | `final_check.py`（style check） | P2 |
+| 版本统计 | cover 统计先更新；管理文档版本一致 | `cover_stats.py`, 人工核对 | P0 |
+
+`final_check.py` 默认（`--gate-level p2`）必须达到全部检查通过。
 
 ## 3. 格式规范
 
@@ -113,3 +137,30 @@ python docs-stm/tools/pdf_print_grade.py
 - 每次文档变更后运行标准流程。
 - 每次正式归档或发布前运行 PDF 验证。
 - 每次发现新问题时登记到 `docs-stm/management/review-findings.md`，修复后同步更新 `docs-stm/management/changelog.md`。
+
+## 7. 门禁演进史
+
+记录各检查项加入 P0/P1/P2 框架的版本与升级判定，便于评估"试运营 → 正式门禁"的过渡过程。
+
+| 版本 | 检查项 | 起始级别 | 当前级别 | 备注 |
+|------|--------|---------|---------|------|
+| v3.x | 章节结构 / 图号 / 代码围栏 / 跨章引用 / UTF-8 / HTML TOC / 合并文档 | P0 | P0 | v6.0 之前即"必过" |
+| v4.27 | 图表覆盖（`_audit_smart.py`） | P0 | P0 | 由独立工具确保 |
+| v5.0 | 索引完整性 / 术语完整性 / 工具脚本可用性 / CSS 渲染钩子 | P1 | P1 | 内容质量保障层 |
+| v5.3 (Phase C) | 索引层级（main/sub/see-also） | P2 | P1 | v5.7 实测 see-also 全部解析；P1 升级判定通过 |
+| v5.5 (Phase E) | 图注动宾结构（strict） | P2 | P2 | 已运行多版本，0 违规；保留 P2 至少一个版本周期再评估升级 |
+| v5.5 (Phase E) | 图簇桥接 | P2 | P2 | 33 簇全部含桥接；保留 P2 至少一个版本周期再评估升级 |
+| v5.6 (Phase F) | 延伸思考 | P2 | P2 | 56 题 / 14 章节槽；保留 P2 至少一个版本周期再评估升级 |
+| v5.x | 写作风格审计（`check_style.py`） | P2 | P2 | 永久 advisory；不计划升级 |
+| v5.8 (Phase G) | 印刷级 PDF 视觉验证 | 人工 | 人工 | 当前不接入 `final_check.py`；视觉验证为主，待 verify_pdf 自动化后再评估 |
+
+**升级判定规则**（plan §4.8）：
+
+1. **试运营期**：P2 检查项至少跨一个版本周期，记录命中数 / 误报率 / 修复成本
+2. **升级 P2 → P1** 条件：误报率 < 10% 且修复成本可承受
+3. **降级**：从未发生；如因工具误报率上升需要降级，必须在 changelog 记录原因
+
+**当前 P2 候选升级清单**（v6.1+ 评估）：
+
+- 图注动宾结构、图簇桥接、延伸思考三项均跨版本稳定，待下一个工具迭代后评估升级 P1
+- 索引层级已在 v6.0 升级 P1（v5.7 / v5.8 两个版本周期 0 误报）

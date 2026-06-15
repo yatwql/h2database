@@ -1,6 +1,45 @@
 #!/usr/bin/env python3
-"""Comprehensive final delivery check for H2 documentation."""
-import re, os, glob, subprocess, sys
+"""Comprehensive final delivery check for H2 documentation.
+
+Gate levels (introduced in v6.0 / Phase H):
+
+- ``p0`` — foundational integrity & renderer correctness (figure numbering,
+  cross-refs, code-fence balance, heading hierarchy, UTF-8, HTML TOC,
+  merged-doc consistency, CSS style hooks). Must pass for any delivery.
+- ``p1`` — content-quality gates that block formal delivery (index
+  integrity & hierarchy, glossary content, glossary builder availability).
+- ``p2`` — v6.0-era quality gates that started life as advisory checks
+  (figure caption verb-leading + length, figure cluster bridges, chapter
+  exercises, writing-style audit). All currently passing; subject to
+  re-rating during Phase H gate review.
+
+Default: ``--gate-level p2`` runs every section (matches v5.x behaviour).
+
+Usage:
+    python docs-stm/tools/final_check.py                  # all (p0+p1+p2)
+    python docs-stm/tools/final_check.py --gate-level p1  # p0+p1
+    python docs-stm/tools/final_check.py --gate-level p0  # p0 only
+"""
+import re, os, glob, subprocess, sys, argparse
+
+# ── Gate-level argument parsing ──────────────────────────────────────────
+_arg_parser = argparse.ArgumentParser(add_help=False)
+_arg_parser.add_argument('--gate-level', choices=['p0', 'p1', 'p2'], default='p2')
+_arg_parser.add_argument('--help', '-h', action='store_true')
+_args, _unknown = _arg_parser.parse_known_args()
+if _args.help:
+    print(__doc__)
+    sys.exit(0)
+
+GATE_LEVEL = _args.gate_level
+LEVEL_RANK = {'p0': 0, 'p1': 1, 'p2': 2}
+_active_rank = LEVEL_RANK[GATE_LEVEL]
+
+def gate(section_level: str) -> bool:
+    """Return True if the section's level is included by ``GATE_LEVEL``."""
+    return LEVEL_RANK[section_level] <= _active_rank
+
+print(f'[gate-level: {GATE_LEVEL}] running sections at or below {GATE_LEVEL}\n')
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 repo_root = os.path.normpath(os.path.join(script_dir, '..', '..'))
@@ -34,16 +73,34 @@ CHAPTERS = front_matter + [os.path.join(docs_dir, name) for name in chapter_name
 CHAPTERS = [p for p in CHAPTERS if os.path.exists(p)]
 
 results = []
+# SECTION_LEVEL is a "sticky" global that each section header updates;
+# check() reads it to decide whether to record (and print) the result.
+# Sections still execute their file I/O + computations even when skipped
+# — total runtime is ~1s, so we trade tiny waste for zero indentation churn
+# vs the alternative of restructuring 15 flat sections into functions.
+SECTION_LEVEL = 'p0'
 
 def check(ok, msg):
+    if not gate(SECTION_LEVEL):
+        return
     results.append((ok, msg))
     print(f'  {"OK" if ok else "FAIL"}: {msg}')
+
+def section(level: str, name: str) -> None:
+    """Mark the start of a new section with its gate level.
+
+    Always prints the heading so the reader sees which sections exist;
+    appends a [SKIP] marker when the level is outside the active gate."""
+    global SECTION_LEVEL
+    SECTION_LEVEL = level
+    suffix = '' if gate(level) else f'  [SKIP — outside {GATE_LEVEL}]'
+    print(f'\n=== {name} ({level}) ==={suffix}'.rstrip())
 
 # 1. Figure numbering - sequential per chapter
 # Numeric chapters use **图 N-M:** (N is chapter, M is figure index).
 # v5.4 appendix uses **图 A-M:** with letter prefix; treat each letter as its
 # own group so the same uniqueness/completeness invariants apply.
-print('=== Figure Numbering ===')
+section('p0', 'Figure Numbering')
 global_by_ch: dict = {}  # ch (int or 'A'/'B'/…) -> [(file, base_num, full_num)]
 for f in CHAPTERS:
     with open(f, 'r', encoding='utf-8') as fh:
@@ -84,7 +141,7 @@ for ch in sorted(global_by_ch, key=lambda k: (isinstance(k, str), k)):
     check(passed, ', '.join(msg_parts))
 
 # 2. Cross-references
-print('\n=== Cross-References ===')
+section('p0', 'Cross-References')
 for f in CHAPTERS:
     with open(f, 'r', encoding='utf-8') as fh:
         content = fh.read()
@@ -108,7 +165,7 @@ for f in CHAPTERS:
         check(True, f'{f}: book front/back matter (skipped cross-ref check)')
 
 # 3. Code fence balance
-print('\n=== Code Fence Balance ===')
+section('p0', 'Code Fence Balance')
 total_fences = 0
 all_balanced = True
 for f in CHAPTERS:
@@ -124,7 +181,7 @@ for f in CHAPTERS:
 check(all_balanced, f'Total: {total_fences} fences across all files')
 
 # 4. Heading hierarchy
-print('\n=== Heading Hierarchy ===')
+section('p0', 'Heading Hierarchy')
 for f in CHAPTERS:
     with open(f, 'r', encoding='utf-8') as fh:
         lines = fh.readlines()
@@ -142,7 +199,7 @@ for f in CHAPTERS:
         check(True, f'{f}: {len(headings)} headings, no level jumps')
 
 # 5. UTF-8 encoding
-print('\n=== UTF-8 Encoding ===')
+section('p0', 'UTF-8 Encoding')
 for f in CHAPTERS + [os.path.join(docs_dir, 'h2-source-code-analysis.md'), os.path.join(docs_dir, 'h2-source-code-analysis.html')]:
     try:
         with open(f, 'r', encoding='utf-8') as fh:
@@ -154,7 +211,7 @@ for f in CHAPTERS + [os.path.join(docs_dir, 'h2-source-code-analysis.md'), os.pa
         check(False, f'{f}: cannot read ({e})')
 
 # 6. HTML TOC check
-print('\n=== HTML TOC ===')
+section('p0', 'HTML TOC')
 try:
     with open(os.path.join(docs_dir, 'h2-source-code-analysis.html'), 'r', encoding='utf-8') as f:
         html = f.read()
@@ -176,7 +233,7 @@ except FileNotFoundError:
     check(False, 'HTML file not found')
 
 # 7. Merged doc consistency
-print('\n=== Merged Doc ===')
+section('p0', 'Merged Doc')
 try:
     ALL_MD = CHAPTERS + [os.path.join(docs_dir, 'cover.md')]
     md_lines = sum(1 for f in ALL_MD for l in open(f, 'r', encoding='utf-8'))
@@ -186,7 +243,7 @@ except FileNotFoundError:
     check(False, 'Merged doc not found')
 
 # 8. CSS style checks (non-blocking, warning only)
-print('\n=== CSS Style Checks ===')
+section('p0', 'CSS Style Checks')
 try:
     with open(os.path.join(script_dir, 'generate_html.py'), 'r', encoding='utf-8') as f:
         gen_content = f.read()
@@ -213,7 +270,7 @@ except FileNotFoundError:
     check(True, 'CSS check skipped (generate_html.py not found)')
 
 # 9. Check: glossary builder scripts exist
-print('\n=== Glossary Builder Checks ===')
+section('p1', 'Glossary Builder Checks')
 glossary_script = os.path.join(script_dir, 'build_glossary.py')
 index_script = os.path.join(script_dir, 'build_index.py')
 scripts_ok = True
@@ -232,7 +289,7 @@ for s_name, s_path in [('build_glossary.py', glossary_script), ('build_index.py'
 check(scripts_ok, 'Glossary builder scripts available')
 
 # 11. Index integrity check
-print('\n=== Index Integrity ===')
+section('p1', 'Index Integrity')
 index_path = os.path.join(docs_dir, 'back', 'index.md')
 index_ok = True
 if os.path.exists(index_path):
@@ -325,7 +382,7 @@ else:
 # Run them as separate checks so authors see the diagnostic at the same
 # place as other quality gates. Failure does not regress index_ok; only
 # missing tools count as hard failures.
-print('\n=== Figure Caption Quality (style-guide §14) ===')
+section('p2', 'Figure Caption Quality (style-guide §14)')
 caption_tool = os.path.join(script_dir, '_audit_captions.py')
 if os.path.exists(caption_tool):
     try:
@@ -341,7 +398,7 @@ if os.path.exists(caption_tool):
 else:
     check(False, 'Caption audit tool missing')
 
-print('\n=== Figure Cluster Bridges (style-guide §13.6) ===')
+section('p2', 'Figure Cluster Bridges (style-guide §13.6)')
 cluster_tool = os.path.join(script_dir, '_audit_figure_clusters.py')
 if os.path.exists(cluster_tool):
     try:
@@ -366,7 +423,7 @@ else:
 # 11c. v5.6 chapter exercises (style-guide §12). Each chapter must end with
 # a 延伸思考 section containing >= 3 well-formed exercises; the book total
 # must be >= 50 across all 14 chapter slots.
-print('\n=== Chapter Exercises (style-guide §12) ===')
+section('p2', 'Chapter Exercises (style-guide §12)')
 exercises_tool = os.path.join(script_dir, '_audit_exercises.py')
 if os.path.exists(exercises_tool):
     try:
@@ -390,7 +447,7 @@ else:
 # v6.0 supports multi-line entries with the **章节**: ... line on a separate
 # row. Parse entries as blocks delimited by `- **Term**:` markers, so that the
 # chapter reference can live on a continuation line.
-print('\n=== Glossary Content ===')
+section('p1', 'Glossary Content')
 glossary_path = os.path.join(docs_dir, 'back', 'glossary.md')
 glossary_ok = True
 if os.path.exists(glossary_path):
@@ -451,7 +508,7 @@ else:
     glossary_ok = False
 
 # 10. Style check (advisory)
-print('\n=== Style Check ===')
+section('p2', 'Style Check')
 style_script = os.path.join(script_dir, 'check_style.py')
 style_ok = True
 if os.path.exists(style_script):
