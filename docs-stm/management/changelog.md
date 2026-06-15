@@ -4,6 +4,46 @@
 
 ---
 
+## [v6.1] — 2026-06-15
+
+### 新增交付形态：EPUB（按需输出）
+
+> 用户反馈：交付文档增加 EPUB 输出形态，按需生成，仅在交付的最后阶段产出。
+
+#### Added — 新工具
+- **`docs-stm/tools/generate_epub.py`**（新建，~200 行）：基于 pandoc 的 EPUB 渲染管道
+  - Step 0：检测 pandoc 是否在 PATH；缺失则给出 Windows / macOS / Debian 安装命令并退出
+  - Step 1：调用 `rebuild_merged.py` 确保合并 Markdown 最新
+  - Step 2：从 `cover.md` 自动提取 标题 / 副标题 / 版本 / 作者 / 出版日期
+  - Step 3：写入临时 metadata YAML 块（`<dc:title>` / `<dc:creator>` / `<dc:date>` / `<dc:language>=zh-CN` / `<dc:rights>` / `<dc:publisher>`）
+  - Step 4：写入临时 CSS（等宽字体代码块 + 蓝色左竖条 + 表头蓝底白字 + 引用块浅蓝背景 + 章节 page-break）
+  - Step 5：调用 `pandoc <metadata> <merged.md> -o <epub> --toc --toc-depth=3 --split-level=1 --to=epub3 --css=<css>`
+  - Step 6：输出文件路径 / 大小 / 元数据摘要 + 可选 epubcheck 命令提示
+  - 临时 metadata / CSS 文件在 finally 中清理
+
+#### Added — gitignore
+- `.gitignore`：新增 `docs-stm/*.epub`（紧贴 `*.pdf` `*.html` 之后），避免误提交大文件
+
+#### Changed — testplan.md 新增 §4.3 EPUB 交付门禁
+- §4 标题从"PDF 专项门禁"改为"交付形态专项门禁"，明确这是按需可选交付物的统一节
+- 新增 §4.3 列出 8 项 EPUB 要求（pandoc 引擎 + cover.md 元数据自动提取 + H1 分卷 + TOC 深度 H1-H3 + 内嵌 CSS + 文件大小 + 视觉验证清单）
+- 明确 EPUB 不接入 `final_check.py`（与印刷级 PDF 同样走人工视觉验证起步）
+
+#### Changed — requirements.md 交付物表
+- 新增"印刷级 PDF"行（v6.0 已交付但表格未更新）
+- 新增"EPUB"行（按需生成，最终交付阶段，git 忽略）
+
+#### Changed — CLAUDE.md 项目说明
+- "PDF generation is on demand only" 段落扩展：在标准 PDF 之后追加印刷级 PDF 与 EPUB 命令示例
+- 明确印刷级 PDF 与 EPUB 都是"on demand only and should be the final delivery step"
+
+#### Notes — 实现选择
+- 选择 pandoc 而非纯 Python（如 ebooklib）：pandoc 是 markdown → epub 的事实标准，对 ASCII 围栏代码、CJK 字体、表格/图注/嵌套列表的处理都已成熟，零额外维护
+- pandoc 仅作为该脚本的依赖，**不进入** `cover_stats / rebuild_merged / generate_html / _audit_smart / final_check` 日常流水线，与 plan §4.6 "印刷级 PDF 增量推进，不阻塞 MD/HTML 流水线"原则一致
+- 本批不引入 final_check 新检查项（plan §4.8 "新检查全部从 P2 起步"；按需交付物走人工视觉验证）
+
+---
+
 ## [v6.0] — 2026-06-15
 
 ### 工业级技术书籍质量提升 — 总体里程碑（Phase A → H）

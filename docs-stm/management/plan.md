@@ -1,6 +1,6 @@
 # H2 Database 源码分析 — 实施计划
 
-> 版本：v6.0
+> 版本：v6.1
 > 最后更新：2026-06-15
 
 ---
@@ -51,6 +51,7 @@ docs-stm/
 - v5.1 – v5.7（v6.0 推进中）：基线度量、ch7-8 拆分、前后件深度化、端到端案例研究附录、图注与图簇桥接质量、章末延伸思考、附录 A/B 拆分、HTML 视觉与交互修复、后件升级为附录 C/D/E。
 - v5.8（Phase G）：印刷级 PDF 渲染管道（独立产出）—— 章首装饰页、TOC 虚线对齐、印刷级页眉页脚。
 - v6.0（Phase H 收尾）：门禁分级（P0/P1/P2）落地、`final_check.py --gate-level` 入口、testplan.md 门禁演进史、v6.0 全量回归发布。
+- v6.1（按需交付物扩展）：EPUB 输出形态（pandoc 渲染管道 `generate_epub.py`，最终交付阶段按需生成）。
 
 每个版本的具体增量、工具新增、文件变更记录均在 `docs-stm/management/changelog.md` 中维护；v6.0 阶段路线见 `docs-stm/plan/2026-06-15-001-feat-industrial-book-quality-plan.md`。
 

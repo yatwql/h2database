@@ -21,6 +21,7 @@
 docs/html/testOutput.html
 docs-stm/*.pdf
 docs-stm/*.html
+docs-stm/*.epub
 docs-stm/*.log
 *.zip
 mdpdf.log

@@ -83,6 +83,18 @@ python docs-stm/tools/add_pdf_toc_links.py
 python docs-stm/tools/verify_pdf.py
 ```
 
+Print-grade PDF (chapter cover banners + TOC dot leaders) is on demand and emits a separate file, never overwriting the standard PDF:
+
+```bash
+python docs-stm/tools/pdf_print_grade.py    # → docs-stm/h2-source-code-analysis-print.pdf
+```
+
+EPUB delivery (for e-readers) is on demand and runs only at the final delivery stage. Requires pandoc on PATH:
+
+```bash
+python docs-stm/tools/generate_epub.py      # → docs-stm/h2-source-code-analysis.epub
+```
+
 ## Documentation Conventions
 
 - Figure captions use `**图 X-Y: Title**` on their own line, outside code fences.

@@ -1,6 +1,6 @@
 # H2 Database 源码分析 — 质量标准与测试计划
 
-> 版本：v6.0
+> 版本：v6.1
 > 最后更新：2026-06-15
 
 ---
@@ -82,7 +82,9 @@ python docs-stm/tools/final_check.py --gate-level p0  # 仅 p0
 - 跨章引用：使用 `详见第X章《实际 H1 标题》`。
 - 管理文档职责：需求、计划、测试、变更、审查问题分别维护，避免重复。
 
-## 4. PDF 专项门禁
+## 4. 交付形态专项门禁
+
+本节列出"非日常"的可选交付形态门禁。所有这些产出都不在日常流水线内生成；按需在交付的最后阶段单独运行。
 
 ### 4.1 标准 PDF（日常交付）
 
@@ -119,6 +121,30 @@ python docs-stm/tools/pdf_print_grade.py
 ```
 
 视觉验证：在 Chrome / Adobe Reader 中检查 (a) 章首装饰条 (b) TOC 虚线对齐 (c) 页眉/页脚一致出现。
+
+### 4.3 EPUB（v6.0 起，可选交付）
+
+EPUB 是面向电子阅读器（Apple Books / Kindle / Calibre / Readium 等）的可选交付形态，**只在交付的最后阶段按需输出**，不进入日常流水线。要求：
+
+- EPUB 由 pandoc 从合并后的 `h2-source-code-analysis.md` 生成；运行前先调用 `rebuild_merged.py` 保证源最新
+- 输出路径：`docs-stm/h2-source-code-analysis.epub`（与日常 PDF / 印刷级 PDF 互相独立）
+- 元数据：`<dc:title>` / `<dc:creator>` / `<dc:date>` / `<dc:language>=zh-CN` 由 cover.md 自动提取（标题 / 副标题 / 版本 / 作者 / 出版日期）
+- 每个 H1 章节在 EPUB 内部独立分卷（`--split-level=1`），便于阅读器分章导航
+- 目录深度 H1-H3（`--toc --toc-depth=3`），与 HTML 侧边栏 TOC 层级一致
+- 内嵌精简 CSS：等宽字体代码块 + 蓝色左竖条 + 表头蓝底白字 + 引用块浅蓝背景
+- 文件大小：合理 EPUB 通常在 2-5 MB 范围；超过 10 MB 视为异常需人工排查
+
+依赖：[pandoc](https://pandoc.org/)（不是日常依赖；只在出 EPUB 时需要）
+
+验证命令：
+
+```bash
+python docs-stm/tools/generate_epub.py
+```
+
+视觉验证：在 Apple Books / Calibre / Readium 中至少查看一章正文 + 一个代码块 + 一张 ASCII 图 + 目录导航是否正常。
+
+EPUB 不接入 `final_check.py`（按 plan §4.6 / §4.8 印刷级 + 按需交付物均走人工视觉验证起步）。
 
 ## 5. 拒绝标准
 

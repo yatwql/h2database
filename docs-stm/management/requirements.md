@@ -1,7 +1,7 @@
 # H2 Database 源码分析 — 需求文档
 
-> 版本：v6.0
-> 状态：已交付
+> 版本：v6.1
+> 状态：已交付（v6.0 + EPUB 输出形态）
 > 最后更新：2026-06-15
 
 ---
@@ -20,6 +20,8 @@
 | 合并 Markdown | `docs-stm/h2-source-code-analysis.md` | 标准可提交交付物，由源章节生成 |
 | HTML | `docs-stm/h2-source-code-analysis.html` | 按需生成，带侧边栏 TOC，git 忽略 |
 | PDF | `docs-stm/h2-source-code-analysis.pdf` | 按需生成，带大纲和可点击目录，git 忽略 |
+| 印刷级 PDF | `docs-stm/h2-source-code-analysis-print.pdf` | 按需生成（最终交付阶段），章首装饰页 + TOC 虚线对齐，git 忽略 |
+| EPUB | `docs-stm/h2-source-code-analysis.epub` | 按需生成（最终交付阶段），面向电子阅读器，git 忽略 |
 | 工具脚本 | `docs-stm/tools/` | 正式生成、审计和验证工具 |
 | 管理文档 | `docs-stm/management/` | 当前需求、计划、质量门禁、变更记录、审查问题、写作风格指南 |
 

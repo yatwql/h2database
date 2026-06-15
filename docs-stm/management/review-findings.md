@@ -61,6 +61,7 @@ python docs-stm/tools/balance_check.py --diff docs-stm/management/baseline-v5.0.
 | R7-15 | G (v5.8) | P1 | 缺印刷级 PDF 渲染管道（章首装饰页、TOC 虚线对齐、印刷级页眉页脚） | ✅ 已完成（新建 `pdf_print_grade.py`，独立于日常 PDF 流水线）|
 | R7-16 | H (v6.0) | P1 | `final_check.py` 缺 P0/P1/P2 门禁分级入口；testplan.md 仅平铺列表 | ✅ 已完成（`--gate-level` 入口；testplan §2 重构 + §7 门禁演进史）|
 | R7-17 | H (v6.0) | P0 | v6.0 全量回归发布 | ✅ 已完成（cover/requirements/plan/testplan/style-guide 全部 v6.0；changelog v6.0 总览条目；三档门禁全部通过）|
+| R8-1 | — (v6.1) | P2 | 缺 EPUB 输出形态（电子阅读器交付） | ✅ 已完成（新建 `generate_epub.py`，pandoc 引擎，按需在最终交付阶段产出）|
 
 ---
 
@@ -133,6 +134,6 @@ python docs-stm/tools/balance_check.py --diff docs-stm/management/baseline-v5.0.
 
 ## 当前未解决问题
 
-- **v6.0 已发布**：Phase A–H 全部 8 阶段交付，参见 `docs-stm/plan/2026-06-15-001-feat-industrial-book-quality-plan.md` 与 `changelog.md` v6.0 总览条目。第 7 轮审查至此闭环。
-- 下一阶段为 **v6.0 后维护期**（plan.md §7 后续增强项 P3/P4）：API 文档索引、交互式图表、英文版翻译、CI 集成；印刷级 PDF per-chapter running header（待 paged.js 或同等方案）。
+- **v6.1 已交付**：v6.0 全部 8 阶段（Phase A–H）+ EPUB 按需交付形态。第 7 轮审查闭环；R8-1（EPUB 扩展）作为 v6.0 后维护期首条增量记录。
+- 下一阶段为 **v6.x 维护期**（plan.md §7 后续增强项 P3/P4）：API 文档索引、交互式图表、英文版翻译、CI 集成；印刷级 PDF per-chapter running header（待 paged.js 或同等方案）。
 - 后续新发现问题在此追加。下一轮正式审查启动时另开第 8 轮清单。
