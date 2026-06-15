@@ -1,0 +1,123 @@
+{
+  "files": [
+    {
+      "file": "ch1-2-architecture.md",
+      "chapters": [
+        1,
+        2
+      ],
+      "lines": 2157,
+      "figures": 32,
+      "source_refs": 7,
+      "term_hits": 11,
+      "index_hits": 24
+    },
+    {
+      "file": "ch3-packages.md",
+      "chapters": [
+        3
+      ],
+      "lines": 2262,
+      "figures": 53,
+      "source_refs": 18,
+      "term_hits": 4,
+      "index_hits": 10
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "chapters": [
+        4,
+        5
+      ],
+      "lines": 3893,
+      "figures": 105,
+      "source_refs": 86,
+      "term_hits": 11,
+      "index_hits": 21
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "chapters": [
+        6
+      ],
+      "lines": 2841,
+      "figures": 23,
+      "source_refs": 25,
+      "term_hits": 11,
+      "index_hits": 20
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "chapters": [
+        6
+      ],
+      "lines": 4618,
+      "figures": 44,
+      "source_refs": 9,
+      "term_hits": 11,
+      "index_hits": 20
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "chapters": [
+        6
+      ],
+      "lines": 3503,
+      "figures": 39,
+      "source_refs": 1,
+      "term_hits": 11,
+      "index_hits": 20
+    },
+    {
+      "file": "ch7-8-sql-optimizer.md",
+      "chapters": [
+        7,
+        8
+      ],
+      "lines": 8085,
+      "figures": 181,
+      "source_refs": 19,
+      "term_hits": 9,
+      "index_hits": 19
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "chapters": [
+        9,
+        10
+      ],
+      "lines": 6566,
+      "figures": 76,
+      "source_refs": 19,
+      "term_hits": 25,
+      "index_hits": 32
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "chapters": [
+        11,
+        12
+      ],
+      "lines": 2389,
+      "figures": 26,
+      "source_refs": 1,
+      "term_hits": 6,
+      "index_hits": 15
+    }
+  ],
+  "totals": {
+    "files": 9,
+    "lines": 36314,
+    "figures": 579,
+    "source_refs": 185,
+    "glossary_entries_total": 77,
+    "index_entries_total": 141
+  },
+  "balance": {
+    "max_lines": 8085,
+    "min_lines": 2157,
+    "max_min_ratio": 3.748,
+    "mean_lines": 4034.9,
+    "stddev_lines": 1951.0
+  }
+}
