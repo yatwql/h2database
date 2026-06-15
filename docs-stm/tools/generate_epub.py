@@ -110,12 +110,12 @@ if os.path.exists(cover_md):
         author = m.group(1).strip()
 
 
-# ── Step 3: Build a metadata YAML block for pandoc ───────────────────────
-# pandoc reads ``--metadata-file`` to populate EPUB ``<dc:title>``,
-# ``<dc:creator>``, ``<dc:date>``, etc. We write the block to a temp file
-# next to the merged Markdown so pandoc can pick up encoding correctly.
+# ── Step 3: Build a metadata YAML file for pandoc ────────────────────────
+# Passed via ``--metadata-file`` so pandoc reads it as pure YAML rather
+# than as a markdown YAML metadata block (the latter would require the
+# ``yaml_metadata_block`` extension which we *disable* on the markdown
+# reader, since the merged doc uses bare ``---`` as section separators).
 metadata_yaml = textwrap.dedent(f"""\
-    ---
     title: "{title}"
     subtitle: "{subtitle}"
     author: "{author}"
@@ -124,7 +124,6 @@ metadata_yaml = textwrap.dedent(f"""\
     lang: zh-CN
     publisher: "H2 Database 源码分析项目"
     description: "深入剖析 H2 Database v2.x 核心源码 — {version}"
-    ---
     """)
 
 metadata_path = os.path.join(docs_dir, '_epub_metadata.yaml')
@@ -188,10 +187,15 @@ print(f"\n=== Step 2: Converting {merged_md} -> EPUB ===")
 
 cmd = [
     pandoc,
-    metadata_path,
     merged_md,
     '-o', epub_out,
-    '--from=markdown+pipe_tables+fenced_code_blocks+backtick_code_blocks',
+    # Disable yaml_metadata_block in the input reader. The merged doc uses
+    # bare `---` thematic-break lines as section separators, and pandoc's
+    # default markdown reader treats those as the *start* of a YAML metadata
+    # block, then fails parsing the body that follows. Metadata comes from
+    # the standalone --metadata-file below, so we don't need inline YAML.
+    '--from=markdown+pipe_tables+fenced_code_blocks+backtick_code_blocks-yaml_metadata_block',
+    f'--metadata-file={metadata_path}',
     '--to=epub3',
     '--toc',
     '--toc-depth=3',
