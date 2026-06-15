@@ -274,34 +274,86 @@ if os.path.exists(index_path):
         check(False, f'Index references non-existent chapters: {missing_refs}')
     else:
         check(True, f'Index chapter refs valid (covers chapters {sorted(chapter_files_map.keys())})')
+
+    # v6.0: index hierarchy & cross-reference health (P2 advisory).
+    # Run the dedicated audit tools and surface their pass/fail as separate
+    # checks. We do NOT regress index_ok on advisory failure; only on hard
+    # malformations (missing tools).
+    import subprocess
+    hier_tool = os.path.join(script_dir, 'build_index.py')
+    if os.path.exists(hier_tool):
+        try:
+            res = subprocess.run(
+                [sys.executable, hier_tool, '--hierarchy-check'],
+                capture_output=True, text=True, encoding='utf-8',
+            )
+            check(res.returncode == 0, f'Index hierarchy floor (main>=150, sub>=50, see-also>=30)')
+        except Exception as exc:
+            check(False, f'Index hierarchy check failed to run: {exc}')
+
+    xref_tool = os.path.join(script_dir, '_audit_index_xrefs.py')
+    if os.path.exists(xref_tool):
+        try:
+            res = subprocess.run(
+                [sys.executable, xref_tool],
+                capture_output=True, text=True, encoding='utf-8',
+            )
+            check(res.returncode == 0, 'Index see-also targets resolve and sub-entries reference valid chapters')
+        except Exception as exc:
+            check(False, f'Index xref audit failed to run: {exc}')
 else:
     check(False, 'Index file not found')
     index_ok = False
 
 # 12. Glossary content validation
+# v6.0 supports multi-line entries with the **章节**: ... line on a separate
+# row. Parse entries as blocks delimited by `- **Term**:` markers, so that the
+# chapter reference can live on a continuation line.
 print('\n=== Glossary Content ===')
 glossary_path = os.path.join(docs_dir, 'back', 'glossary.md')
 glossary_ok = True
 if os.path.exists(glossary_path):
     with open(glossary_path, 'r', encoding='utf-8') as fh:
-        glossary_content = fh.read()
+        glossary_lines = fh.readlines()
 
-    # Count entries
-    glossary_entries = [line.strip() for line in glossary_content.split('\n') if line.strip().startswith('- **')]
-    entry_count = len(glossary_entries)
+    glossary_content = ''.join(glossary_lines)
+    entry_term_re = re.compile(r'^- \*\*([^*]+)\*\*')
+
+    # Split file into entry blocks by walking lines; each block runs until the
+    # next entry marker, a top-level heading (## ...), or a horizontal rule.
+    entry_blocks: list[tuple[str, str]] = []  # (term, body)
+    current_term: str | None = None
+    current_body: list[str] = []
+    for raw in glossary_lines:
+        stripped = raw.strip()
+        is_boundary = stripped.startswith('## ') or stripped.startswith('---')
+        m = entry_term_re.match(raw)
+        if m:
+            if current_term is not None:
+                entry_blocks.append((current_term, ''.join(current_body)))
+            current_term = m.group(1).strip()
+            current_body = [raw]
+        elif is_boundary:
+            if current_term is not None:
+                entry_blocks.append((current_term, ''.join(current_body)))
+                current_term = None
+                current_body = []
+        elif current_term is not None:
+            current_body.append(raw)
+    if current_term is not None:
+        entry_blocks.append((current_term, ''.join(current_body)))
+
+    entry_count = len(entry_blocks)
     check(entry_count >= 60, f'Glossary: {entry_count} entries (target: >= 60)')
 
-    # Validate every entry has at least one chapter reference
-    no_ref_entries = []
-    for entry in glossary_entries:
-        if not re.search(r'第(\d+)章', entry):
-            no_ref_entries.append(entry[:60])
-
+    # Validate every entry block has at least one chapter reference somewhere
+    # within its body (handles both legacy single-line and v6.0 multi-line).
+    no_ref_entries = [term for term, body in entry_blocks if not re.search(r'第(\d+)章', body)]
     if no_ref_entries:
         glossary_ok = False
         check(False, f'Glossary: {len(no_ref_entries)} entries missing chapter references')
-        for e in no_ref_entries[:5]:
-            print(f'  MISSING CHAPTER REF: {e}')
+        for term in no_ref_entries[:5]:
+            print(f'  MISSING CHAPTER REF: {term}')
     else:
         check(True, f'All {entry_count} glossary entries have chapter references')
 

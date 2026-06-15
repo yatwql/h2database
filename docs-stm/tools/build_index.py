@@ -8,7 +8,13 @@ Scans all chapter files and extracts:
 3. Maps each entry to its chapter and section
 
 Outputs a draft index.md that can be edited and refined.
-Use --coverage to show per-chapter entry density report.
+
+Flags:
+  --coverage          Show per-chapter entry density report from chapter files.
+  --hierarchy-check   Audit the existing index.md for main/sub-entry depth and
+                      report counts (main, sub, see-also). Exits 1 when the
+                      counts fall below v6.0 minimums (main >= 150, sub >= 50,
+                      see-also >= 30).
 """
 import re, os, sys, glob
 sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
@@ -19,6 +25,68 @@ chapter_files = sorted(glob.glob(os.path.join(docs_dir, 'ch[0-9]*.md')))
 
 # Check for --coverage flag
 show_coverage = '--coverage' in sys.argv
+hierarchy_check = '--hierarchy-check' in sys.argv
+
+# ---- Hierarchy check mode (v6.0): inspect existing index.md ----
+
+if hierarchy_check:
+    index_path = os.path.join(docs_dir, 'back', 'index.md')
+    if not os.path.exists(index_path):
+        print(f'ERROR: index not found at {index_path}')
+        sys.exit(1)
+
+    main_count = 0
+    sub_count = 0
+    see_also_count = 0
+    section_count = 0
+    main_with_subs = 0
+    last_main_had_sub = False
+
+    with open(index_path, 'r', encoding='utf-8') as fh:
+        for raw in fh:
+            if raw.startswith('## '):
+                section_count += 1
+                continue
+            if raw.startswith('  see also:'):
+                see_also_count += 1
+                continue
+            if raw.startswith('  - '):
+                sub_count += 1
+                if not last_main_had_sub:
+                    main_with_subs += 1
+                    last_main_had_sub = True
+                continue
+            if raw.startswith('- '):
+                main_count += 1
+                last_main_had_sub = False
+                continue
+
+    print('=== Index Hierarchy Report ===')
+    print(f'  sections (## headings):  {section_count}')
+    print(f'  main entries:            {main_count}')
+    print(f'  sub-entries:             {sub_count}')
+    print(f'  see-also lines:          {see_also_count}')
+    print(f'  main entries w/ subs:    {main_with_subs}')
+    print(f'  total entries:           {main_count + sub_count}')
+
+    # v6.0 minimums (set lower than the live numbers; these are floor checks
+    # that flag accidental regressions if someone bulk-deletes entries).
+    floors = {'main': 150, 'sub': 50, 'see_also': 30, 'total': 250}
+    fails: list[str] = []
+    if main_count < floors['main']:
+        fails.append(f"main {main_count} < {floors['main']}")
+    if sub_count < floors['sub']:
+        fails.append(f"sub-entries {sub_count} < {floors['sub']}")
+    if see_also_count < floors['see_also']:
+        fails.append(f"see-also {see_also_count} < {floors['see_also']}")
+    if (main_count + sub_count) < floors['total']:
+        fails.append(f"total {main_count + sub_count} < {floors['total']}")
+
+    if fails:
+        print(f'\nFAIL: hierarchy below v6.0 floor ({"; ".join(fails)})')
+        sys.exit(1)
+    print('\nOK: hierarchy meets v6.0 floor (main>=150, sub>=50, see_also>=30, total>=250)')
+    sys.exit(0)
 
 # Track section numbering across files
 current_ch = 0

@@ -2,7 +2,10 @@
 
 ## H2 Database 源码全面分析与解读
 
-版本 v5.0 · 2026-06-11 · 36,893 行 · 12 章 + 1 附录
+版本 v5.3 · 2026-06-15 · 37,887 行 · 12 章 + 1 附录
+
+**作者：其·龙（Stallman Wang）**
+**联系邮箱：[stallman.wang@foxmail.com](mailto:stallman.wang@foxmail.com)**
 
 深入剖析 H2 Database v2.x 核心源码，覆盖总体架构、分层模块、核心包结构、模块流程、经典算法、SQL 执行全流程、查询优化器、持久化引擎与锁实现。
 

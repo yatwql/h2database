@@ -25,3 +25,4 @@ docs-stm/*.log
 *.zip
 mdpdf.log
 __pycache__/
+.claude/worktrees/

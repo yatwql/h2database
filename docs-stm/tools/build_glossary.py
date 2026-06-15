@@ -11,6 +11,8 @@ Outputs a draft glossary.md that can be edited and refined.
 
 Flags:
   --coverage  Output per-chapter term coverage report from existing glossary.md.
+  --validate  Verify every entry's chapter reference resolves to actual content.
+              Exits 1 if any entry references a non-existent chapter.
 """
 import re, os, sys, glob
 sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
@@ -21,26 +23,70 @@ chapter_files = sorted(glob.glob(os.path.join(docs_dir, 'ch[0-9]*.md')))
 glossary_path = os.path.join(docs_dir, 'back', 'glossary.md')
 
 
+def parse_glossary_v6() -> dict[str, dict]:
+    """Parse v6.0 multi-line glossary entries.
+
+    Returns {term: {chapters: [int], section_refs: [str], body: str}}.
+    section_refs are raw strings like "第6章 §6.1" extracted from the **章节** line.
+    """
+    entries: dict[str, dict] = {}
+    term_pattern = re.compile(r'^- \*\*([^*]+)\*\*')
+    ch_pattern = re.compile(r'第(\d+)章')
+    section_pattern = re.compile(r'§\d+(?:\.\d+)*[a-z]?')
+
+    with open(glossary_path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    current: dict | None = None
+    current_term: str | None = None
+    for raw in lines:
+        line = raw.rstrip('\n')
+        stripped = line.strip()
+        # Boundaries: HR, top-level heading
+        if stripped.startswith('---') or stripped.startswith('## '):
+            if current_term is not None and current is not None:
+                entries[current_term] = current
+                current_term = None
+                current = None
+            continue
+        m = term_pattern.match(stripped)
+        if m:
+            if current_term is not None and current is not None:
+                entries[current_term] = current
+            current_term = m.group(1).strip()
+            current = {'chapters': [], 'section_refs': [], 'body': line}
+            for c in ch_pattern.findall(line):
+                ch = int(c)
+                if ch not in current['chapters']:
+                    current['chapters'].append(ch)
+            for s in section_pattern.findall(line):
+                current['section_refs'].append(s)
+        elif current is not None:
+            current['body'] += '\n' + line
+            for c in ch_pattern.findall(line):
+                ch = int(c)
+                if ch not in current['chapters']:
+                    current['chapters'].append(ch)
+            for s in section_pattern.findall(line):
+                current['section_refs'].append(s)
+
+    if current_term is not None and current is not None:
+        entries[current_term] = current
+
+    return entries
+
+
 # ---- Coverage mode ----
 
 if '--coverage' in sys.argv:
-    # Parse glossary entries and extract chapter references
-    ch_pattern = re.compile(r'第(\d+)章')
-    term_pattern = re.compile(r'^- \*\*([^*]+)\*\*')
+    entries = parse_glossary_v6()
     chapter_terms: dict[int, list[str]] = {}
-    total = 0
+    for term, info in entries.items():
+        for ch in info['chapters']:
+            chapter_terms.setdefault(ch, []).append(term)
+    total = len(entries)
 
-    with open(glossary_path, 'r', encoding='utf-8') as f:
-        for line in f:
-            m = term_pattern.match(line.strip())
-            if m:
-                term = m.group(1).strip()
-                chapters = set(int(c) for c in ch_pattern.findall(line))
-                for ch in chapters:
-                    chapter_terms.setdefault(ch, []).append(term)
-                total += 1
-
-    # Determine expected chapters from the doc file set
+    # Determine expected chapters from doc file set
     expected_chapters = set()
     for fpath in chapter_files:
         with open(fpath, 'r', encoding='utf-8') as f:
@@ -71,6 +117,41 @@ if '--coverage' in sys.argv:
         print('结果: 所有章节均满足 ≥3 条术语。')
     else:
         print('结果: 部分章节术语不足，请补充。')
+    sys.exit(0)
+
+
+# ---- Validate mode (v6.0): verify chapter refs resolve in actual content ----
+
+if '--validate' in sys.argv:
+    entries = parse_glossary_v6()
+
+    # Collect available chapter numbers from filesystem
+    available_chapters: set[int] = set()
+    for fpath in chapter_files:
+        with open(fpath, 'r', encoding='utf-8') as f:
+            for line in f:
+                m = re.match(r'^# 第(\d+)章', line)
+                if m:
+                    available_chapters.add(int(m.group(1)))
+
+    invalid = 0
+    no_chapter = 0
+    for term, info in entries.items():
+        if not info['chapters']:
+            print(f"  NO_CHAPTER: '{term}' has no chapter reference")
+            no_chapter += 1
+            continue
+        for ch in info['chapters']:
+            if ch not in available_chapters:
+                print(f"  INVALID: '{term}' references 第{ch}章 (not in book)")
+                invalid += 1
+
+    print(f"\nEntries: {len(entries)}")
+    print(f"Entries without chapter ref: {no_chapter}")
+    print(f"Entries with invalid chapter ref: {invalid}")
+    if invalid > 0 or no_chapter > 0:
+        sys.exit(1)
+    print("All chapter references resolve correctly.")
     sys.exit(0)
 
 

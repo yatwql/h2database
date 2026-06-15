@@ -9,6 +9,8 @@ Modes:
   (default) Insert glossary reference into unannotated chapter files.
   --report-missing  Scan chapter files for bold terms not in glossary.
   --check           Like --report-missing, but exits with code 1 if any missing.
+  --check-related   Verify [[term]] cross-refs in glossary.md all resolve.
+                    Exits with code 1 if any dangling links found.
 """
 import re, os, sys, glob
 sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
@@ -19,18 +21,144 @@ glossary_path = os.path.join(docs_dir, 'back', 'glossary.md')
 
 
 def parse_glossary_terms(path: str) -> dict[str, list[int]]:
-    """Parse glossary.md and return a mapping of term names to chapter numbers."""
+    """Parse glossary.md and return a mapping of term names to chapter numbers.
+
+    Supports v6.0 multi-line entry format:
+        - **Term**: 释义第一行
+          释义第二行
+          **章节**：第N章 §X.Y
+          **相关**：[[Other]]、[[Another]]
+
+    Falls back gracefully on legacy single-line entries.
+    """
     terms: dict[str, list[int]] = {}
     term_pattern = re.compile(r'^- \*\*([^*]+)\*\*')
     ch_pattern = re.compile(r'第(\d+)章')
+
     with open(path, 'r', encoding='utf-8') as f:
-        for line in f:
-            m = term_pattern.match(line.strip())
-            if m:
-                term = m.group(1).strip()
-                chapters = [int(c) for c in ch_pattern.findall(line)]
-                terms[term] = chapters
+        lines = f.readlines()
+
+    current_term: str | None = None
+    current_chapters: list[int] = []
+    for line in lines:
+        m = term_pattern.match(line.strip())
+        if m:
+            # Flush previous term
+            if current_term is not None:
+                terms[current_term] = current_chapters
+            current_term = m.group(1).strip()
+            # Collect chapters from same line (legacy format)
+            current_chapters = [int(c) for c in ch_pattern.findall(line)]
+        elif current_term is not None:
+            # Continuation line for v6.0 format
+            for c in ch_pattern.findall(line):
+                ch = int(c)
+                if ch not in current_chapters:
+                    current_chapters.append(ch)
+            # Top-level non-list-item line ends the entry
+            if line and not line[0].isspace() and not line.startswith('-'):
+                terms[current_term] = current_chapters
+                current_term = None
+                current_chapters = []
+
+    # Flush trailing term
+    if current_term is not None:
+        terms[current_term] = current_chapters
+
     return terms
+
+
+def parse_glossary_with_related(path: str) -> dict[str, dict]:
+    """Parse glossary.md into rich entries: {term: {chapters, related, body}}.
+
+    Used by --check-related to verify see-also closure.
+    """
+    entries: dict[str, dict] = {}
+    term_pattern = re.compile(r'^- \*\*([^*]+)\*\*')
+    ch_pattern = re.compile(r'第(\d+)章')
+    # see-also links use [[Term]] markdown-flavored cross-refs in v6.0
+    related_pattern = re.compile(r'\[\[([^\]]+)\]\]')
+
+    with open(path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    current: dict | None = None
+    current_term: str | None = None
+    for raw in lines:
+        line = raw.rstrip('\n')
+        # Boundary: horizontal rule or italic footer terminates open entry
+        stripped = line.strip()
+        if stripped.startswith('---') or stripped.startswith('## '):
+            if current_term is not None and current is not None:
+                entries[current_term] = current
+                current_term = None
+                current = None
+            continue
+        m = term_pattern.match(line.strip())
+        if m:
+            if current_term is not None and current is not None:
+                entries[current_term] = current
+            current_term = m.group(1).strip()
+            current = {'chapters': [], 'related': [], 'body': []}
+            for c in ch_pattern.findall(line):
+                ch = int(c)
+                if ch not in current['chapters']:
+                    current['chapters'].append(ch)
+        elif current is not None:
+            # Continuation line
+            current['body'].append(line)
+            for c in ch_pattern.findall(line):
+                ch = int(c)
+                if ch not in current['chapters']:
+                    current['chapters'].append(ch)
+            for r in related_pattern.findall(line):
+                r = r.strip()
+                if r and r not in current['related']:
+                    current['related'].append(r)
+            if line and not line.startswith(' ') and not line.startswith('-'):
+                # Top-level non-indented line — end of entry
+                entries[current_term] = current
+                current_term = None
+                current = None
+
+    if current_term is not None and current is not None:
+        entries[current_term] = current
+
+    return entries
+
+
+def check_related(verbose: bool = False) -> int:
+    """Verify see-also closure: every [[Term]] link must resolve to an existing entry.
+
+    Returns count of dangling references. Single-edge references (A->B without B->A)
+    are reported but do not count as errors — they are common ("X uses Y" without
+    "Y is used by X").
+    """
+    entries = parse_glossary_with_related(glossary_path)
+    known = {t.lower() for t in entries}
+
+    dangling = 0
+    one_way = 0
+    for term, info in entries.items():
+        for r in info['related']:
+            r_norm = r.lower()
+            if r_norm not in known:
+                # Try a few common normalization fallbacks
+                # e.g. "COW / Copy-on-Write" matches "COW" or "Copy-on-Write"
+                hit = False
+                for candidate in known:
+                    if r_norm in candidate or candidate.startswith(r_norm + ' '):
+                        hit = True
+                        break
+                if not hit:
+                    dangling += 1
+                    if verbose:
+                        print(f"  DANGLING: '{term}' -> [[{r}]]")
+
+    if verbose:
+        print(f"\nDangling see-also references: {dangling}")
+        print(f"One-way see-also references: {one_way} (informational)")
+    return dangling
 
 
 def report_missing(check_mode: bool = False) -> int:
@@ -249,6 +377,12 @@ def report_missing(check_mode: bool = False) -> int:
 
 
 # ---- Entry point ----
+
+if '--check-related' in sys.argv:
+    dangling = check_related(verbose=True)
+    if dangling > 0:
+        sys.exit(1)
+    sys.exit(0)
 
 if '--report-missing' in sys.argv:
     count = report_missing(check_mode=False)

@@ -4,6 +4,65 @@
 
 ---
 
+## [v5.3] — 2026-06-15
+
+### 工业级技术书籍质量提升 — Phase C：前后件深化
+
+> v6.0 计划的第三阶段交付，对应 U5 / U6 / U7 / U8 四个实施单元。
+
+#### Added — 前后件内容
+- **前言（preface.md）深化**：44 行 → 100 行；新增「为什么写这本书」「技术深度承诺」「读者契约」「版本声明」「致谢」五个二级章节；明确"承诺与不承诺"清单；列出读者前置知识与外部资源；记录 v2.4.240 → v2.4.249-SNAPSHOT 上游 43 次提交的关键变更。
+- **阅读指南（how-to-read.md）深化**：80 行 → 165 行；新增「读者画像」（4 类典型读者）、「章节先决条件矩阵」（13 行 × 3 列）、「推荐阅读路径 D（MVStore 内核）/E（查询优化器）」、「章节估读时长」参考表（按行数 + 图表 + 源引用加权估算）。
+- **术语表（glossary.md）深化**：73 条 → **113 条**；条目格式升级为「释义 + 章节 + 相关」三段结构；引入 `[[Term]]` 风格 see-also 链接构建术语知识图谱；补齐 RootReference / PageRef / TransactionMap / VersionedBitSet / Recoverable Operation / Counted B-Tree / Fletcher-32 / VarInt 等核心术语。
+- **概念索引（index.md）层级化**：122 条 → **314 条**（206 主条目 + 108 子条目）；引入"主条目/子条目两级 + see-also 交叉指向"格式；新增 159 处 see-also 链接形成跨主题导航；显式补强 ch3 / ch5 / ch10 等先前命中数偏低的章节；新增「附录」区块预埋 3 个端到端案例条目（待 Phase D 填充内容）。
+
+#### Added — 工具链
+- **`docs-stm/tools/_annotate_terms.py`**：新增 `--check-related` 模式，解析 v6.0 多行术语条目并验证 `[[Term]]` see-also 链接全部解析；输出"未解析"与"单边引用"两类诊断；退出码 1 当存在未解析。
+- **`docs-stm/tools/build_glossary.py`**：新增 `--validate` 模式，针对每条术语的「章节」字段做章节号合法性校验；旧 `--coverage` 模式重写为基于 v6.0 多行解析器，可正确处理跨行 `**章节**：` 标注。
+- **`docs-stm/tools/build_index.py`**：新增 `--hierarchy-check` 模式，输出主条目/子条目/see-also/section heading 四类计数与 v6.0 floor（main ≥ 150、sub ≥ 50、see-also ≥ 30、total ≥ 250）；不达阈值时退出码 1。
+- **`docs-stm/tools/_audit_index_xrefs.py`**：新建索引交叉引用审计器，三大检查并行：(a) see-also 目标全部解析为主条目（含主条目别名）；(b) 子条目引用的章节号 ∈ 1-12；(c) `## A..Z` 字母段按字母升序排列；输出每检查的主诊断 + summary。
+
+#### Changed — 集成与门禁
+- **`docs-stm/tools/final_check.py`**：
+  - 术语章节引用检查改为按"条目块"扫描（兼容 v6.0 多行格式），不再因 `第N章` 标注移到 `**章节**：` 续行而误报。
+  - 索引完整性段新增两项 P2 检查：「索引层级 floor」与「索引交叉引用合法性」，分别透传 `build_index.py --hierarchy-check` 与 `_audit_index_xrefs.py` 的退出码。
+  - 检查项总数：92 → **94 项全部通过**。
+- **`docs-stm/tools/balance_check.py`**：术语章节累计统计改为多行块扫描，glossary 总命中数恢复正常（先前为 0，现 150）。
+- **管理文档同步**：
+  - `testplan.md` v5.0 → v5.3，质量门禁表新增「索引层级（v6.0）」一行；术语完整性门禁的目标条目数从 60 提升至 100。
+
+#### 关键度量（vs v5.2 基线）
+| 指标 | v5.2 | v5.3 | 改善 |
+|------|------|------|------|
+| `final_check.py` 检查项 | 92 | 94 | +2（新增索引层级 / 索引 xref 两项） |
+| 术语条目数 | 73 | 113 | +40（+55%） |
+| 索引主条目 | 122 | 206 | +84（+69%） |
+| 索引子条目 | 0 | 108 | +108（新引入层级） |
+| see-also 链接 | 0 | 159 | +159（新引入交叉指向） |
+| 索引总条目 | 122 | 314 | +192（+157%） |
+| preface 行数 | 44 | 100 | +56（+127%） |
+| how-to-read 行数 | 80 | 165 | +85（+106%） |
+
+#### 守恒验证
+- 章节正文行数：36,314 → 36,314 ✅（前后件内容增长不进入章节统计）
+- 章节正文图数：579 → 579 ✅
+- 源码引用：185 → 185 ✅
+- HTML TOC 条目：564 → **570**（新增 6 条来自 preface/how-to-read 新增小节）
+- 合并文档行数：36,890 → **37,879**（新增前后件内容 + 索引/术语扩充）
+
+#### 索引交叉引用清理（U8 一次性修复）
+- 共 8 处 see-also 目标曾指向不存在的别名（如 `COW`、`Write Amplification`、`SessionRemote`、`Compaction`），全部改写为索引中实际存在的主条目（如 `Copy-on-Write`、`写放大`、`Session 类`、`Compact`）。
+- `_audit_index_xrefs.py` 0 dangling / 0 invalid sub-chapter / 26 字母 section 全部有序。
+
+#### 后续阶段
+- v5.4：Phase D — 端到端案例研究附录（U9-U13）
+- v5.5：Phase E — 图质量升级（U14-U16）
+- v5.6：Phase F — 延伸思考（U17-U18）
+- v5.7：Phase G — 印刷级 PDF（U19）
+- v6.0：Phase H — 门禁升级与全量回归（U20-U21）
+
+---
+
 ## [v5.2] — 2026-06-15
 
 ### 工业级技术书籍质量提升 — Phase B：ch7-8 物理拆分

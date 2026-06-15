@@ -79,20 +79,49 @@ def count_source_refs(text: str) -> int:
 
 
 def load_glossary_chapter_index() -> dict[int, int]:
-    """Return {chapter_number: count_of_terms_referencing_that_chapter}."""
+    """Return {chapter_number: count_of_terms_referencing_that_chapter}.
+
+    v6.0 introduces multi-line glossary entries where the chapter reference
+    lives on a separate `**章节**：第N章 §X.Y` continuation line. Walk
+    entries as blocks delimited by `- **Term**:` markers and accumulate any
+    chapter numbers found within each block.
+    """
     path = os.path.join(DOCS_DIR, GLOSSARY_REL)
     counts: dict[int, int] = {}
     if not os.path.exists(path):
         return counts
     with open(path, "r", encoding="utf-8") as f:
-        text = f.read()
-    # 一个术语条目可能引用多个章节；每章各计 +1。
-    for line in text.splitlines():
-        if not line.lstrip().startswith("- **"):
-            continue
-        for ch_str in GLOSSARY_CHAPTER_RE.findall(line):
-            ch = int(ch_str)
+        lines = f.readlines()
+
+    current_block: list[str] = []
+    in_entry = False
+
+    def flush(block: list[str]):
+        if not block:
+            return
+        joined = "\n".join(block)
+        # A term may reference multiple chapters; +1 per (entry, chapter) pair.
+        chapters = {int(c) for c in GLOSSARY_CHAPTER_RE.findall(joined)}
+        for ch in chapters:
             counts[ch] = counts.get(ch, 0) + 1
+
+    for raw in lines:
+        stripped = raw.lstrip()
+        is_entry_start = stripped.startswith("- **")
+        is_boundary = raw.strip().startswith("## ") or raw.strip().startswith("---")
+
+        if is_entry_start:
+            flush(current_block)
+            current_block = [raw]
+            in_entry = True
+        elif is_boundary:
+            flush(current_block)
+            current_block = []
+            in_entry = False
+        elif in_entry:
+            current_block.append(raw)
+
+    flush(current_block)
     return counts
 
 
