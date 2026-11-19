@@ -62,6 +62,9 @@ books/docs/managements/
   testplan.md                # 质量门禁与验证命令（验证的唯一权威）
   changelog.md               # 版本历史
   folder.md                  # 本文件：目录结构
+  technical.md               # 工具链架构约束（可机检部分由 check_architecture 守卫）
+  analysis-doc-standard.md   # 源码分析文档的通用内容标准与验收清单
+  tui-interaction.md         # TUI 交互设计契约（键位/反馈/确认/光标）
 ```
 
 ## 2.1 配置分三类

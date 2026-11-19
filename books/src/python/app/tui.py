@@ -12,13 +12,14 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import time
 import unicodedata
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from lib import _config
 
-from app import actions, settings
+from app import actions, keys, settings
 
 # group -> [(key, action, label)]
 GROUPS: dict[str, list[tuple[str, str, str]]] = {
@@ -51,6 +52,9 @@ PALETTE = {
     'warn': '38;5;221',
     'error': '38;5;203',
     'hint': '38;5;244',
+    'cursor': '1;38;5;231',      # the highlighted row
+    'cursor_bar': '1;38;5;45',   # its leading marker
+    'value_ok': '38;5;114',
 }
 
 
@@ -124,19 +128,31 @@ def header() -> str:
     return '\n'.join(rows)
 
 
-def menu_text() -> str:
-    """Grouped menu: group headers, aligned keys, one colour for actions."""
+ENTRIES: list[tuple[str, str, str]] = [entry for entries in GROUPS.values()
+                                       for entry in entries]
+
+
+def menu_text(cursor: int | None = None) -> str:
+    """Grouped menu; `cursor` highlights one row (↑/↓ moves it)."""
     lines: list[str] = []
+    index = 0
     for group, entries in GROUPS.items():
         lines.append(f" {_c('▍', PALETTE['group'])}{_c(group, PALETTE['group'])}")
         for key, _action, label in entries:
-            lines.append(f"   {_c(key, PALETTE['key'])}   {label}")
+            marker = '❯' if cursor == index else ' '
+            label_style = PALETTE['cursor'] if cursor == index else PALETTE['value']
+            lines.append(f" {_c(marker, PALETTE['cursor_bar'])} "
+                         f"{_c(key, PALETTE['key'])}   {_c(label, label_style)}")
+            index += 1
         lines.append('')
     lines.append(f"   {_c('c', PALETTE['key'])} 配置   "
                  f"{_c('r', PALETTE['key'])} 刷新   "
                  f"{_c('?', PALETTE['key'])} 帮助")
     lines.append(f"   {_c('q', PALETTE['key'])} / {_c('0', PALETTE['key'])} 退出"
                  f"   {_c('Ctrl+C', PALETTE['key'])} 退出")
+    lines.append(f"   {_c('↑/↓', PALETTE['key'])} 选择 · "
+                 f"{_c('Enter', PALETTE['key'])} 执行 · "
+                 f"数字键直达")
     return '\n'.join(lines)
 
 
@@ -168,11 +184,44 @@ def configure(reader=input) -> str:
     return f'已更新 {key} = {stored}'
 
 
-def _run(action: str) -> str:
+# Actions that rewrite many artifacts and take minutes: ask once before running.
+CONFIRM_ACTIONS = {'deliver'}
+TAIL_LINES = 15
+
+
+def _tail(text: str, limit: int = TAIL_LINES) -> str:
+    """Last ``limit`` lines of an action's output (progress, not a wall of text)."""
+    lines = [line for line in (text or '').splitlines() if line.strip()]
+    if not lines:
+        return ''
+    shown = lines[-limit:]
+    prefix = f'…（前 {len(lines) - len(shown)} 行略）' if len(lines) > len(shown) else ''
+    return ('\n' + prefix + '\n' if prefix else '\n') + '\n'.join(shown)
+
+
+def confirm(question: str, reader=input) -> bool:
+    """y/N prompt for actions worth a second look."""
+    answer = (reader(f'{question} [y/N] ') or '').strip().lower()
+    return answer in ('y', 'yes', '是')
+
+
+def run_entry(action: str, label: str) -> str:
+    """Run one action and report what happened: status, tail, timing, exit code."""
     if action == 'settings':
         return configure()
+    if action in CONFIRM_ACTIONS and not confirm(f'{label} 会重建全部产物，继续？'):
+        return _c('已取消', PALETTE['hint'])
+    started = time.perf_counter()
+    sys.stdout.write(_c(f'⠿ 正在执行 {label}（{action}）…', PALETTE['hint']) + '\n')
+    sys.stdout.flush()
     code, text = actions.run(action)
-    return f'{text}\n[{_c("退出码 " + str(code), "32" if code == 0 else "31")}]'
+    elapsed = time.perf_counter() - started
+    lines = [line for line in (text or '').splitlines() if line.strip()]
+    verdict = _c('✓ 完成', PALETTE['value_ok']) if code == 0 else _c('✗ 失败', PALETTE['error'])
+    summary = (f'{verdict}  {label}  用时 {elapsed:.1f}s  '
+               f'退出码 {code}  输出 {len(lines)} 行')
+    return (f'{_tail(text)}\n{summary}\n'
+            f'{_c("详情见 books/logs/", PALETTE["hint"])}')
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -189,32 +238,52 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.write(text)
         return code
 
-    keys = {key: action for entries in GROUPS.values() for key, action, _ in entries}
+    shortcuts = {key: (action, label) for key, action, label in ENTRIES}
+    cursor = 0
+    status = ''
     while True:
-        sys.stdout.write('\n' + header() + '\n\n' + menu_text() + '\n\n> ')
+        screen = ['\n' + header(), '', menu_text(cursor)]
+        if status:
+            screen += ['', status]
+        screen += ['', _c('❯ ', PALETTE['cursor_bar'])]
+        sys.stdout.write('\n'.join(screen))
         sys.stdout.flush()
+        status = ''
         try:
-            choice = (sys.stdin.readline() or '').strip().lower()
-        except KeyboardInterrupt:   # Ctrl+C leaves the menu cleanly
+            pressed = keys.normalize(keys.read_key())
+        except KeyboardInterrupt:      # Ctrl+C leaves the menu cleanly
             sys.stdout.write('\n')
             return 0
-        if choice in ('q', 'quit', 'exit', '0', ''):
+
+        if pressed in ('q', '0', keys.KEY_ESC, keys.KEY_CTRL_C):
             return 0
-        if choice in ('?', 'h', 'help'):
+        if pressed == keys.KEY_UP:
+            cursor = (cursor - 1) % len(ENTRIES)
+            continue
+        if pressed == keys.KEY_DOWN:
+            cursor = (cursor + 1) % len(ENTRIES)
+            continue
+        if pressed == keys.KEY_ENTER:
+            action, label = ENTRIES[cursor][1], ENTRIES[cursor][2]
+            status = run_entry(action, label)
+            continue
+        if pressed in ('?', 'h'):
             print(help_text())
             continue
-        if choice == 'r':
+        if pressed == 'r':
             settings._reload()
-            print('配置已重新读取')
+            status = _c('配置已重新读取', PALETTE['value_ok'])
             continue
-        if choice == 'c':
-            print(configure())
+        if pressed == 'c':
+            status = configure()
             continue
-        if choice in keys:
-            print(_run(keys[choice]))
+        if pressed in shortcuts:
+            index = next(i for i, entry in enumerate(ENTRIES) if entry[0] == pressed)
+            cursor = index
+            action, label = shortcuts[pressed]
+            status = run_entry(action, label)
             continue
-        print('无效选项，输入 ? 查看帮助')
-
+        status = _c(f'无效按键 {pressed!r}，按 ? 查看帮助', PALETTE['warn'])
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

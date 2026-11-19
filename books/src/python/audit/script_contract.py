@@ -35,6 +35,7 @@ def scripts() -> list[str]:
     library = (os.sep + 'lib' + os.sep,
                os.sep + 'app' + os.sep + 'actions.py',
                os.sep + 'app' + os.sep + 'settings.py',
+               os.sep + 'app' + os.sep + 'keys.py',
                os.sep + 'ingest' + os.sep + 'languages' + os.sep)
     return sorted(p for p in found
                   if not any(marker in p for marker in library)
