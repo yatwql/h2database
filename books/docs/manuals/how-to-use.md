@@ -22,6 +22,17 @@ books/scripts/launch.sh web        # Web 控制台
 Windows 用 `books\scripts\launch.ps1`（参数相同）。三个渠道共用 `core/actions.py`，
 也可直接 `python books/src/python/app/{cli,tui,web}.py`。
 
+## 1.5 提交前跑一遍快速档
+
+```bash
+books/scripts/verify.sh          # fast：ruff + 结构门禁 + 单元套件（约 16 秒）
+books/scripts/verify.sh full     # 合入前：全部门禁
+books/scripts/verify.sh release  # 发布前：full + 慢档 + 产物
+```
+
+Windows 用 `books\scripts\verify.ps1`，参数相同。分档说明见
+[`testplan.md §1.2`](../managements/testplan.md)。
+
 ## 2. 单入口：make.py
 
 日常一律走单入口，不要手工按顺序调用脚本：

@@ -39,10 +39,10 @@
 文档里引用的路径/脚本/章节名/版本号与仓库不一致。按报告里的位置改成实际路径，
 或把过时文字删掉；`--json` 可拿到结构化列表。
 
-**Q：`check_gate_trace` 说某道门禁没在 testplan 登记？**
+**Q：`gate_trace` 说某道门禁没在 testplan 登记？**
 新增门禁必须同时写进 `docs/managements/testplan.md`，让手册与工具链保持双向可追溯。
 
-**Q：`audit_prose_quality` 分数不够？**
+**Q：`prose_quality` 分数不够？**
 按报告里最低的维度改生成器或配置（句长、列表占比、小节深度等），阈值在
 `style.json [prose]`；不要为凑分放水阈值。
 

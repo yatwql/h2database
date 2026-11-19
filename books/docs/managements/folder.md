@@ -47,9 +47,8 @@ books/
     h2-source-code-analysis-print.pdf
     h2-source-code-analysis.epub
   docs/
-    managements/             # 项目管理文档 + 通用规范（见 §2）
+    managements/             # 全部管理与规范文档（见 §2）
     manuals/                 # 使用手册（how-to-use.md：脚本用法唯一说明）
-    plan/                    # 带日期的计划文档
 ```
 
 ## 2. 管理文档

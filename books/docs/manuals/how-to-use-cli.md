@@ -6,12 +6,13 @@
 
 ```bash
 books/scripts/bookctl status              # 书籍 + 配置 + LLM 状态
-books/scripts/bookctl analyze             # 源码 → 手稿
+books/scripts/bookctl analyze             # 源码 → 手稿（确定性）
+books/scripts/bookctl analyze-llm         # 源码 → 手稿（导读/小结用 LLM 润色）
 books/scripts/bookctl build               # 手稿 → 合并 Markdown + HTML
 books/scripts/bookctl check               # 全部质量门禁
 books/scripts/bookctl test --full         # 含 chromium/pandoc 的完整测试
 books/scripts/bookctl deliver             # PDF + EPUB
-books/scripts/bookctl llm "解释 MVCC"      # 用配置的 provider 回答
+books/scripts/bookctl llm-ask "解释 MVCC"  # 用配置的 provider 回答
 books/scripts/bookctl make check --timings  # make.py 原样透传
 books/scripts/bookctl doctor              # 依赖与环境
 books/scripts/bookctl settings            # 列出可写配置项
@@ -23,6 +24,7 @@ books/scripts/bookctl settings set dist out   # 改配置（写回配置文件�
 ```bash
 books/scripts/launch.sh cli status         # 书籍 + 配置 + LLM 状态
 books/scripts/launch.sh cli analyze        # 源码 → 手稿（digest → outline → chapters）
+books/scripts/launch.sh cli analyze-llm     # 同上，导读/小结由 LLM 起草
 books/scripts/launch.sh cli build          # 手稿 → 合并 Markdown + HTML
 books/scripts/launch.sh cli check          # 全部质量门禁
 books/scripts/launch.sh cli test           # 测试套件

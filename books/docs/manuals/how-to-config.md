@@ -129,6 +129,20 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 
 ## 5. LLM 配置
 
+### 源码 → 手稿是否用 LLM
+
+`book.toml` 的开关决定 ingest 阶段要不要让 LLM 起草**导读**与**小结**两段散文：
+
+```toml
+[llm]
+ingest_prose = false   # 默认关；开则走 chapter-draft / summary 场景
+```
+
+事实、源码坐标、表格、练习、交叉索引**永远确定性**，开关只影响这两段叙述文字；
+provider 不可用时自动回退到确定性文本并在 stderr 打一行警告，不会中断 ingest。
+命令行另有 `--llm`（只影响本次运行），TUI 里是独立的 `[L]` 菜单项。
+
+
 `llm_provider.json` 定义 provider 与路由，`llm_settings.json` 定义生成参数：
 
 ```json

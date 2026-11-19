@@ -11,7 +11,7 @@
 - 质量门禁：结构（`audit/structure.py`）、事实（`audit/source_refs.py`）、
   图书质量（`audit/book_quality.py`）、文风（`audit/prose_quality.py`）、
   交付（`render/verify_pdf.py`、`render/verify_epub.py`）。
-- 工具链设计说明见 `books/docs/plan/toolchain-design.md`。
+- 工具链设计说明见 `toolchain-design.md`（同目录）。
 
 ## 2. 例行工作流
 

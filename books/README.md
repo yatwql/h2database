@@ -12,7 +12,7 @@
 | ------ | ------ |
 | 源码 → 手稿 | 抽取包/模块版图、核心类型、公开 API、依赖方向，按章节映射生成手稿 |
 | 手稿 → 文档 | 合并 Markdown、HTML（侧边栏 TOC）、PDF（大纲/页内目录）、EPUB |
-| 质量门禁 | 20 道：结构完整性、源码坐标可核验、链接锚点、图注、术语/索引、文风评分、交付校验 |
+| 质量门禁 | 27 道：结构完整性、源码坐标可核验、链接锚点、图注、术语/索引、文风评分、交付校验 |
 | 多入口 | CLI、TUI、Web 控制台共用同一套动作 |
 | 可配置 | 数据组织 / 基础 / 风格三层配置 + 语言包 + LLM provider 路由 |
 
@@ -82,13 +82,13 @@ books/
 | [faq.md](docs/manuals/faq.md) | 常见问题（环境、配置、门禁、交付、日志、LLM） |
 | [how-to-use.md](docs/manuals/how-to-use.md) | 门禁与脚本速查（面向开发者） |
 
-**规范与设计（`docs/managements/`、`docs/plan/`）**
+**规范与设计（`docs/managements/`）**
 
 | 文档 | 内容 |
 | ------ | ------ |
 | [analysis-doc-standard.md](docs/managements/analysis-doc-standard.md) | 源码分析文档的通用内容标准与验收清单 |
 | [technical.md](docs/managements/technical.md) | 工具链架构约束；§13 是文件职责分类的权威定义（结构/表述/名词 vs 规则/基础/外部服务） |
-| [toolchain-design.md](docs/plan/toolchain-design.md) | 流水线与配置模型的设计说明 |
+| [toolchain-design.md](docs/managements/toolchain-design.md) | 流水线与配置模型的设计说明 |
 
 **管理文档（`docs/managements/`）**
 
@@ -100,4 +100,5 @@ books/
 | [testplan.md](docs/managements/testplan.md) | 质量门禁与验证命令（验证唯一权威） |
 | [changelog.md](docs/managements/changelog.md) | 版本历史 |
 | [style-guide.md](docs/managements/style-guide.md) | 写作与格式规范 |
+| [tui-interaction.md](docs/managements/tui-interaction.md) | TUI 交互契约（键位、反馈、确认、光标） |
 | [README.md](docs/managements/README.md) | 管理文档索引 |
