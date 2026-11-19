@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tests for the language analyzers and multi-language digest."""
+import importlib
 import json
 import os
 import sys
@@ -17,7 +18,7 @@ sys.path.insert(0, os.path.join(TOOLS_DIR, 'lib'))
 
 FIXTURES = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fixtures')
 
-from ingest import languages
+languages = importlib.import_module('ingest.languages')
 
 
 class TestRegistry(unittest.TestCase):
