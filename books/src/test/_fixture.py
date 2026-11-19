@@ -23,6 +23,22 @@ TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )
 
+BOOK_ROOT = os.path.dirname(TOOLS_DIR)
+
+_LAYERS = ('lib', 'audit', 'manuscript', 'render', 'ingest')
+
+
+def ensure_tools_path() -> None:
+    """Put the toolchain and its layers on sys.path, idempotently.
+
+    Delivery scripts import their siblings as top-level modules (``terms``,
+    ``captions``), so every layer must be present; gating the whole block on
+    TOOLS_DIR alone leaves them out when the path is only partly prepared.
+    """
+    for path in (TOOLS_DIR, *(os.path.join(TOOLS_DIR, sub) for sub in _LAYERS)):
+        if path not in sys.path:
+            sys.path.insert(0, path)
+
 BOOK_TOML = """[book]
 title = "测试之书"
 version = "0.1"
@@ -380,12 +396,7 @@ def run_inproc(root: str, script: str, *args: str) -> tuple[int, str]:
     import io
     import runpy
 
-    if TOOLS_DIR not in sys.path:
-        sys.path.insert(0, TOOLS_DIR)
-    for _sub in ('lib', 'audit', 'manuscript', 'render', 'ingest'):
-        _path = os.path.join(TOOLS_DIR, _sub)
-        if _path not in sys.path:
-            sys.path.insert(0, _path)
+    ensure_tools_path()
 
     previous_root = os.environ.get('BOOK_ROOT')
     previous_argv = sys.argv[:]
@@ -415,8 +426,7 @@ def run_inproc(root: str, script: str, *args: str) -> tuple[int, str]:
 
 def load_module(root: str, name: str):
     """Import (or re-import) a delivery module with BOOK_ROOT pointed at root."""
-    if TOOLS_DIR not in sys.path:
-        sys.path.insert(0, TOOLS_DIR)
+    ensure_tools_path()
     previous_root = os.environ.get('BOOK_ROOT')
     refresh_config(root)
     try:

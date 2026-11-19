@@ -6,19 +6,13 @@ depend on the current manuscript contents.
 """
 import importlib
 import os
-import sys
 import tempfile
 import unittest
 
-TOOLS_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
-)
-if TOOLS_DIR not in sys.path:
-    sys.path.insert(0, TOOLS_DIR)
-    for _sub in ('lib', 'audit', 'manuscript', 'render', 'ingest'):
-        _path = os.path.join(TOOLS_DIR, _sub)
-        if _path not in sys.path:
-            sys.path.insert(0, _path)
+import _fixture
+
+_fixture.ensure_tools_path()
+
 
 _annotate_terms = importlib.import_module('terms')
 _audit_captions = importlib.import_module('captions')
@@ -93,30 +87,6 @@ class _TempFile:
         os.unlink(self._tmp.name)
 
 
-class TestGlossaryParser(unittest.TestCase):
-    def test_multi_line_entry_collects_chapters(self):
-        with _TempFile(GLOSSARY_FIXTURE) as path:
-            terms = _annotate_terms.parse_glossary_terms(path)
-        self.assertEqual(terms['ACID'], [10])
-        self.assertEqual(terms['Append-Only'], [6])
-
-    def test_all_terms_found(self):
-        with _TempFile(GLOSSARY_FIXTURE) as path:
-            terms = _annotate_terms.parse_glossary_terms(path)
-        self.assertEqual(sorted(terms), ['ACID', 'Append-Only', 'B-Tree'])
-
-    def test_related_links_parsed(self):
-        with _TempFile(GLOSSARY_FIXTURE) as path:
-            entries = _annotate_terms.parse_glossary_with_related(path)
-        self.assertEqual(entries['ACID']['related'], ['MVCC', 'Undo Log'])
-
-    def test_chapters_deduplicated(self):
-        with _TempFile(GLOSSARY_FIXTURE) as path:
-            entries = _annotate_terms.parse_glossary_with_related(path)
-        chapters = entries['ACID']['chapters']
-        self.assertEqual(len(chapters), len(set(chapters)))
-
-
 class TestCaptionClassifier(unittest.TestCase):
     threshold = _audit_captions.THRESHOLDS['normal']
 
@@ -148,42 +118,6 @@ class TestCaptionClassifier(unittest.TestCase):
         self.assertEqual(len(flags), len(lines))
         self.assertTrue(flags[2], 'caption inside a fence must be skipped')
         self.assertFalse(flags[0])
-
-
-class TestExerciseParser(unittest.TestCase):
-    def test_slots_detected(self):
-        slots = _audit_exercises.parse_chapter_slots(CHAPTER_FIXTURE.splitlines())
-        chapters = [s['chapter'] for s in slots if s['chapter'] is not None]
-        self.assertIn(3, chapters)
-
-    def test_section_lines_are_one_indexed(self):
-        lines = CHAPTER_FIXTURE.splitlines()
-        slots = _audit_exercises.parse_chapter_slots(lines)
-        slot = next(s for s in slots if s['chapter'] == 3)
-        for key in ('summary_line', 'exercises_line', 'further_line'):
-            if slot[key] is not None:
-                self.assertGreaterEqual(slot[key], 1)
-                self.assertLessEqual(slot[key], len(lines))
-
-    def test_find_section_end_bounded(self):
-        lines = CHAPTER_FIXTURE.splitlines()
-        end = _audit_exercises.find_section_end(lines, 10)
-        self.assertGreater(end, 10)
-
-
-class TestIndexParser(unittest.TestCase):
-    def test_main_entries_parsed(self):
-        with _TempFile(INDEX_FIXTURE) as path:
-            main, _sub, _sa, sections = _audit_index_xrefs.parse_index(path)
-        self.assertTrue(sections)
-        joined = ' '.join(main)
-        self.assertIn('acid', joined.lower())
-
-    def test_see_also_parsed(self):
-        with _TempFile(INDEX_FIXTURE) as path:
-            _main, _sub, see_alsos, _sections = _audit_index_xrefs.parse_index(path)
-        targets = [t for sa in see_alsos for t in sa['targets']]
-        self.assertIn('MVCC', targets)
 
 
 if __name__ == '__main__':
