@@ -40,7 +40,7 @@ class IndexXrefUnitTest(unittest.TestCase):
     def test_parse_index_returns_sections_and_entries(self):
         path = self.index('# 索引\n\n## A\n\n- ACID —— §1.1\n  - 子项 —— §2.1\n'
                           '  see also: MVStore\n')
-        main_entries, sub_entries, see_alsos, sections = self.mod.parse_index(path)
+        main_entries, _sub_entries, see_alsos, sections = self.mod.parse_index(path)
         self.assertTrue(main_entries)
         self.assertTrue(sections)
         self.assertIsInstance(see_alsos, list)
