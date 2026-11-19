@@ -4,6 +4,14 @@
 > [配置](how-to-config.md) · [CLI](how-to-use-cli.md) · [TUI](how-to-use-tui.md) ·
 > [Web](how-to-use-web.md) · [常见问题](faq.md)
 
+## 0. 质量评分
+
+```bash
+python books/src/python/make.py report   # 六维评分：功能/稳定/交互/代码/文档风格/文档质量
+```
+
+评分只是汇总视图（复用已有门禁与度量），不是新门禁；低于目标时按提示逐项整改。
+
 ## 1. 启动方式
 
 ```bash

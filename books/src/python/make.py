@@ -82,6 +82,7 @@ GROUPS = {
 GROUPS['check'] = GROUPS['verify']
 GROUPS['test'] = ('unittest',)
 GROUPS['cover'] = ('coverage',)
+GROUPS['report'] = ('scorecard',)
 
 OPTIONAL_TOOLS = {
     'pandoc': 'render/to_epub.py',
@@ -150,6 +151,14 @@ def doctor() -> int:
     return 0 if problems == 0 else 1
 
 
+def report(extra: list[str] | None = None) -> int:
+    """Six-dimension release scorecard (book quality, code, docs, interaction)."""
+    extra = extra or []
+    proc = subprocess.run([PY, os.path.join(TOOLS_DIR, 'audit', 'scorecard.py'), *extra],
+                          cwd=os.path.dirname(BOOK_ROOT), check=False)
+    return proc.returncode
+
+
 def coverage() -> int:
     """Run the test suite under coverage and enforce the ratchet."""
     if importlib.util.find_spec('coverage') is None:
@@ -181,7 +190,7 @@ def main(argv: list[str]) -> int:
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('command',
                         choices=['check', 'build', 'verify', 'test', 'cover',
-                                 'deliver', 'doctor'])
+                                 'report', 'deliver', 'doctor'])
     parser.add_argument('--only', help='comma-separated step names')
     parser.add_argument('--skip', help='comma-separated step names to skip')
     parser.add_argument('--timings', action='store_true', help='print per-step wall time')
@@ -196,6 +205,9 @@ def main(argv: list[str]) -> int:
 
     if args.command == 'cover':
         return coverage()
+
+    if args.command == 'report':
+        return report(sys.argv[2:])
 
     if args.full:
         os.environ['BOOK_SLOW'] = '1'
