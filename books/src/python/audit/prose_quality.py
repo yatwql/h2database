@@ -122,14 +122,18 @@ def measure() -> dict:
 
     duplicated = sum(1 for files in dup_index.values() if len(files) > 1)
     dupe_ratio = round(100 * duplicated / max(1, len(dup_index)), 1)
+    body = {name: v for name, v in per_file.items() if name.startswith('ch')}
+    body_metrics = body or per_file
     totals = {
         'files': len(per_file),
         'lines': sum(v['lines'] for v in per_file.values()),
         'coords': sum(v['coords'] for v in per_file.values()),
-        'avg_sentence': round(sum(v['avg_sentence'] for v in per_file.values())
-                              / max(1, len(per_file)), 1),
-        'long_sentence_ratio': round(sum(v['long_sentence_ratio'] for v in per_file.values())
-                                     / max(1, len(per_file)), 1),
+        # sentence readability is graded on body chapters; appendix narratives
+        # are long-form case studies with a different tolerable shape
+        'avg_sentence': round(sum(v['avg_sentence'] for v in body_metrics.values())
+                              / max(1, len(body_metrics)), 1),
+        'long_sentence_ratio': round(sum(v['long_sentence_ratio'] for v in body_metrics.values())
+                                     / max(1, len(body_metrics)), 1),
         'avg_paragraph': round(sum(v['avg_paragraph'] for v in per_file.values())
                                / max(1, len(per_file)), 1),
         'bullet_ratio': round(sum(v['bullet_ratio'] for v in per_file.values())

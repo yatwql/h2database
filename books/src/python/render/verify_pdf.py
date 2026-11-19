@@ -217,6 +217,13 @@ def verify(pdf_path: str, html_path: str, require_toc_links: bool = False) -> Re
                    'printed TOC links resolve to outline pages' if not problems
                    else '; '.join(problems[:2]))
 
+    sizes = {(round(float(page.mediabox.width), 1), round(float(page.mediabox.height), 1))
+             for page in reader.pages}
+    a4 = all(abs(w - 595) <= 2 and abs(h - 842) <= 2 for w, h in sizes)
+    report.add('PAGE_SIZE', a4, f'{sorted(sizes)[:2]} (expect A4 595x842)')
+    rotations = {int(page.get('/Rotate') or 0) for page in reader.pages}
+    report.add('ROTATION', rotations <= {0}, f'rotations={sorted(rotations)}')
+
     missing_fonts = non_embedded_fonts(reader)
     report.add('FONTS', not missing_fonts,
                'all fonts embedded' if not missing_fonts

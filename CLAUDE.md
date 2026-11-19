@@ -25,6 +25,7 @@ python books/src/python/make.py doctor        # optional deps (pandoc/playwright
 | Topic | Authoritative file |
 |-------|--------------------|
 | Directory structure, file ownership | `books/docs/managements/folder.md` |
+| Launchers and virtualenv | `books/README.md` (快速开始), `books/scripts/{bk,launch,bootstrap}.*` |
 | Script usage, gates, delivery steps | `books/docs/manuals/how-to-use.md` |
 | Quality gates and verification commands | `books/docs/managements/testplan.md` |
 | Writing and format conventions | `books/docs/managements/style-guide.md` |
@@ -38,7 +39,8 @@ python books/src/python/make.py doctor        # optional deps (pandoc/playwright
   scripts read it through `_config`.
 - Manuscript sources live only in `books/data/manuscript/`.
 - Delivery artifacts live only in `books/dist/` (gitignored, regenerated).
-- Tooling lives only in `books/src/python/`; tests only in `books/src/test/`.
+- Tooling lives in `books/src/python/` (thin launchers may live in `books/scripts/`);
+  tests only in `books/src/test/`.
 - No temporary repair scripts, archives, or `__pycache__` in git; session
   artifacts go to `.claude/`.
 - No historical traces in docs or code comments (review rounds, batches, dated

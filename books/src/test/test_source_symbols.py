@@ -32,13 +32,13 @@ class BaselineTest(unittest.TestCase):
     def test_missing_baseline_is_empty(self):
         data = sfc.load_baseline(self.baseline)
         self.assertEqual(data['accepted'], [])
-        self.assertEqual(data['h2_version'], '')
+        self.assertEqual(data['source_version'], '')
 
     def test_save_then_load_roundtrip(self):
         broken = [(Claim('ch3.md', 10, 'MVMap', 'rollbackTo'), 'org/h2/mvstore/MVMap.java')]
         sfc.save_baseline(broken, '2.4.249-SNAPSHOT', self.baseline)
         data = sfc.load_baseline(self.baseline)
-        self.assertEqual(data['h2_version'], '2.4.249-SNAPSHOT')
+        self.assertEqual(data['source_version'], '2.4.249-SNAPSHOT')
         self.assertEqual(data['accepted'], ['ch3.md::MVMap::rollbackTo'])
 
     def test_baseline_is_sorted_and_stable(self):

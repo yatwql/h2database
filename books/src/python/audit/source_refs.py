@@ -2,8 +2,8 @@
 """Source freshness check — detect stale ClassName.java:lineno references in documentation.
 
 Scans all books/ch*.md files for source file references, resolves them against
-h2/src/main/, and reports:
-  - MISSING: referenced class file does not exist in the H2 source tree
+the configured source root, and reports:
+  - MISSING: referenced file does not exist in the source tree
   - OFFSET:  class file exists but referenced line number exceeds current file length
   - OK:      reference is valid
   - AMBIGUOUS: class name appears in multiple source packages
@@ -86,7 +86,7 @@ class Verification(NamedTuple):
 
 
 
-def get_h2_version() -> str:
+def get_project_version() -> str:
     """Project version from the configured build file (empty when absent)."""
     try:
         lines = _fsutil.read_lines(POM_PATH)
@@ -98,21 +98,44 @@ def get_h2_version() -> str:
             return m.group(1).strip()
     return 'unknown'
 
+def _preferred_paths() -> dict:
+    """Class name -> source-relative path recorded by the inventory.
+
+    Duplicate stems (e.g. DataType in two packages) resolve to the file the
+    manuscript actually cites, instead of the first match on disk.
+    """
+    path = os.path.join(_config.BOOK_ROOT, 'data', 'state', 'source-inventory.json')
+    if not os.path.isfile(path):
+        return {}
+    try:
+        payload = json.loads(_fsutil.read_text(path))
+    except (OSError, ValueError):
+        return {}
+    preferred: dict = {}
+    for package in (payload.get('packages') or {}).values():
+        for unit in package.get('classes') or []:
+            rel = unit.get('rel')
+            if rel:
+                preferred.setdefault(unit['name'], rel)
+    return preferred
+
+
 def build_class_index() -> dict:
-    """Return {ClassName: [list of absolute .java file paths]} from h2/src/main/."""
+    """Map file stem -> absolute paths, inventory-preferred file first."""
     index: dict = defaultdict(list)
     if not os.path.isdir(SOURCE_DIR):
         return index
+    preferred = _preferred_paths()
     for root, _dirs, files in os.walk(SOURCE_DIR):
         for f in files:
             if f.endswith(tuple(SUFFIXES)):
-                name = os.path.splitext(f)[0]
-                index[name].append(os.path.join(root, f))
+                index[os.path.splitext(f)[0]].append(os.path.join(root, f))
+    for name, paths in index.items():
+        rel = preferred.get(name)
+        if rel:
+            paths.sort(key=lambda item: 0 if item.endswith(rel) else 1)
     return index
 
-# ---------------------------------------------------------------------------
-# Extraction
-# ---------------------------------------------------------------------------
 def extract_references() -> list:
     """Parse all chapter files for ClassName.java:lineno refs outside code fences."""
     refs: list = []
@@ -217,6 +240,16 @@ def resolve_references(refs: list, class_index: dict) -> list:
 # ---------------------------------------------------------------------------
 # Line-number verification
 # ---------------------------------------------------------------------------
+def _count_file_lines(path: str) -> int:
+    """Line count of a source file (OSError propagates to the caller)."""
+    try:
+        with open(path, encoding='utf-8') as fh:
+            return sum(1 for _ in fh)
+    except OSError as exc:
+        exc.add_note(f'while reading {path}')
+        raise
+
+
 def verify_line_numbers(resolved: list) -> list:
     """Check each resolved reference's line number against the source file."""
     results: list = []
@@ -226,7 +259,15 @@ def verify_line_numbers(resolved: list) -> list:
             results.append(Verification(r, 'MISSING', None, ''))
             continue
 
-        file_path = res.paths[0]   # first path if ambiguous
+        file_path = res.paths[0]   # inventory-preferred / first path
+        if len(res.paths) > 1:
+            for candidate in res.paths:
+                try:
+                    if _count_file_lines(candidate) >= r.lineno:
+                        file_path = candidate
+                        break
+                except OSError:
+                    continue
         try:
             with open(file_path, encoding='utf-8') as fh:
                 file_lines = fh.readlines()
@@ -251,21 +292,21 @@ def load_baseline(path: str | None = None) -> dict:
     """Return the accepted-drift baseline (empty skeleton when absent)."""
     target = path or BASELINE_PATH
     if not os.path.isfile(target):
-        return {'h2_version': '', 'accepted': []}
+        return {'source_version': '', 'accepted': []}
     try:
         data = json.loads(_fsutil.read_text_raw(target))
     except (OSError, json.JSONDecodeError) as exc:
         print(f'  [WARN] cannot read baseline {target}: {exc}', file=sys.stderr)
-        return {'h2_version': '', 'accepted': []}
+        return {'source_version': '', 'accepted': []}
     data.setdefault('accepted', [])
-    data.setdefault('h2_version', '')
+    data.setdefault('source_version', data.pop('h2_version', ''))
     return data
 
-def save_baseline(broken: list, h2_version: str, path: str | None = None) -> None:
+def save_baseline(broken: list, source_version: str, path: str | None = None) -> None:
     """Record the current drift as accepted."""
     target = path or BASELINE_PATH
     payload = {
-        'h2_version': h2_version,
+        'source_version': source_version,
         'note': 'Accepted symbol drift. Refresh after an upstream update.',
         'accepted': sorted(
             (_claim_key(c.doc_file, c.class_name, c.method) for c, _rel in broken)
@@ -304,7 +345,7 @@ def format_rel_path(path: str) -> str:
 
 def print_report(results: list, class_index: dict) -> None:
     """Print the formatted freshness report."""
-    h2_version = get_h2_version()
+    h2_version = get_project_version()
     today = date.today().isoformat()
 
     # Categorise
@@ -320,7 +361,7 @@ def print_report(results: list, class_index: dict) -> None:
     # -- Header --
     print('====== Source Freshness Report ======')
     print(f'Generated: {today}')
-    print(f'Source base: v{h2_version}')
+    print(f'Source base: {h2_version}')
     print()
 
     # -- MISSING --
@@ -395,7 +436,7 @@ def main(argv: list[str] | None = None) -> int:
                         help='treat known (baselined) drift as a failure too')
     args = parser.parse_args(argv)
 
-    h2_version = get_h2_version()
+    h2_version = get_project_version()
     try:
         print('Building class index from H2 source (h2/src/main/)...')
         class_index = build_class_index()

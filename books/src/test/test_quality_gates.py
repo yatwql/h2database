@@ -126,7 +126,10 @@ class TestEpubVerification(unittest.TestCase):
         opf = (
             '<?xml version="1.0" encoding="utf-8"?>'
             '<package xmlns="http://www.idpf.org/2007/opf" version="3.0">'
-            '<metadata/>'
+            '<metadata xmlns:dc="http://purl.org/dc/elements/1.1/">'
+            '<dc:title>测试之书</dc:title><dc:creator>tester</dc:creator>'
+            '<dc:language>zh-CN</dc:language>'
+            '<dc:identifier id="uid">urn:uuid:test</dc:identifier></metadata>'
             '<manifest>'
             '<item id="ch1" href="ch1.xhtml" media-type="application/xhtml+xml"/>'
             '<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" '

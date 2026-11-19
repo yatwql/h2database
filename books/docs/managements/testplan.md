@@ -77,6 +77,8 @@ python books/src/python/structure.py --gate-level p0  # 仅 p0
 | 合并 Markdown | 合并结果按 book.toml 章节顺序拼接，front/back matter 齐备 | `render/merge.py` | P0 |
 | HTML 渲染 | HTML 含标题锚点、侧边栏 TOC、印刷 TOC；未闭合围栏不吞正文 | `render/to_html.py` | P0 |
 | PDF 渲染 | HTML → PDF 成功，页面数据可读 | `render/to_pdf.py` | P0 |
+| PDF 版式 | 页面为 A4（595×842±2）、无旋转 | `verify_pdf.py`（PAGE_SIZE / ROTATION） | P1 |
+| EPUB 元数据 | dc:title/creator/language/identifier 齐备；配置了封面则必须在 manifest | `verify_epub.py`（METADATA / COVER） | P1 |
 | PDF 交付校验 | outline 与标题一致、层级正确、TOC 链接可用、字体嵌入、体积达标 | `render/verify_pdf.py` | P1 |
 | EPUB 结构校验 | mimetype/container/manifest/spine/nav 全部可解析 | `render/verify_epub.py` | P1 |
 | 可读性 | 长句、宽 ASCII 图、框线闭合、图注质量 | `audit/readability.py` | P1 |

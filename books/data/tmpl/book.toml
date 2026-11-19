@@ -19,6 +19,7 @@ running_head = "H2 Database 源码分析"
 breadcrumb_root = "H2 源码分析"
 
 [paths]
+cover_image = ""       # optional: books/data/assets/cover.png
 # All paths are relative to the directory containing this file.
 manuscript = "data/manuscript"
 dist = "dist"

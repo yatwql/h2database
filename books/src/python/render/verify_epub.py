@@ -141,6 +141,24 @@ def verify(epub_path: str) -> Report:
             }
         spine = [ref.get('idref', '')
                  for ref in opf.findall('.//opf:spine/opf:itemref', NS_OPF)]
+        metadata = {}
+        for node in opf.findall('.//opf:metadata/*', NS_OPF):
+            tag = node.tag.rsplit('}', 1)[-1]
+            metadata.setdefault(tag, (node.text or '').strip())
+        required = ('title', 'creator', 'language', 'identifier')
+        missing_meta = [name for name in required if not metadata.get(name)]
+        report.add('METADATA', not missing_meta,
+                   'title/creator/language/identifier present' if not missing_meta
+                   else f'missing {missing_meta}')
+        has_cover = any('cover-image' in m['properties'].split()
+                        or os.path.basename(m['href']).lower().startswith('cover')
+                        for m in manifest.values())
+        configured_cover = bool(_config._CFG.get('paths', {}).get('cover_image'))
+        if configured_cover or has_cover:
+            report.add('COVER', has_cover,
+                       'cover image declared' if has_cover else 'cover configured but missing')
+        else:
+            report.add('COVER', True, 'no cover configured (optional)')
         report.add('OPF', bool(manifest) and bool(spine),
                    f'{len(manifest)} manifest items, {len(spine)} spine items')
 
