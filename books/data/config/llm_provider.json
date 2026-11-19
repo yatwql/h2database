@@ -9,7 +9,7 @@
       "models": [
         "deepseek-v4-flash"
       ],
-      "priority": 10,
+      "priority": 20,
       "timeout": 120
     },
     "opencode-go": {
@@ -20,7 +20,7 @@
       "models": [
         "GLM-5.3-Flash"
       ],
-      "priority": 20,
+      "priority": 10,
       "timeout": 120,
       "pacing": {
         "min_interval": 5,
@@ -28,19 +28,19 @@
       }
     }
   },
-  "default_provider": "deepseek-main",
+  "default_provider": "opencode-go",
   "routing": {
     "scenario": {
       "chapter-draft": {
-        "provider": "deepseek-main",
+        "provider": "opencode-go",
         "thinking": "medium"
       },
       "chapter-polish": {
-        "provider": "deepseek-main",
+        "provider": "opencode-go",
         "thinking": "high"
       },
       "summary": {
-        "provider": "deepseek-main",
+        "provider": "opencode-go",
         "thinking": "low"
       },
       "review": {

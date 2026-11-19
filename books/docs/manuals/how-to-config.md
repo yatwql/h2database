@@ -158,6 +158,11 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 的 `providers.<credentials_ref>` 块（`api_key` / `model` / `endpoint`），该文件被
 `.gitignore` 忽略。
 
+**优先级与回退**：`providers.<名>.priority` 数值小者靠前。一次调用先走路由
+指定的 provider，失败（无密钥、端点报错、响应不可解析）则按 priority 依次回退，
+全部失败才抛出聚合错误。`pacing.min_interval` 是端点级节流：请求前按上一笔时间
+自动等待，避免超出订阅节奏；`pacing.max_concurrency` 用于说明在途上限。
+
 **强度（thinking level）**：路由项可写成对象，按场景指定思考强度：
 
 ```json

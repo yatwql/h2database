@@ -23,6 +23,7 @@ from __future__ import annotations
 import http.client
 import json
 import os
+import time
 from urllib.parse import urlsplit
 
 from lib import _config
@@ -98,6 +99,35 @@ def resolve(scenario: str, book: str | None = None,
         raise LLMError(f'unknown thinking level {thinking!r}; expected one of {levels}')
     merged['thinking'] = thinking
     return {'provider': provider, 'spec': spec, 'settings': merged}
+
+
+def _ordered_providers(preferred: str) -> list[str]:
+    """Preferred provider first, then the rest by ascending ``priority``."""
+    table = providers().get('providers') or {}
+    others = sorted(
+        (name for name in table if name != preferred),
+        key=lambda name: (table[name].get('priority', 100), name))
+    return [preferred, *others]
+
+
+_LAST_CALL: dict[str, float] = {}
+
+
+def _respect_pacing(provider: str, spec: dict) -> None:
+    """Honour a provider's declared min_interval (subscription endpoints).
+
+    This is honest client-side throttling: the provider's own pacing numbers are
+    applied before the request instead of hammering the endpoint.
+    """
+    pacing = spec.get('pacing') or {}
+    interval = float(pacing.get('min_interval') or 0)
+    if interval <= 0:
+        return
+    previous = _LAST_CALL.get(provider)
+    now = time.monotonic()
+    if previous is not None and now - previous < interval:
+        time.sleep(interval - (now - previous))
+    _LAST_CALL[provider] = time.monotonic()
 
 
 def _mock(prompt: str, spec: dict, params: dict) -> str:
@@ -207,30 +237,26 @@ def _complete_anthropic(prompt: str, provider: str, spec: dict, params: dict,
     return text
 
 
-def complete(prompt: str, scenario: str = 'chapter-draft',
-             book: str | None = None, chapter: str | None = None,
-             model: str | None = None) -> str:
-    """Send a prompt through the resolved provider and return the text."""
-    resolved = resolve(scenario, book=book, chapter=chapter)
-    spec, params = resolved['spec'], resolved['settings']
+def _attempt(prompt: str, provider: str, spec: dict, params: dict,
+             model: str | None) -> str:
+    """One provider attempt (mock / anthropic / openai-compatible)."""
     kind = spec.get('kind', 'mock')
-
     if kind == 'mock':
         return _mock(prompt, spec, params)
 
+    _respect_pacing(provider, spec)
     if kind == 'anthropic':
-        return _complete_anthropic(prompt, resolved['provider'], spec, params, model)
+        return _complete_anthropic(prompt, provider, spec, params, model)
 
-    api_key = _api_key(resolved['provider'], spec)
+    api_key = _api_key(provider, spec)
     if not api_key:
         hint = spec.get('api_key_env') or 'llm_key.json'
-        raise LLMError(f'provider {resolved["provider"]!r} has no key: '
+        raise LLMError(f'provider {provider!r} has no key: '
                        f'set ${spec.get("api_key_env")} or add it to '
                        f'data/config/llm_key.json ({hint})')
 
-    model_name = _model_for(resolved['provider'], spec, model)
     payload = {
-        'model': model_name,
+        'model': _model_for(provider, spec, model),
         'messages': [{'role': 'user', 'content': prompt}],
         'temperature': params.get('temperature', 0.3),
         'max_tokens': params.get('max_tokens', 2048),
@@ -242,6 +268,25 @@ def complete(prompt: str, scenario: str = 'chapter-draft',
         return data['choices'][0]['message']['content']
     except (KeyError, IndexError, TypeError) as exc:
         raise LLMError(f'unexpected provider response: {data!r}') from exc
+
+
+def complete(prompt: str, scenario: str = 'chapter-draft',
+             book: str | None = None, chapter: str | None = None,
+             model: str | None = None) -> str:
+    """Send a prompt, falling back along the priority chain on failure."""
+    resolved = resolve(scenario, book=book, chapter=chapter)
+    params = resolved['settings']
+    table = providers().get('providers') or {}
+    chain = [name for name in _ordered_providers(resolved['provider'])
+             if name in table]
+    last_error: Exception | None = None
+    for provider in chain:
+        try:
+            return _attempt(prompt, provider, table[provider], params, model)
+        except LLMError as exc:
+            last_error = exc
+            continue
+    raise LLMError(f'all providers failed, last error: {last_error}')
 
 
 def status() -> dict:

@@ -51,12 +51,12 @@ class LLMOfflineCase(unittest.TestCase):
     def provider_patch(self, provider: str):
         """Patch the provider table so every scenario uses a network provider."""
         config = self.llm.providers()
-        config.setdefault('providers', {})[provider] = {
+        config['providers'] = {provider: {
             'kind': 'openai-compatible',
             'base_url': f'https://{provider}.invalid/v1',
             'api_key_env': f'{provider.upper()}_API_KEY',
             'models': [f'{provider}-test'],
-        }
+        }}
         config['default_provider'] = provider
         routing = config.setdefault('routing', {}).setdefault('scenario', {})
         for name, value in list(routing.items()):
@@ -141,13 +141,13 @@ class AnthropicTransportCase(unittest.TestCase):
                               'endpoint': 'https://api.example.invalid/anthropic/v1/messages'}
             }}, fh)
         config = self.llm.providers()
-        config['providers']['demo-anthropic'] = {
+        config['providers'] = {'demo-anthropic': {
             'kind': 'anthropic',
             'base_url': 'https://api.example.invalid/anthropic',
             'credentials_ref': 'demo-anthropic',
             'api_key_env': 'DEMO_ANTHROPIC_API_KEY',
             'models': ['demo-model'],
-        }
+        }}
         config['default_provider'] = 'demo-anthropic'
         for scenario in config.setdefault('routing', {}).setdefault('scenario', {}).values():
             if isinstance(scenario, dict):
@@ -204,7 +204,9 @@ class AnthropicTransportCase(unittest.TestCase):
         os.remove(os.path.join(self.root, 'data', 'config', 'llm_key.json'))
         with self.assertRaises(self.llm.LLMError) as ctx:
             self.llm.complete('hi')
-        self.assertIn('llm_key.json', str(ctx.exception))
+        message = str(ctx.exception)
+        self.assertIn('all providers failed', message)
+        self.assertIn('llm_key.json', message)
 
     def test_status_reports_configured_providers_without_secrets(self):
         status = self.llm.status()
