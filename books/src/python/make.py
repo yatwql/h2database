@@ -42,6 +42,8 @@ STEPS: list[Step] = [
     ('rebuild_merged', 'render/rebuild_merged.py', (), 'build'),
     ('generate_html', 'render/generate_html.py', (), 'build'),
     # ---- verify ----
+    ('file_length', 'audit/check_file_length.py', (), 'verify'),
+    ('script_contract', 'audit/check_script_contract.py', (), 'verify'),
     ('doc_traces', 'audit/check_doc_traces.py', (), 'verify'),
     ('code_traces', 'audit/check_code_traces.py', (), 'verify'),
     ('doc_drift', 'audit/check_doc_drift.py', (), 'verify'),

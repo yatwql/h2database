@@ -75,6 +75,8 @@ python books/src/python/final_check.py --gate-level p0  # 仅 p0
 | ASCII 图质量 | 图宽 ≤ `ascii_max_cols`（CJK 记 2 列）；无行尾空格/制表符；单图不混用框线与 ASCII 边框；已知项走基线 | `_audit_ascii.py`、`books/data/baselines/ascii-baseline.json` | P1 |
 | EPUB 结构 | mimetype 首条且未压缩、container/OPF 可解析、manifest 与 spine 全部可解析、nav 链接全部命中、体积 ≤ `epub_max_mb` | `verify_epub.py` | P1 |
 | PDF 交付 | outline 与 HTML 标题逐一对应、outline 层级跟随标题层级、印刷 TOC 链接按序且在页内、字体全部嵌入、体积 ≤ `pdf_max_mb` | `verify_pdf.py --require-toc-links` | P1 |
+| 文件长度 | 源码 ≤900 行、测试 ≤1200 行、文档 ≤1200 行（手稿附录 ≤2000） | `audit/check_file_length.py` | P0 |
+| 脚本契约 | 每个入口脚本有模块说明、可执行入口、必要时说明退出码 | `audit/check_script_contract.py` | P0 |
 | 文档一致性 | 文档中引用的路径、脚本、章节名、版本号与仓库实际一致 | `audit/check_doc_drift.py` | P0 |
 | 历史痕迹 | 文档与代码注释只描述当前状态，不含过程性记录 | `audit/check_doc_traces.py`、`audit/check_code_traces.py` | P0 |
 | 工具链测试 | 单元 + 集成测试全绿（109 例）：`make.py test` | `books/src/test/` | P0 |
