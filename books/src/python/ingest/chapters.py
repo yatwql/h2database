@@ -501,9 +501,9 @@ APPENDIX_SPEC = {
 }
 
 
-def render_appendix(ch: dict) -> str:
+def render_appendix(ch: dict, spec_table: dict | None = None) -> str:
     """Verified source-coordinate block appended to an appendix (idempotent)."""
-    spec = APPENDIX_SPEC.get(ch['file'])
+    spec = (spec_table if spec_table is not None else APPENDIX_SPEC).get(ch['file'])
     if not spec:
         return ''
     num, heading = spec

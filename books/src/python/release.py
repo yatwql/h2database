@@ -34,9 +34,11 @@ REPO_ROOT = os.path.dirname(BOOK_ROOT)
 RUNNER = os.path.join(PY_ROOT, 'check_runner.py')
 LOG = _log.get_logger('release')
 
-ARTIFACTS = ('h2-source-code-analysis.md', 'h2-source-code-analysis.html',
-             'h2-source-code-analysis.pdf', 'h2-source-code-analysis-print.pdf',
-             'h2-source-code-analysis.epub')
+def artifacts() -> tuple[str, ...]:
+    """Delivery artifacts by basename, derived from the configured book name."""
+    paths = (_config.merged_md(), _config.merged_html(), _config.merged_pdf(),
+             _config.merged_print_pdf(), _config.merged_epub())
+    return tuple(os.path.basename(path) for path in paths)
 
 
 def status() -> dict:
@@ -44,7 +46,7 @@ def status() -> dict:
     versions = _config.versions()
     dist = _config.DIST_DIR
     present = {}
-    for name in ARTIFACTS:
+    for name in artifacts():
         path = os.path.join(dist, name)
         present[name] = os.path.getsize(path) if os.path.isfile(path) else 0
     return {'versions': versions, 'artifacts': present,
