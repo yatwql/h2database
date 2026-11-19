@@ -115,115 +115,99 @@
 
 ### 9.3.2.1 `ToCharFunction`
 
-`ToCharFunction` 位于 `org.h2.expression.function`，1,156 行、8 个公开方法。
+`ToCharFunction` 位于 `org.h2.expression.function`，1,156 行、8 个公开方法。它占该包实现的 12%，包内排名第 1。
 
-- 职责：按方法名与调用点归纳
-- 规模：占该包 12%，包级依赖 8 个。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
 
 ### 9.3.2.2 `DateTimeFunction`
 
-`DateTimeFunction` 位于 `org.h2.expression.function`，1,081 行、7 个公开方法。
+`DateTimeFunction` 位于 `org.h2.expression.function`，1,081 行、7 个公开方法。它占该包实现的 11%，包内排名第 2。
 
-- 职责：按方法名与调用点归纳
-- 规模：占该包 11%，包级依赖 8 个。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
 
 ### 9.3.2.3 `BitFunction`
 
-`BitFunction` 位于 `org.h2.expression.function`，730 行、5 个公开方法。
+`BitFunction` 位于 `org.h2.expression.function`，730 行、5 个公开方法。它占该包实现的 8%，包内排名第 3。
 
-- 职责：按方法名与调用点归纳
-- 规模：占该包 8%，包级依赖 8 个。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
 
 ### 9.3.2.4 `MathFunction`
 
-`MathFunction` 位于 `org.h2.expression.function`，405 行、3 个公开方法。
+`MathFunction` 位于 `org.h2.expression.function`，405 行、3 个公开方法。它占该包实现的 4%，包内排名第 4。
 
-- 职责：按方法名与调用点归纳
-- 规模：占该包 4%，包级依赖 8 个。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
 
 ### 9.3.2.5 `AlterTableAlterColumn`
 
-`AlterTableAlterColumn` 位于 `org.h2.command.ddl`，734 行、17 个公开方法。
+`AlterTableAlterColumn` 位于 `org.h2.command.ddl`，734 行、17 个公开方法。它占该包实现的 10%，包内排名第 5。
 
-- 职责：按方法名与调用点归纳
-- 规模：占该包 10%，包级依赖 8 个。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
 
 ### 9.3.2.6 `AlterTableAddConstraint`
 
-`AlterTableAddConstraint` 位于 `org.h2.command.ddl`，520 行、18 个公开方法。
+`AlterTableAddConstraint` 位于 `org.h2.command.ddl`，520 行、18 个公开方法。它占该包实现的 7%，包内排名第 6。
 
-- 职责：按方法名与调用点归纳
-- 规模：占该包 7%，包级依赖 8 个。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
 
 ### 9.3.2.7 `SequenceOptions`
 
-`SequenceOptions` 位于 `org.h2.command.ddl`，363 行、18 个公开方法。
+`SequenceOptions` 位于 `org.h2.command.ddl`，363 行、18 个公开方法。它占该包实现的 5%，包内排名第 7。
 
-- 职责：按方法名与调用点归纳
-- 规模：占该包 5%，包级依赖 8 个。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
 
 ### 9.3.2.8 `CreateTable`
 
-`CreateTable` 位于 `org.h2.command.ddl`，275 行、17 个公开方法。
+`CreateTable` 位于 `org.h2.command.ddl`，275 行、17 个公开方法。它占该包实现的 4%，包内排名第 8。
 
-- 职责：按方法名与调用点归纳
-- 规模：占该包 4%，包级依赖 8 个。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
 
 ### 9.3.2.9 `ExpressionColumn`
 
-`ExpressionColumn` 位于 `org.h2.expression`，553 行、23 个公开方法。
+`ExpressionColumn` 位于 `org.h2.expression`，553 行、23 个公开方法。它占该包实现的 9%，包内排名第 9。
 
-- 职责：按方法名与调用点归纳
-- 规模：占该包 9%，包级依赖 8 个。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
 
 ### 9.3.2.10 `Expression`
 
-`Expression` 位于 `org.h2.expression`，551 行、41 个公开方法。
+`Expression` 位于 `org.h2.expression`，551 行、41 个公开方法。它占该包实现的 9%，包内排名第 10。
 
-- 职责：按方法名与调用点归纳
-- 规模：占该包 9%，包级依赖 8 个。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
 
 ### 9.3.2.11 `BinaryOperation`
 
-`BinaryOperation` 位于 `org.h2.expression`，455 行、6 个公开方法。
+`BinaryOperation` 位于 `org.h2.expression`，455 行、6 个公开方法。它占该包实现的 8%，包内排名第 11。
 
-- 职责：按方法名与调用点归纳
-- 规模：占该包 8%，包级依赖 8 个。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
 
 ### 9.3.2.12 `ExpressionVisitor`
 
-`ExpressionVisitor` 位于 `org.h2.expression`，417 行、17 个公开方法。
+`ExpressionVisitor` 位于 `org.h2.expression`，417 行、17 个公开方法。它占该包实现的 7%，包内排名第 12。
 
-- 职责：按方法名与调用点归纳
-- 规模：占该包 7%，包级依赖 8 个。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
 
 ### 9.3.2.13 `ScriptCommand`
 
-`ScriptCommand` 位于 `org.h2.command.dml`，858 行、23 个公开方法。
+`ScriptCommand` 位于 `org.h2.command.dml`，858 行、23 个公开方法。它占该包实现的 15%，包内排名第 13。
 
-- 职责：按方法名与调用点归纳
-- 规模：占该包 15%，包级依赖 8 个。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
 
 ### 9.3.2.14 `Set`
 
-`Set` 位于 `org.h2.command.dml`，652 行、9 个公开方法。
+`Set` 位于 `org.h2.command.dml`，652 行、9 个公开方法。它占该包实现的 11%，包内排名第 14。
 
-- 职责：按方法名与调用点归纳
-- 规模：占该包 11%，包级依赖 8 个。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
 
 ### 9.3.2.15 `MergeUsing`
 
-`MergeUsing` 位于 `org.h2.command.dml`，598 行、20 个公开方法。
+`MergeUsing` 位于 `org.h2.command.dml`，598 行、20 个公开方法。它占该包实现的 10%，包内排名第 15。
 
-- 职责：按方法名与调用点归纳
-- 规模：占该包 10%，包级依赖 8 个。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
 
 ### 9.3.2.16 `SetClauseList`
 
-`SetClauseList` 位于 `org.h2.command.dml`，507 行、3 个公开方法。
+`SetClauseList` 位于 `org.h2.command.dml`，507 行、3 个公开方法。它占该包实现的 9%，包内排名第 16。
 
-- 职责：按方法名与调用点归纳
-- 规模：占该包 9%，包级依赖 8 个。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
 
 ## 9.3.2 源码坐标明细
 
@@ -275,15 +259,21 @@
 
 ## 9.6 设计权衡
 
-- `org.h2.expression.function` 用 50 个文件换到 9,509 行实现，平均每文件 190 行，其中 `ToCharFunction` 独占 1,156 行、8 个公开方法。
-- 该包对外声明了 8 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
-- `org.h2.command.ddl`（7,262 行）与 `org.h2.expression.function` 的职责差是本章最值得记的一条边界。
+`org.h2.expression.function` 有 50 个文件、9,509 行。平均每文件 190 行。
+
+其中 `ToCharFunction` 独占 1,156 行，8 个公开方法。规模集中，风险也集中。
+
+它对外声明 8 个 `org.h2` 依赖，最重的是 `org.h2.value`。依赖越集中，越说明它是被复用的底座。
+
+与 `org.h2.command.ddl`（7,262 行）的分工是本章最该记住的边界。前者偏实现，后者偏编排。合并会打散扩展点。
 
 ## 9.7 常见误区
 
-- 把 `org.h2.expression.function` 的 9,509 行当作复杂度上限：`ToCharFunction` 之外的 49 个文件多为类型族与样板。
-- 只看 `ToCharFunction` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
-- 把 `org.h2.expression.function` 与 `org.h2.command.ddl` 视为可互换：前者 50 文件、后者 63 文件，扩展点分布完全不同。
+把 `org.h2.expression.function` 的行数当作复杂度上限是误读。`ToCharFunction` 之外还有 49 个文件，其中多为类型族与样板。
+
+只读 `ToCharFunction` 的签名而不看调用点，也会踩坑。真正的约束写在调用方的加锁顺序里。
+
+`org.h2.expression.function` 与 `org.h2.command.ddl` 不能互换。前者 50 个文件，后者 63 个文件，扩展点分布完全不同。
 
 ## 9.8 深读要点
 
@@ -306,14 +296,18 @@
 
 ## 9.9 知识点清单
 
-1. `org.h2.expression.function` 的 `ToCharFunction`：1,156 行、8 个公开方法，职责按方法名归纳
-2. `org.h2.expression.function` 的 `DateTimeFunction`：1,081 行、7 个公开方法，职责按方法名归纳
-3. `org.h2.command.ddl` 的 `AlterTableAlterColumn`：734 行、17 个公开方法，职责按方法名归纳
-4. `org.h2.command.ddl` 的 `AlterTableAddConstraint`：520 行、18 个公开方法，职责按方法名归纳
-5. `org.h2.expression` 的 `ExpressionColumn`：553 行、23 个公开方法，职责按方法名归纳
-6. `org.h2.expression` 的 `Expression`：551 行、41 个公开方法，职责按方法名归纳
-7. `org.h2.command.dml` 的 `ScriptCommand`：858 行、23 个公开方法，职责按方法名归纳
-8. `org.h2.command.dml` 的 `Set`：652 行、9 个公开方法，职责按方法名归纳
+下表汇总本章必须记住的类型，按包分组；规模与公开方法数用于排阅读顺序。
+
+| 类型 | 包 | 行数 | 公开方法 | 职责 |
+| --- | --- | --- | --- | --- |
+| `ToCharFunction` | `org.h2.expression.function` | 1,156 | 8 | 按方法名归纳 |
+| `DateTimeFunction` | `org.h2.expression.function` | 1,081 | 7 | 按方法名归纳 |
+| `AlterTableAlterColumn` | `org.h2.command.ddl` | 734 | 17 | 按方法名归纳 |
+| `AlterTableAddConstraint` | `org.h2.command.ddl` | 520 | 18 | 按方法名归纳 |
+| `ExpressionColumn` | `org.h2.expression` | 553 | 23 | 按方法名归纳 |
+| `Expression` | `org.h2.expression` | 551 | 41 | 按方法名归纳 |
+| `ScriptCommand` | `org.h2.command.dml` | 858 | 23 | 按方法名归纳 |
+| `Set` | `org.h2.command.dml` | 652 | 9 | 按方法名归纳 |
 
 ## 9.9 本章小结
 
@@ -323,22 +317,22 @@
 
 ## 9.10 延伸思考
 
-**1. 🟢★ 指出 `org.h2.expression.function` 中 `ToCharFunction` 与 `DateTimeFunction` 的分工差异，并给出调用方向。**
+**1. 🟢★ 说明 `ToCharFunction` 与 `DateTimeFunction` 的分工差异。给出调用方向。**
 
 > 提示：第9章 §9.2 的表格给出 `ToCharFunction` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§9.2 核心类型
 
-**2. 🔵★★ 围绕 `org.h2.command.ddl` 的 `AlterTableAlterColumn`，说明它为什么需要独立成类型而不是并入 `AlterTableAddConstraint`。**
+**2. 🔵★★ `AlterTableAlterColumn` 为什么独立成类型，而不是并入 `AlterTableAddConstraint`？**
 
 > 提示：第9章 §9.2 的表格给出 `AlterTableAlterColumn` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§9.2 核心类型
 
-**3. 🟠★★★ 以 `org.h2.expression` 的 `ExpressionColumn` 为入口，画出一次完整调用经过的包。**
+**3. 🟠★★★ 以 `ExpressionColumn` 为入口，画出一次完整调用经过的包。**
 
 > 提示：第9章 §9.2 的表格给出 `ExpressionColumn` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§9.2 核心类型
 
-**4. 🟢★★★★ 如果只保留 `org.h2.command.dml` 的一个类型，你保留 `ScriptCommand` 还是 `Set`？说明代价。**
+**4. 🟢★★★★ 只保留一个类型时，你留 `ScriptCommand` 还是 `Set`？说明代价。**
 
 > 提示：第9章 §9.2 的表格给出 `ScriptCommand` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§9.2 核心类型

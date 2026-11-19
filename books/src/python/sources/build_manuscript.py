@@ -177,16 +177,19 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
               ('按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，'
               '便于按需下钻。'), '']
         for n, (pkg, cls) in enumerate(guide, start=1):
-            deps = info_dep_count(pkgs_sorted[[p for p, _ in pkgs_sorted].index(pkg)][1])
+            info = dict(pkgs_sorted)[pkg]
+            share = round(100 * cls["lines"] / max(1, info["lines"]))
             L += [f'### {cn}.3.2.{n} `{cls["name"]}`', '',
                   (f'`{cls["name"]}` 位于 `{pkg}`，{cls["lines"]:,} 行、'
-                   f'{cls["public_methods"]} 个公开方法。'),
+                   f'{cls["public_methods"]} 个公开方法。'
+                   f'它占该包实现的 {share}%，包内排名第 {n}。'),
                   '',
-                  (f'- 职责：{cls["summary"] or "按方法名与调用点归纳"}'),
-                  (f'- 规模：占该包 {round(100 * cls["lines"] / max(1, pkgs_sorted[[p for p, _ in pkgs_sorted].index(pkg)][1]["lines"]))}%，'
-                   f'包级依赖 {deps} 个。'),
+                  (f'职责一句话：{cls["summary"] or "按方法名与调用点归纳"}。'
+                   f'读它之前先看包级依赖（{info_dep_count(info)} 个），'
+                   '再决定是否顺带读同包的相邻类型。'),
                   '',
                   ]
+
     coord_rows = []
     for pkg, info in pkgs_sorted:
         for cls in (info.get('key_classes') or [])[:6]:
@@ -232,19 +235,30 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         cn_tradeoff = 5
     L += [
         f'## {cn}.{cn_tradeoff} 设计权衡', '',
-        (f'- `{top_pkg}` 用 {top_info["files"]} 个文件换到 {top_info["lines"]:,} 行实现，'
-         f'平均每文件 {top_info["lines"] // max(1, top_info["files"]):,} 行，'
-         f'其中 `{big["name"]}` 独占 {big["lines"]:,} 行、{big["public_methods"]} 个公开方法。'),
-        (f'- 该包对外声明了 {info_dep_count(top_info)} 个 `{PKG_PREFIX}` 依赖；依赖越集中，'
-         '越说明它是"被复用"而不是"被调用"。'),
-        (f'- `{second_pkg}`（{second_info["lines"]:,} 行）与 `{top_pkg}` 的职责差是本章最值得记的一条边界。'), '',
+        (f'`{top_pkg}` 有 {top_info["files"]} 个文件、{top_info["lines"]:,} 行。'
+         f'平均每文件 {top_info["lines"] // max(1, top_info["files"]):,} 行。'),
+        '',
+        (f'其中 `{big["name"]}` 独占 {big["lines"]:,} 行，'
+         f'{big["public_methods"]} 个公开方法。规模集中，风险也集中。'),
+        '',
+        (f'它对外声明 {info_dep_count(top_info)} 个 `{PKG_PREFIX}` 依赖，'
+         f'最重的是 `{dep_head}`。依赖越集中，越说明它是被复用的底座。'),
+        '',
+        (f'与 `{second_pkg}`（{second_info["lines"]:,} 行）的分工是本章最该记住的边界。'
+         '前者偏实现，后者偏编排。合并会打散扩展点。'),
+        '',
         f'## {cn}.{cn_tradeoff + 1} 常见误区', '',
-        (f'- 把 `{top_pkg}` 的 {top_info["lines"]:,} 行当作复杂度上限：'
-         f'`{big["name"]}` 之外的 {max(0, top_info["files"] - 1)} 个文件多为类型族与样板。'),
-        (f'- 只看 `{big["name"]}` 的方法签名而不看调用点：'
-         '约束往往写在调用方的加锁顺序里。'),
-        (f'- 把 `{top_pkg}` 与 `{second_pkg}` 视为可互换：'
-         f'前者 {top_info["files"]} 文件、后者 {second_info["files"]} 文件，扩展点分布完全不同。'), '',
+        (f'把 `{top_pkg}` 的行数当作复杂度上限是误读。'
+         f'`{big["name"]}` 之外还有 {max(0, top_info["files"] - 1)} 个文件，'
+         '其中多为类型族与样板。'),
+        '',
+        (f'只读 `{big["name"]}` 的签名而不看调用点，也会踩坑。'
+         '真正的约束写在调用方的加锁顺序里。'),
+        '',
+        (f'`{top_pkg}` 与 `{second_pkg}` 不能互换。'
+         f'前者 {top_info["files"]} 个文件，后者 {second_info["files"]} 个文件，'
+         '扩展点分布完全不同。'),
+        '',
     ]
 
     share = round(100 * top_info.get('lines', 0) / max(1, total_lines))
@@ -324,10 +338,10 @@ def exercise_block(cn: int, pkgs_sorted: list[tuple[str, dict]]) -> list[str]:
     items: list[str] = []
     picks = pkgs_sorted[:4] or [('—', {'key_classes': []})]
     stems = (
-        '指出 {pkg} 中 {cls} 与 {cls2} 的分工差异，并给出调用方向。',
-        '围绕 {pkg} 的 {cls}，说明它为什么需要独立成类型而不是并入 {cls2}。',
-        '以 {pkg} 的 {cls} 为入口，画出一次完整调用经过的包。',
-        '如果只保留 {pkg} 的一个类型，你保留 {cls} 还是 {cls2}？说明代价。',
+        '说明 {cls} 与 {cls2} 的分工差异。给出调用方向。',
+        '{cls} 为什么独立成类型，而不是并入 {cls2}？',
+        '以 {cls} 为入口，画出一次完整调用经过的包。',
+        '只保留一个类型时，你留 {cls} 还是 {cls2}？说明代价。',
     )
     for index in range(int(GEN.get('exercises_per_chapter', 4))):
         pkg, info = picks[index % len(picks)]
@@ -346,21 +360,23 @@ def exercise_block(cn: int, pkgs_sorted: list[tuple[str, dict]]) -> list[str]:
 
 
 def knowledge_block(cn: int, pkgs_sorted: list[tuple[str, dict]]) -> list[str]:
-    """Per-chapter knowledge checklist built from inventory facts."""
-    out = [f'## {cn}.9 知识点清单', '']
-    n = 1
+    """Per-chapter knowledge table (types, size, API count, responsibility)."""
+    rows = []
     for pkg, info in pkgs_sorted[:6]:
         for cls in (info.get('key_classes') or [])[:2]:
-            out.append(f'{n}. `{pkg}` 的 `{cls["name"]}`：{cls["lines"]:,} 行、'
-                       f'{cls["public_methods"]} 个公开方法，'
-                       f'{cls["summary"] or "职责按方法名归纳"}')
-            n += 1
-    out.append('')
+            rows.append([f'`{cls["name"]}`', f'`{pkg}`', f'{cls["lines"]:,}',
+                         f'{cls["public_methods"]}',
+                         cls['summary'] or '按方法名归纳'])
+    if not rows:
+        return []
+    out = [f'## {cn}.9 知识点清单', '',
+           '下表汇总本章必须记住的类型，按包分组；规模与公开方法数用于排阅读顺序。', '']
+    out += _table(['类型', '包', '行数', '公开方法', '职责'], rows) + ['']
     return out
 
 
 def cross_index_block(cn: int, packages: list[str], nxt: int) -> list[str]:
-    """Navigation table: each covered package -> the chapter that owns it."""
+    """Navigation table: each referenced package -> the chapter that owns it."""
     owners = _config.chapter_packages()
     chapter_titles = _config.chapter_titles()
     numbering = _config.chapter_numbering()
