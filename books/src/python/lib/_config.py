@@ -247,6 +247,12 @@ def chapter_coverage() -> dict[str, list[int]]:
     return {k: list(v) for k, v in _CFG.get('chapters', {}).get('coverage', {}).items()}
 
 
+def source_languages() -> list[str]:
+    """Source languages to digest (base.json [sources].languages)."""
+    raw = SOURCES.get('languages') or ['java']
+    return [str(item) for item in raw]
+
+
 def missing_files() -> list[str]:
     """Configured chapter files that do not exist on disk."""
     names = list(_CFG.get('chapters', {}).get('files', []))

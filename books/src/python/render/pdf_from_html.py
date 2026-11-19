@@ -9,6 +9,7 @@ _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)
 
 import os
 import re
+from typing import Any
 
 from lib import _config, _fsutil
 from playwright.sync_api import sync_playwright
@@ -123,7 +124,7 @@ else:
         content_start = min(2, len(page_texts))
     print(f'Content start: page {content_start}')
 
-outline_stack = {}
+outline_stack: dict[int, Any] = {}
 found_count = 0
 not_found = []
 current_page = content_start
@@ -142,12 +143,13 @@ for level, text, search_key in search_keys:
                 break
     if page_num is not None:
         current_page = page_num
-        parent = None
+        parent: Any = None
         for lvl in range(level - 1, 0, -1):
             if lvl in outline_stack:
                 parent = outline_stack[lvl]
                 break
-        item = writer.add_outline_item(text, page_num, parent=parent)
+        item = writer.add_outline_item(title=text, page_number=page_num,
+                                       parent=parent)
         outline_stack[level] = item
         found_count += 1
     else:

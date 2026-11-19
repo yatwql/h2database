@@ -32,7 +32,9 @@ def scripts() -> list[str]:
     root = os.path.join(_config.BOOK_ROOT, 'src', 'python')
     found = glob.glob(os.path.join(root, '**', '*.py'), recursive=True)
     # library-style modules: shared helpers, not entry points
-    library = (os.sep + 'lib' + os.sep, os.sep + 'app' + os.sep + 'actions.py')
+    library = (os.sep + 'lib' + os.sep,
+               os.sep + 'app' + os.sep + 'actions.py',
+               os.sep + 'ingest' + os.sep + 'languages' + os.sep)
     return sorted(p for p in found
                   if not any(marker in p for marker in library)
                   and not p.endswith('__init__.py'))

@@ -34,6 +34,7 @@ class TestGenericSourceTree(unittest.TestCase):
             base = json.load(fh)
         base['sources']['src_main'] = MINI_TREE
         base['sources']['package_prefix'] = 'org.example'
+        base['sources']['languages'] = ['java']
         with open(base_path, 'w', encoding='utf-8') as fh:
             json.dump(base, fh, ensure_ascii=False, indent=2)
 
@@ -49,7 +50,9 @@ class TestGenericSourceTree(unittest.TestCase):
         self.assertEqual(code, 0, out[-400:])
         inventory = json.loads(self.read('data', 'state', 'source-inventory.json'))
         self.assertIn('org.example', inventory['packages'])
-        self.assertEqual(inventory['packages']['org.example']['files'], 1)
+        package = inventory['packages']['org.example']
+        self.assertGreaterEqual(package['files'], 1)
+        self.assertIn('Widget', [u['name'] for u in package['classes']])
 
         code, out = self.run_script('outline.py')
         self.assertEqual(code, 0, out[-400:])

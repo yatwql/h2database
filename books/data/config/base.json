@@ -10,7 +10,10 @@
     "path_pattern": "^org/h2/[A-Za-z0-9_/]+\\.java$",
     "file_suffix": ".java",
     "package_prefix": "org.h2",
-    "language": "java"
+    "language": "java",
+    "languages": [
+      "java"
+    ]
   },
   "baselines": {
     "ascii": "data/baselines/ascii-baseline.json",

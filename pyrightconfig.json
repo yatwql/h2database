@@ -40,14 +40,28 @@
       ]
     },
     {
-      "root": "books/src/python/sources",
+      "root": "books/src/test",
       "extraPaths": [
         "books/src/python/lib",
         "books/src/python"
       ]
     },
     {
-      "root": "books/src/test",
+      "root": "books/src/python/ingest",
+      "extraPaths": [
+        "books/src/python/lib",
+        "books/src/python"
+      ]
+    },
+    {
+      "root": "books/src/python/ingest/languages",
+      "extraPaths": [
+        "books/src/python/lib",
+        "books/src/python"
+      ]
+    },
+    {
+      "root": "books/src/python/app",
       "extraPaths": [
         "books/src/python/lib",
         "books/src/python"
