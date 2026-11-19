@@ -4,7 +4,7 @@
 不在代码里硬编码；改配置不需要改代码，改完跑 `make.py check` 验证。
 
 | 层 | 文件 | 管什么 |
-|----|------|--------|
+| ---- | ------ | -------- |
 | 数据组织 | `data/tmpl/book.toml` | 书名、版本、路径、章节清单、章节标题、H1 编号、覆盖归属、章节→包映射 |
 | 基础配置 | `data/config/base.json` | 源码树、语言、文件后缀、包前缀、状态与基线路径、工具链预算、日志 |
 | 风格配置 | `data/config/style.json` | 展示文案、章节骨架、图注词表、写作与质量阈值、生成能力与模板 |
@@ -85,7 +85,7 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 ### style.json 键一览
 
 | 段 | 键 | 作用 |
-|----|----|------|
+| ---- | ---- | ------ |
 | `project` | `display_title_*`、`author`、`running_head` | 渲染文案（HTML/PDF/EPUB） |
 | `sections` | `per_chapter`、`optional` | 必备段落（结构门禁按此检查）与允许的可选段落 |
 | `captions` | `leading_verbs`、`vague_trailing`、`presets.{strict,normal,loose}` | 图注动宾词表与阈值预设（min_chars < max_chars、fail_at ≥ 0） |
@@ -101,7 +101,7 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 ### 风格相关文件的归属（文档是文档，配置是配置）
 
 | 关注点 | 文件 | 属于 |
-|--------|------|------|
+| -------- | ------ | ------ |
 | 判定规则与阈值（图注词表、质量/文风阈值、篇幅预算、必备段落名） | `data/config/style.json` | 配置 |
 | 文体文案（四段引言、深读要点等叙述模板） | `data/tmpl/templates.toml` | 文档 |
 | 名称与提示语（章节骨架名、练习提示/回顾前缀、术语行） | `data/language/zh.json` | 文档 |

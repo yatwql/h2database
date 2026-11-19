@@ -91,7 +91,7 @@ app/        入口层：cli.py / tui.py / web.py + actions.py，只编排，不�
 ## 12. 三个版本
 
 | 版本 | 来源 | 含义 | 谁改 |
-|------|------|------|------|
+| ------ | ------ | ------ | ------ |
 | 工具版本 | `lib/_version.py`（或被 `[sources].tool_version` 覆盖） | 工具链自身 | 改工具的开发者，semver |
 | 源码版本 | `[sources].version`，否则读源码清单（pom.xml / pyproject.toml / Cargo.toml） | 被分析的那份源码 | 上游升级时自动变化 |
 | 文档版本 | `book.toml [book].version` | 这本书/这份手稿 | 内容迭代时 |

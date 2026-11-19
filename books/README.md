@@ -9,7 +9,7 @@
 ## 能做什么
 
 | 能力 | 说明 |
-|------|------|
+| ------ | ------ |
 | 源码 → 手稿 | 抽取包/模块版图、核心类型、公开 API、依赖方向，按章节映射生成手稿 |
 | 手稿 → 文档 | 合并 Markdown、HTML（侧边栏 TOC）、PDF（大纲/页内目录）、EPUB |
 | 质量门禁 | 20 道：结构完整性、源码坐标可核验、链接锚点、图注、术语/索引、文风评分、交付校验 |
@@ -73,7 +73,7 @@ books/
 **用户文档（`docs/manuals/`）**
 
 | 文档 | 内容 |
-|------|------|
+| ------ | ------ |
 | [how-to-config.md](docs/manuals/how-to-config.md) | 如何配置：数据组织、基础、风格、语言包、LLM |
 | [how-to-use-cli.md](docs/manuals/how-to-use-cli.md) | CLI 用法、动作、退出码 |
 | [how-to-use-tui.md](docs/manuals/how-to-use-tui.md) | TUI 菜单与 `--once` 脚本化 |
@@ -84,7 +84,7 @@ books/
 **规范与设计（`docs/spec/`、`docs/plan/`）**
 
 | 文档 | 内容 |
-|------|------|
+| ------ | ------ |
 | [analysis-doc-standard.md](docs/spec/analysis-doc-standard.md) | 源码分析文档的通用内容标准与验收清单 |
 | [technical.md](docs/spec/technical.md) | 工具链架构约束（分层、契约、命名、日志、环境） |
 | [toolchain-design.md](docs/plan/toolchain-design.md) | 流水线与配置模型的设计说明 |
@@ -92,7 +92,7 @@ books/
 **管理文档（`docs/managements/`）**
 
 | 文档 | 内容 |
-|------|------|
+| ------ | ------ |
 | [folder.md](docs/managements/folder.md) | 目录结构与文件归属 |
 | [requirements.md](docs/managements/requirements.md) | 范围与交付物 |
 | [plan.md](docs/managements/plan.md) | 工作流、维护策略、在建项、风险 |
