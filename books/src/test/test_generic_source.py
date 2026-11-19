@@ -45,18 +45,18 @@ class TestGenericSourceTree(unittest.TestCase):
             return fh.read()
 
     def test_stage1_on_mini_tree(self):
-        code, out = self.run_script('digest_source.py')
+        code, out = self.run_script('digest.py')
         self.assertEqual(code, 0, out[-400:])
         inventory = json.loads(self.read('data', 'state', 'source-inventory.json'))
         self.assertIn('org.example', inventory['packages'])
         self.assertEqual(inventory['packages']['org.example']['files'], 1)
 
-        code, out = self.run_script('plan_outline.py')
+        code, out = self.run_script('outline.py')
         self.assertEqual(code, 0, out[-400:])
         outline = json.loads(self.read('data', 'state', 'outline.json'))
         self.assertFalse(any(ch['missing_packages'] for ch in outline['chapters']))
 
-        code, out = self.run_script('build_manuscript.py')
+        code, out = self.run_script('chapters.py')
         self.assertEqual(code, 0, out[-400:])
         chapter = self.read('data', 'manuscript', 'ch1-test.md')
         self.assertIn('org.example', chapter)

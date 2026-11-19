@@ -33,30 +33,30 @@ HAS_PLAYWRIGHT = importlib.util.find_spec('playwright') is not None
 HAS_PANDOC = bool(__import__('shutil').which('pandoc'))
 
 
-BUILD_SCRIPTS = ['cover_stats.py', 'rebuild_merged.py', 'generate_html.py']
+BUILD_SCRIPTS = ['cover.py', 'merge.py', 'to_html.py']
 
 ALL_SCRIPTS = [
-    'cover_stats.py', 'rebuild_merged.py', 'generate_html.py',
-    'add_pdf_toc_links.py', 'generate_epub.py', 'pdf_from_html.py',
-    'final_check.py',
+    'cover.py', 'merge.py', 'to_html.py',
+    'pdf_toc_links.py', 'to_epub.py', 'pdf_from_html.py',
+    'structure.py',
 ]
 
 AUDIT_SCRIPTS = [
-    '_audit_links.py',
-    '_audit_ascii.py',
-    '_audit_captions.py',
-    '_audit_figures.py',
-    '_audit_crossrefs.py',
-    '_audit_exercises.py',
-    '_audit_figure_clusters.py',
-    '_audit_index_xrefs.py',
-    '_audit_smart.py',
-    'balance_check.py',
-    'check_style.py',
-    'readability_check.py',
-    'source_freshness_check.py',
-    'build_glossary.py',
-    'build_index.py',
+    'links.py',
+    'diagrams.py',
+    'captions.py',
+    'figures.py',
+    'crossrefs.py',
+    'exercises.py',
+    'figure_clusters.py',
+    'index_xrefs.py',
+    'smart.py',
+    'balance.py',
+    'style.py',
+    'readability.py',
+    'source_refs.py',
+    'glossary.py',
+    'index.py',
 ]
 
 
@@ -79,18 +79,18 @@ class ScriptTestBase(unittest.TestCase):
 
 class TestBuildScripts(ScriptTestBase):
     def test_cover_stats_runs(self):
-        code, out = self.run_script('cover_stats.py')
+        code, out = self.run_script('cover.py')
         self.assertEqual(code, 0, out)
         self.assertIn('cover.md', out)
 
     def test_rebuild_merged_writes_dist(self):
-        code, out = self.run_script('rebuild_merged.py')
+        code, out = self.run_script('merge.py')
         self.assertEqual(code, 0, out)
         self.assertTrue(os.path.isfile(self.path('dist', 'test-book.md')))
 
     def test_generate_html_runs_after_merge(self):
-        self.run_script('rebuild_merged.py')
-        code, out = self.run_script('generate_html.py')
+        self.run_script('merge.py')
+        code, out = self.run_script('to_html.py')
         self.assertEqual(code, 0, out)
         html = self.read('dist', 'test-book.html')
         self.assertIn('<h1 id="第1章-测试章节">', html)
@@ -108,44 +108,44 @@ class TestAuditScripts(ScriptTestBase):
     def test_link_audit_detects_break(self):
         with open(self.path('data', 'manuscript', 'ch1-test.md'), 'a', encoding='utf-8') as fh:
             fh.write('\n[坏链接](missing.md)\n')
-        code, out = self.run_script('_audit_links.py')
+        code, out = self.run_script('links.py')
         self.assertEqual(code, 1, out)
         self.assertIn('BROKEN_FILE', out)
 
     def test_ascii_audit_detects_wide_diagram(self):
         with open(self.path('data', 'manuscript', 'ch1-test.md'), 'a', encoding='utf-8') as fh:
             fh.write('\n```text\n' + 'x' * 130 + '\n```\n')
-        code, out = self.run_script('_audit_ascii.py')
+        code, out = self.run_script('diagrams.py')
         self.assertEqual(code, 1, out)
         self.assertIn('WIDE_LINE', out)
 
     def test_caption_audit_strict_flags_bare_noun(self):
         with open(self.path('data', 'manuscript', 'ch1-test.md'), 'a', encoding='utf-8') as fh:
             fh.write('\n**图 1-9: MVStore 架构**\n')
-        code, out = self.run_script('_audit_captions.py', '--threshold', 'strict')
+        code, out = self.run_script('captions.py', '--threshold', 'strict')
         self.assertEqual(code, 1, out)
         self.assertIn('NO_VERB', out)
 
     def test_glossary_builder_handles_fixture(self):
-        code, out = self.run_script('build_glossary.py')
+        code, out = self.run_script('glossary.py')
         self.assertIn(code, (0, 1), out)
         self.assertNotIn('Traceback', out)
 
     def test_index_builder_handles_fixture(self):
-        code, out = self.run_script('build_index.py')
+        code, out = self.run_script('index.py')
         self.assertIn(code, (0, 1), out)
         self.assertNotIn('Traceback', out)
 
     def test_glossary_builder_check_mode(self):
-        code, out = self.run_script('build_glossary.py', '--check')
+        code, out = self.run_script('glossary.py', '--check')
         self.assertIn(code, (0, 1), out)
 
     def test_index_builder_hierarchy_check(self):
-        code, out = self.run_script('build_index.py', '--hierarchy-check')
+        code, out = self.run_script('index.py', '--hierarchy-check')
         self.assertIn(code, (0, 1), out)
 
     def test_source_freshness_handles_missing_source_tree(self):
-        code, out = self.run_script('source_freshness_check.py')
+        code, out = self.run_script('source_refs.py')
         self.assertIn(code, (0, 1), out)
         self.assertNotIn('Traceback', out)
 
@@ -154,8 +154,8 @@ class TestEveryScriptRuns(ScriptTestBase):
     """Every script must start, do something, and exit without a traceback."""
 
     def test_all_scripts_in_sequence(self):
-        self.run_script('rebuild_merged.py')
-        self.run_script('generate_html.py')
+        self.run_script('merge.py')
+        self.run_script('to_html.py')
         for script in ALL_SCRIPTS + AUDIT_SCRIPTS:
             with self.subTest(script=script):
                 code, out = self.run_script(script)
@@ -168,27 +168,27 @@ class TestCaseStudyOutline(ScriptTestBase):
         for scenario in ('select', 'commit', 'recover'):
             with self.subTest(scenario=scenario):
                 code, out = self.run_script(
-                    'build_case_study_outline.py', '--scenario', scenario)
+                    'case_studies.py', '--scenario', scenario)
                 self.assertEqual(code, 0, out)
                 self.assertTrue(out.strip())
 
 
 class TestAnnotateTermsModes(ScriptTestBase):
     def test_default_mode_annotates_chapters(self):
-        code, out = self.run_script('_annotate_terms.py')
+        code, out = self.run_script('terms.py')
         self.assertEqual(code, 0, out)
         self.assertIn('Updated', out)
 
     def test_check_related_mode(self):
-        code, out = self.run_script('_annotate_terms.py', '--check-related')
+        code, out = self.run_script('terms.py', '--check-related')
         self.assertIn(code, (0, 1), out)
 
     def test_report_missing_mode(self):
-        code, out = self.run_script('_annotate_terms.py', '--report-missing')
+        code, out = self.run_script('terms.py', '--report-missing')
         self.assertEqual(code, 0, out)
 
     def test_check_mode(self):
-        code, out = self.run_script('_annotate_terms.py', '--check')
+        code, out = self.run_script('terms.py', '--check')
         self.assertIn(code, (0, 1), out)
 
 
@@ -197,12 +197,12 @@ class TestPdfToolchain(ScriptTestBase):
 
     def setUp(self):
         super().setUp()
-        self.run_script('rebuild_merged.py')
-        self.run_script('generate_html.py')
+        self.run_script('merge.py')
+        self.run_script('to_html.py')
 
     @unittest.skipUnless(SLOW and HAS_PLAYWRIGHT, 'slow suite: set BOOK_SLOW=1')
     def test_generate_pdf_then_verify(self):
-        code, out = self.run_script('generate_pdf.py')
+        code, out = self.run_script('to_pdf.py')
         self.assertIn(code, (0, 1), out)
         self.assertNotIn('Traceback', out)
         if code == 0:
@@ -212,14 +212,14 @@ class TestPdfToolchain(ScriptTestBase):
 
     @unittest.skipUnless(SLOW and HAS_PLAYWRIGHT, 'slow suite: set BOOK_SLOW=1')
     def test_add_pdf_toc_links_runs(self):
-        self.run_script('generate_pdf.py')
-        code, out = self.run_script('add_pdf_toc_links.py')
+        self.run_script('to_pdf.py')
+        code, out = self.run_script('pdf_toc_links.py')
         self.assertIn(code, (0, 1), out)
         self.assertNotIn('Traceback', out)
 
     @unittest.skipUnless(SLOW and HAS_PLAYWRIGHT, 'slow suite: set BOOK_SLOW=1')
     def test_pdf_print_grade_runs(self):
-        code, out = self.run_script('pdf_print_grade.py')
+        code, out = self.run_script('print_pdf.py')
         self.assertIn(code, (0, 1), out)
         self.assertNotIn('Traceback', out)
 
@@ -229,24 +229,24 @@ class TestFullDeliveryPipeline(ScriptTestBase):
 
     def setUp(self):
         super().setUp()
-        self.run_script('rebuild_merged.py')
-        self.run_script('generate_html.py')
+        self.run_script('merge.py')
+        self.run_script('to_html.py')
 
     @unittest.skipUnless(SLOW and HAS_PLAYWRIGHT, 'slow suite: set BOOK_SLOW=1')
     def test_pdf_render_verify_and_toc_links(self):
-        code, out = self.run_script('generate_pdf.py')
+        code, out = self.run_script('to_pdf.py')
         self.assertEqual(code, 0, out[-400:])
         code, out = self.run_script('verify_pdf.py')
         self.assertIn(code, (0, 1), out[-400:])
-        code, out = self.run_script('add_pdf_toc_links.py')
+        code, out = self.run_script('pdf_toc_links.py')
         self.assertIn(code, (0, 1), out[-400:])
         code, out = self.run_script('verify_pdf.py', '--require-toc-links')
         self.assertIn(code, (0, 1), out[-400:])
 
     @unittest.skipUnless(SLOW and HAS_PLAYWRIGHT, 'slow suite: set BOOK_SLOW=1')
     def test_print_grade_pdf(self):
-        self.run_script('generate_pdf.py')
-        code, out = self.run_script('pdf_print_grade.py')
+        self.run_script('to_pdf.py')
+        code, out = self.run_script('print_pdf.py')
         self.assertIn(code, (0, 1), out[-400:])
         self.assertNotIn('Traceback', out)
 
@@ -258,7 +258,7 @@ class TestFullDeliveryPipeline(ScriptTestBase):
 
     @unittest.skipUnless(SLOW and HAS_PANDOC, 'slow suite: set BOOK_SLOW=1')
     def test_epub_build_and_verify(self):
-        code, out = self.run_script('generate_epub.py')
+        code, out = self.run_script('to_epub.py')
         self.assertEqual(code, 0, out[-400:])
         code, out = self.run_script('verify_epub.py')
         self.assertEqual(code, 0, out[-400:])
@@ -267,8 +267,8 @@ class TestFullDeliveryPipeline(ScriptTestBase):
 class TestDeliveryScripts(ScriptTestBase):
     def setUp(self):
         super().setUp()
-        self.run_script('rebuild_merged.py')
-        self.run_script('generate_html.py')
+        self.run_script('merge.py')
+        self.run_script('to_html.py')
 
     @unittest.skipUnless(HAS_PYPDF, 'pypdf not installed')
     def test_verify_pdf_reports_missing_artifact(self):
@@ -284,7 +284,7 @@ class TestDeliveryScripts(ScriptTestBase):
 
     @unittest.skipUnless(SLOW and HAS_PANDOC, 'slow suite: set BOOK_SLOW=1')
     def test_generate_epub_smoke(self):
-        code, out = self.run_script('generate_epub.py')
+        code, out = self.run_script('to_epub.py')
         self.assertIn(code, (0, 1), out)
         self.assertNotIn('Traceback', out)
 

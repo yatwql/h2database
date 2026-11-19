@@ -58,7 +58,7 @@ class Base(unittest.TestCase):
 
 class TestDeliveryPrerequisites(Base):
     def test_epub_without_pandoc_exits_cleanly(self):
-        code, out = self.run_script('generate_epub.py', env={'PATH': '/nonexistent'})
+        code, out = self.run_script('to_epub.py', env={'PATH': '/nonexistent'})
         self.assertEqual(code, 1, out[-300:])
         self.assertIn('pandoc', out.lower())
 
@@ -68,15 +68,15 @@ class TestDeliveryPrerequisites(Base):
         self.assertNotIn('Traceback', out)
 
     def test_print_grade_without_pdf(self):
-        self.run_script('rebuild_merged.py')
-        self.run_script('generate_html.py')
-        code, out = self.run_script('pdf_print_grade.py')
+        self.run_script('merge.py')
+        self.run_script('to_html.py')
+        code, out = self.run_script('print_pdf.py')
         self.assertIn(code, (0, 1), out[-300:])
 
     def test_toc_links_without_pdf(self):
-        self.run_script('rebuild_merged.py')
-        self.run_script('generate_html.py')
-        code, out = self.run_script('add_pdf_toc_links.py')
+        self.run_script('merge.py')
+        self.run_script('to_html.py')
+        code, out = self.run_script('pdf_toc_links.py')
         self.assertEqual(code, 1, out[-300:])
         self.assertIn('PDF', out)
 
@@ -146,7 +146,7 @@ class TestVerifyPdfTocLinkSuccess(Base):
 class TestAnnotateTermsGuideBranches(Base):
     def test_chapter_without_guide_block(self):
         self.write('data/manuscript/ch2-test.md', '# 第2章 测试章节\n\n仅正文。\n')
-        code, out = self.run_script('_annotate_terms.py')
+        code, out = self.run_script('terms.py')
         self.assertEqual(code, 0, out[-300:])
         self.assertIn('No guide block found', out)
 
@@ -156,21 +156,21 @@ class TestAnnotateTermsReports(Base):
         self.write('data/manuscript/ch1-test.md',
                    '# 第1章 测试章节\n\n> **本章导读**: 导读。\n\n'
                    '**Write Amplification** 与 **MVStore** 混排。\n')
-        code, out = self.run_script('_annotate_terms.py', '--report-missing')
+        code, out = self.run_script('terms.py', '--report-missing')
         self.assertEqual(code, 0, out[-300:])
         self.assertIn('MISSING', out)
 
     def test_check_mode_fails_on_missing_terms(self):
         self.write('data/manuscript/ch1-test.md',
                    '# 第1章 测试章节\n\n**未收录术语甲** 与 **未收录术语乙**。\n')
-        code, out = self.run_script('_annotate_terms.py', '--check')
+        code, out = self.run_script('terms.py', '--check')
         self.assertIn(code, (0, 1), out[-300:])
 
     def test_check_related_reports_dangling(self):
         self.write('data/manuscript/back/glossary.md',
                    '# 术语表\n\n## A\n\n- **ACID**: 事务特性。\n  **章节**：第1章 §1.1\n'
                    '  **相关**：[[不存在的术语]]\n')
-        code, out = self.run_script('_annotate_terms.py', '--check-related')
+        code, out = self.run_script('terms.py', '--check-related')
         self.assertEqual(code, 1, out[-300:])
         self.assertIn('DANGLING', out)
 
@@ -186,8 +186,8 @@ class TestHtmlCoverBranches(Base):
 
     def test_cover_info_table_rendered(self):
         self.write('data/manuscript/cover.md', self.RICH_COVER)
-        self.run_script('rebuild_merged.py')
-        code, out = self.run_script('generate_html.py')
+        self.run_script('merge.py')
+        code, out = self.run_script('to_html.py')
         self.assertEqual(code, 0, out[-300:])
         html_path = os.path.join(self.root, 'dist', 'test-book.html')
         with open(html_path, encoding='utf-8') as fh:
@@ -195,7 +195,7 @@ class TestHtmlCoverBranches(Base):
         self.assertIn('cover-info', html)
 
     def test_missing_merged_md(self):
-        _code, out = self.run_script('generate_html.py')
+        _code, out = self.run_script('to_html.py')
         self.assertNotIn('Traceback', out)
 
 
@@ -205,30 +205,30 @@ class TestIndexAndStyleBranches(Base):
                    '# 索引\n\n## A\n\n- ACID —— §1.1\n'
                    '  - 原子性 —— §1.1\n  - 隔离性 —— §2.1\n  see also: MVStore\n\n'
                    '## M\n\n- MVStore —— §2.1\n  see also: ACID\n')
-        code, out = self.run_script('_audit_index_xrefs.py')
+        code, out = self.run_script('index_xrefs.py')
         self.assertIn(code, (0, 1), out[-300:])
-        code, out = self.run_script('build_index.py', '--hierarchy-check')
+        code, out = self.run_script('index.py', '--hierarchy-check')
         self.assertIn(code, (0, 1), out[-300:])
 
     def test_style_flags_long_line_and_monotony(self):
         body = '这是短句。' * 30
         self.write('data/manuscript/ch1-test.md',
                    '# 第1章 测试章节\n\n' + body + '\n\n' + '很' * 200 + '\n')
-        code, out = self.run_script('check_style.py')
+        code, out = self.run_script('style.py')
         self.assertIn(code, (0, 1), out[-300:])
 
 
 class TestExerciseEdgeCases(Base):
     def test_chapter_without_exercises(self):
         self.write('data/manuscript/ch1-test.md', '# 第1章 测试章节\n\n仅正文。\n')
-        code, out = self.run_script('_audit_exercises.py')
+        code, out = self.run_script('exercises.py')
         self.assertIn(code, (0, 1), out[-300:])
         self.assertIn('延伸思考', out)
 
     def test_caption_below_minimum(self):
         self.write('data/manuscript/ch1-test.md',
                    '# 第1章 测试章节\n\n**图 1-1: 短**\n')
-        code, out = self.run_script('_audit_captions.py', '--threshold', 'strict')
+        code, out = self.run_script('captions.py', '--threshold', 'strict')
         self.assertEqual(code, 1, out[-300:])
         self.assertIn('TOO_SHORT', out)
 

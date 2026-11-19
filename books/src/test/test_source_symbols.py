@@ -18,7 +18,7 @@ if TOOLS_DIR not in sys.path:
         if _path not in sys.path:
             sys.path.insert(0, _path)
 
-sfc = importlib.import_module('source_freshness_check')
+sfc = importlib.import_module('source_refs')
 
 Claim = namedtuple('Claim', 'doc_file doc_line class_name method')
 

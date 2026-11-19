@@ -44,31 +44,31 @@ class FixtureCase(unittest.TestCase):
 
 class TestBalanceCheckHelpers(FixtureCase):
     def test_count_lines(self):
-        bc = self.module('balance_check')
+        bc = self.module('balance')
         self.assertEqual(bc.count_lines('a\nb\nc\n'), 3)
 
     def test_count_figures(self):
-        bc = self.module('balance_check')
+        bc = self.module('balance')
         text = '**图 1-1: 展示**\n**图 2-3: 对比**\n**图 A-1: 标注**\n'
         self.assertEqual(bc.count_figures(text), 3)
 
     def test_count_source_refs(self):
-        bc = self.module('balance_check')
+        bc = self.module('balance')
         self.assertEqual(bc.count_source_refs('见 MVStore.java:12 与 Page.java:7'), 2)
 
     def test_glossary_chapter_index(self):
-        bc = self.module('balance_check')
+        bc = self.module('balance')
         index = bc.load_glossary_chapter_index()
         self.assertIsInstance(index, dict)
         self.assertTrue(index, 'fixture glossary should contribute chapter hits')
 
     def test_index_chapter_index(self):
-        bc = self.module('balance_check')
+        bc = self.module('balance')
         index = bc.load_index_chapter_index()
         self.assertIsInstance(index, dict)
 
     def test_collect_metrics_and_render(self):
-        bc = self.module('balance_check')
+        bc = self.module('balance')
         metrics = bc.collect_metrics()
         self.assertIn('totals', metrics)
         self.assertGreaterEqual(metrics['totals']['files'], 1)
@@ -76,7 +76,7 @@ class TestBalanceCheckHelpers(FixtureCase):
         self.assertIn('| 文件 |', rendered)
 
     def test_render_diff(self):
-        bc = self.module('balance_check')
+        bc = self.module('balance')
         current = bc.collect_metrics()
         baseline = bc.collect_metrics()
         diff = bc.render_diff(current, baseline)
@@ -85,23 +85,23 @@ class TestBalanceCheckHelpers(FixtureCase):
 
 class TestSmartAuditHelpers(FixtureCase):
     def test_count_diagrams_detects_blocks(self):
-        smart = self.module('_audit_smart')
+        smart = self.module('smart')
         text = '```text\n┌──┐\n│ab│\n└──┘\n```\n'
         self.assertEqual(smart.count_diagrams(text), 1)
 
     def test_count_diagrams_ignores_short_blocks(self):
-        smart = self.module('_audit_smart')
+        smart = self.module('smart')
         self.assertEqual(smart.count_diagrams('```text\nab\n```\n'), 0)
 
     def test_build_exempt_ranges_for_appendix_file(self):
-        smart = self.module('_audit_smart')
+        smart = self.module('smart')
         lines = ['# 附录 A 案例研究', '', '## 附：小节', '正文']
         headings = [(1, '附录 A 案例研究', 1), (2, '附：小节', 3)]
         ranges = smart.build_exempt_ranges(headings, lines)
         self.assertIsInstance(ranges, list)
 
     def test_check_figure_refs_runs(self):
-        smart = self.module('_audit_smart')
+        smart = self.module('smart')
         smart.check_figure_refs()  # prints a report; must not raise
 
 
@@ -114,13 +114,13 @@ class TestFigureClusterHelpers(FixtureCase):
     )
 
     def test_find_clusters_with_bridge(self):
-        clusters = self.module('_audit_figure_clusters')
+        clusters = self.module('figure_clusters')
         path = self.write('data/manuscript/cluster.md', self.FIGURES)
         found = clusters.find_clusters(path, min_figs=3, window=40)
         self.assertEqual(len(found), 1)
 
     def test_find_clusters_without_bridge(self):
-        clusters = self.module('_audit_figure_clusters')
+        clusters = self.module('figure_clusters')
         path = self.write('data/manuscript/cluster2.md',
                           '**图 2-1: 展示 A**\n\n**图 2-2: 展示 B**\n\n**图 2-3: 展示 C**\n')
         found = clusters.find_clusters(path, min_figs=3, window=40)
@@ -128,21 +128,21 @@ class TestFigureClusterHelpers(FixtureCase):
         self.assertFalse(found[0]['bridged'])
 
     def test_no_cluster_below_threshold(self):
-        clusters = self.module('_audit_figure_clusters')
+        clusters = self.module('figure_clusters')
         path = self.write('data/manuscript/single.md', '**图 3-1: 展示 A**\n')
         self.assertEqual(clusters.find_clusters(path, min_figs=3, window=40), [])
 
 
 class TestGlossaryBuilder(FixtureCase):
     def test_parse_glossary_v6(self):
-        builder = self.module('build_glossary')
+        builder = self.module('glossary')
         entries = builder.parse_glossary_v6()
         self.assertIn('ACID', entries)
         self.assertEqual(entries['ACID']['chapters'], [1])
         self.assertTrue(entries['ACID']['section_refs'])
 
     def test_parse_glossary_skips_malformed_lines(self):
-        builder = self.module('build_glossary')
+        builder = self.module('glossary')
         self.write('data/manuscript/back/glossary.md',
                    '# 术语表\n\n## A\n\n- 无加粗术语\n- **Term**: 释义\n  **章节**：第2章 §2.1\n')
         entries = builder.parse_glossary_v6()
@@ -151,7 +151,7 @@ class TestGlossaryBuilder(FixtureCase):
 
 class TestSourceFreshnessHelpers(FixtureCase):
     def test_resolve_and_verify(self):
-        sfc = self.module('source_freshness_check')
+        sfc = self.module('source_refs')
         with tempfile.TemporaryDirectory() as tmp:
             java = os.path.join(tmp, 'MVStore.java')
             with open(java, 'w', encoding='utf-8') as fh:
@@ -164,7 +164,7 @@ class TestSourceFreshnessHelpers(FixtureCase):
             self.assertEqual(checks[0].status, 'OK')
 
     def test_verify_line_numbers_flags_offset(self):
-        sfc = self.module('source_freshness_check')
+        sfc = self.module('source_refs')
         with tempfile.TemporaryDirectory() as tmp:
             java = os.path.join(tmp, 'A.java')
             with open(java, 'w', encoding='utf-8') as fh:
@@ -175,19 +175,19 @@ class TestSourceFreshnessHelpers(FixtureCase):
             self.assertEqual(checks[0].status, 'OFFSET')
 
     def test_missing_class_reported(self):
-        sfc = self.module('source_freshness_check')
+        sfc = self.module('source_refs')
         resolved = sfc.resolve_references(
             [sfc.Reference('ch.md', 1, 'NoSuchClass', 1)], {})
         self.assertEqual(resolved[0].status, 'MISSING')
 
     def test_ambiguous_class_reported(self):
-        sfc = self.module('source_freshness_check')
+        sfc = self.module('source_refs')
         resolved = sfc.resolve_references(
             [sfc.Reference('ch.md', 1, 'Dup', 1)], {'Dup': ['a.java', 'b.java']})
         self.assertEqual(resolved[0].status, 'AMBIGUOUS')
 
     def test_claim_key_is_stable(self):
-        sfc = self.module('source_freshness_check')
+        sfc = self.module('source_refs')
         a = sfc._claim_key('ch1.md', 'MVMap', 'open')
         b = sfc._claim_key('ch1.md', 'MVMap', 'open')
         self.assertEqual(a, b)

@@ -186,7 +186,7 @@ def verify(pdf_path: str, html_path: str, require_toc_links: bool = False) -> Re
     annots = toc_link_annotations(reader)
     if toc_count and not annots and not require_toc_links:
         report.add('TOC_LINKS', True,
-                   'printed TOC not enhanced yet (run add_pdf_toc_links.py)')
+                   'printed TOC not enhanced yet (run pdf_toc_links.py)')
         annots = None
     problems: list[str] = []
     outline_pages = [page for _t, page, _d in outline]

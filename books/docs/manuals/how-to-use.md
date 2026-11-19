@@ -50,37 +50,37 @@ python books/src/python/make.py deliver --skip generate_pdf
 ## 3. 单独调用某个门禁（调试用）
 
 ```bash
-python books/src/python/audit/_audit_links.py          # 链接与锚点解析
-python books/src/python/_audit_ascii.py          # ASCII 图宽度/对齐（已知项走基线）
-python books/src/python/_audit_captions.py       # 图注动宾结构（--threshold strict|normal|loose）
-python books/src/python/_audit_figures.py        # 图号与引用一致性（--strict 才失败）
-python books/src/python/_audit_crossrefs.py      # 章节互引准确性
-python books/src/python/_audit_exercises.py      # 延伸思考题量与结构
-python books/src/python/_audit_figure_clusters.py# 图簇桥接叙事
-python books/src/python/_audit_index_xrefs.py    # 索引 see-also 可解析
-python books/src/python/_audit_smart.py          # 图表覆盖与 fig-refs（--fig-refs）
-python books/src/python/balance_check.py         # 章节均衡度量（--json / --baseline / --diff）
-python books/src/python/check_style.py           # 写作风格审计（advisory）
-python books/src/python/readability_check.py     # 可读性：长句、宽图、框线闭合
-python books/src/python/source_freshness_check.py# 源码引用与 Class.method 断言
-python books/src/python/final_check.py           # 汇总门禁（--gate-level p0|p1|p2）
+python books/src/python/audit/links.py          # 链接与锚点解析
+python books/src/python/diagrams.py          # ASCII 图宽度/对齐（已知项走基线）
+python books/src/python/captions.py       # 图注动宾结构（--threshold strict|normal|loose）
+python books/src/python/figures.py        # 图号与引用一致性（--strict 才失败）
+python books/src/python/crossrefs.py      # 章节互引准确性
+python books/src/python/exercises.py      # 延伸思考题量与结构
+python books/src/python/figure_clusters.py# 图簇桥接叙事
+python books/src/python/index_xrefs.py    # 索引 see-also 可解析
+python books/src/python/smart.py          # 图表覆盖与 fig-refs（--fig-refs）
+python books/src/python/balance.py         # 章节均衡度量（--json / --baseline / --diff）
+python books/src/python/style.py           # 写作风格审计（advisory）
+python books/src/python/readability.py     # 可读性：长句、宽图、框线闭合
+python books/src/python/source_refs.py# 源码引用与 Class.method 断言
+python books/src/python/structure.py           # 汇总门禁（--gate-level p0|p1|p2）
 ```
 
 维护型脚本（按需运行，会改写内容）：
 
 ```bash
-python books/src/python/build_glossary.py        # 生成本术语表草稿（--check / --validate / --coverage）
-python books/src/python/build_index.py           # 生成索引草稿（--hierarchy-check）
-python books/src/python/_annotate_terms.py       # 给各章补术语参考行（--check / --report-missing / --check-related）
-python books/src/python/cover_stats.py           # 刷新 cover.md 的统计数字
+python books/src/python/glossary.py        # 生成本术语表草稿（--check / --validate / --coverage）
+python books/src/python/index.py           # 生成索引草稿（--hierarchy-check）
+python books/src/python/terms.py       # 给各章补术语参考行（--check / --report-missing / --check-related）
+python books/src/python/cover.py           # 刷新 cover.md 的统计数字
 ```
 
 基线类脚本（把当前已知问题记账，避免每次升级都被卡）：
 
 ```bash
-python books/src/python/_audit_ascii.py --update-baseline
-python books/src/python/source_freshness_check.py --suggest          # 看改名建议
-python books/src/python/source_freshness_check.py --update-baseline  # 复核后记账
+python books/src/python/diagrams.py --update-baseline
+python books/src/python/source_refs.py --suggest          # 看改名建议
+python books/src/python/source_refs.py --update-baseline  # 复核后记账
 ```
 
 ## 4. PDF 与 EPUB（按需交付）
@@ -92,11 +92,11 @@ python books/src/python/make.py deliver
 拆开执行：
 
 ```bash
-python books/src/python/generate_pdf.py        # HTML → PDF（chromium）
+python books/src/python/to_pdf.py        # HTML → PDF（chromium）
 python books/src/python/verify_pdf.py          # 交付校验（--require-toc-links 走交付口径）
-python books/src/python/add_pdf_toc_links.py   # 给印刷 TOC 加可点击链接
-python books/src/python/pdf_print_grade.py     # 印刷级 PDF（不覆盖标准 PDF）
-python books/src/python/generate_epub.py       # EPUB（需要 pandoc）
+python books/src/python/pdf_toc_links.py   # 给印刷 TOC 加可点击链接
+python books/src/python/print_pdf.py     # 印刷级 PDF（不覆盖标准 PDF）
+python books/src/python/to_epub.py       # EPUB（需要 pandoc）
 python books/src/python/verify_epub.py         # EPUB 结构校验
 ```
 
@@ -114,7 +114,7 @@ python books/src/python/verify_epub.py         # EPUB 结构校验
 | Python 3.11+ | 全部脚本（需要标准库 `tomllib`） | 无法运行 |
 | `pypdf` | PDF 校验、TOC 链接 | PDF 校验跳过 |
 | `playwright` + chromium | PDF 渲染 | 只能校验已有 PDF |
-| `pandoc` | EPUB 生成 | `generate_epub.py` 直接报错退出 |
+| `pandoc` | EPUB 生成 | `to_epub.py` 直接报错退出 |
 | `coverage` | `make.py cover` | 返回 2 并提示安装 |
 
 `make.py doctor` 会逐项报告可用性。

@@ -30,7 +30,7 @@ PDF 生成较慢；日常编辑只要求 `make.py check` + `make.py build` 通�
 
 ### 2.1 门禁分级（v6.0 / Phase H 起）
 
-`final_check.py` 的检查项按"阻塞级别"分为 P0 / P1 / P2 三档：
+`structure.py` 的检查项按"阻塞级别"分为 P0 / P1 / P2 三档：
 
 | 级别 | 含义 | 阻塞级别 |
 | --- | --- | --- |
@@ -38,58 +38,59 @@ PDF 生成较慢；日常编辑只要求 `make.py check` + `make.py build` 通�
 | **P1** | 内容质量 + 工具可用性 | 正式发布 |
 | **P2** | v6.0 起的"叙事质量"门禁，处于试运营评估期 | 可选；当前已全部通过 |
 
-`final_check.py` 命令行控制：
+`structure.py` 命令行控制：
 
 ```bash
-python books/src/python/final_check.py                  # 默认 p2 = 全量
-python books/src/python/final_check.py --gate-level p1  # p0 + p1
-python books/src/python/final_check.py --gate-level p0  # 仅 p0
+python books/src/python/structure.py                  # 默认 p2 = 全量
+python books/src/python/structure.py --gate-level p1  # p0 + p1
+python books/src/python/structure.py --gate-level p0  # 仅 p0
 ```
 
 ### 2.2 各检查项及其级别
 
 | 类别 | 通过标准 | 验证方式 | 级别 |
 | --- | --- | --- | --- |
-| 章节结构 | 12 章 + 5 附录齐全，H1/H2/H3/H4 层级连续 | `final_check.py`（heading hierarchy） | P0 |
-| 图号 | 每章图号唯一且完整；允许历史补号导致非严格位置顺序 | `final_check.py`（figure numbering） | P0 |
-| 图表覆盖 | 内容型 `###` 小节 ≥ 2 图；模板型小节 ≥ 1 图 | `_audit_smart.py` | P0 |
-| 代码围栏 | 所有围栏成对；HTML `<pre><code>` 平衡 | `final_check.py`（code fence balance / HTML TOC） | P0 |
-| 跨章引用 | 章节互引 ≥ 1；前后件免检 | `final_check.py`（cross-references） | P0 |
-| HTML TOC | TOC 与内容标题 1:1，零断链 | `final_check.py`（HTML TOC） | P0 |
-| 合并文档 | 源文件总行数与合并文档一致 | `final_check.py`（merged doc） | P0 |
-| 编码 | Markdown 和 HTML 均为有效 UTF-8 | `final_check.py`（UTF-8 encoding） | P0 |
-| CSS 渲染钩子 | generate_html.py 含 9 项关键 CSS 标记（h1 装饰、复制按钮、面包屑等） | `final_check.py`（CSS style checks） | P0 |
-| 索引完整性 | 索引 ≥ 120 条；每章 ≥ 5 条；章节引用对应实际内容 | `final_check.py`（index integrity） | P1 |
-| 索引层级 | 主条目 ≥ 150；子条目 ≥ 50；see-also ≥ 30；see-also 全部解析；子条目章节 ∈ 1-12 | `final_check.py`、`build_index.py --hierarchy-check`、`_audit_index_xrefs.py` | P1 |
-| 术语完整性 | 术语 ≥ 60 条；每条有对应章节引用；引用章节号 ∈ 1-12 | `final_check.py`（glossary content） | P1 |
-| 工具脚本可用性 | `build_glossary.py` / `build_index.py` 语法有效 | `final_check.py`（glossary builder checks） | P1 |
-| 图注动宾结构 | 全书图注以批准动词起首；长度 ∈ [8, 30] 字；无模糊后缀；strict 阈值下违规 = 0 | `_audit_captions.py --threshold strict` | P2 |
-| 图簇桥接 | 3+ 张图在 ≤ 40 行内连续出现的"图簇"，前置一句桥接叙事点名所有图 | `_audit_figure_clusters.py --window 40 --needs-bridge`（应输出空清单） | P2 |
-| 延伸思考 | 14 章节槽全部含 `## N.X 延伸思考` 小节；每章 ≥ 3 题；每题含难度/题型 emoji + 提示行 + 含锚点的回顾行；全书 ≥ 50 题 | `final_check.py`、`_audit_exercises.py` | P2 |
-| 写作风格审计 | `check_style.py` 0 WARN | `final_check.py`（style check） | P2 |
-| 版本统计 | cover 统计先更新；管理文档版本一致 | `cover_stats.py`, 人工核对 | P0 |
-| 链接与锚点 | 所有相对链接指向存在的文件；`#anchor` 命中真实标题；代码围栏内不检查 | `_audit_links.py` | P0 |
+| 章节结构 | 12 章 + 5 附录齐全，H1/H2/H3/H4 层级连续 | `structure.py`（heading hierarchy） | P0 |
+| 图号 | 每章图号唯一且完整；允许历史补号导致非严格位置顺序 | `structure.py`（figure numbering） | P0 |
+| 图表覆盖 | 内容型 `###` 小节 ≥ 2 图；模板型小节 ≥ 1 图 | `smart.py` | P0 |
+| 代码围栏 | 所有围栏成对；HTML `<pre><code>` 平衡 | `structure.py`（code fence balance / HTML TOC） | P0 |
+| 跨章引用 | 章节互引 ≥ 1；前后件免检 | `structure.py`（cross-references） | P0 |
+| HTML TOC | TOC 与内容标题 1:1，零断链 | `structure.py`（HTML TOC） | P0 |
+| 合并文档 | 源文件总行数与合并文档一致 | `structure.py`（merged doc） | P0 |
+| 编码 | Markdown 和 HTML 均为有效 UTF-8 | `structure.py`（UTF-8 encoding） | P0 |
+| CSS 渲染钩子 | to_html.py 含 9 项关键 CSS 标记（h1 装饰、复制按钮、面包屑等） | `structure.py`（CSS style checks） | P0 |
+| 索引完整性 | 索引 ≥ 120 条；每章 ≥ 5 条；章节引用对应实际内容 | `structure.py`（index integrity） | P1 |
+| 索引层级 | 主条目 ≥ 150；子条目 ≥ 50；see-also ≥ 30；see-also 全部解析；子条目章节 ∈ 1-12 | `structure.py`、`index.py --hierarchy-check`、`index_xrefs.py` | P1 |
+| 术语完整性 | 术语 ≥ 60 条；每条有对应章节引用；引用章节号 ∈ 1-12 | `structure.py`（glossary content） | P1 |
+| 工具脚本可用性 | `glossary.py` / `index.py` 语法有效 | `structure.py`（glossary builder checks） | P1 |
+| 图注动宾结构 | 全书图注以批准动词起首；长度 ∈ [8, 30] 字；无模糊后缀；strict 阈值下违规 = 0 | `captions.py --threshold strict` | P2 |
+| 图簇桥接 | 3+ 张图在 ≤ 40 行内连续出现的"图簇"，前置一句桥接叙事点名所有图 | `figure_clusters.py --window 40 --needs-bridge`（应输出空清单） | P2 |
+| 延伸思考 | 14 章节槽全部含 `## N.X 延伸思考` 小节；每章 ≥ 3 题；每题含难度/题型 emoji + 提示行 + 含锚点的回顾行；全书 ≥ 50 题 | `structure.py`、`exercises.py` | P2 |
+| 写作风格审计 | `style.py` 0 WARN | `structure.py`（style check） | P2 |
+| 版本统计 | cover 统计先更新；管理文档版本一致 | `cover.py`, 人工核对 | P0 |
+| 链接与锚点 | 所有相对链接指向存在的文件；`#anchor` 命中真实标题；代码围栏内不检查 | `links.py` | P0 |
 | 配置一致性 | `books/data/tmpl/book.toml` 列出的章节全部存在、无重复、产物路径位于 `dist/` | `books/src/test/test_config.py` | P0 |
-| 源码符号 | `Class.method(` 断言在对应 java 文件中存在；已知漂移记入基线，仅"新增漂移"阻塞。上游升级后：`--suggest` 取改名建议 → 复核 → `--update-baseline` | `source_freshness_check.py`、`books/data/baselines/source-symbol-baseline.json` | P1 |
+| 源码符号 | `Class.method(` 断言在对应 java 文件中存在；已知漂移记入基线，仅"新增漂移"阻塞。上游升级后：`--suggest` 取改名建议 → 复核 → `--update-baseline` | `source_refs.py`、`books/data/baselines/source-symbol-baseline.json` | P1 |
 | 构建幂等 | 连续两次 `make.py build` 的 HTML 哈希一致 | `.github/workflows/book.yml` | P0 |
-| 合并 Markdown | 合并结果按 book.toml 章节顺序拼接，front/back matter 齐备 | `render/rebuild_merged.py` | P0 |
-| HTML 渲染 | HTML 含标题锚点、侧边栏 TOC、印刷 TOC；未闭合围栏不吞正文 | `render/generate_html.py` | P0 |
-| PDF 渲染 | HTML → PDF 成功，页面数据可读 | `render/generate_pdf.py` | P0 |
+| 合并 Markdown | 合并结果按 book.toml 章节顺序拼接，front/back matter 齐备 | `render/merge.py` | P0 |
+| HTML 渲染 | HTML 含标题锚点、侧边栏 TOC、印刷 TOC；未闭合围栏不吞正文 | `render/to_html.py` | P0 |
+| PDF 渲染 | HTML → PDF 成功，页面数据可读 | `render/to_pdf.py` | P0 |
 | PDF 交付校验 | outline 与标题一致、层级正确、TOC 链接可用、字体嵌入、体积达标 | `render/verify_pdf.py` | P1 |
 | EPUB 结构校验 | mimetype/container/manifest/spine/nav 全部可解析 | `render/verify_epub.py` | P1 |
-| 可读性 | 长句、宽 ASCII 图、框线闭合、图注质量 | `audit/readability_check.py` | P1 |
-| 写作风格 | 每章 WARN 计数为 0 | `audit/check_style.py` | P2 |
-| 源码引用 | `Class.java:行号` 可解析、行号在文件长度内、方法存在 | `audit/source_freshness_check.py` | P1 |
-| ASCII 图质量 | 图宽 ≤ `ascii_max_cols`（CJK 记 2 列）；无行尾空格/制表符；单图不混用框线与 ASCII 边框；已知项走基线 | `_audit_ascii.py`、`books/data/baselines/ascii-baseline.json` | P1 |
+| 可读性 | 长句、宽 ASCII 图、框线闭合、图注质量 | `audit/readability.py` | P1 |
+| 写作风格 | 每章 WARN 计数为 0 | `audit/style.py` | P2 |
+| 源码引用 | `Class.java:行号` 可解析、行号在文件长度内、方法存在 | `audit/source_refs.py` | P1 |
+| ASCII 图质量 | 图宽 ≤ `ascii_max_cols`（CJK 记 2 列）；无行尾空格/制表符；单图不混用框线与 ASCII 边框；已知项走基线 | `diagrams.py`、`books/data/baselines/ascii-baseline.json` | P1 |
 | EPUB 结构 | mimetype 首条且未压缩、container/OPF 可解析、manifest 与 spine 全部可解析、nav 链接全部命中、体积 ≤ `epub_max_mb` | `verify_epub.py` | P1 |
 | PDF 交付 | outline 与 HTML 标题逐一对应、outline 层级跟随标题层级、印刷 TOC 链接按序且在页内、字体全部嵌入、体积 ≤ `pdf_max_mb` | `verify_pdf.py --require-toc-links` | P1 |
-| 文件长度 | 源码 ≤900 行、测试 ≤1200 行、文档 ≤1200 行（手稿附录 ≤2000） | `audit/check_file_length.py` | P0 |
-| 脚本契约 | 每个入口脚本有模块说明、可执行入口、必要时说明退出码 | `audit/check_script_contract.py` | P0 |
-| 文档一致性 | 文档中引用的路径、脚本、章节名、版本号与仓库实际一致 | `audit/check_doc_drift.py` | P0 |
-| 历史痕迹 | 文档与代码注释只描述当前状态，不含过程性记录 | `audit/check_doc_traces.py`、`audit/check_code_traces.py` | P0 |
+| 架构约束 | 分层依赖方向、门禁只读、不硬编码路径、命名不遮蔽标准库 | `audit/check_architecture.py` | P0 |
+| 文件长度 | 源码 ≤900 行、测试 ≤1200 行、文档 ≤1200 行（手稿附录 ≤2000） | `audit/file_length.py` | P0 |
+| 脚本契约 | 每个入口脚本有模块说明、可执行入口、必要时说明退出码 | `audit/script_contract.py` | P0 |
+| 文档一致性 | 文档中引用的路径、脚本、章节名、版本号与仓库实际一致 | `audit/doc_drift.py` | P0 |
+| 历史痕迹 | 文档与代码注释只描述当前状态，不含过程性记录 | `audit/doc_traces.py`、`audit/code_traces.py` | P0 |
 | 工具链测试 | 单元 + 集成测试全绿（109 例）：`make.py test` | `books/src/test/` | P0 |
 
-`final_check.py` 默认（`--gate-level p2`）必须达到全部检查通过。
+`structure.py` 默认（`--gate-level p2`）必须达到全部检查通过。
 
 ## 3. 格式规范
 
@@ -117,8 +118,8 @@ python books/src/python/final_check.py --gate-level p0  # 仅 p0
 验证命令为：
 
 ```bash
-python books/src/python/generate_pdf.py
-python books/src/python/add_pdf_toc_links.py
+python books/src/python/to_pdf.py
+python books/src/python/pdf_toc_links.py
 python books/src/python/verify_pdf.py
 ```
 
@@ -136,7 +137,7 @@ python books/src/python/verify_pdf.py
 验证命令：
 
 ```bash
-python books/src/python/pdf_print_grade.py
+python books/src/python/print_pdf.py
 ```
 
 视觉验证：在 Chrome / Adobe Reader 中检查 (a) 章首装饰条 (b) TOC 虚线对齐 (c) 页眉/页脚一致出现。
@@ -145,7 +146,7 @@ python books/src/python/pdf_print_grade.py
 
 EPUB 是面向电子阅读器（Apple Books / Kindle / Calibre / Readium 等）的可选交付形态，**只在交付的最后阶段按需输出**，不进入日常流水线。要求：
 
-- EPUB 由 pandoc 从合并后的 `h2-source-code-analysis.md` 生成；运行前先调用 `rebuild_merged.py` 保证源最新
+- EPUB 由 pandoc 从合并后的 `h2-source-code-analysis.md` 生成；运行前先调用 `merge.py` 保证源最新
 - 输出路径：`books/dist/h2-source-code-analysis.epub`（与日常 PDF / 印刷级 PDF 互相独立）
 - 元数据：`<dc:title>` / `<dc:creator>` / `<dc:date>` / `<dc:language>=zh-CN` 由 cover.md 自动提取（标题 / 副标题 / 版本 / 作者 / 出版日期）
 - 每个 H1 章节在 EPUB 内部独立分卷（`--split-level=1`），便于阅读器分章导航
@@ -158,12 +159,12 @@ EPUB 是面向电子阅读器（Apple Books / Kindle / Calibre / Readium 等）�
 验证命令：
 
 ```bash
-python books/src/python/generate_epub.py
+python books/src/python/to_epub.py
 ```
 
 视觉验证：在 Apple Books / Calibre / Readium 中至少查看一章正文 + 一个代码块 + 一张 ASCII 图 + 目录导航是否正常。
 
-EPUB 不接入 `final_check.py`（按需交付物均走人工视觉验证起步，与印刷级 PDF 一致）。
+EPUB 不接入 `structure.py`（按需交付物均走人工视觉验证起步，与印刷级 PDF 一致）。
 
 ## 5. 拒绝标准
 
@@ -190,15 +191,15 @@ EPUB 不接入 `final_check.py`（按需交付物均走人工视觉验证起步�
 | 版本 | 检查项 | 起始级别 | 当前级别 | 备注 |
 | --- | --- | --- | --- | --- |
 | v3.x | 章节结构 / 图号 / 代码围栏 / 跨章引用 / UTF-8 / HTML TOC / 合并文档 | P0 | P0 | v6.0 之前即"必过" |
-| v4.27 | 图表覆盖（`_audit_smart.py`） | P0 | P0 | 由独立工具确保 |
+| v4.27 | 图表覆盖（`smart.py`） | P0 | P0 | 由独立工具确保 |
 | v5.0 | 索引完整性 / 术语完整性 / 工具脚本可用性 / CSS 渲染钩子 | P1 | P1 | 内容质量保障层 |
 | v5.3 (Phase C) | 索引层级（main/sub/see-also） | P2 | P1 | v5.7 实测 see-also 全部解析；P1 升级判定通过 |
 | v5.5 (Phase E) | 图注动宾结构（strict） | P2 | P2 | 已运行多版本，0 违规；保留 P2 至少一个版本周期再评估升级 |
 | v5.5 (Phase E) | 图簇桥接 | P2 | P2 | 33 簇全部含桥接；保留 P2 至少一个版本周期再评估升级 |
 | v5.6 (Phase F) | 延伸思考 | P2 | P2 | 56 题 / 14 章节槽；保留 P2 至少一个版本周期再评估升级 |
-| v5.x | 写作风格审计（`check_style.py`） | P2 | P2 | 永久 advisory；不计划升级 |
-| v5.8 (Phase G) | 印刷级 PDF 视觉验证 | 人工 | 人工 | 当前不接入 `final_check.py`；视觉验证为主，待 verify_pdf 自动化后再评估 |
-| v6.1 | EPUB 视觉验证 | 人工 | 人工 | pandoc 引擎；EPUB 由 cover.md 提取元数据；不接入 `final_check.py` |
+| v5.x | 写作风格审计（`style.py`） | P2 | P2 | 永久 advisory；不计划升级 |
+| v5.8 (Phase G) | 印刷级 PDF 视觉验证 | 人工 | 人工 | 当前不接入 `structure.py`；视觉验证为主，待 verify_pdf 自动化后再评估 |
+| v6.1 | EPUB 视觉验证 | 人工 | 人工 | pandoc 引擎；EPUB 由 cover.md 提取元数据；不接入 `structure.py` |
 
 **升级判定规则**（plan §4.8）：
 

@@ -44,18 +44,18 @@ class FixtureCase(unittest.TestCase):
 
 class TestSmartAuditBranches(FixtureCase):
     def test_runs_on_fixture_with_report(self):
-        code, out = self.run_script('_audit_smart.py')
+        code, out = self.run_script('smart.py')
         self.assertIn(code, (0, 1), out[-300:])
         self.assertNotIn('Traceback', out)
 
     def test_diagram_markers_and_short_blocks(self):
-        smart = self.module('_audit_smart')
+        smart = self.module('smart')
         self.assertEqual(smart.count_diagrams(''), 0)
         two_line = '```text\n┌┐\n└┘\n```\n'
         self.assertEqual(smart.count_diagrams(two_line), 0)
 
     def test_exempt_ranges_non_appendix(self):
-        smart = self.module('_audit_smart')
+        smart = self.module('smart')
         lines = ['# 第1章 测试', '', '## 1.1 小节', '正文']
         headings = [(1, '第1章 测试', 1), (2, '1.1 小节', 3)]
         self.assertEqual(smart.build_exempt_ranges(headings, lines), [])
@@ -82,12 +82,12 @@ class TestSmartAuditDeepCoverage(FixtureCase):
 
     def test_report_with_children(self):
         self.write('data/manuscript/ch1-test.md', self.RICH)
-        code, out = self.run_script('_audit_smart.py')
+        code, out = self.run_script('smart.py')
         self.assertIn(code, (0, 1), out[-400:])
         self.assertNotIn('Traceback', out)
 
     def test_fig_refs_mode(self):
-        code, out = self.run_script('_audit_smart.py', '--fig-refs')
+        code, out = self.run_script('smart.py', '--fig-refs')
         self.assertEqual(code, 0, out[-300:])
 
 
@@ -109,7 +109,7 @@ class TestSmartAuditGaps(FixtureCase):
 
     def test_gap_section_reported(self):
         self.write('data/manuscript/ch1-test.md', self.GAP)
-        code, out = self.run_script('_audit_smart.py')
+        code, out = self.run_script('smart.py')
         self.assertIn(code, (0, 1), out[-400:])
         self.assertIn('TOTAL', out)
 
@@ -121,7 +121,7 @@ class TestReadabilityDeep(FixtureCase):
                    '```text\n┌────────┐\n│ 缺少下边框 │\n```\n\n'
                    '**图 1-1: 架构**\n\n'
                    '**图 1-2: 展示组件 A 与组件 B 的完整调用链路与失败回退**\n')
-        code, out = self.run_script('readability_check.py', '--figures')
+        code, out = self.run_script('readability.py', '--figures')
         self.assertIn(code, (0, 1), out[-400:])
         self.assertNotIn('Traceback', out)
 
@@ -129,28 +129,28 @@ class TestReadabilityDeep(FixtureCase):
         self.write('data/manuscript/ch1-test.md',
                    '# 第1章 测试章节\n\n' +
                    '```text\n' + ('x' * 140 + '\n') * 4 + '```\n')
-        code, out = self.run_script('readability_check.py')
+        code, out = self.run_script('readability.py')
         self.assertIn(code, (0, 1), out[-400:])
         self.assertIn('READABILITY', out)
 
 
 class TestGlossaryValidateMode(FixtureCase):
     def test_validate_resolves_chapters(self):
-        code, out = self.run_script('build_glossary.py', '--validate')
+        code, out = self.run_script('glossary.py', '--validate')
         self.assertIn(code, (0, 1), out[-300:])
         self.assertIn('Entries', out)
 
     def test_validate_flags_invalid_chapter(self):
         self.write('data/manuscript/back/glossary.md',
                    '# 术语表\n\n## A\n\n- **ACID**: 事务特性。\n  **章节**：第99章 §99.1\n')
-        code, out = self.run_script('build_glossary.py', '--validate')
+        code, out = self.run_script('glossary.py', '--validate')
         self.assertEqual(code, 1)
         self.assertIn('INVALID', out)
 
 
 class TestGlossaryCoverageMode(FixtureCase):
     def test_coverage_mode_runs(self):
-        code, out = self.run_script('build_glossary.py', '--coverage')
+        code, out = self.run_script('glossary.py', '--coverage')
         self.assertIn(code, (0, 1), out[-300:])
         self.assertNotIn('Traceback', out)
 
@@ -159,7 +159,7 @@ class TestGlossaryCoverageMode(FixtureCase):
                    '# 术语表\n\n## A\n\n- **ACID**: 事务特性。\n'
                    '  **章节**：第1章 §1.1\n  **相关**：[[MVStore]]\n\n'
                    '## M\n\n- **MVStore**: 存储引擎。\n  **章节**：第2章 §2.1\n')
-        code, out = self.run_script('build_glossary.py', '--check')
+        code, out = self.run_script('glossary.py', '--check')
         self.assertIn(code, (0, 1), out[-300:])
 
 
@@ -182,7 +182,7 @@ class TestSmartAuditDeep(FixtureCase):
 
     def test_full_report_path(self):
         self.write('data/manuscript/ch1-test.md', self.RICH)
-        code, out = self.run_script('_audit_smart.py')
+        code, out = self.run_script('smart.py')
         self.assertIn(code, (0, 1), out[-400:])
         self.assertNotIn('Traceback', out)
 
@@ -190,33 +190,33 @@ class TestSmartAuditDeep(FixtureCase):
 class TestGlossaryBuilderBranches(FixtureCase):
     def test_missing_glossary_exits_cleanly(self):
         os.unlink(os.path.join(self.root, 'data', 'manuscript', 'back', 'glossary.md'))
-        code, out = self.run_script('build_glossary.py')
+        code, out = self.run_script('glossary.py')
         self.assertIn(code, (0, 1), out[-300:])
         self.assertNotIn('Traceback', out)
 
     def test_check_mode_on_missing_terms(self):
         self.write('data/manuscript/back/glossary.md',
                    '# 术语表\n\n## A\n\n- **ACID**: 事务特性。\n  **章节**：第1章 §1.1\n')
-        code, out = self.run_script('build_glossary.py', '--check')
+        code, out = self.run_script('glossary.py', '--check')
         self.assertIn(code, (0, 1), out[-300:])
 
 
 class TestIndexBuilderBranches(FixtureCase):
     def test_hierarchy_check_on_small_index(self):
-        code, out = self.run_script('build_index.py', '--hierarchy-check')
+        code, out = self.run_script('index.py', '--hierarchy-check')
         self.assertIn(code, (0, 1), out[-300:])
         self.assertNotIn('Traceback', out)
 
     def test_missing_index_file(self):
         os.unlink(os.path.join(self.root, 'data', 'manuscript', 'back', 'index.md'))
-        code, out = self.run_script('build_index.py')
+        code, out = self.run_script('index.py')
         self.assertIn(code, (0, 1), out[-300:])
         self.assertNotIn('Traceback', out)
 
 
 class TestReadabilityBranches(FixtureCase):
     def test_runs_on_fixture(self):
-        code, out = self.run_script('readability_check.py')
+        code, out = self.run_script('readability.py')
         self.assertIn(code, (0, 1), out[-300:])
         self.assertNotIn('Traceback', out)
 
@@ -225,54 +225,54 @@ class TestReadabilityBranches(FixtureCase):
         diagram = '```text\n' + 'x' * 130 + '\n' + 'y' * 130 + '\n' + 'z' * 130 + '\n```\n'
         self.write('data/manuscript/ch1-test.md',
                    '# 第1章 测试章节\n\n' + body + '\n' + diagram)
-        code, out = self.run_script('readability_check.py')
+        code, out = self.run_script('readability.py')
         self.assertIn(code, (0, 1), out[-300:])
 
 
 class TestAnnotateTermsBranches(FixtureCase):
     def test_annotates_then_is_idempotent(self):
-        code, out = self.run_script('_annotate_terms.py')
+        code, out = self.run_script('terms.py')
         self.assertEqual(code, 0, out[-300:])
-        code2, out2 = self.run_script('_annotate_terms.py')
+        code2, out2 = self.run_script('terms.py')
         self.assertEqual(code2, 0, out2[-300:])
         self.assertIn('Already annotated', out2)
 
     def test_missing_glossary_exits_cleanly(self):
         os.unlink(os.path.join(self.root, 'data', 'manuscript', 'back', 'glossary.md'))
-        code, out = self.run_script('_annotate_terms.py', '--check-related')
+        code, out = self.run_script('terms.py', '--check-related')
         self.assertIn(code, (0, 1), out[-200:])
         self.assertNotIn('Traceback', out)
 
 
 class TestIndexXrefBranches(FixtureCase):
     def test_runs_and_reports(self):
-        code, out = self.run_script('_audit_index_xrefs.py')
+        code, out = self.run_script('index_xrefs.py')
         self.assertIn(code, (0, 1), out[-300:])
         self.assertNotIn('Traceback', out)
 
     def test_broken_see_also_detected(self):
         self.write('data/manuscript/back/index.md',
                    '# 索引\n\n## A\n\n- ACID —— §1.1\n  see also: 不存在的词\n')
-        code, out = self.run_script('_audit_index_xrefs.py')
+        code, out = self.run_script('index_xrefs.py')
         self.assertIn(code, (0, 1), out[-300:])
 
 
 class TestCaptionAndExerciseBranches(FixtureCase):
     def test_captions_normal_threshold(self):
-        code, out = self.run_script('_audit_captions.py', '--threshold', 'loose')
+        code, out = self.run_script('captions.py', '--threshold', 'loose')
         self.assertIn(code, (0, 1), out[-300:])
 
     def test_captions_json_output(self):
-        _code, out = self.run_script('_audit_captions.py', '--json')
+        _code, out = self.run_script('captions.py', '--json')
         self.assertIn('\"violations\"', out)
 
     def test_exercises_json_output(self):
-        code, out = self.run_script('_audit_exercises.py', '--json')
+        code, out = self.run_script('exercises.py', '--json')
         self.assertIn(code, (0, 1), out[-200:])
         self.assertIn('{', out)
 
     def test_figure_clusters_json(self):
-        code, out = self.run_script('_audit_figure_clusters.py', '--json')
+        code, out = self.run_script('figure_clusters.py', '--json')
         self.assertIn(code, (0, 1), out[-200:])
         self.assertIn('{', out)
 
@@ -281,20 +281,20 @@ class TestStyleAndHtmlBranches(FixtureCase):
     def test_style_on_broken_tables(self):
         self.write('data/manuscript/ch1-test.md',
                    '# 第1章 测试章节\n\n| a | b |\n|---|---|\n| 1 |\n')
-        code, out = self.run_script('check_style.py')
+        code, out = self.run_script('style.py')
         self.assertIn(code, (0, 1), out[-300:])
 
     def test_html_handles_unclosed_fence(self):
         self.write('data/manuscript/ch2-test.md',
                    '# 第2章 测试章节\n\n```text\n未闭合\n')
-        self.run_script('rebuild_merged.py')
-        code, out = self.run_script('generate_html.py')
+        self.run_script('merge.py')
+        code, out = self.run_script('to_html.py')
         self.assertEqual(code, 0, out[-300:])
 
 
 class TestSourceFreshnessReport(FixtureCase):
     def test_print_report_branches(self):
-        sfc = self.module('source_freshness_check')
+        sfc = self.module('source_refs')
         ref_ok = sfc.Reference('ch.md', 1, 'A', 2)
         ref_missing = sfc.Reference('ch.md', 2, 'B', 5)
         results = [
@@ -310,31 +310,31 @@ class TestSourceFreshnessBranches(FixtureCase):
     def test_missing_reference_and_baseline_flow(self):
         self.write('data/manuscript/ch1-test.md',
                    '# 第1章 测试章节\n\n见 NoSuchClass.java:12 与 Page.java:3\n')
-        code, out = self.run_script('source_freshness_check.py')
+        code, out = self.run_script('source_refs.py')
         self.assertIn(code, (0, 1), out[-300:])
         self.assertNotIn('Traceback', out)
 
     def test_update_baseline_then_clean(self):
         self.write('data/manuscript/ch1-test.md',
                    '# 第1章 测试章节\n\n见 MVStore.rollbackTo() 用法\n')
-        code, _ = self.run_script('source_freshness_check.py', '--update-baseline')
+        code, _ = self.run_script('source_refs.py', '--update-baseline')
         self.assertEqual(code, 0)
-        code, out = self.run_script('source_freshness_check.py', '--suggest')
+        code, out = self.run_script('source_refs.py', '--suggest')
         self.assertIn(code, (0, 1), out[-300:])
 
 
 class TestAnalysisBranches(FixtureCase):
     def test_balance_check_json_and_baseline(self):
-        code, out = self.run_script('balance_check.py', '--json')
+        code, out = self.run_script('balance.py', '--json')
         self.assertIn(code, (0, 1), out[-200:])
         baseline = os.path.join(self.root, 'dist', 'baseline.json')
-        code, _ = self.run_script('balance_check.py', '--baseline', baseline)
+        code, _ = self.run_script('balance.py', '--baseline', baseline)
         self.assertEqual(code, 0)
-        code, out = self.run_script('balance_check.py', '--diff', baseline)
+        code, out = self.run_script('balance.py', '--diff', baseline)
         self.assertEqual(code, 0, out[-200:])
 
     def test_balance_check_missing_baseline(self):
-        code, out = self.run_script('balance_check.py', '--diff',
+        code, out = self.run_script('balance.py', '--diff',
                                     os.path.join(self.root, 'nope.json'))
         self.assertEqual(code, 1)
         self.assertIn('基线文件不存在', out)

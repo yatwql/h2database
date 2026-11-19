@@ -18,7 +18,7 @@ if TOOLS_DIR not in sys.path:
         if _path not in sys.path:
             sys.path.insert(0, _path)
 
-audit_ascii = importlib.import_module('_audit_ascii')
+audit_ascii = importlib.import_module('diagrams')
 verify_epub = importlib.import_module('verify_epub')
 verify_pdf = importlib.import_module('verify_pdf')
 

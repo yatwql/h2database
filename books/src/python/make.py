@@ -38,33 +38,33 @@ Step = tuple[str, str | None, tuple[str, ...], str]
 
 STEPS: list[Step] = [
     # ---- build ----
-    ('cover_stats', 'manuscript/cover_stats.py', (), 'build'),
-    ('rebuild_merged', 'render/rebuild_merged.py', (), 'build'),
-    ('generate_html', 'render/generate_html.py', (), 'build'),
+    ('cover_stats', 'manuscript/cover.py', (), 'build'),
+    ('rebuild_merged', 'render/merge.py', (), 'build'),
+    ('generate_html', 'render/to_html.py', (), 'build'),
     # ---- verify ----
-    ('file_length', 'audit/check_file_length.py', (), 'verify'),
-    ('script_contract', 'audit/check_script_contract.py', (), 'verify'),
-    ('doc_traces', 'audit/check_doc_traces.py', (), 'verify'),
-    ('code_traces', 'audit/check_code_traces.py', (), 'verify'),
-    ('doc_drift', 'audit/check_doc_drift.py', (), 'verify'),
-    ('audit_links', 'audit/_audit_links.py', (), 'verify'),
-    ('audit_ascii', 'audit/_audit_ascii.py', (), 'verify'),
-    ('audit_smart', 'audit/_audit_smart.py', (), 'verify'),
-    ('audit_captions', 'audit/_audit_captions.py', (), 'verify'),
-    ('audit_figures', 'audit/_audit_figures.py', (), 'verify'),
-    ('audit_crossrefs', 'audit/_audit_crossrefs.py', (), 'verify'),
-    ('audit_exercises', 'audit/_audit_exercises.py', (), 'verify'),
-    ('audit_figure_clusters', 'audit/_audit_figure_clusters.py', (), 'verify'),
-    ('audit_index_xrefs', 'audit/_audit_index_xrefs.py', (), 'verify'),
-    ('balance_check', 'audit/balance_check.py', (), 'verify'),
-    ('source_freshness', 'audit/source_freshness_check.py', (), 'verify'),
-    ('readability', 'audit/readability_check.py', (), 'verify'),
-    ('style', 'audit/check_style.py', (), 'verify'),
-    ('final_check', 'audit/final_check.py', (), 'verify'),
+    ('file_length', 'audit/file_length.py', (), 'verify'),
+    ('script_contract', 'audit/script_contract.py', (), 'verify'),
+    ('doc_traces', 'audit/doc_traces.py', (), 'verify'),
+    ('code_traces', 'audit/code_traces.py', (), 'verify'),
+    ('doc_drift', 'audit/doc_drift.py', (), 'verify'),
+    ('audit_links', 'audit/links.py', (), 'verify'),
+    ('audit_ascii', 'audit/diagrams.py', (), 'verify'),
+    ('audit_smart', 'audit/smart.py', (), 'verify'),
+    ('audit_captions', 'audit/captions.py', (), 'verify'),
+    ('audit_figures', 'audit/figures.py', (), 'verify'),
+    ('audit_crossrefs', 'audit/crossrefs.py', (), 'verify'),
+    ('audit_exercises', 'audit/exercises.py', (), 'verify'),
+    ('audit_figure_clusters', 'audit/figure_clusters.py', (), 'verify'),
+    ('audit_index_xrefs', 'audit/index_xrefs.py', (), 'verify'),
+    ('balance_check', 'audit/balance.py', (), 'verify'),
+    ('source_freshness', 'audit/source_refs.py', (), 'verify'),
+    ('readability', 'audit/readability.py', (), 'verify'),
+    ('style', 'audit/style.py', (), 'verify'),
+    ('final_check', 'audit/structure.py', (), 'verify'),
     # ---- deliver ----
-    ('generate_pdf', 'render/generate_pdf.py', (), 'deliver'),
+    ('generate_pdf', 'render/to_pdf.py', (), 'deliver'),
     ('verify_pdf', 'render/verify_pdf.py', ('--require-toc-links',), 'deliver'),
-    ('generate_epub', 'render/generate_epub.py', (), 'deliver'),
+    ('generate_epub', 'render/to_epub.py', (), 'deliver'),
     ('verify_epub', 'render/verify_epub.py', (), 'deliver'),
 ]
 
@@ -78,9 +78,9 @@ GROUPS['test'] = ('unittest',)
 GROUPS['cover'] = ('coverage',)
 
 OPTIONAL_TOOLS = {
-    'pandoc': 'render/generate_epub.py',
-    'playwright': 'render/generate_pdf.py',
-    'pypdf': 'generate_pdf.py, add_pdf_toc_links.py, verify_pdf.py',
+    'pandoc': 'render/to_epub.py',
+    'playwright': 'render/to_pdf.py',
+    'pypdf': 'to_pdf.py, pdf_toc_links.py, verify_pdf.py',
     'defusedxml': 'verify_epub.py (optional XML hardening)',
 }
 

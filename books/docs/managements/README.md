@@ -16,7 +16,7 @@
 
 - **同一事实只有一个权威位置**：验证看 `testplan.md`，结构看 `folder.md`，
   写作看 `style-guide.md`，其余文档只做引用。
-- **不重复统计数字**：以 `cover.md` 自动更新结果与 `final_check.py` 输出为准。
+- **不重复统计数字**：以 `cover.md` 自动更新结果与 `structure.py` 输出为准。
 - **版本号对齐**：管理文档版本与 `books/data/manuscript/cover.md` 一致。
 - **改动留痕**：正式评审按架构师／文档工程师／程序员（源码引用）／图书编辑
   四视角并行，结论与改动记入 `changelog.md`。

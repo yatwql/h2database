@@ -20,10 +20,10 @@ if TOOLS_DIR not in sys.path:
         if _path not in sys.path:
             sys.path.insert(0, _path)
 
-_annotate_terms = importlib.import_module('_annotate_terms')
-_audit_captions = importlib.import_module('_audit_captions')
-_audit_exercises = importlib.import_module('_audit_exercises')
-_audit_index_xrefs = importlib.import_module('_audit_index_xrefs')
+_annotate_terms = importlib.import_module('terms')
+_audit_captions = importlib.import_module('captions')
+_audit_exercises = importlib.import_module('exercises')
+_audit_index_xrefs = importlib.import_module('index_xrefs')
 
 GLOSSARY_FIXTURE = """# 附录 C：术语表
 

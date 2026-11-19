@@ -29,7 +29,7 @@
 | 工具脚本 | `books/src/python/` | 正式生成、审计和验证工具 |
 | 管理文档 | `books/docs/managements/` | 当前需求、计划、质量门禁、变更记录、写作风格指南 |
 
-当前统计数据以 `books/data/manuscript/cover.md` 自动更新结果和 `books/src/python/audit/final_check.py` 输出为准；本文件不重复维护数字。
+当前统计数据以 `books/data/manuscript/cover.md` 自动更新结果和 `books/src/python/audit/structure.py` 输出为准；本文件不重复维护数字。
 
 ## 3. 内容范围
 

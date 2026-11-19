@@ -24,9 +24,9 @@
 
 | 步骤 | 脚本 | 产出 |
 | --- | --- | --- |
-| 抽取版图 | `ingest/digest_source.py` | 包/文件/行数、`package-info` 职责、核心类型、公开 API → `data/state/source-inventory.json` |
-| 规划章节 | `ingest/plan_outline.py` | 章节 → 包的映射与覆盖矩阵（缺包即报）→ `data/state/outline.json` |
-| 渲染章节 | `ingest/build_manuscript.py` | 每章的模块版图、核心类型、源码坐标、术语对照、小结、练习 |
+| 抽取版图 | `ingest/digest.py` | 包/文件/行数、`package-info` 职责、核心类型、公开 API → `data/state/source-inventory.json` |
+| 规划章节 | `ingest/outline.py` | 章节 → 包的映射与覆盖矩阵（缺包即报）→ `data/state/outline.json` |
+| 渲染章节 | `ingest/chapters.py` | 每章的模块版图、核心类型、源码坐标、术语对照、小结、练习 |
 
 **stage 2（手稿 → 文档）**
 
@@ -52,9 +52,9 @@ python books/src/python/make.py deliver
 源码更新后重生成手稿：
 
 ```bash
-python books/src/python/ingest/digest_source.py
-python books/src/python/ingest/plan_outline.py
-python books/src/python/ingest/build_manuscript.py
+python books/src/python/ingest/digest.py
+python books/src/python/ingest/outline.py
+python books/src/python/ingest/chapters.py
 ```
 
 ## 目录一览
@@ -75,10 +75,10 @@ books/
 
 | 类别 | 门禁 | 脚本 |
 | --- | --- | --- |
-| 结构 | 章节/段落/图号/围栏/TOC/UTF-8 完整性 | `audit/final_check.py` |
-| 事实 | `Class.java:line` 与 `Class.method(` 断言核对源码 | `audit/source_freshness_check.py` |
-| 一致性 | 链接与锚点、索引 see-also、术语覆盖、跨章引用 | `audit/_audit_links.py` 等 |
-| 叙事 | 图注动宾、图簇桥接、长句与重复、ASCII 图宽度 | `audit/_audit_captions.py` 等 |
+| 结构 | 章节/段落/图号/围栏/TOC/UTF-8 完整性 | `audit/structure.py` |
+| 事实 | `Class.java:line` 与 `Class.method(` 断言核对源码 | `audit/source_refs.py` |
+| 一致性 | 链接与锚点、索引 see-also、术语覆盖、跨章引用 | `audit/links.py` 等 |
+| 叙事 | 图注动宾、图簇桥接、长句与重复、ASCII 图宽度 | `audit/captions.py` 等 |
 | 交付 | PDF outline/字体嵌入、EPUB 容器与 nav | `render/verify_pdf.py`、`render/verify_epub.py` |
 
 配置分三类：`data/tmpl/book.toml`（数据组织：章节、标题、编号、包映射）、

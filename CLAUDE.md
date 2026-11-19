@@ -44,5 +44,5 @@ python books/src/python/make.py doctor        # optional deps (pandoc/playwright
 - No historical traces in docs or code comments (review rounds, batches, dated
   plans, completed-work ledgers); version history lives in `changelog.md` only.
   `make.py check` enforces this plus doc drift (paths, scripts, chapters,
-  versions) through `audit/check_doc_traces.py`, `audit/check_code_traces.py`
-  and `audit/check_doc_drift.py`.
+  versions) through `audit/doc_traces.py`, `audit/code_traces.py`
+  and `audit/doc_drift.py`.

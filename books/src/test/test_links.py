@@ -18,7 +18,7 @@ if TOOLS_DIR not in sys.path:
             sys.path.insert(0, _path)
 
 _mdutil = importlib.import_module('lib._mdutil')
-_audit_links = importlib.import_module('_audit_links')
+_audit_links = importlib.import_module('links')
 
 
 class TestSlugify(unittest.TestCase):

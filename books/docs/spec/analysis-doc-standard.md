@@ -75,6 +75,6 @@ N.w 阅读检查清单   N.v 延展阅读（跨章引用）
 ## 9. 与工具链的对应
 
 本规范大部分可机检，对应脚本见 `manuals/how-to-use.md`：
-`digest_source.py`（版图与坐标）、`plan_outline.py`（覆盖矩阵）、
-`build_manuscript.py`（骨架渲染）、`audit/*`（结构、图注、链接、术语）、
+`digest.py`（版图与坐标）、`outline.py`（覆盖矩阵）、
+`chapters.py`（骨架渲染）、`audit/*`（结构、图注、链接、术语）、
 `render/verify_pdf.py`、`render/verify_epub.py`（交付）。
