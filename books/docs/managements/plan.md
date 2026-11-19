@@ -87,3 +87,16 @@ books/
 | HTML TOC 或围栏状态回归 | 运行 `generate_html.py` 和 `final_check.py` |
 | PDF 大纲/目录失效 | 正式交付前运行 PDF 三步验证 |
 | 管理文档重复维护导致冲突 | 保持职责分离，删除重复段落，使用交叉引用 |
+
+## 9. 当前在建项：源码重分析 → 手稿重生成
+
+上游源码更新（H2 2.5.259-SNAPSHOT，843 个 Java 文件 / 231k 行）后，手稿改为
+"事实驱动重生成 + 十轮质量复盘"：
+
+- 阶段一（源码 → 手稿）：`sources/digest_source.py` 产出版图清单，
+  `sources/plan_outline.py` 生成章节大纲与覆盖矩阵，`sources/build_manuscript.py`
+  依据事实渲染章节（包版图、核心类型、源码坐标、练习）。
+- 阶段二（手稿 → 文档）：沿用 `render/` 与 `audit/` 既有门禁。
+- 质量复盘：十轮递进，每轮"度量 → 改进生成器 → 重生成 → 复核门禁"，
+  度量口径与验收标准见 `books/docs/plan/2026-06-16-001-manuscript-regeneration.md`。
+

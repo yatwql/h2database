@@ -176,6 +176,11 @@ def source_tree(key: str) -> str:
     return os.path.normpath(os.path.join(BOOK_ROOT, rel))
 
 
+def chapter_packages() -> dict[str, list[str]]:
+    """Chapter file -> source packages it must digest (stage-1 mapping)."""
+    return dict(_CFG.get('chapters', {}).get('packages', {}))
+
+
 def missing_files() -> list[str]:
     """Configured chapter files that do not exist on disk."""
     names = list(_CFG.get('chapters', {}).get('files', []))
