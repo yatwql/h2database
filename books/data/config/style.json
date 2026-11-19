@@ -173,5 +173,50 @@
       "limit": 2000,
       "warn": 1500
     }
+  },
+  "style_rules": {
+    "terminology": [
+      [
+        "页面",
+        "页"
+      ],
+      [
+        "快照读",
+        "快照读取"
+      ],
+      [
+        "预写日志",
+        "WAL"
+      ],
+      [
+        "写时复制",
+        "COW"
+      ],
+      [
+        "日志结构合并树",
+        "LSM-Tree"
+      ]
+    ],
+    "preferred_terms": {
+      "页面": "page",
+      "页面分裂": "page split"
+    },
+    "banned_link_text": [
+      "点击这里",
+      "这里",
+      "链接",
+      "详情"
+    ],
+    "heading": {
+      "no_trailing_punctuation": true,
+      "forbid_bare": [
+        "概述",
+        "简介",
+        "说明"
+      ]
+    },
+    "cjk_latin_spacing": true,
+    "list_punctuation": "consistent",
+    "max_paragraph_chars": 420
   }
 }

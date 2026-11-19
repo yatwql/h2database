@@ -82,6 +82,7 @@ python books/src/python/structure.py --gate-level p0  # 仅 p0
 | PDF 交付校验 | outline 与标题一致、层级正确、TOC 链接可用、字体嵌入、体积达标 | `render/verify_pdf.py` | P1 |
 | EPUB 结构校验 | mimetype/container/manifest/spine/nav 全部可解析 | `render/verify_epub.py` | P1 |
 | 可读性 | 长句、宽 ASCII 图、框线闭合、图注质量 | `audit/readability.py` | P1 |
+| 术语与排版规则 | 同一概念不混用两种写法；标题无尾标点；链接文字可读；中英之间留空格；列表标点一致；段落 ≤ 上限（已知项走基线） | `style_rules.py` | P1 |
 | 写作风格 | 每章 WARN 计数为 0 | `audit/style.py` | P2 |
 | 源码引用 | `Class.java:行号` 可解析、行号在文件长度内、方法存在 | `audit/source_refs.py` | P1 |
 | ASCII 图质量 | 图宽 ≤ `ascii_max_cols`（CJK 记 2 列）；无行尾空格/制表符；单图不混用框线与 ASCII 边框；已知项走基线 | `diagrams.py`、`books/data/baselines/ascii-baseline.json` | P1 |

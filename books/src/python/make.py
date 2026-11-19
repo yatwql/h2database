@@ -67,6 +67,7 @@ STEPS: list[Step] = [
     ('source_freshness', 'audit/source_refs.py', (), 'verify'),
     ('readability', 'audit/readability.py', (), 'verify'),
     ('style', 'audit/style.py', (), 'verify'),
+    ('style_rules', 'audit/style_rules.py', (), 'verify'),
     ('final_check', 'audit/structure.py', (), 'verify'),
     # ---- deliver ----
     ('generate_pdf', 'render/to_pdf.py', (), 'deliver'),

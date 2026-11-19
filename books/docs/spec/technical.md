@@ -114,7 +114,7 @@ app/        入口层：cli.py / tui.py / web.py + actions.py，只编排，不�
 | `data/tmpl/book.toml` | 这本书**是什么、怎么组织** | 书名/版本/产物名、`[project]` 展示文案、目录、章节清单与顺序、每条 H1 标题、H1 编号、覆盖归属、包→章节映射 | 文档·结构 | 规划期（outline）与全部阶段 | 章节/编号/索引/跨章引用错位，结构门禁直接拦 |
 | `data/tmpl/templates.toml` | 这本书**怎么表述** | 版图/类型/入口/路径四段引言 + 深读要点，含 `{num}{pkgs}{top}{dep}{share}` 占位符 | 文档·表述 | `ingest/chapters.py` 渲染章节时 | 措辞变化，不影响判定；占位符写错会被 `style_schema.py` 拒绝 |
 | `data/language/<code>.json` | 章节与练习的**名词与提示语** | 本章导读/小结/延伸思考/延展阅读的名字、`提示`/`回顾` 前缀、术语行与术语表链接 | 文档·名词 | 门禁匹配与生成器 | 门禁找不到段落，判为缺失 |
-| `data/config/style.json` | **判定规则与阈值** | 图注词表与预设、图示标记、质量/文风阈值、禁用语、必备段落名、篇幅预算、生成数量上限 | 配置·规则 | 全部门禁 | 阈值失效或误报；`style_schema.py` 先校验结构 |
+| `data/config/style.json` | **判定规则与阈值** | 图注词表与预设、图示标记、质量/文风阈值、禁用语、必备段落名、篇幅预算、生成数量上限、`style_rules`（术语一致性/排版） | 配置·规则 | 全部门禁 | 阈值失效或误报；`style_schema.py` 先校验结构 |
 | `data/config/base.json` | **基础设施** | 源码树、语言与后缀、包前缀、状态/基线路径、日志、PDF/EPUB/ASCII/覆盖率预算 | 配置·基础 | 全部门禁与入口 | 找不到源码或产物路径 |
 | `data/config/llm_*.json` | **模型路由与参数** | provider、模型、场景/书籍/章节路由、thinking 强度、密钥环境变量名 | 配置·外部服务 | `lib/_llm.py` 与 `app/` | 调用越界或被 `llm_policy.py` 拦下 |
 

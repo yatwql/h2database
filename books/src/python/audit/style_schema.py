@@ -26,8 +26,8 @@ from lib import _config, _fsutil
 STYLE_PATH = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'style.json')
 TEMPLATES_PATH = os.path.join(_config.BOOK_ROOT, 'data', 'tmpl', 'templates.toml')
 KNOWN_TEMPLATES = {'map_intro', 'types_intro', 'api_intro', 'path_intro', 'deep_dive'}
-KNOWN_TOP = {'_note', '_schema', 'project', 'sections', 'captions', 'diagrams',
-             'quality', 'prose', 'generation', 'limits', 'thresholds'}
+KNOWN_TOP = {'_note', '_schema', 'sections', 'captions', 'diagrams',
+             'quality', 'prose', 'style_rules', 'generation', 'limits', 'thresholds'}
 REQUIRED = {
     'sections': ('per_chapter',),
     'captions': ('leading_verbs', 'vague_trailing', 'presets'),
@@ -105,6 +105,18 @@ def validate(style: dict) -> list[str]:
     composite = prose.get('min_composite')
     if not isinstance(composite, (int, float)) or not 0 < composite <= 100:
         problems.append('[prose].min_composite must be within (0, 100]')
+
+    rules = style.get('style_rules')
+    if not isinstance(rules, dict):
+        problems.append('[style_rules] missing or not an object')
+    else:
+        terminology = rules.get('terminology')
+        if terminology and not all(isinstance(g, list) and len(g) > 1 for g in terminology):
+            problems.append('[style_rules].terminology must be a list of synonym groups')
+        if not isinstance(rules.get('banned_link_text', []), list):
+            problems.append('[style_rules].banned_link_text must be a list')
+        if not isinstance((rules.get('heading') or {}), dict):
+            problems.append('[style_rules].heading must be an object')
 
     templates = _config.templates()
     unknown_templates = set(templates) - KNOWN_TEMPLATES
