@@ -18,7 +18,7 @@
       "api_key_env": "OPENCODE_GO_API_KEY",
       "credentials_ref": "opencode-go",
       "models": [
-        "GLM-5.3-Flash"
+        "deepseek-v4.1-flash"
       ],
       "priority": 10,
       "timeout": 120,

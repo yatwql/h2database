@@ -8,7 +8,7 @@
     },
     "opencode-go": {
       "api_key": "",
-      "model": "GLM-5.3-Flash",
+      "model": "deepseek-v4.1-flash",
       "endpoint": "https://opencode.ai/zen/go/v1/messages"
     }
   }
