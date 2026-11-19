@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Test coverage with the ratchet from base.json [toolchain].coverage_fail_under.
 #
-#   scripts/eval-coverage.sh          # run the suite under coverage, enforce ratchet
+#   scripts/test-eval-coverage.sh          # run the suite under coverage, enforce ratchet
 #
 # Naming: `eval-*` measures. This one exits non-zero when coverage drops below
 # the ratchet, so it is also usable as a gate in a release job.

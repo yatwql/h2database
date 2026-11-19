@@ -1,4 +1,4 @@
-# Order-dependence probe (Windows): two runs, compared.
+# Test-order probe (Windows): two runs, compared.
 param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Rest)
 $BookDir = Split-Path -Parent $PSScriptRoot
 $Python = Join-Path $BookDir '.venv\Scripts\python.exe'

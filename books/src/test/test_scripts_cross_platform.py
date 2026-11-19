@@ -67,7 +67,8 @@ class WrapperParityTest(unittest.TestCase):
                                 f'{name} does not name a python entry point')
 
     def test_wrappers_forward_arguments(self):
-        for name in ('check-fast.sh', 'check-full.sh', 'check-release.sh'):
+        for name in ('check-fast.sh', 'check-full.sh', 'check-release.sh',
+                     'test-eval-order.sh'):
             with self.subTest(script=name):
                 self.assertIn('"$@"', pathlib_text(name))
 

@@ -30,8 +30,8 @@
 | `release.sh` / `.ps1` | 发布流程：`status` / `gate`（P2）/ `publish --title`（P2 + 写发布清单）/ `manifest` |
 | `install-hooks.sh` / `.ps1` | 把 `core.hooksPath` 指到仓库内的 `.githooks/`（pre-commit=P0，pre-push=P1） |
 | `eval-score.sh` / `.ps1` | 六维发布评分（功能/稳定/交互/代码/文档风格/文档质量），`--json` 出机读 |
-| `eval-coverage.sh` / `.ps1` | 覆盖率 + 棘轮（低于 `base.json [toolchain].coverage_fail_under` 失败） |
-| `eval-order.sh` / `.ps1` | 顺序依赖探测：正序/逆序各跑一次并对比（慢档，约 2 倍测试时间） |
+| `test-eval-coverage.sh` / `.ps1` | 测试覆盖率 + 棘轮（低于 `base.json [toolchain].coverage_fail_under` 失败） |
+| `test-eval-order.sh` / `.ps1` | 测试顺序依赖探测：正序/逆序各跑一次并对比（慢档，约 2 倍测试时间） |
 
 全部支持 `PYTHON=/path/to/python` 覆盖解释器。
 
@@ -178,7 +178,7 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `portability.py` | 移植性：`open()` 必须显式 encoding；`LC_ALL=C` + ASCII 输出下入口不得崩 | ● |
 | `test_redundancy.py` | 测试卫生：重复用例体 / 无断言 / 非 TestCase 的 test_* / 同名遮蔽 | ● |
 | `perf_baseline.py` | 交付速度：每步耗时对比历史中位数，超阈值提示；`--strict` 变成失败 | ● |
-| `order_dependence.py` | 顺序依赖：正序/逆序两跑对比（P2 档自动执行，也可用 `eval-order.sh` 单独跑） | ● |
+| `order_dependence.py` | 顺序依赖：正序/逆序两跑对比（P2 档自动执行，也可用 `test-eval-order.sh` 单独跑） | ● |
 | `scorecard.py` | 六维评分汇总（`eval-score.sh` 的实现） | ● |
 
 ## 9. 交付渲染 `src/python/render/`

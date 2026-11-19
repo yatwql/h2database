@@ -32,7 +32,7 @@ books/scripts/check-release.sh   # 发布前：full + 慢档 + 产物
 ```
 
 Windows 用同名 `.ps1`。度量类用 `eval-score.sh`（六维评分）与
-`eval-coverage.sh`（覆盖率棘轮）。分档说明见
+`test-eval-coverage.sh`（覆盖率棘轮）。分档说明见
 [`testplan.md §1.2`](../managements/testplan.md)。
 
 ## 2. 单入口：make.py

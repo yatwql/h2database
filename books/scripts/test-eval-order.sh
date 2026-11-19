@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Order-dependence probe: run the suite twice (normal, reversed) and diff.
 #
-#   scripts/eval-order.sh                 # whole suite (slow: two runs)
-#   scripts/eval-order.sh --only a,b      # a module subset
+#   scripts/test-eval-order.sh                 # whole suite (slow: two runs)
+#   scripts/test-eval-order.sh --only a,b      # a module subset
 #
 # Naming: `eval-*` measures; this exits 1 when a case only passes in one order.
 set -euo pipefail

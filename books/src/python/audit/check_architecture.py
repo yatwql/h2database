@@ -186,7 +186,7 @@ def check_scripts(scripts_dir: str | None = None) -> list[str]:
     """
     directory = scripts_dir or os.path.join(_config.BOOK_ROOT, 'scripts')
     allowed = ('bookctl', 'launch', 'bootstrap', 'check', 'eval', 'new',
-               'release', 'install')
+               'test', 'release', 'install')
     problems: list[str] = []
     if not os.path.isdir(directory):
         return problems
