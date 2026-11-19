@@ -27,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -51,6 +53,8 @@ jobs:
         python-version: ['3.11', '3.13']
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -67,6 +71,8 @@ jobs:
     if: github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -83,6 +89,8 @@ jobs:
     if: github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -95,6 +103,10 @@ jobs:
           sudo apt-get update && sudo apt-get install -y pandoc
       - name: full suite
         run: BOOK_SLOW=1 python books/src/python/make.py test --full --timings
+      - name: coverage with the browser and pandoc paths present
+        # the ratchet only means something when pypdf/playwright/pandoc are
+        # installed, otherwise the render paths are skipped and coverage dips
+        run: python books/src/python/make.py cover
 
   deliver:
     name: Build artifacts (release)
@@ -103,6 +115,8 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
