@@ -17,7 +17,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOOK_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 APP="$BOOK_DIR/src/python/app/cli.py"
-SCAFFOLD="$BOOK_DIR/src/python/app/scaffold.py"
+SCAFFOLD="$BOOK_DIR/src/python/core/scaffold.py"
 MAKE="$BOOK_DIR/src/python/make.py"
 
 if [ -z "${PYTHON:-}" ] && [ -x "$BOOK_DIR/.venv/bin/python" ]; then

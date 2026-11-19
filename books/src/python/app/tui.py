@@ -12,28 +12,14 @@ from __future__ import annotations
 import argparse
 import os
 import sys
-import time
 import unicodedata
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+from core import actions, menu, settings
 from lib import _config
 
-from app import actions, keys, settings
+from app import keys
 
-# group -> [(key, action, label)]
-GROUPS: dict[str, list[tuple[str, str, str]]] = {
-    '内容': [('1', 'analyze', '源码 → 手稿'),
-             ('l', 'analyze-llm', '源码 → 手稿（LLM 润色导读/小结）'),
-             ('2', 'build', '手稿 → Markdown + HTML'),
-             ('3', 'deliver', 'PDF + EPUB（按需）')],
-    '质量': [('4', 'check', '全部质量门禁'),
-             ('5', 'test', '测试套件（快档）')],
-    '配置与状态': [('6', 'status', '书籍 / 配置 / LLM 状态'),
-                   ('7', 'llm-ask', '用配置的 provider 提问'),
-                   ('8', 'settings', '查看与修改配置'),
-                   ('9', 'doctor', '依赖与环境')],
-}
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 USE_COLOR = sys.stdout.isatty() and not os.environ.get('NO_COLOR')
 
@@ -57,6 +43,7 @@ PALETTE = {
     'cursor_bar': '1;38;5;45',   # its leading marker
     'value_ok': '38;5;114',
     'llm_badge': '38;5;179',   # amber: this row spends LLM tokens
+    'llm_key': '1;38;5;214',   # brighter amber: the LLM shortcut itself
 }
 
 
@@ -64,6 +51,11 @@ def _width(text: str) -> int:
     """Display width: CJK and fullwidth characters take two columns."""
     return sum(2 if unicodedata.east_asian_width(ch) in ('W', 'F') else 1
                for ch in text)
+
+
+def _key(text: str, colour: str | None = None) -> str:
+    """Render one shortcut as [key] so the pressable thing stands out."""
+    return _c(f'[{text}]', colour or PALETTE['key'])
 
 
 def _c(text: str, code: str) -> str:
@@ -130,50 +122,27 @@ def header() -> str:
     return '\n'.join(rows)
 
 
-ENTRIES: list[tuple[str, str, str]] = [entry for entries in GROUPS.values()
-                                       for entry in entries]
-
-# Entries whose output depends on the LLM carry a badge, so the plain and the
-# LLM path are never mistaken for each other at a glance.
-LLM_ACTIONS = {'analyze-llm', 'llm-ask'}
-
-# The cursor starts on the everyday action (hand-written manuscript -> built
-# HTML), not on the ingest step, so opening the menu and pressing Enter does the
-# common thing.
-DEFAULT_ENTRY_KEY = '2'
-
-
-def default_cursor() -> int:
-    """Index of the entry the menu starts on (0 when the key is missing)."""
-    for index, entry in enumerate(ENTRIES):
-        if entry[0] == DEFAULT_ENTRY_KEY:
-            return index
-    return 0
-
-
 def menu_text(cursor: int | None = None) -> str:
     """Grouped menu; `cursor` highlights one row (↑/↓ moves it)."""
     lines: list[str] = []
     index = 0
-    for group, entries in GROUPS.items():
+    for group, entries in menu.GROUPS.items():
         lines.append(f" {_c('▍', PALETTE['group'])}{_c(group, PALETTE['group'])}")
         for key, _action, label in entries:
             marker = '❯' if cursor == index else ' '
             label_style = PALETTE['cursor'] if cursor == index else PALETTE['value']
-            badge = (f" {_c('LLM', PALETTE['llm_badge'])}"
-                     if _action in LLM_ACTIONS else '')
+            llm_row = menu.is_llm(_action)
+            badge = f" {_c('LLM', PALETTE['llm_badge'])}" if llm_row else ''
+            key_label = key.upper() if llm_row else key
+            key_colour = PALETTE['llm_key'] if llm_row else None
             lines.append(f" {_c(marker, PALETTE['cursor_bar'])} "
-                         f"{_c(key, PALETTE['key'])}   {_c(label, label_style)}{badge}")
+                         f"{_key(key_label, key_colour)}  "
+                         f"{_c(label, label_style)}{badge}")
             index += 1
         lines.append('')
-    lines.append(f"   {_c('c', PALETTE['key'])} 配置   "
-                 f"{_c('r', PALETTE['key'])} 刷新   "
-                 f"{_c('?', PALETTE['key'])} 帮助")
-    lines.append(f"   {_c('q', PALETTE['key'])} / {_c('0', PALETTE['key'])} 退出"
-                 f"   {_c('Ctrl+C', PALETTE['key'])} 退出")
-    lines.append(f"   {_c('↑/↓', PALETTE['key'])} 选择 · "
-                 f"{_c('Enter', PALETTE['key'])} 执行 · "
-                 f"数字键直达")
+    lines.append(f"   {_key('c')} 配置  {_key('r')} 刷新  {_key('?')} 帮助")
+    lines.append(f"   {_key('q')} / {_key('0')} 退出  {_key('Ctrl+C')} 退出")
+    lines.append(f"   {_key('↑/↓')} 选择 · {_key('Enter')} 执行 · 数字键直达")
     return '\n'.join(lines)
 
 
@@ -205,19 +174,6 @@ def configure(reader=input) -> str:
     return f'已更新 {key} = {stored}'
 
 
-# Actions that rewrite many artifacts and take minutes: ask once before running.
-CONFIRM_ACTIONS = {'deliver'}
-TAIL_LINES = 15
-
-
-def _tail(text: str, limit: int = TAIL_LINES) -> str:
-    """Last ``limit`` lines of an action's output (progress, not a wall of text)."""
-    lines = [line for line in (text or '').splitlines() if line.strip()]
-    if not lines:
-        return ''
-    shown = lines[-limit:]
-    prefix = f'…（前 {len(lines) - len(shown)} 行略）' if len(lines) > len(shown) else ''
-    return ('\n' + prefix + '\n' if prefix else '\n') + '\n'.join(shown)
 
 
 def confirm(question: str, reader=input) -> bool:
@@ -227,22 +183,20 @@ def confirm(question: str, reader=input) -> bool:
 
 
 def run_entry(action: str, label: str) -> str:
-    """Run one action and report what happened: status, tail, timing, exit code."""
+    """Run one action and render the outcome core.menu reports."""
     if action == 'settings':
         return configure()
-    if action in CONFIRM_ACTIONS and not confirm(f'{label} 会重建全部产物，继续？'):
+    if menu.needs_confirmation(action) and not confirm(f'{label} 会重建全部产物，继续？'):
         return _c('已取消', PALETTE['hint'])
-    started = time.perf_counter()
     sys.stdout.write(_c(f'⠿ 正在执行 {label}（{action}）…', PALETTE['hint']) + '\n')
     sys.stdout.flush()
-    code, text = actions.run(action)
-    elapsed = time.perf_counter() - started
-    lines = [line for line in (text or '').splitlines() if line.strip()]
-    verdict = _c('✓ 完成', PALETTE['value_ok']) if code == 0 else _c('✗ 失败', PALETTE['error'])
-    summary = (f'{verdict}  {label}  用时 {elapsed:.1f}s  '
-               f'退出码 {code}  输出 {len(lines)} 行')
-    return (f'{_tail(text)}\n{summary}\n'
-            f'{_c("详情见 books/logs/", PALETTE["hint"])}')
+    outcome = menu.run_report(action, label)
+    verdict = (_c('✓ 完成', PALETTE['value_ok']) if outcome.ok
+               else _c('✗ 失败', PALETTE['error']))
+    summary = (f'{verdict}  {outcome.label}  用时 {outcome.elapsed:.1f}s  '
+               f'退出码 {outcome.code}  输出 {outcome.output_lines} 行')
+    return (f'\n{outcome.tail}\n{summary}\n'
+            f'{_c("详情见 " + menu.log_location() + "/", PALETTE["hint"])}')
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -259,8 +213,8 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.write(text)
         return code
 
-    shortcuts = {key: (action, label) for key, action, label in ENTRIES}
-    cursor = default_cursor()
+    shortcuts = menu.shortcut_map()
+    cursor = menu.default_cursor()
     status = ''
     while True:
         screen = ['\n' + header(), '', menu_text(cursor)]
@@ -279,13 +233,13 @@ def main(argv: list[str] | None = None) -> int:
         if pressed in ('q', '0', keys.KEY_ESC, keys.KEY_CTRL_C):
             return 0
         if pressed == keys.KEY_UP:
-            cursor = (cursor - 1) % len(ENTRIES)
+            cursor = (cursor - 1) % len(menu.ENTRIES)
             continue
         if pressed == keys.KEY_DOWN:
-            cursor = (cursor + 1) % len(ENTRIES)
+            cursor = (cursor + 1) % len(menu.ENTRIES)
             continue
         if pressed == keys.KEY_ENTER:
-            action, label = ENTRIES[cursor][1], ENTRIES[cursor][2]
+            action, label = menu.ENTRIES[cursor][1], menu.ENTRIES[cursor][2]
             status = run_entry(action, label)
             continue
         if pressed in ('?', 'h'):
@@ -299,8 +253,7 @@ def main(argv: list[str] | None = None) -> int:
             status = configure()
             continue
         if pressed in shortcuts:
-            index = next(i for i, entry in enumerate(ENTRIES) if entry[0] == pressed)
-            cursor = index
+            cursor = menu.index_of(pressed)
             action, label = shortcuts[pressed]
             status = run_entry(action, label)
             continue

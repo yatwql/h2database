@@ -37,7 +37,7 @@ books/
       appendix-b-version-changes.md
       back/                  # 后件：glossary.md / references.md / index.md
   src/
-    python/                  # 工具链：lib/ ingest/ manuscript/ audit/ render/ app/ + make.py
+    python/                  # 工具链：lib/ core/ ingest/ manuscript/ audit/ render/ app/ + make.py
     test/                    # unittest 测试套件（单元 + 集成 + 真实书稿回归）
   logs/                      # 运行日志（按天回滚，gitignored）
   dist/                      # 交付产物（生成物，gitignored）

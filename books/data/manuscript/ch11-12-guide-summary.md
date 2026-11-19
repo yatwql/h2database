@@ -1,6 +1,6 @@
 # 第13章 二次开发指南
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、28,213 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、28,213 行实现，构成《二次开发指南》的源码基础。读者可借此快速了解二次开发所涉及的代码范围与整体结构。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -31,12 +31,12 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `JdbcResultSet.absolute()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3173` |
-| `JdbcResultSet.afterLast()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3105` |
-| `JdbcDatabaseMetaData.allProceduresAreCallable()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:305` |
-| `JdbcDatabaseMetaData.allTablesAreSelectable()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:316` |
-| `JdbcConnection.abort()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:1832` |
-| `JdbcConnection.clearWarnings()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:655` |
+| `JdbcResultSet.absolute()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcResultSet.java:3173` |
+| `JdbcResultSet.afterLast()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcResultSet.java:3105` |
+| `JdbcDatabaseMetaData.allProceduresAreCallable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:305` |
+| `JdbcDatabaseMetaData.allTablesAreSelectable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:316` |
+| `JdbcConnection.abort()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcConnection.java:1832` |
+| `JdbcConnection.clearWarnings()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcConnection.java:655` |
 
 ## 13.3.1 公共类型清单
 
@@ -96,26 +96,26 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `JdbcResultSet.absolute()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3173` |
-| `JdbcResultSet.afterLast()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3105` |
-| `JdbcResultSet.beforeFirst()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3086` |
-| `JdbcResultSet.cancelRowUpdates()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3432` |
-| `JdbcResultSet.clearWarnings()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:260` |
-| `JdbcResultSet.close()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:188` |
-| `JdbcDatabaseMetaData.allProceduresAreCallable()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:305` |
-| `JdbcDatabaseMetaData.allTablesAreSelectable()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:316` |
-| `JdbcDatabaseMetaData.autoCommitFailureClosesAllResultSets()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:2598` |
-| `JdbcDatabaseMetaData.dataDefinitionCausesTransactionCommit()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:1814` |
-| `JdbcDatabaseMetaData.dataDefinitionIgnoredInTransactions()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:1825` |
-| `JdbcDatabaseMetaData.deletesAreDetected()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:1950` |
-| `JdbcConnection.abort()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:1832` |
-| `JdbcConnection.clearWarnings()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:655` |
-| `JdbcConnection.close()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:355` |
-| `JdbcConnection.commit()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:480` |
-| `JdbcConnection.createArrayOf()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:1521` |
-| `JdbcConnection.createBlob()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:1468` |
-| `JdbcCallableStatement.executeLargeUpdate()` | `h2/src/main/org/h2/jdbc/JdbcCallableStatement.java:119` |
-| `JdbcCallableStatement.executeUpdate()` | `h2/src/main/org/h2/jdbc/JdbcCallableStatement.java:89` |
+| `JdbcResultSet.absolute()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcResultSet.java:3173` |
+| `JdbcResultSet.afterLast()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcResultSet.java:3105` |
+| `JdbcResultSet.beforeFirst()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcResultSet.java:3086` |
+| `JdbcResultSet.cancelRowUpdates()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcResultSet.java:3432` |
+| `JdbcResultSet.clearWarnings()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcResultSet.java:260` |
+| `JdbcResultSet.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcResultSet.java:188` |
+| `JdbcDatabaseMetaData.allProceduresAreCallable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:305` |
+| `JdbcDatabaseMetaData.allTablesAreSelectable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:316` |
+| `JdbcDatabaseMetaData.autoCommitFailureClosesAllResultSets()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:2598` |
+| `JdbcDatabaseMetaData.dataDefinitionCausesTransactionCommit()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:1814` |
+| `JdbcDatabaseMetaData.dataDefinitionIgnoredInTransactions()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:1825` |
+| `JdbcDatabaseMetaData.deletesAreDetected()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:1950` |
+| `JdbcConnection.abort()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcConnection.java:1832` |
+| `JdbcConnection.clearWarnings()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcConnection.java:655` |
+| `JdbcConnection.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcConnection.java:355` |
+| `JdbcConnection.commit()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcConnection.java:480` |
+| `JdbcConnection.createArrayOf()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcConnection.java:1521` |
+| `JdbcConnection.createBlob()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcConnection.java:1468` |
+| `JdbcCallableStatement.executeLargeUpdate()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcCallableStatement.java:119` |
+| `JdbcCallableStatement.executeUpdate()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcCallableStatement.java:89` |
 
 ## 13.4 阅读路径
 
@@ -177,7 +177,7 @@
 
 ## 13.9 本章小结
 
-- 本章覆盖 1 个包、17,330 行。
+本章覆盖 1 个包、共 17,330 行，主要包为 org.h2.jdbc。
 - 关键入口与源码坐标见 §13.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -261,12 +261,12 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `SimpleResultSet.absolute()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:2229` |
-| `SimpleResultSet.addColumn()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:100` |
-| `Csv.close()` | `h2/src/main/org/h2/tools/Csv.java:639` |
-| `Csv.getBinaryColumns()` | `h2/src/main/org/h2/tools/Csv.java:909` |
-| `Recover.checkPowerOff()` | `h2/src/main/org/h2/tools/Recover.java:857` |
-| `Recover.checkWritingAllowed()` | `h2/src/main/org/h2/tools/Recover.java:865` |
+| `SimpleResultSet.absolute()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/SimpleResultSet.java:2229` |
+| `SimpleResultSet.addColumn()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/SimpleResultSet.java:100` |
+| `Csv.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Csv.java:639` |
+| `Csv.getBinaryColumns()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Csv.java:909` |
+| `Recover.checkPowerOff()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Recover.java:857` |
+| `Recover.checkWritingAllowed()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Recover.java:865` |
 
 ## 14.3.1 公共类型清单
 
@@ -326,26 +326,26 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `SimpleResultSet.absolute()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:2229` |
-| `SimpleResultSet.addColumn()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:100` |
-| `SimpleResultSet.addRow()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:133` |
-| `SimpleResultSet.afterLast()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:2069` |
-| `SimpleResultSet.beforeFirst()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:242` |
-| `SimpleResultSet.cancelRowUpdates()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:2077` |
-| `Csv.close()` | `h2/src/main/org/h2/tools/Csv.java:639` |
-| `Csv.getBinaryColumns()` | `h2/src/main/org/h2/tools/Csv.java:909` |
-| `Csv.getCaseSensitiveColumnNames()` | `h2/src/main/org/h2/tools/Csv.java:687` |
-| `Csv.getEscapeCharacter()` | `h2/src/main/org/h2/tools/Csv.java:782` |
-| `Csv.getFieldDelimiter()` | `h2/src/main/org/h2/tools/Csv.java:743` |
-| `Csv.getFieldSeparatorRead()` | `h2/src/main/org/h2/tools/Csv.java:705` |
-| `Recover.checkPowerOff()` | `h2/src/main/org/h2/tools/Recover.java:857` |
-| `Recover.checkWritingAllowed()` | `h2/src/main/org/h2/tools/Recover.java:865` |
-| `Recover.execute()` | `h2/src/main/org/h2/tools/Recover.java:239` |
-| `Recover.getCompareMode()` | `h2/src/main/org/h2/tools/Recover.java:918` |
-| `Recover.getDatabasePath()` | `h2/src/main/org/h2/tools/Recover.java:841` |
-| `Recover.getLobFileListCache()` | `h2/src/main/org/h2/tools/Recover.java:889` |
-| `Server.createPgServer()` | `h2/src/main/org/h2/tools/Server.java:539` |
-| `Server.createTcpServer()` | `h2/src/main/org/h2/tools/Server.java:511` |
+| `SimpleResultSet.absolute()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/SimpleResultSet.java:2229` |
+| `SimpleResultSet.addColumn()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/SimpleResultSet.java:100` |
+| `SimpleResultSet.addRow()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/SimpleResultSet.java:133` |
+| `SimpleResultSet.afterLast()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/SimpleResultSet.java:2069` |
+| `SimpleResultSet.beforeFirst()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/SimpleResultSet.java:242` |
+| `SimpleResultSet.cancelRowUpdates()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/SimpleResultSet.java:2077` |
+| `Csv.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Csv.java:639` |
+| `Csv.getBinaryColumns()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Csv.java:909` |
+| `Csv.getCaseSensitiveColumnNames()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Csv.java:687` |
+| `Csv.getEscapeCharacter()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Csv.java:782` |
+| `Csv.getFieldDelimiter()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Csv.java:743` |
+| `Csv.getFieldSeparatorRead()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Csv.java:705` |
+| `Recover.checkPowerOff()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Recover.java:857` |
+| `Recover.checkWritingAllowed()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Recover.java:865` |
+| `Recover.execute()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Recover.java:239` |
+| `Recover.getCompareMode()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Recover.java:918` |
+| `Recover.getDatabasePath()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Recover.java:841` |
+| `Recover.getLobFileListCache()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Recover.java:889` |
+| `Server.createPgServer()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Server.java:539` |
+| `Server.createTcpServer()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Server.java:511` |
 
 ## 14.4 阅读路径
 
@@ -406,7 +406,7 @@
 
 ## 14.9 本章小结
 
-- 本章覆盖 1 个包、10,883 行。
+本章共覆盖 1 个包、10,883 行代码，主要内容集中在 org.h2.tools 包中。
 - 关键入口与源码坐标见 §14.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 

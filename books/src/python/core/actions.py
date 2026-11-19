@@ -112,7 +112,7 @@ def doctor() -> tuple[int, str]:
 
 def settings_table() -> tuple[int, str]:
     """List the writable settings with their current values."""
-    from app import settings as settings_module
+    from core import settings as settings_module
     lines = [f"{'key':<14}{'value':<28}说明"]
     for row in settings_module.list_settings():
         lines.append(f"{row['key']:<14}{row['value']:<28}{row['description']}")

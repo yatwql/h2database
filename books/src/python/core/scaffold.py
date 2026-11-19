@@ -12,9 +12,9 @@ division of responsibility:
   data/config/base.json        infrastructure: source tree, logging, budgets
 
 Usage:
-  python app/scaffold.py ../my-book --title "My Book"
-  python app/scaffold.py ../translation --lang en --title "My Book (EN)"
-  python app/scaffold.py ../copy --from-manuscript   # also copy chapters
+  python core/scaffold.py ../my-book --title "My Book"
+  python core/scaffold.py ../translation --lang en --title "My Book (EN)"
+  python core/scaffold.py ../copy --from-manuscript   # also copy chapters
 """
 from __future__ import annotations
 

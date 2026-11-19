@@ -12,14 +12,22 @@ ingest/     源码 → 手稿：只读源码树，只写 data/state 与 data/man
 manuscript/ 手稿维护：只读写 data/manuscript 与 data/state。
 audit/      质量门禁：只读；输出报告到 stdout，不修改仓库。
 render/     交付渲染：只写 dist/，可读 manuscript 与 data/state。
-app/        入口层：cli.py / tui.py / web.py + actions.py，只编排，不含业务逻辑。
+core/       领域层：actions（动作执行）、settings（可改配置）、menu（菜单模型与
+            运行回报）、scaffold（新书脚手架）。业务规则只允许写在这一层。
+app/        渠道层：cli.py / tui.py / web.py / keys.py，只做渲染与按键分发，
+            通过 core.actions 执行，不含任何业务判断。
 ```
 
 **入口层约束**：三个渠道共用 `app/actions.py`；渠道层不得直接实现分析、渲染或
 校验逻辑，只能调用 `actions`（其内部调用 `make.py` 与 stage 1 脚本）。
 
-**依赖方向**：`lib ← ingest/manuscript/audit/render`。同层之间不得互相 import，
-下层不得反向依赖上层。
+**依赖方向**：`lib ← core ← {ingest, manuscript, audit, render} ← app`。
+同层之间不得互相 import；`app` 只能向上调用 `core`（以及 `lib` 取展示配置），
+不得直接 import `ingest/manuscript/audit/render/make`；`core` 不得反向依赖 `app`。
+
+**渠道纯净**（`audit/check_architecture.py` 机检）：`app/` 内不得出现
+`subprocess`、`write_text`、写模式 `open`，也不得持有动作表、确认策略、菜单模型
+这类规则——它们属于 `core/menu.py` 与 `core/actions.py`。
 
 ## 2. 配置与常量
 

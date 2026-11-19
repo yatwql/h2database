@@ -29,7 +29,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lib import _config, _fsutil
 
 PY_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LAYERS = ('ingest', 'manuscript', 'audit', 'render', 'app')
+LAYERS = ('core', 'ingest', 'manuscript', 'audit', 'render', 'app')
+# Channels may only reach the domain through core/ (plus lib for display config).
+CHANNELS = 'app'
+CHANNEL_FORBIDDEN_LAYERS = ('ingest', 'manuscript', 'audit', 'render')
+CHANNEL_FORBIDDEN_CALLS = ('subprocess', 'write_text', "'w'", '"w"')
 STDLIB_CLASH = {'types', 'html', 'json', 'logging', 'email', 'code', 'test', 'binascii'}
 PATH_LITERALS = ('books/', 'data/manuscript', 'data/config', 'data/tmpl')
 WRITE_CALLS = ('write_text', 'open(')
@@ -68,10 +72,31 @@ def check(path: str) -> list[str]:
     # LAYER: no sibling imports, no dependencies on render from below
     for module in imports_of(path):
         head = module.split('.')[0]
-        if head in LAYERS and head != layer:
+        allowed_up = (layer == 'app' and head == 'core')
+        if head in LAYERS and head != layer and not allowed_up:
             problems.append(f'{rel}: imports sibling layer "{module}"')
         if head == 'render' and layer in ('ingest', 'manuscript', 'audit', 'lib'):
             problems.append(f'{rel}: layer "{layer}" must not depend on render')
+
+    # CHANNEL: channels carry no business logic - no engine imports, no writes,
+    # no process spawning. They render, read keys and call core.actions.
+    if layer == CHANNELS:
+        for module in imports_of(path):
+            head = module.split('.')[0]
+            if head in CHANNEL_FORBIDDEN_LAYERS:
+                problems.append(
+                    f'{rel}: channel imports "{module}"; go through core.actions')
+            if head in ('make',):
+                problems.append(f'{rel}: channel must not drive make.py directly')
+        for call in CHANNEL_FORBIDDEN_CALLS:
+            if call in source:
+                problems.append(f'{rel}: channel contains "{call}" (business logic)')
+
+    # DIRECTION: core is a domain layer, it never depends on the channels
+    if layer == 'core':
+        for module in imports_of(path):
+            if module.split('.')[0] == 'app':
+                problems.append(f'{rel}: core must not depend on the channel layer')
 
     # WRITE: gates must not modify the manuscript or artifacts (baselines excepted)
     if layer == 'audit' and 'baseline' not in source:

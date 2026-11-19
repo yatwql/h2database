@@ -330,7 +330,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 ---
 # 第1章 H2 总体架构
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、12,067 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、12,067 行实现，围绕《H2 总体架构》梳理其整体设计。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -361,12 +361,12 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Database.addDatabaseObject()` | `h2/src/main/org/h2/engine/Database.java:948` |
-| `Database.addSchemaObject()` | `h2/src/main/org/h2/engine/Database.java:923` |
-| `SessionLocal.addLocalTempTable()` | `h2/src/main/org/h2/engine/SessionLocal.java:397` |
-| `SessionLocal.addLocalTempTableConstraint()` | `h2/src/main/org/h2/engine/SessionLocal.java:510` |
-| `SessionRemote.addTemporaryLob()` | `h2/src/main/org/h2/engine/SessionRemote.java:819` |
-| `SessionRemote.autoCommitIfCluster()` | `h2/src/main/org/h2/engine/SessionRemote.java:296` |
+| `Database.addDatabaseObject()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Database.java:948` |
+| `Database.addSchemaObject()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Database.java:923` |
+| `SessionLocal.addLocalTempTable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionLocal.java:397` |
+| `SessionLocal.addLocalTempTableConstraint()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionLocal.java:510` |
+| `SessionRemote.addTemporaryLob()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionRemote.java:819` |
+| `SessionRemote.autoCommitIfCluster()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionRemote.java:296` |
 
 ## 1.3.1 公共类型清单
 
@@ -426,26 +426,26 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Database.addDatabaseObject()` | `h2/src/main/org/h2/engine/Database.java:948` |
-| `Database.addSchemaObject()` | `h2/src/main/org/h2/engine/Database.java:923` |
-| `Database.allocateObjectId()` | `h2/src/main/org/h2/engine/Database.java:1369` |
-| `Database.checkPowerOff()` | `h2/src/main/org/h2/engine/Database.java:475` |
-| `Database.checkWritingAllowed()` | `h2/src/main/org/h2/engine/Database.java:1824` |
-| `Database.checkpoint()` | `h2/src/main/org/h2/engine/Database.java:2320` |
-| `SessionLocal.addLocalTempTable()` | `h2/src/main/org/h2/engine/SessionLocal.java:397` |
-| `SessionLocal.addLocalTempTableConstraint()` | `h2/src/main/org/h2/engine/SessionLocal.java:510` |
-| `SessionLocal.addLocalTempTableIndex()` | `h2/src/main/org/h2/engine/SessionLocal.java:454` |
-| `SessionLocal.addProcedure()` | `h2/src/main/org/h2/engine/SessionLocal.java:1424` |
-| `SessionLocal.addSavepoint()` | `h2/src/main/org/h2/engine/SessionLocal.java:1140` |
-| `SessionLocal.addTemporaryLob()` | `h2/src/main/org/h2/engine/SessionLocal.java:1768` |
-| `SessionRemote.addTemporaryLob()` | `h2/src/main/org/h2/engine/SessionRemote.java:819` |
-| `SessionRemote.autoCommitIfCluster()` | `h2/src/main/org/h2/engine/SessionRemote.java:296` |
-| `SessionRemote.cancel()` | `h2/src/main/org/h2/engine/SessionRemote.java:197` |
-| `SessionRemote.cancelStatement()` | `h2/src/main/org/h2/engine/SessionRemote.java:208` |
-| `SessionRemote.checkClosed()` | `h2/src/main/org/h2/engine/SessionRemote.java:558` |
-| `SessionRemote.checkPowerOff()` | `h2/src/main/org/h2/engine/SessionRemote.java:704` |
-| `Mode.getEnum()` | `h2/src/main/org/h2/engine/Mode.java:766` |
-| `Mode.getInstance()` | `h2/src/main/org/h2/engine/Mode.java:754` |
+| `Database.addDatabaseObject()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Database.java:948` |
+| `Database.addSchemaObject()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Database.java:923` |
+| `Database.allocateObjectId()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Database.java:1369` |
+| `Database.checkPowerOff()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Database.java:475` |
+| `Database.checkWritingAllowed()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Database.java:1824` |
+| `Database.checkpoint()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Database.java:2320` |
+| `SessionLocal.addLocalTempTable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionLocal.java:397` |
+| `SessionLocal.addLocalTempTableConstraint()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionLocal.java:510` |
+| `SessionLocal.addLocalTempTableIndex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionLocal.java:454` |
+| `SessionLocal.addProcedure()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionLocal.java:1424` |
+| `SessionLocal.addSavepoint()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionLocal.java:1140` |
+| `SessionLocal.addTemporaryLob()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionLocal.java:1768` |
+| `SessionRemote.addTemporaryLob()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionRemote.java:819` |
+| `SessionRemote.autoCommitIfCluster()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionRemote.java:296` |
+| `SessionRemote.cancel()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionRemote.java:197` |
+| `SessionRemote.cancelStatement()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionRemote.java:208` |
+| `SessionRemote.checkClosed()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionRemote.java:558` |
+| `SessionRemote.checkPowerOff()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionRemote.java:704` |
+| `Mode.getEnum()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Mode.java:766` |
+| `Mode.getInstance()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Mode.java:754` |
 
 ## 1.4 阅读路径
 
@@ -513,7 +513,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 1.9 本章小结
 
-- 本章覆盖 1 个包、11,851 行。
+本章覆盖 1 个包、共 11,851 行，主要包为 org.h2.engine。
 - 关键入口与源码坐标见 §1.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -595,8 +595,8 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Driver.acceptsURL()` | `h2/src/main/org/h2/Driver.java:76` |
-| `Driver.connect()` | `h2/src/main/org/h2/Driver.java:55` |
+| `Driver.acceptsURL()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/Driver.java:76` |
+| `Driver.connect()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/Driver.java:55` |
 
 ## 2.3.1 公共类型清单
 
@@ -622,12 +622,12 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Driver.acceptsURL()` | `h2/src/main/org/h2/Driver.java:76` |
-| `Driver.connect()` | `h2/src/main/org/h2/Driver.java:55` |
-| `Driver.getMajorVersion()` | `h2/src/main/org/h2/Driver.java:95` |
-| `Driver.getMinorVersion()` | `h2/src/main/org/h2/Driver.java:106` |
-| `Driver.getParentLogger()` | `h2/src/main/org/h2/Driver.java:138` |
-| `Driver.getPropertyInfo()` | `h2/src/main/org/h2/Driver.java:119` |
+| `Driver.acceptsURL()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/Driver.java:76` |
+| `Driver.connect()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/Driver.java:55` |
+| `Driver.getMajorVersion()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/Driver.java:95` |
+| `Driver.getMinorVersion()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/Driver.java:106` |
+| `Driver.getParentLogger()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/Driver.java:138` |
+| `Driver.getPropertyInfo()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/Driver.java:119` |
 
 ## 2.4 阅读路径
 
@@ -679,7 +679,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 2.8 本章小结
 
-- 本章覆盖 1 个包、216 行。
+本章覆盖 1 个包、共 216 行，主要包为 org.h2。
 - 关键入口与源码坐标见 §2.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -734,7 +734,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - 详见第1章《H2 总体架构》。
 # 第3章 包结构与模块职责
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、7,387 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、7,387 行实现，围绕《包结构与模块职责》梳理包的组织方式、模块边界与职责分工，帮助读者建立对整体结构的清晰认识。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -775,18 +775,18 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `ErrorCode.getState()` | `h2/src/main/org/h2/api/ErrorCode.java:2317` |
-| `ErrorCode.isCommon()` | `h2/src/main/org/h2/api/ErrorCode.java:2287` |
-| `Interval.equals()` | `h2/src/main/org/h2/api/Interval.java:617` |
-| `Interval.getDays()` | `h2/src/main/org/h2/api/Interval.java:543` |
-| `IntervalQualifier.getTypeName()` | `h2/src/main/org/h2/api/IntervalQualifier.java:253` |
-| `IntervalQualifier.hasDays()` | `h2/src/main/org/h2/api/IntervalQualifier.java:165` |
-| `Schema.add()` | `h2/src/main/org/h2/schema/Schema.java:267` |
-| `Schema.canDrop()` | `h2/src/main/org/h2/schema/Schema.java:92` |
-| `Sequence.close()` | `h2/src/main/org/h2/schema/Sequence.java:553` |
-| `Sequence.flush()` | `h2/src/main/org/h2/schema/Sequence.java:510` |
-| `FunctionAlias.compareTo()` | `h2/src/main/org/h2/schema/FunctionAlias.java:546` |
-| `FunctionAlias.findJavaMethod()` | `h2/src/main/org/h2/schema/FunctionAlias.java:243` |
+| `ErrorCode.getState()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/ErrorCode.java:2317` |
+| `ErrorCode.isCommon()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/ErrorCode.java:2287` |
+| `Interval.equals()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/Interval.java:617` |
+| `Interval.getDays()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/Interval.java:543` |
+| `IntervalQualifier.getTypeName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/IntervalQualifier.java:253` |
+| `IntervalQualifier.hasDays()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/IntervalQualifier.java:165` |
+| `Schema.add()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/schema/Schema.java:267` |
+| `Schema.canDrop()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/schema/Schema.java:92` |
+| `Sequence.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/schema/Sequence.java:553` |
+| `Sequence.flush()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/schema/Sequence.java:510` |
+| `FunctionAlias.compareTo()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/schema/FunctionAlias.java:546` |
+| `FunctionAlias.findJavaMethod()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/schema/FunctionAlias.java:243` |
 
 ## 3.3.1 公共类型清单
 
@@ -887,26 +887,26 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `ErrorCode.getState()` | `h2/src/main/org/h2/api/ErrorCode.java:2317` |
-| `ErrorCode.isCommon()` | `h2/src/main/org/h2/api/ErrorCode.java:2287` |
-| `Interval.equals()` | `h2/src/main/org/h2/api/Interval.java:617` |
-| `Interval.getDays()` | `h2/src/main/org/h2/api/Interval.java:543` |
-| `Interval.getHours()` | `h2/src/main/org/h2/api/Interval.java:552` |
-| `Interval.getLeading()` | `h2/src/main/org/h2/api/Interval.java:506` |
-| `Interval.getMinutes()` | `h2/src/main/org/h2/api/Interval.java:561` |
-| `Interval.getMonths()` | `h2/src/main/org/h2/api/Interval.java:534` |
-| `IntervalQualifier.getTypeName()` | `h2/src/main/org/h2/api/IntervalQualifier.java:253` |
-| `IntervalQualifier.hasDays()` | `h2/src/main/org/h2/api/IntervalQualifier.java:165` |
-| `IntervalQualifier.hasHours()` | `h2/src/main/org/h2/api/IntervalQualifier.java:182` |
-| `IntervalQualifier.hasMinutes()` | `h2/src/main/org/h2/api/IntervalQualifier.java:201` |
-| `IntervalQualifier.hasMonths()` | `h2/src/main/org/h2/api/IntervalQualifier.java:156` |
-| `IntervalQualifier.hasMultipleFields()` | `h2/src/main/org/h2/api/IntervalQualifier.java:237` |
-| `H2Type.array()` | `h2/src/main/org/h2/api/H2Type.java:258` |
-| `H2Type.getName()` | `h2/src/main/org/h2/api/H2Type.java:296` |
-| `H2Type.getVendor()` | `h2/src/main/org/h2/api/H2Type.java:301` |
-| `H2Type.getVendorTypeNumber()` | `h2/src/main/org/h2/api/H2Type.java:312` |
-| `H2Type.row()` | `h2/src/main/org/h2/api/H2Type.java:270` |
-| `H2Type.toString()` | `h2/src/main/org/h2/api/H2Type.java:317` |
+| `ErrorCode.getState()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/ErrorCode.java:2317` |
+| `ErrorCode.isCommon()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/ErrorCode.java:2287` |
+| `Interval.equals()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/Interval.java:617` |
+| `Interval.getDays()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/Interval.java:543` |
+| `Interval.getHours()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/Interval.java:552` |
+| `Interval.getLeading()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/Interval.java:506` |
+| `Interval.getMinutes()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/Interval.java:561` |
+| `Interval.getMonths()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/Interval.java:534` |
+| `IntervalQualifier.getTypeName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/IntervalQualifier.java:253` |
+| `IntervalQualifier.hasDays()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/IntervalQualifier.java:165` |
+| `IntervalQualifier.hasHours()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/IntervalQualifier.java:182` |
+| `IntervalQualifier.hasMinutes()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/IntervalQualifier.java:201` |
+| `IntervalQualifier.hasMonths()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/IntervalQualifier.java:156` |
+| `IntervalQualifier.hasMultipleFields()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/IntervalQualifier.java:237` |
+| `H2Type.array()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/H2Type.java:258` |
+| `H2Type.getName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/H2Type.java:296` |
+| `H2Type.getVendor()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/H2Type.java:301` |
+| `H2Type.getVendorTypeNumber()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/H2Type.java:312` |
+| `H2Type.row()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/H2Type.java:270` |
+| `H2Type.toString()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/H2Type.java:317` |
 
 ## 3.4 阅读路径
 
@@ -977,7 +977,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 3.9 本章小结
 
-- 本章覆盖 2 个包、7,387 行。
+本章共覆盖 2 个包、7,387 行代码，主要涉及 org.h2.api 包。
 - 关键入口与源码坐标见 §3.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -1036,7 +1036,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - 详见第4章《包结构与模块职责》。
 # 第4章 模块边界与依赖治理
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 1 个包、15,026 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 1 个包、15,026 行实现，并以《模块边界与依赖治理》为题，聚焦模块划分、边界界定与依赖关系的梳理和治理。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -1067,10 +1067,10 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Parser.newPrimaryKeyConstraintCommand()` | `h2/src/main/org/h2/command/Parser.java:9178` |
-| `Parser.parseDomainConstraintExpression()` | `h2/src/main/org/h2/command/Parser.java:9446` |
-| `ParserBase.formatNonKeywords()` | `h2/src/main/org/h2/command/ParserBase.java:93` |
-| `ParserBase.getLastParseIndex()` | `h2/src/main/org/h2/command/ParserBase.java:743` |
+| `Parser.newPrimaryKeyConstraintCommand()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9178` |
+| `Parser.parseDomainConstraintExpression()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9446` |
+| `ParserBase.formatNonKeywords()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:93` |
+| `ParserBase.getLastParseIndex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:743` |
 
 ## 4.3.1 公共类型清单
 
@@ -1130,25 +1130,25 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Parser.newPrimaryKeyConstraintCommand()` | `h2/src/main/org/h2/command/Parser.java:9178` |
-| `Parser.parseDomainConstraintExpression()` | `h2/src/main/org/h2/command/Parser.java:9446` |
-| `Parser.parseExpression()` | `h2/src/main/org/h2/command/Parser.java:9434` |
-| `Parser.parseTableName()` | `h2/src/main/org/h2/command/Parser.java:9463` |
-| `Parser.prepare()` | `h2/src/main/org/h2/command/Parser.java:455` |
-| `Parser.prepareCommand()` | `h2/src/main/org/h2/command/Parser.java:486` |
-| `ParserBase.formatNonKeywords()` | `h2/src/main/org/h2/command/ParserBase.java:93` |
-| `ParserBase.getLastParseIndex()` | `h2/src/main/org/h2/command/ParserBase.java:743` |
-| `ParserBase.parseColumnList()` | `h2/src/main/org/h2/command/ParserBase.java:247` |
-| `ParserBase.parseNonKeywords()` | `h2/src/main/org/h2/command/ParserBase.java:72` |
-| `ParserBase.quoteIdentifier()` | `h2/src/main/org/h2/command/ParserBase.java:55` |
-| `ParserBase.setLiteralsChecked()` | `h2/src/main/org/h2/command/ParserBase.java:215` |
-| `Token.toString()` | `h2/src/main/org/h2/command/Token.java:476` |
-| `Prepared.checkCanceled()` | `h2/src/main/org/h2/command/Prepared.java:340` |
-| `Prepared.collectDependencies()` | `h2/src/main/org/h2/command/Prepared.java:486` |
-| `Prepared.getCurrentRowNumber()` | `h2/src/main/org/h2/command/Prepared.java:418` |
-| `Prepared.getParameters()` | `h2/src/main/org/h2/command/Prepared.java:167` |
-| `Prepared.getPersistedObjectId()` | `h2/src/main/org/h2/command/Prepared.java:291` |
-| `Prepared.getPlanSQL()` | `h2/src/main/org/h2/command/Prepared.java:320` |
+| `Parser.newPrimaryKeyConstraintCommand()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9178` |
+| `Parser.parseDomainConstraintExpression()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9446` |
+| `Parser.parseExpression()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9434` |
+| `Parser.parseTableName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9463` |
+| `Parser.prepare()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:455` |
+| `Parser.prepareCommand()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:486` |
+| `ParserBase.formatNonKeywords()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:93` |
+| `ParserBase.getLastParseIndex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:743` |
+| `ParserBase.parseColumnList()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:247` |
+| `ParserBase.parseNonKeywords()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:72` |
+| `ParserBase.quoteIdentifier()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:55` |
+| `ParserBase.setLiteralsChecked()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:215` |
+| `Token.toString()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Token.java:476` |
+| `Prepared.checkCanceled()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:340` |
+| `Prepared.collectDependencies()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:486` |
+| `Prepared.getCurrentRowNumber()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:418` |
+| `Prepared.getParameters()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:167` |
+| `Prepared.getPersistedObjectId()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:291` |
+| `Prepared.getPlanSQL()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:320` |
 
 ## 4.4 阅读路径
 
@@ -1216,7 +1216,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 4.9 本章小结
 
-- 本章覆盖 1 个包、15,026 行。
+本章覆盖 1 个包、共 15,026 行，主要内容集中在 org.h2.command 包。
 - 关键入口与源码坐标见 §4.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -1301,10 +1301,10 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Parser.newPrimaryKeyConstraintCommand()` | `h2/src/main/org/h2/command/Parser.java:9178` |
-| `Parser.parseDomainConstraintExpression()` | `h2/src/main/org/h2/command/Parser.java:9446` |
-| `ParserBase.formatNonKeywords()` | `h2/src/main/org/h2/command/ParserBase.java:93` |
-| `ParserBase.getLastParseIndex()` | `h2/src/main/org/h2/command/ParserBase.java:743` |
+| `Parser.newPrimaryKeyConstraintCommand()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9178` |
+| `Parser.parseDomainConstraintExpression()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9446` |
+| `ParserBase.formatNonKeywords()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:93` |
+| `ParserBase.getLastParseIndex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:743` |
 
 ## 5.3.1 公共类型清单
 
@@ -1364,25 +1364,25 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Parser.newPrimaryKeyConstraintCommand()` | `h2/src/main/org/h2/command/Parser.java:9178` |
-| `Parser.parseDomainConstraintExpression()` | `h2/src/main/org/h2/command/Parser.java:9446` |
-| `Parser.parseExpression()` | `h2/src/main/org/h2/command/Parser.java:9434` |
-| `Parser.parseTableName()` | `h2/src/main/org/h2/command/Parser.java:9463` |
-| `Parser.prepare()` | `h2/src/main/org/h2/command/Parser.java:455` |
-| `Parser.prepareCommand()` | `h2/src/main/org/h2/command/Parser.java:486` |
-| `ParserBase.formatNonKeywords()` | `h2/src/main/org/h2/command/ParserBase.java:93` |
-| `ParserBase.getLastParseIndex()` | `h2/src/main/org/h2/command/ParserBase.java:743` |
-| `ParserBase.parseColumnList()` | `h2/src/main/org/h2/command/ParserBase.java:247` |
-| `ParserBase.parseNonKeywords()` | `h2/src/main/org/h2/command/ParserBase.java:72` |
-| `ParserBase.quoteIdentifier()` | `h2/src/main/org/h2/command/ParserBase.java:55` |
-| `ParserBase.setLiteralsChecked()` | `h2/src/main/org/h2/command/ParserBase.java:215` |
-| `Token.toString()` | `h2/src/main/org/h2/command/Token.java:476` |
-| `Prepared.checkCanceled()` | `h2/src/main/org/h2/command/Prepared.java:340` |
-| `Prepared.collectDependencies()` | `h2/src/main/org/h2/command/Prepared.java:486` |
-| `Prepared.getCurrentRowNumber()` | `h2/src/main/org/h2/command/Prepared.java:418` |
-| `Prepared.getParameters()` | `h2/src/main/org/h2/command/Prepared.java:167` |
-| `Prepared.getPersistedObjectId()` | `h2/src/main/org/h2/command/Prepared.java:291` |
-| `Prepared.getPlanSQL()` | `h2/src/main/org/h2/command/Prepared.java:320` |
+| `Parser.newPrimaryKeyConstraintCommand()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9178` |
+| `Parser.parseDomainConstraintExpression()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9446` |
+| `Parser.parseExpression()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9434` |
+| `Parser.parseTableName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9463` |
+| `Parser.prepare()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:455` |
+| `Parser.prepareCommand()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:486` |
+| `ParserBase.formatNonKeywords()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:93` |
+| `ParserBase.getLastParseIndex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:743` |
+| `ParserBase.parseColumnList()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:247` |
+| `ParserBase.parseNonKeywords()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:72` |
+| `ParserBase.quoteIdentifier()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:55` |
+| `ParserBase.setLiteralsChecked()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:215` |
+| `Token.toString()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Token.java:476` |
+| `Prepared.checkCanceled()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:340` |
+| `Prepared.collectDependencies()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:486` |
+| `Prepared.getCurrentRowNumber()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:418` |
+| `Prepared.getParameters()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:167` |
+| `Prepared.getPersistedObjectId()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:291` |
+| `Prepared.getPlanSQL()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:320` |
 
 ## 5.4 阅读路径
 
@@ -1443,7 +1443,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 5.9 本章小结
 
-- 本章覆盖 1 个包、15,026 行。
+本章覆盖 1 个包、共 15,026 行代码，主要涉及 org.h2.command 包。
 - 关键入口与源码坐标见 §5.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -1508,7 +1508,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - 详见第4章《模块边界与依赖治理》。
 # 第6章 数据结构：值、行与页
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、19,200 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、19,200 行实现，并以《数据结构：值、行与页》为题，梳理值、行与页三类数据组织方式在代码中的落地脉络。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -1549,18 +1549,18 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Value.add()` | `h2/src/main/org/h2/value/Value.java:929` |
-| `Value.castTo()` | `h2/src/main/org/h2/value/Value.java:1105` |
-| `TypeInfo.areSameTypes()` | `h2/src/main/org/h2/value/TypeInfo.java:738` |
-| `TypeInfo.checkComparable()` | `h2/src/main/org/h2/value/TypeInfo.java:764` |
-| `Transfer.close()` | `h2/src/main/org/h2/value/Transfer.java:478` |
-| `Transfer.flush()` | `h2/src/main/org/h2/value/Transfer.java:216` |
-| `LocalResult.addRow()` | `h2/src/main/org/h2/result/LocalResult.java:420` |
-| `LocalResult.addRowForTable()` | `h2/src/main/org/h2/result/LocalResult.java:404` |
-| `UpdatableRow.deleteRow()` | `h2/src/main/org/h2/result/UpdatableRow.java:257` |
-| `UpdatableRow.insertRow()` | `h2/src/main/org/h2/result/UpdatableRow.java:309` |
-| `SortOrder.addNullOrdering()` | `h2/src/main/org/h2/result/SortOrder.java:312` |
-| `SortOrder.compare()` | `h2/src/main/org/h2/result/SortOrder.java:162` |
+| `Value.add()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Value.java:929` |
+| `Value.castTo()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Value.java:1105` |
+| `TypeInfo.areSameTypes()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/TypeInfo.java:738` |
+| `TypeInfo.checkComparable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/TypeInfo.java:764` |
+| `Transfer.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Transfer.java:478` |
+| `Transfer.flush()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Transfer.java:216` |
+| `LocalResult.addRow()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/result/LocalResult.java:420` |
+| `LocalResult.addRowForTable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/result/LocalResult.java:404` |
+| `UpdatableRow.deleteRow()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/result/UpdatableRow.java:257` |
+| `UpdatableRow.insertRow()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/result/UpdatableRow.java:309` |
+| `SortOrder.addNullOrdering()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/result/SortOrder.java:312` |
+| `SortOrder.compare()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/result/SortOrder.java:162` |
 
 ## 6.3.1 公共类型清单
 
@@ -1661,26 +1661,26 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Value.add()` | `h2/src/main/org/h2/value/Value.java:929` |
-| `Value.castTo()` | `h2/src/main/org/h2/value/Value.java:1105` |
-| `Value.charLength()` | `h2/src/main/org/h2/value/Value.java:2832` |
-| `Value.clearCache()` | `h2/src/main/org/h2/value/Value.java:773` |
-| `Value.compareTo()` | `h2/src/main/org/h2/value/Value.java:2643` |
-| `Value.compareTypeSafe()` | `h2/src/main/org/h2/value/Value.java:2631` |
-| `TypeInfo.areSameTypes()` | `h2/src/main/org/h2/value/TypeInfo.java:738` |
-| `TypeInfo.checkComparable()` | `h2/src/main/org/h2/value/TypeInfo.java:764` |
-| `TypeInfo.equals()` | `h2/src/main/org/h2/value/TypeInfo.java:1397` |
-| `TypeInfo.getDecimalPrecision()` | `h2/src/main/org/h2/value/TypeInfo.java:1490` |
-| `TypeInfo.getDeclaredPrecision()` | `h2/src/main/org/h2/value/TypeInfo.java:1095` |
-| `TypeInfo.getDeclaredScale()` | `h2/src/main/org/h2/value/TypeInfo.java:1166` |
-| `Transfer.close()` | `h2/src/main/org/h2/value/Transfer.java:478` |
-| `Transfer.flush()` | `h2/src/main/org/h2/value/Transfer.java:216` |
-| `Transfer.getSocket()` | `h2/src/main/org/h2/value/Transfer.java:1289` |
-| `Transfer.getVersion()` | `h2/src/main/org/h2/value/Transfer.java:1330` |
-| `Transfer.init()` | `h2/src/main/org/h2/value/Transfer.java:196` |
-| `Transfer.isClosed()` | `h2/src/main/org/h2/value/Transfer.java:1334` |
-| `DataType.addPrecision()` | `h2/src/main/org/h2/value/DataType.java:791` |
-| `DataType.areStableComparable()` | `h2/src/main/org/h2/value/DataType.java:592` |
+| `Value.add()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Value.java:929` |
+| `Value.castTo()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Value.java:1105` |
+| `Value.charLength()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Value.java:2832` |
+| `Value.clearCache()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Value.java:773` |
+| `Value.compareTo()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Value.java:2643` |
+| `Value.compareTypeSafe()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Value.java:2631` |
+| `TypeInfo.areSameTypes()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/TypeInfo.java:738` |
+| `TypeInfo.checkComparable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/TypeInfo.java:764` |
+| `TypeInfo.equals()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/TypeInfo.java:1397` |
+| `TypeInfo.getDecimalPrecision()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/TypeInfo.java:1490` |
+| `TypeInfo.getDeclaredPrecision()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/TypeInfo.java:1095` |
+| `TypeInfo.getDeclaredScale()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/TypeInfo.java:1166` |
+| `Transfer.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Transfer.java:478` |
+| `Transfer.flush()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Transfer.java:216` |
+| `Transfer.getSocket()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Transfer.java:1289` |
+| `Transfer.getVersion()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Transfer.java:1330` |
+| `Transfer.init()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Transfer.java:196` |
+| `Transfer.isClosed()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Transfer.java:1334` |
+| `DataType.addPrecision()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/DataType.java:791` |
+| `DataType.areStableComparable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/DataType.java:592` |
 
 ## 6.4 阅读路径
 
@@ -1751,7 +1751,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 6.9 本章小结
 
-- 本章覆盖 2 个包、19,200 行。
+本章共覆盖 2 个包、19,200 行代码，主要包为 org.h2.value。内容围绕该主要包展开，呈现其整体结构与实现概况。
 - 关键入口与源码坐标见 §6.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -1811,7 +1811,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - 详见第7章《数据结构：值、行与页》。
 # 第7章 存储与压缩算法
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 1 个包、14,516 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章围绕《存储与压缩算法》，由源码清单汇总而成，覆盖 1 个包、14,516 行实现。导读将据此呈现该章相关实现的结构与要点。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -1842,12 +1842,12 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `FileStore.accountForRemovedPage()` | `h2/src/main/org/h2/mvstore/FileStore.java:2178` |
-| `FileStore.backup()` | `h2/src/main/org/h2/mvstore/FileStore.java:1432` |
-| `MVStore.adoptFileStore()` | `h2/src/main/org/h2/mvstore/MVStore.java:2183` |
-| `MVStore.autoCommitBufferSize()` | `h2/src/main/org/h2/mvstore/MVStore.java:2003` |
-| `MVMap.append()` | `h2/src/main/org/h2/mvstore/MVMap.java:1364` |
-| `MVMap.ceilingKey()` | `h2/src/main/org/h2/mvstore/MVMap.java:325` |
+| `FileStore.accountForRemovedPage()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/FileStore.java:2178` |
+| `FileStore.backup()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/FileStore.java:1432` |
+| `MVStore.adoptFileStore()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVStore.java:2183` |
+| `MVStore.autoCommitBufferSize()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVStore.java:2003` |
+| `MVMap.append()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVMap.java:1364` |
+| `MVMap.ceilingKey()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVMap.java:325` |
 
 ## 7.3.1 公共类型清单
 
@@ -1907,26 +1907,26 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `FileStore.accountForRemovedPage()` | `h2/src/main/org/h2/mvstore/FileStore.java:2178` |
-| `FileStore.backup()` | `h2/src/main/org/h2/mvstore/FileStore.java:1432` |
-| `FileStore.bind()` | `h2/src/main/org/h2/mvstore/FileStore.java:281` |
-| `FileStore.clear()` | `h2/src/main/org/h2/mvstore/FileStore.java:1397` |
-| `FileStore.close()` | `h2/src/main/org/h2/mvstore/FileStore.java:314` |
-| `FileStore.compact()` | `h2/src/main/org/h2/mvstore/FileStore.java:937` |
-| `MVStore.adoptFileStore()` | `h2/src/main/org/h2/mvstore/MVStore.java:2183` |
-| `MVStore.autoCommitBufferSize()` | `h2/src/main/org/h2/mvstore/MVStore.java:2003` |
-| `MVStore.autoCommitDisabled()` | `h2/src/main/org/h2/mvstore/MVStore.java:1981` |
-| `MVStore.autoCompactFillRate()` | `h2/src/main/org/h2/mvstore/MVStore.java:2021` |
-| `MVStore.backgroundExceptionHandler()` | `h2/src/main/org/h2/mvstore/MVStore.java:2161` |
-| `MVStore.cacheConcurrency()` | `h2/src/main/org/h2/mvstore/MVStore.java:2105` |
-| `MVMap.append()` | `h2/src/main/org/h2/mvstore/MVMap.java:1364` |
-| `MVMap.ceilingKey()` | `h2/src/main/org/h2/mvstore/MVMap.java:325` |
-| `MVMap.clear()` | `h2/src/main/org/h2/mvstore/MVMap.java:441` |
-| `MVMap.contains()` | `h2/src/main/org/h2/mvstore/MVMap.java:763` |
-| `MVMap.containsKey()` | `h2/src/main/org/h2/mvstore/MVMap.java:433` |
-| `MVMap.create()` | `h2/src/main/org/h2/mvstore/MVMap.java:1518` |
-| `Page.copy()` | `h2/src/main/org/h2/mvstore/Page.java:382` |
-| `Page.createEmptyLeaf()` | `h2/src/main/org/h2/mvstore/Page.java:156` |
+| `FileStore.accountForRemovedPage()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/FileStore.java:2178` |
+| `FileStore.backup()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/FileStore.java:1432` |
+| `FileStore.bind()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/FileStore.java:281` |
+| `FileStore.clear()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/FileStore.java:1397` |
+| `FileStore.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/FileStore.java:314` |
+| `FileStore.compact()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/FileStore.java:937` |
+| `MVStore.adoptFileStore()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVStore.java:2183` |
+| `MVStore.autoCommitBufferSize()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVStore.java:2003` |
+| `MVStore.autoCommitDisabled()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVStore.java:1981` |
+| `MVStore.autoCompactFillRate()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVStore.java:2021` |
+| `MVStore.backgroundExceptionHandler()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVStore.java:2161` |
+| `MVStore.cacheConcurrency()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVStore.java:2105` |
+| `MVMap.append()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVMap.java:1364` |
+| `MVMap.ceilingKey()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVMap.java:325` |
+| `MVMap.clear()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVMap.java:441` |
+| `MVMap.contains()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVMap.java:763` |
+| `MVMap.containsKey()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVMap.java:433` |
+| `MVMap.create()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVMap.java:1518` |
+| `Page.copy()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/Page.java:382` |
+| `Page.createEmptyLeaf()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/Page.java:156` |
 
 ## 7.4 阅读路径
 
@@ -1994,7 +1994,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 7.9 本章小结
 
-- 本章覆盖 1 个包、14,516 行。
+本章覆盖 1 个包、共 14,516 行，主要包为 org.h2.mvstore。
 - 关键入口与源码坐标见 §7.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -2051,7 +2051,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - 详见第8章《存储与压缩算法》。
 # 第8章 索引与表达式求值
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 1 个包、4,105 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 1 个包、4,105 行实现，围绕《索引与表达式求值》展开。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -2082,12 +2082,12 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Index.add()` | `h2/src/main/org/h2/index/Index.java:210` |
-| `Index.areRowsEquivalent()` | `h2/src/main/org/h2/index/Index.java:379` |
-| `IndexCondition.cloneWithIndexColumns()` | `h2/src/main/org/h2/index/IndexCondition.java:559` |
-| `IndexCondition.get()` | `h2/src/main/org/h2/index/IndexCondition.java:122` |
-| `IndexCursor.canUseIndexForIn()` | `h2/src/main/org/h2/index/IndexCursor.java:318` |
-| `IndexCursor.find()` | `h2/src/main/org/h2/index/IndexCursor.java:289` |
+| `Index.add()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/Index.java:210` |
+| `Index.areRowsEquivalent()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/Index.java:379` |
+| `IndexCondition.cloneWithIndexColumns()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCondition.java:559` |
+| `IndexCondition.get()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCondition.java:122` |
+| `IndexCursor.canUseIndexForIn()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCursor.java:318` |
+| `IndexCursor.find()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCursor.java:289` |
 
 ## 8.3.1 公共类型清单
 
@@ -2147,26 +2147,26 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Index.add()` | `h2/src/main/org/h2/index/Index.java:210` |
-| `Index.areRowsEquivalent()` | `h2/src/main/org/h2/index/Index.java:379` |
-| `Index.canFindNext()` | `h2/src/main/org/h2/index/Index.java:302` |
-| `Index.canGetFirstOrLast()` | `h2/src/main/org/h2/index/Index.java:293` |
-| `Index.canScan()` | `h2/src/main/org/h2/index/Index.java:539` |
-| `Index.close()` | `h2/src/main/org/h2/index/Index.java:202` |
-| `IndexCondition.cloneWithIndexColumns()` | `h2/src/main/org/h2/index/IndexCondition.java:559` |
-| `IndexCondition.get()` | `h2/src/main/org/h2/index/IndexCondition.java:122` |
-| `IndexCondition.getColumn()` | `h2/src/main/org/h2/index/IndexCondition.java:472` |
-| `IndexCondition.getColumns()` | `h2/src/main/org/h2/index/IndexCondition.java:485` |
-| `IndexCondition.getCompareType()` | `h2/src/main/org/h2/index/IndexCondition.java:462` |
-| `IndexCondition.getCompoundInList()` | `h2/src/main/org/h2/index/IndexCondition.java:144` |
-| `IndexCursor.canUseIndexForIn()` | `h2/src/main/org/h2/index/IndexCursor.java:318` |
-| `IndexCursor.find()` | `h2/src/main/org/h2/index/IndexCursor.java:289` |
-| `IndexCursor.get()` | `h2/src/main/org/h2/index/IndexCursor.java:411` |
-| `IndexCursor.getEnd()` | `h2/src/main/org/h2/index/IndexCursor.java:406` |
-| `IndexCursor.getInColumnPosition()` | `h2/src/main/org/h2/index/IndexCursor.java:237` |
-| `IndexCursor.getSearchRow()` | `h2/src/main/org/h2/index/IndexCursor.java:419` |
-| `LinkedIndex.add()` | `h2/src/main/org/h2/index/LinkedIndex.java:61` |
-| `LinkedIndex.checkRename()` | `h2/src/main/org/h2/index/LinkedIndex.java:199` |
+| `Index.add()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/Index.java:210` |
+| `Index.areRowsEquivalent()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/Index.java:379` |
+| `Index.canFindNext()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/Index.java:302` |
+| `Index.canGetFirstOrLast()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/Index.java:293` |
+| `Index.canScan()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/Index.java:539` |
+| `Index.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/Index.java:202` |
+| `IndexCondition.cloneWithIndexColumns()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCondition.java:559` |
+| `IndexCondition.get()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCondition.java:122` |
+| `IndexCondition.getColumn()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCondition.java:472` |
+| `IndexCondition.getColumns()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCondition.java:485` |
+| `IndexCondition.getCompareType()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCondition.java:462` |
+| `IndexCondition.getCompoundInList()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCondition.java:144` |
+| `IndexCursor.canUseIndexForIn()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCursor.java:318` |
+| `IndexCursor.find()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCursor.java:289` |
+| `IndexCursor.get()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCursor.java:411` |
+| `IndexCursor.getEnd()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCursor.java:406` |
+| `IndexCursor.getInColumnPosition()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCursor.java:237` |
+| `IndexCursor.getSearchRow()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCursor.java:419` |
+| `LinkedIndex.add()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/LinkedIndex.java:61` |
+| `LinkedIndex.checkRename()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/LinkedIndex.java:199` |
 
 ## 8.4 阅读路径
 
@@ -2234,7 +2234,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 8.9 本章小结
 
-- 本章覆盖 1 个包、4,105 行。
+本章覆盖 1 个包、共 4,105 行，主要包是 org.h2.index。
 - 关键入口与源码坐标见 §8.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -2291,7 +2291,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - 详见第9章《索引与表达式求值》。
 # 第9章 SQL 解析与执行
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 4 个包、28,396 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，围绕《SQL 解析与执行》覆盖 4 个包、28,396 行实现，梳理 SQL 解析与执行相关代码的整体结构。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -2352,26 +2352,26 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `ToCharFunction.apply()` | `h2/src/main/org/h2/expression/function/ToCharFunction.java:1088` |
-| `ToCharFunction.clearNames()` | `h2/src/main/org/h2/expression/function/ToCharFunction.java:552` |
-| `DateTimeFunction.dateadd()` | `h2/src/main/org/h2/expression/function/DateTimeFunction.java:656` |
-| `DateTimeFunction.getField()` | `h2/src/main/org/h2/expression/function/DateTimeFunction.java:241` |
-| `BitFunction.checkArgType()` | `h2/src/main/org/h2/expression/function/BitFunction.java:709` |
-| `BitFunction.getBitwise()` | `h2/src/main/org/h2/expression/function/BitFunction.java:455` |
-| `AlterTableAlterColumn.addColumn()` | `h2/src/main/org/h2/command/ddl/AlterTableAlterColumn.java:719` |
-| `AlterTableAlterColumn.getType()` | `h2/src/main/org/h2/command/ddl/AlterTableAlterColumn.java:710` |
-| `AlterTableAddConstraint.getConstraintName()` | `h2/src/main/org/h2/command/ddl/AlterTableAddConstraint.java:448` |
-| `AlterTableAddConstraint.getIndexColumns()` | `h2/src/main/org/h2/command/ddl/AlterTableAddConstraint.java:480` |
-| `SequenceOptions.getBounds()` | `h2/src/main/org/h2/command/ddl/SequenceOptions.java:241` |
-| `SequenceOptions.getCacheSize()` | `h2/src/main/org/h2/command/ddl/SequenceOptions.java:346` |
-| `ExpressionColumn.createIndexConditions()` | `h2/src/main/org/h2/expression/ExpressionColumn.java:499` |
-| `ExpressionColumn.getAlias()` | `h2/src/main/org/h2/expression/ExpressionColumn.java:404` |
-| `Expression.addFilterConditions()` | `h2/src/main/org/h2/expression/Expression.java:477` |
-| `Expression.createIndexConditions()` | `h2/src/main/org/h2/expression/Expression.java:354` |
-| `BinaryOperation.getOperationType()` | `h2/src/main/org/h2/expression/BinaryOperation.java:450` |
-| `BinaryOperation.getUnenclosedSQL()` | `h2/src/main/org/h2/expression/BinaryOperation.java:74` |
-| `ScriptCommand.close()` | `h2/src/main/org/h2/command/dml/ScriptCommand.java:677` |
-| `ScriptCommand.collectDependencies()` | `h2/src/main/org/h2/command/dml/ScriptCommand.java:119` |
+| `ToCharFunction.apply()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/ToCharFunction.java:1088` |
+| `ToCharFunction.clearNames()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/ToCharFunction.java:552` |
+| `DateTimeFunction.dateadd()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/DateTimeFunction.java:656` |
+| `DateTimeFunction.getField()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/DateTimeFunction.java:241` |
+| `BitFunction.checkArgType()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/BitFunction.java:709` |
+| `BitFunction.getBitwise()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/BitFunction.java:455` |
+| `AlterTableAlterColumn.addColumn()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ddl/AlterTableAlterColumn.java:719` |
+| `AlterTableAlterColumn.getType()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ddl/AlterTableAlterColumn.java:710` |
+| `AlterTableAddConstraint.getConstraintName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ddl/AlterTableAddConstraint.java:448` |
+| `AlterTableAddConstraint.getIndexColumns()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ddl/AlterTableAddConstraint.java:480` |
+| `SequenceOptions.getBounds()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ddl/SequenceOptions.java:241` |
+| `SequenceOptions.getCacheSize()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ddl/SequenceOptions.java:346` |
+| `ExpressionColumn.createIndexConditions()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/ExpressionColumn.java:499` |
+| `ExpressionColumn.getAlias()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/ExpressionColumn.java:404` |
+| `Expression.addFilterConditions()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/Expression.java:477` |
+| `Expression.createIndexConditions()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/Expression.java:354` |
+| `BinaryOperation.getOperationType()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/BinaryOperation.java:450` |
+| `BinaryOperation.getUnenclosedSQL()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/BinaryOperation.java:74` |
+| `ScriptCommand.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/dml/ScriptCommand.java:677` |
+| `ScriptCommand.collectDependencies()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/dml/ScriptCommand.java:119` |
 
 ## 9.3.1 公共类型清单
 
@@ -2506,26 +2506,26 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `ToCharFunction.apply()` | `h2/src/main/org/h2/expression/function/ToCharFunction.java:1088` |
-| `ToCharFunction.clearNames()` | `h2/src/main/org/h2/expression/function/ToCharFunction.java:552` |
-| `ToCharFunction.getDateNames()` | `h2/src/main/org/h2/expression/function/ToCharFunction.java:527` |
-| `ToCharFunction.getName()` | `h2/src/main/org/h2/expression/function/ToCharFunction.java:1151` |
-| `ToCharFunction.getValue()` | `h2/src/main/org/h2/expression/function/ToCharFunction.java:1113` |
-| `ToCharFunction.optimize()` | `h2/src/main/org/h2/expression/function/ToCharFunction.java:1141` |
-| `DateTimeFunction.dateadd()` | `h2/src/main/org/h2/expression/function/DateTimeFunction.java:656` |
-| `DateTimeFunction.getField()` | `h2/src/main/org/h2/expression/function/DateTimeFunction.java:241` |
-| `DateTimeFunction.getFieldName()` | `h2/src/main/org/h2/expression/function/DateTimeFunction.java:337` |
-| `DateTimeFunction.getName()` | `h2/src/main/org/h2/expression/function/DateTimeFunction.java:1076` |
-| `DateTimeFunction.getUnenclosedSQL()` | `h2/src/main/org/h2/expression/function/DateTimeFunction.java:1050` |
-| `DateTimeFunction.getValue()` | `h2/src/main/org/h2/expression/function/DateTimeFunction.java:353` |
-| `BitFunction.checkArgType()` | `h2/src/main/org/h2/expression/function/BitFunction.java:709` |
-| `BitFunction.getBitwise()` | `h2/src/main/org/h2/expression/function/BitFunction.java:455` |
-| `BitFunction.getName()` | `h2/src/main/org/h2/expression/function/BitFunction.java:725` |
-| `BitFunction.getValue()` | `h2/src/main/org/h2/expression/function/BitFunction.java:123` |
-| `BitFunction.optimize()` | `h2/src/main/org/h2/expression/function/BitFunction.java:578` |
-| `MathFunction.getName()` | `h2/src/main/org/h2/expression/function/MathFunction.java:400` |
-| `MathFunction.getValue()` | `h2/src/main/org/h2/expression/function/MathFunction.java:87` |
-| `MathFunction.optimize()` | `h2/src/main/org/h2/expression/function/MathFunction.java:216` |
+| `ToCharFunction.apply()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/ToCharFunction.java:1088` |
+| `ToCharFunction.clearNames()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/ToCharFunction.java:552` |
+| `ToCharFunction.getDateNames()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/ToCharFunction.java:527` |
+| `ToCharFunction.getName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/ToCharFunction.java:1151` |
+| `ToCharFunction.getValue()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/ToCharFunction.java:1113` |
+| `ToCharFunction.optimize()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/ToCharFunction.java:1141` |
+| `DateTimeFunction.dateadd()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/DateTimeFunction.java:656` |
+| `DateTimeFunction.getField()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/DateTimeFunction.java:241` |
+| `DateTimeFunction.getFieldName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/DateTimeFunction.java:337` |
+| `DateTimeFunction.getName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/DateTimeFunction.java:1076` |
+| `DateTimeFunction.getUnenclosedSQL()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/DateTimeFunction.java:1050` |
+| `DateTimeFunction.getValue()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/DateTimeFunction.java:353` |
+| `BitFunction.checkArgType()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/BitFunction.java:709` |
+| `BitFunction.getBitwise()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/BitFunction.java:455` |
+| `BitFunction.getName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/BitFunction.java:725` |
+| `BitFunction.getValue()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/BitFunction.java:123` |
+| `BitFunction.optimize()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/BitFunction.java:578` |
+| `MathFunction.getName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/MathFunction.java:400` |
+| `MathFunction.getValue()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/MathFunction.java:87` |
+| `MathFunction.optimize()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/MathFunction.java:216` |
 
 ## 9.4 阅读路径
 
@@ -2602,7 +2602,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 9.9 本章小结
 
-- 本章覆盖 4 个包、28,396 行。
+本章共覆盖 4 个包、28,396 行代码，主要包为 org.h2.expression.function。内容围绕该核心包展开，并兼顾其余相关包。
 - 关键入口与源码坐标见 §9.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -2668,7 +2668,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - 详见第10章《SQL 解析与执行》。
 # 第10章 查询优化器
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、16,277 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，聚焦《查询优化器》，覆盖 2 个包、共 16,277 行实现。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -2709,18 +2709,18 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `InformationSchemaTable.canGetRowCount()` | `h2/src/main/org/h2/table/InformationSchemaTable.java:3057` |
-| `InformationSchemaTable.generateRows()` | `h2/src/main/org/h2/table/InformationSchemaTable.java:881` |
-| `InformationSchemaTableLegacy.generateRows()` | `h2/src/main/org/h2/table/InformationSchemaTableLegacy.java:731` |
-| `InformationSchemaTableLegacy.getMaxDataModificationId()` | `h2/src/main/org/h2/table/InformationSchemaTableLegacy.java:2310` |
-| `Table.addConstraint()` | `h2/src/main/org/h2/table/Table.java:1109` |
-| `Table.addDependencies()` | `h2/src/main/org/h2/table/Table.java:417` |
-| `WindowFrame.getEndIndex()` | `h2/src/main/org/h2/expression/analysis/WindowFrame.java:239` |
-| `WindowFrame.getExclusion()` | `h2/src/main/org/h2/expression/analysis/WindowFrame.java:439` |
-| `DataAnalysisOperation.getOverCondition()` | `h2/src/main/org/h2/expression/analysis/DataAnalysisOperation.java:97` |
-| `DataAnalysisOperation.getValue()` | `h2/src/main/org/h2/expression/analysis/DataAnalysisOperation.java:388` |
-| `WindowFunction.getCost()` | `h2/src/main/org/h2/expression/analysis/WindowFunction.java:534` |
-| `WindowFunction.getFunctionType()` | `h2/src/main/org/h2/expression/analysis/WindowFunction.java:122` |
+| `InformationSchemaTable.canGetRowCount()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTable.java:3057` |
+| `InformationSchemaTable.generateRows()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTable.java:881` |
+| `InformationSchemaTableLegacy.generateRows()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTableLegacy.java:731` |
+| `InformationSchemaTableLegacy.getMaxDataModificationId()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTableLegacy.java:2310` |
+| `Table.addConstraint()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/Table.java:1109` |
+| `Table.addDependencies()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/Table.java:417` |
+| `WindowFrame.getEndIndex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/analysis/WindowFrame.java:239` |
+| `WindowFrame.getExclusion()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/analysis/WindowFrame.java:439` |
+| `DataAnalysisOperation.getOverCondition()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/analysis/DataAnalysisOperation.java:97` |
+| `DataAnalysisOperation.getValue()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/analysis/DataAnalysisOperation.java:388` |
+| `WindowFunction.getCost()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/analysis/WindowFunction.java:534` |
+| `WindowFunction.getFunctionType()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/analysis/WindowFunction.java:122` |
 
 ## 10.3.1 公共类型清单
 
@@ -2821,26 +2821,26 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `InformationSchemaTable.canGetRowCount()` | `h2/src/main/org/h2/table/InformationSchemaTable.java:3057` |
-| `InformationSchemaTable.generateRows()` | `h2/src/main/org/h2/table/InformationSchemaTable.java:881` |
-| `InformationSchemaTable.getMaxDataModificationId()` | `h2/src/main/org/h2/table/InformationSchemaTable.java:2974` |
-| `InformationSchemaTable.getRowCount()` | `h2/src/main/org/h2/table/InformationSchemaTable.java:2993` |
-| `InformationSchemaTable.getRowCountApproximation()` | `h2/src/main/org/h2/table/InformationSchemaTable.java:2998` |
-| `InformationSchemaTable.isView()` | `h2/src/main/org/h2/table/InformationSchemaTable.java:2988` |
-| `InformationSchemaTableLegacy.generateRows()` | `h2/src/main/org/h2/table/InformationSchemaTableLegacy.java:731` |
-| `InformationSchemaTableLegacy.getMaxDataModificationId()` | `h2/src/main/org/h2/table/InformationSchemaTableLegacy.java:2310` |
-| `Table.addConstraint()` | `h2/src/main/org/h2/table/Table.java:1109` |
-| `Table.addDependencies()` | `h2/src/main/org/h2/table/Table.java:417` |
-| `Table.addDependentMaterializedView()` | `h2/src/main/org/h2/table/Table.java:1091` |
-| `Table.addDependentView()` | `h2/src/main/org/h2/table/Table.java:1082` |
-| `Table.addIndex()` | `h2/src/main/org/h2/table/Table.java:171` |
-| `Table.addRow()` | `h2/src/main/org/h2/table/Table.java:232` |
-| `TableFilter.accept()` | `h2/src/main/org/h2/table/TableFilter.java:1304` |
-| `TableFilter.addCommonJoinColumnToExclude()` | `h2/src/main/org/h2/table/TableFilter.java:1195` |
-| `TableFilter.addCommonJoinColumns()` | `h2/src/main/org/h2/table/TableFilter.java:1179` |
-| `TableFilter.addFilter()` | `h2/src/main/org/h2/table/TableFilter.java:676` |
-| `TableFilter.addFilterCondition()` | `h2/src/main/org/h2/table/TableFilter.java:617` |
-| `TableFilter.addIndexCondition()` | `h2/src/main/org/h2/table/TableFilter.java:607` |
+| `InformationSchemaTable.canGetRowCount()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTable.java:3057` |
+| `InformationSchemaTable.generateRows()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTable.java:881` |
+| `InformationSchemaTable.getMaxDataModificationId()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTable.java:2974` |
+| `InformationSchemaTable.getRowCount()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTable.java:2993` |
+| `InformationSchemaTable.getRowCountApproximation()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTable.java:2998` |
+| `InformationSchemaTable.isView()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTable.java:2988` |
+| `InformationSchemaTableLegacy.generateRows()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTableLegacy.java:731` |
+| `InformationSchemaTableLegacy.getMaxDataModificationId()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTableLegacy.java:2310` |
+| `Table.addConstraint()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/Table.java:1109` |
+| `Table.addDependencies()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/Table.java:417` |
+| `Table.addDependentMaterializedView()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/Table.java:1091` |
+| `Table.addDependentView()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/Table.java:1082` |
+| `Table.addIndex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/Table.java:171` |
+| `Table.addRow()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/Table.java:232` |
+| `TableFilter.accept()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/TableFilter.java:1304` |
+| `TableFilter.addCommonJoinColumnToExclude()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/TableFilter.java:1195` |
+| `TableFilter.addCommonJoinColumns()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/TableFilter.java:1179` |
+| `TableFilter.addFilter()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/TableFilter.java:676` |
+| `TableFilter.addFilterCondition()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/TableFilter.java:617` |
+| `TableFilter.addIndexCondition()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/TableFilter.java:607` |
 
 ## 10.4 阅读路径
 
@@ -2906,7 +2906,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 10.9 本章小结
 
-- 本章覆盖 2 个包、16,277 行。
+本章覆盖 2 个包、共 16,277 行，主要包为 org.h2.table。内容围绕该主要包的结构与实现展开，便于把握本章核心。
 - 关键入口与源码坐标见 §10.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -2966,7 +2966,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - 详见第11章《查询优化器》。
 # 第11章 持久化
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 3 个包、18,539 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章《持久化》由源码清单汇总而成，覆盖 3 个包、18,539 行实现，旨在从代码层面呈现持久化相关机制的整体结构与实现脉络。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -3007,18 +3007,18 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `StringUtils.addAsterisk()` | `h2/src/main/org/h2/util/StringUtils.java:283` |
-| `StringUtils.appendHex()` | `h2/src/main/org/h2/util/StringUtils.java:1277` |
-| `DateTimeUtils.absoluteDayFromDateValue()` | `h2/src/main/org/h2/util/DateTimeUtils.java:873` |
-| `DateTimeUtils.absoluteDayFromYear()` | `h2/src/main/org/h2/util/DateTimeUtils.java:857` |
-| `DateTimeTemplate.format()` | `h2/src/main/org/h2/util/DateTimeTemplate.java:178` |
-| `DateTimeTemplate.of()` | `h2/src/main/org/h2/util/DateTimeTemplate.java:430` |
-| `FileLock.getFileLockMethod()` | `h2/src/main/org/h2/store/FileLock.java:458` |
-| `FileLock.getUniqueId()` | `h2/src/main/org/h2/store/FileLock.java:472` |
-| `FileStore.autoDelete()` | `h2/src/main/org/h2/store/FileStore.java:429` |
-| `FileStore.close()` | `h2/src/main/org/h2/store/FileStore.java:221` |
-| `Data.checkCapacity()` | `h2/src/main/org/h2/store/Data.java:171` |
-| `Data.copyString()` | `h2/src/main/org/h2/store/Data.java:204` |
+| `StringUtils.addAsterisk()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/StringUtils.java:283` |
+| `StringUtils.appendHex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/StringUtils.java:1277` |
+| `DateTimeUtils.absoluteDayFromDateValue()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeUtils.java:873` |
+| `DateTimeUtils.absoluteDayFromYear()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeUtils.java:857` |
+| `DateTimeTemplate.format()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeTemplate.java:178` |
+| `DateTimeTemplate.of()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeTemplate.java:430` |
+| `FileLock.getFileLockMethod()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/FileLock.java:458` |
+| `FileLock.getUniqueId()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/FileLock.java:472` |
+| `FileStore.autoDelete()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/FileStore.java:429` |
+| `FileStore.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/FileStore.java:221` |
+| `Data.checkCapacity()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/Data.java:171` |
+| `Data.copyString()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/Data.java:204` |
 
 ## 11.3.1 公共类型清单
 
@@ -3119,26 +3119,26 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `StringUtils.addAsterisk()` | `h2/src/main/org/h2/util/StringUtils.java:283` |
-| `StringUtils.appendHex()` | `h2/src/main/org/h2/util/StringUtils.java:1277` |
-| `StringUtils.appendToLength()` | `h2/src/main/org/h2/util/StringUtils.java:1360` |
-| `StringUtils.appendTwoDigits()` | `h2/src/main/org/h2/util/StringUtils.java:1327` |
-| `StringUtils.appendZeroPadded()` | `h2/src/main/org/h2/util/StringUtils.java:1342` |
-| `StringUtils.arrayCombine()` | `h2/src/main/org/h2/util/StringUtils.java:525` |
-| `DateTimeUtils.absoluteDayFromDateValue()` | `h2/src/main/org/h2/util/DateTimeUtils.java:873` |
-| `DateTimeUtils.absoluteDayFromYear()` | `h2/src/main/org/h2/util/DateTimeUtils.java:857` |
-| `DateTimeUtils.appendDate()` | `h2/src/main/org/h2/util/DateTimeUtils.java:981` |
-| `DateTimeUtils.appendTime()` | `h2/src/main/org/h2/util/DateTimeUtils.java:1003` |
-| `DateTimeUtils.appendTimeZone()` | `h2/src/main/org/h2/util/DateTimeUtils.java:1063` |
-| `DateTimeUtils.convertScale()` | `h2/src/main/org/h2/util/DateTimeUtils.java:1123` |
-| `DateTimeTemplate.format()` | `h2/src/main/org/h2/util/DateTimeTemplate.java:178` |
-| `DateTimeTemplate.of()` | `h2/src/main/org/h2/util/DateTimeTemplate.java:430` |
-| `DateTimeTemplate.parse()` | `h2/src/main/org/h2/util/DateTimeTemplate.java:183` |
-| `IntervalUtils.appendInterval()` | `h2/src/main/org/h2/util/IntervalUtils.java:402` |
-| `IntervalUtils.daysFromInterval()` | `h2/src/main/org/h2/util/IntervalUtils.java:724` |
-| `IntervalUtils.hoursFromInterval()` | `h2/src/main/org/h2/util/IntervalUtils.java:753` |
-| `IntervalUtils.intervalFromAbsolute()` | `h2/src/main/org/h2/util/IntervalUtils.java:540` |
-| `IntervalUtils.intervalToAbsolute()` | `h2/src/main/org/h2/util/IntervalUtils.java:472` |
+| `StringUtils.addAsterisk()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/StringUtils.java:283` |
+| `StringUtils.appendHex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/StringUtils.java:1277` |
+| `StringUtils.appendToLength()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/StringUtils.java:1360` |
+| `StringUtils.appendTwoDigits()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/StringUtils.java:1327` |
+| `StringUtils.appendZeroPadded()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/StringUtils.java:1342` |
+| `StringUtils.arrayCombine()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/StringUtils.java:525` |
+| `DateTimeUtils.absoluteDayFromDateValue()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeUtils.java:873` |
+| `DateTimeUtils.absoluteDayFromYear()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeUtils.java:857` |
+| `DateTimeUtils.appendDate()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeUtils.java:981` |
+| `DateTimeUtils.appendTime()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeUtils.java:1003` |
+| `DateTimeUtils.appendTimeZone()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeUtils.java:1063` |
+| `DateTimeUtils.convertScale()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeUtils.java:1123` |
+| `DateTimeTemplate.format()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeTemplate.java:178` |
+| `DateTimeTemplate.of()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeTemplate.java:430` |
+| `DateTimeTemplate.parse()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeTemplate.java:183` |
+| `IntervalUtils.appendInterval()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/IntervalUtils.java:402` |
+| `IntervalUtils.daysFromInterval()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/IntervalUtils.java:724` |
+| `IntervalUtils.hoursFromInterval()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/IntervalUtils.java:753` |
+| `IntervalUtils.intervalFromAbsolute()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/IntervalUtils.java:540` |
+| `IntervalUtils.intervalToAbsolute()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/IntervalUtils.java:472` |
 
 ## 11.4 阅读路径
 
@@ -3205,7 +3205,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 11.9 本章小结
 
-- 本章覆盖 2 个包、17,194 行。
+本章覆盖 2 个包、共 17,194 行，主要内容集中在 org.h2.util 包。
 - 关键入口与源码坐标见 §11.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -3293,12 +3293,12 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `FileUtils.canWrite()` | `h2/src/main/org/h2/store/fs/FileUtils.java:317` |
-| `FileUtils.createDirectories()` | `h2/src/main/org/h2/store/fs/FileUtils.java:372` |
-| `FilePath.canWrite()` | `h2/src/main/org/h2/store/fs/FilePath.java:201` |
-| `FilePath.createDirectory()` | `h2/src/main/org/h2/store/fs/FilePath.java:206` |
-| `FilePathWrapper.canWrite()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:72` |
-| `FilePathWrapper.createDirectory()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:77` |
+| `FileUtils.canWrite()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FileUtils.java:317` |
+| `FileUtils.createDirectories()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FileUtils.java:372` |
+| `FilePath.canWrite()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePath.java:201` |
+| `FilePath.createDirectory()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePath.java:206` |
+| `FilePathWrapper.canWrite()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePathWrapper.java:72` |
+| `FilePathWrapper.createDirectory()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePathWrapper.java:77` |
 
 ## 12.3.1 公共类型清单
 
@@ -3358,26 +3358,26 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `FileUtils.canWrite()` | `h2/src/main/org/h2/store/fs/FileUtils.java:317` |
-| `FileUtils.createDirectories()` | `h2/src/main/org/h2/store/fs/FileUtils.java:372` |
-| `FileUtils.createDirectory()` | `h2/src/main/org/h2/store/fs/FileUtils.java:84` |
-| `FileUtils.createFile()` | `h2/src/main/org/h2/store/fs/FileUtils.java:96` |
-| `FileUtils.createTempFile()` | `h2/src/main/org/h2/store/fs/FileUtils.java:412` |
-| `FileUtils.delete()` | `h2/src/main/org/h2/store/fs/FileUtils.java:108` |
-| `FilePath.canWrite()` | `h2/src/main/org/h2/store/fs/FilePath.java:201` |
-| `FilePath.createDirectory()` | `h2/src/main/org/h2/store/fs/FilePath.java:206` |
-| `FilePath.createFile()` | `h2/src/main/org/h2/store/fs/FilePath.java:132` |
-| `FilePath.createTempFile()` | `h2/src/main/org/h2/store/fs/FilePath.java:284` |
-| `FilePath.delete()` | `h2/src/main/org/h2/store/fs/FilePath.java:145` |
-| `FilePath.exists()` | `h2/src/main/org/h2/store/fs/FilePath.java:139` |
-| `FilePathWrapper.canWrite()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:72` |
-| `FilePathWrapper.createDirectory()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:77` |
-| `FilePathWrapper.createFile()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:82` |
-| `FilePathWrapper.createTempFile()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:166` |
-| `FilePathWrapper.delete()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:87` |
-| `FilePathWrapper.exists()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:92` |
-| `FakeFileChannel.force()` | `h2/src/main/org/h2/store/fs/FakeFileChannel.java:109` |
-| `FakeFileChannel.lock()` | `h2/src/main/org/h2/store/fs/FakeFileChannel.java:34` |
+| `FileUtils.canWrite()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FileUtils.java:317` |
+| `FileUtils.createDirectories()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FileUtils.java:372` |
+| `FileUtils.createDirectory()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FileUtils.java:84` |
+| `FileUtils.createFile()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FileUtils.java:96` |
+| `FileUtils.createTempFile()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FileUtils.java:412` |
+| `FileUtils.delete()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FileUtils.java:108` |
+| `FilePath.canWrite()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePath.java:201` |
+| `FilePath.createDirectory()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePath.java:206` |
+| `FilePath.createFile()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePath.java:132` |
+| `FilePath.createTempFile()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePath.java:284` |
+| `FilePath.delete()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePath.java:145` |
+| `FilePath.exists()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePath.java:139` |
+| `FilePathWrapper.canWrite()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePathWrapper.java:72` |
+| `FilePathWrapper.createDirectory()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePathWrapper.java:77` |
+| `FilePathWrapper.createFile()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePathWrapper.java:82` |
+| `FilePathWrapper.createTempFile()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePathWrapper.java:166` |
+| `FilePathWrapper.delete()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePathWrapper.java:87` |
+| `FilePathWrapper.exists()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePathWrapper.java:92` |
+| `FakeFileChannel.force()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FakeFileChannel.java:109` |
+| `FakeFileChannel.lock()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FakeFileChannel.java:34` |
 
 ## 12.4 阅读路径
 
@@ -3438,7 +3438,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 12.9 本章小结
 
-- 本章覆盖 1 个包、1,345 行。
+本章覆盖 1 个包、共 1,345 行，主要包为 org.h2.store.fs，集中呈现该包的文件存储相关实现。
 - 关键入口与源码坐标见 §12.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -3501,7 +3501,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - 详见第11章《持久化》。
 # 第13章 二次开发指南
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、28,213 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章依据源码清单汇总而成，围绕《二次开发指南》展开，覆盖 2 个包、共 28,213 行实现，旨在为后续二次开发提供整体脉络与参考。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -3532,12 +3532,12 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `JdbcResultSet.absolute()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3173` |
-| `JdbcResultSet.afterLast()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3105` |
-| `JdbcDatabaseMetaData.allProceduresAreCallable()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:305` |
-| `JdbcDatabaseMetaData.allTablesAreSelectable()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:316` |
-| `JdbcConnection.abort()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:1832` |
-| `JdbcConnection.clearWarnings()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:655` |
+| `JdbcResultSet.absolute()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcResultSet.java:3173` |
+| `JdbcResultSet.afterLast()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcResultSet.java:3105` |
+| `JdbcDatabaseMetaData.allProceduresAreCallable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:305` |
+| `JdbcDatabaseMetaData.allTablesAreSelectable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:316` |
+| `JdbcConnection.abort()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcConnection.java:1832` |
+| `JdbcConnection.clearWarnings()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcConnection.java:655` |
 
 ## 13.3.1 公共类型清单
 
@@ -3597,26 +3597,26 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `JdbcResultSet.absolute()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3173` |
-| `JdbcResultSet.afterLast()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3105` |
-| `JdbcResultSet.beforeFirst()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3086` |
-| `JdbcResultSet.cancelRowUpdates()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3432` |
-| `JdbcResultSet.clearWarnings()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:260` |
-| `JdbcResultSet.close()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:188` |
-| `JdbcDatabaseMetaData.allProceduresAreCallable()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:305` |
-| `JdbcDatabaseMetaData.allTablesAreSelectable()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:316` |
-| `JdbcDatabaseMetaData.autoCommitFailureClosesAllResultSets()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:2598` |
-| `JdbcDatabaseMetaData.dataDefinitionCausesTransactionCommit()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:1814` |
-| `JdbcDatabaseMetaData.dataDefinitionIgnoredInTransactions()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:1825` |
-| `JdbcDatabaseMetaData.deletesAreDetected()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:1950` |
-| `JdbcConnection.abort()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:1832` |
-| `JdbcConnection.clearWarnings()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:655` |
-| `JdbcConnection.close()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:355` |
-| `JdbcConnection.commit()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:480` |
-| `JdbcConnection.createArrayOf()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:1521` |
-| `JdbcConnection.createBlob()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:1468` |
-| `JdbcCallableStatement.executeLargeUpdate()` | `h2/src/main/org/h2/jdbc/JdbcCallableStatement.java:119` |
-| `JdbcCallableStatement.executeUpdate()` | `h2/src/main/org/h2/jdbc/JdbcCallableStatement.java:89` |
+| `JdbcResultSet.absolute()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcResultSet.java:3173` |
+| `JdbcResultSet.afterLast()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcResultSet.java:3105` |
+| `JdbcResultSet.beforeFirst()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcResultSet.java:3086` |
+| `JdbcResultSet.cancelRowUpdates()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcResultSet.java:3432` |
+| `JdbcResultSet.clearWarnings()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcResultSet.java:260` |
+| `JdbcResultSet.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcResultSet.java:188` |
+| `JdbcDatabaseMetaData.allProceduresAreCallable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:305` |
+| `JdbcDatabaseMetaData.allTablesAreSelectable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:316` |
+| `JdbcDatabaseMetaData.autoCommitFailureClosesAllResultSets()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:2598` |
+| `JdbcDatabaseMetaData.dataDefinitionCausesTransactionCommit()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:1814` |
+| `JdbcDatabaseMetaData.dataDefinitionIgnoredInTransactions()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:1825` |
+| `JdbcDatabaseMetaData.deletesAreDetected()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:1950` |
+| `JdbcConnection.abort()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcConnection.java:1832` |
+| `JdbcConnection.clearWarnings()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcConnection.java:655` |
+| `JdbcConnection.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcConnection.java:355` |
+| `JdbcConnection.commit()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcConnection.java:480` |
+| `JdbcConnection.createArrayOf()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcConnection.java:1521` |
+| `JdbcConnection.createBlob()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcConnection.java:1468` |
+| `JdbcCallableStatement.executeLargeUpdate()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcCallableStatement.java:119` |
+| `JdbcCallableStatement.executeUpdate()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/jdbc/JdbcCallableStatement.java:89` |
 
 ## 13.4 阅读路径
 
@@ -3678,7 +3678,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 13.9 本章小结
 
-- 本章覆盖 1 个包、17,330 行。
+本章覆盖 1 个包、共 17,330 行，主要包为 org.h2.jdbc。
 - 关键入口与源码坐标见 §13.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -3762,12 +3762,12 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `SimpleResultSet.absolute()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:2229` |
-| `SimpleResultSet.addColumn()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:100` |
-| `Csv.close()` | `h2/src/main/org/h2/tools/Csv.java:639` |
-| `Csv.getBinaryColumns()` | `h2/src/main/org/h2/tools/Csv.java:909` |
-| `Recover.checkPowerOff()` | `h2/src/main/org/h2/tools/Recover.java:857` |
-| `Recover.checkWritingAllowed()` | `h2/src/main/org/h2/tools/Recover.java:865` |
+| `SimpleResultSet.absolute()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/SimpleResultSet.java:2229` |
+| `SimpleResultSet.addColumn()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/SimpleResultSet.java:100` |
+| `Csv.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Csv.java:639` |
+| `Csv.getBinaryColumns()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Csv.java:909` |
+| `Recover.checkPowerOff()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Recover.java:857` |
+| `Recover.checkWritingAllowed()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Recover.java:865` |
 
 ## 14.3.1 公共类型清单
 
@@ -3827,26 +3827,26 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `SimpleResultSet.absolute()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:2229` |
-| `SimpleResultSet.addColumn()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:100` |
-| `SimpleResultSet.addRow()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:133` |
-| `SimpleResultSet.afterLast()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:2069` |
-| `SimpleResultSet.beforeFirst()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:242` |
-| `SimpleResultSet.cancelRowUpdates()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:2077` |
-| `Csv.close()` | `h2/src/main/org/h2/tools/Csv.java:639` |
-| `Csv.getBinaryColumns()` | `h2/src/main/org/h2/tools/Csv.java:909` |
-| `Csv.getCaseSensitiveColumnNames()` | `h2/src/main/org/h2/tools/Csv.java:687` |
-| `Csv.getEscapeCharacter()` | `h2/src/main/org/h2/tools/Csv.java:782` |
-| `Csv.getFieldDelimiter()` | `h2/src/main/org/h2/tools/Csv.java:743` |
-| `Csv.getFieldSeparatorRead()` | `h2/src/main/org/h2/tools/Csv.java:705` |
-| `Recover.checkPowerOff()` | `h2/src/main/org/h2/tools/Recover.java:857` |
-| `Recover.checkWritingAllowed()` | `h2/src/main/org/h2/tools/Recover.java:865` |
-| `Recover.execute()` | `h2/src/main/org/h2/tools/Recover.java:239` |
-| `Recover.getCompareMode()` | `h2/src/main/org/h2/tools/Recover.java:918` |
-| `Recover.getDatabasePath()` | `h2/src/main/org/h2/tools/Recover.java:841` |
-| `Recover.getLobFileListCache()` | `h2/src/main/org/h2/tools/Recover.java:889` |
-| `Server.createPgServer()` | `h2/src/main/org/h2/tools/Server.java:539` |
-| `Server.createTcpServer()` | `h2/src/main/org/h2/tools/Server.java:511` |
+| `SimpleResultSet.absolute()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/SimpleResultSet.java:2229` |
+| `SimpleResultSet.addColumn()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/SimpleResultSet.java:100` |
+| `SimpleResultSet.addRow()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/SimpleResultSet.java:133` |
+| `SimpleResultSet.afterLast()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/SimpleResultSet.java:2069` |
+| `SimpleResultSet.beforeFirst()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/SimpleResultSet.java:242` |
+| `SimpleResultSet.cancelRowUpdates()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/SimpleResultSet.java:2077` |
+| `Csv.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Csv.java:639` |
+| `Csv.getBinaryColumns()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Csv.java:909` |
+| `Csv.getCaseSensitiveColumnNames()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Csv.java:687` |
+| `Csv.getEscapeCharacter()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Csv.java:782` |
+| `Csv.getFieldDelimiter()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Csv.java:743` |
+| `Csv.getFieldSeparatorRead()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Csv.java:705` |
+| `Recover.checkPowerOff()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Recover.java:857` |
+| `Recover.checkWritingAllowed()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Recover.java:865` |
+| `Recover.execute()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Recover.java:239` |
+| `Recover.getCompareMode()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Recover.java:918` |
+| `Recover.getDatabasePath()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Recover.java:841` |
+| `Recover.getLobFileListCache()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Recover.java:889` |
+| `Server.createPgServer()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Server.java:539` |
+| `Server.createTcpServer()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/tools/Server.java:511` |
 
 ## 14.4 阅读路径
 
@@ -3907,7 +3907,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 14.9 本章小结
 
-- 本章覆盖 1 个包、10,883 行。
+本章覆盖 1 个包、共 10,883 行，主要包为 org.h2.tools。
 - 关键入口与源码坐标见 §14.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 

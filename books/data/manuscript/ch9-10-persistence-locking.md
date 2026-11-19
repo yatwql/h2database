@@ -1,6 +1,6 @@
 # 第11章 持久化
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 3 个包、18,539 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章《持久化》由源码清单汇总而成，覆盖 3 个包、18,539 行实现。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -41,18 +41,18 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `StringUtils.addAsterisk()` | `h2/src/main/org/h2/util/StringUtils.java:283` |
-| `StringUtils.appendHex()` | `h2/src/main/org/h2/util/StringUtils.java:1277` |
-| `DateTimeUtils.absoluteDayFromDateValue()` | `h2/src/main/org/h2/util/DateTimeUtils.java:873` |
-| `DateTimeUtils.absoluteDayFromYear()` | `h2/src/main/org/h2/util/DateTimeUtils.java:857` |
-| `DateTimeTemplate.format()` | `h2/src/main/org/h2/util/DateTimeTemplate.java:178` |
-| `DateTimeTemplate.of()` | `h2/src/main/org/h2/util/DateTimeTemplate.java:430` |
-| `FileLock.getFileLockMethod()` | `h2/src/main/org/h2/store/FileLock.java:458` |
-| `FileLock.getUniqueId()` | `h2/src/main/org/h2/store/FileLock.java:472` |
-| `FileStore.autoDelete()` | `h2/src/main/org/h2/store/FileStore.java:429` |
-| `FileStore.close()` | `h2/src/main/org/h2/store/FileStore.java:221` |
-| `Data.checkCapacity()` | `h2/src/main/org/h2/store/Data.java:171` |
-| `Data.copyString()` | `h2/src/main/org/h2/store/Data.java:204` |
+| `StringUtils.addAsterisk()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/StringUtils.java:283` |
+| `StringUtils.appendHex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/StringUtils.java:1277` |
+| `DateTimeUtils.absoluteDayFromDateValue()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeUtils.java:873` |
+| `DateTimeUtils.absoluteDayFromYear()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeUtils.java:857` |
+| `DateTimeTemplate.format()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeTemplate.java:178` |
+| `DateTimeTemplate.of()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeTemplate.java:430` |
+| `FileLock.getFileLockMethod()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/FileLock.java:458` |
+| `FileLock.getUniqueId()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/FileLock.java:472` |
+| `FileStore.autoDelete()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/FileStore.java:429` |
+| `FileStore.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/FileStore.java:221` |
+| `Data.checkCapacity()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/Data.java:171` |
+| `Data.copyString()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/Data.java:204` |
 
 ## 11.3.1 公共类型清单
 
@@ -153,26 +153,26 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `StringUtils.addAsterisk()` | `h2/src/main/org/h2/util/StringUtils.java:283` |
-| `StringUtils.appendHex()` | `h2/src/main/org/h2/util/StringUtils.java:1277` |
-| `StringUtils.appendToLength()` | `h2/src/main/org/h2/util/StringUtils.java:1360` |
-| `StringUtils.appendTwoDigits()` | `h2/src/main/org/h2/util/StringUtils.java:1327` |
-| `StringUtils.appendZeroPadded()` | `h2/src/main/org/h2/util/StringUtils.java:1342` |
-| `StringUtils.arrayCombine()` | `h2/src/main/org/h2/util/StringUtils.java:525` |
-| `DateTimeUtils.absoluteDayFromDateValue()` | `h2/src/main/org/h2/util/DateTimeUtils.java:873` |
-| `DateTimeUtils.absoluteDayFromYear()` | `h2/src/main/org/h2/util/DateTimeUtils.java:857` |
-| `DateTimeUtils.appendDate()` | `h2/src/main/org/h2/util/DateTimeUtils.java:981` |
-| `DateTimeUtils.appendTime()` | `h2/src/main/org/h2/util/DateTimeUtils.java:1003` |
-| `DateTimeUtils.appendTimeZone()` | `h2/src/main/org/h2/util/DateTimeUtils.java:1063` |
-| `DateTimeUtils.convertScale()` | `h2/src/main/org/h2/util/DateTimeUtils.java:1123` |
-| `DateTimeTemplate.format()` | `h2/src/main/org/h2/util/DateTimeTemplate.java:178` |
-| `DateTimeTemplate.of()` | `h2/src/main/org/h2/util/DateTimeTemplate.java:430` |
-| `DateTimeTemplate.parse()` | `h2/src/main/org/h2/util/DateTimeTemplate.java:183` |
-| `IntervalUtils.appendInterval()` | `h2/src/main/org/h2/util/IntervalUtils.java:402` |
-| `IntervalUtils.daysFromInterval()` | `h2/src/main/org/h2/util/IntervalUtils.java:724` |
-| `IntervalUtils.hoursFromInterval()` | `h2/src/main/org/h2/util/IntervalUtils.java:753` |
-| `IntervalUtils.intervalFromAbsolute()` | `h2/src/main/org/h2/util/IntervalUtils.java:540` |
-| `IntervalUtils.intervalToAbsolute()` | `h2/src/main/org/h2/util/IntervalUtils.java:472` |
+| `StringUtils.addAsterisk()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/StringUtils.java:283` |
+| `StringUtils.appendHex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/StringUtils.java:1277` |
+| `StringUtils.appendToLength()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/StringUtils.java:1360` |
+| `StringUtils.appendTwoDigits()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/StringUtils.java:1327` |
+| `StringUtils.appendZeroPadded()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/StringUtils.java:1342` |
+| `StringUtils.arrayCombine()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/StringUtils.java:525` |
+| `DateTimeUtils.absoluteDayFromDateValue()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeUtils.java:873` |
+| `DateTimeUtils.absoluteDayFromYear()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeUtils.java:857` |
+| `DateTimeUtils.appendDate()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeUtils.java:981` |
+| `DateTimeUtils.appendTime()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeUtils.java:1003` |
+| `DateTimeUtils.appendTimeZone()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeUtils.java:1063` |
+| `DateTimeUtils.convertScale()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeUtils.java:1123` |
+| `DateTimeTemplate.format()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeTemplate.java:178` |
+| `DateTimeTemplate.of()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeTemplate.java:430` |
+| `DateTimeTemplate.parse()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/DateTimeTemplate.java:183` |
+| `IntervalUtils.appendInterval()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/IntervalUtils.java:402` |
+| `IntervalUtils.daysFromInterval()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/IntervalUtils.java:724` |
+| `IntervalUtils.hoursFromInterval()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/IntervalUtils.java:753` |
+| `IntervalUtils.intervalFromAbsolute()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/IntervalUtils.java:540` |
+| `IntervalUtils.intervalToAbsolute()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/util/IntervalUtils.java:472` |
 
 ## 11.4 阅读路径
 
@@ -239,7 +239,7 @@
 
 ## 11.9 本章小结
 
-- 本章覆盖 2 个包、17,194 行。
+本章覆盖 2 个包、共 17,194 行，主要包为 org.h2.util。
 - 关键入口与源码坐标见 §11.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -327,12 +327,12 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `FileUtils.canWrite()` | `h2/src/main/org/h2/store/fs/FileUtils.java:317` |
-| `FileUtils.createDirectories()` | `h2/src/main/org/h2/store/fs/FileUtils.java:372` |
-| `FilePath.canWrite()` | `h2/src/main/org/h2/store/fs/FilePath.java:201` |
-| `FilePath.createDirectory()` | `h2/src/main/org/h2/store/fs/FilePath.java:206` |
-| `FilePathWrapper.canWrite()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:72` |
-| `FilePathWrapper.createDirectory()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:77` |
+| `FileUtils.canWrite()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FileUtils.java:317` |
+| `FileUtils.createDirectories()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FileUtils.java:372` |
+| `FilePath.canWrite()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePath.java:201` |
+| `FilePath.createDirectory()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePath.java:206` |
+| `FilePathWrapper.canWrite()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePathWrapper.java:72` |
+| `FilePathWrapper.createDirectory()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePathWrapper.java:77` |
 
 ## 12.3.1 公共类型清单
 
@@ -392,26 +392,26 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `FileUtils.canWrite()` | `h2/src/main/org/h2/store/fs/FileUtils.java:317` |
-| `FileUtils.createDirectories()` | `h2/src/main/org/h2/store/fs/FileUtils.java:372` |
-| `FileUtils.createDirectory()` | `h2/src/main/org/h2/store/fs/FileUtils.java:84` |
-| `FileUtils.createFile()` | `h2/src/main/org/h2/store/fs/FileUtils.java:96` |
-| `FileUtils.createTempFile()` | `h2/src/main/org/h2/store/fs/FileUtils.java:412` |
-| `FileUtils.delete()` | `h2/src/main/org/h2/store/fs/FileUtils.java:108` |
-| `FilePath.canWrite()` | `h2/src/main/org/h2/store/fs/FilePath.java:201` |
-| `FilePath.createDirectory()` | `h2/src/main/org/h2/store/fs/FilePath.java:206` |
-| `FilePath.createFile()` | `h2/src/main/org/h2/store/fs/FilePath.java:132` |
-| `FilePath.createTempFile()` | `h2/src/main/org/h2/store/fs/FilePath.java:284` |
-| `FilePath.delete()` | `h2/src/main/org/h2/store/fs/FilePath.java:145` |
-| `FilePath.exists()` | `h2/src/main/org/h2/store/fs/FilePath.java:139` |
-| `FilePathWrapper.canWrite()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:72` |
-| `FilePathWrapper.createDirectory()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:77` |
-| `FilePathWrapper.createFile()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:82` |
-| `FilePathWrapper.createTempFile()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:166` |
-| `FilePathWrapper.delete()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:87` |
-| `FilePathWrapper.exists()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:92` |
-| `FakeFileChannel.force()` | `h2/src/main/org/h2/store/fs/FakeFileChannel.java:109` |
-| `FakeFileChannel.lock()` | `h2/src/main/org/h2/store/fs/FakeFileChannel.java:34` |
+| `FileUtils.canWrite()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FileUtils.java:317` |
+| `FileUtils.createDirectories()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FileUtils.java:372` |
+| `FileUtils.createDirectory()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FileUtils.java:84` |
+| `FileUtils.createFile()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FileUtils.java:96` |
+| `FileUtils.createTempFile()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FileUtils.java:412` |
+| `FileUtils.delete()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FileUtils.java:108` |
+| `FilePath.canWrite()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePath.java:201` |
+| `FilePath.createDirectory()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePath.java:206` |
+| `FilePath.createFile()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePath.java:132` |
+| `FilePath.createTempFile()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePath.java:284` |
+| `FilePath.delete()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePath.java:145` |
+| `FilePath.exists()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePath.java:139` |
+| `FilePathWrapper.canWrite()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePathWrapper.java:72` |
+| `FilePathWrapper.createDirectory()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePathWrapper.java:77` |
+| `FilePathWrapper.createFile()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePathWrapper.java:82` |
+| `FilePathWrapper.createTempFile()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePathWrapper.java:166` |
+| `FilePathWrapper.delete()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePathWrapper.java:87` |
+| `FilePathWrapper.exists()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FilePathWrapper.java:92` |
+| `FakeFileChannel.force()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FakeFileChannel.java:109` |
+| `FakeFileChannel.lock()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/store/fs/FakeFileChannel.java:34` |
 
 ## 12.4 阅读路径
 
@@ -472,7 +472,7 @@
 
 ## 12.9 本章小结
 
-- 本章覆盖 1 个包、1,345 行。
+本章覆盖 1 个包、共 1,345 行代码，主要包为 org.h2.store.fs。
 - 关键入口与源码坐标见 §12.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 

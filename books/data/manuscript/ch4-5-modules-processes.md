@@ -1,6 +1,6 @@
 # 第4章 模块边界与依赖治理
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 1 个包、15,026 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，围绕《模块边界与依赖治理》展开，覆盖 1 个包、15,026 行实现，旨在梳理模块划分与依赖关系。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -31,10 +31,10 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Parser.newPrimaryKeyConstraintCommand()` | `h2/src/main/org/h2/command/Parser.java:9178` |
-| `Parser.parseDomainConstraintExpression()` | `h2/src/main/org/h2/command/Parser.java:9446` |
-| `ParserBase.formatNonKeywords()` | `h2/src/main/org/h2/command/ParserBase.java:93` |
-| `ParserBase.getLastParseIndex()` | `h2/src/main/org/h2/command/ParserBase.java:743` |
+| `Parser.newPrimaryKeyConstraintCommand()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9178` |
+| `Parser.parseDomainConstraintExpression()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9446` |
+| `ParserBase.formatNonKeywords()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:93` |
+| `ParserBase.getLastParseIndex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:743` |
 
 ## 4.3.1 公共类型清单
 
@@ -94,25 +94,25 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Parser.newPrimaryKeyConstraintCommand()` | `h2/src/main/org/h2/command/Parser.java:9178` |
-| `Parser.parseDomainConstraintExpression()` | `h2/src/main/org/h2/command/Parser.java:9446` |
-| `Parser.parseExpression()` | `h2/src/main/org/h2/command/Parser.java:9434` |
-| `Parser.parseTableName()` | `h2/src/main/org/h2/command/Parser.java:9463` |
-| `Parser.prepare()` | `h2/src/main/org/h2/command/Parser.java:455` |
-| `Parser.prepareCommand()` | `h2/src/main/org/h2/command/Parser.java:486` |
-| `ParserBase.formatNonKeywords()` | `h2/src/main/org/h2/command/ParserBase.java:93` |
-| `ParserBase.getLastParseIndex()` | `h2/src/main/org/h2/command/ParserBase.java:743` |
-| `ParserBase.parseColumnList()` | `h2/src/main/org/h2/command/ParserBase.java:247` |
-| `ParserBase.parseNonKeywords()` | `h2/src/main/org/h2/command/ParserBase.java:72` |
-| `ParserBase.quoteIdentifier()` | `h2/src/main/org/h2/command/ParserBase.java:55` |
-| `ParserBase.setLiteralsChecked()` | `h2/src/main/org/h2/command/ParserBase.java:215` |
-| `Token.toString()` | `h2/src/main/org/h2/command/Token.java:476` |
-| `Prepared.checkCanceled()` | `h2/src/main/org/h2/command/Prepared.java:340` |
-| `Prepared.collectDependencies()` | `h2/src/main/org/h2/command/Prepared.java:486` |
-| `Prepared.getCurrentRowNumber()` | `h2/src/main/org/h2/command/Prepared.java:418` |
-| `Prepared.getParameters()` | `h2/src/main/org/h2/command/Prepared.java:167` |
-| `Prepared.getPersistedObjectId()` | `h2/src/main/org/h2/command/Prepared.java:291` |
-| `Prepared.getPlanSQL()` | `h2/src/main/org/h2/command/Prepared.java:320` |
+| `Parser.newPrimaryKeyConstraintCommand()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9178` |
+| `Parser.parseDomainConstraintExpression()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9446` |
+| `Parser.parseExpression()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9434` |
+| `Parser.parseTableName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9463` |
+| `Parser.prepare()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:455` |
+| `Parser.prepareCommand()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:486` |
+| `ParserBase.formatNonKeywords()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:93` |
+| `ParserBase.getLastParseIndex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:743` |
+| `ParserBase.parseColumnList()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:247` |
+| `ParserBase.parseNonKeywords()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:72` |
+| `ParserBase.quoteIdentifier()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:55` |
+| `ParserBase.setLiteralsChecked()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:215` |
+| `Token.toString()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Token.java:476` |
+| `Prepared.checkCanceled()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:340` |
+| `Prepared.collectDependencies()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:486` |
+| `Prepared.getCurrentRowNumber()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:418` |
+| `Prepared.getParameters()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:167` |
+| `Prepared.getPersistedObjectId()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:291` |
+| `Prepared.getPlanSQL()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:320` |
 
 ## 4.4 阅读路径
 
@@ -180,7 +180,7 @@
 
 ## 4.9 本章小结
 
-- 本章覆盖 1 个包、15,026 行。
+本章覆盖 1 个包、共 15,026 行代码，主要包为 org.h2.command。
 - 关键入口与源码坐标见 §4.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -265,10 +265,10 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Parser.newPrimaryKeyConstraintCommand()` | `h2/src/main/org/h2/command/Parser.java:9178` |
-| `Parser.parseDomainConstraintExpression()` | `h2/src/main/org/h2/command/Parser.java:9446` |
-| `ParserBase.formatNonKeywords()` | `h2/src/main/org/h2/command/ParserBase.java:93` |
-| `ParserBase.getLastParseIndex()` | `h2/src/main/org/h2/command/ParserBase.java:743` |
+| `Parser.newPrimaryKeyConstraintCommand()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9178` |
+| `Parser.parseDomainConstraintExpression()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9446` |
+| `ParserBase.formatNonKeywords()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:93` |
+| `ParserBase.getLastParseIndex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:743` |
 
 ## 5.3.1 公共类型清单
 
@@ -328,25 +328,25 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Parser.newPrimaryKeyConstraintCommand()` | `h2/src/main/org/h2/command/Parser.java:9178` |
-| `Parser.parseDomainConstraintExpression()` | `h2/src/main/org/h2/command/Parser.java:9446` |
-| `Parser.parseExpression()` | `h2/src/main/org/h2/command/Parser.java:9434` |
-| `Parser.parseTableName()` | `h2/src/main/org/h2/command/Parser.java:9463` |
-| `Parser.prepare()` | `h2/src/main/org/h2/command/Parser.java:455` |
-| `Parser.prepareCommand()` | `h2/src/main/org/h2/command/Parser.java:486` |
-| `ParserBase.formatNonKeywords()` | `h2/src/main/org/h2/command/ParserBase.java:93` |
-| `ParserBase.getLastParseIndex()` | `h2/src/main/org/h2/command/ParserBase.java:743` |
-| `ParserBase.parseColumnList()` | `h2/src/main/org/h2/command/ParserBase.java:247` |
-| `ParserBase.parseNonKeywords()` | `h2/src/main/org/h2/command/ParserBase.java:72` |
-| `ParserBase.quoteIdentifier()` | `h2/src/main/org/h2/command/ParserBase.java:55` |
-| `ParserBase.setLiteralsChecked()` | `h2/src/main/org/h2/command/ParserBase.java:215` |
-| `Token.toString()` | `h2/src/main/org/h2/command/Token.java:476` |
-| `Prepared.checkCanceled()` | `h2/src/main/org/h2/command/Prepared.java:340` |
-| `Prepared.collectDependencies()` | `h2/src/main/org/h2/command/Prepared.java:486` |
-| `Prepared.getCurrentRowNumber()` | `h2/src/main/org/h2/command/Prepared.java:418` |
-| `Prepared.getParameters()` | `h2/src/main/org/h2/command/Prepared.java:167` |
-| `Prepared.getPersistedObjectId()` | `h2/src/main/org/h2/command/Prepared.java:291` |
-| `Prepared.getPlanSQL()` | `h2/src/main/org/h2/command/Prepared.java:320` |
+| `Parser.newPrimaryKeyConstraintCommand()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9178` |
+| `Parser.parseDomainConstraintExpression()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9446` |
+| `Parser.parseExpression()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9434` |
+| `Parser.parseTableName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:9463` |
+| `Parser.prepare()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:455` |
+| `Parser.prepareCommand()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Parser.java:486` |
+| `ParserBase.formatNonKeywords()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:93` |
+| `ParserBase.getLastParseIndex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:743` |
+| `ParserBase.parseColumnList()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:247` |
+| `ParserBase.parseNonKeywords()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:72` |
+| `ParserBase.quoteIdentifier()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:55` |
+| `ParserBase.setLiteralsChecked()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ParserBase.java:215` |
+| `Token.toString()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Token.java:476` |
+| `Prepared.checkCanceled()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:340` |
+| `Prepared.collectDependencies()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:486` |
+| `Prepared.getCurrentRowNumber()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:418` |
+| `Prepared.getParameters()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:167` |
+| `Prepared.getPersistedObjectId()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:291` |
+| `Prepared.getPlanSQL()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/Prepared.java:320` |
 
 ## 5.4 阅读路径
 
@@ -407,7 +407,7 @@
 
 ## 5.9 本章小结
 
-- 本章覆盖 1 个包、15,026 行。
+本章覆盖 1 个包、共 15,026 行，主要包为 org.h2.command。
 - 关键入口与源码坐标见 §5.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 

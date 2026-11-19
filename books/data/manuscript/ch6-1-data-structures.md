@@ -1,6 +1,6 @@
 # 第6章 数据结构：值、行与页
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、19,200 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、19,200 行实现，并以《数据结构：值、行与页》为题，梳理值、行与页三类核心数据组织方式。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -41,18 +41,18 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Value.add()` | `h2/src/main/org/h2/value/Value.java:929` |
-| `Value.castTo()` | `h2/src/main/org/h2/value/Value.java:1105` |
-| `TypeInfo.areSameTypes()` | `h2/src/main/org/h2/value/TypeInfo.java:738` |
-| `TypeInfo.checkComparable()` | `h2/src/main/org/h2/value/TypeInfo.java:764` |
-| `Transfer.close()` | `h2/src/main/org/h2/value/Transfer.java:478` |
-| `Transfer.flush()` | `h2/src/main/org/h2/value/Transfer.java:216` |
-| `LocalResult.addRow()` | `h2/src/main/org/h2/result/LocalResult.java:420` |
-| `LocalResult.addRowForTable()` | `h2/src/main/org/h2/result/LocalResult.java:404` |
-| `UpdatableRow.deleteRow()` | `h2/src/main/org/h2/result/UpdatableRow.java:257` |
-| `UpdatableRow.insertRow()` | `h2/src/main/org/h2/result/UpdatableRow.java:309` |
-| `SortOrder.addNullOrdering()` | `h2/src/main/org/h2/result/SortOrder.java:312` |
-| `SortOrder.compare()` | `h2/src/main/org/h2/result/SortOrder.java:162` |
+| `Value.add()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Value.java:929` |
+| `Value.castTo()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Value.java:1105` |
+| `TypeInfo.areSameTypes()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/TypeInfo.java:738` |
+| `TypeInfo.checkComparable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/TypeInfo.java:764` |
+| `Transfer.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Transfer.java:478` |
+| `Transfer.flush()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Transfer.java:216` |
+| `LocalResult.addRow()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/result/LocalResult.java:420` |
+| `LocalResult.addRowForTable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/result/LocalResult.java:404` |
+| `UpdatableRow.deleteRow()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/result/UpdatableRow.java:257` |
+| `UpdatableRow.insertRow()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/result/UpdatableRow.java:309` |
+| `SortOrder.addNullOrdering()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/result/SortOrder.java:312` |
+| `SortOrder.compare()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/result/SortOrder.java:162` |
 
 ## 6.3.1 公共类型清单
 
@@ -153,26 +153,26 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Value.add()` | `h2/src/main/org/h2/value/Value.java:929` |
-| `Value.castTo()` | `h2/src/main/org/h2/value/Value.java:1105` |
-| `Value.charLength()` | `h2/src/main/org/h2/value/Value.java:2832` |
-| `Value.clearCache()` | `h2/src/main/org/h2/value/Value.java:773` |
-| `Value.compareTo()` | `h2/src/main/org/h2/value/Value.java:2643` |
-| `Value.compareTypeSafe()` | `h2/src/main/org/h2/value/Value.java:2631` |
-| `TypeInfo.areSameTypes()` | `h2/src/main/org/h2/value/TypeInfo.java:738` |
-| `TypeInfo.checkComparable()` | `h2/src/main/org/h2/value/TypeInfo.java:764` |
-| `TypeInfo.equals()` | `h2/src/main/org/h2/value/TypeInfo.java:1397` |
-| `TypeInfo.getDecimalPrecision()` | `h2/src/main/org/h2/value/TypeInfo.java:1490` |
-| `TypeInfo.getDeclaredPrecision()` | `h2/src/main/org/h2/value/TypeInfo.java:1095` |
-| `TypeInfo.getDeclaredScale()` | `h2/src/main/org/h2/value/TypeInfo.java:1166` |
-| `Transfer.close()` | `h2/src/main/org/h2/value/Transfer.java:478` |
-| `Transfer.flush()` | `h2/src/main/org/h2/value/Transfer.java:216` |
-| `Transfer.getSocket()` | `h2/src/main/org/h2/value/Transfer.java:1289` |
-| `Transfer.getVersion()` | `h2/src/main/org/h2/value/Transfer.java:1330` |
-| `Transfer.init()` | `h2/src/main/org/h2/value/Transfer.java:196` |
-| `Transfer.isClosed()` | `h2/src/main/org/h2/value/Transfer.java:1334` |
-| `DataType.addPrecision()` | `h2/src/main/org/h2/value/DataType.java:791` |
-| `DataType.areStableComparable()` | `h2/src/main/org/h2/value/DataType.java:592` |
+| `Value.add()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Value.java:929` |
+| `Value.castTo()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Value.java:1105` |
+| `Value.charLength()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Value.java:2832` |
+| `Value.clearCache()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Value.java:773` |
+| `Value.compareTo()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Value.java:2643` |
+| `Value.compareTypeSafe()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Value.java:2631` |
+| `TypeInfo.areSameTypes()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/TypeInfo.java:738` |
+| `TypeInfo.checkComparable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/TypeInfo.java:764` |
+| `TypeInfo.equals()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/TypeInfo.java:1397` |
+| `TypeInfo.getDecimalPrecision()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/TypeInfo.java:1490` |
+| `TypeInfo.getDeclaredPrecision()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/TypeInfo.java:1095` |
+| `TypeInfo.getDeclaredScale()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/TypeInfo.java:1166` |
+| `Transfer.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Transfer.java:478` |
+| `Transfer.flush()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Transfer.java:216` |
+| `Transfer.getSocket()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Transfer.java:1289` |
+| `Transfer.getVersion()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Transfer.java:1330` |
+| `Transfer.init()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Transfer.java:196` |
+| `Transfer.isClosed()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/Transfer.java:1334` |
+| `DataType.addPrecision()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/DataType.java:791` |
+| `DataType.areStableComparable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/value/DataType.java:592` |
 
 ## 6.4 阅读路径
 
@@ -243,7 +243,7 @@
 
 ## 6.9 本章小结
 
-- 本章覆盖 2 个包、19,200 行。
+本章共覆盖 2 个包、19,200 行代码，其中主要包为 org.h2.value。
 - 关键入口与源码坐标见 §6.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 

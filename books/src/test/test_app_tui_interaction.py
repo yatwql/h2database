@@ -21,6 +21,7 @@ class TuiInteractionTest(unittest.TestCase):
         self.root = _fixture.build_book(self.tmp.name)
         self.tui = _fixture.load_module(self.root, 'tui')
         self.keys = importlib.import_module('app.keys')
+        self.menu = importlib.import_module('core.menu')
         self.calls: list[str] = []
 
     def press(self, *keys: str, answers: list[str] | None = None):
@@ -45,7 +46,7 @@ class TuiInteractionTest(unittest.TestCase):
         return code, buffer.getvalue()
 
     def test_cursor_starts_on_the_everyday_action(self):
-        entry = self.tui.ENTRIES[self.tui.default_cursor()]
+        entry = self.menu.ENTRIES[self.menu.default_cursor()]
         self.assertEqual(entry[0], '2')
         self.assertEqual(entry[1], 'build')
 
@@ -70,6 +71,27 @@ class TuiInteractionTest(unittest.TestCase):
         self.calls.clear()
         self.press('L')
         self.assertEqual(self.calls, ['analyze-llm'])
+
+    def test_quit_is_case_insensitive(self):
+        for key in ('Q', 'q'):
+            with self.subTest(key=key):
+                self.calls.clear()
+                self.assertEqual(self.press(key)[0], 0)
+                self.assertEqual(self.calls, [])
+
+    def test_refresh_is_case_insensitive(self):
+        for key in ('R', 'r'):
+            with self.subTest(key=key):
+                _code, out = self.press(key, 'q')
+                self.assertIn('配置已重新读取', out)
+
+    def test_configure_is_case_insensitive(self):
+        for key in ('C', 'c'):
+            with self.subTest(key=key):
+                configure = mock.Mock(return_value='ok')
+                with mock.patch.object(self.tui, 'configure', configure):
+                    self.press(key, 'q')
+                configure.assert_called_once()
 
     def test_llm_entries_carry_a_badge_in_the_menu(self):
         text = self.tui.menu_text()

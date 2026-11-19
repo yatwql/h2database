@@ -30,7 +30,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lib import _config, _fsutil
 
 PY_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ALLOWED_LAYERS = ('app', 'ingest')
+ALLOWED_LAYERS = ('core', 'ingest')
 IMPORT_RE = re.compile(r'^\s*(?:from\s+lib\s+import\s+[^\n]*\b_llm\b|import\s+lib\._llm)', re.MULTILINE)
 
 

@@ -1,6 +1,6 @@
 # 第9章 SQL 解析与执行
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 4 个包、28,396 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，以《SQL 解析与执行》为题，覆盖 4 个包、28,396 行实现，系统梳理 SQL 解析与执行相关代码的整体结构与关键实现。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -61,26 +61,26 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `ToCharFunction.apply()` | `h2/src/main/org/h2/expression/function/ToCharFunction.java:1088` |
-| `ToCharFunction.clearNames()` | `h2/src/main/org/h2/expression/function/ToCharFunction.java:552` |
-| `DateTimeFunction.dateadd()` | `h2/src/main/org/h2/expression/function/DateTimeFunction.java:656` |
-| `DateTimeFunction.getField()` | `h2/src/main/org/h2/expression/function/DateTimeFunction.java:241` |
-| `BitFunction.checkArgType()` | `h2/src/main/org/h2/expression/function/BitFunction.java:709` |
-| `BitFunction.getBitwise()` | `h2/src/main/org/h2/expression/function/BitFunction.java:455` |
-| `AlterTableAlterColumn.addColumn()` | `h2/src/main/org/h2/command/ddl/AlterTableAlterColumn.java:719` |
-| `AlterTableAlterColumn.getType()` | `h2/src/main/org/h2/command/ddl/AlterTableAlterColumn.java:710` |
-| `AlterTableAddConstraint.getConstraintName()` | `h2/src/main/org/h2/command/ddl/AlterTableAddConstraint.java:448` |
-| `AlterTableAddConstraint.getIndexColumns()` | `h2/src/main/org/h2/command/ddl/AlterTableAddConstraint.java:480` |
-| `SequenceOptions.getBounds()` | `h2/src/main/org/h2/command/ddl/SequenceOptions.java:241` |
-| `SequenceOptions.getCacheSize()` | `h2/src/main/org/h2/command/ddl/SequenceOptions.java:346` |
-| `ExpressionColumn.createIndexConditions()` | `h2/src/main/org/h2/expression/ExpressionColumn.java:499` |
-| `ExpressionColumn.getAlias()` | `h2/src/main/org/h2/expression/ExpressionColumn.java:404` |
-| `Expression.addFilterConditions()` | `h2/src/main/org/h2/expression/Expression.java:477` |
-| `Expression.createIndexConditions()` | `h2/src/main/org/h2/expression/Expression.java:354` |
-| `BinaryOperation.getOperationType()` | `h2/src/main/org/h2/expression/BinaryOperation.java:450` |
-| `BinaryOperation.getUnenclosedSQL()` | `h2/src/main/org/h2/expression/BinaryOperation.java:74` |
-| `ScriptCommand.close()` | `h2/src/main/org/h2/command/dml/ScriptCommand.java:677` |
-| `ScriptCommand.collectDependencies()` | `h2/src/main/org/h2/command/dml/ScriptCommand.java:119` |
+| `ToCharFunction.apply()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/ToCharFunction.java:1088` |
+| `ToCharFunction.clearNames()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/ToCharFunction.java:552` |
+| `DateTimeFunction.dateadd()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/DateTimeFunction.java:656` |
+| `DateTimeFunction.getField()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/DateTimeFunction.java:241` |
+| `BitFunction.checkArgType()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/BitFunction.java:709` |
+| `BitFunction.getBitwise()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/BitFunction.java:455` |
+| `AlterTableAlterColumn.addColumn()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ddl/AlterTableAlterColumn.java:719` |
+| `AlterTableAlterColumn.getType()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ddl/AlterTableAlterColumn.java:710` |
+| `AlterTableAddConstraint.getConstraintName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ddl/AlterTableAddConstraint.java:448` |
+| `AlterTableAddConstraint.getIndexColumns()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ddl/AlterTableAddConstraint.java:480` |
+| `SequenceOptions.getBounds()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ddl/SequenceOptions.java:241` |
+| `SequenceOptions.getCacheSize()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/ddl/SequenceOptions.java:346` |
+| `ExpressionColumn.createIndexConditions()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/ExpressionColumn.java:499` |
+| `ExpressionColumn.getAlias()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/ExpressionColumn.java:404` |
+| `Expression.addFilterConditions()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/Expression.java:477` |
+| `Expression.createIndexConditions()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/Expression.java:354` |
+| `BinaryOperation.getOperationType()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/BinaryOperation.java:450` |
+| `BinaryOperation.getUnenclosedSQL()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/BinaryOperation.java:74` |
+| `ScriptCommand.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/dml/ScriptCommand.java:677` |
+| `ScriptCommand.collectDependencies()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/command/dml/ScriptCommand.java:119` |
 
 ## 9.3.1 公共类型清单
 
@@ -215,26 +215,26 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `ToCharFunction.apply()` | `h2/src/main/org/h2/expression/function/ToCharFunction.java:1088` |
-| `ToCharFunction.clearNames()` | `h2/src/main/org/h2/expression/function/ToCharFunction.java:552` |
-| `ToCharFunction.getDateNames()` | `h2/src/main/org/h2/expression/function/ToCharFunction.java:527` |
-| `ToCharFunction.getName()` | `h2/src/main/org/h2/expression/function/ToCharFunction.java:1151` |
-| `ToCharFunction.getValue()` | `h2/src/main/org/h2/expression/function/ToCharFunction.java:1113` |
-| `ToCharFunction.optimize()` | `h2/src/main/org/h2/expression/function/ToCharFunction.java:1141` |
-| `DateTimeFunction.dateadd()` | `h2/src/main/org/h2/expression/function/DateTimeFunction.java:656` |
-| `DateTimeFunction.getField()` | `h2/src/main/org/h2/expression/function/DateTimeFunction.java:241` |
-| `DateTimeFunction.getFieldName()` | `h2/src/main/org/h2/expression/function/DateTimeFunction.java:337` |
-| `DateTimeFunction.getName()` | `h2/src/main/org/h2/expression/function/DateTimeFunction.java:1076` |
-| `DateTimeFunction.getUnenclosedSQL()` | `h2/src/main/org/h2/expression/function/DateTimeFunction.java:1050` |
-| `DateTimeFunction.getValue()` | `h2/src/main/org/h2/expression/function/DateTimeFunction.java:353` |
-| `BitFunction.checkArgType()` | `h2/src/main/org/h2/expression/function/BitFunction.java:709` |
-| `BitFunction.getBitwise()` | `h2/src/main/org/h2/expression/function/BitFunction.java:455` |
-| `BitFunction.getName()` | `h2/src/main/org/h2/expression/function/BitFunction.java:725` |
-| `BitFunction.getValue()` | `h2/src/main/org/h2/expression/function/BitFunction.java:123` |
-| `BitFunction.optimize()` | `h2/src/main/org/h2/expression/function/BitFunction.java:578` |
-| `MathFunction.getName()` | `h2/src/main/org/h2/expression/function/MathFunction.java:400` |
-| `MathFunction.getValue()` | `h2/src/main/org/h2/expression/function/MathFunction.java:87` |
-| `MathFunction.optimize()` | `h2/src/main/org/h2/expression/function/MathFunction.java:216` |
+| `ToCharFunction.apply()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/ToCharFunction.java:1088` |
+| `ToCharFunction.clearNames()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/ToCharFunction.java:552` |
+| `ToCharFunction.getDateNames()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/ToCharFunction.java:527` |
+| `ToCharFunction.getName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/ToCharFunction.java:1151` |
+| `ToCharFunction.getValue()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/ToCharFunction.java:1113` |
+| `ToCharFunction.optimize()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/ToCharFunction.java:1141` |
+| `DateTimeFunction.dateadd()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/DateTimeFunction.java:656` |
+| `DateTimeFunction.getField()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/DateTimeFunction.java:241` |
+| `DateTimeFunction.getFieldName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/DateTimeFunction.java:337` |
+| `DateTimeFunction.getName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/DateTimeFunction.java:1076` |
+| `DateTimeFunction.getUnenclosedSQL()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/DateTimeFunction.java:1050` |
+| `DateTimeFunction.getValue()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/DateTimeFunction.java:353` |
+| `BitFunction.checkArgType()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/BitFunction.java:709` |
+| `BitFunction.getBitwise()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/BitFunction.java:455` |
+| `BitFunction.getName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/BitFunction.java:725` |
+| `BitFunction.getValue()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/BitFunction.java:123` |
+| `BitFunction.optimize()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/BitFunction.java:578` |
+| `MathFunction.getName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/MathFunction.java:400` |
+| `MathFunction.getValue()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/MathFunction.java:87` |
+| `MathFunction.optimize()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/function/MathFunction.java:216` |
 
 ## 9.4 阅读路径
 
@@ -311,7 +311,7 @@
 
 ## 9.9 本章小结
 
-- 本章覆盖 4 个包、28,396 行。
+本章覆盖 4 个包、共 28,396 行，其中主要包是 org.h2.expression.function。
 - 关键入口与源码坐标见 §9.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 

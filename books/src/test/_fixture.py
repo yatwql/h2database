@@ -322,7 +322,7 @@ FILES = {
 }
 
 
-SUBDIRS = ('', 'lib', 'audit', 'manuscript', 'render', 'ingest', 'app')
+SUBDIRS = ('', 'lib', 'audit', 'manuscript', 'render', 'ingest', 'app', 'core')
 
 
 def resolve_script(script: str) -> str:
@@ -339,7 +339,8 @@ def refresh_config(root: str) -> None:
     """Point lib._config at ``root`` and drop every cached config module."""
     os.environ['BOOK_ROOT'] = root
     for key in ('_config', 'lib._config', 'lib._log', '_log',
-                'app', 'app.actions', 'app.settings', 'app.cli', 'app.tui'):
+                'app', 'app.cli', 'app.tui', 'app.web', 'app.keys',
+                'core', 'core.actions', 'core.settings'):
         sys.modules.pop(key, None)
     lib = sys.modules.get('lib')
     if lib is not None:
@@ -418,7 +419,8 @@ def run_inproc(root: str, script: str, *args: str) -> tuple[int, str]:
         else:
             os.environ['BOOK_ROOT'] = previous_root
         for key in ('_config', 'lib._config', 'lib._log', '_log',
-                'app', 'app.actions', 'app.settings', 'app.cli', 'app.tui'):
+                'app', 'app.cli', 'app.tui', 'app.web', 'app.keys',
+                'core', 'core.actions', 'core.settings'):
             sys.modules.pop(key, None)
         lib_mod = sys.modules.get('lib')
         if lib_mod is not None and hasattr(lib_mod, '_config'):

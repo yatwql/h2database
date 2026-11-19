@@ -1,6 +1,6 @@
 # 第1章 H2 总体架构
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、12,067 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章基于源码清单汇总，围绕《H2 总体架构》展开，覆盖 2 个包、共 12,067 行实现，旨在从整体上梳理 H2 的模块划分与架构脉络。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -31,12 +31,12 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Database.addDatabaseObject()` | `h2/src/main/org/h2/engine/Database.java:948` |
-| `Database.addSchemaObject()` | `h2/src/main/org/h2/engine/Database.java:923` |
-| `SessionLocal.addLocalTempTable()` | `h2/src/main/org/h2/engine/SessionLocal.java:397` |
-| `SessionLocal.addLocalTempTableConstraint()` | `h2/src/main/org/h2/engine/SessionLocal.java:510` |
-| `SessionRemote.addTemporaryLob()` | `h2/src/main/org/h2/engine/SessionRemote.java:819` |
-| `SessionRemote.autoCommitIfCluster()` | `h2/src/main/org/h2/engine/SessionRemote.java:296` |
+| `Database.addDatabaseObject()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Database.java:948` |
+| `Database.addSchemaObject()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Database.java:923` |
+| `SessionLocal.addLocalTempTable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionLocal.java:397` |
+| `SessionLocal.addLocalTempTableConstraint()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionLocal.java:510` |
+| `SessionRemote.addTemporaryLob()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionRemote.java:819` |
+| `SessionRemote.autoCommitIfCluster()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionRemote.java:296` |
 
 ## 1.3.1 公共类型清单
 
@@ -96,26 +96,26 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Database.addDatabaseObject()` | `h2/src/main/org/h2/engine/Database.java:948` |
-| `Database.addSchemaObject()` | `h2/src/main/org/h2/engine/Database.java:923` |
-| `Database.allocateObjectId()` | `h2/src/main/org/h2/engine/Database.java:1369` |
-| `Database.checkPowerOff()` | `h2/src/main/org/h2/engine/Database.java:475` |
-| `Database.checkWritingAllowed()` | `h2/src/main/org/h2/engine/Database.java:1824` |
-| `Database.checkpoint()` | `h2/src/main/org/h2/engine/Database.java:2320` |
-| `SessionLocal.addLocalTempTable()` | `h2/src/main/org/h2/engine/SessionLocal.java:397` |
-| `SessionLocal.addLocalTempTableConstraint()` | `h2/src/main/org/h2/engine/SessionLocal.java:510` |
-| `SessionLocal.addLocalTempTableIndex()` | `h2/src/main/org/h2/engine/SessionLocal.java:454` |
-| `SessionLocal.addProcedure()` | `h2/src/main/org/h2/engine/SessionLocal.java:1424` |
-| `SessionLocal.addSavepoint()` | `h2/src/main/org/h2/engine/SessionLocal.java:1140` |
-| `SessionLocal.addTemporaryLob()` | `h2/src/main/org/h2/engine/SessionLocal.java:1768` |
-| `SessionRemote.addTemporaryLob()` | `h2/src/main/org/h2/engine/SessionRemote.java:819` |
-| `SessionRemote.autoCommitIfCluster()` | `h2/src/main/org/h2/engine/SessionRemote.java:296` |
-| `SessionRemote.cancel()` | `h2/src/main/org/h2/engine/SessionRemote.java:197` |
-| `SessionRemote.cancelStatement()` | `h2/src/main/org/h2/engine/SessionRemote.java:208` |
-| `SessionRemote.checkClosed()` | `h2/src/main/org/h2/engine/SessionRemote.java:558` |
-| `SessionRemote.checkPowerOff()` | `h2/src/main/org/h2/engine/SessionRemote.java:704` |
-| `Mode.getEnum()` | `h2/src/main/org/h2/engine/Mode.java:766` |
-| `Mode.getInstance()` | `h2/src/main/org/h2/engine/Mode.java:754` |
+| `Database.addDatabaseObject()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Database.java:948` |
+| `Database.addSchemaObject()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Database.java:923` |
+| `Database.allocateObjectId()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Database.java:1369` |
+| `Database.checkPowerOff()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Database.java:475` |
+| `Database.checkWritingAllowed()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Database.java:1824` |
+| `Database.checkpoint()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Database.java:2320` |
+| `SessionLocal.addLocalTempTable()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionLocal.java:397` |
+| `SessionLocal.addLocalTempTableConstraint()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionLocal.java:510` |
+| `SessionLocal.addLocalTempTableIndex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionLocal.java:454` |
+| `SessionLocal.addProcedure()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionLocal.java:1424` |
+| `SessionLocal.addSavepoint()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionLocal.java:1140` |
+| `SessionLocal.addTemporaryLob()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionLocal.java:1768` |
+| `SessionRemote.addTemporaryLob()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionRemote.java:819` |
+| `SessionRemote.autoCommitIfCluster()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionRemote.java:296` |
+| `SessionRemote.cancel()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionRemote.java:197` |
+| `SessionRemote.cancelStatement()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionRemote.java:208` |
+| `SessionRemote.checkClosed()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionRemote.java:558` |
+| `SessionRemote.checkPowerOff()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/SessionRemote.java:704` |
+| `Mode.getEnum()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Mode.java:766` |
+| `Mode.getInstance()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/engine/Mode.java:754` |
 
 ## 1.4 阅读路径
 
@@ -183,7 +183,7 @@
 
 ## 1.9 本章小结
 
-- 本章覆盖 1 个包、11,851 行。
+本章覆盖 1 个包，共 11,851 行，主要包是 org.h2.engine。
 - 关键入口与源码坐标见 §1.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -265,8 +265,8 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Driver.acceptsURL()` | `h2/src/main/org/h2/Driver.java:76` |
-| `Driver.connect()` | `h2/src/main/org/h2/Driver.java:55` |
+| `Driver.acceptsURL()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/Driver.java:76` |
+| `Driver.connect()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/Driver.java:55` |
 
 ## 2.3.1 公共类型清单
 
@@ -292,12 +292,12 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Driver.acceptsURL()` | `h2/src/main/org/h2/Driver.java:76` |
-| `Driver.connect()` | `h2/src/main/org/h2/Driver.java:55` |
-| `Driver.getMajorVersion()` | `h2/src/main/org/h2/Driver.java:95` |
-| `Driver.getMinorVersion()` | `h2/src/main/org/h2/Driver.java:106` |
-| `Driver.getParentLogger()` | `h2/src/main/org/h2/Driver.java:138` |
-| `Driver.getPropertyInfo()` | `h2/src/main/org/h2/Driver.java:119` |
+| `Driver.acceptsURL()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/Driver.java:76` |
+| `Driver.connect()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/Driver.java:55` |
+| `Driver.getMajorVersion()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/Driver.java:95` |
+| `Driver.getMinorVersion()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/Driver.java:106` |
+| `Driver.getParentLogger()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/Driver.java:138` |
+| `Driver.getPropertyInfo()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/Driver.java:119` |
 
 ## 2.4 阅读路径
 
@@ -349,7 +349,7 @@
 
 ## 2.8 本章小结
 
-- 本章覆盖 1 个包、216 行。
+本章共覆盖 1 个包、216 行代码，主要包为 org.h2。
 - 关键入口与源码坐标见 §2.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 

@@ -56,7 +56,8 @@ def feature_score() -> tuple[int, list[str]]:
         ('languages', len(glob.glob(os.path.join(PY_ROOT, 'ingest', 'languages',
                                                  '[!_]*.py'))) >= 3),
         ('versions', os.path.isfile(os.path.join(PY_ROOT, 'lib', '_version.py'))),
-        ('settings', os.path.isfile(os.path.join(PY_ROOT, 'app', 'settings.py'))),
+        ('core', os.path.isfile(os.path.join(PY_ROOT, 'core', 'actions.py'))),
+        ('settings', os.path.isfile(os.path.join(PY_ROOT, 'core', 'settings.py'))),
     ]
     for name, ok in checks:
         points += 1 if ok else 0

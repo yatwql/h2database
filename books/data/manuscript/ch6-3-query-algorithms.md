@@ -1,6 +1,6 @@
 # 第8章 索引与表达式求值
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 1 个包、4,105 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，围绕《索引与表达式求值》展开，覆盖 1 个包、4,105 行实现，呈现索引机制与表达式求值相关代码的整体脉络。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -31,12 +31,12 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Index.add()` | `h2/src/main/org/h2/index/Index.java:210` |
-| `Index.areRowsEquivalent()` | `h2/src/main/org/h2/index/Index.java:379` |
-| `IndexCondition.cloneWithIndexColumns()` | `h2/src/main/org/h2/index/IndexCondition.java:559` |
-| `IndexCondition.get()` | `h2/src/main/org/h2/index/IndexCondition.java:122` |
-| `IndexCursor.canUseIndexForIn()` | `h2/src/main/org/h2/index/IndexCursor.java:318` |
-| `IndexCursor.find()` | `h2/src/main/org/h2/index/IndexCursor.java:289` |
+| `Index.add()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/Index.java:210` |
+| `Index.areRowsEquivalent()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/Index.java:379` |
+| `IndexCondition.cloneWithIndexColumns()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCondition.java:559` |
+| `IndexCondition.get()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCondition.java:122` |
+| `IndexCursor.canUseIndexForIn()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCursor.java:318` |
+| `IndexCursor.find()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCursor.java:289` |
 
 ## 8.3.1 公共类型清单
 
@@ -96,26 +96,26 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Index.add()` | `h2/src/main/org/h2/index/Index.java:210` |
-| `Index.areRowsEquivalent()` | `h2/src/main/org/h2/index/Index.java:379` |
-| `Index.canFindNext()` | `h2/src/main/org/h2/index/Index.java:302` |
-| `Index.canGetFirstOrLast()` | `h2/src/main/org/h2/index/Index.java:293` |
-| `Index.canScan()` | `h2/src/main/org/h2/index/Index.java:539` |
-| `Index.close()` | `h2/src/main/org/h2/index/Index.java:202` |
-| `IndexCondition.cloneWithIndexColumns()` | `h2/src/main/org/h2/index/IndexCondition.java:559` |
-| `IndexCondition.get()` | `h2/src/main/org/h2/index/IndexCondition.java:122` |
-| `IndexCondition.getColumn()` | `h2/src/main/org/h2/index/IndexCondition.java:472` |
-| `IndexCondition.getColumns()` | `h2/src/main/org/h2/index/IndexCondition.java:485` |
-| `IndexCondition.getCompareType()` | `h2/src/main/org/h2/index/IndexCondition.java:462` |
-| `IndexCondition.getCompoundInList()` | `h2/src/main/org/h2/index/IndexCondition.java:144` |
-| `IndexCursor.canUseIndexForIn()` | `h2/src/main/org/h2/index/IndexCursor.java:318` |
-| `IndexCursor.find()` | `h2/src/main/org/h2/index/IndexCursor.java:289` |
-| `IndexCursor.get()` | `h2/src/main/org/h2/index/IndexCursor.java:411` |
-| `IndexCursor.getEnd()` | `h2/src/main/org/h2/index/IndexCursor.java:406` |
-| `IndexCursor.getInColumnPosition()` | `h2/src/main/org/h2/index/IndexCursor.java:237` |
-| `IndexCursor.getSearchRow()` | `h2/src/main/org/h2/index/IndexCursor.java:419` |
-| `LinkedIndex.add()` | `h2/src/main/org/h2/index/LinkedIndex.java:61` |
-| `LinkedIndex.checkRename()` | `h2/src/main/org/h2/index/LinkedIndex.java:199` |
+| `Index.add()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/Index.java:210` |
+| `Index.areRowsEquivalent()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/Index.java:379` |
+| `Index.canFindNext()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/Index.java:302` |
+| `Index.canGetFirstOrLast()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/Index.java:293` |
+| `Index.canScan()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/Index.java:539` |
+| `Index.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/Index.java:202` |
+| `IndexCondition.cloneWithIndexColumns()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCondition.java:559` |
+| `IndexCondition.get()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCondition.java:122` |
+| `IndexCondition.getColumn()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCondition.java:472` |
+| `IndexCondition.getColumns()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCondition.java:485` |
+| `IndexCondition.getCompareType()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCondition.java:462` |
+| `IndexCondition.getCompoundInList()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCondition.java:144` |
+| `IndexCursor.canUseIndexForIn()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCursor.java:318` |
+| `IndexCursor.find()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCursor.java:289` |
+| `IndexCursor.get()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCursor.java:411` |
+| `IndexCursor.getEnd()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCursor.java:406` |
+| `IndexCursor.getInColumnPosition()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCursor.java:237` |
+| `IndexCursor.getSearchRow()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/IndexCursor.java:419` |
+| `LinkedIndex.add()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/LinkedIndex.java:61` |
+| `LinkedIndex.checkRename()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/index/LinkedIndex.java:199` |
 
 ## 8.4 阅读路径
 
@@ -183,7 +183,7 @@
 
 ## 8.9 本章小结
 
-- 本章覆盖 1 个包、4,105 行。
+本章覆盖 1 个包、共 4,105 行，主要包为 org.h2.index。
 - 关键入口与源码坐标见 §8.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 

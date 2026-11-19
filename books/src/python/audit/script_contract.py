@@ -33,8 +33,9 @@ def scripts() -> list[str]:
     found = glob.glob(os.path.join(root, '**', '*.py'), recursive=True)
     # library-style modules: shared helpers, not entry points
     library = (os.sep + 'lib' + os.sep,
-               os.sep + 'app' + os.sep + 'actions.py',
-               os.sep + 'app' + os.sep + 'settings.py',
+               os.sep + 'core' + os.sep + 'actions.py',
+               os.sep + 'core' + os.sep + 'settings.py',
+               os.sep + 'core' + os.sep + 'menu.py',
                os.sep + 'app' + os.sep + 'keys.py',
                os.sep + 'ingest' + os.sep + 'languages' + os.sep)
     return sorted(p for p in found

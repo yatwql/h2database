@@ -1,6 +1,6 @@
 # 第3章 包结构与模块职责
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、7,387 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、7,387 行实现，围绕《包结构与模块职责》梳理代码组织与模块边界。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -41,18 +41,18 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `ErrorCode.getState()` | `h2/src/main/org/h2/api/ErrorCode.java:2317` |
-| `ErrorCode.isCommon()` | `h2/src/main/org/h2/api/ErrorCode.java:2287` |
-| `Interval.equals()` | `h2/src/main/org/h2/api/Interval.java:617` |
-| `Interval.getDays()` | `h2/src/main/org/h2/api/Interval.java:543` |
-| `IntervalQualifier.getTypeName()` | `h2/src/main/org/h2/api/IntervalQualifier.java:253` |
-| `IntervalQualifier.hasDays()` | `h2/src/main/org/h2/api/IntervalQualifier.java:165` |
-| `Schema.add()` | `h2/src/main/org/h2/schema/Schema.java:267` |
-| `Schema.canDrop()` | `h2/src/main/org/h2/schema/Schema.java:92` |
-| `Sequence.close()` | `h2/src/main/org/h2/schema/Sequence.java:553` |
-| `Sequence.flush()` | `h2/src/main/org/h2/schema/Sequence.java:510` |
-| `FunctionAlias.compareTo()` | `h2/src/main/org/h2/schema/FunctionAlias.java:546` |
-| `FunctionAlias.findJavaMethod()` | `h2/src/main/org/h2/schema/FunctionAlias.java:243` |
+| `ErrorCode.getState()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/ErrorCode.java:2317` |
+| `ErrorCode.isCommon()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/ErrorCode.java:2287` |
+| `Interval.equals()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/Interval.java:617` |
+| `Interval.getDays()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/Interval.java:543` |
+| `IntervalQualifier.getTypeName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/IntervalQualifier.java:253` |
+| `IntervalQualifier.hasDays()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/IntervalQualifier.java:165` |
+| `Schema.add()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/schema/Schema.java:267` |
+| `Schema.canDrop()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/schema/Schema.java:92` |
+| `Sequence.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/schema/Sequence.java:553` |
+| `Sequence.flush()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/schema/Sequence.java:510` |
+| `FunctionAlias.compareTo()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/schema/FunctionAlias.java:546` |
+| `FunctionAlias.findJavaMethod()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/schema/FunctionAlias.java:243` |
 
 ## 3.3.1 公共类型清单
 
@@ -153,26 +153,26 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `ErrorCode.getState()` | `h2/src/main/org/h2/api/ErrorCode.java:2317` |
-| `ErrorCode.isCommon()` | `h2/src/main/org/h2/api/ErrorCode.java:2287` |
-| `Interval.equals()` | `h2/src/main/org/h2/api/Interval.java:617` |
-| `Interval.getDays()` | `h2/src/main/org/h2/api/Interval.java:543` |
-| `Interval.getHours()` | `h2/src/main/org/h2/api/Interval.java:552` |
-| `Interval.getLeading()` | `h2/src/main/org/h2/api/Interval.java:506` |
-| `Interval.getMinutes()` | `h2/src/main/org/h2/api/Interval.java:561` |
-| `Interval.getMonths()` | `h2/src/main/org/h2/api/Interval.java:534` |
-| `IntervalQualifier.getTypeName()` | `h2/src/main/org/h2/api/IntervalQualifier.java:253` |
-| `IntervalQualifier.hasDays()` | `h2/src/main/org/h2/api/IntervalQualifier.java:165` |
-| `IntervalQualifier.hasHours()` | `h2/src/main/org/h2/api/IntervalQualifier.java:182` |
-| `IntervalQualifier.hasMinutes()` | `h2/src/main/org/h2/api/IntervalQualifier.java:201` |
-| `IntervalQualifier.hasMonths()` | `h2/src/main/org/h2/api/IntervalQualifier.java:156` |
-| `IntervalQualifier.hasMultipleFields()` | `h2/src/main/org/h2/api/IntervalQualifier.java:237` |
-| `H2Type.array()` | `h2/src/main/org/h2/api/H2Type.java:258` |
-| `H2Type.getName()` | `h2/src/main/org/h2/api/H2Type.java:296` |
-| `H2Type.getVendor()` | `h2/src/main/org/h2/api/H2Type.java:301` |
-| `H2Type.getVendorTypeNumber()` | `h2/src/main/org/h2/api/H2Type.java:312` |
-| `H2Type.row()` | `h2/src/main/org/h2/api/H2Type.java:270` |
-| `H2Type.toString()` | `h2/src/main/org/h2/api/H2Type.java:317` |
+| `ErrorCode.getState()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/ErrorCode.java:2317` |
+| `ErrorCode.isCommon()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/ErrorCode.java:2287` |
+| `Interval.equals()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/Interval.java:617` |
+| `Interval.getDays()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/Interval.java:543` |
+| `Interval.getHours()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/Interval.java:552` |
+| `Interval.getLeading()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/Interval.java:506` |
+| `Interval.getMinutes()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/Interval.java:561` |
+| `Interval.getMonths()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/Interval.java:534` |
+| `IntervalQualifier.getTypeName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/IntervalQualifier.java:253` |
+| `IntervalQualifier.hasDays()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/IntervalQualifier.java:165` |
+| `IntervalQualifier.hasHours()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/IntervalQualifier.java:182` |
+| `IntervalQualifier.hasMinutes()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/IntervalQualifier.java:201` |
+| `IntervalQualifier.hasMonths()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/IntervalQualifier.java:156` |
+| `IntervalQualifier.hasMultipleFields()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/IntervalQualifier.java:237` |
+| `H2Type.array()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/H2Type.java:258` |
+| `H2Type.getName()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/H2Type.java:296` |
+| `H2Type.getVendor()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/H2Type.java:301` |
+| `H2Type.getVendorTypeNumber()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/H2Type.java:312` |
+| `H2Type.row()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/H2Type.java:270` |
+| `H2Type.toString()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/api/H2Type.java:317` |
 
 ## 3.4 阅读路径
 
@@ -243,7 +243,7 @@
 
 ## 3.9 本章小结
 
-- 本章覆盖 2 个包、7,387 行。
+本章覆盖 2 个包、共 7,387 行，主要包为 org.h2.api。
 - 关键入口与源码坐标见 §3.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 

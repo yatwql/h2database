@@ -1,6 +1,6 @@
 # 第10章 查询优化器
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、16,277 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章《查询优化器》由源码清单汇总而成，覆盖 2 个包、16,277 行实现，旨在梳理查询优化器的代码结构与核心实现。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -41,18 +41,18 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `InformationSchemaTable.canGetRowCount()` | `h2/src/main/org/h2/table/InformationSchemaTable.java:3057` |
-| `InformationSchemaTable.generateRows()` | `h2/src/main/org/h2/table/InformationSchemaTable.java:881` |
-| `InformationSchemaTableLegacy.generateRows()` | `h2/src/main/org/h2/table/InformationSchemaTableLegacy.java:731` |
-| `InformationSchemaTableLegacy.getMaxDataModificationId()` | `h2/src/main/org/h2/table/InformationSchemaTableLegacy.java:2310` |
-| `Table.addConstraint()` | `h2/src/main/org/h2/table/Table.java:1109` |
-| `Table.addDependencies()` | `h2/src/main/org/h2/table/Table.java:417` |
-| `WindowFrame.getEndIndex()` | `h2/src/main/org/h2/expression/analysis/WindowFrame.java:239` |
-| `WindowFrame.getExclusion()` | `h2/src/main/org/h2/expression/analysis/WindowFrame.java:439` |
-| `DataAnalysisOperation.getOverCondition()` | `h2/src/main/org/h2/expression/analysis/DataAnalysisOperation.java:97` |
-| `DataAnalysisOperation.getValue()` | `h2/src/main/org/h2/expression/analysis/DataAnalysisOperation.java:388` |
-| `WindowFunction.getCost()` | `h2/src/main/org/h2/expression/analysis/WindowFunction.java:534` |
-| `WindowFunction.getFunctionType()` | `h2/src/main/org/h2/expression/analysis/WindowFunction.java:122` |
+| `InformationSchemaTable.canGetRowCount()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTable.java:3057` |
+| `InformationSchemaTable.generateRows()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTable.java:881` |
+| `InformationSchemaTableLegacy.generateRows()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTableLegacy.java:731` |
+| `InformationSchemaTableLegacy.getMaxDataModificationId()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTableLegacy.java:2310` |
+| `Table.addConstraint()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/Table.java:1109` |
+| `Table.addDependencies()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/Table.java:417` |
+| `WindowFrame.getEndIndex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/analysis/WindowFrame.java:239` |
+| `WindowFrame.getExclusion()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/analysis/WindowFrame.java:439` |
+| `DataAnalysisOperation.getOverCondition()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/analysis/DataAnalysisOperation.java:97` |
+| `DataAnalysisOperation.getValue()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/analysis/DataAnalysisOperation.java:388` |
+| `WindowFunction.getCost()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/analysis/WindowFunction.java:534` |
+| `WindowFunction.getFunctionType()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/expression/analysis/WindowFunction.java:122` |
 
 ## 10.3.1 公共类型清单
 
@@ -153,26 +153,26 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `InformationSchemaTable.canGetRowCount()` | `h2/src/main/org/h2/table/InformationSchemaTable.java:3057` |
-| `InformationSchemaTable.generateRows()` | `h2/src/main/org/h2/table/InformationSchemaTable.java:881` |
-| `InformationSchemaTable.getMaxDataModificationId()` | `h2/src/main/org/h2/table/InformationSchemaTable.java:2974` |
-| `InformationSchemaTable.getRowCount()` | `h2/src/main/org/h2/table/InformationSchemaTable.java:2993` |
-| `InformationSchemaTable.getRowCountApproximation()` | `h2/src/main/org/h2/table/InformationSchemaTable.java:2998` |
-| `InformationSchemaTable.isView()` | `h2/src/main/org/h2/table/InformationSchemaTable.java:2988` |
-| `InformationSchemaTableLegacy.generateRows()` | `h2/src/main/org/h2/table/InformationSchemaTableLegacy.java:731` |
-| `InformationSchemaTableLegacy.getMaxDataModificationId()` | `h2/src/main/org/h2/table/InformationSchemaTableLegacy.java:2310` |
-| `Table.addConstraint()` | `h2/src/main/org/h2/table/Table.java:1109` |
-| `Table.addDependencies()` | `h2/src/main/org/h2/table/Table.java:417` |
-| `Table.addDependentMaterializedView()` | `h2/src/main/org/h2/table/Table.java:1091` |
-| `Table.addDependentView()` | `h2/src/main/org/h2/table/Table.java:1082` |
-| `Table.addIndex()` | `h2/src/main/org/h2/table/Table.java:171` |
-| `Table.addRow()` | `h2/src/main/org/h2/table/Table.java:232` |
-| `TableFilter.accept()` | `h2/src/main/org/h2/table/TableFilter.java:1304` |
-| `TableFilter.addCommonJoinColumnToExclude()` | `h2/src/main/org/h2/table/TableFilter.java:1195` |
-| `TableFilter.addCommonJoinColumns()` | `h2/src/main/org/h2/table/TableFilter.java:1179` |
-| `TableFilter.addFilter()` | `h2/src/main/org/h2/table/TableFilter.java:676` |
-| `TableFilter.addFilterCondition()` | `h2/src/main/org/h2/table/TableFilter.java:617` |
-| `TableFilter.addIndexCondition()` | `h2/src/main/org/h2/table/TableFilter.java:607` |
+| `InformationSchemaTable.canGetRowCount()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTable.java:3057` |
+| `InformationSchemaTable.generateRows()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTable.java:881` |
+| `InformationSchemaTable.getMaxDataModificationId()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTable.java:2974` |
+| `InformationSchemaTable.getRowCount()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTable.java:2993` |
+| `InformationSchemaTable.getRowCountApproximation()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTable.java:2998` |
+| `InformationSchemaTable.isView()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTable.java:2988` |
+| `InformationSchemaTableLegacy.generateRows()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTableLegacy.java:731` |
+| `InformationSchemaTableLegacy.getMaxDataModificationId()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/InformationSchemaTableLegacy.java:2310` |
+| `Table.addConstraint()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/Table.java:1109` |
+| `Table.addDependencies()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/Table.java:417` |
+| `Table.addDependentMaterializedView()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/Table.java:1091` |
+| `Table.addDependentView()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/Table.java:1082` |
+| `Table.addIndex()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/Table.java:171` |
+| `Table.addRow()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/Table.java:232` |
+| `TableFilter.accept()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/TableFilter.java:1304` |
+| `TableFilter.addCommonJoinColumnToExclude()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/TableFilter.java:1195` |
+| `TableFilter.addCommonJoinColumns()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/TableFilter.java:1179` |
+| `TableFilter.addFilter()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/TableFilter.java:676` |
+| `TableFilter.addFilterCondition()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/TableFilter.java:617` |
+| `TableFilter.addIndexCondition()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/table/TableFilter.java:607` |
 
 ## 10.4 阅读路径
 
@@ -238,7 +238,7 @@
 
 ## 10.9 本章小结
 
-- 本章覆盖 2 个包、16,277 行。
+本章覆盖 2 个包、共 16,277 行，内容主要集中在 org.h2.table 包。
 - 关键入口与源码坐标见 §10.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 

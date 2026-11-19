@@ -1,6 +1,6 @@
 # 第7章 存储与压缩算法
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 1 个包、14,516 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，围绕《存储与压缩算法》展开，覆盖 1 个包、14,516 行实现，旨在呈现相关存储与压缩机制的整体设计与代码落地。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
@@ -31,12 +31,12 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `FileStore.accountForRemovedPage()` | `h2/src/main/org/h2/mvstore/FileStore.java:2178` |
-| `FileStore.backup()` | `h2/src/main/org/h2/mvstore/FileStore.java:1432` |
-| `MVStore.adoptFileStore()` | `h2/src/main/org/h2/mvstore/MVStore.java:2183` |
-| `MVStore.autoCommitBufferSize()` | `h2/src/main/org/h2/mvstore/MVStore.java:2003` |
-| `MVMap.append()` | `h2/src/main/org/h2/mvstore/MVMap.java:1364` |
-| `MVMap.ceilingKey()` | `h2/src/main/org/h2/mvstore/MVMap.java:325` |
+| `FileStore.accountForRemovedPage()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/FileStore.java:2178` |
+| `FileStore.backup()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/FileStore.java:1432` |
+| `MVStore.adoptFileStore()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVStore.java:2183` |
+| `MVStore.autoCommitBufferSize()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVStore.java:2003` |
+| `MVMap.append()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVMap.java:1364` |
+| `MVMap.ceilingKey()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVMap.java:325` |
 
 ## 7.3.1 公共类型清单
 
@@ -96,26 +96,26 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `FileStore.accountForRemovedPage()` | `h2/src/main/org/h2/mvstore/FileStore.java:2178` |
-| `FileStore.backup()` | `h2/src/main/org/h2/mvstore/FileStore.java:1432` |
-| `FileStore.bind()` | `h2/src/main/org/h2/mvstore/FileStore.java:281` |
-| `FileStore.clear()` | `h2/src/main/org/h2/mvstore/FileStore.java:1397` |
-| `FileStore.close()` | `h2/src/main/org/h2/mvstore/FileStore.java:314` |
-| `FileStore.compact()` | `h2/src/main/org/h2/mvstore/FileStore.java:937` |
-| `MVStore.adoptFileStore()` | `h2/src/main/org/h2/mvstore/MVStore.java:2183` |
-| `MVStore.autoCommitBufferSize()` | `h2/src/main/org/h2/mvstore/MVStore.java:2003` |
-| `MVStore.autoCommitDisabled()` | `h2/src/main/org/h2/mvstore/MVStore.java:1981` |
-| `MVStore.autoCompactFillRate()` | `h2/src/main/org/h2/mvstore/MVStore.java:2021` |
-| `MVStore.backgroundExceptionHandler()` | `h2/src/main/org/h2/mvstore/MVStore.java:2161` |
-| `MVStore.cacheConcurrency()` | `h2/src/main/org/h2/mvstore/MVStore.java:2105` |
-| `MVMap.append()` | `h2/src/main/org/h2/mvstore/MVMap.java:1364` |
-| `MVMap.ceilingKey()` | `h2/src/main/org/h2/mvstore/MVMap.java:325` |
-| `MVMap.clear()` | `h2/src/main/org/h2/mvstore/MVMap.java:441` |
-| `MVMap.contains()` | `h2/src/main/org/h2/mvstore/MVMap.java:763` |
-| `MVMap.containsKey()` | `h2/src/main/org/h2/mvstore/MVMap.java:433` |
-| `MVMap.create()` | `h2/src/main/org/h2/mvstore/MVMap.java:1518` |
-| `Page.copy()` | `h2/src/main/org/h2/mvstore/Page.java:382` |
-| `Page.createEmptyLeaf()` | `h2/src/main/org/h2/mvstore/Page.java:156` |
+| `FileStore.accountForRemovedPage()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/FileStore.java:2178` |
+| `FileStore.backup()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/FileStore.java:1432` |
+| `FileStore.bind()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/FileStore.java:281` |
+| `FileStore.clear()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/FileStore.java:1397` |
+| `FileStore.close()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/FileStore.java:314` |
+| `FileStore.compact()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/FileStore.java:937` |
+| `MVStore.adoptFileStore()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVStore.java:2183` |
+| `MVStore.autoCommitBufferSize()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVStore.java:2003` |
+| `MVStore.autoCommitDisabled()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVStore.java:1981` |
+| `MVStore.autoCompactFillRate()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVStore.java:2021` |
+| `MVStore.backgroundExceptionHandler()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVStore.java:2161` |
+| `MVStore.cacheConcurrency()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVStore.java:2105` |
+| `MVMap.append()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVMap.java:1364` |
+| `MVMap.ceilingKey()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVMap.java:325` |
+| `MVMap.clear()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVMap.java:441` |
+| `MVMap.contains()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVMap.java:763` |
+| `MVMap.containsKey()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVMap.java:433` |
+| `MVMap.create()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/MVMap.java:1518` |
+| `Page.copy()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/Page.java:382` |
+| `Page.createEmptyLeaf()` | `../lzcapp/document/codebase/h2db/h2/src/main/org/h2/mvstore/Page.java:156` |
 
 ## 7.4 阅读路径
 
@@ -183,7 +183,7 @@
 
 ## 7.9 本章小结
 
-- 本章覆盖 1 个包、14,516 行。
+本章覆盖 1 个包、共 14,516 行代码，主要内容集中在 org.h2.mvstore 包中。
 - 关键入口与源码坐标见 §7.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
