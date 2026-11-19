@@ -54,6 +54,40 @@ class LlmPolicyUnitTest(unittest.TestCase):
             problems = self.policy.secret_files()
         self.assertTrue(any('filled in' in p for p in problems))
 
+    def test_an_offending_import_is_detected(self):
+        fake = os.path.join(self.tmp.name, 'audit', 'rogue.py')
+        os.makedirs(os.path.dirname(fake), exist_ok=True)
+        with open(fake, 'w', encoding='utf-8') as fh:
+            fh.write('from lib import _llm\n')
+        with mock.patch.object(self.policy.glob, 'glob', return_value=[fake]), \
+                mock.patch.object(self.policy, 'PY_ROOT', self.tmp.name):
+            offenders = self.policy.offenders()
+        self.assertEqual(offenders[0]['layer'], 'audit')
+        self.assertIn('rogue.py', offenders[0]['file'])
+
+    def test_an_allowed_import_is_not_reported(self):
+        fake = os.path.join(self.tmp.name, 'core', 'allowed.py')
+        os.makedirs(os.path.dirname(fake), exist_ok=True)
+        with open(fake, 'w', encoding='utf-8') as fh:
+            fh.write('from lib import _llm\n')
+        with mock.patch.object(self.policy.glob, 'glob', return_value=[fake]), \
+                mock.patch.object(self.policy, 'PY_ROOT', self.tmp.name):
+            self.assertEqual(self.policy.offenders(), [])
+
+    def test_pycache_paths_are_skipped(self):
+        fake = os.path.join(self.tmp.name, '__pycache__', 'x.py')
+        with mock.patch.object(self.policy.glob, 'glob', return_value=[fake]), \
+                mock.patch.object(self.policy, 'PY_ROOT', self.tmp.name):
+            self.assertEqual(self.policy.offenders(), [])
+
+    def test_json_output_reports_offenders(self):
+        with mock.patch.object(self.policy, 'offenders',
+                               return_value=[{'file': 'audit/x.py', 'layer': 'audit'}]), \
+                redirect_stdout(io.StringIO()) as out:
+            code = self.policy.main(['--json'])
+        self.assertEqual(code, 1)
+        self.assertIn('offenders', out.getvalue())
+
     def test_human_output_reports_pass(self):
         buffer = io.StringIO()
         with redirect_stdout(buffer):
