@@ -101,7 +101,7 @@ python books/src/python/structure.py --gate-level p0  # 仅 p0
 | 文件长度 | 源码 ≤900 行、测试 ≤1200 行、文档 ≤1200 行（手稿附录 ≤2000） | `audit/file_length.py` | P0 |
 | 脚本契约 | 每个入口脚本有模块说明、可执行入口、必要时说明退出码 | `audit/script_contract.py` | P0 |
 | 文档一致性 | 文档中引用的路径、脚本、章节名、版本号与仓库实际一致 | `audit/doc_drift.py` | P0 |
-| 网络隔离 | 测试全程零出站连接：`_netguard` 在 `_fixture` 导入时接管 socket，只允许回环；LLM 一律 mock（`mock` provider 或打桩 `_post_json`），Playwright 用假引擎 | `tests/_netguard.py`、`test_no_network.py` | P0 |
+| 网络隔离 | 测试全程零出站连接：`_netguard` 在 `_fixture` 导入时接管 socket，只允许回环；LLM 一律 mock（`mock` provider 或打桩 `_post_json`），Playwright 用假引擎 | `src/test/_netguard.py`、`src/test/test_no_network.py` | P0 |
 | 覆盖率 | 分支覆盖率不低于 `base.json [toolchain].coverage_fail_under`（当前 77） | `make.py cover` | P1 |
 | 历史痕迹 | 文档与代码注释只描述当前状态，不含过程性记录 | `audit/doc_traces.py`、`audit/code_traces.py` | P0 |
 | 多入口一致 | CLI/TUI/Web 三个渠道共用 `app/actions.py`，`status` 与 `llm-ask` 均可运行 | `books/src/test/test_llm.py` | P1 |
