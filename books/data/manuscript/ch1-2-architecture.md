@@ -166,10 +166,11 @@
 - **Engine**：详见[术语表](back/glossary.md)对应条目。
 - **H2**：详见[术语表](back/glossary.md)对应条目。
 - **CAS (Compare-And-Swap)**：详见[术语表](back/glossary.md)对应条目。
+- **ConnectionInfo**：详见[术语表](back/glossary.md)对应条目。
 - **CTE**：详见[术语表](back/glossary.md)对应条目。
-- **JSON**：详见[术语表](back/glossary.md)对应条目。
-- **LSM-Tree / Log-Structured Merge-Tree**：详见[术语表](back/glossary.md)对应条目。
-- **PageStore**：详见[术语表](back/glossary.md)对应条目。
+- **Database**：详见[术语表](back/glossary.md)对应条目。
+- **Driver**：详见[术语表](back/glossary.md)对应条目。
+- **Expression**：详见[术语表](back/glossary.md)对应条目。
 
 ## 1.9 知识点清单
 
@@ -337,13 +338,6 @@
 本章出现的专业术语与书末术语表的对应关系：
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **ConnectionInfo**：详见[术语表](back/glossary.md)对应条目。
-- **Database**：详见[术语表](back/glossary.md)对应条目。
-- **Driver**：详见[术语表](back/glossary.md)对应条目。
-- **Engine**：详见[术语表](back/glossary.md)对应条目。
-- **Expression**：详见[术语表](back/glossary.md)对应条目。
-- **FilePathDisk**：详见[术语表](back/glossary.md)对应条目。
-- **FilePathEncrypt**：详见[术语表](back/glossary.md)对应条目。
 
 ## 2.9 知识点清单
 

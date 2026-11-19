@@ -224,11 +224,11 @@
 - **H2**：详见[术语表](back/glossary.md)对应条目。
 - **Value**：详见[术语表](back/glossary.md)对应条目。
 - **Append-Only**：详见[术语表](back/glossary.md)对应条目。
+- **AbstractAggregate**：详见[术语表](back/glossary.md)对应条目。
+- **Aggregate**：详见[术语表](back/glossary.md)对应条目。
 - **B-Tree**：详见[术语表](back/glossary.md)对应条目。
 - **Chunk**：详见[术语表](back/glossary.md)对应条目。
 - **COW / Copy-on-Write**：详见[术语表](back/glossary.md)对应条目。
-- **Compact**：详见[术语表](back/glossary.md)对应条目。
-- **Free Space**：详见[术语表](back/glossary.md)对应条目。
 
 ## 6.9 知识点清单
 

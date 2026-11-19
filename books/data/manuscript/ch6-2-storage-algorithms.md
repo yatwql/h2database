@@ -165,12 +165,12 @@
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
 - **MVStore**：详见[术语表](back/glossary.md)对应条目。
-- **AbstractAggregate**：详见[术语表](back/glossary.md)对应条目。
-- **Aggregate**：详见[术语表](back/glossary.md)对应条目。
-- **CommandContainer**：详见[术语表](back/glossary.md)对应条目。
-- **DML**：详见[术语表](back/glossary.md)对应条目。
-- **LOB**：详见[术语表](back/glossary.md)对应条目。
-- **LocalResult**：详见[术语表](back/glossary.md)对应条目。
+- **Append-Only**：详见[术语表](back/glossary.md)对应条目。
+- **BackgroundWriter**：详见[术语表](back/glossary.md)对应条目。
+- **Block**：详见[术语表](back/glossary.md)对应条目。
+- **Chunk**：详见[术语表](back/glossary.md)对应条目。
+- **Checkpoint**：详见[术语表](back/glossary.md)对应条目。
+- **Counted B-Tree**：详见[术语表](back/glossary.md)对应条目。
 
 ## 7.9 知识点清单
 

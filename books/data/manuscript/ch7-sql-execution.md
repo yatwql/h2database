@@ -289,10 +289,10 @@
 - **DML**：详见[术语表](back/glossary.md)对应条目。
 - **Expression**：详见[术语表](back/glossary.md)对应条目。
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **Append-Only**：详见[术语表](back/glossary.md)对应条目。
-- **BackgroundWriter**：详见[术语表](back/glossary.md)对应条目。
-- **Block**：详见[术语表](back/glossary.md)对应条目。
-- **Chunk**：详见[术语表](back/glossary.md)对应条目。
+- **Aggregate**：详见[术语表](back/glossary.md)对应条目。
+- **Bloom 过滤**：详见[术语表](back/glossary.md)对应条目。
+- **ISODEBUG**：详见[术语表](back/glossary.md)对应条目。
+- **Maven**：详见[术语表](back/glossary.md)对应条目。
 
 ## 9.9 知识点清单
 

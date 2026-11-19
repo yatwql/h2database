@@ -304,7 +304,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## H2 Database 源码全面分析与解读
 
-版本 v6.1 · 2026-06-15 · 6,827 行 · 12 章 + 5 附录
+版本 v6.1 · 2026-11-19 · 6,876 行 · 12 章 + 5 附录
 
 **作者：其·龙（Stallman Wang）**
 **联系邮箱：[stallman.wang@foxmail.com](mailto:stallman.wang@foxmail.com)**
@@ -496,10 +496,11 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - **Engine**：详见[术语表](back/glossary.md)对应条目。
 - **H2**：详见[术语表](back/glossary.md)对应条目。
 - **CAS (Compare-And-Swap)**：详见[术语表](back/glossary.md)对应条目。
+- **ConnectionInfo**：详见[术语表](back/glossary.md)对应条目。
 - **CTE**：详见[术语表](back/glossary.md)对应条目。
-- **JSON**：详见[术语表](back/glossary.md)对应条目。
-- **LSM-Tree / Log-Structured Merge-Tree**：详见[术语表](back/glossary.md)对应条目。
-- **PageStore**：详见[术语表](back/glossary.md)对应条目。
+- **Database**：详见[术语表](back/glossary.md)对应条目。
+- **Driver**：详见[术语表](back/glossary.md)对应条目。
+- **Expression**：详见[术语表](back/glossary.md)对应条目。
 
 ## 1.9 知识点清单
 
@@ -667,13 +668,6 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 本章出现的专业术语与书末术语表的对应关系：
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **ConnectionInfo**：详见[术语表](back/glossary.md)对应条目。
-- **Database**：详见[术语表](back/glossary.md)对应条目。
-- **Driver**：详见[术语表](back/glossary.md)对应条目。
-- **Engine**：详见[术语表](back/glossary.md)对应条目。
-- **Expression**：详见[术语表](back/glossary.md)对应条目。
-- **FilePathDisk**：详见[术语表](back/glossary.md)对应条目。
-- **FilePathEncrypt**：详见[术语表](back/glossary.md)对应条目。
 
 ## 2.9 知识点清单
 
@@ -1203,13 +1197,13 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 本章出现的专业术语与书末术语表的对应关系：
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
+- **CommitDecisionMaker**：详见[术语表](back/glossary.md)对应条目。
+- **DDL**：详见[术语表](back/glossary.md)对应条目。
 - **Deadlock**：详见[术语表](back/glossary.md)对应条目。
+- **DML**：详见[术语表](back/glossary.md)对应条目。
 - **Expression**：详见[术语表](back/glossary.md)对应条目。
+- **FreeSpaceBitSet**：详见[术语表](back/glossary.md)对应条目。
 - **Index**：详见[术语表](back/glossary.md)对应条目。
-- **IndexCondition**：详见[术语表](back/glossary.md)对应条目。
-- **Meta Lock**：详见[术语表](back/glossary.md)对应条目。
-- **MVMap**：详见[术语表](back/glossary.md)对应条目。
-- **MVStore**：详见[术语表](back/glossary.md)对应条目。
 
 ## 4.9 知识点清单
 
@@ -1437,13 +1431,6 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 本章出现的专业术语与书末术语表的对应关系：
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **CommitDecisionMaker**：详见[术语表](back/glossary.md)对应条目。
-- **DDL**：详见[术语表](back/glossary.md)对应条目。
-- **DML**：详见[术语表](back/glossary.md)对应条目。
-- **FreeSpaceBitSet**：详见[术语表](back/glossary.md)对应条目。
-- **RollbackDecisionMaker**：详见[术语表](back/glossary.md)对应条目。
-- **Savepoint**：详见[术语表](back/glossary.md)对应条目。
-- **Transaction**：详见[术语表](back/glossary.md)对应条目。
 
 ## 5.9 知识点清单
 
@@ -1745,11 +1732,11 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - **H2**：详见[术语表](back/glossary.md)对应条目。
 - **Value**：详见[术语表](back/glossary.md)对应条目。
 - **Append-Only**：详见[术语表](back/glossary.md)对应条目。
+- **AbstractAggregate**：详见[术语表](back/glossary.md)对应条目。
+- **Aggregate**：详见[术语表](back/glossary.md)对应条目。
 - **B-Tree**：详见[术语表](back/glossary.md)对应条目。
 - **Chunk**：详见[术语表](back/glossary.md)对应条目。
 - **COW / Copy-on-Write**：详见[术语表](back/glossary.md)对应条目。
-- **Compact**：详见[术语表](back/glossary.md)对应条目。
-- **Free Space**：详见[术语表](back/glossary.md)对应条目。
 
 ## 6.9 知识点清单
 
@@ -1989,12 +1976,12 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
 - **MVStore**：详见[术语表](back/glossary.md)对应条目。
-- **AbstractAggregate**：详见[术语表](back/glossary.md)对应条目。
-- **Aggregate**：详见[术语表](back/glossary.md)对应条目。
-- **CommandContainer**：详见[术语表](back/glossary.md)对应条目。
-- **DML**：详见[术语表](back/glossary.md)对应条目。
-- **LOB**：详见[术语表](back/glossary.md)对应条目。
-- **LocalResult**：详见[术语表](back/glossary.md)对应条目。
+- **Append-Only**：详见[术语表](back/glossary.md)对应条目。
+- **BackgroundWriter**：详见[术语表](back/glossary.md)对应条目。
+- **Block**：详见[术语表](back/glossary.md)对应条目。
+- **Chunk**：详见[术语表](back/glossary.md)对应条目。
+- **Checkpoint**：详见[术语表](back/glossary.md)对应条目。
+- **Counted B-Tree**：详见[术语表](back/glossary.md)对应条目。
 
 ## 7.9 知识点清单
 
@@ -2229,12 +2216,12 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
 - **Index**：详见[术语表](back/glossary.md)对应条目。
-- **CBO / Cost-Based Optimization**：详见[术语表](back/glossary.md)对应条目。
-- **Genetic Algorithm**：详见[术语表](back/glossary.md)对应条目。
-- **Hybrid Strategy**：详见[术语表](back/glossary.md)对应条目。
-- **IndexCondition**：详见[术语表](back/glossary.md)对应条目。
-- **Optimizer**：详见[术语表](back/glossary.md)对应条目。
-- **Parser**：详见[术语表](back/glossary.md)对应条目。
+- **ACID**：详见[术语表](back/glossary.md)对应条目。
+- **CAS (Compare-And-Swap)**：详见[术语表](back/glossary.md)对应条目。
+- **Deadlock**：详见[术语表](back/glossary.md)对应条目。
+- **Lock**：详见[术语表](back/glossary.md)对应条目。
+- **Meta Lock**：详见[术语表](back/glossary.md)对应条目。
+- **MVCC**：详见[术语表](back/glossary.md)对应条目。
 
 ## 8.9 知识点清单
 
@@ -2593,10 +2580,10 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - **DML**：详见[术语表](back/glossary.md)对应条目。
 - **Expression**：详见[术语表](back/glossary.md)对应条目。
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **Append-Only**：详见[术语表](back/glossary.md)对应条目。
-- **BackgroundWriter**：详见[术语表](back/glossary.md)对应条目。
-- **Block**：详见[术语表](back/glossary.md)对应条目。
-- **Chunk**：详见[术语表](back/glossary.md)对应条目。
+- **Aggregate**：详见[术语表](back/glossary.md)对应条目。
+- **Bloom 过滤**：详见[术语表](back/glossary.md)对应条目。
+- **ISODEBUG**：详见[术语表](back/glossary.md)对应条目。
+- **Maven**：详见[术语表](back/glossary.md)对应条目。
 
 ## 9.9 知识点清单
 
@@ -2905,11 +2892,6 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - **Expression**：详见[术语表](back/glossary.md)对应条目。
 - **H2**：详见[术语表](back/glossary.md)对应条目。
 - **Table**：详见[术语表](back/glossary.md)对应条目。
-- **ACID**：详见[术语表](back/glossary.md)对应条目。
-- **CAS (Compare-And-Swap)**：详见[术语表](back/glossary.md)对应条目。
-- **Deadlock**：详见[术语表](back/glossary.md)对应条目。
-- **Lock**：详见[术语表](back/glossary.md)对应条目。
-- **Meta Lock**：详见[术语表](back/glossary.md)对应条目。
 
 ## 10.9 知识点清单
 
@@ -3206,13 +3188,9 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 本章出现的专业术语与书末术语表的对应关系：
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **Aggregate**：详见[术语表](back/glossary.md)对应条目。
-- **ISODEBUG**：详见[术语表](back/glossary.md)对应条目。
-- **Maven**：详见[术语表](back/glossary.md)对应条目。
-- **MVStoreTool**：详见[术语表](back/glossary.md)对应条目。
-- **Query**：详见[术语表](back/glossary.md)对应条目。
-- **Select**：详见[术语表](back/glossary.md)对应条目。
-- **SmallLRUCache**：详见[术语表](back/glossary.md)对应条目。
+- **JdbcResultSet**：详见[术语表](back/glossary.md)对应条目。
+- **SimpleResultSet**：详见[术语表](back/glossary.md)对应条目。
+- **JdbcDatabaseMetaData**：详见[术语表](back/glossary.md)对应条目。
 
 ## 11.9 知识点清单
 
@@ -3448,10 +3426,6 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 本章出现的专业术语与书末术语表的对应关系：
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **Bloom 过滤**：详见[术语表](back/glossary.md)对应条目。
-- **Single Writer**：详见[术语表](back/glossary.md)对应条目。
-- **TransactionMap**：详见[术语表](back/glossary.md)对应条目。
-- **Write Amplification**：详见[术语表](back/glossary.md)对应条目。
 
 ## 12.9 知识点清单
 

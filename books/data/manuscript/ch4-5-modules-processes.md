@@ -161,13 +161,13 @@
 本章出现的专业术语与书末术语表的对应关系：
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
+- **CommitDecisionMaker**：详见[术语表](back/glossary.md)对应条目。
+- **DDL**：详见[术语表](back/glossary.md)对应条目。
 - **Deadlock**：详见[术语表](back/glossary.md)对应条目。
+- **DML**：详见[术语表](back/glossary.md)对应条目。
 - **Expression**：详见[术语表](back/glossary.md)对应条目。
+- **FreeSpaceBitSet**：详见[术语表](back/glossary.md)对应条目。
 - **Index**：详见[术语表](back/glossary.md)对应条目。
-- **IndexCondition**：详见[术语表](back/glossary.md)对应条目。
-- **Meta Lock**：详见[术语表](back/glossary.md)对应条目。
-- **MVMap**：详见[术语表](back/glossary.md)对应条目。
-- **MVStore**：详见[术语表](back/glossary.md)对应条目。
 
 ## 4.9 知识点清单
 
@@ -395,13 +395,6 @@
 本章出现的专业术语与书末术语表的对应关系：
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **CommitDecisionMaker**：详见[术语表](back/glossary.md)对应条目。
-- **DDL**：详见[术语表](back/glossary.md)对应条目。
-- **DML**：详见[术语表](back/glossary.md)对应条目。
-- **FreeSpaceBitSet**：详见[术语表](back/glossary.md)对应条目。
-- **RollbackDecisionMaker**：详见[术语表](back/glossary.md)对应条目。
-- **Savepoint**：详见[术语表](back/glossary.md)对应条目。
-- **Transaction**：详见[术语表](back/glossary.md)对应条目。
 
 ## 5.9 知识点清单
 

@@ -224,11 +224,6 @@
 - **Expression**：详见[术语表](back/glossary.md)对应条目。
 - **H2**：详见[术语表](back/glossary.md)对应条目。
 - **Table**：详见[术语表](back/glossary.md)对应条目。
-- **ACID**：详见[术语表](back/glossary.md)对应条目。
-- **CAS (Compare-And-Swap)**：详见[术语表](back/glossary.md)对应条目。
-- **Deadlock**：详见[术语表](back/glossary.md)对应条目。
-- **Lock**：详见[术语表](back/glossary.md)对应条目。
-- **Meta Lock**：详见[术语表](back/glossary.md)对应条目。
 
 ## 10.9 知识点清单
 

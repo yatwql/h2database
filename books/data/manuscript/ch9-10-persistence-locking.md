@@ -222,13 +222,9 @@
 本章出现的专业术语与书末术语表的对应关系：
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **Aggregate**：详见[术语表](back/glossary.md)对应条目。
-- **ISODEBUG**：详见[术语表](back/glossary.md)对应条目。
-- **Maven**：详见[术语表](back/glossary.md)对应条目。
-- **MVStoreTool**：详见[术语表](back/glossary.md)对应条目。
-- **Query**：详见[术语表](back/glossary.md)对应条目。
-- **Select**：详见[术语表](back/glossary.md)对应条目。
-- **SmallLRUCache**：详见[术语表](back/glossary.md)对应条目。
+- **JdbcResultSet**：详见[术语表](back/glossary.md)对应条目。
+- **SimpleResultSet**：详见[术语表](back/glossary.md)对应条目。
+- **JdbcDatabaseMetaData**：详见[术语表](back/glossary.md)对应条目。
 
 ## 11.9 知识点清单
 
@@ -464,10 +460,6 @@
 本章出现的专业术语与书末术语表的对应关系：
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **Bloom 过滤**：详见[术语表](back/glossary.md)对应条目。
-- **Single Writer**：详见[术语表](back/glossary.md)对应条目。
-- **TransactionMap**：详见[术语表](back/glossary.md)对应条目。
-- **Write Amplification**：详见[术语表](back/glossary.md)对应条目。
 
 ## 12.9 知识点清单
 
