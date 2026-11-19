@@ -15,6 +15,10 @@ import shutil
 import subprocess
 import sys
 
+import _netguard
+
+_netguard.install()
+
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )

@@ -31,7 +31,7 @@ def make_pdf(path: str, pages: int = 2, titles: list[tuple[str, int]] | None = N
              size: tuple[float, float] = (595, 842), rotate: int = 0,
              annots: list[dict] | None = None) -> str:
     writer = PdfWriter()
-    for index in range(pages):
+    for _index in range(pages):
         page = writer.add_blank_page(width=size[0], height=size[1])
         page[NameObject('/Rotate')] = NumberObject(rotate)
     for title, page_number in titles or []:
@@ -185,6 +185,54 @@ class VerifyPdfCase(unittest.TestCase):
         self.assertIn('OUTLINE', buffer.getvalue())
 
 
+class _FakePage:
+    def __init__(self, links):
+        self._links = links
+
+    def goto(self, url: str, **kwargs) -> None:
+        return None
+
+    def wait_for_timeout(self, ms: int) -> None:
+        return None
+
+    def evaluate(self, script: str):
+        return self._links
+
+
+class _FakeBrowser:
+    def __init__(self, page):
+        self._page = page
+
+    def new_page(self, **kwargs):
+        return self._page
+
+    def close(self) -> None:
+        return None
+
+
+class _FakeChromium:
+    def __init__(self, page):
+        self._page = page
+
+    def launch(self, **kwargs):
+        return _FakeBrowser(self._page)
+
+
+class _FakePlaywright:
+    def __init__(self, page):
+        self.chromium = _FakeChromium(page)
+
+
+def _fake_engine(links):
+    from contextlib import contextmanager
+
+    @contextmanager
+    def engine():
+        yield _FakePlaywright(_FakePage(links))
+
+    return engine
+
+
 class TocLinksCase(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -202,7 +250,18 @@ class TocLinksCase(unittest.TestCase):
         self.assertEqual(self.module.collect_outline(reader), [('第一章', 0), ('第二章', 1)])
 
     def test_get_toc_links_reads_printed_toc(self):
-        links = self.module.get_toc_links(self.html)
+        links = [{'index': 0, 'text': '第一章',
+                  'href': '#a', 'rect': {'x': 10, 'y': 10, 'w': 90, 'h': 12}},
+                 {'index': 1, 'text': '第二章',
+                  'href': '#b', 'rect': {'x': 10, 'y': 40, 'w': 90, 'h': 12}}]
+        engine = _fake_engine(links)
+        original = self.module.sync_playwright
+        self.module.__dict__['sync_playwright'] = engine
+        try:
+            found = self.module.get_toc_links(self.html)
+        finally:
+            self.module.__dict__['sync_playwright'] = original
+        self.assertEqual([item['text'] for item in found], ['第一章', '第二章'])
         self.assertEqual([item['text'] for item in links], ['第一章', '第二章'])
 
     def test_add_links_writes_annotations(self):
