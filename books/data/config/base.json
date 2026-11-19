@@ -25,7 +25,7 @@
     "source_symbol": "data/baselines/source-symbol-baseline.json"
   },
   "toolchain": {
-    "coverage_fail_under": 83,
+    "coverage_fail_under": 85,
     "pdf_max_mb": 12,
     "epub_max_mb": 10,
     "ascii_max_cols": 100,
