@@ -284,6 +284,12 @@ def app_name() -> str:
     return APP_NAME
 
 
+def app_name_zh() -> str:
+    """Chinese product name (shown next to the English one)."""
+    from lib._version import APP_NAME_ZH
+    return APP_NAME_ZH
+
+
 def app_title() -> str:
     """One-line product title including the tool version."""
     from lib._version import APP_TITLE, TOOL_VERSION

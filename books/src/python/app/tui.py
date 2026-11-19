@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import unicodedata
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -35,31 +36,42 @@ GROUPS: dict[str, list[tuple[str, str, str]]] = {
 USE_COLOR = sys.stdout.isatty() and not os.environ.get('NO_COLOR')
 
 
+def _width(text: str) -> int:
+    """Display width: CJK and fullwidth characters take two columns."""
+    return sum(2 if unicodedata.east_asian_width(ch) in ('W', 'F') else 1
+               for ch in text)
+
+
 def _c(text: str, code: str) -> str:
     return f'\033[{code}m{text}\033[0m' if USE_COLOR else text
 
 
 def header() -> str:
-    """Product, book, source tree and directories as a boxed banner."""
+    """Two identity lines (product, then book) above the operational facts."""
     info = settings.summary()
-    width = 72
-    title = f" {_config.app_name()} v{info['tool_version']}  ·  {info['title']} v{info['version']} "
-    line = '─' * max(0, width - len(title) - 2)
-
-    def row(label: str, value: str) -> str:
-        text = f'{label} {value}'
-        return f"│ {text:<{width - 1}}│"
-
+    product = f" {_config.app_name()} · {_config.app_name_zh()}  v{info['tool_version']}"
+    book = f" {info['title']}  v{info['version']}"
     source = info['source_dir'] or '(未配置)'
-    rows = [
-        _c(f"┌─{title}{line}─┐", '36;1'),
-        row('源码', f"{source}  ({info['source_version']})"),
-        row('手稿', info['manuscript']),
-        row('产物', info['dist']),
-        row('语言', f"{info['languages']:<12}日志 {info['log_level']:<8}LLM {info['llm_provider']}"),
-        _c(f"└{'─' * width}┘", '36;1'),
+    facts = [
+        f" 源码 {source}  ({info['source_version']})",
+        f" 手稿 {info['manuscript']}",
+        f" 产物 {info['dist']}",
+        f" 语言 {info['languages']}  日志 {info['log_level']}  LLM {info['llm_provider']}",
     ]
-    return '\n'.join(rows)
+    inner = max(_width(text) for text in [product, book, *facts]) + 1
+
+    def line(text: str) -> str:
+        return f"│{text}{' ' * (inner - _width(text))}│"
+
+    border = '─' * inner
+    return '\n'.join([
+        _c(f'┌{border}┐', '36'),
+        _c(line(product), '96;1'),        # bright cyan: the software itself
+        _c(line(book), '93;1'),           # bright yellow: the book being built
+        _c(f'├{border}┤', '36'),
+        *[line(text) for text in facts],
+        _c(f'└{border}┘', '36'),
+    ])
 
 
 def menu_text() -> str:
