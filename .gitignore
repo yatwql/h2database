@@ -31,3 +31,10 @@ __pycache__/
 .claude/scratch/
 books/logs/
 .venv/
+
+# secrets — never committed (see books/data/config/llm_key.example.json)
+books/data/config/llm_key.json
+**/llm_key.json
+.env
+.env.*
+!.env.example

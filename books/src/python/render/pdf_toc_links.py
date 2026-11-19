@@ -53,11 +53,12 @@ def collect_outline(reader: PdfReader) -> list[tuple[str, int]]:
     walk(reader.outline)
     return entries
 
-def get_toc_links() -> list[dict]:
+def get_toc_links(html_path: Path | None = None) -> list[dict]:
+    html_path = Path(html_path) if html_path else HTML_PATH
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
         page = browser.new_page(viewport={'width': int(VIEWPORT_WIDTH), 'height': int(VIEWPORT_HEIGHT)})
-        page.goto('file:///' + str(HTML_PATH).replace('\\', '/'), wait_until='networkidle', timeout=60000)
+        page.goto('file:///' + str(html_path).replace('\\', '/'), wait_until='networkidle', timeout=60000)
         page.wait_for_timeout(2000)
         links = page.evaluate("""() => {
             const nav = document.getElementById('toc-page-nav');
@@ -80,23 +81,27 @@ def get_toc_links() -> list[dict]:
         browser.close()
         return links
 
-def add_links() -> None:
-    if not HTML_PATH.exists():
-        print(f'error: HTML not found: {HTML_PATH} (run to_html.py first)',
+def add_links(pdf_path: Path | None = None, html_path: Path | None = None,
+              tmp_path: Path | None = None) -> None:
+    html_path = Path(html_path) if html_path else HTML_PATH
+    pdf_path = Path(pdf_path) if pdf_path else PDF_PATH
+    tmp_path = Path(tmp_path) if tmp_path else pdf_path.with_suffix('.pdf.tmp')
+    if not html_path.exists():
+        print(f'error: HTML not found: {html_path} (run to_html.py first)',
               file=sys.stderr)
         raise SystemExit(1)
-    if not PDF_PATH.exists():
-        print(f'error: PDF not found: {PDF_PATH} (run to_pdf.py first)',
+    if not pdf_path.exists():
+        print(f'error: PDF not found: {pdf_path} (run to_pdf.py first)',
               file=sys.stderr)
         raise SystemExit(1)
 
-    toc_links = get_toc_links()
+    toc_links = get_toc_links(html_path)
     print(f'TOC links in HTML: {len(toc_links)}')
 
     try:
-        reader = PdfReader(str(PDF_PATH))
+        reader = PdfReader(str(pdf_path))
     except Exception as exc:
-        print(f'error: cannot read {PDF_PATH}: {exc}', file=sys.stderr)
+        print(f'error: cannot read {pdf_path}: {exc}', file=sys.stderr)
         raise SystemExit(1) from exc
     outline_entries = collect_outline(reader)
     print(f'Outline entries in PDF: {len(outline_entries)}')
@@ -151,10 +156,10 @@ def add_links() -> None:
         writer.add_annotation(page_number, annotation)
         added += 1
 
-    writer.write(str(TMP_PATH))
+    writer.write(str(tmp_path))
     # Validate the temporary file is readable before replacing the original.
-    PdfReader(str(TMP_PATH))
-    os.replace(TMP_PATH, PDF_PATH)
+    PdfReader(str(tmp_path))
+    os.replace(tmp_path, pdf_path)
     print(f'TOC links added: {added}')
 
 if __name__ == '__main__':

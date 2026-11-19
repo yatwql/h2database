@@ -35,6 +35,24 @@ GROUPS: dict[str, list[tuple[str, str, str]]] = {
 
 USE_COLOR = sys.stdout.isatty() and not os.environ.get('NO_COLOR')
 
+# One palette, used everywhere: chrome is quiet, identity is bright, keys are
+# the only saturated colour in the menu so the eye lands on what is actionable.
+PALETTE = {
+    'frame': '38;5;240',        # dim grey: borders and rules
+    'label': '38;5;245',        # muted grey: field labels
+    'value': '38;5;252',        # near-white: field values
+    'product': '1;38;5;231',    # bold bright white: the software itself
+    'product_accent': '1;38;5;45',   # bright cyan: product name
+    'book': '1;38;5;222',       # bright warm yellow: the book being built
+    'book_accent': '38;5;179',
+    'group': '1;38;5;45',       # bright cyan: menu groups
+    'key': '1;38;5;114',        # bright green: what you can press
+    'ok': '38;5;114',
+    'warn': '38;5;221',
+    'error': '38;5;203',
+    'hint': '38;5;244',
+}
+
 
 def _width(text: str) -> int:
     """Display width: CJK and fullwidth characters take two columns."""
@@ -47,43 +65,69 @@ def _c(text: str, code: str) -> str:
 
 
 def header() -> str:
-    """Two identity lines (product, then book) above the operational facts."""
+    """Identity on top, operational facts below, chrome kept quiet."""
     info = settings.summary()
-    product = f" {_config.app_name()} · {_config.app_name_zh()}  v{info['tool_version']}"
-    book = f" {info['title']}  v{info['version']}"
     source = info['source_dir'] or '(未配置)'
+    # (label, value) pairs: labels are muted, values near-white.
     facts = [
-        f" 源码 {source}  ({info['source_version']})",
-        f" 手稿 {info['manuscript']}",
-        f" 产物 {info['dist']}",
-        f" 语言 {info['languages']}  日志 {info['log_level']}  LLM {info['llm_provider']}",
+        ('源码', f"{source}  {_c('(' + info['source_version'] + ')', PALETTE['hint'])}"),
+        ('手稿', info['manuscript']),
+        ('产物', info['dist']),
+        ('语言', '{}   {} {}   {} {}'.format(
+            info['languages'], _c('日志', PALETTE['label']), info['log_level'],
+            _c('LLM', PALETTE['label']), info['llm_provider'])),
     ]
-    inner = max(_width(text) for text in [product, book, *facts]) + 1
+    label_width = max(_width(label) for label, _value in facts) + 1
 
-    def line(text: str) -> str:
-        return f"│{text}{' ' * (inner - _width(text))}│"
+    title_left = _c(_config.app_name(), PALETTE['product_accent'])
+    title_rest = (f" · {_config.app_name_zh()}  "
+                  f"{_c('v' + info['tool_version'], PALETTE['hint'])}")
+    product_plain = f' {_config.app_name()} · {_config.app_name_zh()}  v{info["tool_version"]}'
+    book_plain = f' {info["title"]}  v{info["version"]}'
+    book_line = (f' {_c(info["title"], PALETTE["book"])}'
+                 f'  {_c("v" + info["version"], PALETTE["hint"])}')
 
-    border = '─' * inner
-    return '\n'.join([
-        _c(f'┌{border}┐', '36'),
-        _c(line(product), '96;1'),        # bright cyan: the software itself
-        _c(line(book), '93;1'),           # bright yellow: the book being built
-        _c(f'├{border}┤', '36'),
-        *[line(text) for text in facts],
-        _c(f'└{border}┘', '36'),
-    ])
+    inner = max(_width(product_plain), _width(book_plain),
+                max(_width(f' {label} {value}') for label, value in facts)) + 1
+
+    def pad(plain: str, rendered: str) -> str:
+        return f"{rendered}{' ' * (inner - _width(plain))}"
+
+    def fact_line(label: str, value: str) -> str:
+        gap = ' ' * (label_width - _width(label))
+        plain = f' {label}{gap}{value}'
+        rendered = f' {_c(label, PALETTE["label"])}{gap}{value}'
+        return _c('│', PALETTE['frame']) + pad(plain, rendered) + _c('│', PALETTE['frame'])
+
+    product_line = pad(product_plain, ' ' + title_left + title_rest)
+    book_padded = pad(book_plain, book_line)
+    rows = [
+        _c('╭' + '─' * inner + '╮', PALETTE['frame']),
+        product_line,
+        book_padded,
+        _c('├' + '─' * inner + '┤', PALETTE['frame']),
+        *[fact_line(label, value) for label, value in facts],
+        _c('╰' + '─' * inner + '╯', PALETTE['frame']),
+    ]
+    # product/book lines need their frame characters painted without colour bleed
+    rows[1] = rows[1].replace('╭', '│', 0)
+    rows[1] = _c('│', PALETTE['frame']) + rows[1] + _c('│', PALETTE['frame'])
+    rows[2] = _c('│', PALETTE['frame']) + rows[2] + _c('│', PALETTE['frame'])
+    return '\n'.join(rows)
 
 
 def menu_text() -> str:
-    """Grouped menu; every entry is `<key>) <label>`."""
+    """Grouped menu: group headers, aligned keys, one colour for actions."""
     lines: list[str] = []
     for group, entries in GROUPS.items():
-        lines.append(_c(f' {group}', '33;1'))
+        lines.append(f" {_c('▍', PALETTE['group'])}{_c(group, PALETTE['group'])}")
         for key, _action, label in entries:
-            lines.append(f"   {_c(key + ')', '32')} {label}")
-    lines.append('')
-    lines.append(f"   {_c('c)', '32')} 修改配置      {_c('r)', '32')} 刷新"
-                 f"      {_c('?', '32')} 帮助      {_c('q)', '32')} 退出")
+            lines.append(f"   {_c(key, PALETTE['key'])}   {label}")
+        lines.append('')
+    lines.append(f"   {_c('c', PALETTE['key'])} 配置   "
+                 f"{_c('r', PALETTE['key'])} 刷新   "
+                 f"{_c('?', PALETTE['key'])} 帮助   "
+                 f"{_c('q', PALETTE['key'])} 退出")
     return '\n'.join(lines)
 
 

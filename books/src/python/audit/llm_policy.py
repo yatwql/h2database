@@ -21,6 +21,7 @@ import glob
 import json
 import os
 import re
+import subprocess
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -39,6 +40,37 @@ def policy() -> dict:
         ).get('policy') or {}
     except (OSError, json.JSONDecodeError):
         return {}
+
+
+SECRET_NAME = 'llm_key.json'
+
+
+def secret_files() -> list[str]:
+    """Key files that git tracks, plus an example file that holds a value."""
+    problems: list[str] = []
+    try:
+        listed = subprocess.run(['git', 'ls-files', '--', f'*{SECRET_NAME}', '*llm_key*'],
+                                capture_output=True, text=True, timeout=20, check=False,
+                                cwd=_config.BOOK_ROOT)
+    except (OSError, subprocess.SubprocessError):
+        return problems
+    for line in listed.stdout.splitlines():
+        rel = line.strip()
+        if rel and rel.endswith(SECRET_NAME):
+            problems.append(f'{rel}: a key file is tracked by git (remove it, rotate the key)')
+
+    example = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'llm_key.example.json')
+    if os.path.exists(example):
+        try:
+            data = json.loads(_fsutil.read_text(example))
+        except json.JSONDecodeError:
+            problems.append('llm_key.example.json: invalid JSON')
+            data = {}
+        for name, value in (data.get('keys') or {}).items():
+            if str(value).strip():
+                problems.append(f'llm_key.example.json: keys.{name} is filled in; '
+                                'the example must stay empty')
+    return problems
 
 
 def offenders() -> list[dict]:
@@ -65,10 +97,18 @@ def main(argv: list[str] | None = None) -> int:
 
     pol = policy()
     found = offenders()
+    leaks = secret_files()
 
     if args.json:
-        print(json.dumps({'policy': pol, 'offenders': found}, ensure_ascii=False, indent=2))
-        return 0 if not found else 1
+        print(json.dumps({'policy': pol, 'offenders': found, 'secret_files': leaks},
+                         ensure_ascii=False, indent=2))
+        return 0 if not found and not leaks else 1
+
+    if leaks:
+        print(f'密钥文件不合规 {len(leaks)} 处：')
+        for item in leaks:
+            print(f'  {item}')
+        return 1
 
     if not found:
         print(f"✅ LLM 仅用于 {', '.join(pol.get('llm_scenarios') or ['prose'])}；"

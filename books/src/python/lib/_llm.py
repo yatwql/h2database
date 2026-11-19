@@ -6,8 +6,13 @@ Configuration lives in two files so policy and secrets stay separate:
   data/config/llm_provider.json   providers, models, routing (scenario/book/chapter)
   data/config/llm_settings.json   generation parameters per scenario/book/chapter
 
-Secrets are read from environment variables named by the provider entry
-(``api_key_env``); nothing is stored in the repository. The ``mock`` provider
+Secrets come from two places, resolved in this order:
+
+  1. the environment variable named by the provider entry (``api_key_env``)
+  2. ``data/config/llm_key.json`` (gitignored, shape: ``{"keys": {provider: key}}``)
+
+Nothing secret is ever committed: ``llm_key.json`` is ignored by git and the
+``llm_policy`` gate fails if a key file is tracked. The ``mock`` provider
 answers deterministically so the whole pipeline runs offline.
 
 Routing precedence: chapter > book > scenario > default_provider.
@@ -124,6 +129,28 @@ def _post_json(url: str, payload: dict, api_key: str, timeout: float) -> dict:
         raise LLMError(f'provider returned invalid JSON: {exc}') from exc
 
 
+def key_file() -> dict:
+    """Contents of the local key file (empty when it is absent)."""
+    path = _config.key_file()
+    try:
+        with open(path, encoding='utf-8') as fh:
+            data = json.load(fh)
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _api_key(provider: str, spec: dict) -> str:
+    """Environment variable first, then the gitignored key file."""
+    env_name = spec.get('api_key_env')
+    if env_name:
+        value = os.environ.get(env_name, '')
+        if value:
+            return value
+    keys = key_file().get('keys') or {}
+    return str(keys.get(provider, '') or '')
+
+
 def complete(prompt: str, scenario: str = 'chapter-draft',
              book: str | None = None, chapter: str | None = None,
              model: str | None = None) -> str:
@@ -135,10 +162,12 @@ def complete(prompt: str, scenario: str = 'chapter-draft',
     if kind == 'mock':
         return _mock(prompt, spec, params)
 
-    api_key_env = spec.get('api_key_env')
-    api_key = os.environ.get(api_key_env or '', '')
+    api_key = _api_key(resolved['provider'], spec)
     if not api_key:
-        raise LLMError(f'provider {resolved["provider"]!r} needs ${api_key_env}')
+        hint = spec.get('api_key_env') or 'llm_key.json'
+        raise LLMError(f'provider {resolved["provider"]!r} has no key: '
+                       f'set ${spec.get("api_key_env")} or add it to '
+                       f'data/config/llm_key.json ({hint})')
 
     model_name = model or (spec.get('models') or [''])[0]
     payload = {
@@ -159,9 +188,12 @@ def complete(prompt: str, scenario: str = 'chapter-draft',
 def status() -> dict:
     """Non-secret summary for CLIs and the web UI."""
     cfg = providers()
+    keys = key_file().get('keys') or {}
     return {
+        'key_source': _config.key_file() if os.path.exists(_config.key_file()) else '',
         'default_provider': cfg.get('default_provider'),
         'providers': sorted(cfg.get('providers') or {}),
         'routing': cfg.get('routing') or {},
         'scenarios': sorted(settings().get('scenarios') or {}),
+        'keys_configured': sorted(name for name, value in keys.items() if value),
     }

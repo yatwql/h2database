@@ -252,6 +252,11 @@ def chapter_titles() -> dict[str, list[str]]:
     return {k: list(v) for k, v in _CFG.get('chapters', {}).get('titles', {}).items()}
 
 
+def key_file() -> str:
+    """Local secret file (gitignored); env vars still win over it."""
+    return os.path.join(BOOK_ROOT, 'data', 'config', 'llm_key.json')
+
+
 def chapter_numbering() -> dict[str, list[int]]:
     """Chapter file -> H1 chapter numbers it owns (unique across files)."""
     return {k: list(v) for k, v in _CFG.get('chapters', {}).get('numbering', {}).items()}
