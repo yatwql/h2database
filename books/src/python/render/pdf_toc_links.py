@@ -82,7 +82,8 @@ def get_toc_links(html_path: Path | None = None) -> list[dict]:
         return links
 
 def add_links(pdf_path: Path | None = None, html_path: Path | None = None,
-              tmp_path: Path | None = None) -> None:
+              tmp_path: Path | None = None,
+              toc_links: list[dict] | None = None) -> None:
     html_path = Path(html_path) if html_path else HTML_PATH
     pdf_path = Path(pdf_path) if pdf_path else PDF_PATH
     tmp_path = Path(tmp_path) if tmp_path else pdf_path.with_suffix('.pdf.tmp')
@@ -95,7 +96,8 @@ def add_links(pdf_path: Path | None = None, html_path: Path | None = None,
               file=sys.stderr)
         raise SystemExit(1)
 
-    toc_links = get_toc_links(html_path)
+    if toc_links is None:
+        toc_links = get_toc_links(html_path)
     print(f'TOC links in HTML: {len(toc_links)}')
 
     try:

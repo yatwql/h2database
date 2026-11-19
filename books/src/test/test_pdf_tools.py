@@ -264,12 +264,46 @@ class TocLinkInjectionTest(unittest.TestCase):
         self.assertEqual([item['text'] for item in found], ['第一章', '第二章'])
         self.assertEqual([item['text'] for item in links], ['第一章', '第二章'])
 
+    def toc_links(self) -> list[dict]:
+        return [
+            {'index': 0, 'text': '第一章', 'href': '#a',
+             'rect': {'x': 20, 'y': 30, 'w': 120, 'h': 14}},
+            {'index': 1, 'text': '第二章', 'href': '#b',
+             'rect': {'x': 20, 'y': 60, 'w': 120, 'h': 14}},
+        ]
+
     def test_add_links_writes_annotations(self):
         make_pdf(self.pdf, titles=[('第一章', 0), ('第二章', 1)])
-        self.module.add_links(self.pdf, self.html)
+        self.module.add_links(self.pdf, self.html, toc_links=self.toc_links())
         annots = [annot for page in PdfReader(self.pdf).pages
                   for annot in (page.get('/Annots') or [])]
         self.assertEqual(len(annots), 2)
+
+    def test_add_links_warns_when_titles_differ(self):
+        make_pdf(self.pdf, titles=[('另一个标题', 0)])
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            self.module.add_links(self.pdf, self.html, toc_links=self.toc_links()[:1])
+        self.assertIn('Note:', buffer.getvalue())
+
+    def test_add_links_rejects_more_toc_entries_than_outline(self):
+        make_pdf(self.pdf, titles=[('第一章', 0)])
+        with self.assertRaises(RuntimeError):
+            self.module.add_links(self.pdf, self.html, toc_links=self.toc_links())
+
+    def test_add_links_clamps_links_at_the_page_edge(self):
+        make_pdf(self.pdf, titles=[('第一章', 0)])
+        edge = [{'index': 0, 'text': '第一章', 'href': '#a',
+                 'rect': {'x': 780, 'y': 1060, 'w': 40, 'h': 20}}]
+        self.module.add_links(self.pdf, self.html, toc_links=edge)
+        self.assertTrue(os.path.exists(self.pdf))
+
+    def test_add_links_rejects_an_empty_rectangle(self):
+        make_pdf(self.pdf, titles=[('第一章', 0)])
+        degenerate = [{'index': 0, 'text': '第一章', 'href': '#a',
+                       'rect': {'x': 10, 'y': 10, 'w': 0, 'h': 0}}]
+        with self.assertRaises(RuntimeError):
+            self.module.add_links(self.pdf, self.html, toc_links=degenerate)
 
     def test_add_links_requires_html(self):
         make_pdf(self.pdf, titles=[('第一章', 0)])

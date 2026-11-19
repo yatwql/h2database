@@ -66,6 +66,16 @@ class StructureMutationTest(unittest.TestCase):
         _code, out = self.run_gate()
         self.assertTrue(out)
 
+    def test_structure_runs_after_a_full_build(self):
+        """HTML/merged/TOC checks only execute when the artifacts exist."""
+        for script in ('cover.py', 'merge.py', 'to_html.py'):
+            code, out = _fixture.run_inproc(self.root, script)
+            self.assertEqual(code, 0, out[-400:])
+        code, out = self.run_gate()
+        self.assertIn(code, (0, 1), out[-600:])
+        self.assertIn('CSS', out)
+        self.assertIn('Merged', out)
+
     def test_stale_merged_document_is_reported(self):
         _fixture.run_inproc(self.root, 'merge.py')
         merged = os.path.join(self.root, 'dist', 'test-book.md')
