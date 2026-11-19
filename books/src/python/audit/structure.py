@@ -162,7 +162,7 @@ for ch in sorted(global_by_ch, key=lambda k: (isinstance(k, str), k)):
     elif not complete:
         msg_parts.append(f'gaps in numbering (has {len(sorted_bases)} unique, expected {sorted_bases[-1]})')
     elif not in_order:
-        out_of_order = sum(1 for a, e in zip(base_nums, range(1, len(base_nums)+1)) if a != e)
+        out_of_order = sum(1 for a, e in zip(base_nums, range(1, len(base_nums)+1), strict=False) if a != e)
         msg_parts.append(f'all unique+complete, {out_of_order} out-of-order inserts')
     else:
         msg_parts.append('all sequential')
@@ -197,7 +197,7 @@ total_fences = 0
 all_balanced = True
 for f in CHAPTERS:
     lines = _read_lines(f)
-    fences = sum(1 for l in lines if l.strip().startswith('```'))
+    fences = sum(1 for line in lines if line.strip().startswith('```'))
     if fences % 2 != 0:
         all_balanced = False
         check(False, f'{f}: {fences} fences (ODD!)')
@@ -211,10 +211,10 @@ section('p0', 'Heading Hierarchy')
 for f in CHAPTERS:
     lines = _read_lines(f)
     headings = []
-    for i, l in enumerate(lines):
-        m = re.match(r'^(#{1,4})\s', l)
+    for i, line in enumerate(lines):
+        m = re.match(r'^(#{1,4})\s', line)
         if m:
-            headings.append((len(m.group(1)), i+1, l.strip()[:60]))
+            headings.append((len(m.group(1)), i+1, line.strip()[:60]))
     has_jump = False
     for i in range(1, len(headings)):
         if headings[i][0] - headings[i-1][0] > 1:
@@ -322,7 +322,7 @@ if os.path.exists(index_path):
     check(entry_count >= 120, f'Index: {entry_count} entries (target: >= 120)')
 
     # Count per-chapter entries
-    per_chapter = {i: 0 for i in range(1, 13)}
+    per_chapter = dict.fromkeys(range(1, 13), 0)
     for entry in index_entries:
         refs = re.findall(r'§(\d+)\.', entry)
         refs += re.findall(r'第(\d+)章', entry)
@@ -543,7 +543,7 @@ if os.path.exists(style_script):
         )
         # Check for final warning count
         style_warnings = 0
-        for line in result.stderr.split('\n'):
+        for _line in result.stderr.split('\n'):
             pass
         for line in result.stdout.split('\n'):
             m = re.search(r'(\d+) style warnings', line)
