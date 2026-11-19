@@ -21,7 +21,9 @@ from http import server
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core import actions
-from lib import _config
+from lib import _config, _fsutil
+
+_fsutil.pin_stdout_utf8()
 
 PAGE = """<!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="utf-8"><title>__APP__</title>

@@ -17,9 +17,11 @@ import unicodedata
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core import actions, menu, settings
-from lib import _config
+from lib import _config, _fsutil
 
 from app import keys
+
+_fsutil.pin_stdout_utf8()
 
 USE_COLOR = sys.stdout.isatty() and not os.environ.get('NO_COLOR')
 

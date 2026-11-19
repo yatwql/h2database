@@ -25,6 +25,13 @@ cd "$REPO_DIR"
 
 FAST_GATES="architecture,script_contract,style_schema,llm_policy,versions,file_length"
 
+LOG_DIR="$BOOK_DIR/logs"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/check-$TIER-$(date +%Y-%m-%d_%H%M%S).log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+trap 'if [ "$KEEP_LOG" = "1" ]; then :; else rm -f "$LOG_FILE"; fi' EXIT
+KEEP_LOG=0
+
 say() { printf '\n\033[1;36m== [%s] %s\033[0m\n' "$LEVEL" "$1"; }
 
 case "$TIER" in
@@ -53,7 +60,9 @@ say "unit suite (fast tier)"
 
 case "$TIER" in
   fast)
+    KEEP_LOG=1
     say "fast tier passed"
+    echo "log: $LOG_FILE"
     ;;
   full|release)
     say "every gate"
@@ -64,7 +73,9 @@ case "$TIER" in
       say "deliver artifacts"
       "$PYTHON" books/src/python/make.py deliver --timings
     fi
+    KEEP_LOG=1
     say "$TIER tier passed"
+    echo "log: $LOG_FILE"
     ;;
   *)
     echo "usage: $0 [fast|full|release]" >&2

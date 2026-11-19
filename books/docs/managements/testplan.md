@@ -154,6 +154,7 @@ python books/src/python/structure.py --gate-level p0  # 仅 p0
 | `traces.py` | 文档与代码注释不得有过程痕迹（`--kind docs\|code\|all`） | 一个门禁两个范围，一个目的 |
 | `file_length.py` | 文件行数预算 | 只管规模 |
 | `gate_trace.py` | 门禁表与实现的双向可追溯 | 只管登记一致性 |
+| `portability.py` | 移植性：文本 `open()` 均显式 encoding；ASCII locale 下入口可运行 | 只管环境适配，不评判内容 |
 | `typecheck.py` | pyright 静态类型检查 | 只管类型 |
 
 合并原则：目的相同且扫描面重叠 → 合并（`traces.py` 合并了原 `doc_traces` 与

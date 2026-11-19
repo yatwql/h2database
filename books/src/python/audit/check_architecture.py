@@ -48,7 +48,8 @@ DEPENDENCY_MATRIX: dict[str, frozenset[str]] = {
 }
 STDLIB_CLASH = {'types', 'html', 'json', 'logging', 'email', 'code', 'test', 'binascii'}
 PATH_LITERALS = ('books/', 'data/manuscript', 'data/config', 'data/tmpl')
-WRITE_CALLS = ('write_text', 'open(')
+WRITE_CALLS = ('write_text', 'open(')  # kept for the human-readable rule text
+WRITE_MODES = 'wax+'
 
 
 def layer_of(path: str, root: str | None = None) -> str:
@@ -72,6 +73,28 @@ def imports_of(path: str) -> list[str]:
         elif isinstance(node, ast.Import):
             found += [alias.name for alias in node.names]
     return found
+
+
+def write_calls(tree: ast.AST) -> list[int]:
+    """Line numbers of calls that write files (open in a write mode, write_text)."""
+    lines: list[int] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        name = getattr(func, 'id', None) or getattr(func, 'attr', None)
+        if name == 'write_text':
+            lines.append(node.lineno)
+            continue
+        if name != 'open' or len(node.args) < 2:
+            continue
+        mode = node.args[1]
+        literal_write = (isinstance(mode, ast.Constant) and isinstance(mode.value, str)
+                         and any(flag in mode.value for flag in WRITE_MODES))
+        keyword_mode = any(kw.arg == 'mode' for kw in node.keywords)
+        if literal_write or keyword_mode:
+            lines.append(node.lineno)
+    return lines
 
 
 def check(path: str, root: str | None = None) -> list[str]:
@@ -127,11 +150,10 @@ def check(path: str, root: str | None = None) -> list[str]:
 
     # WRITE: gates must not modify the manuscript or artifacts (baselines excepted)
     if layer == 'audit' and 'baseline' not in source:
-        for call in WRITE_CALLS:
-            if call in source and 'add_note' not in source:
-                if call == 'open(' and "'w'" not in source and '"w"' not in source:
-                    continue
-                problems.append(f'{rel}: "{layer}" layer must not write files')
+        writers = write_calls(tree)
+        if writers:
+            problems.append(
+                f'{rel}: "{layer}" layer must not write files (line {writers[0]})')
 
     # CONFIG: no hardcoded repository paths outside lib/ (the gate defines them)
     if layer != 'lib' and name != 'check_architecture':
@@ -167,7 +189,11 @@ def check_scripts(scripts_dir: str | None = None) -> list[str]:
     problems: list[str] = []
     if not os.path.isdir(directory):
         return problems
-    for name in sorted(os.listdir(directory)):
+    try:
+        entries = sorted(os.listdir(directory))
+    except OSError as exc:
+        return [f'scripts/: cannot list the directory: {exc}']
+    for name in entries:
         path = os.path.join(directory, name)
         if not os.path.isfile(path) or name.startswith('.'):
             continue
