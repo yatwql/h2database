@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -139,8 +140,7 @@ def doctor() -> int:
     for module, users in OPTIONAL_TOOLS.items():
         found = importlib.util.find_spec(module) is not None
         if module == 'pandoc':
-            found = bool(subprocess.run(['which', 'pandoc'], capture_output=True,
-                                        check=False).stdout.strip())
+            found = shutil.which('pandoc') is not None
         status = 'ok' if found else 'MISSING'
         if not found:
             problems += 1
