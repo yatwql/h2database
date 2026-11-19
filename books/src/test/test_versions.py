@@ -36,7 +36,7 @@ class VersionsCase(unittest.TestCase):
 
 class TestVersions(VersionsCase):
     def test_tool_version_defaults_to_package_constant(self):
-        self.assertRegex(self.config().tool_version(), r'^\d+\.\d+\.\d+$')
+        self.assertRegex(self.config().tool_version(), r'^\d+\.\d+(\.\d+)?$')
 
     def test_doc_version_comes_from_book_toml(self):
         self.assertEqual(self.config().doc_version(), self.config().VERSION)

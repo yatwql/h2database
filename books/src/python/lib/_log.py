@@ -50,7 +50,7 @@ def setup(level: str | None = None) -> logging.Logger:
     global _CONFIGURED
     settings = _settings()
     numeric = getattr(logging, (level or settings['level']).upper(), logging.INFO)
-    root = logging.getLogger('books')
+    root = logging.getLogger(_config.app_name())
     if _CONFIGURED:
         if level:  # only an explicit request changes the level after setup
             root.setLevel(numeric)
@@ -64,7 +64,7 @@ def setup(level: str | None = None) -> logging.Logger:
     root.setLevel(numeric)
     root.propagate = False
 
-    logfile = os.path.join(log_dir(), 'books.log')
+    logfile = os.path.join(log_dir(), f'{_config.app_name()}.log')
     try:
         file_handler = logging.handlers.TimedRotatingFileHandler(
             logfile, when='midnight', backupCount=settings['retention_days'],
@@ -89,7 +89,7 @@ def setup(level: str | None = None) -> logging.Logger:
 def get_logger(name: str) -> logging.Logger:
     """Child logger; configuration happens on first call."""
     setup()
-    return logging.getLogger(f'books.{name}')
+    return logging.getLogger(f'{_config.app_name()}.{name}')
 
 
 def describe() -> dict:

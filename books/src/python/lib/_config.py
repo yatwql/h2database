@@ -278,6 +278,18 @@ def source_suffixes() -> list[str]:
     return sorted(set(found))
 
 
+def app_name() -> str:
+    """Product name of the toolchain (logs, CLI, TUI, Web)."""
+    from lib._version import APP_NAME
+    return APP_NAME
+
+
+def app_title() -> str:
+    """One-line product title including the tool version."""
+    from lib._version import APP_TITLE, TOOL_VERSION
+    return f'{APP_TITLE} v{TOOL_VERSION}'
+
+
 def tool_version() -> str:
     """The toolchain's own version (independent of book and source)."""
     from lib._version import TOOL_VERSION

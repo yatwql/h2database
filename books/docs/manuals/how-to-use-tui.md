@@ -11,11 +11,12 @@ python books/src/python/app/tui.py
 ## 界面
 
 ```text
-┌─ 某系统源码剖析  v1.0 ─────────────────────────────────────┐
-│ 手稿  /path/to/books/data/manuscript                        │
-│ 产物  /path/to/books/dist                                   │
-│ 语言  java          日志 INFO    LLM mock                    │
-└─────────────────────────────────────────────────────────────┘
+┌─ bookwright v0.1  ·  某系统源码剖析 v1.0 ───────────────────┐
+│ 源码 /path/to/src  (源码版本)                                │
+│ 手稿 /path/to/books/data/manuscript                          │
+│ 产物 /path/to/books/dist                                     │
+│ 语言 java   日志 INFO   LLM mock                              │
+└──────────────────────────────────────────────────────────────┘
 
  内容
    1) 源码 → 手稿

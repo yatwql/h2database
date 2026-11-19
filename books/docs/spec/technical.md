@@ -138,3 +138,13 @@ app/        入口层：cli.py / tui.py / web.py + actions.py，只编排，不�
 
 判定配置在 `style.json [content_depth]`；门禁为 `audit/content_depth.py`，
 接入 `make.py check`。
+
+## 15. 产品标识
+
+- 名称与版本只有一处定义：`lib/_version.py`（`APP_NAME` / `APP_TITLE` /
+  `TOOL_VERSION`，当前 `bookwright 0.1`），通过 `_config.app_name()` 与
+  `_config.app_title()` 暴露。
+- 显示面必须一致：CLI `status`、TUI 顶部横幅、Web 页面标题、日志根 logger 与
+  日志文件名（`logs/<name>.log`）都读同一来源。
+- 与“三版本”的关系：`TOOL_VERSION` 是工具版本，源码版本与文档版本分别由
+  `base.json`/源码清单与 `book.toml` 决定（见 §12）。

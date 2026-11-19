@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tests for the logging layer: level control, file output, rotation config."""
+import importlib
 import logging
 import logging.handlers
 import os
@@ -15,6 +16,8 @@ TOOLS_DIR = os.path.join(
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
 sys.path.insert(0, os.path.join(TOOLS_DIR, 'lib'))
+
+_config = importlib.import_module('lib._config')
 
 
 class TestLogging(unittest.TestCase):
@@ -35,11 +38,12 @@ class TestLogging(unittest.TestCase):
         return _fixture.load_module(self.root, '_log')
 
     def log_file(self) -> str:
-        return os.path.join(self.root, 'logs', 'books.log')
+        name = _config.app_name()
+        return os.path.join(self.root, 'logs', f'{name}.log')
 
     def log_text(self) -> str:
         """Flush every handler and return the log file contents."""
-        for handler in logging.getLogger('books').handlers:
+        for handler in logging.getLogger(_config.app_name()).handlers:
             handler.flush()
         if not os.path.isfile(self.log_file()):
             return ''
@@ -80,7 +84,7 @@ class TestLogging(unittest.TestCase):
     def test_daily_rotation_configured(self):
         log = self.module()
         log.setup('INFO')
-        rotating = [h for h in logging.getLogger('books').handlers
+        rotating = [h for h in logging.getLogger(_config.app_name()).handlers
                     if isinstance(h, logging.handlers.TimedRotatingFileHandler)]
         self.assertTrue(rotating, 'a TimedRotatingFileHandler must be installed')
         handler = rotating[0]
@@ -96,10 +100,10 @@ class TestLogging(unittest.TestCase):
         text = ''
         while time.time() < deadline:
             text = self.log_text()
-            if 'books.make' in text:
+            if f'{_config.app_name()}.make' in text:
                 break
             time.sleep(0.05)
-        self.assertIn('books.make', text)
+        self.assertIn(f'{_config.app_name()}.make', text)
 
 
 if __name__ == '__main__':

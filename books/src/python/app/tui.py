@@ -15,6 +15,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from lib import _config
+
 from app import actions, settings
 
 # group -> [(key, action, label)]
@@ -38,19 +40,23 @@ def _c(text: str, code: str) -> str:
 
 
 def header() -> str:
-    """Book identity and the settings that matter most, as a boxed banner."""
+    """Product, book, source tree and directories as a boxed banner."""
     info = settings.summary()
-    width = 68
-    title = f" {info['title']}  v{info['version']} "
+    width = 72
+    title = f" {_config.app_name()} v{info['tool_version']}  ·  {info['title']} v{info['version']} "
     line = '─' * max(0, width - len(title) - 2)
+
+    def row(label: str, value: str) -> str:
+        text = f'{label} {value}'
+        return f"│ {text:<{width - 1}}│"
+
+    source = info['source_dir'] or '(未配置)'
     rows = [
         _c(f"┌─{title}{line}─┐", '36;1'),
-        f"│ 手稿  {info['manuscript']:<58}│",
-        f"│ 产物  {info['dist']:<58}│",
-        (f"│ 语言  {info['languages']:<14}日志 {info['log_level']:<8}"
-        f"LLM {info['llm_provider']:<16}│"),
-        (f"│ 版本  工具 {info['tool_version']:<8}源码 {info['source_version']:<14}"
-         f"文档 {info['doc_version']:<8}│"),
+        row('源码', f"{source}  ({info['source_version']})"),
+        row('手稿', info['manuscript']),
+        row('产物', info['dist']),
+        row('语言', f"{info['languages']:<12}日志 {info['log_level']:<8}LLM {info['llm_provider']}"),
         _c(f"└{'─' * width}┘", '36;1'),
     ]
     return '\n'.join(rows)

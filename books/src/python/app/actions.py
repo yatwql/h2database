@@ -46,6 +46,7 @@ def status() -> tuple[int, str]:
     """Book identity, configuration layers and LLM routing."""
     versions = _config.versions()
     lines = [
+        f"app       : {_config.app_title()}",
         f"book      : {_config.TITLE or '(untitled)'} v{_config.VERSION}",
         (f"versions  : tool {versions['tool']}  source {versions['source']}  "
         f"doc {versions['doc']}"),

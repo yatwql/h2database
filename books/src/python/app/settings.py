@@ -156,6 +156,14 @@ def set_value(key: str, value: str) -> str:
     return ','.join(stored) if isinstance(stored, list) else str(stored)
 
 
+def _source_dir() -> str:
+    """Configured source tree (empty when not configured)."""
+    try:
+        return _config.source_tree('src_main')
+    except Exception:  # noqa: BLE001 - a missing source tree is not fatal here
+        return ''
+
+
 def summary() -> dict:
     """Book identity plus the settings shown in the UI header."""
     return {
@@ -166,6 +174,7 @@ def summary() -> dict:
         'languages': ','.join(_config.source_languages()),
         'log_level': get('log.level') if 'log.level' in SPEC else '',
         'llm_provider': get('llm.provider'),
+        'source_dir': _source_dir(),
         'tool_version': _config.versions()['tool'],
         'source_version': _config.versions()['source'],
         'doc_version': _config.versions()['doc'],

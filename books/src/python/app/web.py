@@ -20,14 +20,16 @@ from http import server
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from lib import _config
+
 from app import actions
 
 PAGE = """<!DOCTYPE html>
-<html lang="zh-CN"><head><meta charset="utf-8"><title>books 工具链</title>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>__APP__</title>
 <style>body{font-family:system-ui;margin:2rem;max-width:52rem}
 button{margin:.2rem;padding:.4rem .8rem}pre{background:#f5f5f5;padding:1rem;
 white-space:pre-wrap}</style></head>
-<body><h1>books 工具链</h1>
+<body><h1>__APP__</h1>
 <p id="actions"></p>
 <p><input id="prompt" size="50" placeholder="llm-ask 的提示词">
 <button onclick="run('llm-ask')">llm-ask</button></p>
@@ -63,7 +65,8 @@ class Handler(server.BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         if self.path in ('/', '/index.html'):
-            page = PAGE.replace('__ACTIONS__', json.dumps(actions.ACTIONS, ensure_ascii=False))
+            page = (PAGE.replace('__ACTIONS__', json.dumps(actions.ACTIONS, ensure_ascii=False))
+                    .replace('__APP__', _config.app_title()))
             self._send(200, page, 'text/html; charset=utf-8')
         elif self.path == '/api/status':
             code, text = actions.run('status')
