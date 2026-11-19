@@ -48,6 +48,21 @@ class GlossaryBuilderTest(unittest.TestCase):
         code, out = _fixture.run_inproc(self.root, 'glossary.py', '--coverage')
         self.assertIn(code, (0, 1), out[-400:])
 
+    def test_default_mode_drafts_a_glossary(self):
+        self.glossary('# 术语表\n\n## A\n\n- **ACID**: 描述。\n  **章节**：第1章\n')
+        code, out = _fixture.run_inproc(self.root, 'glossary.py')
+        self.assertEqual(code, 0, out[-400:])
+        # the draft is generated from chapter terms, not from the existing file
+        self.assertIn('术语表（自动生成草稿）', out)
+
+    def test_draft_extracts_terms_from_the_chapters(self):
+        path = os.path.join(self.root, 'data', 'manuscript', 'ch1-test.md')
+        with open(path, 'a', encoding='utf-8') as fh:
+            fh.write('\n**存储引擎** 负责持久化，**调度器** 分发任务。\n')
+        code, out = _fixture.run_inproc(self.root, 'glossary.py')
+        self.assertEqual(code, 0, out[-400:])
+        self.assertTrue(out.strip())
+
     def test_malformed_glossary_is_tolerated(self):
         self.glossary('# 术语表\n- 没有加粗的条目\n- **B**: 描述\n')
         code, out = _fixture.run_inproc(self.root, 'glossary.py', '--check')
