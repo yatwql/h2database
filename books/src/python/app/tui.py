@@ -137,6 +137,19 @@ ENTRIES: list[tuple[str, str, str]] = [entry for entries in GROUPS.values()
 # LLM path are never mistaken for each other at a glance.
 LLM_ACTIONS = {'analyze-llm', 'llm-ask'}
 
+# The cursor starts on the everyday action (hand-written manuscript -> built
+# HTML), not on the ingest step, so opening the menu and pressing Enter does the
+# common thing.
+DEFAULT_ENTRY_KEY = '2'
+
+
+def default_cursor() -> int:
+    """Index of the entry the menu starts on (0 when the key is missing)."""
+    for index, entry in enumerate(ENTRIES):
+        if entry[0] == DEFAULT_ENTRY_KEY:
+            return index
+    return 0
+
 
 def menu_text(cursor: int | None = None) -> str:
     """Grouped menu; `cursor` highlights one row (↑/↓ moves it)."""
@@ -247,7 +260,7 @@ def main(argv: list[str] | None = None) -> int:
         return code
 
     shortcuts = {key: (action, label) for key, action, label in ENTRIES}
-    cursor = 0
+    cursor = default_cursor()
     status = ''
     while True:
         screen = ['\n' + header(), '', menu_text(cursor)]

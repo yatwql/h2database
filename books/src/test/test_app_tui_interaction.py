@@ -44,20 +44,23 @@ class TuiInteractionTest(unittest.TestCase):
             code = self.tui.main([])
         return code, buffer.getvalue()
 
-    def test_enter_runs_the_highlighted_entry(self):
+    def test_cursor_starts_on_the_everyday_action(self):
+        entry = self.tui.ENTRIES[self.tui.default_cursor()]
+        self.assertEqual(entry[0], '2')
+        self.assertEqual(entry[1], 'build')
+
+    def test_enter_runs_the_default_entry_without_any_navigation(self):
         code, out = self.press(self.keys.KEY_ENTER)
         self.assertEqual(code, 0)
-        self.assertEqual(self.calls, ['analyze'])
-        self.assertIn('正在执行 源码 → 手稿', out)
-
-    def test_down_then_enter_runs_the_second_entry(self):
-        code, _out = self.press(self.keys.KEY_DOWN, self.keys.KEY_ENTER)
-        self.assertEqual(code, 0)
-        self.assertEqual(self.calls, ['analyze-llm'])
-
-    def test_third_entry_is_the_deterministic_build(self):
-        self.press(self.keys.KEY_DOWN, self.keys.KEY_DOWN, self.keys.KEY_ENTER)
         self.assertEqual(self.calls, ['build'])
+        self.assertIn('正在执行 手稿 → Markdown + HTML', out)
+
+    def test_down_moves_to_the_next_entry(self):
+        # past `3 deliver` (which asks for confirmation) onto `4 check`
+        code, _out = self.press(self.keys.KEY_DOWN, self.keys.KEY_DOWN,
+                                self.keys.KEY_ENTER)
+        self.assertEqual(code, 0)
+        self.assertEqual(self.calls, ['check'])
 
     def test_l_shortcut_runs_the_llm_ingest(self):
         self.press('l')
@@ -75,8 +78,14 @@ class TuiInteractionTest(unittest.TestCase):
         for line in llm_rows:
             self.assertIn('LLM', line)
 
-    def test_up_from_the_first_entry_wraps_to_the_last(self):
+    def test_up_moves_to_the_previous_entry(self):
         self.press(self.keys.KEY_UP, self.keys.KEY_ENTER)
+        self.assertEqual(self.calls, ['analyze-llm'])
+
+    def test_navigation_wraps_at_both_ends(self):
+        # up three times from the default lands on the last entry
+        self.press(self.keys.KEY_UP, self.keys.KEY_UP, self.keys.KEY_UP,
+                   self.keys.KEY_ENTER)
         self.assertEqual(self.calls, ['doctor'])
 
     def test_digit_key_runs_immediately_without_enter(self):
