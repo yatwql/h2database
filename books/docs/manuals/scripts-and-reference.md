@@ -8,7 +8,7 @@
 
 | 位置 | 约定 | 例 |
 | --- | --- | --- |
-| `books/scripts/` | 动词前缀 + 对象：`check-*` 验证（退出码决定成败）、`eval-*` 度量（出报告） | `check-fast.sh`、`eval-score.sh` |
+| `books/scripts/` | 动词前缀 + 对象：`check-*` 验证（退出码决定成败）、`eval-*` 度量（出报告）、`new-*` 生成 | `check-fast.sh`、`eval-score.sh`、`new-book.sh` |
 | `src/python/<层>/` | 目录定类别、文件名写对象，不加动词前缀 | `audit/links.py`、`render/to_pdf.py` |
 | `src/python/lib/` | 内部模块用下划线前缀 | `lib/_config.py` |
 
@@ -22,6 +22,7 @@
 | `bookctl` / `bookctl.ps1` | 统一分发器：`bookctl <action>` 转发到 `app/cli.py`，自己找解释器（`.venv` → `$PYTHON` → `python3`） |
 | `launch.sh` / `launch.ps1` | 交互入口：默认进 TUI，`launch.sh cli <action>` / `launch.sh web` 切渠道 |
 | `bootstrap.sh` / `bootstrap.ps1` | 建 `.venv`、装依赖、装 chromium（首次使用跑一次） |
+| `new-book.sh` / `.ps1` | 脚手架：生成新书（或翻译版）的四份文档侧配置 + 按目标语言派生的 `style.json` |
 | `check-fast.sh` / `.ps1` | 快速档：ruff + 结构门禁 + 单元套件（约 16 秒），每次提交跑 |
 | `check-full.sh` / `.ps1` | 完整档：全部门禁（合入前跑） |
 | `check-release.sh` / `.ps1` | 发布档：完整档 + 慢档（chromium/pandoc）+ `make.py deliver` |
@@ -67,7 +68,7 @@
 | `core/actions.py` | 动作执行（库）；`analyze(use_llm=…)` 等 |
 | `core/menu.py` | 菜单模型、确认策略、运行回报（库） |
 | `core/settings.py` | 可改配置项的读写与校验（库） |
-| `core/scaffold.py <目标目录>` | 新书脚手架：生成四份文档侧配置；`--lang`、`--from-manuscript` |
+| `core/scaffold.py <目标目录>` | 新书脚手架：四份文档侧配置 + 派生 `style.json`；`--lang`、`--title`、`--from-manuscript` |
 
 ## 6. 源码 → 手稿 `src/python/ingest/`
 
@@ -156,4 +157,4 @@
 | 改了源码树 | `bookctl analyze`（确定性）或 `bookctl analyze-llm`（导读/小结用 LLM） |
 | 只重建文档 | `bookctl build` |
 | 单独查某个问题 | `make.py check --only <step>`，或直接跑对应 `audit/*.py --json` |
-| 新建一本书 | `books/src/python/core/scaffold.py ../new-book --title "…"` |
+| 新建一本书 / 翻译版 | `books/scripts/new-book.sh ../new-book --title "…"`（翻译加 `--lang en`） |

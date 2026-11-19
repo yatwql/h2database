@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import json
 import os
 import sys
 import tempfile
@@ -43,6 +44,25 @@ class ScaffoldGeneratorTest(unittest.TestCase):
             self.assertIn('新书', fh.read())
         self.assertTrue(os.path.exists(os.path.join(target, 'data', 'language', 'zh.json')))
         self.assertTrue(os.path.exists(os.path.join(target, 'data', 'config', 'base.json')))
+
+    def test_style_is_derived_per_language(self):
+        cjk = self.module.style_for('zh')
+        latin = self.module.style_for('en')
+        self.assertEqual(cjk['prose']['avg_sentence_good'], 28)
+        self.assertEqual(latin['prose']['avg_sentence_good'], 18)
+        self.assertEqual(cjk['style_rules']['terminology'], [])
+        self.assertEqual(latin['captions']['leading_verbs'], [])
+        self.assertTrue(cjk['prose']['avg_sentence_good'] > latin['prose']['avg_sentence_good'])
+
+    def test_scaffold_writes_the_derived_style(self):
+        target = os.path.join(self.tmp.name, 'translated')
+        self.module.scaffold(target, 'Translated', 'en', False)
+        style_path = os.path.join(target, 'data', 'config', 'style.json')
+        with open(style_path, encoding='utf-8') as fh:
+            written = json.load(fh)
+        self.assertEqual(written['prose']['avg_sentence_bad'], 30)
+        self.assertEqual(written['style_rules']['terminology'], [])
+        self.assertIn('en', written['_note'])
 
     def test_scaffold_is_idempotent(self):
         target = os.path.join(self.tmp.name, 'again')

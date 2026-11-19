@@ -21,6 +21,19 @@ books/scripts/bookctl new ../copy --title "副本" --from-manuscript   # 连章�
 一句话记法：**结构看 `book.toml`，说法看 `templates.toml`，名词看语言包，判分看 `style.json`。**
 拷错方向会被门禁拦下：`style_schema.py` 拒绝 `style.json` 里出现叙述模板或展示文案。
 
+## 生成
+
+```bash
+books/scripts/new-book.sh ../my-book --title "My Book"
+books/scripts/new-book.sh ../translation --lang en --title "My Book (EN)"
+books/scripts/new-book.sh ../copy --from-manuscript   # 连章节一起复制
+```
+
+`style.json` 不是原样复制：结构（键、章节骨架）沿用当前书的 schema，保证
+`style_schema` 门禁直接通过；**内容按目标语言重新派生**——句长锚点按 CJK / 拉丁
+字系取不同值，术语表同义词、禁用链接文案、图注动词表、`glossary_ignore` 与逐书
+`limits` 全部清空，避免把上一本书的词表带进新书。
+
 ## 脚手架之后
 
 1. 改 `data/config/base.json`：`sources.src_main` 指向新源码树，`languages` 选 `java|python|rust`。

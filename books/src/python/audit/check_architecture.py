@@ -158,12 +158,12 @@ def check(path: str, root: str | None = None) -> list[str]:
 def check_scripts(scripts_dir: str | None = None) -> list[str]:
     """Name convention for the top-level wrappers in books/scripts/.
 
-    `check-*` verifies (exit code decides), `eval-*` measures; the interactive
-    and setup entry points keep their historical names. One pattern per file, so
-    the directory itself documents what a script is for.
+    `check-*` verifies (exit code decides), `eval-*` measures, `new-*` generates
+    a new book; the interactive and setup entry points keep their names. One
+    pattern per file, so the directory itself documents what a script is for.
     """
     directory = scripts_dir or os.path.join(_config.BOOK_ROOT, 'scripts')
-    allowed = ('bookctl', 'launch', 'bootstrap', 'check', 'eval')
+    allowed = ('bookctl', 'launch', 'bootstrap', 'check', 'eval', 'new')
     problems: list[str] = []
     if not os.path.isdir(directory):
         return problems

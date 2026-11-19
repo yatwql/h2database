@@ -126,6 +126,57 @@ def _base_config() -> dict:
     return current
 
 
+# Sentence-length anchors per script family. A translation needs its own numbers:
+# what reads long in Chinese reads fine in English and vice versa.
+PROSE_ANCHORS = {
+    'cjk': {'avg_sentence_good': 28, 'avg_sentence_bad': 45,
+            'long_sentence_ratio': 8, 'bullet_ratio': 15},
+    'latin': {'avg_sentence_good': 18, 'avg_sentence_bad': 30,
+              'long_sentence_ratio': 12, 'bullet_ratio': 18},
+}
+CJK_LANGS = ('zh', 'ja', 'ko')
+
+
+def _script_family(lang: str) -> str:
+    return 'cjk' if lang.split('-')[0].lower() in CJK_LANGS else 'latin'
+
+
+def style_for(lang: str) -> dict:
+    """A fresh style.json for the new book: same schema, no inherited vocabulary.
+
+    Structure (sections, keys) comes from the current style.json so the schema
+    gate keeps passing; everything book- or language-specific is reset:
+    terminology, banned link text, phrase lists, per-book limits and the prose
+    anchors for the target script family.
+    """
+    source = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'style.json')
+    try:
+        style = json.loads(_fsutil.read_text(source))
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f'error: invalid style config {source}: {exc}') from exc
+
+    style['_note'] = f'style.json for a new book ({lang}); thresholds are a starting point'
+    family = _script_family(lang)
+    prose = style.setdefault('prose', {})
+    prose.update(PROSE_ANCHORS[family])
+
+    rules = style.setdefault('style_rules', {})
+    rules['terminology'] = []          # book-specific synonyms: start empty
+    rules['banned_link_text'] = []
+    if family != 'cjk':
+        # Phrase lists below were written for Chinese prose; an English book must
+        # not inherit them or every caption would be flagged.
+        for key in ('leading_verbs', 'vague_trailing'):
+            if isinstance(style.get('captions'), dict):
+                style['captions'][key] = []
+    depth = style.setdefault('content_depth', {})
+    depth['glossary_ignore'] = []
+    for section in ('limits', 'thresholds'):
+        if isinstance(style.get(section), dict):
+            style[section] = {}
+    return style
+
+
 def scaffold(target: str, title: str, lang: str, copy_manuscript: bool) -> list[str]:
     """Create the four document-side files (and optionally the chapters)."""
     target = os.path.abspath(target)
@@ -147,8 +198,8 @@ def scaffold(target: str, title: str, lang: str, copy_manuscript: bool) -> list[
     write(f'{LANG_REL}/{lang}.json',
           json.dumps(_language_pack(lang), ensure_ascii=False, indent=2) + '\n')
     write(f'{CONFIG_REL}/base.json', json.dumps(_base_config(), ensure_ascii=False, indent=2) + '\n')
-    write(f'{CONFIG_REL}/style.json', _fsutil.read_text(
-        os.path.join(_config.BOOK_ROOT, 'data', 'config', 'style.json')))
+    write(f'{CONFIG_REL}/style.json',
+          json.dumps(style_for(lang), ensure_ascii=False, indent=2) + '\n')
     write(f'{MANUSCRIPT_REL}/cover.md',
           COVER_MD.format(title=title, date=__import__('datetime').date.today().isoformat()))
     write(f'{MANUSCRIPT_REL}/ch1-overview.md', CHAPTER_MD.format(title=title))
