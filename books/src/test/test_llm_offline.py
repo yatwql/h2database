@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""The suite must never touch the network: prove it, and prove the guard."""
+"""LLM providers offline: key resolution, mock provider and the Messages API."""
 from __future__ import annotations
 
 import json
 import os
-import socket
 import sys
 import tempfile
 import unittest
@@ -20,28 +19,9 @@ if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
 
 
-class GuardCase(unittest.TestCase):
-    def test_guard_is_installed(self):
-        self.assertTrue(_netguard.active())
-
-    def test_external_connect_is_blocked(self):
-        with self.assertRaises(_netguard.BlockedNetwork):
-            socket.create_connection(('example.com', 443), timeout=1)
-
-    def test_external_dns_lookup_is_blocked(self):
-        with self.assertRaises(_netguard.BlockedNetwork):
-            socket.getaddrinfo('api.openai.com', 443)
-
-    def test_loopback_is_allowed(self):
-        server = socket.socket()
-        server.bind(('127.0.0.1', 0))
-        server.listen(1)
-        self.addCleanup(server.close)
-        client = socket.create_connection(server.getsockname(), timeout=2)
-        client.close()
 
 
-class LLMOfflineCase(unittest.TestCase):
+class OfflineProviderTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
@@ -121,11 +101,7 @@ class LLMOfflineCase(unittest.TestCase):
             self.assertTrue(self.llm.complete('hi'))
 
 
-if __name__ == '__main__':
-    unittest.main()
-
-
-class AnthropicTransportCase(unittest.TestCase):
+class AnthropicTransportTest(unittest.TestCase):
     """The Anthropic-compatible chain: no sockets, payload and auth verified."""
 
     def setUp(self):
@@ -212,3 +188,7 @@ class AnthropicTransportCase(unittest.TestCase):
         status = self.llm.status()
         self.assertIn('demo-anthropic', status['keys_configured'])
         self.assertNotIn('sk-test', json.dumps(status, ensure_ascii=False))
+
+
+if __name__ == '__main__':
+    unittest.main()

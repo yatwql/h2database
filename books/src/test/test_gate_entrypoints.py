@@ -33,7 +33,7 @@ GATES = [
 ]
 
 
-class GateCliCase(unittest.TestCase):
+class GateEntrypointsTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)

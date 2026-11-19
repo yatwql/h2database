@@ -105,7 +105,7 @@ def fake_engine(page: FakePage):
     return engine
 
 
-class PdfBuildCase(unittest.TestCase):
+class PdfBuildPipelineTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)

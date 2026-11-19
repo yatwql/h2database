@@ -28,7 +28,7 @@ def completed(code: int = 0, out: str = '', err: str = ''):
     return result
 
 
-class SelectCase(unittest.TestCase):
+class MakeDriverTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)

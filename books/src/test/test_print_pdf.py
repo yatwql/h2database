@@ -97,7 +97,7 @@ def fake_engine(page):
     return engine
 
 
-class PrintPdfCase(unittest.TestCase):
+class PrintGradePdfTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)

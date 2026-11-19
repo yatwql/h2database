@@ -62,7 +62,7 @@ HTML_TWO_HEADINGS = (
 )
 
 
-class VerifyPdfCase(unittest.TestCase):
+class PdfVerificationTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
@@ -233,7 +233,7 @@ def _fake_engine(links):
     return engine
 
 
-class TocLinksCase(unittest.TestCase):
+class TocLinkInjectionTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
