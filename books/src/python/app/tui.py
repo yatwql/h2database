@@ -56,6 +56,7 @@ PALETTE = {
     'cursor': '1;38;5;231',      # the highlighted row
     'cursor_bar': '1;38;5;45',   # its leading marker
     'value_ok': '38;5;114',
+    'llm_badge': '38;5;179',   # amber: this row spends LLM tokens
 }
 
 
@@ -132,6 +133,10 @@ def header() -> str:
 ENTRIES: list[tuple[str, str, str]] = [entry for entries in GROUPS.values()
                                        for entry in entries]
 
+# Entries whose output depends on the LLM carry a badge, so the plain and the
+# LLM path are never mistaken for each other at a glance.
+LLM_ACTIONS = {'analyze-llm', 'llm-ask'}
+
 
 def menu_text(cursor: int | None = None) -> str:
     """Grouped menu; `cursor` highlights one row (↑/↓ moves it)."""
@@ -142,8 +147,10 @@ def menu_text(cursor: int | None = None) -> str:
         for key, _action, label in entries:
             marker = '❯' if cursor == index else ' '
             label_style = PALETTE['cursor'] if cursor == index else PALETTE['value']
+            badge = (f" {_c('LLM', PALETTE['llm_badge'])}"
+                     if _action in LLM_ACTIONS else '')
             lines.append(f" {_c(marker, PALETTE['cursor_bar'])} "
-                         f"{_c(key, PALETTE['key'])}   {_c(label, label_style)}")
+                         f"{_c(key, PALETTE['key'])}   {_c(label, label_style)}{badge}")
             index += 1
         lines.append('')
     lines.append(f"   {_c('c', PALETTE['key'])} 配置   "

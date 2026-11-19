@@ -63,6 +63,18 @@ class TuiInteractionTest(unittest.TestCase):
         self.press('l')
         self.assertEqual(self.calls, ['analyze-llm'])
 
+    def test_uppercase_l_shortcut_works_too(self):
+        self.calls.clear()
+        self.press('L')
+        self.assertEqual(self.calls, ['analyze-llm'])
+
+    def test_llm_entries_carry_a_badge_in_the_menu(self):
+        text = self.tui.menu_text()
+        llm_rows = [line for line in text.splitlines() if 'LLM' in line]
+        self.assertTrue(llm_rows)
+        for line in llm_rows:
+            self.assertIn('LLM', line)
+
     def test_up_from_the_first_entry_wraps_to_the_last(self):
         self.press(self.keys.KEY_UP, self.keys.KEY_ENTER)
         self.assertEqual(self.calls, ['doctor'])
