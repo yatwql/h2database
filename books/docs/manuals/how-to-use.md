@@ -50,7 +50,7 @@ python books/src/python/make.py deliver --skip generate_pdf
 ## 3. 单独调用某个门禁（调试用）
 
 ```bash
-python books/src/python/_audit_links.py          # 链接与锚点解析
+python books/src/python/audit/_audit_links.py          # 链接与锚点解析
 python books/src/python/_audit_ascii.py          # ASCII 图宽度/对齐（已知项走基线）
 python books/src/python/_audit_captions.py       # 图注动宾结构（--threshold strict|normal|loose）
 python books/src/python/_audit_figures.py        # 图号与引用一致性（--strict 才失败）

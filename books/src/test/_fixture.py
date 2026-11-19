@@ -288,7 +288,7 @@ FILES = {
 }
 
 
-SUBDIRS = ('', 'lib', 'audit', 'manuscript', 'render', 'sources')
+SUBDIRS = ('', 'lib', 'audit', 'manuscript', 'render', 'ingest')
 
 
 def resolve_script(script: str) -> str:
@@ -359,7 +359,7 @@ def run_inproc(root: str, script: str, *args: str) -> tuple[int, str]:
 
     if TOOLS_DIR not in sys.path:
         sys.path.insert(0, TOOLS_DIR)
-    for _sub in ('lib', 'audit', 'manuscript', 'render', 'sources'):
+    for _sub in ('lib', 'audit', 'manuscript', 'render', 'ingest'):
         _path = os.path.join(TOOLS_DIR, _sub)
         if _path not in sys.path:
             sys.path.insert(0, _path)

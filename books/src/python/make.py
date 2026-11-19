@@ -57,7 +57,7 @@ STEPS: list[Step] = [
     ('audit_figure_clusters', 'audit/_audit_figure_clusters.py', (), 'verify'),
     ('audit_index_xrefs', 'audit/_audit_index_xrefs.py', (), 'verify'),
     ('balance_check', 'audit/balance_check.py', (), 'verify'),
-    ('source_freshness', 'sources/source_freshness_check.py', (), 'verify'),
+    ('source_freshness', 'audit/source_freshness_check.py', (), 'verify'),
     ('readability', 'audit/readability_check.py', (), 'verify'),
     ('style', 'audit/check_style.py', (), 'verify'),
     ('final_check', 'audit/final_check.py', (), 'verify'),

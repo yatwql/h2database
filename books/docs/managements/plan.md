@@ -4,11 +4,11 @@
 
 ## 1. 当前状态
 
-- 手稿由源码事实驱动生成：`sources/digest_source.py` → `plan_outline.py` → `build_manuscript.py`。
+- 手稿由源码事实驱动生成：`ingest/digest_source.py` → `plan_outline.py` → `build_manuscript.py`。
 - 章节采用单主责包映射，非主责章节用跨章索引跳转。
 - 四层配置：`data/tmpl/book.toml`（数据组织）、`data/config/base.json`（基础）、
   `data/config/style.json`（风格）、`data/language/zh.json`（语言包）。
-- 质量门禁：结构（`audit/final_check.py`）、事实（`sources/source_freshness_check.py`）、
+- 质量门禁：结构（`audit/final_check.py`）、事实（`audit/source_freshness_check.py`）、
   图书质量（`audit/audit_book_quality.py`）、文风（`audit/audit_prose_quality.py`）、
   交付（`render/verify_pdf.py`、`render/verify_epub.py`）。
 - 工具链设计说明见 `books/docs/plan/toolchain-design.md`。
@@ -25,9 +25,9 @@ python books/src/python/make.py deliver    # 按需：PDF + EPUB + 校验
 源码更新后重生成手稿：
 
 ```bash
-python books/src/python/sources/digest_source.py
-python books/src/python/sources/plan_outline.py
-python books/src/python/sources/build_manuscript.py
+python books/src/python/ingest/digest_source.py
+python books/src/python/ingest/plan_outline.py
+python books/src/python/ingest/build_manuscript.py
 python books/src/python/make.py check
 ```
 

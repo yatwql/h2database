@@ -12,11 +12,11 @@
 
 | 阶段 | 脚本 | 输入 → 输出 |
 | --- | --- | --- |
-| stage 1 | `sources/digest_source.py` | 源码树 → `data/state/source-inventory.json` |
-| stage 1 | `sources/plan_outline.py` | inventory + 章节映射 → `data/state/outline.json`（含覆盖矩阵与归属冲突） |
-| stage 1 | `sources/build_manuscript.py` | outline + 模板 → `data/manuscript/*.md` |
+| stage 1 | `ingest/digest_source.py` | 源码树 → `data/state/source-inventory.json` |
+| stage 1 | `ingest/plan_outline.py` | inventory + 章节映射 → `data/state/outline.json`（含覆盖矩阵与归属冲突） |
+| stage 1 | `ingest/build_manuscript.py` | outline + 模板 → `data/manuscript/*.md` |
 | stage 2 | `render/*` | 手稿 → 合并 Markdown / HTML / PDF / EPUB |
-| 全程 | `audit/*`、`sources/source_freshness_check.py` | 质量门禁与事实核验 |
+| 全程 | `audit/*`、`audit/source_freshness_check.py` | 质量门禁与事实核验 |
 
 ## 2. 配置三层
 
@@ -39,7 +39,7 @@
 | 类别 | 脚本 | 判据 |
 | --- | --- | --- |
 | 结构 | `audit/final_check.py` | 章节/图号/围栏/TOC/编码完整性 |
-| 事实 | `sources/source_freshness_check.py` | `Class.java:line` 与 `Class.method(` 可在源码中解析 |
+| 事实 | `audit/source_freshness_check.py` | `Class.java:line` 与 `Class.method(` 可在源码中解析 |
 | 图书质量 | `audit/audit_book_quality.py` | 坐标密度、四层阶梯、章节长度、表格行数、重复度、术语与练习分布 |
 | 文风 | `audit/audit_prose_quality.py` | 句长、长句比、段长、列表占比、示例密度、小节深度、唯一性、表格卫生 |
 | 交付 | `render/verify_pdf.py`、`render/verify_epub.py` | outline/字体/页内链接；EPUB 容器与 nav |

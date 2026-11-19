@@ -74,7 +74,7 @@ def digest(root: str) -> dict:
         rel = os.path.relpath(dirpath, root).replace(os.sep, '.')
         pkg = 'default' if rel == '.' else rel
         entry = packages.setdefault(pkg, {
-            'depends_on': {}, 
+            'depends_on': {},
             'path': os.path.relpath(dirpath, root).replace(os.sep, '/'),
             'summary': _package_javadoc(os.path.join(dirpath, 'package-info.java')),
             'files': 0, 'lines': 0, 'classes': [],

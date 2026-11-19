@@ -72,6 +72,14 @@ python books/src/python/final_check.py --gate-level p0  # 仅 p0
 | 配置一致性 | `books/data/tmpl/book.toml` 列出的章节全部存在、无重复、产物路径位于 `dist/` | `books/src/test/test_config.py` | P0 |
 | 源码符号 | `Class.method(` 断言在对应 java 文件中存在；已知漂移记入基线，仅"新增漂移"阻塞。上游升级后：`--suggest` 取改名建议 → 复核 → `--update-baseline` | `source_freshness_check.py`、`books/data/baselines/source-symbol-baseline.json` | P1 |
 | 构建幂等 | 连续两次 `make.py build` 的 HTML 哈希一致 | `.github/workflows/book.yml` | P0 |
+| 合并 Markdown | 合并结果按 book.toml 章节顺序拼接，front/back matter 齐备 | `render/rebuild_merged.py` | P0 |
+| HTML 渲染 | HTML 含标题锚点、侧边栏 TOC、印刷 TOC；未闭合围栏不吞正文 | `render/generate_html.py` | P0 |
+| PDF 渲染 | HTML → PDF 成功，页面数据可读 | `render/generate_pdf.py` | P0 |
+| PDF 交付校验 | outline 与标题一致、层级正确、TOC 链接可用、字体嵌入、体积达标 | `render/verify_pdf.py` | P1 |
+| EPUB 结构校验 | mimetype/container/manifest/spine/nav 全部可解析 | `render/verify_epub.py` | P1 |
+| 可读性 | 长句、宽 ASCII 图、框线闭合、图注质量 | `audit/readability_check.py` | P1 |
+| 写作风格 | 每章 WARN 计数为 0 | `audit/check_style.py` | P2 |
+| 源码引用 | `Class.java:行号` 可解析、行号在文件长度内、方法存在 | `audit/source_freshness_check.py` | P1 |
 | ASCII 图质量 | 图宽 ≤ `ascii_max_cols`（CJK 记 2 列）；无行尾空格/制表符；单图不混用框线与 ASCII 边框；已知项走基线 | `_audit_ascii.py`、`books/data/baselines/ascii-baseline.json` | P1 |
 | EPUB 结构 | mimetype 首条且未压缩、container/OPF 可解析、manifest 与 spine 全部可解析、nav 链接全部命中、体积 ≤ `epub_max_mb` | `verify_epub.py` | P1 |
 | PDF 交付 | outline 与 HTML 标题逐一对应、outline 层级跟随标题层级、印刷 TOC 链接按序且在页内、字体全部嵌入、体积 ≤ `pdf_max_mb` | `verify_pdf.py --require-toc-links` | P1 |

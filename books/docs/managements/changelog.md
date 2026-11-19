@@ -9,7 +9,7 @@
 - 事实核验：源码坐标 411 处，`Class.method(` 断言全部可解析。
 - 质量：结构门禁、图书质量门禁、文风评分、PDF/EPUB 交付校验全部通过。
 - 配置：数据组织（`book.toml`）、基础（`base.json`）、风格（`style.json`）、语言包（`language/zh.json`）四层。
-- 工具链：`sources/`（事实抽取）、`manuscript/`（手稿维护）、`audit/`（质量门禁）、`render/`（交付）、`lib/`（公共库）。
+- 工具链：`ingest/`（源码抽取）、`manuscript/`（手稿维护）、`audit/`（质量门禁）、`render/`（交付）、`lib/`（公共库）。
 
 ## v6.0
 

@@ -17,7 +17,7 @@ TOOLS_DIR = os.path.join(
 )
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
-for _sub in ('lib', 'audit', 'manuscript', 'render', 'sources'):
+for _sub in ('lib', 'audit', 'manuscript', 'render', 'ingest'):
     sys.path.insert(0, os.path.join(TOOLS_DIR, _sub))
 
 MINI_TREE = os.path.join(os.path.dirname(os.path.abspath(__file__)),

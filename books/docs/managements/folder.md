@@ -36,7 +36,7 @@ books/
       appendix-b-version-changes.md
       back/                  # 后件：glossary.md / references.md / index.md
   src/
-    python/                  # 交付工具链（27 个脚本 + _config/_fsutil/_mdutil）
+    python/                  # 工具链：lib/ ingest/ manuscript/ audit/ render/ + make.py
     test/                    # unittest 测试套件（单元 + 集成 + 真实书稿回归）
   dist/                      # 交付产物（生成物，gitignored）
     h2-source-code-analysis.md
