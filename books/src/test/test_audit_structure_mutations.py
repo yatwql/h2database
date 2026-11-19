@@ -99,6 +99,22 @@ class StructureMutationTest(unittest.TestCase):
         self.assertIn(code, (0, 1))
         self.assertNotIn('Traceback', out)
 
+    def test_secondary_sections_report_their_own_defects(self):
+        """Captions, clusters, exercises, glossary and style each fail on their own."""
+        path = self.chapter('ch1-test.md')
+        with open(path, 'w', encoding='utf-8') as fh:
+            fh.write(
+                '# 第1章 测试\n\n> **本章导读**：导读。\n\n'
+                '## 1.1 小节\n\n'
+                '**图 1-1: 对比**\n\n**图 1-2: 对比**\n\n'          # vague captions + cluster
+                '## 1.9 本章小结\n\n小结。\n\n'
+                '## 1.10 延伸思考\n\n'
+                '**1. 🟢★ 练习一**\n\n## 1.11 延展阅读\n\n- 参考\n')
+        code, out = self.run_gate()
+        self.assertIn(code, (0, 1), out[-800:])
+        for section in ('Figure Caption', 'Figure Cluster', 'Chapter Exercises'):
+            self.assertIn(section, out)
+
     def test_structure_runs_after_a_full_build(self):
         """HTML/merged/TOC checks only execute when the artifacts exist."""
         for script in ('cover.py', 'merge.py', 'to_html.py'):
