@@ -75,6 +75,69 @@ GEN = _config.POLICY.get('generation', {})
 TPL = _config.templates()
 
 
+# Set by main(): whether the lead-in and summary may be written by the LLM.
+# Facts, coordinates, tables and exercises never are - they come from the inventory.
+_USE_LLM = False
+PROSE_LIMIT = 220
+PROSE_MIN_CHARS = 20
+
+
+def prose_enabled() -> bool:
+    """Whether prose generation is switched on for this run."""
+    return bool(_USE_LLM or os.environ.get('BOOK_LLM_INGEST') == '1'
+                or _config.llm_ingest_prose())
+
+
+def prose(kind: str, fallback: str, enabled: bool | None = None, **facts) -> str:
+    """One prose paragraph: deterministic by default, LLM-drafted on request.
+
+    Only narrative sentences pass through here. The provider result is reduced
+    to a single plain paragraph (no fences, headings or bullet marks) so it can
+    never inject structure the gates rely on; any failure falls back to the
+    deterministic text instead of breaking the ingest step.
+    """
+    if enabled is None:
+        enabled = prose_enabled()
+    if not enabled:
+        return fallback
+    try:
+        from lib import _llm  # lazy: the offline path stays stdlib-only
+        scenario = 'chapter-draft' if kind == 'lead' else 'summary'
+        text = _llm.complete(_prose_prompt(kind, facts), scenario=scenario)
+    except Exception as exc:  # noqa: BLE001 - a provider hiccup must not break ingest
+        print(f'  [warn] LLM prose unavailable ({exc}); using deterministic text',
+              file=sys.stderr)
+        return fallback
+    body: list[str] = []
+    in_fence = False
+    for line in (text or '').splitlines():
+        if line.strip().startswith('```'):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        stripped = line.strip(' #>*-\t')
+        if stripped:
+            body.append(stripped)
+    cleaned = ' '.join(body).replace('`', '')
+    if len(cleaned) < PROSE_MIN_CHARS:
+        return fallback
+    return cleaned[:PROSE_LIMIT]
+
+
+def _prose_prompt(kind: str, facts: dict) -> str:
+    """Prompt for one prose paragraph, facts supplied by the caller."""
+    if kind == 'lead':
+        return ('用一到两句中文写本章导读：本章由源码清单汇总而成，覆盖 '
+                f'{facts.get("pkgs", 0)} 个包、{facts.get("lines", "0")} 行实现，'
+                f'章节标题为《{facts.get("title", "")}》。'
+                '只输出连贯句子，不要列表、标题或代码。')
+    return ('用一到两句中文写本章小结：本章覆盖 '
+            f'{facts.get("pkgs", 0)} 个包、{facts.get("lines", "0")} 行，'
+            f'主要包是 {facts.get("top", "")}。'
+            '只输出连贯句子，不要列表、标题或代码。')
+
+
 def tpl(key: str, fallback: str, **facts) -> str:
     """Render a config-provided string template; falls back to the default."""
     pattern = TPL.get(key)
@@ -293,8 +356,11 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         cn_summary = cn_tradeoff + 2
 
     L += knowledge_block(cn, pkgs_sorted)
+    summary_line = prose('summary',
+                         f'- 本章覆盖 {len(packages)} 个包、{total_lines:,} 行。',
+                         pkgs=len(packages), lines=f'{total_lines:,}', top=top_pkg)
     L += [f'## {cn}.{cn_summary} 本章小结', '',
-          f'- 本章覆盖 {len(packages)} 个包、{total_lines:,} 行。',
+          summary_line,
           f'- 关键入口与源码坐标见 §{cn}.3。',
           '- 职责优先取自注释，注释缺失处需结合调用点归纳。', '']
 
@@ -425,9 +491,15 @@ def render_chapter(ch: dict) -> str:
         cross = (str(nxt), title if nxt == num else _cross_title(spec, nxt))
         out += [f'# 第{num}章 {title}', '']
         if idx == 0:
-            out += [('> **本章导读**：本章由源码清单汇总而成，覆盖 '
-                    f'{len(packages)} 个包、{ch["source_lines"]:,} 行实现；'
-                    '读完应能说清这些包的职责边界与关键协作。'), '',
+            lead = prose('lead',
+                         ('> **本章导读**：本章由源码清单汇总而成，覆盖 '
+                          f'{len(packages)} 个包、{ch["source_lines"]:,} 行实现；'
+                          '读完应能说清这些包的职责边界与关键协作。'),
+                         pkgs=len(packages), lines=f'{ch["source_lines"]:,}',
+                         title=title)
+            if not lead.startswith('>'):
+                lead = f'> **本章导读**：{lead.lstrip("- ")}'
+            out += [lead, '',
                     '> **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。', '']
 
         out += _sections(num, title, subset, cross)
@@ -560,7 +632,15 @@ def main(argv: list[str] | None = None) -> int:
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--only', help='single chapter file name')
     parser.add_argument('--dry-run', action='store_true', help='print instead of writing')
+    parser.add_argument('--llm', action='store_true',
+                        help='let the LLM draft the lead-in and summary prose '
+                             '(facts, tables and coordinates stay deterministic)')
     args = parser.parse_args(argv)
+
+    global _USE_LLM
+    _USE_LLM = bool(args.llm
+                    or os.environ.get('BOOK_LLM_INGEST') == '1'
+                    or _config.llm_ingest_prose())
 
     global _INVENTORY
     try:

@@ -108,3 +108,7 @@ per_chapter = ["本章导读", "本章小结", "延伸思考", "延展阅读"]
 "ch8-query-optimizer.md" = [8]
 "ch9-10-persistence-locking.md" = [9, 10]
 "ch11-12-guide-summary.md" = [11, 12]
+
+[llm]
+# 源码 → 手稿时是否让 LLM 起草导读/小结（事实、坐标、表格始终确定性）
+ingest_prose = false

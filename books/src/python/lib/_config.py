@@ -293,6 +293,11 @@ def book_updated() -> str:
     return _last_change(rel)
 
 
+def llm_ingest_prose() -> bool:
+    """Whether source -> manuscript may use the LLM for prose sections."""
+    return bool((_CFG.get('llm') or {}).get('ingest_prose', False))
+
+
 def key_file() -> str:
     """Local secret file (gitignored); env vars still win over it."""
     return os.path.join(BOOK_ROOT, 'data', 'config', 'llm_key.json')

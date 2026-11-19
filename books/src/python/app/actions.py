@@ -20,6 +20,7 @@ LOG = _log.get_logger('app')
 ACTIONS = {
     'status': '显示书籍、配置与 LLM 状态',
     'analyze': '源码 → 手稿（digest → outline → chapters）',
+    'analyze-llm': '源码 → 手稿（导读/小结用 LLM 润色，事实仍确定性）',
     'build': '手稿 → 合并 Markdown + HTML',
     'check': '运行全部质量门禁',
     'test': '运行测试套件',
@@ -64,11 +65,17 @@ def status() -> tuple[int, str]:
     return 0, '\n'.join(lines) + '\n'
 
 
-def analyze() -> tuple[int, str]:
-    """Run stage 1: digest the source tree, plan the outline, render chapters."""
+def analyze(use_llm: bool = False) -> tuple[int, str]:
+    """Run stage 1: digest the source tree, plan the outline, render chapters.
+
+    With ``use_llm`` the chapter lead-in and summary paragraphs may be drafted by
+    the configured provider; facts, coordinates, tables and exercises stay
+    deterministic either way.
+    """
     out = []
     for script in ('ingest/digest.py', 'ingest/outline.py', 'ingest/chapters.py'):
-        code, text = _run(script)
+        extra = ['--llm'] if use_llm and script.endswith('chapters.py') else []
+        code, text = _run(script, *extra)
         out.append(text)
         if code != 0:
             return code, '\n'.join(out)
@@ -117,6 +124,7 @@ DISPATCH = {
     'doctor': doctor,
     'settings': settings_table,
     'analyze': analyze,
+    'analyze-llm': lambda: analyze(use_llm=True),
     'build': build,
     'check': check,
     'test': test,

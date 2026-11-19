@@ -3,7 +3,8 @@
 
 Policy (data/config/llm_settings.json -> policy):
 - prose scenarios may call the LLM (chapter-draft, chapter-polish, summary,
-  review);
+  review), including ingest's lead-in/summary when `book.toml [llm].ingest_prose`
+  (or `--llm`) switches it on;
 - everything factual stays deterministic: gates, coordinates, cross refs,
   links, duplicates, metrics, captions, index, glossary, tables.
 
@@ -42,7 +43,7 @@ def policy() -> dict:
         return {}
 
 
-SECRET_NAME = 'llm_key.json'
+SECRET_NAME = os.path.basename(_config.key_file())
 
 
 def secret_files() -> list[str]:

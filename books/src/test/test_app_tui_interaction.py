@@ -53,7 +53,15 @@ class TuiInteractionTest(unittest.TestCase):
     def test_down_then_enter_runs_the_second_entry(self):
         code, _out = self.press(self.keys.KEY_DOWN, self.keys.KEY_ENTER)
         self.assertEqual(code, 0)
+        self.assertEqual(self.calls, ['analyze-llm'])
+
+    def test_third_entry_is_the_deterministic_build(self):
+        self.press(self.keys.KEY_DOWN, self.keys.KEY_DOWN, self.keys.KEY_ENTER)
         self.assertEqual(self.calls, ['build'])
+
+    def test_l_shortcut_runs_the_llm_ingest(self):
+        self.press('l')
+        self.assertEqual(self.calls, ['analyze-llm'])
 
     def test_up_from_the_first_entry_wraps_to_the_last(self):
         self.press(self.keys.KEY_UP, self.keys.KEY_ENTER)

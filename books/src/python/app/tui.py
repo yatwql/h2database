@@ -24,6 +24,7 @@ from app import actions, keys, settings
 # group -> [(key, action, label)]
 GROUPS: dict[str, list[tuple[str, str, str]]] = {
     '内容': [('1', 'analyze', '源码 → 手稿'),
+             ('l', 'analyze-llm', '源码 → 手稿（LLM 润色导读/小结）'),
              ('2', 'build', '手稿 → Markdown + HTML'),
              ('3', 'deliver', 'PDF + EPUB（按需）')],
     '质量': [('4', 'check', '全部质量门禁'),

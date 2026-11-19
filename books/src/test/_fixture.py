@@ -91,6 +91,8 @@ epub_max_mb = 10
 [sections]
 per_chapter = ["本章小结", "延伸思考"]
 
+[llm]
+
 [sources]
 root = "../h2/src/main"
 """
