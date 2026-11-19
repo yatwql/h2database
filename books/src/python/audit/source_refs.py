@@ -120,13 +120,14 @@ def _preferred_paths() -> dict:
     return preferred
 
 
-def build_class_index() -> dict:
+def build_class_index(source_dir: str | None = None) -> dict:
     """Map file stem -> absolute paths, inventory-preferred file first."""
     index: dict = defaultdict(list)
-    if not os.path.isdir(SOURCE_DIR):
+    root_dir = source_dir or SOURCE_DIR
+    if not os.path.isdir(root_dir):
         return index
     preferred = _preferred_paths()
-    for root, _dirs, files in os.walk(SOURCE_DIR):
+    for root, _dirs, files in os.walk(root_dir):
         for f in files:
             if f.endswith(tuple(SUFFIXES)):
                 index[os.path.splitext(f)[0]].append(os.path.join(root, f))
@@ -136,11 +137,12 @@ def build_class_index() -> dict:
             paths.sort(key=lambda item: 0 if item.endswith(rel) else 1)
     return index
 
-def extract_references() -> list:
+def extract_references(chapter_files: list[str] | None = None,
+                       docs_dir: str | None = None) -> list:
     """Parse all chapter files for ClassName.java:lineno refs outside code fences."""
     refs: list = []
-    for ch_name in CHAPTER_FILES:
-        ch_path = os.path.join(DOCS_DIR, ch_name)
+    for ch_name in (chapter_files or CHAPTER_FILES):
+        ch_path = os.path.join(docs_dir or DOCS_DIR, ch_name)
         if not os.path.exists(ch_path):
             print(f'  [WARN] Chapter file not found: {ch_name}', file=sys.stderr)
             continue
@@ -182,11 +184,12 @@ class SymbolClaim(NamedTuple):
 # ---------------------------------------------------------------------------
 # Symbol-level claims
 # ---------------------------------------------------------------------------
-def extract_symbol_claims() -> list:
+def extract_symbol_claims(chapter_files: list[str] | None = None,
+                          docs_dir: str | None = None) -> list:
     """Collect ClassName.method( claims from chapter prose (outside fences)."""
     claims: list = []
-    for ch_name in CHAPTER_FILES:
-        ch_path = os.path.join(DOCS_DIR, ch_name)
+    for ch_name in (chapter_files or CHAPTER_FILES):
+        ch_path = os.path.join(docs_dir or DOCS_DIR, ch_name)
         if not os.path.exists(ch_path):
             continue
         lines = _fsutil.read_lines(ch_path)
@@ -344,9 +347,10 @@ def format_rel_path(path: str) -> str:
     """Convert an absolute file path to its source-root relative form."""
     return os.path.relpath(path, SOURCE_DIR).replace('\\', '/')
 
-def print_report(results: list, class_index: dict) -> None:
+def print_report(results: list, class_index: dict,
+                 h2_version: str | None = None) -> None:
     """Print the formatted freshness report."""
-    h2_version = get_project_version()
+    h2_version = h2_version or get_project_version()
     today = date.today().isoformat()
 
     # Categorise
@@ -437,7 +441,10 @@ def main(argv: list[str] | None = None) -> int:
                         help='print nearest-method rename hints for drifted claims')
     parser.add_argument('--strict-symbols', action='store_true',
                         help='treat known (baselined) drift as a failure too')
+    parser.add_argument('--baseline', metavar='PATH',
+                        help='alternate drift baseline file')
     args = parser.parse_args(argv)
+    baseline_path = args.baseline or BASELINE_PATH
 
     h2_version = get_project_version()
     try:
@@ -467,21 +474,21 @@ def main(argv: list[str] | None = None) -> int:
 
         print('Verifying Class.method claims against the source tree...')
         broken_symbols = verify_symbol_claims(extract_symbol_claims(), class_index)
-        baseline = load_baseline()
+        baseline = load_baseline(baseline_path)
         new_drift, known_drift = split_drift(broken_symbols, baseline)
 
         if args.prune:
             remaining = [(claim, rel) for claim, rel in broken_symbols]
-            accepted = set(load_baseline().get('accepted', []))
+            accepted = set(load_baseline(baseline_path).get('accepted', []))
             kept = [(c, r) for c, r in remaining
                     if _claim_key(c.doc_file, c.class_name, c.method) in accepted]
             dropped = len(accepted) - len(kept)
-            save_baseline(kept, h2_version)
+            save_baseline(kept, h2_version, baseline_path)
             print(f'  baseline pruned: {dropped} resolved entr(ies) removed, '
                   f'{len(kept)} kept')
             return 0
         if args.update_baseline:
-            save_baseline(broken_symbols, h2_version)
+            save_baseline(broken_symbols, h2_version, baseline_path)
             print(f'  baseline updated: {len(broken_symbols)} accepted claim(s) '
                   f'-> {os.path.relpath(BASELINE_PATH, REPO_ROOT)}')
             new_drift = []
