@@ -47,7 +47,8 @@ FAST_GATES = ('architecture,script_contract,style_schema,llm_policy,'
 MODES = {
     'p0': ('commit gate', ('lint', 'fast-gates', 'tests')),
     'p1': ('merge gate', ('lint', 'fast-gates', 'gates', 'tests')),
-    'p2': ('release gate', ('lint', 'fast-gates', 'gates', 'tests', 'slow', 'deliver')),
+    'p2': ('release gate', ('lint', 'fast-gates', 'gates', 'tests', 'slow', 'order',
+                            'deliver')),
 }
 ALIASES = {'fast': 'p0', 'full': 'p1', 'release': 'p2'}
 
@@ -109,6 +110,9 @@ def _command(step: str, marker: str = '') -> list[str] | None:
         return tests_command(marker)
     if step == 'slow':
         return [PY, os.path.join(PY_ROOT, 'make.py'), 'test', '--full']
+    if step == 'order':
+        # test-order dependence: the suite runs twice, normal and reversed
+        return [PY, os.path.join(PY_ROOT, 'audit', 'order_dependence.py')]
     if step == 'deliver':
         return [PY, os.path.join(PY_ROOT, 'make.py'), 'deliver']
     raise KeyError(step)

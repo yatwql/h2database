@@ -40,6 +40,12 @@ class StepCommandTest(unittest.TestCase):
         self.assertIn('--full', self.runner._command('slow'))
         self.assertIn('deliver', self.runner._command('deliver'))
 
+    def test_the_release_tier_runs_the_order_probe(self):
+        _label, steps = self.runner.MODES['p2']
+        self.assertIn('order', steps)
+        self.assertLess(steps.index('order'), steps.index('deliver'))
+        self.assertTrue(self.runner._command('order')[-1].endswith('order_dependence.py'))
+
     def test_unknown_step_raises(self):
         with self.assertRaises(KeyError):
             self.runner._command('nope')

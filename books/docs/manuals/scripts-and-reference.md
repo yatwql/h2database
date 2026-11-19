@@ -25,7 +25,7 @@
 | `new-book.sh` / `.ps1` | 脚手架：生成新书（或翻译版）的四份文档侧配置 + 按目标语言派生的 `style.json` |
 | `check-fast.sh` / `.ps1` | P0：ruff + 结构门禁 + 单元套件（约 16 秒），每次提交跑 |
 | `check-full.sh` / `.ps1` | P1：全部门禁（合入前跑） |
-| `check-release.sh` / `.ps1` | P2：完整档 + 慢档（chromium/pandoc）+ `make.py deliver` |
+| `check-release.sh` / `.ps1` | P2：完整档 + 慢档（chromium/pandoc）+ 顺序依赖探测 + `make.py deliver` |
 | `check.sh` / `check.ps1` | 档位入口：`check.sh p0\|p1\|p2`（也接受 fast/full/release），其余参数透传 |
 | `release.sh` / `.ps1` | 发布流程：`status` / `gate`（P2）/ `publish --title`（P2 + 写发布清单）/ `manifest` |
 | `install-hooks.sh` / `.ps1` | 把 `core.hooksPath` 指到仓库内的 `.githooks/`（pre-commit=P0，pre-push=P1） |
@@ -178,7 +178,7 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `portability.py` | 移植性：`open()` 必须显式 encoding；`LC_ALL=C` + ASCII 输出下入口不得崩 | ● |
 | `test_redundancy.py` | 测试卫生：重复用例体 / 无断言 / 非 TestCase 的 test_* / 同名遮蔽 | ● |
 | `perf_baseline.py` | 交付速度：每步耗时对比历史中位数，超阈值提示；`--strict` 变成失败 | ● |
-| `order_dependence.py` | 顺序依赖：正序/逆序两跑对比，人工触发（`eval-order.sh`） | ● |
+| `order_dependence.py` | 顺序依赖：正序/逆序两跑对比（P2 档自动执行，也可用 `eval-order.sh` 单独跑） | ● |
 | `scorecard.py` | 六维评分汇总（`eval-score.sh` 的实现） | ● |
 
 ## 9. 交付渲染 `src/python/render/`

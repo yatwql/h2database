@@ -33,7 +33,7 @@ PDF 生成较慢；日常编辑只要求 `make.py check` + `make.py build` 通�
 | --- | --- | --- | --- |
 | fast（P0，也由 `pre-commit` 钩子执行） | 每次提交 / PR | ruff + 结构门禁（architecture、script_contract、style_schema、llm_policy、versions、file_length）+ 单元套件（约 16s） | `scripts/check-fast.sh` |
 | full（P1，也由 `pre-push` 钩子执行） | 合入 master / 发布前 | 全部门禁（`make.py check --keep-going`） | `scripts/check-full.sh` |
-| release（P2） | 打版本标签 | full + 慢档（chromium/pandoc）+ `make.py deliver` 出产物 | `scripts/check-release.sh` |
+| release（P2） | 打版本标签 | full + 慢档（chromium/pandoc）+ 顺序依赖探测 + `make.py deliver` 出产物 | `scripts/check-release.sh` |
 
 度量类单独命名：`scripts/eval-score.sh`（六维评分）、`scripts/eval-coverage.sh`
 （覆盖率棘轮）。分档只决定"跑到哪一步"，判据本身不分档。
