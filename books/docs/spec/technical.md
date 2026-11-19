@@ -126,3 +126,15 @@ app/        入口层：cli.py / tui.py / web.py + actions.py，只编排，不�
 - `audit/style_schema.py`：`style.json` 不得含 `generation.templates` 或 `project`；
   `templates.toml` 只允许已知键、占位符合法。
 - `audit/check_architecture.py`：脚本不得硬编码仓库路径，一律经 `_config` 取。
+
+## 14. 内容深度（可机检的四项）
+
+| 检查 | 判据 | 例外 |
+|------|------|------|
+| 前向引用（PREREQ） | 本章提到由**后续章节**拥有的类型时，行内必须点名该章（`第N章`），否则视为缺少指引 | 类型名须以行内代码形式出现，避免误判普通单词 |
+| 术语覆盖（GLOSSARY） | 正文出现次数 ≥ `glossary_min_uses` 的类型必须在术语表有条目 | `glossary_ignore` 列出通用名（File/Header/Undo…） |
+| 摘录新鲜度（EXCERPT） | 代码摘录首行标注 `File.java:LINE` 时，其后若干行必须与源码对应行一致 | 源码中找不到文件则单独报 MISSING |
+| 练习指向（EXERCISE） | 每道练习题要么点名本章关键类型，要么给出 `§X.Y` 锚点 | 无 |
+
+判定配置在 `style.json [content_depth]`；门禁为 `audit/content_depth.py`，
+接入 `make.py check`。

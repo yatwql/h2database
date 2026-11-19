@@ -96,6 +96,7 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 | `prose` | 句长/段落/列表/重复度的好与坏锚点、`min_composite`、`forbid_phrases` | 文风评分与禁用语 |
 | `generation` | 表格容量、练习数、清单条数 | 生成器的数值上限（文案见 `templates.toml`） |
 | `style_rules` | `terminology`（同义词组，检测混用）、`banned_link_text`、`heading`（尾标点/裸标签）、`cjk_latin_spacing`、`list_punctuation`、`max_paragraph_chars` | 术语一致性与排版规则（`style_rules.py`） |
+| `content_depth` | `glossary_min_uses`（高频类型须入术语表）、`glossary_ignore`（通用名白名单）、`excerpt_lines`（代码摘录比对行数） | 内容深度规则（`content_depth.py`） |
 | `limits` | `sources/tests/docs/manuscript` 的 `limit`/`warn` | 文件长度预算 |
 
 改完运行 `python books/src/python/make.py check`：`style_schema.py` 会先校验结构

@@ -27,7 +27,8 @@ STYLE_PATH = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'style.json')
 TEMPLATES_PATH = os.path.join(_config.BOOK_ROOT, 'data', 'tmpl', 'templates.toml')
 KNOWN_TEMPLATES = {'map_intro', 'types_intro', 'api_intro', 'path_intro', 'deep_dive'}
 KNOWN_TOP = {'_note', '_schema', 'sections', 'captions', 'diagrams',
-             'quality', 'prose', 'style_rules', 'generation', 'limits', 'thresholds'}
+             'quality', 'prose', 'style_rules', 'content_depth', 'generation',
+             'limits', 'thresholds'}
 REQUIRED = {
     'sections': ('per_chapter',),
     'captions': ('leading_verbs', 'vague_trailing', 'presets'),
@@ -117,6 +118,17 @@ def validate(style: dict) -> list[str]:
             problems.append('[style_rules].banned_link_text must be a list')
         if not isinstance((rules.get('heading') or {}), dict):
             problems.append('[style_rules].heading must be an object')
+
+    depth = style.get('content_depth')
+    if not isinstance(depth, dict):
+        problems.append('[content_depth] missing or not an object')
+    else:
+        if not isinstance(depth.get('glossary_min_uses'), int) or depth['glossary_min_uses'] < 1:
+            problems.append('[content_depth].glossary_min_uses must be >= 1')
+        if not isinstance(depth.get('glossary_ignore', []), list):
+            problems.append('[content_depth].glossary_ignore must be a list')
+        if not isinstance(depth.get('excerpt_lines', 1), int):
+            problems.append('[content_depth].excerpt_lines must be an int')
 
     templates = _config.templates()
     unknown_templates = set(templates) - KNOWN_TEMPLATES

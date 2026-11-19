@@ -214,5 +214,21 @@
     "cjk_latin_spacing": true,
     "list_punctuation": "consistent",
     "max_paragraph_chars": 420
+  },
+  "content_depth": {
+    "glossary_min_uses": 20,
+    "excerpt_lines": 6,
+    "require_signpost_for_forward_refs": true,
+    "exercise_must_name_type_or_anchor": true,
+    "glossary_ignore": [
+      "Header",
+      "File",
+      "Undo",
+      "Interval",
+      "TypeInfo",
+      "BitSet",
+      "Transfer",
+      "FilePathWrapper"
+    ]
   }
 }
