@@ -40,13 +40,18 @@ def doc_files() -> list[str]:
     return sorted({os.path.normpath(p) for p in files if os.path.isfile(p)})
 
 
-def _exists(rel: str) -> bool:
+def _repo_root(explicit: str | None = None) -> str:
+    return explicit or REPO_ROOT
+
+
+def _exists(rel: str, repo_root: str | None = None) -> bool:
+    root = _repo_root(repo_root)
     if '*' in rel:
-        return bool(glob.glob(os.path.join(REPO_ROOT, rel), recursive=True))
-    return os.path.exists(os.path.join(REPO_ROOT, rel))
+        return bool(glob.glob(os.path.join(root, rel), recursive=True))
+    return os.path.exists(os.path.join(root, rel))
 
 
-def check_paths(files: list[str]) -> list[dict]:
+def check_paths(files: list[str], repo_root: str | None = None) -> list[dict]:
     out = []
     for path in files:
         for lineno, line in enumerate(_fsutil.read_lines(path), start=1):
@@ -54,15 +59,16 @@ def check_paths(files: list[str]) -> list[dict]:
                 target = match.group(1)
                 if '...' in target or '…' in target or '<' in target:
                     continue  # illustrative path
-                if not _exists(target):
+                if not _exists(target, repo_root):
                     out.append({'kind': 'PATH', 'file': os.path.relpath(path, REPO_ROOT),
                                 'line': lineno, 'detail': target})
     return out
 
 
-def check_scripts(files: list[str]) -> list[dict]:
+def check_scripts(files: list[str], book_root: str | None = None) -> list[dict]:
+    base = book_root or _config.BOOK_ROOT
     available = {os.path.basename(p) for p in
-                 glob.glob(os.path.join(_config.BOOK_ROOT, 'src', 'python', '**', '*.py'),
+                 glob.glob(os.path.join(base, 'src', 'python', '**', '*.py'),
                            recursive=True)}
     out = []
     for path in files:
