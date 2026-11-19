@@ -21,17 +21,6 @@
         "deepseek-chat"
       ]
     },
-    "kimi-main": {
-      "kind": "anthropic",
-      "base_url": "https://api.moonshot.cn/anthropic",
-      "api_key_env": "KIMI_MAIN_API_KEY",
-      "credentials_ref": "kimi-main",
-      "models": [
-        "kimi-k2.6"
-      ],
-      "priority": 50,
-      "timeout": 120
-    },
     "deepseek-main": {
       "kind": "anthropic",
       "base_url": "https://api.deepseek.com/anthropic",
@@ -57,17 +46,6 @@
         "min_interval": 5,
         "max_concurrency": 1
       }
-    },
-    "kimi-code": {
-      "kind": "anthropic",
-      "base_url": "https://api.kimi.com/coding",
-      "api_key_env": "KIMI_CODE_API_KEY",
-      "credentials_ref": "kimi-code",
-      "models": [
-        "kimi-for-coding"
-      ],
-      "priority": 50,
-      "timeout": 120
     }
   },
   "default_provider": "mock",

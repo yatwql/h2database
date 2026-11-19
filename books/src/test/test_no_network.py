@@ -137,25 +137,25 @@ class AnthropicTransportCase(unittest.TestCase):
         os.makedirs(os.path.dirname(key_path), exist_ok=True)
         with open(key_path, 'w', encoding='utf-8') as fh:
             json.dump({'providers': {
-                'kimi-main': {'api_key': 'sk-test', 'model': 'kimi-k2.6',
+                'demo-anthropic': {'api_key': 'sk-test', 'model': 'demo-model',
                               'endpoint': 'https://api.example.invalid/anthropic/v1/messages'}
             }}, fh)
         config = self.llm.providers()
-        config['providers']['kimi-main'] = {
+        config['providers']['demo-anthropic'] = {
             'kind': 'anthropic',
             'base_url': 'https://api.example.invalid/anthropic',
-            'credentials_ref': 'kimi-main',
-            'api_key_env': 'KIMI_MAIN_API_KEY',
-            'models': ['kimi-k2.6'],
+            'credentials_ref': 'demo-anthropic',
+            'api_key_env': 'DEMO_ANTHROPIC_API_KEY',
+            'models': ['demo-model'],
         }
-        config['default_provider'] = 'kimi-main'
+        config['default_provider'] = 'demo-anthropic'
         for scenario in config.setdefault('routing', {}).setdefault('scenario', {}).values():
             if isinstance(scenario, dict):
-                scenario['provider'] = 'kimi-main'
+                scenario['provider'] = 'demo-anthropic'
         patch = mock.patch.object(self.llm, 'providers', return_value=config)
         patch.start()
         self.addCleanup(patch.stop)
-        os.environ.pop('KIMI_MAIN_API_KEY', None)
+        os.environ.pop('DEMO_ANTHROPIC_API_KEY', None)
 
     def fake_connection(self, status: int = 200, body: bytes = b'{}'):
         calls = {}
@@ -191,7 +191,7 @@ class AnthropicTransportCase(unittest.TestCase):
         self.assertTrue(calls['path'].endswith('/v1/messages'))
         self.assertEqual(calls['headers']['x-api-key'], 'sk-test')
         self.assertIn('anthropic-version', calls['headers'])
-        self.assertEqual(calls['payload']['model'], 'kimi-k2.6')
+        self.assertEqual(calls['payload']['model'], 'demo-model')
         self.assertEqual(calls['payload']['messages'][0]['content'], '你好')
 
     def test_missing_text_is_an_error(self):
@@ -208,5 +208,5 @@ class AnthropicTransportCase(unittest.TestCase):
 
     def test_status_reports_configured_providers_without_secrets(self):
         status = self.llm.status()
-        self.assertIn('kimi-main', status['keys_configured'])
+        self.assertIn('demo-anthropic', status['keys_configured'])
         self.assertNotIn('sk-test', json.dumps(status, ensure_ascii=False))
