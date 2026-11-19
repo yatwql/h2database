@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -174,8 +174,8 @@ public final class ConditionInList extends ConditionIn {
         ExpressionVisitor visitor = ExpressionVisitor.getNotFromResolverVisitor(filter);
         TypeInfo colType = l.getType();
         for (Expression e : valueList) {
-            if (!e.isEverything(visitor)
-                    || !TypeInfo.haveSameOrdering(colType, TypeInfo.getHigherType(colType, e.getType()))) {
+            TypeInfo higherType = TypeInfo.getHigherType(colType, e.getType());
+            if (!e.isEverything(visitor) || !Comparison.isSafeIndexCondition(colType, higherType)) {
                 return;
             }
         }

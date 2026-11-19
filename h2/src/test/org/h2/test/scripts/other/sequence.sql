@@ -1,4 +1,4 @@
--- Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+-- Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
 -- and the EPL 1.0 (https://h2database.com/html/license.html).
 -- Initial Developer: H2 Group
 --
@@ -502,4 +502,175 @@ DROP SEQUENCE SEQ;
 > ok
 
 SET MODE Regular;
+> ok
+
+-- A sequence used by a domain cannot be dropped
+
+CREATE SEQUENCE SEQ;
+> ok
+
+CREATE DOMAIN D1 INT DEFAULT NEXT VALUE FOR SEQ;
+> ok
+
+DROP SEQUENCE SEQ;
+> exception CANNOT_DROP_2
+
+DROP DOMAIN D1;
+> ok
+
+CREATE DOMAIN D2 INT CHECK (VALUE < NEXT VALUE FOR SEQ);
+> ok
+
+DROP SEQUENCE SEQ;
+> exception CANNOT_DROP_2
+
+DROP DOMAIN D2;
+> ok
+
+CREATE DOMAIN D3 TIMESTAMP ON UPDATE (TIMESTAMP '2000-01-01 00:00:00' + NEXT VALUE FOR SEQ * INTERVAL '1' DAY);
+> ok
+
+DROP SEQUENCE SEQ;
+> exception CANNOT_DROP_2
+
+DROP DOMAIN D3;
+> ok
+
+DROP SEQUENCE SEQ;
+> ok
+
+-- A function used by a domain cannot be dropped
+
+CREATE ALIAS F1 FOR 'java.lang.Math.abs(int)';
+> ok
+
+CREATE DOMAIN D1 INT CHECK (F1(VALUE) < 1000);
+> ok
+
+DROP ALIAS F1;
+> exception CANNOT_DROP_2
+
+DROP DOMAIN D1;
+> ok
+
+DROP ALIAS F1;
+> ok
+
+-- NEXT VALUE FOR is not allowed in a grouped query
+
+CREATE SEQUENCE SEQ;
+> ok
+
+CREATE TABLE TEST(ID INT, K INT) AS VALUES (1, 1), (2, 1), (3, 2);
+> ok
+
+SELECT NEXT VALUE FOR SEQ, K FROM TEST GROUP BY K;
+> exception FEATURE_NOT_SUPPORTED_1
+
+SELECT NEXT VALUE FOR SEQ, COUNT(*) FROM TEST;
+> exception FEATURE_NOT_SUPPORTED_1
+
+SELECT K FROM TEST GROUP BY K HAVING NEXT VALUE FOR SEQ > 0;
+> exception FEATURE_NOT_SUPPORTED_1
+
+SELECT K FROM TEST GROUP BY K ORDER BY NEXT VALUE FOR SEQ;
+> exception FEATURE_NOT_SUPPORTED_1
+
+SELECT K, MAX(NEXT VALUE FOR SEQ) FROM TEST GROUP BY K;
+> exception FEATURE_NOT_SUPPORTED_1
+
+SELECT K FROM TEST WHERE ID < NEXT VALUE FOR SEQ GROUP BY K;
+> exception FEATURE_NOT_SUPPORTED_1
+
+SELECT COUNT(*) FROM TEST GROUP BY NEXT VALUE FOR SEQ;
+> exception FEATURE_NOT_SUPPORTED_1
+
+CREATE TABLE TEST2(ID INT PRIMARY KEY, C INT);
+> ok
+
+INSERT INTO TEST2 SELECT NEXT VALUE FOR SEQ, COUNT(*) FROM TEST GROUP BY K;
+> exception FEATURE_NOT_SUPPORTED_1
+
+SELECT K, MAX(X) FROM (SELECT NEXT VALUE FOR SEQ X, K FROM TEST) T GROUP BY K;
+> K MAX(X)
+> - ------
+> 1 2
+> 2 3
+> rows: 2
+
+SELECT CURRENT VALUE FOR SEQ, COUNT(*) FROM TEST;
+> CURRENT VALUE FOR PUBLIC.SEQ COUNT(*)
+> ---------------------------- --------
+> 3                            3
+> rows: 1
+
+SET MODE PostgreSQL;
+> ok
+
+SELECT NEXT VALUE FOR SEQ V, K FROM TEST GROUP BY K;
+> V K
+> - -
+> 4 1
+> 5 2
+> rows: 2
+
+SET MODE Regular;
+> ok
+
+DROP TABLE TEST, TEST2;
+> ok
+
+DROP SEQUENCE SEQ;
+> ok
+
+-- NEXT VALUE FOR and ROWNUM() in a query with window functions
+
+CREATE SEQUENCE SEQ START WITH 10;
+> ok
+
+CREATE TABLE TEST(ID INT PRIMARY KEY) AS VALUES 1, 2, 3;
+> ok
+
+SELECT ID, NEXT VALUE FOR SEQ V, ROW_NUMBER() OVER (ORDER BY ID DESC) R FROM TEST ORDER BY ID;
+> ID V  R
+> -- -- -
+> 1  10 3
+> 2  11 2
+> 3  12 1
+> rows (ordered): 3
+
+SELECT ID, NEXT VALUE FOR SEQ V FROM TEST QUALIFY ROW_NUMBER() OVER (ORDER BY ID) > 0 ORDER BY ID;
+> ID V
+> -- --
+> 1  13
+> 2  14
+> 3  15
+> rows (ordered): 3
+
+SELECT ID, ROWNUM() N, COUNT(*) OVER () C FROM TEST ORDER BY ID;
+> ID N C
+> -- - -
+> 1  1 3
+> 2  2 3
+> 3  3 3
+> rows (ordered): 3
+
+CREATE TABLE TEST2(ID BIGINT PRIMARY KEY, SRC INT, R BIGINT);
+> ok
+
+INSERT INTO TEST2 SELECT NEXT VALUE FOR SEQ, ID, RANK() OVER (ORDER BY ID) FROM TEST;
+> update count: 3
+
+SELECT * FROM TEST2 ORDER BY ID;
+> ID SRC R
+> -- --- -
+> 16 1   1
+> 17 2   2
+> 18 3   3
+> rows (ordered): 3
+
+DROP TABLE TEST, TEST2;
+> ok
+
+DROP SEQUENCE SEQ;
 > ok

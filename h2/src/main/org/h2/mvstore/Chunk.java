@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -17,7 +17,7 @@ import org.h2.util.StringUtils;
  * A chunk of data, containing one or multiple pages.
  * <p>
  * Minimum chunk size is usually 4096 bytes, and it grows in those fixed increments (blocks).
- * Chunk's length and it's position in the underlying filestore
+ * Chunk length and its position in the underlying filestore
  * are multiples of that increment (block size),
  * therefore they both are measured in blocks, instead of bytes.
  * There are at most 67 million (2^26) chunks,
@@ -422,10 +422,10 @@ public abstract class Chunk<C extends Chunk<C>> {
         return isSaved()
                 && isLive()
                 && pageCountLive < pageCount    // not fully occupied
-                && isEvacuatable();
+                && isEvacuable();
     }
 
-    private boolean isEvacuatable() {
+    private boolean isEvacuable() {
         return pinCount == 0;
     }
 
@@ -438,7 +438,7 @@ public abstract class Chunk<C extends Chunk<C>> {
      * @return ByteBuffer containing page data.
      */
     ByteBuffer readBufferForPage(FileStore<C> fileStore, int offset, long pos) {
-        assert isAllocated() || buffer != null : this;  // chunk has been at least serialized
+        assert buffer != null || isAllocated() : this;  // chunk has been at least serialized
         while (true) {
             long originalBlock = block;
             try {
@@ -451,10 +451,12 @@ public abstract class Chunk<C extends Chunk<C>> {
                             "Negative position {0}; p={1}, c={2}", filePos, pos, toString());
                 }
 
+                ByteBuffer buff = buffer;
                 int length = DataUtils.getPageMaxLength(pos);
                 if (length == DataUtils.PAGE_LARGE) {
-                    // read the first bytes to figure out actual length
-                    length = readFully(fileStore, filePos, 128).getInt();
+                    // A pending page has not necessarily been written to the file yet.
+                    length = buff == null ? readFully(fileStore, filePos, 128).getInt()
+                            : buff.getInt(offset);
                     // pageNo is deliberately not included into length to preserve compatibility
                     // TODO: remove this adjustment when page on disk format is re-organized
                     length += 4;
@@ -465,7 +467,6 @@ public abstract class Chunk<C extends Chunk<C>> {
                             "Illegal page length {0} reading at {1}; max pos {2} ", length, filePos, maxPos);
                 }
 
-                ByteBuffer buff = buffer;
                 if (buff == null) {
                     buff = readFully(fileStore, filePos, length);
                 } else {

@@ -1,4 +1,4 @@
--- Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+-- Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
 -- and the EPL 1.0 (https://h2database.com/html/license.html).
 -- Initial Developer: H2 Group
 --
@@ -44,7 +44,26 @@ DROP SYNONYM SCHEMA2.T1;
 
 SET SCHEMA PUBLIC;
 > ok
+CREATE TABLE T (I INT);
+> ok
 
+INSERT INTO T VALUES (1);
+> update count: 1
+
+CREATE SYNONYM S FOR T;
+> ok
+
+SELECT S.I FROM S;
+> I
+> -
+> 1
+> rows: 1
+
+DROP SYNONYM S;
+> ok
+
+DROP TABLE T;
+> ok
 DROP SCHEMA SCHEMA2 CASCADE;
 > ok
 

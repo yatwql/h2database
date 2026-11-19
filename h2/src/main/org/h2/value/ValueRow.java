@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -147,7 +147,7 @@ public final class ValueRow extends ValueCollectionBase {
 
     /**
      * Creates a copy of this row but the new instance will contain the {@link #values} according to
-     * {@code newOrder}.<br />
+     * {@code newOrder}.<br>
      * E.g.: ROW('a', 'b').cloneWithOrder([1, 0]) returns ROW('b', 'a')
      * @param newOrder array of indexes to create the new values array
      */

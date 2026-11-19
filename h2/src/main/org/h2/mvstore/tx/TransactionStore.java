@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import org.h2.engine.IsolationLevel;
@@ -96,6 +97,13 @@ public class TransactionStore implements AutoCloseable
     final AtomicReference<VersionedBitSet> committingTransactions = new AtomicReference<>(new VersionedBitSet());
 
     private final AtomicInteger state = new AtomicInteger(OPEN);
+
+    /**
+     * Counter of rollbacks, incremented after the undo of each rollback.
+     * Used by waiting transactions to detect rollbacks of the blocking
+     * transaction made after they have read the blocked entry.
+     */
+    final AtomicLong rollbackCounter = new AtomicLong();
 
     /**
      * Soft limit on the number of concurrently opened transactions.
@@ -251,14 +259,15 @@ public class TransactionStore implements AutoCloseable
                                         assert lastUndoKey == null || getTransactionId(lastUndoKey) == transactionId;
                                         logId = lastUndoKey == null ? 0 : getLogId(lastUndoKey) + 1;
                                     }
-                                    Transaction transaction = new Transaction(null, transactionId, commitOrder,
-                                                                                status, name, logId, 1, 0, null, null);
+                                    Transaction transaction =
+                                                    new Transaction(null, transactionId, commitOrder,
+                                                                    status, name, logId, 1, 0, null, null, null);
                                     leftoverTransactions.add(transaction);
                                     continue;
                                 } catch (Throwable ignore) {
-                                    /* Exception like NPE or Assertion are possible here after some chunk loss
-                                     after unclean shutdown, i.e. when undo log may have references to already
-                                     removed map */
+                                    // Exception like NPE or Assertion are possible here after some chunk loss
+                                    // after unclean shutdown, i.e. when undo log may have references to already
+                                    // removed map
                                 }
                             }
                         }
@@ -280,9 +289,9 @@ public class TransactionStore implements AutoCloseable
 
     /**
      * Checks if transaction is completely closed - status set to CLOSED,
-     * corresponding bit in open & commiting bit sets cleared,
+     * corresponding bit in open and committing bit sets cleared,
      * transaction slot emptied.
-     * That also means that all uncommitted entries from this transaction, has been re-written as commited.
+     * That also means that all uncommitted entries from this transaction, has been re-written as committed.
      * @param transactionId to check
      * @return true if transaction is completely closed, false otherwise
      */
@@ -504,8 +513,9 @@ public class TransactionStore implements AutoCloseable
         assert !committingTransactions.get().get(transactionId);
 
         Transaction transaction = new Transaction(this, transactionId, sequenceNo, status, name, logId,
-                timeoutMillis, ownerId, isolationLevel, listener);
-
+                                                    timeoutMillis, ownerId, isolationLevel, listener,
+                                                    store.isVersioningRequired() ? store.registerVersionUsage()
+                                                            : null);
         assert transactions.get(transactionId) == null;
         transactions.set(transactionId, transaction);
 
@@ -582,7 +592,7 @@ public class TransactionStore implements AutoCloseable
 
             // this is an atomic action that causes all changes
             // made by this transaction, to be considered as "committed"
-            VersionedBitSet commitingTx = flipCommittingTransactionsBit(transactionId, true);
+            VersionedBitSet committingTx = flipCommittingTransactionsBit(transactionId, true);
 
             t.notifyAllWaitingTransactions();
 
@@ -593,7 +603,7 @@ public class TransactionStore implements AutoCloseable
             // but preserves fact of commit in case of abrupt termination.
             MVMap<Long,Record<?,?>> undoLog = undoLogs[transactionId];
             if (!recovery) {
-                markUndoLogAsCommitted(transactionId, commitingTx.getVersion());
+                markUndoLogAsCommitted(transactionId, committingTx.getVersion());
             }
 
             Cursor<Long,Record<?,?>> cursor = undoLog.cursor(null);
@@ -830,6 +840,8 @@ public class TransactionStore implements AutoCloseable
             undoLog.operate(undoKey, null, decisionMaker);
             decisionMaker.reset();
         }
+        t.lastRollback = rollbackCounter.incrementAndGet();
+        t.notifyAllWaitingTransactions();
     }
 
     /**
@@ -951,6 +963,7 @@ public class TransactionStore implements AutoCloseable
     private static final class TxMapBuilder<K,V> extends MVMap.Builder<K,V> {
 
         private final MVMap<String, DataType<?>> typeRegistry;
+        @SuppressWarnings("rawtypes")
         private final DataType defaultDataType;
 
         TxMapBuilder(MVMap<String, DataType<?>> typeRegistry, DataType<?> defaultDataType) {

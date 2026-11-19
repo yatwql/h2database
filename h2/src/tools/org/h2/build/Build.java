@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -219,16 +219,29 @@ public class Build extends BuildBase {
     }
 
     private void compileTools() {
+        download();
         mkdir("temp");
         FileList files = files("src/tools").keep("src/tools/org/h2/build/*");
         StringList args = args("-d", "temp", "-sourcepath", "src/tools" +
                 File.pathSeparator + "src/test" +
-                File.pathSeparator + "src/main");
+                File.pathSeparator + "src/main",
+                "-classpath",
+                "ext/lucene-core-" + LUCENE_VERSION + ".jar" +
+                File.pathSeparator + "ext/lucene-analysis-common-" + LUCENE_VERSION + ".jar" +
+                File.pathSeparator + "ext/lucene-queryparser-" + LUCENE_VERSION + ".jar" +
+                File.pathSeparator + "ext/org.osgi.core-" + OSGI_VERSION + ".jar" +
+                File.pathSeparator + "ext/org.osgi.service.jdbc-" + OSGI_JDBC_VERSION + ".jar" +
+                File.pathSeparator + "ext/jts-core-" + JTS_VERSION + ".jar");
         String version = getTargetJavaVersion();
         if (version != null) {
             args = args.plus("-target", version, "-source", version);
         }
         javac(args, files);
+        // tools such as GenerateDoc and WebSite load the grammar and other
+        // resources of the database and the samples via the classpath
+        copy("temp", files("src/main/org/h2/res").exclude("*.DS_Store"), "src/main");
+        copy("temp", files("src/test").exclude("*.java").exclude("*/package.html")
+                .exclude("*.DS_Store"), "src/test");
     }
 
     /**
@@ -417,7 +430,7 @@ public class Build extends BuildBase {
         downloadUsingMaven("ext/asm-" + ASM_VERSION + ".jar",
                 "org.ow2.asm", "asm", ASM_VERSION,
                 "dc6ea1875f4d64fbc85e1691c95b96a3d8569c90");
-        downloadUsingMaven("ext/apiguardian-" + APIGUARDIAN_VERSION + ".jar",
+        downloadUsingMaven("ext/apiguardian-api-" + APIGUARDIAN_VERSION + ".jar",
                 "org.apiguardian", "apiguardian-api", APIGUARDIAN_VERSION,
                 "a231e0d844d2721b0fa1b238006d15c6ded6842a");
     }

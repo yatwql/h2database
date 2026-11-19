@@ -1,4 +1,4 @@
--- Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+-- Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
 -- and the EPL 1.0 (https://h2database.com/html/license.html).
 -- Initial Developer: H2 Group
 --
@@ -26,3 +26,6 @@ SELECT REGR_SXY(Y, X) OVER (ORDER BY R) FROM (VALUES
 > 179.4
 > 187.66666666666666
 > rows (ordered): 9
+
+SELECT REGR_SXY(Y, X) FROM (SELECT 1e9 + 2 * X Y, 1e9 + X X FROM SYSTEM_RANGE(1, 10));
+>> 165.0

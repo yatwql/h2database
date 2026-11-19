@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -26,6 +26,7 @@ import org.h2.result.SortOrder;
 import org.h2.table.Column;
 import org.h2.table.IndexColumn;
 import org.h2.table.TableType;
+import org.h2.value.TypeInfo;
 import org.h2.value.Value;
 import org.h2.value.ValueArray;
 import org.h2.value.ValueRow;
@@ -178,12 +179,34 @@ public class IndexCondition {
     }
 
     /**
+     * Check whether a value can be used for index lookups on the column. The
+     * data type of a parameter is known only at execution time. A value of
+     * another data type than the column is compared with the column values
+     * after a conversion to the higher data type; if that data type orders the
+     * values differently (for example, an INTEGER value for a VARCHAR column),
+     * an index lookup misses rows.
+     *
+     * @param column the column
+     * @param v the value
+     * @return whether the value can be used for index lookups
+     */
+    static boolean isSafeValue(Column column, Value v) {
+        TypeInfo colType = column.getType();
+        int valueType = v.getValueType();
+        if (valueType == colType.getValueType() || valueType == Value.NULL) {
+            return true;
+        }
+        return TypeInfo.haveSameOrdering(colType, TypeInfo.getHigherType(colType, v.getType()));
+    }
+
+    /**
      * Get the current value list of the expression. The value list is of the
      * same type as the column, distinct, and sorted.
      *
      * @param session the session
      * @param sortTypes sort types
-     * @return the value list
+     * @return the value list, or {@code null} if a value has a data type that
+     *         cannot be used for index lookups on the column
      */
     public Value[] getCurrentValueList(SessionLocal session, int[] sortTypes) {
         Comparator<Value> comparator;
@@ -202,6 +225,12 @@ public class IndexCondition {
                 Column[] columns = getColumns();
                 for (Expression e : expressionList) {
                     ValueRow v = (ValueRow) e.getValue(session);
+                    Value[] values = v.getList();
+                    for (int i = 0; i < values.length; i++) {
+                        if (!isSafeValue(columns[i], values[i])) {
+                            return null;
+                        }
+                    }
                     v = Column.convert(session, columns, v);
                     valueSet.add(v);
                 }
@@ -209,6 +238,9 @@ public class IndexCondition {
                 Column column = getColumn();
                 for (Expression e : expressionList) {
                     Value v = e.getValue(session);
+                    if (!isSafeValue(column, v)) {
+                        return null;
+                    }
                     v = column.convert(session, v);
                     valueSet.add(v);
                 }
@@ -536,20 +568,30 @@ public class IndexCondition {
         }
 
         int[] newOrder = new int[length];
-        int found = 0;
+        boolean[] matched = new boolean[length];
         for (int i = 0; i < length; i++) {
             if (indexColumns[i] == null || indexColumns[i].column == null) {
                 return null;
             }
+            int match = -1;
             for (int j = 0; j < this.columns.length; j++) {
                 if (columns[j] == indexColumns[i].column) {
-                    newOrder[j] = i;
-                    found++;
+                    if (match >= 0) {
+                        // The condition references the same column more than once,
+                        // for example (B, B) = (1, 1) with an index on (A, B).
+                        // Counting the matches would map the index column twice and
+                        // leave another index column unmapped, so the condition
+                        // cannot be mapped onto this index.
+                        return null;
+                    }
+                    match = j;
                 }
             }
-        }
-        if (found != length) {
-            return null;
+            if (match < 0 || matched[match]) {
+                return null;
+            }
+            matched[match] = true;
+            newOrder[match] = i;
         }
 
         Column[] newColumns = new Column[length];

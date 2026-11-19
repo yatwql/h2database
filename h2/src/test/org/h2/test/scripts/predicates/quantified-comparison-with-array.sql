@@ -1,4 +1,4 @@
--- Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+-- Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
 -- and the EPL 1.0 (https://h2database.com/html/license.html).
 -- Initial Developer: H2 Group
 --
@@ -299,3 +299,15 @@ SELECT V, A, CASE V WHEN = ANY(A) THEN 1 WHEN > ANY(A) THEN 2 WHEN < ANY(A) THEN
 > null [null]       4
 > null null         4
 > rows: 35
+
+CREATE TABLE T3(C0 INT) AS VALUES 1, 2, 3;
+> ok
+
+SELECT COUNT(*) FROM T3 WHERE C0 = ANY(ARRAY[1.0, 0.5, 2.5]);
+> COUNT(*)
+> --------
+> 1
+> rows: 1
+
+DROP TABLE T3;
+> ok

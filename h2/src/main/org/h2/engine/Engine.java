@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -44,6 +44,38 @@ public final class Engine {
         }
     }
 
+    /**
+     * Checks whether a database is open in this process.
+     *
+     * @param name the normalized database name: the real path of the
+     *            database file without the file suffix
+     * @return true if the database is open
+     */
+    public static boolean isOpen(String name) {
+        name = unwrapAll(name);
+        synchronized (DATABASES) {
+            for (Map.Entry<String, DatabaseHolder> e : DATABASES.entrySet()) {
+                Database database = e.getValue().database;
+                // a database opened with a file system prefix such as
+                // "nioMapped:" is registered under the name with the prefix
+                if (database != null && database.isPersistent() && unwrapAll(e.getKey()).equals(name)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static String unwrapAll(String name) {
+        for (String n = name;;) {
+            String unwrapped = FileUtils.unwrap(n);
+            if (unwrapped.equals(n)) {
+                return n;
+            }
+            n = unwrapped;
+        }
+    }
+
     private static SessionLocal openSession(ConnectionInfo ci, boolean ifExists, boolean forbidCreation,
             String cipher) {
         String name = ci.getName();
@@ -65,9 +97,8 @@ public final class Engine {
             if (database == null || openNew) {
                 if (ci.isPersistent()) {
                     String p = ci.getProperty("MV_STORE");
-                    String fileName;
+                    String fileName = name + Constants.SUFFIX_MV_FILE;
                     if (p == null) {
-                        fileName = name + Constants.SUFFIX_MV_FILE;
                         if (!FileUtils.exists(fileName)) {
                             throwNotFound(ifExists, forbidCreation, name);
                             fileName = name + Constants.SUFFIX_OLD_DATABASE_FILE;
@@ -77,7 +108,6 @@ public final class Engine {
                             fileName = null;
                         }
                     } else {
-                        fileName = name + Constants.SUFFIX_MV_FILE;
                         if (!FileUtils.exists(fileName)) {
                             throwNotFound(ifExists, forbidCreation, name);
                             fileName = null;
@@ -121,7 +151,7 @@ public final class Engine {
         }
         if (user == null) {
             if (database.validateFilePasswordHash(cipher, ci.getFilePasswordHash())) {
-                if (ci.getProperty("AUTHREALM")== null) {
+                if (ci.getProperty("AUTHREALM") == null) {
                     user = database.findUser(ci.getUserName());
                     if (user != null) {
                         if (!user.validateUserPasswordHash(ci.getUserPasswordHash())) {
@@ -212,8 +242,7 @@ public final class Engine {
     private static SessionLocal openSession(ConnectionInfo ci) {
         boolean ifExists = ci.removeProperty("IFEXISTS", false);
         boolean forbidCreation = ci.removeProperty("FORBID_CREATION", false);
-        boolean ignoreUnknownSetting = ci.removeProperty(
-                "IGNORE_UNKNOWN_SETTINGS", false);
+        boolean ignoreUnknownSetting = ci.removeProperty("IGNORE_UNKNOWN_SETTINGS", false);
         String cipher = ci.removeProperty("CIPHER", null);
         String init = ci.removeProperty("INIT", null);
         SessionLocal session;
@@ -252,6 +281,9 @@ public final class Engine {
                     }
                     StringUtils.quoteStringSQL(builder, value);
                 } else {
+                    if (value.indexOf(';') >= 0) {
+                        throw DbException.get(ErrorCode.INVALID_VALUE_2, value, setting);
+                    }
                     builder.append(value);
                 }
                 try {
@@ -336,20 +368,19 @@ public final class Engine {
     }
 
     /**
-     * This method is called after validating user name and password. If user
+     * This method is called after validating username and password. If user
      * name and password were correct, the sleep time is reset, otherwise this
      * method waits some time (to make brute force / rainbow table attacks
      * harder) and then throws a 'wrong user or password' exception. The delay
-     * is a bit randomized to protect against timing attacks. Also the delay
-     * doubles after each unsuccessful logins, to make brute force attacks
+     * is a bit randomized to protect against timing attacks. Also, the delay
+     * doubles after each unsuccessful login, to make brute force attacks
      * harder.
-     *
-     * There is only one exception message both for wrong user and for
-     * wrong password, to make it harder to get the list of user names. This
+     * There is only one exception message both for wrong username and for
+     * wrong password, to make it harder to get the list of usernames. This
      * method must only be called from one place, so it is not possible from the
-     * stack trace to see if the user name was wrong or the password.
+     * stack trace to see if the username was wrong or the password.
      *
-     * @param correct if the user name or the password was correct
+     * @param correct if the username or the password was correct
      * @throws DbException the exception 'wrong user or password'
      */
     private static void validateUserAndPassword(boolean correct) {

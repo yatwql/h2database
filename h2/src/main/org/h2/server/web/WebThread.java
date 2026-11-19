@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -7,6 +7,7 @@ package org.h2.server.web;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -24,7 +25,6 @@ import org.h2.util.IOUtils;
 import org.h2.util.NetUtils;
 import org.h2.util.NetworkConnectionInfo;
 import org.h2.util.StringUtils;
-import org.h2.util.Utils;
 import org.h2.util.Utils21;
 
 /**
@@ -259,19 +259,8 @@ class WebThread extends WebApp implements Runnable {
             return false;
         }
         host = StringUtils.toLowerEnglish(host);
-        if (host.equals(server.getHost()) ||
-                host.equals("localhost") ||
-                host.equals("127.0.0.1") ||
-                host.equals("[::1]")) {
+        if (server.isAllowedHost(host)) {
             return true;
-        }
-        String externalNames = server.getExternalNames();
-        if (externalNames != null && !externalNames.isEmpty()) {
-            for (String s : externalNames.split(",")) {
-                if (host.equals(s.trim())) {
-                    return true;
-                }
-            }
         }
         writeSimple("HTTP/1.1 404 Not Found", "Host " + host + " not found");
         return false;
@@ -297,9 +286,12 @@ class WebThread extends WebApp implements Runnable {
 
     private void parseBodyAttributes() throws IOException {
         if (dataLength > 0) {
-            byte[] bytes = Utils.newBytes(dataLength);
-            for (int pos = 0; pos < dataLength;) {
-                pos += input.read(bytes, pos, dataLength - pos);
+            // Grow the buffer with the bytes actually received instead of
+            // allocating the full declared Content-Length up front; this also
+            // stops the read loop from spinning if the client closes early.
+            byte[] bytes = input.readNBytes(dataLength);
+            if (bytes.length != dataLength) {
+                throw new EOFException();
             }
             String s = new String(bytes, StandardCharsets.UTF_8);
             parseAttributes(s);
@@ -340,24 +332,26 @@ class WebThread extends WebApp implements Runnable {
         for (String line; (line = readHeaderLine()) != null;) {
             trace(" " + line);
             String lower = StringUtils.toLowerEnglish(line);
-            if (lower.startsWith("host")) {
+            int colon = lower.indexOf(':');
+            String name = colon >= 0 ? lower.substring(0, colon) : "";
+            if (name.equals("host")) {
                 host = getHeaderLineValue(line);
-            } else if (lower.startsWith("if-modified-since")) {
+            } else if (name.equals("if-modified-since")) {
                 ifModifiedSince = getHeaderLineValue(line);
-            } else if (lower.startsWith("connection")) {
+            } else if (name.equals("connection")) {
                 String conn = getHeaderLineValue(line);
                 if ("keep-alive".equals(conn)) {
                     keepAlive = true;
                 }
-            } else if (lower.startsWith("content-type")) {
+            } else if (name.equals("content-type")) {
                 String type = getHeaderLineValue(line);
                 if (type.startsWith("multipart/form-data")) {
                     multipart = true;
                 }
-            } else if (lower.startsWith("content-length")) {
+            } else if (name.equals("content-length")) {
                 len = Integer.parseInt(getHeaderLineValue(line));
                 trace("len=" + len);
-            } else if (lower.startsWith("user-agent")) {
+            } else if (name.equals("user-agent")) {
                 boolean isWebKit = lower.contains("webkit/");
                 if (isWebKit && session != null) {
                     // workaround for what seems to be a WebKit bug:
@@ -365,7 +359,7 @@ class WebThread extends WebApp implements Runnable {
                     session.put("frame-border", "1");
                     session.put("frameset-border", "2");
                 }
-            } else if (lower.startsWith("accept-language")) {
+            } else if (name.equals("accept-language")) {
                 Locale locale = session == null ? null : session.locale;
                 if (locale == null) {
                     String languages = getHeaderLineValue(line);

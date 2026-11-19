@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -52,7 +52,7 @@ class MVPlainTempResult extends MVTempResult {
 
     /**
      * Creates a new plain temporary result. This result does not sort its rows,
-     * but it can be used in index-sorted queries and it can preserve additional
+     * but it can be used in index-sorted queries, and it can preserve additional
      * columns for WITH TIES processing.
      *
      * @param database

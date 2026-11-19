@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -12,6 +12,7 @@ import org.h2.engine.SessionLocal;
 import org.h2.engine.User;
 import org.h2.expression.Expression;
 import org.h2.message.DbException;
+import org.h2.table.TableView;
 
 /**
  * This class represents the statements
@@ -85,6 +86,9 @@ public class AlterUser extends DefineCommand {
         case CommandInterface.ALTER_USER_ADMIN:
             session.getUser().checkAdmin();
             user.setAdmin(admin);
+            if (!admin) {
+                TableView.recheckOwnerRights(session);
+            }
             break;
         default:
             throw DbException.getInternalError("type=" + type);

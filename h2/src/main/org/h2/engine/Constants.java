@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -15,13 +15,13 @@ public class Constants {
     /**
      * The build date is updated for each public release.
      */
-    public static final String BUILD_DATE = "2025-09-22";
+    public static final String BUILD_DATE = "2026-09-23";
 
     /**
      * Sequential version number. Even numbers are used for official releases,
      * odd numbers are used for development builds.
      */
-    public static final int BUILD_ID = 249;
+    public static final int BUILD_ID = 259;
 
     /**
      * Whether this is a snapshot version.
@@ -84,7 +84,7 @@ public class Constants {
     /**
      * The minor version of this database.
      */
-    public static final int VERSION_MINOR = 4;
+    public static final int VERSION_MINOR = 5;
 
     /**
      * The lock mode that means no locking is used at all.

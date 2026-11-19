@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  *
@@ -435,6 +435,7 @@ public final class Parser extends ParserBase {
     private boolean parseDomainConstraint;
     private QueryScope queryScope;
     private boolean parsingRecursiveWithList;
+    private Select selectWithoutWindowFunctions;
 
     /**
      * Creates a new instance of parser.
@@ -1088,6 +1089,9 @@ public final class Parser extends ParserBase {
             read(FROM);
         }
         command.setTableFilter(readSimpleTableFilter());
+        if (database.getMode().discardWithTableHints) {
+            discardWithTableHints();
+        }
         if (readIf(WHERE)) {
             command.setCondition(readExpression());
         }
@@ -1418,7 +1422,12 @@ public final class Parser extends ParserBase {
 
     private Prepared parseMerge(int start) {
         read("INTO");
-        TableFilter targetTableFilter = readSimpleTableFilter();
+        Table table = readTableOrView();
+        if (database.getMode().discardWithTableHints) {
+            discardWithTableHints();
+        }
+        TableFilter targetTableFilter =
+                new TableFilter(session, table, readFromAlias(null), rightsChecked, currentSelect, 0, null);
         if (readIf(USING)) {
             return parseMergeUsing(targetTableFilter, start);
         }
@@ -1601,7 +1610,7 @@ public final class Parser extends ParserBase {
                         String schemaOrTableName = columnName;
                         String tableOrColumnName = readIdentifier();
                         if (readIf(DOT)) {
-                            if (!table.getSchema().getName().equals(schemaOrTableName)) {
+                            if (!database.equalsIdentifiers(table.getSchema().getName(), schemaOrTableName)) {
                                 throw DbException.get(ErrorCode.SCHEMA_NAME_MUST_MATCH);
                             }
                             columnName = readIdentifier();
@@ -1609,7 +1618,7 @@ public final class Parser extends ParserBase {
                             columnName = tableOrColumnName;
                             tableOrColumnName = schemaOrTableName;
                         }
-                        if (!table.getName().equals(tableOrColumnName)) {
+                        if (!database.equalsIdentifiers(table.getName(), tableOrColumnName)) {
                             throw DbException.get(ErrorCode.TABLE_OR_VIEW_NOT_FOUND_1, tableOrColumnName);
                         }
                     }
@@ -1769,7 +1778,11 @@ public final class Parser extends ParserBase {
                     table = new FunctionTable(mainSchema, session, readTableFunction(tableName, schema));
                 }
             } else {
+                boolean isSynonym = isTableSynonym(tableName, schema);
                 table = readTableOrView(tableName, /*resolveMaterializedView*/true);
+                if (isSynonym) {
+                    alias = tableName;
+                }
             }
         }
         ArrayList<String> derivedColumnNames = null;
@@ -2249,7 +2262,7 @@ public final class Parser extends ParserBase {
     }
 
     private TableFilter readTableReference() {
-        for (TableFilter top, last = top = readTablePrimary(), join;; last = join) {
+        for (TableFilter top = readTablePrimary(), join;;) {
             switch (currentTokenType) {
             case RIGHT: {
                 read();
@@ -2298,16 +2311,26 @@ public final class Parser extends ParserBase {
             }
             case NATURAL: {
                 read();
-                read(JOIN);
-                join = readTablePrimary();
-                Expression on = null;
-                for (Column column1 : last.getTable().getColumns()) {
-                    Column column2 = join.getColumn(last.getColumnName(column1), true);
-                    if (column2 != null) {
-                        on = addJoinColumn(on, last, join, column1, column2, false);
-                    }
+                if (readIf(LEFT)) {
+                    readIf("OUTER");
+                    read(JOIN);
+                    join = readTablePrimary();
+                    addJoin(top, join, true, readNaturalJoinColumns(top, join, false));
+                } else if (readIf(RIGHT)) {
+                    readIf("OUTER");
+                    read(JOIN);
+                    join = readTablePrimary();
+                    Expression on = readNaturalJoinColumns(top, join, true);
+                    addJoin(join, top, true, on);
+                    top = join;
+                } else if (readIf(FULL)) {
+                    throw getSyntaxError();
+                } else {
+                    readIf(INNER);
+                    read(JOIN);
+                    join = readTablePrimary();
+                    addJoin(top, join, false, readNaturalJoinColumns(top, join, false));
                 }
-                addJoin(top, join, false, on);
                 break;
             }
             default:
@@ -2320,6 +2343,50 @@ public final class Parser extends ParserBase {
         }
     }
 
+    private Expression readNaturalJoinColumns(TableFilter chain, TableFilter join, boolean rightJoin) {
+        return readNaturalJoinColumns(chain, join, rightJoin, null, new HashSet<>());
+    }
+
+    /**
+     * Build the join condition of a NATURAL JOIN. Per the SQL Standard the
+     * common columns are the columns of the whole left joined table (the chain
+     * of already joined filters) that have a matching column in the right
+     * table. Columns that were already merged into a common column by a
+     * previous NATURAL JOIN or JOIN ... USING are not visible. A column of the
+     * right table that matches more than one visible column of the chain is
+     * ambiguous.
+     *
+     * @param chain the left (outer) end of the join chain
+     * @param join the joined table filter
+     * @param rightJoin whether this is a converted right outer join
+     * @param on the join condition built so far, or {@code null}
+     * @param matched right columns already matched by a chain filter
+     * @return the join condition, or {@code null} if there are no common
+     *         columns
+     */
+    private Expression readNaturalJoinColumns(TableFilter chain, TableFilter join, boolean rightJoin, Expression on,
+            HashSet<Column> matched) {
+        for (TableFilter f = chain; f != null; f = f.getJoin()) {
+            TableFilter n = f.getNestedJoin();
+            if (n != null) {
+                on = readNaturalJoinColumns(n, join, rightJoin, on, matched);
+            }
+            for (Column column1 : f.getTable().getColumns()) {
+                if (f.isCommonJoinColumnToExclude(column1)) {
+                    continue;
+                }
+                Column column2 = join.getColumn(f.getColumnName(column1), true);
+                if (column2 != null) {
+                    if (!matched.add(column2)) {
+                        throw DbException.get(ErrorCode.AMBIGUOUS_COLUMN_NAME_1, column2.getName());
+                    }
+                    on = addJoinColumn(on, f, join, column1, column2, rightJoin);
+                }
+            }
+        }
+        return on;
+    }
+
     private Expression readJoinSpecification(TableFilter filter1, TableFilter filter2, boolean rightJoin) {
         Expression on = null;
         if (readIf(ON)) {
@@ -2327,11 +2394,44 @@ public final class Parser extends ParserBase {
         } else if (readIf(USING, OPEN_PAREN)) {
             do {
                 String columnName = readIdentifier();
-                on = addJoinColumn(on, filter1, filter2, filter1.getColumn(columnName, false),
+                TableFilter leftFilter = findTableFilterWithColumn(filter1, columnName, null);
+                if (leftFilter == null) {
+                    throw DbException.get(ErrorCode.COLUMN_NOT_FOUND_1, columnName);
+                }
+                on = addJoinColumn(on, leftFilter, filter2, leftFilter.getColumn(columnName, false),
                         filter2.getColumn(columnName, false), rightJoin);
             } while (readIfMore());
         }
         return on;
+    }
+
+    /**
+     * Find the table filter of a join chain that contains the specified
+     * column. The column must exist in exactly one filter of the chain;
+     * columns that were already merged into a common column by a previous
+     * NATURAL JOIN or JOIN ... USING are not visible.
+     *
+     * @param filter the left (outer) end of the join chain
+     * @param columnName the name of the column
+     * @param found the filter found so far, or {@code null}
+     * @return the table filter, or {@code null} if none of the filters has
+     *         the column
+     */
+    private TableFilter findTableFilterWithColumn(TableFilter filter, String columnName, TableFilter found) {
+        for (TableFilter f = filter; f != null; f = f.getJoin()) {
+            TableFilter n = f.getNestedJoin();
+            if (n != null) {
+                found = findTableFilterWithColumn(n, columnName, found);
+            }
+            Column c = f.getColumn(columnName, true);
+            if (c != null && !f.isCommonJoinColumnToExclude(c)) {
+                if (found != null) {
+                    throw DbException.get(ErrorCode.AMBIGUOUS_COLUMN_NAME_1, columnName);
+                }
+                found = f;
+            }
+        }
+        return found;
     }
 
     private Expression addJoinColumn(Expression on, TableFilter filter1, TableFilter filter2, Column column1,
@@ -2685,7 +2785,12 @@ public final class Parser extends ParserBase {
 
     private Query parseQueryPrimary() {
         if (readIf(OPEN_PAREN)) {
+            // ORDER BY / OFFSET / FETCH are parsed after the select closes its
+            // parameter scope. Record them on this term so result reuse sees
+            // a change to those parameters.
+            BitSet outerUsedParameters = openParametersScope();
             Query query = parseQueryExpressionBodyAndEndOfQuery(tokenIndex);
+            query.setParameterList(closeParametersScope(outerUsedParameters));
             query.setOuterQueryScope(queryScope);
             read(CLOSE_PAREN);
             return query;
@@ -2813,7 +2918,7 @@ public final class Parser extends ParserBase {
             parseSelectFromPart(command);
         }
         if (readIf(WHERE)) {
-            command.addCondition(readExpressionWithGlobalConditions());
+            command.addCondition(readConditionWithoutWindowFunctions(command));
         }
         // the group by is read for the outer select (or not a select)
         // so that columns that are not grouped can be used
@@ -2856,7 +2961,7 @@ public final class Parser extends ParserBase {
         currentSelect = command;
         if (readIf(HAVING)) {
             command.setGroupQuery();
-            command.setHaving(readExpressionWithGlobalConditions());
+            command.setHaving(readConditionWithoutWindowFunctions(command));
         }
         if (readIf(WINDOW)) {
             do {
@@ -2972,6 +3077,16 @@ public final class Parser extends ParserBase {
             return ValueExpression.DEFAULT;
         }
         return readExpression();
+    }
+
+    private Expression readConditionWithoutWindowFunctions(Select select) {
+        Select old = selectWithoutWindowFunctions;
+        selectWithoutWindowFunctions = select;
+        try {
+            return readExpressionWithGlobalConditions();
+        } finally {
+            selectWithoutWindowFunctions = old;
+        }
     }
 
     private Expression readExpressionWithGlobalConditions() {
@@ -3623,6 +3738,9 @@ public final class Parser extends ParserBase {
     private void readOver(DataAnalysisOperation operation) {
         if (readIf("OVER")) {
             operation.setOverCondition(readWindowNameOrSpecification());
+            if (selectWithoutWindowFunctions != null && currentSelect == selectWithoutWindowFunctions) {
+                throw DbException.get(ErrorCode.INVALID_USE_OF_AGGREGATE_FUNCTION_1, operation.getTraceSQL());
+            }
             currentSelect.setWindowQuery();
         } else if (operation.isAggregate()) {
             currentSelect.setGroupQuery();
@@ -7999,14 +8117,74 @@ public final class Parser extends ParserBase {
         throw getTableOrViewNotFoundDbException(tableName);
     }
 
+
+    private boolean isTableSynonym(String tableName, Schema schema) {
+        if (schema != null) {
+            return schema.findTableOrView(session, tableName) == null
+                    && schema.getSynonym(tableName) != null;
+        }
+
+        Schema currentSchema = database.getSchema(session.getCurrentSchemaName());
+        if (currentSchema.findTableOrView(session, tableName) != null) {
+            return false;
+        }
+        if (currentSchema.getSynonym(tableName) != null) {
+            return true;
+        }
+
+        if (getWithSubquery(tableName) != null) {
+            return false;
+        }
+
+        String[] schemaNames = session.getSchemaSearchPath();
+        if (schemaNames != null) {
+            for (String name : schemaNames) {
+                Schema s = database.getSchema(name);
+                if (s.findTableOrView(session, tableName) != null) {
+                    return false;
+                }
+                if (s.getSynonym(tableName) != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private Table getWithSubquery(String name) {
         for (QueryScope queryScope = this.queryScope; queryScope != null; queryScope = queryScope.parent) {
             Table tableSubquery = queryScope.tableSubqueries.get(name);
             if (tableSubquery != null) {
+                if (tableSubquery instanceof CTE) {
+                    // a query that reads the CTE depends on its parameters
+                    for (Parameter p : ((CTE) tableSubquery).getParameters()) {
+                        useCteParameter(p);
+                    }
+                }
                 return tableSubquery;
             }
         }
         return null;
+    }
+
+    /**
+     * Marks a parameter of a CTE as used. When a query that reads the CTE is
+     * prepared again from its SQL, the parameter does not appear in this SQL,
+     * so it is added to the parameters of this parser.
+     *
+     * @param p the parameter of the CTE
+     */
+    private void useCteParameter(Parameter p) {
+        int index = p.getIndex();
+        if (index >= parameters.size() || parameters.get(index) == null) {
+            ArrayList<Parameter> list = new ArrayList<>(parameters);
+            while (list.size() <= index) {
+                list.add(null);
+            }
+            list.set(index, p);
+            parameters = list;
+        }
+        usedParameters.set(index);
     }
 
     private DbException getTableOrViewNotFoundDbException(String tableName) {

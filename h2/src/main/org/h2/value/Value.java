@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -2576,7 +2576,8 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
                     System.arraycopy(values, 0, newValues, 0, i);
                     newValues[i] = v2;
                     while (++i < length) {
-                        newValues[i] = values[i].convertTo(componentType, provider, conversionMode, column);
+                        newValues[i] = values[i].convertTo(iter.next().getValue(), provider, conversionMode,
+                                column);
                     }
                     v = ValueRow.get(targetType, newValues);
                     break loop;

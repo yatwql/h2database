@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -136,6 +136,8 @@ public final class InformationSchemaTableLegacy extends MetaTable {
         super(schema, id, type);
         Column[] cols;
         String indexColumnName = null;
+        // the generator uses the value of the index column to find the objects instead of walking all of them
+        boolean indexLookup = false;
         switch (type) {
         case TABLES:
             setMetaTableName("TABLES");
@@ -155,6 +157,7 @@ public final class InformationSchemaTableLegacy extends MetaTable {
                     column("ROW_COUNT_ESTIMATE", TypeInfo.TYPE_BIGINT), //
             };
             indexColumnName = "TABLE_NAME";
+            indexLookup = true;
             break;
         case COLUMNS:
             setMetaTableName("COLUMNS");
@@ -197,6 +200,7 @@ public final class InformationSchemaTableLegacy extends MetaTable {
                     column("CHECK_CONSTRAINT"), //
             };
             indexColumnName = "TABLE_NAME";
+            indexLookup = true;
             break;
         case INDEXES:
             setMetaTableName("INDEXES");
@@ -224,6 +228,7 @@ public final class InformationSchemaTableLegacy extends MetaTable {
                     column("INDEX_CLASS"), //
             };
             indexColumnName = "TABLE_NAME";
+            indexLookup = true;
             break;
         case TABLE_TYPES:
             setMetaTableName("TABLE_TYPES");
@@ -432,6 +437,7 @@ public final class InformationSchemaTableLegacy extends MetaTable {
                     column("ID", TypeInfo.TYPE_INTEGER), //
             };
             indexColumnName = "TABLE_NAME";
+            indexLookup = true;
             break;
         case IN_DOUBT:
             setMetaTableName("IN_DOUBT");
@@ -712,8 +718,9 @@ public final class InformationSchemaTableLegacy extends MetaTable {
             indexColumn = getColumn(database.sysIdentifier(indexColumnName)).getColumnId();
             IndexColumn[] indexCols = IndexColumn.wrap(
                     new Column[] { cols[indexColumn] });
-            metaIndex = new MetaIndex(this, indexCols, false);
+            metaIndex = new MetaIndex(this, indexCols, false, indexLookup);
         }
+        setIndexes();
     }
 
     private static String replaceNullWithEmpty(String s) {
@@ -1296,7 +1303,7 @@ public final class InformationSchemaTableLegacy extends MetaTable {
                                     // ID
                                     ValueInteger.get(alias.getId()),
                                     // SOURCE
-                                    alias.getSource()
+                                    admin ? alias.getSource() : null
                                     // when adding more columns, see also below
                             );
                         }
@@ -1762,7 +1769,7 @@ public final class InformationSchemaTableLegacy extends MetaTable {
                         // REMARKS
                         replaceNullWithEmpty(trigger.getComment()),
                         // SQL
-                        trigger.getCreateSQL(),
+                        admin ? trigger.getCreateSQL() : null,
                         // ID
                         ValueInteger.get(trigger.getId())
                 );
@@ -1775,12 +1782,17 @@ public final class InformationSchemaTableLegacy extends MetaTable {
                     NetworkConnectionInfo networkConnectionInfo = s.getNetworkConnectionInfo();
                     Command command = s.getCurrentCommand();
                     int blockingSessionId = s.getBlockingSessionId();
+                    User user = s.getUser();
+                    if (user == null) {
+                        // Session was closed concurrently
+                        continue;
+                    }
                     add(session,
                             rows,
                             // ID
                             ValueInteger.get(s.getId()),
                             // USER_NAME
-                            s.getUser().getName(),
+                            user.getName(),
                             // SERVER
                             networkConnectionInfo == null ? null : networkConnectionInfo.getServer(),
                             // CLIENT_ADDR
@@ -1891,6 +1903,9 @@ public final class InformationSchemaTableLegacy extends MetaTable {
             break;
         }
         case QUERY_STATISTICS: {
+            if (!session.getUser().isAdmin()) {
+                break;
+            }
             QueryStatisticsData control = database.getQueryStatisticsData();
             if (control != null) {
                 for (QueryStatisticsData.QueryEntry entry : control.getQueries()) {

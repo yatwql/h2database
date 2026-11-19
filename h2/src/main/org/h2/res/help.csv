@@ -1,4 +1,4 @@
-# Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+# Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
 # and the EPL 1.0 (https://h2database.com/html/license.html).
 # Initial Developer: H2 Group
 
@@ -352,7 +352,7 @@ VALUES (1, 'Hello'), (2, 'World');
 "
 
 "Commands (DML)","WITH","
-WITH [ RECURSIVE ] { name [( columnName [,...] )] AS ( query ) [,...] }
+WITH [ RECURSIVE ] { queryName [( columnName [,...] )] AS ( query ) } [,...]
 query
 ","
 Can be used to create a recursive or non-recursive query (common table expression).
@@ -3373,6 +3373,8 @@ combined into a space separated key-value pairs, as follows:
 ""'lineComment=# lineSeparator=\n null= rowSeparator=')"".
 The following options are supported:
 
+""binaryColumns"" (a comma separated list of 1-based column numbers that contain binary values; these columns are read as hexadecimal and returned as byte arrays),
+
 ""caseSensitiveColumnNames"" (true or false; disabled by default),
 
 ""charset"" (for example 'UTF-8'),
@@ -3627,13 +3629,22 @@ OVERRIDING USER VALUE
 "
 
 "Other Grammar","Query","
-select | explicitTable | tableValue
+select | explicitTable | tableValue | with
 ","
-A query, such as SELECT, explicit table, or table value.
+A query, such as SELECT, explicit table, or table value,
+optionally with a WITH clause (common table expression).
 ","
 SELECT ID FROM TEST;
 TABLE TEST;
 VALUES (1, 2), (3, 4);
+"
+
+"Other Grammar","Query name","
+name
+","
+Name of a common table expression (WITH clause).
+","
+CTE1
 "
 
 "Other Grammar","Quoted Name","
@@ -3754,6 +3765,8 @@ When the next value is requested the sequence is incremented and the current val
 and the last identity in the current session are updated with the generated value.
 The next value of the sequence is generated only once for each processed row.
 If this expression is used multiple times with the same sequence it returns the same value within a processed row.
+The next value may not be requested in a grouped query, except in compatibility modes where it returns
+different values for each invocation.
 Used values are never re-used, even when the transaction is rolled back.
 
 Current value may only be requested after generation of the sequence value in the current session.
@@ -6463,6 +6476,9 @@ The default charset is the default value for this system, and the default field 
 
 The values are converted to text using the default string representation;
 if another conversion is required you need to change the select statement accordingly.
+BINARY, VARBINARY, and BLOB values are written as hexadecimal strings, because
+their default string representation is a lossy UTF-8 decoding. To read such a
+file back, list the columns in the ""binaryColumns"" option of CSVREAD.
 The parameter nullString is used when writing NULL (by default nothing is written
 when NULL appears). The default line separator is the default value for this
 system (system property ""line.separator"").

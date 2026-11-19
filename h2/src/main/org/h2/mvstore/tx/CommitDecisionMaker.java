@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -99,7 +99,7 @@ final class CommitDecisionMaker<V> extends MVMap.DecisionMaker<VersionedValue<V>
                     if (keyCount <= 1) {
                         if (keyCount == 1) {
                             assert index <= 1;
-                            p = p.getChildPage(1 - index).copy();
+                            p = p.getChildPage(1 - index);
                         } else {
                             // if root happens to be such single-childed
                             // (with no keys) internal node, then just
@@ -122,7 +122,8 @@ final class CommitDecisionMaker<V> extends MVMap.DecisionMaker<VersionedValue<V>
             for (int i = 0; i < p.getKeyCount(); i++) {
                 VersionedValue<V> value = p.getValue(i);
                 long operationId = value.getOperationId();
-                if (operationId != NO_OPERATION_ID && TransactionStore.getTransactionId(operationId) == transactionId) {
+                if (operationId != NO_OPERATION_ID &&
+                        TransactionStore.getTransactionId(operationId) == transactionId) {
                     V currentValue = value.getCurrentValue();
                     assert currentValue != null;
                     p.setValue(i, VersionedValueCommitted.getInstance(currentValue));

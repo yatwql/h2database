@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -122,6 +122,9 @@ public class SetComment extends DefineCommand {
         }
         if (column) {
             Table table = (Table) object;
+            // Column comments are persisted only as part of a table definition, a view or
+            // linked table has no place for them and would silently drop the comment
+            table.checkSupportAlter();
             table.getColumn(columnName).setComment(text);
         } else {
             object.setComment(text);

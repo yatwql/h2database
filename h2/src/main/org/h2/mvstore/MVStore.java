@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -396,6 +396,9 @@ public final class MVStore implements AutoCloseable {
         target.adjustLastMapId(source.getLastMapId());
         int autoCommitDelay = target.getAutoCommitDelay();
         boolean reuseSpace = target.isSpaceReused();
+        int poolSize = Integer.getInteger("h2.compactThreads",
+                Math.max(1, Runtime.getRuntime().availableProcessors() / 4));
+        ExecutorService pool = Executors.newFixedThreadPool(poolSize);
         try {
             target.setReuseSpace(false);  // disable unused chunks collection
             target.setAutoCommitDelay(0); // disable autocommit
@@ -412,9 +415,6 @@ public final class MVStore implements AutoCloseable {
                 }
             }
 
-            int poolSize = Integer.getInteger("h2.compactThreads",
-                    Math.max(1, Runtime.getRuntime().availableProcessors() / 4));
-            ExecutorService pool = Executors.newFixedThreadPool(poolSize);
             CompletableFuture.allOf(
                 // We are going to cheat a little bit in the copyFrom() by employing "incomplete" pages,
                 // which would be spared of saving, but save completed pages underneath,
@@ -433,11 +433,11 @@ public final class MVStore implements AutoCloseable {
                     }, pool)
                 ).toArray(CompletableFuture[]::new)
             ).join();
-            pool.shutdownNow();
             // this will end hacky mode of operation with incomplete pages
             // end ensure that all pages are saved
             target.commit();
         } finally {
+            pool.shutdownNow();
             target.setAutoCommitDelay(autoCommitDelay);
             target.setReuseSpace(reuseSpace);
         }
@@ -819,10 +819,9 @@ public final class MVStore implements AutoCloseable {
                                 }
                             }
                             commit();
-                            setRetentionTime(0);
+                            // after restart all chunks held by RETENTION_TIME will be dead anyway
+                            fileStore.stopRetainingUnusedChunks();
                             fileStore.stop(compactFully ? 0 : allowedCompactionTime);
-                            assert oldestVersionToKeep.get() == currentVersion : oldestVersionToKeep.get() + " != "
-                                    + currentVersion;
                         }
 
                         if (meta != null) {
@@ -1092,7 +1091,7 @@ public final class MVStore implements AutoCloseable {
         checkOpen();
         FileStore<?> f = fileStore;
         if (f != null) {
-            f.sync();
+            executeFilestoreOperation(f::sync);
         }
     }
 
@@ -1254,8 +1253,9 @@ public final class MVStore implements AutoCloseable {
     }
 
     /**
-     * How long to retain old, persisted chunks, in milliseconds. Chunks that
-     * are older may be overwritten once they contain no live data.
+     * How long to retain old, persisted chunks, in milliseconds. A chunk that
+     * contains no live data may be overwritten once it has been unused for
+     * this time.
      * <p>
      * The default value is 45000 (45 seconds) when using the default file
      * store. It is assumed that a file system and hard disk will flush all
@@ -1593,8 +1593,8 @@ public final class MVStore implements AutoCloseable {
     /**
      * Prepare map removal from the store. This includes removal of its references by name and by id from meta map.
      * It's still held in maps, so actual removal is delayed until all of its usages (iterators etc.) are completed.
-     * This is controlled by store versions, and actual removal is done by MVStore.setWriteVersion() and
-     * MVMap,setWriteVersion() when removal from maps and from layout is done.
+     * This is controlled by store versions, and actual removal is done by {@link MVStore#setWriteVersion(long)} and
+     * {@link MVMap#setWriteVersion(long)} when removal from maps and from layout is done.
      *
      * @param map the map to remove
      */
@@ -1687,7 +1687,7 @@ public final class MVStore implements AutoCloseable {
         }
     }
 
-    boolean handleException(Throwable ex) {
+    void handleException(Throwable ex) {
         if (backgroundExceptionHandler != null) {
             try {
                 backgroundExceptionHandler.uncaughtException(Thread.currentThread(), ex);
@@ -1696,9 +1696,7 @@ public final class MVStore implements AutoCloseable {
                     ex.addSuppressed(e);
                 }
             }
-            return true;
         }
-        return false;
     }
 
     boolean isOpen() {
@@ -2077,7 +2075,9 @@ public final class MVStore implements AutoCloseable {
         }
 
         /**
-         * Open the file in recovery mode, where some errors may be ignored.
+         * Open the file in recovery mode, where some errors may be ignored. A
+         * page that cannot be read is replaced by an empty page, and the
+         * exception is passed to the background exception handler.
          *
          * @return this
          */
@@ -2152,7 +2152,8 @@ public final class MVStore implements AutoCloseable {
 
         /**
          * Set the listener to be used for exceptions that occur when writing in
-         * the background thread.
+         * the background thread, and for pages that cannot be read in recovery
+         * mode.
          *
          * @param exceptionHandler the handler
          * @return this

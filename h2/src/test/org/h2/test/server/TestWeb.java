@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -8,10 +8,13 @@ package org.h2.test.server;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.sql.Connection;
@@ -77,7 +80,9 @@ public class TestWeb extends TestDb {
         testAlreadyRunning();
         testStartWebServerWithConnection();
         testServer();
+        testHostHeader();
         testWebApp();
+        testAdminSessionsEscaped();
         testIfExists();
 
         testSpecialAutoComplete();
@@ -121,6 +126,16 @@ public class TestWeb extends TestDb {
         response.setServletOutputStream(out);
         servlet.doGet(request, response);
         assertContains(out.toString(), "location.href = 'login.jsp");
+
+        // DNS rebinding: loopback client, but a foreign Host header
+        request = new TestHttpServletRequest();
+        request.setPathInfo("/");
+        request.setServerName("attacker.example");
+        response = new TestHttpServletResponse();
+        out = new TestServletOutputStream();
+        response.setServletOutputStream(out);
+        servlet.doGet(request, response);
+        assertContains(out.toString(), "('webAllowOthers') are disabled");
         servlet.destroy();
     }
 
@@ -264,6 +279,32 @@ public class TestWeb extends TestDb {
         server.stop();
     }
 
+    private void testHostHeader() throws Exception {
+        Server server = Server.createWebServer("-webPort", "8182", "-properties", "null");
+        server.start();
+        try {
+            assertEquals("HTTP/1.1 200 OK", getStatusLine("localhost:8182", null));
+            // DNS rebinding: foreign Host header
+            assertEquals("HTTP/1.1 404 Not Found", getStatusLine("attacker.example:8182", null));
+            // a header whose name only starts with "host" must not replace it
+            assertEquals("HTTP/1.1 404 Not Found", getStatusLine("attacker.example:8182", "Hostname: localhost"));
+        } finally {
+            server.stop();
+        }
+    }
+
+    private static String getStatusLine(String host, String extraHeader) throws IOException {
+        try (Socket socket = new Socket("localhost", 8182)) {
+            OutputStream out = socket.getOutputStream();
+            out.write(("GET /index.html HTTP/1.1\r\nHost: " + host + "\r\n"
+                    + (extraHeader != null ? extraHeader + "\r\n" : "") + "\r\n")
+                    .getBytes(StandardCharsets.ISO_8859_1));
+            out.flush();
+            return new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.ISO_8859_1))
+                    .readLine();
+        }
+    }
+
     private void testIfExists() throws Exception {
         Connection conn = getConnection("jdbc:h2:mem:" + getTestName(),
                 getUser(), getPassword());
@@ -336,7 +377,25 @@ public class TestWeb extends TestDb {
             result = client.get(url, "query.do?sql=create schema test_schema");
             result = client.get(url, "query.do?sql=" +
                     "create view test_view as select * from test");
+            // object names are written into the inline <script> tree, so an
+            // identifier with </script> must not break out of the block
+            result = client.get(url, "query.do?sql=" + StringUtils.urlEncode(
+                    "create table \"</script><h2xsstest>\"(id int)"));
             result = client.get(url, "tables.do");
+            assertContains(result, "h2xsstest");
+            assertTrue(result.indexOf("<h2xsstest>") < 0);
+            assertTrue(result.indexOf("</script><h2xsstest>") < 0);
+            client.get(url, "query.do?sql=" + StringUtils.urlEncode(
+                    "drop table \"</script><h2xsstest>\""));
+            // tree.js writes the node text as HTML, so it must be HTML-escaped
+            // and not only escaped for the JavaScript string
+            result = client.get(url, "query.do?sql=" + StringUtils.urlEncode(
+                    "create table \"<img src=x onload=h2xsstest()>\"(id int)"));
+            result = client.get(url, "tables.do");
+            assertContains(result, "'&lt;img src=x onload=h2xsstest()&gt;'");
+            assertTrue(result.indexOf("'table', '\\u003cimg") < 0);
+            client.get(url, "query.do?sql=" + StringUtils.urlEncode(
+                    "drop table \"<img src=x onload=h2xsstest()>\""));
             result = client.get(url, "query.jsp");
             result = client.get(url, "query.do?sql=select * from test");
             assertContains(result, "Hello");
@@ -382,6 +441,17 @@ public class TestWeb extends TestDb {
                     "select * from test&op=2&row=1");
             result = client.get(url, "query.do?sql=select * from test");
             assertContains(result, "no rows");
+            // the message of a failed edit can contain object names,
+            // it must be escaped like the stack trace next to it
+            result = client.get(url, "query.do?sql=" + StringUtils.urlEncode(
+                    "alter table test add constraint \"<h2xsstest>\" check(id > 0)"));
+            result = client.get(url, "query.do?sql=@edit select * from test");
+            result = client.get(url, "editResult.do?sql=@edit " +
+                    "select * from test&op=1&row=-1&r-1c1=-1&r-1c2=Hello");
+            assertContains(result, "h2xsstest");
+            assertTrue(result.indexOf("<h2xsstest>") < 0);
+            client.get(url, "query.do?sql=" + StringUtils.urlEncode(
+                    "alter table test drop constraint \"<h2xsstest>\""));
 
             // autoComplete
             result = client.get(url, "autoCompleteList.do?query=select 'abc");
@@ -563,6 +633,39 @@ public class TestWeb extends TestDb {
         }
     }
 
+    private void testAdminSessionsEscaped() throws Exception {
+        String hash = WebServer.encodeAdminPassword("1234567890AB");
+        Server server = new Server();
+        server.setOut(new PrintStream(new ByteArrayOutputStream()));
+        server.runTool("-ifNotExists", "-web", "-webPort", "8182",
+                "-properties", "null", "-webAdminPassword", hash);
+        try {
+            String url = "http://localhost:8182";
+            WebClient client = new WebClient();
+            String result = client.get(url);
+            client.readSessionId(result);
+            client.get(url, "login.do?driver=org.h2.Driver" +
+                    "&url=jdbc:h2:mem:<h2xssurl>" +
+                    "&user=<h2xssuser>&password=sa&name=_test_");
+            // the URL, user and last query of every session are shown on the admin page
+            client.get(url, "query.do?sql=select '<h2xsstest>'");
+            WebClient admin = new WebClient();
+            result = admin.get(url);
+            admin.readSessionId(result);
+            admin.get(url, "adminLogin.do?password=1234567890AB");
+            result = admin.get(url, "admin.do");
+            assertContains(result, "h2xsstest");
+            assertTrue(result.indexOf("<h2xsstest>") < 0);
+            assertContains(result, "h2xssurl");
+            assertTrue(result.indexOf("<h2xssurl>") < 0);
+            assertContains(result, "H2XSSUSER");
+            assertTrue(result.indexOf("<H2XSSUSER>") < 0);
+            client.get(url, "logout.do");
+        } finally {
+            server.shutdown();
+        }
+    }
+
     private void testSpecialAutoComplete() throws Exception {
         Server server = new Server();
         server.setOut(new PrintStream(new ByteArrayOutputStream()));
@@ -715,8 +818,14 @@ public class TestWeb extends TestDb {
 
         private String pathInfo;
 
+        private String serverName = "localhost";
+
         void setPathInfo(String pathInfo) {
             this.pathInfo = pathInfo;
+        }
+
+        void setServerName(String serverName) {
+            this.serverName = serverName;
         }
 
         @Override
@@ -837,7 +946,7 @@ public class TestWeb extends TestDb {
 
         @Override
         public String getServerName() {
-            return null;
+            return serverName;
         }
 
         @Override

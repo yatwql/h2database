@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -577,6 +577,30 @@ public class WebServer implements Service {
 
     String getExternalNames() {
         return externalNames;
+    }
+
+    /**
+     * Check if the host name from the Host header of a request is a name of
+     * this server.
+     *
+     * @param host the host name in lower case, without port
+     * @return true if requests with this host name may be served
+     */
+    boolean isAllowedHost(String host) {
+        if (host.equals(getHost()) ||
+                host.equals("localhost") ||
+                host.equals("127.0.0.1") ||
+                host.equals("[::1]")) {
+            return true;
+        }
+        if (externalNames != null && !externalNames.isEmpty()) {
+            for (String s : externalNames.split(",")) {
+                if (host.equals(s.trim())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     void setSSL(boolean b) {

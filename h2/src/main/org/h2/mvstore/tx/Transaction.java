@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -161,6 +161,12 @@ public final class Transaction {
     private volatile boolean notificationRequested;
 
     /**
+     * Value of {@link TransactionStore#rollbackCounter} after the last
+     * rollback (to a savepoint) of this transaction, or 0.
+     */
+    volatile long lastRollback;
+
+    /**
      * RootReferences for undo log snapshots
      */
     private RootReference<Long,Record<?,?>>[] undoLogRootReferences;
@@ -177,8 +183,8 @@ public final class Transaction {
 
 
     Transaction(TransactionStore store, int transactionId, long sequenceNum, int status,
-                String name, long logId, int timeoutMillis, int ownerId,
-                IsolationLevel isolationLevel, TransactionStore.RollbackListener listener) {
+                String name, long logId, int timeoutMillis, int ownerId, IsolationLevel isolationLevel,
+                TransactionStore.RollbackListener listener, MVStore.TxCounter txCounter) {
         this.store = store;
         this.transactionId = transactionId;
         this.sequenceNum = sequenceNum;
@@ -188,6 +194,7 @@ public final class Transaction {
         this.ownerId = ownerId;
         this.isolationLevel = isolationLevel;
         this.listener = listener;
+        this.txCounter = txCounter;
     }
 
     public int getId() {
@@ -391,7 +398,9 @@ public final class Transaction {
     /**
      * Add a log entry.
      *
-     * @param logRecord to append
+     * @param mapId the map ID this change belongs to
+     * @param key the key of the changed entry
+     * @param oldValue the old value of the changed entry
      *
      * @return key for the newly added undo log entry
      */
@@ -539,7 +548,6 @@ public final class Transaction {
         try {
             store.rollbackTo(this, logId, savepointId);
         } finally {
-            notifyAllWaitingTransactions();
             long expectedState = composeState(STATUS_ROLLING_BACK, logId, hasRollback(lastState));
             long newState = composeState(STATUS_OPEN, savepointId, true);
             do {
@@ -640,7 +648,8 @@ public final class Transaction {
      * Transition this transaction into a closed state.
      */
     void closeIt() {
-        transactionMaps.clear();
+        // ensure this cleanup if transaction was not used with markStatement/TransactionEnd
+        releaseSnapshot();
         long lastState = setStatus(STATUS_CLOSED);
         if (getStatus(lastState) != STATUS_CLOSED) {
             store.store.deregisterVersionUsage(txCounter);
@@ -663,16 +672,36 @@ public final class Transaction {
      * @param mapName name of the map containing blocking entry
      * @param key of the blocking entry
      * @param timeoutMillis timeout in milliseconds, {@code -1} for default
-     * @return true if other transaction was closed and this one can proceed, false if timed out
+     * @return true if other transaction was committed or rolled back, and this one can proceed, false if timed out
      */
     public boolean waitFor(Transaction toWaitFor, String mapName, Object key, int timeoutMillis) {
+        return waitFor(toWaitFor, mapName, key, timeoutMillis, store.rollbackCounter.get());
+    }
+
+    /**
+     * Make this transaction to wait for the specified transaction to be closed,
+     * or to roll back to a savepoint, because both of them try to modify the
+     * same map entry.
+     *
+     * @param toWaitFor transaction to wait for
+     * @param mapName name of the map containing blocking entry
+     * @param key of the blocking entry
+     * @param timeoutMillis timeout in milliseconds, {@code -1} for default
+     * @param rollbackCount value of {@link TransactionStore#rollbackCounter}
+     *            read before the blocking entry was read
+     * @return true if other transaction was committed or rolled back
+     *         (possibly to a savepoint), and this one should retry, false if
+     *         timed out
+     */
+    boolean waitFor(Transaction toWaitFor, String mapName, Object key, int timeoutMillis, long rollbackCount) {
         blockingTransaction = toWaitFor;
         blockingMapName = mapName;
         blockingKey = key;
         if (isDeadlocked(toWaitFor)) {
             tryThrowDeadLockException(false);
         }
-        boolean result = toWaitFor.waitForThisToEnd(timeoutMillis == -1 ? this.timeoutMillis : timeoutMillis, this);
+        boolean result = toWaitFor.waitForThisToEnd(timeoutMillis == -1 ? this.timeoutMillis : timeoutMillis, this,
+                rollbackCount);
         blockingMapName = null;
         blockingKey = null;
         blockingTransaction = null;
@@ -698,13 +727,32 @@ public final class Transaction {
                 }
                 Transaction btx = youngest.blockingTransaction;
                 if (btx != null) {
-                    youngest.setStatus(STATUS_ROLLING_BACK);
-                    btx.notifyAllWaitingTransactions();
+                    if (youngest.markAsDeadlockVictim()) {
+                        btx.notifyAllWaitingTransactions();
+                    }
                     return false;
                 }
             }
         }
         return false;
+    }
+
+    /**
+     * Changes the status of this transaction to rolling back, if it is still open.
+     * It may have ended in the meantime, for example as the victim of its own deadlock detection.
+     *
+     * @return true if the status was changed
+     */
+    private boolean markAsDeadlockVictim() {
+        long currentState;
+        do {
+            currentState = statusAndLogId.get();
+            if (getStatus(currentState) != STATUS_OPEN) {
+                return false;
+            }
+        } while (!statusAndLogId.compareAndSet(currentState,
+                composeState(STATUS_ROLLING_BACK, getLogId(currentState), hasRollback(currentState))));
+        return true;
     }
 
     private void tryThrowDeadLockException(boolean throwIt) {
@@ -726,13 +774,12 @@ public final class Transaction {
         }
     }
 
-    private synchronized boolean waitForThisToEnd(int millis, Transaction waiter) {
+    private synchronized boolean waitForThisToEnd(int millis, Transaction waiter, long rollbackCount) {
         long time = System.nanoTime();
         notificationRequested = true;
-        long state;
-        int status;
-        while ((status = getStatus(state = statusAndLogId.get())) != STATUS_CLOSED
-                && status != STATUS_COMMITTED && status != STATUS_ROLLED_BACK && !hasRollback(state)) {
+        // A rollback flag in the state cannot be used here: it stays set after
+        // the first rollback to savepoint and the waiter would never wait.
+        while (isActive(getStatus()) && lastRollback <= rollbackCount) {
             if (waiter.getStatus() != STATUS_OPEN) {
                 waiter.tryThrowDeadLockException(true);
             }

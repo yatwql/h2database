@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -113,9 +113,20 @@ public final class JsonConstructorFunction extends OperationN implements Express
 
     @Override
     public Expression optimize(SessionLocal session) {
+        Subquery byQuery = null;
+        if (array && args.length == 1) {
+            Expression arg0 = args[0];
+            if (arg0 instanceof Format) {
+                arg0 = arg0.getSubexpression(0);
+            }
+            if (arg0 instanceof Subquery) {
+                byQuery = (Subquery) arg0;
+                byQuery.setAllRows();
+            }
+        }
         boolean allConst = optimizeArguments(session, true);
         type = TypeInfo.TYPE_JSON;
-        if (allConst) {
+        if (allConst || byQuery != null && byQuery.getQuery().isConstantQuery()) {
             return TypedValueExpression.getTypedIfNull(getValue(session), type);
         }
         return this;

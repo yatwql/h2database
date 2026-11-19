@@ -1,4 +1,4 @@
--- Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+-- Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
 -- and the EPL 1.0 (https://h2database.com/html/license.html).
 -- Initial Developer: H2 Group
 --
@@ -35,6 +35,24 @@ SELECT COLUMN_NAME, REMARKS FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '
 > C           null
 > D           null
 > rows: 4
+
+CREATE VIEW TEST_VIEW AS SELECT A FROM TEST;
+> ok
+
+COMMENT ON VIEW TEST_VIEW IS 'view comment';
+> ok
+
+COMMENT ON COLUMN TEST_VIEW.A IS 'view column comment';
+> exception FEATURE_NOT_SUPPORTED_1
+
+SELECT REMARKS FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'TEST_VIEW';
+>> null
+
+DROP VIEW TEST_VIEW;
+> ok
+
+COMMENT ON COLUMN INFORMATION_SCHEMA.TABLES.TABLE_NAME IS 'system table column comment';
+> exception FEATURE_NOT_SUPPORTED_1
 
 DROP TABLE TEST;
 > ok

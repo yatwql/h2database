@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -551,8 +551,9 @@ public final class SessionLocal extends Session implements TransactionStore.Roll
 
     public void setLockTimeout(int lockTimeout) {
         this.lockTimeout = lockTimeout;
-        if (hasTransaction()) {
-            transaction.setTimeoutMillis(lockTimeout);
+        Transaction tx = transaction;
+        if (tx != null) {
+            tx.setTimeoutMillis(lockTimeout);
         }
     }
 
@@ -685,10 +686,11 @@ public final class SessionLocal extends Session implements TransactionStore.Roll
      */
     public void commit(boolean ddl) {
         beforeCommitOrRollback();
-        if (hasTransaction()) {
+        Transaction tx = transaction;
+        if (tx != null) {
             try {
                 markUsedTablesAsUpdated();
-                transaction.commit();
+                tx.commit();
                 markUsedTablesAsUpdated();
                 removeTemporaryLobs(true);
                 endTransaction();
@@ -737,14 +739,21 @@ public final class SessionLocal extends Session implements TransactionStore.Roll
             HashSet<Table> tablesToAnalyzeLocal = tablesToAnalyze;
             tablesToAnalyze = null;
             int rowCount = getDatabase().getSettings().analyzeSample / 10;
-            for (Table table : tablesToAnalyzeLocal) {
-                Analyze.analyzeTable(this, table, rowCount, false);
+            try {
+                for (Table table : tablesToAnalyzeLocal) {
+                    Analyze.analyzeTable(this, table, rowCount, false);
+                }
+                // table analysis opens a new transaction(s),
+                // so we need to commit afterward whatever leftovers might be
+                commit(true);
+            } catch (Throwable t) {
+                // failure is ignored, since it is an optional operation
+                getTrace().error(t, "Error analyzing tables");
+                rollback();
+            } finally {
+                // analyze can lock the meta
+                getDatabase().unlockMeta(this);
             }
-            // analyze can lock the meta
-            getDatabase().unlockMeta(this);
-            // table analysis opens a new transaction(s),
-            // so we need to commit afterward whatever leftovers might be
-            commit(true);
         }
     }
 
@@ -794,7 +803,8 @@ public final class SessionLocal extends Session implements TransactionStore.Roll
             getDatabase().releaseDatabaseObjectIds(idsToRelease);
             idsToRelease = null;
         }
-        if (hasTransaction() && !transaction.allowNonRepeatableRead()) {
+        Transaction tx = transaction;
+        if (tx != null && !tx.allowNonRepeatableRead()) {
             snapshotDataModificationId = getDatabase().getNextModificationDataId();
         }
     }
@@ -814,9 +824,7 @@ public final class SessionLocal extends Session implements TransactionStore.Roll
      */
     public void rollback() {
         beforeCommitOrRollback();
-        if (hasTransaction()) {
-            rollbackTo(null);
-        }
+        rollbackTo(null);
         idsToRelease = null;
         cleanTempTables(false);
         if (autoCommitAtTransactionEnd) {
@@ -833,13 +841,14 @@ public final class SessionLocal extends Session implements TransactionStore.Roll
      */
     public void rollbackTo(Savepoint savepoint) {
         int index = savepoint == null ? 0 : savepoint.logIndex;
-        if (hasTransaction()) {
+        Transaction tx = transaction;
+        if (tx != null) {
             markUsedTablesAsUpdated();
             if (savepoint == null) {
-                transaction.rollback();
+                tx.rollback();
                 transaction = null;
             } else {
-                transaction.rollbackToSavepoint(savepoint.transactionSavepoint);
+                tx.rollbackToSavepoint(savepoint.transactionSavepoint);
             }
             markUsedTablesAsUpdated();
         }
@@ -855,7 +864,7 @@ public final class SessionLocal extends Session implements TransactionStore.Roll
         }
 
         // Because cache may have captured query result (in Query.lastResult),
-        // which is based on data from uncommitted transaction.,
+        // which is based on data from uncommitted transaction.
         // It is not valid after rollback, therefore cache has to be cleared.
         if (queryCache != null) {
             queryCache.clear();
@@ -864,7 +873,8 @@ public final class SessionLocal extends Session implements TransactionStore.Roll
 
     @Override
     public boolean hasPendingTransaction() {
-        return containsUncommitted() && transaction.getStatus() != Transaction.STATUS_PREPARED;
+        Transaction tx = transaction;
+        return containsUncommitted(tx) && tx.getStatus() != Transaction.STATUS_PREPARED;
     }
 
     /**
@@ -964,7 +974,9 @@ public final class SessionLocal extends Session implements TransactionStore.Roll
 
     /**
      * Checks if table was updated within current transaction.
+     *
      * @param table to check
+     * @return whether the table was updated within current transaction
      */
     public boolean isUpdatedInCurrentTransaction(Table table) {
         return updates.contains(table);
@@ -979,10 +991,6 @@ public final class SessionLocal extends Session implements TransactionStore.Roll
         locks.remove(t);
     }
 
-
-    private boolean hasTransaction() {
-        return transaction != null;
-    }
 
     private void unlockAll() {
         if (!locks.isEmpty()) {
@@ -1115,12 +1123,13 @@ public final class SessionLocal extends Session implements TransactionStore.Roll
     }
 
     /**
-     * Whether the session contains any uncommitted changes.
+     * Whether the transaction contains any uncommitted changes.
+     * @param tx to check
      *
      * @return true if yes
      */
-    public boolean containsUncommitted() {
-        return hasTransaction() && transaction.hasChanges();
+    private static boolean containsUncommitted(Transaction tx) {
+        return tx != null && tx.hasChanges();
     }
 
     /**
@@ -1608,10 +1617,11 @@ public final class SessionLocal extends Session implements TransactionStore.Roll
     }
 
     public Value getTransactionId() {
-        if (!containsUncommitted()) {
+        Transaction tx = transaction;
+        if (!containsUncommitted(tx)) {
             return ValueNull.INSTANCE;
         }
-        return ValueVarchar.get(Long.toString(transaction.getSequenceNum()));
+        return ValueVarchar.get(Long.toString(tx.getSequenceNum()));
     }
 
     /**
@@ -1729,8 +1739,9 @@ public final class SessionLocal extends Session implements TransactionStore.Roll
      */
     public void endStatement() {
         setCurrentCommand(null);
-        if (hasTransaction()) {
-            transaction.markStatementEnd();
+        Transaction tx = transaction;
+        if (tx != null) {
+            tx.markStatementEnd();
         }
         startStatement = -1;
         statementModificationDataId = 0L;
@@ -1796,7 +1807,8 @@ public final class SessionLocal extends Session implements TransactionStore.Roll
     }
 
     public int getBlockingSessionId() {
-        return hasTransaction() ? transaction.getBlockerId() : 0;
+        Transaction tx = transaction;
+        return tx != null ? tx.getBlockerId() : 0;
     }
 
     @Override

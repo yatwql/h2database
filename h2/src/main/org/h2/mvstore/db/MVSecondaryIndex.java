@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -7,7 +7,6 @@ package org.h2.mvstore.db;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import org.h2.api.ErrorCode;
@@ -351,8 +350,8 @@ public final class MVSecondaryIndex extends MVIndex<SearchRow, Value> {
     }
 
     @Override
-    public Cursor findNext(SessionLocal session, SearchRow higherThan, SearchRow last) {
-        return find(session, higherThan, true, last, false);
+    public Cursor findNext(SessionLocal session, SearchRow higherThan, SearchRow last, boolean reverse) {
+        return find(session, higherThan, true, last, reverse);
     }
 
     /**

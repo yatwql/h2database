@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -81,7 +81,9 @@ public class TestDatabaseEventListener extends TestDb {
     }
 
     private void testInit() throws SQLException {
-        if (config.cipher != null || config.memory) {
+        // a listener set by a remote client is ignored when the database is
+        // opened
+        if (config.cipher != null || config.memory || config.networked) {
             return;
         }
         deleteDb("databaseEventListener");

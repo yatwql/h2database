@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -72,7 +72,6 @@ public final class LobStorageMap implements LobStorageInterface
     /**
      * The lob metadata map for temporary lobs. It contains the mapping from the lob id
      * (which is a long) to the stream store id (which is a byte array).
-     *
      * Key: lobId (long)
      * Value: streamStoreId (byte[])
      */
@@ -202,7 +201,7 @@ public final class LobStorageMap implements LobStorageInterface
     public ValueClob createClob(Reader reader, long maxLength) {
         MVStore.TxCounter txCounter = mvStore.registerVersionUsage();
         try {
-            // we multiple by 3 here to get the worst-case size in bytes
+            // we multiply by 3 here to get the worst-case size in bytes
             if (maxLength != -1
                     && maxLength * 3 <= database.getMaxLengthInplaceLob()) {
                 char[] small = new char[(int) maxLength];

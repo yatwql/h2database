@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -1384,7 +1384,7 @@ public class StringUtils {
     }
 
     /**
-     * Case-sensitive check if a {@param text} starts with a {@param prefix}.
+     * Case-sensitive check if a {@code  text} starts with a {@code  prefix}.
      * It only calls {@code String.startsWith()} and is only here for API consistency
      *
      * @param text the full text starting with a prefix
@@ -1396,7 +1396,7 @@ public class StringUtils {
     }
 
     /**
-     * Case-Insensitive check if a {@param text} starts with a {@param prefix}.
+     * Case-Insensitive check if a {@code  text} starts with a {@code  prefix}.
      *
      * @param text the full text starting with a prefix
      * @param prefix the full text starting with a prefix

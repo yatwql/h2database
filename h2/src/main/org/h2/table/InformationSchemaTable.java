@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -174,6 +174,8 @@ public final class InformationSchemaTable extends MetaTable {
         super(schema, id, type);
         Column[] cols;
         String indexColumnName = null;
+        // the generator uses the value of the index column to find the objects instead of walking all of them
+        boolean indexLookup = false;
         boolean isView = true;
         switch (type) {
         // Standard table
@@ -260,6 +262,7 @@ public final class InformationSchemaTable extends MetaTable {
                     column("REMARKS"), //
             };
             indexColumnName = "TABLE_NAME";
+            indexLookup = true;
             break;
         case COLUMN_PRIVILEGES:
             setMetaTableName("COLUMN_PRIVILEGES");
@@ -576,6 +579,7 @@ public final class InformationSchemaTable extends MetaTable {
                     column("ROW_COUNT_ESTIMATE", TypeInfo.TYPE_BIGINT), //
             };
             indexColumnName = "TABLE_NAME";
+            indexLookup = true;
             break;
         case TABLE_CONSTRAINTS:
             setMetaTableName("TABLE_CONSTRAINTS");
@@ -652,6 +656,7 @@ public final class InformationSchemaTable extends MetaTable {
                     column("REMARKS"), //
             };
             indexColumnName = "TABLE_NAME";
+            indexLookup = true;
             break;
         // Extensions
         case CONSTANTS:
@@ -718,6 +723,7 @@ public final class InformationSchemaTable extends MetaTable {
                     column("INDEX_CLASS"), //
             };
             indexColumnName = "TABLE_NAME";
+            indexLookup = true;
             break;
         case INDEX_COLUMNS:
             setMetaTableName("INDEX_COLUMNS");
@@ -736,6 +742,7 @@ public final class InformationSchemaTable extends MetaTable {
                     column("IS_UNIQUE", TypeInfo.TYPE_BOOLEAN), //
             };
             indexColumnName = "TABLE_NAME";
+            indexLookup = true;
             break;
         case IN_DOUBT:
             setMetaTableName("IN_DOUBT");
@@ -864,8 +871,9 @@ public final class InformationSchemaTable extends MetaTable {
         } else {
             indexColumn = getColumn(database.sysIdentifier(indexColumnName)).getColumnId();
             IndexColumn[] indexCols = IndexColumn.wrap(new Column[] { cols[indexColumn] });
-            metaIndex = new MetaIndex(this, indexCols, false);
+            metaIndex = new MetaIndex(this, indexCols, false, indexLookup);
         }
+        setIndexes();
         this.isView = isView;
     }
 
@@ -2561,6 +2569,9 @@ public final class InformationSchemaTable extends MetaTable {
     }
 
     private void queryStatistics(SessionLocal session, ArrayList<Row> rows) {
+        if (!session.getUser().isAdmin()) {
+            return;
+        }
         QueryStatisticsData control = database.getQueryStatisticsData();
         if (control != null) {
             for (QueryStatisticsData.QueryEntry entry : control.getQueries()) {

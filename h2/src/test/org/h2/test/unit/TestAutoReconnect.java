@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -53,6 +53,7 @@ public class TestAutoReconnect extends TestDb {
 
     @Override
     public void test() throws Exception {
+        testFailedInitServerLeak();
         testWrongUrl();
         autoServer = true;
         testReconnect();
@@ -179,6 +180,26 @@ public class TestAutoReconnect extends TestDb {
             connServer.close();
         } else {
             server.stop();
+        }
+    }
+
+    private void testFailedInitServerLeak() throws Exception {
+        deleteDb(getTestName());
+        String dbName = getBaseDir() + "/" + getTestName();
+
+        //Fetching active servers via Reflection
+        java.lang.reflect.Field serversField = org.h2.server.TcpServer.class.getDeclaredField("SERVERS");
+        serversField.setAccessible(true);
+        java.util.Map<?, ?> servers = (java.util.Map<?, ?>) serversField.get(null);
+
+        int serversBefore = servers.size();
+        // Throws UnsupportedOperationException
+        try {
+            assertThrows(ErrorCode.GENERAL_ERROR_1,
+                    () -> getConnection("jdbc:h2:" + dbName + ";AUTO_SERVER=TRUE;MV_STORE=FALSE"));
+        } finally {
+            assertEquals(serversBefore, servers.size());
+            deleteDb(getTestName());
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -78,7 +78,7 @@ public class SpatialKey extends Value implements Spatial {
 
     @Override
     public int hashCode() {
-        return (int) ((id >>> 32) ^ id);
+        return Long.hashCode(id);
     }
 
     @Override
@@ -98,7 +98,6 @@ public class SpatialKey extends Value implements Spatial {
     @Override
     public int compareTypeSafe(Value v, CompareMode mode, CastDataProvider provider) {
         throw new UnsupportedOperationException();
-//        return 0;
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 H2 Group. Multiple-Licensed under the MPL 2.0,
+ * Copyright 2004-2026 H2 Group. Multiple-Licensed under the MPL 2.0,
  * and the EPL 1.0 (https://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
@@ -33,8 +33,17 @@ public class RuleRepeat implements Rule {
     @Override
     public boolean autoComplete(Sentence sentence) {
         sentence.stopIfRequired();
-        while (rule.autoComplete(sentence)) {
-            // nothing to do
+        for (int last = sentence.getQuery().length();;) {
+            if (!rule.autoComplete(sentence)) {
+                break;
+            }
+            int length = sentence.getQuery().length();
+            if (length >= last) {
+                // a nullable inner rule matched without consuming any
+                // character, repeating it again cannot make progress
+                break;
+            }
+            last = length;
         }
         String s = sentence.getQuery();
         while (Bnf.startWithSpace(s)) {
