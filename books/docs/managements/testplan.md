@@ -157,6 +157,7 @@ python books/src/python/structure.py --gate-level p0  # 仅 p0
 | `portability.py` | 移植性：文本 `open()` 均显式 encoding；ASCII locale 下入口可运行 | 只管环境适配，不评判内容 |
 | `test_redundancy.py` | 测试套件卫生：重复用例体、无断言用例、非 TestCase 内的 test_*、同名遮蔽 | 只管测试代码，不判业务 |
 | `perf_baseline.py` | 交付速度：各步骤耗时与历史中位数对比，超阈值提示（默认 advisory） | 只管速度退化，不判正确性 |
+| 顺序依赖探测（order_dependence，人工触发） | 正序/逆序各跑一次，结果不同即报；不进 `check`，慢档执行 | 只管顺序敏感性，不判正确性 |
 | `typecheck.py` | pyright 静态类型检查 | 只管类型 |
 
 合并原则：目的相同且扫描面重叠 → 合并（`traces.py` 合并了原 `doc_traces` 与

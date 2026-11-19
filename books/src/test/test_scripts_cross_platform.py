@@ -54,7 +54,8 @@ class WrapperParityTest(unittest.TestCase):
         self.assertEqual(missing, [], f'PowerShell wrappers without a .sh twin: {missing}')
 
     def test_wrappers_target_the_same_entry_points(self):
-        entries = ('check_runner.py', 'release.py', 'scaffold.py', 'cli.py', 'make.py')
+        entries = ('check_runner.py', 'release.py', 'scaffold.py', 'cli.py', 'make.py',
+                   'order_dependence.py', 'perf_baseline.py', 'failure_extract.py')
         real = [n for n in self.shells() if n != 'bookctl.sh'] + self.powershells()
         for name in real:
             with self.subTest(script=name):
