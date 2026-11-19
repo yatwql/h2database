@@ -9,15 +9,15 @@
 books/
   data/                      # 输入数据：配置 + 手稿 + 机器维护的状态
     tmpl/
-      book.toml              # 内容组织：路径、章节顺序、标题与编号、包映射
-      case-studies.toml      # 案例流水线（scenario -> steps）
-      templates.toml         # 文体模板（章节骨架文案，文档侧）
+      book.toml              # 文档·结构：身份、路径、章节顺序、标题与编号、包映射
+      case-studies.toml      # 文档·案例：案例流水线（scenario -> steps）
+      templates.toml         # 文档·表述：四段引言与深读要点模板（占位符不可改）
     config/
-      base.json              # 基础配置：源码树、文件后缀/包前缀、状态与基线路径、工具链预算
-      style.json             # 书籍风格：展示文案、章节骨架、图注词表、写作阈值、生成模板
+      base.json              # 配置·基础：源码树、语言与后缀、包前缀、基线路径、预算、日志
+      style.json             # 配置·规则：图注词表、质量/文风阈值、禁用语、必备段落、预算上限
     language/
-      zh.json                # 语言包：章节骨架名、图注提示语、术语提示、标点规则
-    baselines/
+      zh.json                # 文档·名词：章节骨架名、练习提示语、术语行
+    baselines/                 # 机器维护的已知问题账本（非人写文档）
       ascii-baseline.json    # ASCII 图已知问题基线（--update-baseline 生成）
       source-symbol-baseline.json  # 源码符号漂移基线
     manuscript/              # 手稿（唯一可编辑的内容源）

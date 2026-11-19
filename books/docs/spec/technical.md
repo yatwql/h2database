@@ -104,11 +104,25 @@ app/        入口层：cli.py / tui.py / web.py + actions.py，只编排，不�
 - `audit/version_consistency.py` 校验三者可解析且一致；`make.py check` 必跑。
 - `app/cli.py status` 与 TUI 顶部同时显示三者：`工具 / 源码 / 文档`。
 
-## 13. 文档与配置分离
+## 13. 文件职责分类（权威定义）
 
-- **配置**（机器判定用）：`data/config/base.json`（基础设施）、`data/config/style.json`
-  （判定规则与阈值）、`data/config/llm_*.json`（模型路由）。
-- **文档**（叙述与人读用）：`data/tmpl/book.toml`（身份与章节组织）、
-  `data/tmpl/templates.toml`（文体模板）、`data/tmpl/case-studies.toml`（案例流水线）、
-  `data/language/<code>.json`（名称与提示语）。
-- 边界由 `style_schema.py` 强制：`style.json` 不得含 `generation.templates` 或 `project`。
+工具链只通过 `lib/_config.py` 读配置，但"配置"与"文档"严格分开，且"文档"里
+还要再分**结构 / 表述 / 名词**。下表是唯一权威定义，其他文档只做引用。
+
+| 文件 | 回答的问题 | 内容 | 归类 | 读取方 | 改错的后果 |
+|------|-----------|------|------|--------|-----------|
+| `data/tmpl/book.toml` | 这本书**是什么、怎么组织** | 书名/版本/产物名、`[project]` 展示文案、目录、章节清单与顺序、每条 H1 标题、H1 编号、覆盖归属、包→章节映射 | 文档·结构 | 规划期（outline）与全部阶段 | 章节/编号/索引/跨章引用错位，结构门禁直接拦 |
+| `data/tmpl/templates.toml` | 这本书**怎么表述** | 版图/类型/入口/路径四段引言 + 深读要点，含 `{num}{pkgs}{top}{dep}{share}` 占位符 | 文档·表述 | `ingest/chapters.py` 渲染章节时 | 措辞变化，不影响判定；占位符写错会被 `style_schema.py` 拒绝 |
+| `data/language/<code>.json` | 章节与练习的**名词与提示语** | 本章导读/小结/延伸思考/延展阅读的名字、`提示`/`回顾` 前缀、术语行与术语表链接 | 文档·名词 | 门禁匹配与生成器 | 门禁找不到段落，判为缺失 |
+| `data/config/style.json` | **判定规则与阈值** | 图注词表与预设、图示标记、质量/文风阈值、禁用语、必备段落名、篇幅预算、生成数量上限 | 配置·规则 | 全部门禁 | 阈值失效或误报；`style_schema.py` 先校验结构 |
+| `data/config/base.json` | **基础设施** | 源码树、语言与后缀、包前缀、状态/基线路径、日志、PDF/EPUB/ASCII/覆盖率预算 | 配置·基础 | 全部门禁与入口 | 找不到源码或产物路径 |
+| `data/config/llm_*.json` | **模型路由与参数** | provider、模型、场景/书籍/章节路由、thinking 强度、密钥环境变量名 | 配置·外部服务 | `lib/_llm.py` 与 `app/` | 调用越界或被 `llm_policy.py` 拦下 |
+
+记忆法：**结构看 `book.toml`，说法看 `templates.toml`，名词看语言包，判分看 `style.json`，
+找源码看 `base.json`，找模型看 `llm_*.json`。**
+
+边界由两道门禁强制：
+
+- `audit/style_schema.py`：`style.json` 不得含 `generation.templates` 或 `project`；
+  `templates.toml` 只允许已知键、占位符合法。
+- `audit/check_architecture.py`：脚本不得硬编码仓库路径，一律经 `_config` 取。

@@ -87,7 +87,7 @@ books/
 | 文档 | 内容 |
 | ------ | ------ |
 | [analysis-doc-standard.md](docs/spec/analysis-doc-standard.md) | 源码分析文档的通用内容标准与验收清单 |
-| [technical.md](docs/spec/technical.md) | 工具链架构约束（分层、契约、命名、日志、环境） |
+| [technical.md](docs/spec/technical.md) | 工具链架构约束；§13 是文件职责分类的权威定义（结构/表述/名词 vs 规则/基础/外部服务） |
 | [toolchain-design.md](docs/plan/toolchain-design.md) | 流水线与配置模型的设计说明 |
 
 **管理文档（`docs/managements/`）**

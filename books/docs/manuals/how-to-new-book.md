@@ -8,7 +8,8 @@ books/scripts/bookctl new ../my-book-en --lang en --title "My Book"
 books/scripts/bookctl new ../copy --title "副本" --from-manuscript   # 连章节一起复制
 ```
 
-脚手架会生成下面 9 个文件，**它们职责不同、不能互相顶替**：
+脚手架会生成下面这些文件，**它们职责不同、不能互相顶替**（权威定义见
+[`technical.md §13`](../spec/technical.md)）：
 
 | 文件 | 回答的问题 | 内容 | 新建/翻译时怎么改 |
 |------|-----------|------|------------------|
