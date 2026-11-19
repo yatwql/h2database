@@ -132,3 +132,12 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 python books/src/python/make.py check    # 配置一致性、门禁全量
 python books/src/python/make.py doctor   # 依赖与环境
 ```
+
+## 7. 三个版本
+
+- **工具版本**：`lib/_version.py`（或被 `base.json [sources].tool_version` 覆盖）。
+- **源码版本**：`base.json [sources].version` 优先，否则读源码清单（pom/pyproject/Cargo）。
+- **文档版本**：`book.toml [book].version`；管理文档头的 `> 版本：vX` 必须与之一致。
+
+`bk status` 会打印 `versions : tool … source … doc …`，合并稿首行写
+`<!-- versions: … -->` manifest，`make.py check` 里的 `versions` 门禁负责校验。

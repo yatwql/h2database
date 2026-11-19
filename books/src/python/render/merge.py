@@ -55,6 +55,9 @@ for ch_path in chapters:
     lines = content.count('\n')
     total_lines += lines
     print(f'{ch_path}: {lines} lines')
-_fsutil.write_text(output, ''.join(parts))
+versions = _config.versions()
+manifest = (f"<!-- versions: tool={versions['tool']} source={versions['source']} "
+            f"doc={versions['doc']} -->\n\n")
+_fsutil.write_text(output, manifest + ''.join(parts))
 
 print(f'\nTotal: {total_lines} lines written to {output}')

@@ -45,7 +45,7 @@ def _reload() -> None:
     fresh = importlib.import_module('lib._config')
     _config = fresh
     if lib is not None:
-        lib._config = fresh
+        vars(lib)['_config'] = fresh
 
 
 def _read_toml_value(path: str, section: str, field: str) -> str | None:
@@ -166,4 +166,7 @@ def summary() -> dict:
         'languages': ','.join(_config.source_languages()),
         'log_level': get('log.level') if 'log.level' in SPEC else '',
         'llm_provider': get('llm.provider'),
+        'tool_version': _config.versions()['tool'],
+        'source_version': _config.versions()['source'],
+        'doc_version': _config.versions()['doc'],
     }

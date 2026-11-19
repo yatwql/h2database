@@ -87,3 +87,19 @@ app/        入口层：cli.py / tui.py / web.py + actions.py，只编排，不�
   `audit/` 门禁一律不得调用；策略清单在 `llm_settings.json [policy]`。
 - **强度**：路由可按场景/书籍/章节指定 `thinking`（`off|low|medium|high`），
   缺省 `low`；强度随请求传为 `reasoning_effort`。
+
+## 12. 三个版本
+
+| 版本 | 来源 | 含义 | 谁改 |
+|------|------|------|------|
+| 工具版本 | `lib/_version.py`（或被 `[sources].tool_version` 覆盖） | 工具链自身 | 改工具的开发者，semver |
+| 源码版本 | `[sources].version`，否则读源码清单（pom.xml / pyproject.toml / Cargo.toml） | 被分析的那份源码 | 上游升级时自动变化 |
+| 文档版本 | `book.toml [book].version` | 这本书/这份手稿 | 内容迭代时 |
+
+约束：
+
+- 合并 Markdown 首行写 manifest：`<!-- versions: tool=… source=… doc=… -->`；
+  该行与空白分隔不计入手稿行数（`structure.py` 已排除）。
+- 管理文档头 `> 版本：vX` 必须等于文档版本。
+- `audit/version_consistency.py` 校验三者可解析且一致；`make.py check` 必跑。
+- `app/cli.py status` 与 TUI 顶部同时显示三者：`工具 / 源码 / 文档`。

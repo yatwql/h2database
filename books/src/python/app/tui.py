@@ -49,6 +49,8 @@ def header() -> str:
         f"│ 产物  {info['dist']:<58}│",
         (f"│ 语言  {info['languages']:<14}日志 {info['log_level']:<8}"
         f"LLM {info['llm_provider']:<16}│"),
+        (f"│ 版本  工具 {info['tool_version']:<8}源码 {info['source_version']:<14}"
+         f"文档 {info['doc_version']:<8}│"),
         _c(f"└{'─' * width}┘", '36;1'),
     ]
     return '\n'.join(rows)

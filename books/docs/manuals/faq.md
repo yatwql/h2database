@@ -50,6 +50,14 @@
 上游源码变了。跑 `source_refs.py --suggest` 看改名建议，复核后用
 `--update-baseline` 记账（基线在 `data/baselines/`）。
 
+## 版本
+
+**Q：三个版本分别在哪改？**
+工具版本在 `lib/_version.py`（semver，改工具时 bump）；源码版本自动取
+`[sources].version` 或源码清单（pom/pyproject/Cargo），也可显式覆盖；文档版本在
+`book.toml [book].version`。三者由 `version_consistency.py` 校验，`bk status`
+与 TUI 顶部都会显示 `工具 / 源码 / 文档`。
+
 ## 交付
 
 **Q：产物在哪？为什么 `git status` 看不到？**

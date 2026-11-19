@@ -44,8 +44,11 @@ def _make(*args: str) -> tuple[int, str]:
 
 def status() -> tuple[int, str]:
     """Book identity, configuration layers and LLM routing."""
+    versions = _config.versions()
     lines = [
         f"book      : {_config.TITLE or '(untitled)'} v{_config.VERSION}",
+        (f"versions  : tool {versions['tool']}  source {versions['source']}  "
+        f"doc {versions['doc']}"),
         f"manuscript: {_config.MANUSCRIPT_DIR}",
         f"dist      : {_config.DIST_DIR}",
         f"chapters  : {len(_config.chapter_files())} file(s)",

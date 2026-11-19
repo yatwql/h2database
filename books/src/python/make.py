@@ -46,6 +46,7 @@ STEPS: list[Step] = [
     ('architecture', 'audit/check_architecture.py', (), 'verify'),
     ('llm_policy', 'audit/llm_policy.py', (), 'verify'),
     ('gate_trace', 'audit/gate_trace.py', (), 'verify'),
+    ('versions', 'audit/version_consistency.py', (), 'verify'),
     ('typecheck', 'audit/typecheck.py', (), 'verify'),
     ('file_length', 'audit/file_length.py', (), 'verify'),
     ('script_contract', 'audit/script_contract.py', (), 'verify'),

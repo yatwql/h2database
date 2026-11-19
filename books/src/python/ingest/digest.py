@@ -34,6 +34,8 @@ def digest(root: str, selected: list[str] | None = None) -> dict:
     langs = selected or _config.source_languages()
     merged: dict = {
         'root': os.path.abspath(root),
+        'source_version': _config.source_version(root),
+        'tool_version': _config.tool_version(),
         'languages': langs,
         'totals': {'packages': 0, 'files': 0, 'lines': 0},
         'by_language': {},

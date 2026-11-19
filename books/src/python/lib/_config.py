@@ -263,6 +263,67 @@ def source_suffixes() -> list[str]:
     return sorted(set(found))
 
 
+def tool_version() -> str:
+    """The toolchain's own version (independent of book and source)."""
+    from lib._version import TOOL_VERSION
+    return str(SOURCES.get('tool_version') or TOOL_VERSION)
+
+
+def doc_version() -> str:
+    """The document/manuscript version (book.toml [book].version)."""
+    return VERSION
+
+
+def source_version(root: str | None = None) -> str:
+    """Version of the analyzed source tree.
+
+    Resolution order: explicit ``[sources].version`` in base.json, then the
+    language manifest of the configured source root (pom.xml / pyproject.toml /
+    Cargo.toml). Returns 'unknown' when nothing can be read.
+    """
+    explicit = SOURCES.get('version')
+    if explicit:
+        return str(explicit)
+    base = root or os.path.join(BOOK_ROOT, SOURCES.get('src_main', ''))
+    # manifests may sit next to the source root (maven) or inside it (rust/python)
+    candidates: list[str] = []
+    pom_root = SOURCES.get('pom_root')
+    if pom_root:
+        candidates.append(os.path.join(BOOK_ROOT, pom_root))
+    for folder in (base, os.path.dirname(base)):
+        for name in ('pom.xml', 'pyproject.toml', 'Cargo.toml'):
+            candidates.append(os.path.join(folder, name))
+    patterns = {
+        'pom.xml': r'<version>\s*([^<\s]+)\s*</version>',
+        'pyproject.toml': r'^\s*version\s*=\s*"([^"]+)"',
+        'Cargo.toml': r'^\s*version\s*=\s*"([^"]+)"',
+    }
+    for path in candidates:
+        if not os.path.isfile(path):
+            continue
+        detail = _source_version_from(path, patterns[os.path.basename(path)])
+        if detail:
+            return detail
+    return 'unknown'
+
+
+def _source_version_from(path: str, pattern: str) -> str:
+    """First regex capture in a manifest file (empty string when absent)."""
+    import re as _re
+    try:
+        with open(path, encoding='utf-8') as fh:
+            text = fh.read()
+    except OSError:
+        return ''
+    match = _re.search(pattern, text, _re.MULTILINE)
+    return match.group(1).strip() if match else ''
+
+
+def versions() -> dict[str, str]:
+    """The three versions the toolchain tracks."""
+    return {'tool': tool_version(), 'source': source_version(), 'doc': doc_version()}
+
+
 def missing_files() -> list[str]:
     """Configured chapter files that do not exist on disk."""
     names = list(_CFG.get('chapters', {}).get('files', []))

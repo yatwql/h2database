@@ -244,7 +244,12 @@ section('p0', 'Merged Doc')
 try:
     ALL_MD = CHAPTERS + [_config.manuscript('cover.md')]
     md_lines = sum(_count_lines(f) for f in ALL_MD)
-    merged_lines = _count_lines(os.path.join(dist_dir, 'h2-source-code-analysis.md'))
+    manifest_path = os.path.join(dist_dir, 'h2-source-code-analysis.md')
+    merged_text = _fsutil.read_text_raw(manifest_path)
+    # the first line carries the tool/source/doc manifest plus a blank separator;
+    # count only the manuscript content, the same way _count_lines does
+    content = merged_text.split('\n', 2)[2] if merged_text.startswith('<!-- versions:') else merged_text
+    merged_lines = content.count('\n')
     check(md_lines == merged_lines, f'Chapter files (+cover): {md_lines}, Merged: {merged_lines} ({"match" if md_lines == merged_lines else "MISMATCH"})')
 except FileNotFoundError:
     check(False, 'Merged doc not found')

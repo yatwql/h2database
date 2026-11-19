@@ -86,6 +86,7 @@ python books/src/python/structure.py --gate-level p0  # 仅 p0
 | EPUB 结构 | mimetype 首条且未压缩、container/OPF 可解析、manifest 与 spine 全部可解析、nav 链接全部命中、体积 ≤ `epub_max_mb` | `verify_epub.py` | P1 |
 | PDF 交付 | outline 与 HTML 标题逐一对应、outline 层级跟随标题层级、印刷 TOC 链接按序且在页内、字体全部嵌入、体积 ≤ `pdf_max_mb` | `verify_pdf.py --require-toc-links` | P1 |
 | LLM 边界 | LLM 只用于散文生成/评审场景；门禁与事实链路不得调用 | `llm_policy.py` | P1 |
+| 版本一致 | 工具/源码/文档三版本可解析，管理文档头与合并稿 manifest 一致 | `version_consistency.py` | P0 |
 | 架构约束 | 分层依赖方向、门禁只读、不硬编码路径、命名不遮蔽标准库 | `audit/check_architecture.py` | P0 |
 | 图号引用 | 图号唯一、正文引用可解析 | `figures.py` | P1 |
 | 章节均衡 | 每章行数/图数/坐标分布 | `balance.py` | P2 |
