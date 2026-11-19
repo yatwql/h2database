@@ -24,6 +24,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lib import _config, _fsutil
 
 STYLE_PATH = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'style.json')
+TEMPLATES_PATH = os.path.join(_config.BOOK_ROOT, 'data', 'tmpl', 'templates.toml')
+KNOWN_TEMPLATES = {'map_intro', 'types_intro', 'api_intro', 'path_intro', 'deep_dive'}
 KNOWN_TOP = {'_note', '_schema', 'project', 'sections', 'captions', 'diagrams',
              'quality', 'prose', 'generation', 'limits', 'thresholds'}
 REQUIRED = {
@@ -103,6 +105,20 @@ def validate(style: dict) -> list[str]:
     composite = prose.get('min_composite')
     if not isinstance(composite, (int, float)) or not 0 < composite <= 100:
         problems.append('[prose].min_composite must be within (0, 100]')
+
+    templates = _config.templates()
+    unknown_templates = set(templates) - KNOWN_TEMPLATES
+    if unknown_templates:
+        problems.append(f'templates: unknown keys {sorted(unknown_templates)}')
+    for key in ('map_intro', 'types_intro', 'api_intro', 'path_intro'):
+        if not isinstance(templates.get(key), str) or '{' not in templates.get(key, ''):
+            problems.append(f'templates.{key} must be a template string with placeholders')
+    if templates and not isinstance(templates.get('deep_dive'), list):
+        problems.append('templates.deep_dive must be a list of strings')
+    if (style.get('generation') or {}).get('templates'):
+        problems.append('style.json must not carry prose templates (move to data/tmpl/templates.toml)')
+    if 'project' in style:
+        problems.append('style.json must not carry display copy (belongs to book.toml [project])')
 
     for kind, values in (style.get('limits') or {}).items():
         if not isinstance(values, dict) or 'limit' not in values:

@@ -72,7 +72,7 @@ def first_public_method_line(rel_file: str, method: str) -> int | None:
 
 PKG_PREFIX = _config.SOURCES.get('package_prefix') or 'unknown'
 GEN = _config.POLICY.get('generation', {})
-TPL = GEN.get('templates', {})
+TPL = _config.templates()
 
 
 def tpl(key: str, fallback: str, **facts) -> str:

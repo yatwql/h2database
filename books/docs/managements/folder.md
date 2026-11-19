@@ -11,6 +11,7 @@ books/
     tmpl/
       book.toml              # 内容组织：路径、章节顺序、标题与编号、包映射
       case-studies.toml      # 案例流水线（scenario -> steps）
+      templates.toml         # 文体模板（章节骨架文案，文档侧）
     config/
       base.json              # 基础配置：源码树、文件后缀/包前缀、状态与基线路径、工具链预算
       style.json             # 书籍风格：展示文案、章节骨架、图注词表、写作阈值、生成模板
@@ -74,6 +75,8 @@ books/docs/managements/
 
 ## 3. 归属规则
 
+- **文档与配置分离**：判定规则/阈值在 `style.json`，叙述模板在 `templates.toml`，
+  名称与提示语在 `language/`，书籍身份与展示文案在 `book.toml`。
 - **配置分两层、只有一个入口**：内容组织看 `data/tmpl/book.toml`，工具链策略看
   `data/config/config.json`；脚本统一通过 `_config` 读取，禁止硬编码。
 - **基线与状态归 data**：`data/baselines/` 存放机器维护的已知问题记账，不放人写文档。

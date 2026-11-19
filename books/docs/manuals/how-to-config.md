@@ -92,11 +92,23 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 | `diagrams` | `markers` | ASCII 图的框线/箭头字符集 |
 | `quality` | 章节行数、表格行数、重复度、坐标密度、术语与练习下限 | 图书质量门禁阈值 |
 | `prose` | 句长/段落/列表/重复度的好与坏锚点、`min_composite`、`forbid_phrases` | 文风评分与禁用语 |
-| `generation` | 表格容量、练习数、清单条数、四段引言与深读要点模板 | 生成器的可调参数 |
+| `generation` | 表格容量、练习数、清单条数 | 生成器的数值上限（文案见 `templates.toml`） |
 | `limits` | `sources/tests/docs/manuscript` 的 `limit`/`warn` | 文件长度预算 |
 
 改完运行 `python books/src/python/make.py check`：`style_schema.py` 会先校验结构
 （未知键、缺字段、区间不合理都会失败），再由各门禁按新阈值执行。
+
+### 风格相关文件的归属（文档是文档，配置是配置）
+
+| 关注点 | 文件 | 属于 |
+|--------|------|------|
+| 判定规则与阈值（图注词表、质量/文风阈值、篇幅预算、必备段落名） | `data/config/style.json` | 配置 |
+| 文体文案（四段引言、深读要点等叙述模板） | `data/tmpl/templates.toml` | 文档 |
+| 名称与提示语（章节骨架名、练习提示/回顾前缀、术语行） | `data/language/zh.json` | 文档 |
+| 书籍身份与展示文案（书名、作者、页眉、产物名） | `data/tmpl/book.toml [book]/[project]` | 文档 |
+
+`style_schema.py` 会拒绝把叙述模板塞回 `style.json`（`generation.templates`）
+或把展示文案放进配置（`project`），保证两边不串味。
 
 ## 4. 语言包（language/zh.json）
 

@@ -138,6 +138,21 @@ def project(key: str, default: str = '') -> str:
     return str(PROJECT.get(key) or default)
 
 
+TEMPLATES_PATH = os.path.join(BOOK_ROOT, 'data', 'tmpl', 'templates.toml')
+
+
+def templates() -> dict:
+    """Prose templates (document side). Falls back to style.json for old books."""
+    try:
+        with open(TEMPLATES_PATH, 'rb') as fh:
+            data = tomllib.load(fh)
+    except FileNotFoundError:
+        return dict((POLICY.get('generation') or {}).get('templates') or {})
+    except tomllib.TOMLDecodeError as exc:
+        raise ConfigError(f'invalid TOML in {TEMPLATES_PATH}: {exc}') from exc
+    return data
+
+
 def manuscript(*parts: str) -> str:
     """Absolute path inside manuscript/."""
     return os.path.join(MANUSCRIPT_DIR, *parts)

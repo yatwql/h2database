@@ -103,3 +103,12 @@ app/        入口层：cli.py / tui.py / web.py + actions.py，只编排，不�
 - 管理文档头 `> 版本：vX` 必须等于文档版本。
 - `audit/version_consistency.py` 校验三者可解析且一致；`make.py check` 必跑。
 - `app/cli.py status` 与 TUI 顶部同时显示三者：`工具 / 源码 / 文档`。
+
+## 13. 文档与配置分离
+
+- **配置**（机器判定用）：`data/config/base.json`（基础设施）、`data/config/style.json`
+  （判定规则与阈值）、`data/config/llm_*.json`（模型路由）。
+- **文档**（叙述与人读用）：`data/tmpl/book.toml`（身份与章节组织）、
+  `data/tmpl/templates.toml`（文体模板）、`data/tmpl/case-studies.toml`（案例流水线）、
+  `data/language/<code>.json`（名称与提示语）。
+- 边界由 `style_schema.py` 强制：`style.json` 不得含 `generation.templates` 或 `project`。

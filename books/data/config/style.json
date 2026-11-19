@@ -1,6 +1,5 @@
 {
   "_note": "Book style: display copy, section skeleton, caption vocabulary, writing thresholds, generation templates.",
-  "project": {},
   "sections": {
     "per_chapter": [
       "本章导读",
@@ -97,18 +96,7 @@
     "max_classes_per_package": 4,
     "max_api_rows": 20,
     "exercises_per_chapter": 4,
-    "checklist_items": 5,
-    "templates": {
-      "map_intro": "第{num}章覆盖 {pkgs} 个包（{sig}）、{lines} 行实现；规模第一的是 `{top}`（{toplines} 行）。",
-      "types_intro": "在 `{top}` 之外，本章还有 {others} 个包；下表每包取前 {take} 个类型，按规模降序。",
-      "api_intro": "把 {pkgcount} 个包的关键入口与源码位置对应起来，共 {rows} 条坐标，行号由脚本核验。",
-      "path_intro": "读 `{top}` 的 {files} 个文件时，先看骨架类，再沿 `{dep}` 方向下钻。",
-      "deep_dive": [
-        "规模信号：`{top}` 占本章 {share}% 的实现行数，改动风险最高。",
-        "耦合信号：`{top}` 依赖 {deps} 个 `org.h2` 包，其中 `{dep}` 出现最频繁。",
-        "入口信号：`{big}` 的公开方法 {methods} 个，读它等于读本章的主干。"
-      ]
-    }
+    "checklist_items": 5
   },
   "thresholds": {
     "exercises_min_per_chapter": 3,
