@@ -83,8 +83,9 @@ def header() -> str:
     title_rest = (f" · {_config.app_name_zh()}  "
                   f"{_c('v' + info['tool_version'], PALETTE['hint'])}")
     product_plain = f' {_config.app_name()} · {_config.app_name_zh()}  v{info["tool_version"]}'
-    book_plain = f' {info["title"]}  v{info["version"]}'
-    book_line = (f' {_c(info["title"], PALETTE["book"])}'
+    book_plain = f' 书籍 {info["title"]}  v{info["version"]}'
+    book_line = (f' {_c("书籍", PALETTE["label"])} '
+                 f'{_c(info["title"], PALETTE["book"])}'
                  f'  {_c("v" + info["version"], PALETTE["hint"])}')
 
     inner = max(_width(product_plain), _width(book_plain),
