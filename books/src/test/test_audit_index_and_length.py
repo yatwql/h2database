@@ -82,12 +82,12 @@ class FileLengthUnitTest(unittest.TestCase):
             self.assertTrue(os.path.isabs(path))
             self.assertIsInstance(kind, str)
 
-    def test_main_passes_on_the_real_tree(self):
+    def test_main_reports_the_length_budgets(self):
         buffer = io.StringIO()
         with redirect_stdout(buffer):
             code = self.mod.main([])
         self.assertIn(code, (0, 1))
-        self.assertTrue(buffer.getvalue())
+        self.assertRegex(buffer.getvalue(), r'(budget|长度|行数|limit)')
 
     def test_json_output_lists_findings(self):
         buffer = io.StringIO()

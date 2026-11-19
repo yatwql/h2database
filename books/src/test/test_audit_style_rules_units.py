@@ -76,12 +76,12 @@ class StyleRulesUnitTest(unittest.TestCase):
                                      'detail': 'mixed spellings'}])
             self.assertTrue(self.mod.load_baseline())
 
-    def test_main_passes_on_the_real_tree(self):
+    def test_main_reports_the_rule_findings(self):
         buffer = io.StringIO()
         with redirect_stdout(buffer):
             code = self.mod.main([])
         self.assertIn(code, (0, 1))
-        self.assertTrue(buffer.getvalue())
+        self.assertTrue(buffer.getvalue().strip())
 
     def test_json_output_reports_findings(self):
         buffer = io.StringIO()

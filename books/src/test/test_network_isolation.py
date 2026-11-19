@@ -36,6 +36,8 @@ class NetworkGuardTest(unittest.TestCase):
         server.listen(1)
         self.addCleanup(server.close)
         client = socket.create_connection(server.getsockname(), timeout=2)
+        self.addCleanup(client.close)
+        self.assertGreaterEqual(client.fileno(), 0, 'loopback connection was not established')
         client.close()
 
 if __name__ == '__main__':

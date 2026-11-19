@@ -155,6 +155,7 @@ python books/src/python/structure.py --gate-level p0  # 仅 p0
 | `file_length.py` | 文件行数预算 | 只管规模 |
 | `gate_trace.py` | 门禁表与实现的双向可追溯 | 只管登记一致性 |
 | `portability.py` | 移植性：文本 `open()` 均显式 encoding；ASCII locale 下入口可运行 | 只管环境适配，不评判内容 |
+| `test_redundancy.py` | 测试套件卫生：重复用例体、无断言用例、非 TestCase 内的 test_*、同名遮蔽 | 只管测试代码，不判业务 |
 | `typecheck.py` | pyright 静态类型检查 | 只管类型 |
 
 合并原则：目的相同且扫描面重叠 → 合并（`traces.py` 合并了原 `doc_traces` 与

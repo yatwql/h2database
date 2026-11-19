@@ -166,6 +166,7 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `gate_trace.py` | `testplan.md` 门禁表与 `make.py` 步骤双向可追溯 | ● |
 | `typecheck.py` | pyright 静态检查（可选依赖，缺失时跳过） | ● |
 | `portability.py` | 移植性：`open()` 必须显式 encoding；`LC_ALL=C` + ASCII 输出下入口不得崩 | ● |
+| `test_redundancy.py` | 测试卫生：重复用例体 / 无断言 / 非 TestCase 的 test_* / 同名遮蔽 | ● |
 | `scorecard.py` | 六维评分汇总（`eval-score.sh` 的实现） | ● |
 
 ## 9. 交付渲染 `src/python/render/`

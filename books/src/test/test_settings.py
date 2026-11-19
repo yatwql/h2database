@@ -95,9 +95,10 @@ class TestTuiSurface(SettingsCase):
         for group in ('内容', '质量', '配置与状态'):
             self.assertIn(group, text)
 
-    def test_once_status_runs(self):
+    def test_once_status_shows_the_book_identity(self):
         code, out = _fixture.run_inproc(self.root, 'tui.py', '--once', 'status')
         self.assertEqual(code, 0, out[-300:])
+        self.assertIn('测试之书', out)
         self.assertIn('chapters', out)
 
     def test_quit_with_zero(self):

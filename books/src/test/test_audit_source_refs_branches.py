@@ -5,10 +5,12 @@ These exercise the error and edge branches (missing files, empty inputs,
 threshold violations, alternate CLI modes) that the happy-path tests skip.
 """
 
+import io
 import os
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 
 import _fixture
 
@@ -56,7 +58,12 @@ class TestSourceFreshnessReport(FixtureCase):
             sfc.Verification(ref_missing, 'MISSING', None, ''),
             sfc.Verification(ref_ok, 'ERROR', SOURCE_PATH, 'boom'),
         ]
-        sfc.print_report(results, {'A': [SOURCE_PATH], 'Dup': ['a', 'b']})
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            sfc.print_report(results, {'A': [SOURCE_PATH], 'Dup': ['a', 'b']})
+        report = buffer.getvalue()
+        for status in ('OK', 'OFFSET', 'ERROR'):
+            self.assertIn(status, report)
 
 if __name__ == '__main__':
     unittest.main()

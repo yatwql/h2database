@@ -6,10 +6,12 @@ end-to-end tests exercise only indirectly.
 """
 
 import importlib.util
+import io
 import os
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 
 import _fixture
 
@@ -62,7 +64,10 @@ class TestSmartAuditHelpers(FixtureCase):
 
     def test_check_figure_refs_runs(self):
         smart = self.module('smart')
-        smart.check_figure_refs()  # prints a report; must not raise
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            smart.check_figure_refs()
+        self.assertTrue(buffer.getvalue(), 'figure-refs report was silent')
 
 if __name__ == '__main__':
     unittest.main()

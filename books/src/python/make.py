@@ -50,6 +50,7 @@ STEPS: list[Step] = [
     ('versions', 'audit/version_consistency.py', (), 'verify'),
     ('typecheck', 'audit/typecheck.py', (), 'verify'),
     ('portability', 'audit/portability.py', (), 'verify'),
+    ('test_redundancy', 'audit/test_redundancy.py', (), 'verify'),
     ('style_schema', 'audit/style_schema.py', (), 'verify'),
     ('file_length', 'audit/file_length.py', (), 'verify'),
     ('script_contract', 'audit/script_contract.py', (), 'verify'),
