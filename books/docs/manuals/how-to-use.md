@@ -50,7 +50,7 @@ python books/src/python/make.py doctor     # 可选依赖检查（pandoc / playw
 ```bash
 python books/src/python/make.py check --only audit_links,audit_ascii
 python books/src/python/make.py build --timings
-python books/src/python/make.py deliver --skip generate_pdf
+python books/src/python/make.py deliver --skip to_pdf
 ```
 
 ## 3. 日常编辑流程

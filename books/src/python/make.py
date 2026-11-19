@@ -41,7 +41,7 @@ STEPS: list[Step] = [
     # ---- build ----
     ('cover_stats', 'manuscript/cover.py', (), 'build'),
     ('rebuild_merged', 'render/merge.py', (), 'build'),
-    ('generate_html', 'render/to_html.py', (), 'build'),
+    ('to_html', 'render/to_html.py', (), 'build'),
     # ---- verify ----
     ('architecture', 'audit/check_architecture.py', (), 'verify'),
     ('llm_policy', 'audit/llm_policy.py', (), 'verify'),
@@ -64,23 +64,23 @@ STEPS: list[Step] = [
     ('figure_clusters', 'audit/figure_clusters.py', (), 'verify'),
     ('audit_index_xrefs', 'audit/index_xrefs.py', (), 'verify'),
     ('balance_check', 'audit/balance.py', (), 'verify'),
-    ('source_freshness', 'audit/source_refs.py', (), 'verify'),
+    ('source_refs', 'audit/source_refs.py', (), 'verify'),
     ('readability', 'audit/readability.py', (), 'verify'),
     ('style', 'audit/style.py', (), 'verify'),
     ('style_rules', 'audit/style_rules.py', (), 'verify'),
     ('content_depth', 'audit/content_depth.py', (), 'verify'),
-    ('final_check', 'audit/structure.py', (), 'verify'),
+    ('structure', 'audit/structure.py', (), 'verify'),
     # ---- deliver ----
-    ('generate_pdf', 'render/to_pdf.py', (), 'deliver'),
+    ('to_pdf', 'render/to_pdf.py', (), 'deliver'),
     ('verify_pdf', 'render/verify_pdf.py', ('--require-toc-links',), 'deliver'),
-    ('generate_epub', 'render/to_epub.py', (), 'deliver'),
+    ('to_epub', 'render/to_epub.py', (), 'deliver'),
     ('verify_epub', 'render/verify_epub.py', (), 'deliver'),
 ]
 
 GROUPS = {
-    'build': ('cover_stats', 'rebuild_merged', 'generate_html'),
+    'build': ('cover_stats', 'rebuild_merged', 'to_html'),
     'verify': tuple(n for n, _s, _a, g in STEPS if g == 'verify'),
-    'deliver': ('generate_pdf', 'verify_pdf', 'generate_epub', 'verify_epub'),
+    'deliver': ('to_pdf', 'verify_pdf', 'to_epub', 'verify_epub'),
 }
 GROUPS['check'] = GROUPS['verify']
 GROUPS['test'] = ('unittest',)

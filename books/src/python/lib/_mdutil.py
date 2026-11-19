@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Markdown helpers shared by the HTML generator and the link audit.
 
-Keeping the anchor algorithm in one place is what makes ``generate_html``'s
+Keeping the anchor algorithm in one place is what makes ``to_html``'s
 ``<h2 id="...">`` and ``_audit_links``'s anchor check agree.
 """
 from __future__ import annotations
@@ -17,7 +17,7 @@ EXTERNAL_SCHEMES = ('http://', 'https://', 'mailto:', 'tel:', 'data:', 'ftp://')
 
 
 def slugify(title: str) -> str:
-    """GitHub-style heading anchor, matching what generate_html emits."""
+    """GitHub-style heading anchor, matching what to_html emits."""
     anchor = title.strip().lower()
     anchor = _SLUG_STRIP_RE.sub('', anchor)
     return anchor.replace(' ', '-')

@@ -65,7 +65,7 @@
 生成物，已 gitignore；需要时用 `make.py build|deliver` 重新生成。
 
 **Q：PDF 校验失败说 outline 数量不对？**
-PDF 是旧稿。重新 `make.py build` 后再 `generate_pdf`（或 `make.py deliver`）。
+PDF 是旧稿。重新 `make.py build` 后再 `to_pdf`（或 `make.py deliver`）。
 
 ## 日志
 

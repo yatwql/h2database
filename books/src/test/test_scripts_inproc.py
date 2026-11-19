@@ -88,7 +88,7 @@ class TestBuildScripts(ScriptTestBase):
         self.assertEqual(code, 0, out)
         self.assertTrue(os.path.isfile(self.path('dist', 'test-book.md')))
 
-    def test_generate_html_runs_after_merge(self):
+    def test_to_html_runs_after_merge(self):
         self.run_script('merge.py')
         code, out = self.run_script('to_html.py')
         self.assertEqual(code, 0, out)
@@ -144,7 +144,7 @@ class TestAuditScripts(ScriptTestBase):
         code, out = self.run_script('index.py', '--hierarchy-check')
         self.assertIn(code, (0, 1), out)
 
-    def test_source_freshness_handles_missing_source_tree(self):
+    def test_source_refs_handles_missing_source_tree(self):
         code, out = self.run_script('source_refs.py')
         self.assertIn(code, (0, 1), out)
         self.assertNotIn('Traceback', out)
@@ -202,7 +202,7 @@ class TestPdfToolchain(ScriptTestBase):
         self.run_script('to_html.py')
 
     @unittest.skipUnless(SLOW and HAS_PLAYWRIGHT, 'slow suite: set BOOK_SLOW=1')
-    def test_generate_pdf_then_verify(self):
+    def test_to_pdf_then_verify(self):
         code, out = self.run_script('to_pdf.py')
         self.assertIn(code, (0, 1), out)
         self.assertNotIn('Traceback', out)
@@ -284,7 +284,7 @@ class TestDeliveryScripts(ScriptTestBase):
         self.assertIn('EXISTS', out)
 
     @unittest.skipUnless(SLOW and HAS_PANDOC, 'slow suite: set BOOK_SLOW=1')
-    def test_generate_epub_smoke(self):
+    def test_to_epub_smoke(self):
         code, out = self.run_script('to_epub.py')
         self.assertIn(code, (0, 1), out)
         self.assertNotIn('Traceback', out)

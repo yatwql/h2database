@@ -2,7 +2,7 @@
 """
 Generate the **print-grade PDF** for the H2 documentation.
 
-This is the Phase G companion to ``to_pdf.py``. Unlike the standard
+This is the print-grade companion to ``to_pdf.py``. Unlike the standard
 PDF, the print-grade build adds:
 
 1. **TOC dot leaders** — every TOC entry on the printed contents page is

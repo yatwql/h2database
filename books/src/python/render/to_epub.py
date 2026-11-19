@@ -2,7 +2,7 @@
 """
 Generate the **EPUB** delivery for the H2 documentation.
 
-EPUB sits alongside the standard PDF and the Phase G print-grade PDF as
+EPUB sits alongside the standard PDF and the print-grade PDF as
 an *on-demand* delivery format: it is produced only at the final
 delivery stage, never as part of the daily MD/HTML pipeline.
 
@@ -30,6 +30,7 @@ import sys as _sys
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
 import contextlib
+import datetime
 import os
 import re
 import shutil
@@ -98,9 +99,9 @@ if not os.path.exists(merged_md):
 # ── Step 2: Extract title / version / author from cover.md ───────────────
 title = _config.project("display_title_en", _config.TITLE)
 subtitle = _config.project("display_title_zh", _config.TITLE)
-version = "v6.0"
+version = f'v{_config.VERSION}' if _config.VERSION else 'v1.0'
 author = "其·龙（Stallman Wang）"
-publish_date = "2026-06-15"
+publish_date = datetime.date.today().isoformat()
 
 if os.path.exists(cover_md):
     cover_text = _fsutil.read_text(cover_md)

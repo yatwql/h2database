@@ -26,6 +26,7 @@ TRACES: tuple[tuple[str, str], ...] = (
     ('retrospective', r'复盘|评审记录|评审发现'),
     ('batch', r'第\s*\d+\s*批|batch\s*\d+'),
     ('relative-time', r'本次(?:迭代|改动|提交)|上一轮|本轮|新加的|临时绕过'),
+    ('phase-label', r'Phase [A-H]\b|第[0-9一二三四五六七八九十]+轮'),
     ('migration-note', r'迁移自|由.{0,12}迁移|旧版本时|以前是'),
 )
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Comprehensive final delivery check for H2 documentation.
 
-Gate levels (introduced in v6.0 / Phase H):
+Gate levels:
 
 - ``p0`` — foundational integrity & renderer correctness (figure numbering,
   cross-refs, code-fence balance, heading hierarchy, UTF-8, HTML TOC,
@@ -11,7 +11,7 @@ Gate levels (introduced in v6.0 / Phase H):
 - ``p2`` — v6.0-era quality gates that started life as advisory checks
   (figure caption verb-leading + length, figure cluster bridges, chapter
   exercises, writing-style audit). All currently passing; subject to
-  re-rating during Phase H gate review.
+  re-rating after a gate review.
 
 Default: ``--gate-level p2`` runs every section (matches v5.x behaviour).
 
@@ -75,7 +75,7 @@ front_matter = sorted(glob.glob(os.path.join(front_dir, '*.md'))) if os.path.isd
 back_matter = sorted(glob.glob(os.path.join(back_dir, '*.md'))) if os.path.isdir(back_dir) else []
 
 CHAPTERS = front_matter + _config.chapter_files(include_cover=False) + back_matter
-# Drop any chapter file that does not yet exist (Phase D appendix may be
+# Drop any chapter file that does not exist (an appendix may be
 # absent during partial deliveries).
 CHAPTERS = [p for p in CHAPTERS if os.path.exists(p)]
 

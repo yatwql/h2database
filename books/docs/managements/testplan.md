@@ -1,7 +1,6 @@
 # H2 Database 源码分析 — 质量标准与测试计划
 
 > 版本：v6.5
-> 最后更新：2026-06-15
 
 ---
 
@@ -21,14 +20,14 @@ python books/src/python/make.py doctor     # 可选依赖检查（pandoc / playw
 最终交付 PDF / EPUB 时：
 
 ```bash
-python books/src/python/make.py deliver    # build + generate_pdf + verify_pdf + generate_epub
+python books/src/python/make.py deliver    # build + to_pdf + verify_pdf + to_epub
 ```
 
 PDF 生成较慢；日常编辑只要求 `make.py check` + `make.py build` 通过。CI（`.github/workflows/book.yml`）自动执行 lint + 单元测试 + 门禁 + 构建 + 幂等性校验。
 
 ## 2. 质量门禁
 
-### 2.1 门禁分级（v6.0 / Phase H 起）
+### 2.1 门禁分级
 
 `structure.py` 的检查项按"阻塞级别"分为 P0 / P1 / P2 三档：
 
@@ -141,7 +140,7 @@ python books/src/python/pdf_toc_links.py
 python books/src/python/verify_pdf.py
 ```
 
-### 4.2 印刷级 PDF（v6.0 / Phase G 起，可选交付）
+### 4.2 印刷级 PDF（可选交付）
 
 印刷级 PDF 是日常 PDF 的并行产出，用于实体印刷或正式归档场景。要求：
 
@@ -202,30 +201,16 @@ EPUB 不接入 `structure.py`（按需交付物均走人工视觉验证起步，
 - 每次正式归档或发布前运行 PDF 验证。
 - 每次发现新问题时登记到 `books/docs/managements/changelog.md`。
 
-## 7. 门禁演进史
+## 7. 门禁等级
 
-记录各检查项加入 P0/P1/P2 框架的版本与升级判定，便于评估"试运营 → 正式门禁"的过渡过程。
+每项检查在 `make.py check` 中都有固定级别：P0/P1 阻塞，P2 与 `style.py` 为
+advisory（只报告、不阻塞）。新增检查从 P2 起步，误报率与修复成本可接受后升 P1。
 
-| 版本 | 检查项 | 起始级别 | 当前级别 | 备注 |
-| --- | --- | --- | --- | --- |
-| v3.x | 章节结构 / 图号 / 代码围栏 / 跨章引用 / UTF-8 / HTML TOC / 合并文档 | P0 | P0 | v6.0 之前即"必过" |
-| v4.27 | 图表覆盖（`smart.py`） | P0 | P0 | 由独立工具确保 |
-| v5.0 | 索引完整性 / 术语完整性 / 工具脚本可用性 / CSS 渲染钩子 | P1 | P1 | 内容质量保障层 |
-| v5.3 (Phase C) | 索引层级（main/sub/see-also） | P2 | P1 | v5.7 实测 see-also 全部解析；P1 升级判定通过 |
-| v5.5 (Phase E) | 图注动宾结构（strict） | P2 | P2 | 已运行多版本，0 违规；保留 P2 至少一个版本周期再评估升级 |
-| v5.5 (Phase E) | 图簇桥接 | P2 | P2 | 33 簇全部含桥接；保留 P2 至少一个版本周期再评估升级 |
-| v5.6 (Phase F) | 延伸思考 | P2 | P2 | 56 题 / 14 章节槽；保留 P2 至少一个版本周期再评估升级 |
-| v5.x | 写作风格审计（`style.py`） | P2 | P2 | 永久 advisory；不计划升级 |
-| v5.8 (Phase G) | 印刷级 PDF 视觉验证 | 人工 | 人工 | 当前不接入 `structure.py`；视觉验证为主，待 verify_pdf 自动化后再评估 |
-| v6.1 | EPUB 视觉验证 | 人工 | 人工 | pandoc 引擎；EPUB 由 cover.md 提取元数据；不接入 `structure.py` |
+| 级别 | 检查项 |
+| --- | --- |
+| P0 | 章节结构、图号、代码围栏、跨章引用、UTF-8、HTML TOC、合并文档、历史痕迹、图注结构 |
+| P1 | 图表覆盖、索引完整性、术语完整性、脚本契约、内容深度、版本一致性、源码坐标 |
+| P2 / advisory | 索引 see-also、图簇桥接、延伸思考、印刷级 PDF 视觉、EPUB 视觉、写作风格 |
 
-**升级判定规则**（plan §4.8）：
-
-1. **试运营期**：P2 检查项至少跨一个版本周期，记录命中数 / 误报率 / 修复成本
-2. **升级 P2 → P1** 条件：误报率 < 10% 且修复成本可承受
-3. **降级**：从未发生；如因工具误报率上升需要降级，必须在 changelog 记录原因
-
-**当前 P2 候选升级清单**（v6.2+ 评估）：
-
-- 图注动宾结构、图簇桥接、延伸思考三项均跨版本稳定，待下一个工具迭代后评估升级 P1
-- 索引层级已在 v6.0 升级 P1（v5.7 / v5.8 两个版本周期 0 误报）
+级别与阈值的事实来源是 `make.py check` 的步骤表与 `data/config/style.json`；
+本节只说明分级口径，不记录某项检查何时加入。

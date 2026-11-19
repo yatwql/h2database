@@ -59,7 +59,7 @@ class TestBuildPipeline(FixtureTest):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('skip missing', result.stdout)
 
-    def test_generate_html_produces_anchors_and_toc(self):
+    def test_to_html_produces_anchors_and_toc(self):
         _fixture.run(self.root, 'merge.py')
         result = _fixture.run(self.root, 'to_html.py')
         self.assertEqual(result.returncode, 0, result.stderr)

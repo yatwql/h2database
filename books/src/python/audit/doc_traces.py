@@ -34,6 +34,7 @@ TRACES: tuple[tuple[str, str], ...] = (
     ('dated-plan-ref', r'2026-\d{2}-\d{2}-\d{3}'),
     ('ledger', r'已完成清单|遗留问题|未闭环|TODO\s*[（(]历史'),
     ('relative-time', r'本次(?:迭代|改动|提交)|上一轮|本轮|目前已完成'),
+    ('phase-label', r'Phase [A-H]\b|第[0-9一二三四五六七八九十]+轮|演进史|里程碑'),
 )
 
 
