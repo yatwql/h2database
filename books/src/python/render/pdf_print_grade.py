@@ -231,7 +231,7 @@ try:
             '<div style="font-size:9px;color:#666;width:100%;'
             'padding:4px 15mm;display:flex;justify-content:space-between;'
             'border-bottom:0.5px solid #ddd;">'
-            '<span>H2 Database 源码分析</span>'
+            f'<span>{_config.project("running_head", "book")}</span>'
             '<span style="color:#999;">印刷版 v5.7</span>'
             '</div>'
         )

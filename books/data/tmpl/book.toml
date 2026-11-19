@@ -7,6 +7,17 @@ title = "H2 数据库引擎源码剖析"
 version = "6.5"
 merged_name = "h2-source-code-analysis"
 
+[project]
+# Display copy used by the renderers (HTML title, EPUB metadata, PDF running head).
+display_title_en = "H2 Database Source Code Analysis"
+display_title_zh = "H2 Database 源码全面分析与解读"
+author = "其·龙（Stallman Wang）"
+email = "stallman.wang@foxmail.com"
+publisher = "H2 Database 源码分析项目"
+description = "深入剖析 H2 Database v2.x 核心源码"
+running_head = "H2 Database 源码分析"
+breadcrumb_root = "H2 源码分析"
+
 [paths]
 # All paths are relative to the directory containing this file.
 manuscript = "data/manuscript"

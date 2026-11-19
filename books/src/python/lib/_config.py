@@ -80,6 +80,14 @@ BASELINES: dict = dict(POLICY.get('baselines', {}))
 REQUIRED_SECTIONS: list[str] = list(SECTIONS.get('per_chapter', []))
 
 
+PROJECT: dict = dict(_CFG.get('project', {}))
+
+
+def project(key: str, default: str = '') -> str:
+    """Display copy for the renderers (title, author, running head, ...)."""
+    return str(PROJECT.get(key) or default)
+
+
 def manuscript(*parts: str) -> str:
     """Absolute path inside manuscript/."""
     return os.path.join(MANUSCRIPT_DIR, *parts)

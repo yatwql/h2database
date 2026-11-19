@@ -70,6 +70,7 @@ def first_public_method_line(rel_file: str, method: str) -> int | None:
     return None
 
 
+PKG_PREFIX = _config.SOURCES.get('package_prefix') or 'unknown'
 GEN = _config.POLICY.get('generation', {})
 TPL = GEN.get('templates', {})
 
@@ -198,7 +199,7 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         (f'- `{top_pkg}` 用 {top_info["files"]} 个文件换到 {top_info["lines"]:,} 行实现，'
          f'平均每文件 {top_info["lines"] // max(1, top_info["files"]):,} 行，'
          f'其中 `{big["name"]}` 独占 {big["lines"]:,} 行、{big["public_methods"]} 个公开方法。'),
-        (f'- 该包对外声明了 {info_dep_count(top_info)} 个 `org.h2` 依赖；依赖越集中，'
+        (f'- 该包对外声明了 {info_dep_count(top_info)} 个 `{PKG_PREFIX}` 依赖；依赖越集中，'
          '越说明它是"被复用"而不是"被调用"。'),
         (f'- `{second_pkg}`（{second_info["lines"]:,} 行）与 `{top_pkg}` 的职责差是本章最值得记的一条边界。'), '',
         f'## {cn}.{cn_tradeoff + 1} 常见误区', '',
@@ -215,7 +216,7 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
     deep_items = TPL.get('deep_dive')
     if not isinstance(deep_items, list):
         deep_items = ['- `{top}` 占本章 {share}% 的实现行数。',
-                      '- `{top}` 依赖 {deps} 个 `org.h2` 包，`{dep}` 最频繁。',
+                      f'- `{{top}}` 依赖 {{deps}} 个 `{PKG_PREFIX}` 包，`{{dep}}` 最频繁。',
                       '- `{big}` 有 {methods} 个公开方法，是本章主干。']
     for item in deep_items:
         L += [tpl('deep_dive_item', str(item), top=facts['top'], share=share,
@@ -391,7 +392,7 @@ def _cross_title(spec: list, num: int) -> str:
 
 
 def info_dep_count(info: dict) -> int:
-    """Number of distinct org.h2 packages this package imports."""
+    """Number of distinct project packages this package imports."""
     return len(info.get('depends_on') or {})
 
 

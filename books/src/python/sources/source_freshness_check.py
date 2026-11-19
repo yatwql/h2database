@@ -33,6 +33,8 @@ from lib import _config, _fsutil
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, '..', '..', '..', '..'))
 DOCS_DIR = _config.MANUSCRIPT_DIR
+FILE_SUFFIX = _config.SOURCES.get('file_suffix', '.java')
+PACKAGE_PREFIX = _config.SOURCES.get('package_prefix') or 'unknown'
 SOURCE_DIR = _config.source_tree('src_main')
 POM_PATH = _config.source_tree('pom_root')
 # Known (accepted) symbol drift, so an upstream rename does not break the gate
@@ -53,7 +55,7 @@ CHAPTER_FILES = [
 ]
 
 # Pattern: ClassName.java:lineno (also captures start of range ClassName.java:start-end)
-REF_RE = re.compile(r'\b(\w+)\.java:(\d+)')
+REF_RE = re.compile(r'\b(\w+)' + re.escape(FILE_SUFFIX) + r':(\d+)')
 
 # ---------------------------------------------------------------------------
 # Data types

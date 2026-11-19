@@ -96,8 +96,8 @@ if not os.path.exists(merged_md):
     sys.exit(1)
 
 # ── Step 2: Extract title / version / author from cover.md ───────────────
-title = "H2 Database Source Code Analysis"
-subtitle = "H2 Database 源码全面分析与解读"
+title = _config.project("display_title_en", _config.TITLE)
+subtitle = _config.project("display_title_zh", _config.TITLE)
 version = "v6.0"
 author = "其·龙（Stallman Wang）"
 publish_date = "2026-06-15"
@@ -130,8 +130,8 @@ metadata_yaml = textwrap.dedent(f"""\
     date: "{publish_date}"
     rights: "© {publish_date.split('-')[0]} {author}"
     lang: zh-CN
-    publisher: "H2 Database 源码分析项目"
-    description: "深入剖析 H2 Database v2.x 核心源码 — {version}"
+    publisher: _config.project("publisher", "books")
+    description: _config.project("description", "source analysis") + " — {version}"
     """)
 
 metadata_path = os.path.join(dist_dir, '_epub_metadata.yaml')
@@ -141,7 +141,7 @@ _fsutil.write_text(metadata_path, metadata_yaml)
 # Reading apps already render their own fonts, so we keep this minimal:
 # tighter ASCII art, sensible heading rhythm, code-block contrast.
 EPUB_CSS = """
-/* H2 Database 源码分析 — EPUB stylesheet (minimal, reader-friendly) */
+/* {_config.project("running_head", "book")} — EPUB stylesheet */
 body { line-height: 1.55; font-family: "Source Han Serif", "Noto Serif CJK SC", serif; }
 h1 { font-size: 1.6em; margin-top: 1.2em; page-break-before: always; color: #1565C0; }
 h2 { font-size: 1.3em; margin-top: 1em; color: #1565C0; }

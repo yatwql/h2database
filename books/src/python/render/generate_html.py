@@ -467,8 +467,8 @@ if in_pre:
 content_html = ''.join(content_parts)
 
 # Build cover HTML
-cover_title = 'H2 Database Source Code Analysis'
-cover_subtitle = 'H2 Database 源码全面分析与解读'
+cover_title = _config.project('display_title_en', _config.TITLE)
+cover_subtitle = _config.project('display_title_zh', _config.TITLE)
 cover_lines = cover_text.strip().split('\n')
 for cl in cover_lines:
     cl = cl.strip()
@@ -558,7 +558,7 @@ HTML = f"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>H2 Database Source Code Analysis</title>
+<title>{_config.project('display_title_en', _config.TITLE)}</title>
 <style>{STYLE}</style>
 </head>
 <body>
@@ -761,7 +761,7 @@ const chapters = [
   {{ id: '第3章-核心包结构', title: '核心包结构' }},
   {{ id: '第4章-核心模块详解', title: '核心模块详解' }},
   {{ id: '第5章-核心流程解读', title: '核心流程解读' }},
-  {{ id: '第6章-h2-数据库核心算法分析', title: 'H2 数据库核心算法分析' }},
+  {{ id: '第6章-h2-数据库核心算法分析', title: '{_config.project("breadcrumb_root", "源码分析")}' }},
   {{ id: '第7章-sql-执行全流程', title: 'SQL 执行全流程' }},
   {{ id: '第8章-查询优化器', title: '查询优化器' }},
   {{ id: '第9章-持久化引擎深度解析', title: '持久化引擎深度解析' }},
