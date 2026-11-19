@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """style.json schema: every rejection rule is proven by one mutation."""
+
 from __future__ import annotations
 
 import copy
@@ -10,12 +11,13 @@ import unittest
 
 import _fixture
 
+TAGS = ('layer:audit', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 REAL_STYLE = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
     'data', 'config', 'style.json')
-
 
 class StyleSchemaTest(unittest.TestCase):
     def setUp(self):
@@ -135,7 +137,6 @@ class StyleSchemaTest(unittest.TestCase):
         code, out = _fixture.run_inproc(self.root, 'style_schema.py')
         self.assertIn(code, (0, 1))
         self.assertTrue(out)
-
 
 if __name__ == '__main__':
     unittest.main()

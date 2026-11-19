@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Index cross-references and the file-length budget gate."""
+
 from __future__ import annotations
 
 import io
@@ -12,10 +13,11 @@ from unittest import mock
 
 import _fixture
 
+TAGS = ('layer:audit', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
-
 
 class IndexXrefUnitTest(unittest.TestCase):
     def setUp(self):
@@ -62,7 +64,6 @@ class IndexXrefUnitTest(unittest.TestCase):
         start = text.find('{')
         self.assertIsInstance(json.loads(text[start:]) if start >= 0 else {}, dict)
 
-
 class FileLengthUnitTest(unittest.TestCase):
     def setUp(self):
         self.mod = _fixture.load_module(BOOK_ROOT, 'file_length')
@@ -95,7 +96,6 @@ class FileLengthUnitTest(unittest.TestCase):
         payload = json.loads(buffer.getvalue())
         self.assertIn(code, (0, 1))
         self.assertIsInstance(payload, (dict, list))
-
 
 if __name__ == '__main__':
     unittest.main()

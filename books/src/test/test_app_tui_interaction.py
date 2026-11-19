@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Interactive menu: arrows navigate, one key runs, every run reports back."""
+
 from __future__ import annotations
 
 import importlib
@@ -11,8 +12,9 @@ from unittest import mock
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('layer:app', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 class TuiInteractionTest(unittest.TestCase):
     def setUp(self):
@@ -155,7 +157,6 @@ class TuiInteractionTest(unittest.TestCase):
         self.calls.clear()
         self.press('3', answers=['y'])
         self.assertEqual(self.calls, ['deliver'])
-
 
 if __name__ == '__main__':
     unittest.main()

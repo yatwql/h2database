@@ -4,12 +4,15 @@
 These exercise the error and edge branches (missing files, empty inputs,
 threshold violations, alternate CLI modes) that the happy-path tests skip.
 """
+
 import os
 import sys
 import tempfile
 import unittest
 
 import _fixture
+
+TAGS = ('layer:audit', 'tier:fast')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -20,7 +23,6 @@ if TOOLS_DIR not in sys.path:
         _path = os.path.join(TOOLS_DIR, _sub)
         if _path not in sys.path:
             sys.path.insert(0, _path)
-
 
 class FixtureCase(unittest.TestCase):
     def setUp(self):
@@ -41,7 +43,6 @@ class FixtureCase(unittest.TestCase):
             fh.write(text)
         return path
 
-
 class TestSmartAuditBranches(FixtureCase):
     def test_runs_on_fixture_with_report(self):
         code, out = self.run_script('smart.py')
@@ -60,10 +61,8 @@ class TestSmartAuditBranches(FixtureCase):
         headings = [(1, '第1章 测试', 1), (2, '1.1 小节', 3)]
         self.assertEqual(smart.build_exempt_ranges(headings, lines), [])
 
-
 if __name__ == '__main__':
     unittest.main()
-
 
 class TestSmartAuditDeepCoverage(FixtureCase):
     """Drive _audit_smart's report path with #### children and few diagrams."""
@@ -93,7 +92,6 @@ class TestSmartAuditDeepCoverage(FixtureCase):
     def test_fig_refs_mode(self):
         code, out = self.run_script('smart.py', '--fig-refs')
         self.assertEqual(code, 0, out[-300:])
-
 
 class TestSmartAuditGaps(FixtureCase):
     """A section with #### children and too few diagrams must be reported."""

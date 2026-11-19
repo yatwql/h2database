@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """Tests for the print/delivery gates: _audit_ascii, verify_epub, verify_pdf."""
+
 import importlib
 import os
 import sys
 import unittest
 from typing import ClassVar
+
+TAGS = ('layer:audit', 'tier:fast')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -20,7 +23,6 @@ audit_ascii = importlib.import_module('diagrams')
 verify_epub = importlib.import_module('verify_epub')
 verify_pdf = importlib.import_module('verify_pdf')
 
-
 class TestDisplayWidth(unittest.TestCase):
     def test_ascii_is_one_column(self):
         self.assertEqual(audit_ascii.display_width('abc'), 3)
@@ -31,10 +33,8 @@ class TestDisplayWidth(unittest.TestCase):
     def test_mixed(self):
         self.assertEqual(audit_ascii.display_width('MV 存储'), 7)
 
-
 if __name__ == '__main__':
     unittest.main()
-
 
 class TestTextBlocks(unittest.TestCase):
     LINES: ClassVar[list[str]] = [
@@ -59,7 +59,6 @@ class TestTextBlocks(unittest.TestCase):
     def test_java_block_ignored(self):
         blocks = audit_ascii.text_blocks(self.LINES)
         self.assertNotIn('class A {}', [line for _s, b in blocks for line in b])
-
 
 class TestMixedBorders(unittest.TestCase):
     def test_mixed_reported(self):

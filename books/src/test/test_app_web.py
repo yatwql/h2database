@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """The Web console: the page, the JSON API and the bind/shutdown path."""
+
 from __future__ import annotations
 
 import http.client
@@ -15,14 +16,13 @@ from http import server
 
 import _fixture
 
+TAGS = ('layer:app', 'tier:fast')
+
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
-
-
-
 
 class WebConsoleTest(unittest.TestCase):
     @classmethod
@@ -126,7 +126,6 @@ class WebConsoleTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(calls[0], ('127.0.0.1', 9999))
         self.assertIn('bye', buffer.getvalue())
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Script contract: docstring, entry point, guard and --json rules."""
+
 from __future__ import annotations
 
 import io
@@ -12,10 +13,11 @@ from unittest import mock
 
 import _fixture
 
+TAGS = ('layer:audit', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
-
 
 class ScriptContractTest(unittest.TestCase):
     def setUp(self):
@@ -71,7 +73,6 @@ class ScriptContractTest(unittest.TestCase):
         payload = json.loads(buffer.getvalue())
         self.assertIn(code, (0, 1))
         self.assertIn('problems', payload)
-
 
 if __name__ == '__main__':
     unittest.main()

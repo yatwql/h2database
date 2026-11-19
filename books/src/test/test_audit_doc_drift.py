@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Doc drift: paths, script names, versions and chapter names must exist."""
+
 from __future__ import annotations
 
 import io
@@ -11,10 +12,11 @@ from contextlib import redirect_stdout
 
 import _fixture
 
+TAGS = ('layer:audit', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
-
 
 class DocDriftTest(unittest.TestCase):
     def setUp(self):
@@ -101,7 +103,6 @@ class DocDriftTest(unittest.TestCase):
             code = self.drift.main([])
         self.assertIn(code, (0, 1))
         self.assertTrue(buffer.getvalue())
-
 
 if __name__ == '__main__':
     unittest.main()

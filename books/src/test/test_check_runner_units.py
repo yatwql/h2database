@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tier runner: step selection, timeouts, machine info and report files."""
+
 from __future__ import annotations
 
 import os
@@ -9,10 +10,11 @@ from unittest import mock
 
 import _fixture
 
+TAGS = ('layer:infra', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
-
 
 class RunnerUnitsTest(unittest.TestCase):
     def setUp(self):
@@ -72,7 +74,6 @@ class RunnerUnitsTest(unittest.TestCase):
             summary = self.runner.run('p0', only='lint')
         self.assertTrue(summary['ok'])
         self.assertTrue(any(path.endswith('check-latest.json') for path in written))
-
 
 if __name__ == '__main__':
     unittest.main()

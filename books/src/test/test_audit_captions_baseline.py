@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Captions gate: JSON output, baseline diff and the failure threshold."""
+
 from __future__ import annotations
 
 import json
@@ -9,8 +10,9 @@ import unittest
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('layer:audit', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 class CaptionsBaselineTest(unittest.TestCase):
     def setUp(self):
@@ -66,7 +68,6 @@ class CaptionsBaselineTest(unittest.TestCase):
     def test_normal_threshold_tolerates_the_fixture(self):
         code, out = self.run_captions('--threshold', 'normal')
         self.assertIn(code, (0, 1), out[-300:])
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Architecture gate: each rule is proven with a synthetic source tree."""
+
 from __future__ import annotations
 
 import os
@@ -8,8 +9,9 @@ import unittest
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('layer:audit', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 class ArchitectureRulesTest(unittest.TestCase):
     def setUp(self):
@@ -122,7 +124,6 @@ class ArchitectureRulesTest(unittest.TestCase):
             os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR)),
             'check_architecture.py')
         self.assertEqual(code, 0, out[-600:])
-
 
 if __name__ == '__main__':
     unittest.main()

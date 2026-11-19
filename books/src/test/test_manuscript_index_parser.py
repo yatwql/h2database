@@ -4,6 +4,7 @@
 Fixtures are inline strings written to a temporary file so the tests never
 depend on the current manuscript contents.
 """
+
 import importlib
 import os
 import tempfile
@@ -11,8 +12,9 @@ import unittest
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('layer:manuscript', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 _annotate_terms = importlib.import_module('terms')
 _audit_captions = importlib.import_module('captions')
@@ -68,7 +70,6 @@ CHAPTER_FIXTURE = """# 第3章 包结构与模块划分
 - 参考
 """
 
-
 class _TempFile:
     """Context manager that materialises fixture text to a temp .md file."""
 
@@ -86,7 +87,6 @@ class _TempFile:
     def __exit__(self, *exc) -> None:
         os.unlink(self._tmp.name)
 
-
 class TestIndexParser(unittest.TestCase):
     def test_main_entries_parsed(self):
         with _TempFile(INDEX_FIXTURE) as path:
@@ -100,7 +100,6 @@ class TestIndexParser(unittest.TestCase):
             _main, _sub, see_alsos, _sections = _audit_index_xrefs.parse_index(path)
         targets = [t for sa in see_alsos for t in sa['targets']]
         self.assertIn('MVCC', targets)
-
 
 if __name__ == '__main__':
     unittest.main()

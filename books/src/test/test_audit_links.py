@@ -6,12 +6,15 @@ temporary directory, points BOOK_ROOT at it, and asserts the script's real
 behaviour. This is what catches path drift, config wiring mistakes and
 regressions in the audits — the class of bug unit tests cannot see.
 """
+
 import os
 import sys
 import tempfile
 import unittest
 
 import _fixture
+
+TAGS = ('layer:audit', 'tier:fast')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -22,7 +25,6 @@ if TOOLS_DIR not in sys.path:
         _path = os.path.join(TOOLS_DIR, _sub)
         if _path not in sys.path:
             sys.path.insert(0, _path)
-
 
 class FixtureTest(unittest.TestCase):
     def setUp(self):
@@ -36,7 +38,6 @@ class FixtureTest(unittest.TestCase):
     def read(self, path: str) -> str:
         with open(path, encoding='utf-8') as fh:
             return fh.read()
-
 
 class TestLinkAudit(FixtureTest):
     def test_clean_fixture_passes(self):
@@ -58,7 +59,6 @@ class TestLinkAudit(FixtureTest):
         result = _fixture.run(self.root, 'links.py')
         self.assertEqual(result.returncode, 1)
         self.assertIn('BROKEN_ANCHOR', result.stdout)
-
 
 if __name__ == '__main__':
     unittest.main()

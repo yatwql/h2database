@@ -4,6 +4,7 @@
 Fixtures are inline strings written to a temporary file so the tests never
 depend on the current manuscript contents.
 """
+
 import importlib
 import os
 import tempfile
@@ -11,8 +12,9 @@ import unittest
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('layer:audit', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 _annotate_terms = importlib.import_module('terms')
 _audit_captions = importlib.import_module('captions')
@@ -68,7 +70,6 @@ CHAPTER_FIXTURE = """# 第3章 包结构与模块划分
 - 参考
 """
 
-
 class _TempFile:
     """Context manager that materialises fixture text to a temp .md file."""
 
@@ -85,7 +86,6 @@ class _TempFile:
 
     def __exit__(self, *exc) -> None:
         os.unlink(self._tmp.name)
-
 
 class TestExerciseParser(unittest.TestCase):
     def test_slots_detected(self):
@@ -106,7 +106,6 @@ class TestExerciseParser(unittest.TestCase):
         lines = CHAPTER_FIXTURE.splitlines()
         end = _audit_exercises.find_section_end(lines, 10)
         self.assertGreater(end, 10)
-
 
 if __name__ == '__main__':
     unittest.main()

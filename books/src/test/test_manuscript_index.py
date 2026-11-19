@@ -5,6 +5,7 @@ Missing optional tools (pandoc, chromium), missing prerequisites and malformed
 artifacts are the branches that never run in the happy path but do fire in real
 use — and they are where a toolchain silently misbehaves instead of reporting.
 """
+
 import importlib.util
 import os
 import sys
@@ -12,6 +13,8 @@ import tempfile
 import unittest
 
 import _fixture
+
+TAGS = ('layer:manuscript', 'tier:fast')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -26,7 +29,6 @@ if TOOLS_DIR not in sys.path:
 SLOW = os.environ.get('BOOK_SLOW') == '1'
 HAS_PANDOC = bool(__import__('shutil').which('pandoc'))
 HAS_PYPDF = importlib.util.find_spec('pypdf') is not None
-
 
 class Base(unittest.TestCase):
     def setUp(self):
@@ -55,7 +57,6 @@ class Base(unittest.TestCase):
             fh.write(text)
         return path
 
-
 class TestIndexAndStyleBranches(Base):
     def test_index_with_subsections(self):
         self.write('data/manuscript/back/index.md',
@@ -73,7 +74,6 @@ class TestIndexAndStyleBranches(Base):
                    '# 第1章 测试章节\n\n' + body + '\n\n' + '很' * 200 + '\n')
         code, out = self.run_script('style.py')
         self.assertIn(code, (0, 1), out[-300:])
-
 
 if __name__ == '__main__':
     unittest.main()

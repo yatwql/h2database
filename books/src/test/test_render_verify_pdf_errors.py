@@ -5,6 +5,7 @@ Missing optional tools (pandoc, chromium), missing prerequisites and malformed
 artifacts are the branches that never run in the happy path but do fire in real
 use — and they are where a toolchain silently misbehaves instead of reporting.
 """
+
 import importlib.util
 import os
 import sys
@@ -12,6 +13,8 @@ import tempfile
 import unittest
 
 import _fixture
+
+TAGS = ('layer:render', 'tier:slow')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -26,7 +29,6 @@ if TOOLS_DIR not in sys.path:
 SLOW = os.environ.get('BOOK_SLOW') == '1'
 HAS_PANDOC = bool(__import__('shutil').which('pandoc'))
 HAS_PYPDF = importlib.util.find_spec('pypdf') is not None
-
 
 class Base(unittest.TestCase):
     def setUp(self):
@@ -55,7 +57,6 @@ class Base(unittest.TestCase):
             fh.write(text)
         return path
 
-
 class TestVerifyPdfErrorPaths(Base):
     @unittest.skipUnless(SLOW and HAS_PYPDF, 'slow suite: set BOOK_SLOW=1')
     def test_require_toc_links_without_annotations(self):
@@ -63,7 +64,7 @@ class TestVerifyPdfErrorPaths(Base):
         writer = PdfWriter()
         for _ in range(2):
             writer.add_blank_page(width=595, height=842)
-        writer.add_outline_item('第1章 测试', 0)
+        writer.add_outline_item(title='第1章 测试', page_number=0)
         pdf = os.path.join(self.root, 'dist', 'no-links.pdf')
         with open(pdf, 'wb') as fh:
             writer.write(fh)
@@ -84,10 +85,8 @@ class TestVerifyPdfErrorPaths(Base):
         _code, out = self.run_script('verify_epub.py', '--json')
         self.assertIn('"ok"', out)
 
-
 if __name__ == '__main__':
     unittest.main()
-
 
 class TestVerifyPdfTocLinkSuccess(Base):
     @unittest.skipUnless(SLOW and HAS_PYPDF, 'slow suite: set BOOK_SLOW=1')
@@ -99,8 +98,8 @@ class TestVerifyPdfTocLinkSuccess(Base):
         writer = PdfWriter()
         for _ in range(3):
             writer.add_blank_page(width=595, height=842)
-        writer.add_outline_item('第1章 测试', 0)
-        writer.add_outline_item('1.1 小节', 1)
+        writer.add_outline_item(title='第1章 测试', page_number=0)
+        writer.add_outline_item(title='1.1 小节', page_number=1)
         annot = Link(rect=(50, 700, 300, 720), target_page_index=0)
         annot[NameObject('/NM')] = TextStringObject('toc-link-0')
         writer.add_annotation(0, annot)

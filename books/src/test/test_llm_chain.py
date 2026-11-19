@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Priority chain, fallback and endpoint pacing (no network, no real sleeping)."""
+
 from __future__ import annotations
 
 import json
@@ -11,12 +12,13 @@ from unittest import mock
 
 import _fixture
 
+TAGS = ('layer:infra', 'tier:fast')
+
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
-
 
 class ProviderChainTest(unittest.TestCase):
     def setUp(self):
@@ -108,7 +110,6 @@ class ProviderChainTest(unittest.TestCase):
         status = self.llm.status()
         self.assertEqual(status['default_provider'], 'primary')
         self.assertEqual(sorted(status['providers']), ['backup', 'primary', 'secondary'])
-
 
 if __name__ == '__main__':
     unittest.main()

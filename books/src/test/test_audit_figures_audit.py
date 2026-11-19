@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """Tests for the print/delivery gates: _audit_ascii, verify_epub, verify_pdf."""
+
 import importlib
 import os
 import sys
 import tempfile
 import unittest
+
+TAGS = ('layer:audit', 'tier:fast')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -19,7 +22,6 @@ if TOOLS_DIR not in sys.path:
 audit_ascii = importlib.import_module('diagrams')
 verify_epub = importlib.import_module('verify_epub')
 verify_pdf = importlib.import_module('verify_pdf')
-
 
 class TestAuditFile(unittest.TestCase):
     def setUp(self):
@@ -59,7 +61,6 @@ class TestAuditFile(unittest.TestCase):
     def test_mixed_box_detected(self):
         kinds = self.kinds('```text\n┌──┐\n+--+\n└──┘\n```\n')
         self.assertIn('MIXED_BOX', kinds)
-
 
 if __name__ == '__main__':
     unittest.main()

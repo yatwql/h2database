@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Style rules gate: terminology, spacing, headings, list punctuation."""
+
 from __future__ import annotations
 
 import io
@@ -12,10 +13,11 @@ from unittest import mock
 
 import _fixture
 
+TAGS = ('layer:audit', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
-
 
 class StyleRulesUnitTest(unittest.TestCase):
     def setUp(self):
@@ -88,7 +90,6 @@ class StyleRulesUnitTest(unittest.TestCase):
         payload = json.loads(buffer.getvalue())
         self.assertIn(code, (0, 1))
         self.assertIn('findings', payload)
-
 
 if __name__ == '__main__':
     unittest.main()

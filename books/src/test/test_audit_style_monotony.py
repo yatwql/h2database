@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Style gate: monotonous sentence openings are reported per paragraph."""
+
 from __future__ import annotations
 
 import os
@@ -8,8 +9,9 @@ import unittest
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('layer:audit', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 class SentenceOpeningTest(unittest.TestCase):
     def setUp(self):
@@ -46,7 +48,6 @@ class SentenceOpeningTest(unittest.TestCase):
         self.add_paragraph('系统负责协调。系统负责调度。')
         _code, out = self.run_style()
         self.assertNotIn('句式单调', out)
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Tests for the print/delivery gates: _audit_ascii, verify_epub, verify_pdf."""
+
 import importlib
 import os
 import sys
 import tempfile
 import unittest
 import zipfile
+
+TAGS = ('layer:render', 'tier:fast')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -20,7 +23,6 @@ if TOOLS_DIR not in sys.path:
 audit_ascii = importlib.import_module('diagrams')
 verify_epub = importlib.import_module('verify_epub')
 verify_pdf = importlib.import_module('verify_pdf')
-
 
 class TestEpubVerification(unittest.TestCase):
     def setUp(self):
@@ -80,7 +82,6 @@ class TestEpubVerification(unittest.TestCase):
     def test_missing_epub_reports_exists(self):
         report = verify_epub.verify(os.path.join(self.tmp.name, 'nope.epub'))
         self.assertIn('EXISTS', [name for name, _d in report.failures])
-
 
 if __name__ == '__main__':
     unittest.main()

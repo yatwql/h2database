@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Stability: same input → same output, repeated runs → same verdict."""
+
 from __future__ import annotations
 
 import hashlib
@@ -9,13 +10,13 @@ import unittest
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('stability:idempotent', 'layer:infra', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 def digest(path: str) -> str:
     with open(path, 'rb') as fh:
         return hashlib.sha256(fh.read()).hexdigest()
-
 
 class IdempotencyTest(unittest.TestCase):
     def setUp(self):
@@ -41,7 +42,6 @@ class IdempotencyTest(unittest.TestCase):
         for _ in range(3):
             code, _out = _fixture.run_inproc(self.root, 'structure.py')
             self.assertIn(code, (0, 1), 'structure.py verdict changed between runs')
-
 
 class DeterminismTest(unittest.TestCase):
     """Chapter order comes from configuration, not from directory order."""
@@ -71,7 +71,6 @@ class DeterminismTest(unittest.TestCase):
         first = digest(inv)
         _fixture.run_inproc(root, 'digest.py')
         self.assertEqual(first, digest(inv), 'digest.py output is not stable')
-
 
 if __name__ == '__main__':
     unittest.main()

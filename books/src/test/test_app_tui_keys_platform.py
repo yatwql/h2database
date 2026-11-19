@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Platform key readers: POSIX cbreak path and the Windows msvcrt path."""
+
 from __future__ import annotations
 
 import importlib
@@ -11,10 +12,11 @@ from unittest import mock
 
 import _fixture
 
+TAGS = ('layer:app', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 keys = importlib.import_module('app.keys')
-
 
 class PosixReaderTest(unittest.TestCase):
     def run_reader(self, chunks: list[bytes], *, tty: bool = True):
@@ -78,7 +80,6 @@ class PosixReaderTest(unittest.TestCase):
                 mock.patch.object(keys, '_posix_getch', return_value='r'):
             self.assertEqual(keys.read_key(), 'r')
 
-
 class WindowsReaderTest(unittest.TestCase):
     def run_windows(self, chars: list[str]):
         feed = list(chars)
@@ -102,7 +103,6 @@ class WindowsReaderTest(unittest.TestCase):
         with mock.patch.dict(sys.modules, {'msvcrt': msvcrt}):
             self.assertEqual(keys._windows_getch(), 'k')
 
-
 class LineModeTest(unittest.TestCase):
     def test_line_mode_takes_the_first_character(self):
         with mock.patch.object(keys.sys, 'stdin', io.StringIO('status\n')):
@@ -111,7 +111,6 @@ class LineModeTest(unittest.TestCase):
     def test_blank_line_is_treated_as_enter(self):
         with mock.patch.object(keys.sys, 'stdin', io.StringIO('\n')):
             self.assertEqual(keys.read_key(), keys.KEY_ENTER)
-
 
 if __name__ == '__main__':
     unittest.main()

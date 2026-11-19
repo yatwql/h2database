@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tests for the make.py driver (steps, doctor, coverage gate, CLI)."""
+
 from __future__ import annotations
 
 import argparse
@@ -13,12 +14,13 @@ from unittest import mock
 
 import _fixture
 
+TAGS = ('layer:infra', 'tier:fast')
+
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
-
 
 def completed(code: int = 0, out: str = '', err: str = ''):
     result = mock.Mock()
@@ -26,7 +28,6 @@ def completed(code: int = 0, out: str = '', err: str = ''):
     result.stdout = out
     result.stderr = err
     return result
-
 
 class MakeDriverTest(unittest.TestCase):
     def setUp(self):
@@ -146,7 +147,6 @@ class MakeDriverTest(unittest.TestCase):
             code = self.make.main(['build', '--only', 'to_html', '--skip', 'to_html'])
         self.assertEqual(code, 0)
         self.assertIn('nothing to do', buffer.getvalue())
-
 
 if __name__ == '__main__':
     unittest.main()

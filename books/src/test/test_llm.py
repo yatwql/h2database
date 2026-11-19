@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tests for the LLM configuration layer and provider routing."""
+
 import json
 import os
 import sys
@@ -8,13 +9,14 @@ import unittest
 
 import _fixture
 
+TAGS = ('layer:infra', 'tier:fast')
+
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
 sys.path.insert(0, os.path.join(TOOLS_DIR, 'lib'))
-
 
 class TestLLMRouting(unittest.TestCase):
     def setUp(self):
@@ -65,7 +67,6 @@ class TestLLMRouting(unittest.TestCase):
         self.assertEqual(status['default_provider'], 'mock')
         self.assertIn('other', status['providers'])
 
-
 class TestChannels(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -100,10 +101,8 @@ class TestChannels(unittest.TestCase):
         self.assertEqual(code, 0, out[-300:])
         self.assertIn('book', out)
 
-
 if __name__ == '__main__':
     unittest.main()
-
 
 class TestThinkingLevels(unittest.TestCase):
     """Routing may pin a thinking level per scenario/book/chapter."""

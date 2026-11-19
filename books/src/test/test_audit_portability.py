@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Portability gate: encoding-explicit IO and an ASCII-locale probe."""
+
 from __future__ import annotations
 
 import io
@@ -12,8 +13,9 @@ from unittest import mock
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('layer:audit', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 class EncodingScanTest(unittest.TestCase):
     def setUp(self):
@@ -59,7 +61,6 @@ class EncodingScanTest(unittest.TestCase):
         self.assertEqual(problems[0]['check'], 'ENCODING')
         self.assertIn('g.py', problems[0]['file'])
 
-
 class LocaleProbeTest(unittest.TestCase):
     def setUp(self):
         self.mod = _fixture.load_module(
@@ -83,7 +84,6 @@ class LocaleProbeTest(unittest.TestCase):
                                side_effect=OSError('no python')):
             problems = self.mod.locale_probe()
         self.assertIn('probe failed to run', problems[0]['detail'])
-
 
 class PortabilityCliTest(unittest.TestCase):
     def setUp(self):
@@ -110,7 +110,6 @@ class PortabilityCliTest(unittest.TestCase):
         code, out = _fixture.run_inproc(
             os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR)), 'portability.py')
         self.assertEqual(code, 0, out[-600:])
-
 
 if __name__ == '__main__':
     unittest.main()

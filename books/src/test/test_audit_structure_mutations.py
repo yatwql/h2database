@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Structure gate: each invariant is proven by mutating a healthy book."""
+
 from __future__ import annotations
 
 import os
@@ -8,8 +9,9 @@ import unittest
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('layer:audit', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 class StructureMutationTest(unittest.TestCase):
     def setUp(self):
@@ -132,7 +134,6 @@ class StructureMutationTest(unittest.TestCase):
             fh.write('\n手工追加的一行，会让合并稿与章节不一致。\n')
         _code, out = self.run_gate()
         self.assertIn('Merged', out)
-
 
 if __name__ == '__main__':
     unittest.main()

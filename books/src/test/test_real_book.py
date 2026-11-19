@@ -9,10 +9,13 @@ own manuscript so those branches are covered too.
 They deliberately avoid scripts that rewrite tracked files: only audits and
 the (gitignored) HTML build run here.
 """
+
 import os
 import unittest
 
 import _fixture
+
+TAGS = ('layer:infra', 'tier:fast')
 
 BOOK_ROOT = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -51,7 +54,6 @@ MODES = [
     ('links.py', ('--json',)),
 ]
 
-
 @unittest.skipUnless(os.path.isdir(os.path.join(BOOK_ROOT, 'manuscript')),
                      'real manuscript not available')
 class TestRealBook(unittest.TestCase):
@@ -68,7 +70,6 @@ class TestRealBook(unittest.TestCase):
                 code, out = _fixture.run_inproc(BOOK_ROOT, script, *args)
                 self.assertIn(code, (0, 1), f'{script} {args} -> {code}\n{out[-800:]}')
                 self.assertNotIn('Traceback', out, f'{script} {args}:\n{out[-800:]}')
-
 
 if __name__ == '__main__':
     unittest.main()

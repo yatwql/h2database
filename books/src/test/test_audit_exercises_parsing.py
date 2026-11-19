@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Exercises gate: chapter-slot parsing and the per-file audit."""
+
 from __future__ import annotations
 
 import os
@@ -8,10 +9,11 @@ import unittest
 
 import _fixture
 
+TAGS = ('layer:audit', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
-
 
 class SlotParsingTest(unittest.TestCase):
     def setUp(self):
@@ -49,7 +51,6 @@ class SlotParsingTest(unittest.TestCase):
         end = self.mod.find_section_end(text, 0)
         self.assertGreaterEqual(end, 1)
 
-
 class AuditFileTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -79,7 +80,6 @@ class AuditFileTest(unittest.TestCase):
         path = self.write('# 第1章 测试\n\n没有小结也没有练习。\n')
         report = self.mod.audit_file(path)
         self.assertIsInstance(report, dict)
-
 
 if __name__ == '__main__':
     unittest.main()

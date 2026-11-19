@@ -4,12 +4,15 @@
 These exercise the error and edge branches (missing files, empty inputs,
 threshold violations, alternate CLI modes) that the happy-path tests skip.
 """
+
 import os
 import sys
 import tempfile
 import unittest
 
 import _fixture
+
+TAGS = ('layer:manuscript', 'tier:fast')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -20,7 +23,6 @@ if TOOLS_DIR not in sys.path:
         _path = os.path.join(TOOLS_DIR, _sub)
         if _path not in sys.path:
             sys.path.insert(0, _path)
-
 
 class FixtureCase(unittest.TestCase):
     def setUp(self):
@@ -41,7 +43,6 @@ class FixtureCase(unittest.TestCase):
             fh.write(text)
         return path
 
-
 class TestGlossaryValidateMode(FixtureCase):
     def test_validate_resolves_chapters(self):
         code, out = self.run_script('glossary.py', '--validate')
@@ -55,10 +56,8 @@ class TestGlossaryValidateMode(FixtureCase):
         self.assertEqual(code, 1)
         self.assertIn('INVALID', out)
 
-
 if __name__ == '__main__':
     unittest.main()
-
 
 class TestGlossaryCoverageMode(FixtureCase):
     def test_coverage_mode_runs(self):
@@ -73,7 +72,6 @@ class TestGlossaryCoverageMode(FixtureCase):
                    '## M\n\n- **MVStore**: 存储引擎。\n  **章节**：第2章 §2.1\n')
         code, out = self.run_script('glossary.py', '--check')
         self.assertIn(code, (0, 1), out[-300:])
-
 
 class TestGlossaryBuilderBranches(FixtureCase):
     def test_missing_glossary_exits_cleanly(self):

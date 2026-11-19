@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tests for the PDF verification helpers, using synthetic PDFs."""
+
 from __future__ import annotations
 
 import io
@@ -20,12 +21,13 @@ from pypdf.generic import (
     TextStringObject,
 )
 
+TAGS = ('layer:infra', 'tier:slow')
+
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
-
 
 def make_pdf(path: str, pages: int = 2, titles: list[tuple[str, int]] | None = None,
              size: tuple[float, float] = (595, 842), rotate: int = 0,
@@ -54,13 +56,11 @@ def make_pdf(path: str, pages: int = 2, titles: list[tuple[str, int]] | None = N
         writer.write(fh)
     return path
 
-
 HTML_TWO_HEADINGS = (
     '<html><body><nav id="toc-page-nav">'
     '<a href="#a">第一章</a><a href="#b">第二章</a></nav>'
     '<h2 id="a">第一章</h2><p>x</p><h2 id="b">第二章</h2></body></html>'
 )
-
 
 class PdfVerificationTest(unittest.TestCase):
     def setUp(self):
@@ -184,7 +184,6 @@ class PdfVerificationTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn('OUTLINE', buffer.getvalue())
 
-
 class _FakePage:
     def __init__(self, links):
         self._links = links
@@ -198,7 +197,6 @@ class _FakePage:
     def evaluate(self, script: str):
         return self._links
 
-
 class _FakeBrowser:
     def __init__(self, page):
         self._page = page
@@ -209,7 +207,6 @@ class _FakeBrowser:
     def close(self) -> None:
         return None
 
-
 class _FakeChromium:
     def __init__(self, page):
         self._page = page
@@ -217,11 +214,9 @@ class _FakeChromium:
     def launch(self, **kwargs):
         return _FakeBrowser(self._page)
 
-
 class _FakePlaywright:
     def __init__(self, page):
         self.chromium = _FakeChromium(page)
-
 
 def _fake_engine(links):
     from contextlib import contextmanager
@@ -231,7 +226,6 @@ def _fake_engine(links):
         yield _FakePlaywright(_FakePage(links))
 
     return engine
-
 
 class TocLinkInjectionTest(unittest.TestCase):
     def setUp(self):
@@ -313,7 +307,6 @@ class TocLinkInjectionTest(unittest.TestCase):
     def test_add_links_requires_pdf(self):
         with self.assertRaises(SystemExit):
             self.module.add_links(os.path.join(self.tmp.name, 'none.pdf'), self.html)
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Figure clusters: cluster detection, bridging and the report modes."""
+
 from __future__ import annotations
 
 import json
@@ -9,8 +10,9 @@ import unittest
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('layer:audit', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 class FigureClusterModesTest(unittest.TestCase):
     def setUp(self):
@@ -51,7 +53,6 @@ class FigureClusterModesTest(unittest.TestCase):
         code, out = self.run_gate('--has-bridge')
         self.assertEqual(code, 0)
         self.assertNotIn('figs:', out)  # no cluster rows listed
-
 
 if __name__ == '__main__':
     unittest.main()

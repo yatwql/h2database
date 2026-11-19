@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Chapter prose: deterministic by default, LLM-drafted only on request."""
+
 from __future__ import annotations
 
 import importlib
@@ -12,15 +13,15 @@ from unittest import mock
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('layer:ingest', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 def _load(root: str):
     """Load chapters + the LLM layer against the fixture, not the real book."""
     chapters = _fixture.load_module(root, 'chapters')
     llm = importlib.import_module('lib._llm')
     return chapters, llm
-
 
 class ProseSwitchTest(unittest.TestCase):
     def setUp(self):
@@ -78,7 +79,6 @@ class ProseSwitchTest(unittest.TestCase):
             len(self.chapters.prose('lead', 'fallback', enabled=True)),
             self.chapters.PROSE_LIMIT)
 
-
 class ProsePromptTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -95,7 +95,6 @@ class ProsePromptTest(unittest.TestCase):
     def test_summary_prompt_names_the_main_package(self):
         prompt = self.chapters._prose_prompt('summary', {'pkgs': 2, 'lines': '80', 'top': 'org.x.core'})
         self.assertIn('org.x.core', prompt)
-
 
 class IngestSwitchConfigTest(unittest.TestCase):
     def setUp(self):
@@ -115,7 +114,6 @@ class IngestSwitchConfigTest(unittest.TestCase):
             fh.write(text.replace('[llm]', '[llm]\ningest_prose = true', 1))
         config = _fixture.load_module(self.root, '_config')
         self.assertTrue(config.llm_ingest_prose())
-
 
 if __name__ == '__main__':
     unittest.main()

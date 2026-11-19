@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Content depth: code excerpts must still match the source they cite."""
+
 from __future__ import annotations
 
 import os
@@ -8,8 +9,9 @@ import unittest
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('layer:audit', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 class ExcerptFreshnessTest(unittest.TestCase):
     def setUp(self):
@@ -65,7 +67,6 @@ class ExcerptFreshnessTest(unittest.TestCase):
     def test_excerpt_without_a_header_is_ignored(self):
         self.append('```java\nvoid run() {}\n```')
         self.assertEqual(self.check(), [])
-
 
 if __name__ == '__main__':
     unittest.main()

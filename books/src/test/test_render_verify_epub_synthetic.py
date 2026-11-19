@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """verify_epub: synthetic EPUB packages for every check it performs."""
+
 from __future__ import annotations
 
 import os
@@ -8,6 +9,8 @@ import unittest
 import zipfile
 
 import _fixture
+
+TAGS = ('layer:render', 'tier:fast')
 
 _fixture.ensure_tools_path()
 
@@ -24,7 +27,6 @@ NAV = """<?xml version="1.0" encoding="utf-8"?>
   </ol></nav></body>
 </html>
 """
-
 
 def opf(metadata: str = '', extra_manifest: str = '', spine: str = '',
         nav: bool = True) -> str:
@@ -45,14 +47,12 @@ def opf(metadata: str = '', extra_manifest: str = '', spine: str = '',
 </package>
 """
 
-
 def ncx(points: int = 1) -> str:
     body = ''.join(f'<navPoint id="p{i}" playOrder="{i}"><navLabel><text>c</text>'
                    f'</navLabel><content src="text/ch1.xhtml"/></navPoint>'
                    for i in range(points))
     return ('<?xml version="1.0"?><ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" '
             f'version="2005-1"><navMap>{body}</navMap></ncx>')
-
 
 class EpubVerifySyntheticTest(unittest.TestCase):
     def setUp(self):
@@ -154,7 +154,6 @@ class EpubVerifySyntheticTest(unittest.TestCase):
         ok, detail = self.check(report, 'NAV')
         self.assertFalse(ok)
         self.assertIn('broken', detail)
-
 
 if __name__ == '__main__':
     unittest.main()

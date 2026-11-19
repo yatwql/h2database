@@ -4,6 +4,7 @@
 Each gate is a script with ``main(argv)``; running it in-process keeps coverage
 honest and catches wiring breakage that unit tests of the helpers miss.
 """
+
 from __future__ import annotations
 
 import inspect
@@ -16,6 +17,8 @@ import unittest
 from contextlib import redirect_stderr, redirect_stdout
 
 import _fixture
+
+TAGS = ('layer:infra', 'tier:fast')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -31,7 +34,6 @@ GATES = [
     'style_rules', 'style_schema', 'version_consistency', 'structure', 'style',
     'smart', 'source_refs', 'scorecard', 'traces',
 ]
-
 
 class GateEntrypointsTest(unittest.TestCase):
     def setUp(self):
@@ -105,7 +107,6 @@ class GateEntrypointsTest(unittest.TestCase):
                     except Exception as exc:  # noqa: BLE001 - the gate may bail out
                         code = 1 if exc else 0
                 self.assertIn(code, (0, 1, 2, None))
-
 
 if __name__ == '__main__':
     unittest.main()

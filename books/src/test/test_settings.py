@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tests for the writable settings layer and the TUI/CLI surfaces on top of it."""
+
 import io
 import json
 import os
@@ -10,13 +11,14 @@ from contextlib import redirect_stdout
 
 import _fixture
 
+TAGS = ('layer:infra', 'tier:fast')
+
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
 sys.path.insert(0, os.path.join(TOOLS_DIR, 'lib'))
-
 
 class SettingsCase(unittest.TestCase):
     def setUp(self):
@@ -30,7 +32,6 @@ class SettingsCase(unittest.TestCase):
     def read(self, rel: str) -> str:
         with open(os.path.join(self.root, rel), encoding='utf-8') as fh:
             return fh.read()
-
 
 class TestSettings(SettingsCase):
     def test_list_covers_known_keys(self):
@@ -79,7 +80,6 @@ class TestSettings(SettingsCase):
         for key in ('title', 'version', 'manuscript', 'dist', 'languages',
                     'log_level', 'llm_provider'):
             self.assertIn(key, summary)
-
 
 class TestTuiSurface(SettingsCase):
     def test_header_shows_identity(self):
@@ -151,7 +151,6 @@ class TestTuiSurface(SettingsCase):
             result = tui.configure(reader=lambda _prompt: next(answers))
         self.assertIn('未修改', result)
 
-
 class TestCliSurface(SettingsCase):
     def test_cli_settings_lists_keys(self):
         code, out = _fixture.run_inproc(self.root, 'cli.py', 'settings')
@@ -168,7 +167,6 @@ class TestCliSurface(SettingsCase):
         code, out = _fixture.run_inproc(self.root, 'cli.py', 'settings', 'set', 'nope', 'x')
         self.assertEqual(code, 2)
         self.assertIn('error', out)
-
 
 if __name__ == '__main__':
     unittest.main()

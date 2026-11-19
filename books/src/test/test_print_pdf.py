@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tests for the print-grade PDF pipeline (fake Chromium engine)."""
+
 from __future__ import annotations
 
 import io
@@ -13,12 +14,13 @@ import _fixture
 from pypdf import PdfReader, PdfWriter
 from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
 
+TAGS = ('layer:infra', 'tier:slow')
+
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
-
 
 def write_text_pdf(path: str, pages: list[list[str]]) -> str:
     """A4 pages carrying the given ASCII text lines."""
@@ -44,7 +46,6 @@ def write_text_pdf(path: str, pages: list[list[str]]) -> str:
         writer.write(fh)
     return path
 
-
 class RecordingPage:
     def __init__(self, target: str, pages: list[list[str]]):
         self.target = target
@@ -64,7 +65,6 @@ class RecordingPage:
         self.pdf_kwargs = kwargs
         write_text_pdf(path or self.target, self.pages)
 
-
 class FakeBrowser:
     def __init__(self, page):
         self._page = page
@@ -75,7 +75,6 @@ class FakeBrowser:
     def close(self) -> None:
         return None
 
-
 class FakeChromium:
     def __init__(self, page):
         self._page = page
@@ -83,11 +82,9 @@ class FakeChromium:
     def launch(self, **kwargs):
         return FakeBrowser(self._page)
 
-
 class FakePlaywright:
     def __init__(self, page):
         self.chromium = FakeChromium(page)
-
 
 def fake_engine(page):
     @contextmanager
@@ -95,7 +92,6 @@ def fake_engine(page):
         yield FakePlaywright(page)
 
     return engine
-
 
 class PrintGradePdfTest(unittest.TestCase):
     def setUp(self):
@@ -178,7 +174,6 @@ class PrintGradePdfTest(unittest.TestCase):
             code = self.module.main(['--skip-html', '--html', self.html, '--pdf', self.pdf],
                                     engine=fake_engine(page))
         self.assertEqual(code, 0)
-
 
 if __name__ == '__main__':
     unittest.main()

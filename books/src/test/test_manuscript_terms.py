@@ -4,6 +4,7 @@
 These exercise the error and edge branches (missing files, empty inputs,
 threshold violations, alternate CLI modes) that the happy-path tests skip.
 """
+
 import os
 import sys
 import tempfile
@@ -11,6 +12,8 @@ import unittest
 
 import _fixture
 from _cases import Base, ScriptTestBase
+
+TAGS = ('layer:manuscript', 'tier:fast')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -21,7 +24,6 @@ if TOOLS_DIR not in sys.path:
         _path = os.path.join(TOOLS_DIR, _sub)
         if _path not in sys.path:
             sys.path.insert(0, _path)
-
 
 class FixtureCase(unittest.TestCase):
     def setUp(self):
@@ -42,7 +44,6 @@ class FixtureCase(unittest.TestCase):
             fh.write(text)
         return path
 
-
 class TestAnnotateTermsBranches(FixtureCase):
     def test_annotates_then_is_idempotent(self):
         code, out = self.run_script('terms.py')
@@ -57,10 +58,8 @@ class TestAnnotateTermsBranches(FixtureCase):
         self.assertIn(code, (0, 1), out[-200:])
         self.assertNotIn('Traceback', out)
 
-
 if __name__ == '__main__':
     unittest.main()
-
 
 class TestAnnotateTermsGuideBranches(Base):
     def test_chapter_without_guide_block(self):
@@ -68,7 +67,6 @@ class TestAnnotateTermsGuideBranches(Base):
         code, out = self.run_script('terms.py')
         self.assertEqual(code, 0, out[-300:])
         self.assertIn('No guide block found', out)
-
 
 class TestAnnotateTermsReports(Base):
     def test_report_missing_on_rich_chapter(self):
@@ -92,7 +90,6 @@ class TestAnnotateTermsReports(Base):
         code, out = self.run_script('terms.py', '--check-related')
         self.assertEqual(code, 1, out[-300:])
         self.assertIn('DANGLING', out)
-
 
 class TestAnnotateTermsModes(ScriptTestBase):
     def test_default_mode_annotates_chapters(self):

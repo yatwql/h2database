@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tier runner and release flow: modes, reports, manifest, hook wiring."""
+
 from __future__ import annotations
 
 import io
@@ -12,12 +13,13 @@ from unittest import mock
 
 import _fixture
 
+TAGS = ('layer:infra', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
 REPO_ROOT = os.path.dirname(BOOK_ROOT)
 PY_ROOT = _fixture.TOOLS_DIR
-
 
 class RunnerModesTest(unittest.TestCase):
     def setUp(self):
@@ -80,7 +82,6 @@ class RunnerModesTest(unittest.TestCase):
             self.runner.main(['--mode', 'p0', '--json'])
         self.assertTrue(run.call_args.kwargs['as_json'])
 
-
 class ReleaseFlowTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -135,7 +136,6 @@ class ReleaseFlowTest(unittest.TestCase):
         self.assertEqual(self.release.sha256(path), self.release.sha256(path))
         self.assertEqual(self.release.sha256(os.path.join(self.tmp.name, 'missing')), '')
 
-
 class HookWiringTest(unittest.TestCase):
     """The hooks and the tiers must not drift apart."""
 
@@ -159,7 +159,6 @@ class HookWiringTest(unittest.TestCase):
         with open(installer, encoding='utf-8') as fh:
             text = fh.read()
         self.assertIn('core.hooksPath .githooks', text)
-
 
 if __name__ == '__main__':
     unittest.main()

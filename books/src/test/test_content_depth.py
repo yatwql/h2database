@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tests for the content-depth checks (prereq / glossary / excerpt / exercise)."""
+
 import json
 import os
 import sys
@@ -8,13 +9,14 @@ import unittest
 
 import _fixture
 
+TAGS = ('layer:infra', 'tier:fast')
+
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
 sys.path.insert(0, os.path.join(TOOLS_DIR, 'lib'))
-
 
 class DepthCase(unittest.TestCase):
     def setUp(self):
@@ -32,7 +34,6 @@ class DepthCase(unittest.TestCase):
             fh.write(text)
         return path
 
-
 class TestPrerequisites(DepthCase):
     def test_forward_reference_needs_signpost(self):
         depth = self.module()
@@ -48,7 +49,6 @@ class TestPrerequisites(DepthCase):
                           '# 第1章 测试\n\n调用 `WidgetEngine`（详见第2章《测试章节》）。\n')
         self.assertFalse(depth.check_prerequisites(path, 1, owners))
 
-
 class TestGlossary(DepthCase):
     def test_repeated_type_without_entry_is_reported(self):
         depth = self.module()
@@ -63,7 +63,6 @@ class TestGlossary(DepthCase):
         path = self.write('manuscript/ch1-test.md', 'WidgetEngine WidgetEngine\n')
         self.assertEqual(depth.check_glossary([path], min_uses=2,
                                               ignore={'WidgetEngine'}), [])
-
 
 class TestExercises(DepthCase):
     def test_exercise_without_anchor_or_type_is_reported(self):
@@ -84,14 +83,12 @@ class TestExercises(DepthCase):
         path = self.write('manuscript/ch1-test.md', body)
         self.assertEqual(depth.check_exercises([path], owners, {'ch1-test.md': [1]}), [])
 
-
 class TestWholeGate(DepthCase):
     def test_gate_runs_and_reports_json(self):
         code, out = _fixture.run_inproc(self.root, 'content_depth.py', '--json')
         self.assertIn(code, (0, 1), out[-300:])
         payload = json.loads(out)
         self.assertIn('by_kind', payload)
-
 
 if __name__ == '__main__':
     unittest.main()

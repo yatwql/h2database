@@ -9,6 +9,7 @@ Environment-dependent scripts (PDF/EPUB toolchain) run only when their
 optional dependencies are importable; otherwise they are skipped by name so the
 gap stays visible instead of silently passing.
 """
+
 import importlib.util
 import os
 import sys
@@ -16,6 +17,8 @@ import tempfile
 import unittest
 
 import _fixture
+
+TAGS = ('layer:manuscript', 'tier:fast')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -31,7 +34,6 @@ SLOW = os.environ.get('BOOK_SLOW') == '1'
 HAS_PYPDF = importlib.util.find_spec('pypdf') is not None
 HAS_PLAYWRIGHT = importlib.util.find_spec('playwright') is not None
 HAS_PANDOC = bool(__import__('shutil').which('pandoc'))
-
 
 BUILD_SCRIPTS = ['cover.py', 'merge.py', 'to_html.py']
 
@@ -59,7 +61,6 @@ AUDIT_SCRIPTS = [
     'index.py',
 ]
 
-
 class ScriptTestBase(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -76,7 +77,6 @@ class ScriptTestBase(unittest.TestCase):
         with open(self.path(*parts), encoding='utf-8') as fh:
             return fh.read()
 
-
 class TestCaseStudyOutline(ScriptTestBase):
     def test_each_scenario_renders(self):
         for scenario in ('select', 'commit', 'recover'):
@@ -85,7 +85,6 @@ class TestCaseStudyOutline(ScriptTestBase):
                     'case_studies.py', '--scenario', scenario)
                 self.assertEqual(code, 0, out)
                 self.assertTrue(out.strip())
-
 
 if __name__ == '__main__':
     unittest.main()

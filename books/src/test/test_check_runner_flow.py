@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tier runner: step commands, failure reporting and main's flags."""
+
 from __future__ import annotations
 
 import io
@@ -11,10 +12,11 @@ from unittest import mock
 
 import _fixture
 
+TAGS = ('layer:infra', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
-
 
 class StepCommandTest(unittest.TestCase):
     def setUp(self):
@@ -37,7 +39,6 @@ class StepCommandTest(unittest.TestCase):
     def test_unknown_step_raises(self):
         with self.assertRaises(KeyError):
             self.runner._command('nope')
-
 
 class RunStepTest(unittest.TestCase):
     def setUp(self):
@@ -81,7 +82,6 @@ class RunStepTest(unittest.TestCase):
         with open(self.log, encoding='utf-8') as fh:
             self.assertIn('tests', fh.read())
 
-
 class MainFlagsTest(unittest.TestCase):
     def setUp(self):
         self.runner = _fixture.load_module(BOOK_ROOT, 'check_runner')
@@ -109,7 +109,6 @@ class MainFlagsTest(unittest.TestCase):
                                              'failed_step': 'tests', 'seconds': 1.0}), \
                 redirect_stdout(io.StringIO()):
             self.assertEqual(self.runner.main([]), 1)
-
 
 if __name__ == '__main__':
     unittest.main()

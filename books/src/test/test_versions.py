@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tests for the three-version model and its consistency gate."""
+
 import json
 import os
 import sys
@@ -8,13 +9,14 @@ import unittest
 
 import _fixture
 
+TAGS = ('layer:infra', 'tier:fast')
+
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
 sys.path.insert(0, os.path.join(TOOLS_DIR, 'lib'))
-
 
 class VersionsCase(unittest.TestCase):
     def setUp(self):
@@ -32,7 +34,6 @@ class VersionsCase(unittest.TestCase):
         payload['sources'].update(sources)
         with open(path, 'w', encoding='utf-8') as fh:
             json.dump(payload, fh, ensure_ascii=False, indent=2)
-
 
 class TestVersions(VersionsCase):
     def test_tool_version_defaults_to_package_constant(self):
@@ -64,7 +65,6 @@ class TestVersions(VersionsCase):
         bundle = self.config().versions()
         self.assertEqual(set(bundle), {'tool', 'source', 'doc'})
 
-
 class TestVersionGate(VersionsCase):
     def gate(self):
         return _fixture.load_module(self.root, 'version_consistency')
@@ -87,7 +87,6 @@ class TestVersionGate(VersionsCase):
     def test_gate_reports_tool_version(self):
         _code, out = self.run_gate()
         self.assertIn('tool', out)
-
 
 if __name__ == '__main__':
     unittest.main()

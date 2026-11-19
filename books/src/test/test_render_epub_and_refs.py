@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """EPUB verify, source refs and figure clusters: the remaining audit tails."""
+
 from __future__ import annotations
 
 import io
@@ -12,10 +13,11 @@ from unittest import mock
 
 import _fixture
 
+TAGS = ('layer:render', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
-
 
 class EpubVerifyTest(unittest.TestCase):
     def setUp(self):
@@ -42,7 +44,6 @@ class EpubVerifyTest(unittest.TestCase):
         payload = json.loads(buffer.getvalue())
         self.assertIn('ok', payload)
 
-
 class FigureClusterTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -63,7 +64,6 @@ class FigureClusterTest(unittest.TestCase):
     def test_json_output_runs(self):
         code, out = _fixture.run_inproc(self.root, 'figure_clusters.py', '--json')
         self.assertIn(code, (0, 1), out[-300:])
-
 
 class SourceRefsTest(unittest.TestCase):
     def setUp(self):
@@ -97,7 +97,6 @@ class SourceRefsTest(unittest.TestCase):
                 mock.patch.object(self.mod, 'CHAPTER_FILES', ['ch1-test.md'], create=True):
             code = self.mod.main(['--suggest'])
         self.assertIn(code, (0, 1))
-
 
 if __name__ == '__main__':
     unittest.main()

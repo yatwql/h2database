@@ -4,12 +4,15 @@
 These exercise the error and edge branches (missing files, empty inputs,
 threshold violations, alternate CLI modes) that the happy-path tests skip.
 """
+
 import os
 import sys
 import tempfile
 import unittest
 
 import _fixture
+
+TAGS = ('layer:audit', 'tier:fast')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -20,7 +23,6 @@ if TOOLS_DIR not in sys.path:
         _path = os.path.join(TOOLS_DIR, _sub)
         if _path not in sys.path:
             sys.path.insert(0, _path)
-
 
 class FixtureCase(unittest.TestCase):
     def setUp(self):
@@ -41,7 +43,6 @@ class FixtureCase(unittest.TestCase):
             fh.write(text)
         return path
 
-
 class TestReadabilityDeep(FixtureCase):
     def test_unbalanced_box_and_bad_caption(self):
         self.write('data/manuscript/ch1-test.md',
@@ -61,10 +62,8 @@ class TestReadabilityDeep(FixtureCase):
         self.assertIn(code, (0, 1), out[-400:])
         self.assertIn('READABILITY', out)
 
-
 if __name__ == '__main__':
     unittest.main()
-
 
 class TestReadabilityBranches(FixtureCase):
     def test_runs_on_fixture(self):

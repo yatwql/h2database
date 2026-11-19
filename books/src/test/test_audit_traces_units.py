@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Traces gate: both scopes, pattern classes, exemptions and CLI."""
+
 from __future__ import annotations
 
 import io
@@ -12,10 +13,11 @@ from unittest import mock
 
 import _fixture
 
+TAGS = ('layer:audit', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
-
 
 class TracesUnitTest(unittest.TestCase):
     def setUp(self):
@@ -96,7 +98,6 @@ class TracesUnitTest(unittest.TestCase):
         with redirect_stdout(buffer):
             self.traces.main(['--kind', 'code'])
         self.assertIn('代码', buffer.getvalue())
-
 
 if __name__ == '__main__':
     unittest.main()

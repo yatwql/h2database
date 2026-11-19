@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """LLM providers offline: key resolution, mock provider and the Messages API."""
+
 from __future__ import annotations
 
 import json
@@ -12,14 +13,13 @@ from unittest import mock
 import _fixture
 import _netguard
 
+TAGS = ('layer:infra', 'tier:fast')
+
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
-
-
-
 
 class OfflineProviderTest(unittest.TestCase):
     def setUp(self):
@@ -99,7 +99,6 @@ class OfflineProviderTest(unittest.TestCase):
     def test_mock_provider_never_opens_a_socket(self):
         with mock.patch('socket.socket.connect', side_effect=AssertionError('socket opened')):
             self.assertTrue(self.llm.complete('hi'))
-
 
 class AnthropicTransportTest(unittest.TestCase):
     """The Anthropic-compatible chain: no sockets, payload and auth verified."""
@@ -188,7 +187,6 @@ class AnthropicTransportTest(unittest.TestCase):
         status = self.llm.status()
         self.assertIn('demo-anthropic', status['keys_configured'])
         self.assertNotIn('sk-test', json.dumps(status, ensure_ascii=False))
-
 
 if __name__ == '__main__':
     unittest.main()

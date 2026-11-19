@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Markdown/HTML helpers: heading parsing and plain-text extraction."""
+
 from __future__ import annotations
 
 import importlib
@@ -9,12 +10,13 @@ import unittest
 
 import _fixture  # noqa: F401 - installs the offline network guard
 
+TAGS = ('layer:lib', 'tier:fast')
+
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
-
 
 class HtmlHeadingParserTest(unittest.TestCase):
     """One parser feeds the print, outline and verification steps."""
@@ -34,7 +36,6 @@ class HtmlHeadingParserTest(unittest.TestCase):
     def test_drops_zero_width_space(self):
         found = self.mdutil.html_headings('<h2 id="z">第1章\u200b标题</h2>')
         self.assertEqual(found[0]['text'], '第1章标题')
-
 
 if __name__ == '__main__':
     unittest.main()

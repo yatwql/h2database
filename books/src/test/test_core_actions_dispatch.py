@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Core actions: dispatch, unknown actions, settings and the LLM bridge."""
+
 from __future__ import annotations
 
 import os
@@ -8,10 +9,11 @@ from unittest import mock
 
 import _fixture
 
+TAGS = ('layer:core', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
-
 
 class ActionDispatchTest(unittest.TestCase):
     def setUp(self):
@@ -89,7 +91,6 @@ class ActionDispatchTest(unittest.TestCase):
             code, text = self.actions.settings_table()
         self.assertEqual(code, 0)
         self.assertIn('book.title', text)
-
 
 if __name__ == '__main__':
     unittest.main()

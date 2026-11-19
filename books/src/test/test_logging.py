@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tests for the logging layer: level control, file output, rotation config."""
+
 import importlib
 import logging
 import logging.handlers
@@ -10,6 +11,8 @@ import unittest
 
 import _fixture
 
+TAGS = ('layer:infra', 'tier:fast')
+
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )
@@ -18,7 +21,6 @@ if TOOLS_DIR not in sys.path:
 sys.path.insert(0, os.path.join(TOOLS_DIR, 'lib'))
 
 _config = importlib.import_module('lib._config')
-
 
 class TestLogging(unittest.TestCase):
     def setUp(self):
@@ -104,7 +106,6 @@ class TestLogging(unittest.TestCase):
                 break
             time.sleep(0.05)
         self.assertIn(f'{_config.app_name()}.make', text)
-
 
 if __name__ == '__main__':
     unittest.main()

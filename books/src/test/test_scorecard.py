@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tests for the release scorecard dimensions (subprocess-free)."""
+
 from __future__ import annotations
 
 import io
@@ -13,12 +14,13 @@ from unittest import mock
 
 import _fixture
 
+TAGS = ('layer:infra', 'tier:fast')
+
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
-
 
 class ScorecardDimensionsTest(unittest.TestCase):
     def setUp(self):
@@ -150,7 +152,6 @@ class ScorecardDimensionsTest(unittest.TestCase):
                 redirect_stdout(buffer):
             self.card.main([])
         self.assertIn('发布质量评分', buffer.getvalue())
-
 
 if __name__ == '__main__':
     unittest.main()

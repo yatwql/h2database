@@ -4,12 +4,17 @@
 These exercise the error and edge branches (missing files, empty inputs,
 threshold violations, alternate CLI modes) that the happy-path tests skip.
 """
+
 import os
 import sys
 import tempfile
 import unittest
 
 import _fixture
+
+SOURCE_PATH = os.path.join(os.sep, 'synthetic', 'A.java')
+
+TAGS = ('layer:audit', 'tier:fast')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -20,7 +25,6 @@ if TOOLS_DIR not in sys.path:
         _path = os.path.join(TOOLS_DIR, _sub)
         if _path not in sys.path:
             sys.path.insert(0, _path)
-
 
 class FixtureCase(unittest.TestCase):
     def setUp(self):
@@ -41,24 +45,21 @@ class FixtureCase(unittest.TestCase):
             fh.write(text)
         return path
 
-
 class TestSourceFreshnessReport(FixtureCase):
     def test_print_report_branches(self):
         sfc = self.module('source_refs')
         ref_ok = sfc.Reference('ch.md', 1, 'A', 2)
         ref_missing = sfc.Reference('ch.md', 2, 'B', 5)
         results = [
-            sfc.Verification(ref_ok, 'OK', '/tmp/A.java', ''),
-            sfc.Verification(ref_ok, 'OFFSET', '/tmp/A.java', 'file has 1 lines, offset -1'),
+            sfc.Verification(ref_ok, 'OK', SOURCE_PATH, ''),
+            sfc.Verification(ref_ok, 'OFFSET', SOURCE_PATH, 'file has 1 lines, offset -1'),
             sfc.Verification(ref_missing, 'MISSING', None, ''),
-            sfc.Verification(ref_ok, 'ERROR', '/tmp/A.java', 'boom'),
+            sfc.Verification(ref_ok, 'ERROR', SOURCE_PATH, 'boom'),
         ]
-        sfc.print_report(results, {'A': ['/tmp/A.java'], 'Dup': ['a', 'b']})
-
+        sfc.print_report(results, {'A': [SOURCE_PATH], 'Dup': ['a', 'b']})
 
 if __name__ == '__main__':
     unittest.main()
-
 
 class TestSourceFreshnessBranches(FixtureCase):
     def test_missing_reference_and_baseline_flow(self):

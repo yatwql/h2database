@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Gate trace: the testplan and make.py must name the same gates."""
+
 from __future__ import annotations
 
 import io
@@ -11,10 +12,11 @@ from unittest import mock
 
 import _fixture
 
+TAGS = ('layer:audit', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
-
 
 class GateTraceTest(unittest.TestCase):
     def setUp(self):
@@ -74,7 +76,6 @@ class GateTraceTest(unittest.TestCase):
                 code = self.trace.main([])
         self.assertEqual(code, 1)
         self.assertIn('missing script', buffer.getvalue())
-
 
 if __name__ == '__main__':
     unittest.main()

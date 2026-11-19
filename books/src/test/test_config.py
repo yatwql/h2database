@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Tests for the book's single source of truth (books/book.toml + _config)."""
+
 import importlib
 import os
 import sys
 import unittest
+
+TAGS = ('layer:infra', 'tier:fast')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -17,7 +20,6 @@ if TOOLS_DIR not in sys.path:
 
 _config = importlib.import_module('lib._config')
 
-
 class TestConfigStructure(unittest.TestCase):
     def test_config_file_exists(self):
         self.assertTrue(os.path.isfile(_config.CONFIG_PATH), _config.CONFIG_PATH)
@@ -30,7 +32,6 @@ class TestConfigStructure(unittest.TestCase):
     def test_directories_exist(self):
         self.assertTrue(os.path.isdir(_config.MANUSCRIPT_DIR), _config.MANUSCRIPT_DIR)
         self.assertTrue(os.path.isdir(_config.DIST_DIR), _config.DIST_DIR)
-
 
 class TestChapters(unittest.TestCase):
     def test_no_missing_chapter_files(self):
@@ -63,7 +64,6 @@ class TestChapters(unittest.TestCase):
         self.assertTrue(os.path.isfile(_config.glossary_path()))
         self.assertTrue(os.path.isfile(_config.index_path()))
 
-
 class TestArtifacts(unittest.TestCase):
     def test_artifacts_live_in_dist(self):
         for path in (
@@ -75,7 +75,6 @@ class TestArtifacts(unittest.TestCase):
     def test_artifact_names_share_prefix(self):
         for path in (_config.merged_html(), _config.merged_pdf(), _config.merged_epub()):
             self.assertTrue(os.path.basename(path).startswith(_config.MERGED_NAME))
-
 
 class TestThresholds(unittest.TestCase):
     def test_thresholds_positive(self):
@@ -101,7 +100,6 @@ class TestThresholds(unittest.TestCase):
     def test_required_sections_declared(self):
         self.assertIn('本章小结', _config.REQUIRED_SECTIONS)
         self.assertIn('延伸思考', _config.REQUIRED_SECTIONS)
-
 
 if __name__ == '__main__':
     unittest.main()

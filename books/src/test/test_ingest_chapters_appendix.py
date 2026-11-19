@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Appendix rendering: coordinates table, exercises and summary from the inventory."""
+
 from __future__ import annotations
 
 import tempfile
@@ -7,8 +8,9 @@ import unittest
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('layer:ingest', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 class AppendixRenderTest(unittest.TestCase):
     def setUp(self):
@@ -61,7 +63,6 @@ class AppendixRenderTest(unittest.TestCase):
         }}
         text = self.chapters.render_appendix(self.chapter(packages), self.spec)
         self.assertNotIn('Anon', text)
-
 
 if __name__ == '__main__':
     unittest.main()

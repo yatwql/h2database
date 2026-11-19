@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """The smart audit's full report path (helper-level, no fixture book)."""
+
 from __future__ import annotations
 
 import importlib
@@ -8,10 +9,11 @@ import unittest
 import _fixture
 from _cases import FixtureCase
 
+TAGS = ('layer:audit', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 _smart = importlib.import_module('smart')
-
 
 class TestSmartAuditDeep(FixtureCase):
     RICH = (
@@ -35,7 +37,6 @@ class TestSmartAuditDeep(FixtureCase):
         code, out = self.run_script('smart.py')
         self.assertIn(code, (0, 1), out[-400:])
         self.assertNotIn('Traceback', out)
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tests for the HTML->PDF step, with a fake Chromium engine."""
+
 from __future__ import annotations
 
 import io
@@ -18,12 +19,13 @@ from pypdf.generic import (
     NameObject,
 )
 
+TAGS = ('layer:infra', 'tier:slow')
+
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
-
 
 def write_text_pdf(path: str, pages: list[list[str]]) -> str:
     """Write a PDF whose pages contain the given text lines (Helvetica)."""
@@ -50,7 +52,6 @@ def write_text_pdf(path: str, pages: list[list[str]]) -> str:
         writer.write(fh)
     return path
 
-
 class FakePage:
     def __init__(self, target: str, headings: list[dict], pages: list[list[str]]):
         self.target = target
@@ -71,7 +72,6 @@ class FakePage:
     def pdf(self, path: str, **kwargs) -> None:
         write_text_pdf(path or self.target, self.pages)
 
-
 class FakeBrowser:
     def __init__(self, page: FakePage):
         self._page = page
@@ -83,7 +83,6 @@ class FakeBrowser:
     def close(self) -> None:
         self.closed = True
 
-
 class FakeChromium:
     def __init__(self, page: FakePage):
         self._page = page
@@ -91,11 +90,9 @@ class FakeChromium:
     def launch(self, **kwargs):
         return FakeBrowser(self._page)
 
-
 class FakePlaywright:
     def __init__(self, page: FakePage):
         self.chromium = FakeChromium(page)
-
 
 def fake_engine(page: FakePage):
     @contextmanager
@@ -103,7 +100,6 @@ def fake_engine(page: FakePage):
         yield FakePlaywright(page)
 
     return engine
-
 
 class PdfBuildPipelineTest(unittest.TestCase):
     def setUp(self):
@@ -212,7 +208,6 @@ class PdfBuildPipelineTest(unittest.TestCase):
                                     engine=broken)
         self.assertEqual(code, 2)
         self.assertIn('chromium', err.getvalue())
-
 
 if __name__ == '__main__':
     unittest.main()

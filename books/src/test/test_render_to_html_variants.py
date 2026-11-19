@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """to_html: markdown and cover variants the real book relies on."""
+
 from __future__ import annotations
 
 import os
@@ -7,6 +8,8 @@ import tempfile
 import unittest
 
 import _fixture
+
+TAGS = ('layer:render', 'tier:fast')
 
 _fixture.ensure_tools_path()
 
@@ -44,7 +47,6 @@ COVER = """# 测试之书
 **作者：其·龙**
 **联系邮箱：a@b.c**
 """
-
 
 class ToHtmlVariantTest(unittest.TestCase):
     def setUp(self):
@@ -120,7 +122,6 @@ class ToHtmlVariantTest(unittest.TestCase):
     def test_headings_get_anchor_ids(self):
         _code, _out, html = self.build()
         self.assertRegex(html, r'<h1[^>]*id="')
-
 
 if __name__ == '__main__':
     unittest.main()

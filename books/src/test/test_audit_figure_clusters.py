@@ -4,6 +4,7 @@
 These target the pure logic (counting, parsing, clustering, PDF checks) that the
 end-to-end tests exercise only indirectly.
 """
+
 import importlib.util
 import os
 import sys
@@ -11,6 +12,8 @@ import tempfile
 import unittest
 
 import _fixture
+
+TAGS = ('layer:audit', 'tier:fast')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -23,7 +26,6 @@ if TOOLS_DIR not in sys.path:
             sys.path.insert(0, _path)
 
 HAS_PYPDF = importlib.util.find_spec('pypdf') is not None
-
 
 class FixtureCase(unittest.TestCase):
     def setUp(self):
@@ -40,7 +42,6 @@ class FixtureCase(unittest.TestCase):
         with open(path, 'w', encoding='utf-8') as fh:
             fh.write(text)
         return path
-
 
 class TestFigureClusterHelpers(FixtureCase):
     FIGURES = (
@@ -68,7 +69,6 @@ class TestFigureClusterHelpers(FixtureCase):
         clusters = self.module('figure_clusters')
         path = self.write('data/manuscript/single.md', '**图 3-1: 展示 A**\n')
         self.assertEqual(clusters.find_clusters(path, min_figs=3, window=40), [])
-
 
 if __name__ == '__main__':
     unittest.main()

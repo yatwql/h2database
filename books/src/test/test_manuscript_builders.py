@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Glossary and index builders: parsing, validation and generated output."""
+
 from __future__ import annotations
 
 import os
@@ -8,8 +9,9 @@ import unittest
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('layer:manuscript', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 class GlossaryBuilderTest(unittest.TestCase):
     """glossary.py is script-style: drive it with flags, assert the verdict."""
@@ -69,7 +71,6 @@ class GlossaryBuilderTest(unittest.TestCase):
         self.assertIn(code, (0, 1, 2), out[-400:])
         self.assertNotIn('Traceback', out)
 
-
 class IndexBuilderTest(unittest.TestCase):
     """index.py is script-style: drive it with flags, assert the verdict."""
 
@@ -103,7 +104,6 @@ class IndexBuilderTest(unittest.TestCase):
         code, out = _fixture.run_inproc(self.root, 'index.py', '--hierarchy-check')
         self.assertIn(code, (0, 1, 2), out[-400:])
         self.assertNotIn('Traceback', out)
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """The scaffold generator: the files it writes and its CLI output."""
+
 from __future__ import annotations
 
 import io
@@ -12,14 +13,13 @@ from contextlib import redirect_stdout
 
 import _fixture
 
+TAGS = ('layer:app', 'tier:fast')
+
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
-
-
-
 
 class ScaffoldGeneratorTest(unittest.TestCase):
     def setUp(self):
@@ -90,7 +90,6 @@ class ScaffoldGeneratorTest(unittest.TestCase):
                                      '--title', '新标题'])
         self.assertEqual(code, 0)
         self.assertIn('bookctl analyze', buffer.getvalue())
-
 
 if __name__ == '__main__':
     unittest.main()

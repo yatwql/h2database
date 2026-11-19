@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """to_epub in-process: metadata extraction and the pandoc invocation."""
+
 from __future__ import annotations
 
 import os
@@ -11,11 +12,11 @@ from unittest import mock
 
 import _fixture
 
+TAGS = ('layer:render', 'tier:slow')
+
 _fixture.ensure_tools_path()
 
-
 REAL_RUN = subprocess.run
-
 
 def fake_pandoc(*args, **kwargs):
     """Fake only the pandoc invocation; everything else runs for real."""
@@ -33,7 +34,6 @@ def fake_pandoc(*args, **kwargs):
         with open(out, 'w', encoding='utf-8') as fh:
             fh.write('fake epub\n')
     return subprocess.CompletedProcess(command, 0, stdout='pandoc 3.1.0\n', stderr='')
-
 
 class ToEpubInProcessTest(unittest.TestCase):
     def setUp(self):
@@ -74,7 +74,6 @@ class ToEpubInProcessTest(unittest.TestCase):
             code, out = _fixture.run_inproc(self.root, 'to_epub.py')
         self.assertIn(code, (0, 1))
         self.assertNotIn('Traceback', out)
-
 
 if __name__ == '__main__':
     unittest.main()

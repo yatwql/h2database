@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """to_epub: pandoc present (stubbed) and pandoc missing."""
+
 from __future__ import annotations
 
 import os
@@ -10,6 +11,8 @@ import tempfile
 import unittest
 
 import _fixture
+
+TAGS = ('layer:render', 'tier:slow')
 
 _fixture.ensure_tools_path()
 
@@ -30,7 +33,6 @@ done
 [ -n "$out" ] && printf '%%PDF-1.4 fake epub\\n' > "$out"
 exit 0
 """
-
 
 class ToEpubPathsTest(unittest.TestCase):
     def setUp(self):
@@ -60,7 +62,6 @@ class ToEpubPathsTest(unittest.TestCase):
         result = self.run_epub(with_pandoc=False)
         self.assertEqual(result.returncode, 1)
         self.assertIn('pandoc', (result.stdout + result.stderr).lower())
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -4,6 +4,7 @@
 These target the pure logic (counting, parsing, clustering, PDF checks) that the
 end-to-end tests exercise only indirectly.
 """
+
 import importlib.util
 import os
 import sys
@@ -11,6 +12,8 @@ import tempfile
 import unittest
 
 import _fixture
+
+TAGS = ('layer:manuscript', 'tier:fast')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -23,7 +26,6 @@ if TOOLS_DIR not in sys.path:
             sys.path.insert(0, _path)
 
 HAS_PYPDF = importlib.util.find_spec('pypdf') is not None
-
 
 class FixtureCase(unittest.TestCase):
     def setUp(self):
@@ -41,7 +43,6 @@ class FixtureCase(unittest.TestCase):
             fh.write(text)
         return path
 
-
 class TestGlossaryBuilder(FixtureCase):
     def test_parse_glossary_v6(self):
         builder = self.module('glossary')
@@ -56,7 +57,6 @@ class TestGlossaryBuilder(FixtureCase):
                    '# 术语表\n\n## A\n\n- 无加粗术语\n- **Term**: 释义\n  **章节**：第2章 §2.1\n')
         entries = builder.parse_glossary_v6()
         self.assertEqual(list(entries), ['Term'])
-
 
 if __name__ == '__main__':
     unittest.main()

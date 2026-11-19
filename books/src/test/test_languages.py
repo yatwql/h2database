@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tests for the language analyzers and multi-language digest."""
+
 import importlib
 import json
 import os
@@ -8,6 +9,8 @@ import tempfile
 import unittest
 
 import _fixture
+
+TAGS = ('layer:infra', 'tier:fast')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -19,7 +22,6 @@ sys.path.insert(0, os.path.join(TOOLS_DIR, 'lib'))
 FIXTURES = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fixtures')
 
 languages = importlib.import_module('ingest.languages')
-
 
 class TestRegistry(unittest.TestCase):
     def setUp(self):
@@ -38,7 +40,6 @@ class TestRegistry(unittest.TestCase):
         for name, expected in (('mini-java', 'java'), ('mini-python', 'python'),
                                ('mini-rust', 'rust')):
             self.assertEqual(languages.detect(os.path.join(FIXTURES, name)), expected)
-
 
 class TestAnalyzers(unittest.TestCase):
     def setUp(self):
@@ -90,7 +91,6 @@ class TestAnalyzers(unittest.TestCase):
             self.assertGreater(inventory['totals']['files'], 0, language)
             self.assertGreater(inventory['totals']['lines'], 0, language)
 
-
 class TestDigestLanguages(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -132,7 +132,6 @@ class TestDigestLanguages(unittest.TestCase):
         # java-only tree: python contributes nothing but the language is listed
         self.assertEqual(inventory['languages'], ['java', 'python'])
         self.assertIn('java:org.example', inventory['packages'])
-
 
 if __name__ == '__main__':
     unittest.main()

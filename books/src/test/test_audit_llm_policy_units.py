@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """LLM policy: allowed layers, secret-file hygiene and the CLI."""
+
 from __future__ import annotations
 
 import io
@@ -12,10 +13,11 @@ from unittest import mock
 
 import _fixture
 
+TAGS = ('layer:audit', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
-
 
 class LlmPolicyUnitTest(unittest.TestCase):
     def setUp(self):
@@ -102,7 +104,6 @@ class LlmPolicyUnitTest(unittest.TestCase):
         payload = json.loads(buffer.getvalue())
         self.assertEqual(code, 0)
         self.assertIn('llm_scenarios', payload['policy'])
-
 
 if __name__ == '__main__':
     unittest.main()

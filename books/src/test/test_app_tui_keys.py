@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Key decoding: one press per event, arrows recognised, line mode for pipes."""
+
 from __future__ import annotations
 
 import importlib
@@ -9,10 +10,11 @@ from unittest import mock
 
 import _fixture
 
+TAGS = ('layer:app', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 keys = importlib.import_module('app.keys')
-
 
 class KeyDecodingTest(unittest.TestCase):
     def test_arrow_sequences_map_to_up_and_down(self):
@@ -45,7 +47,6 @@ class KeyDecodingTest(unittest.TestCase):
         self.assertEqual(keys.normalize(keys.KEY_UP), keys.KEY_UP)
         self.assertEqual(keys.normalize(keys.KEY_ENTER), keys.KEY_ENTER)
 
-
 class PipedInputTest(unittest.TestCase):
     def test_line_mode_returns_the_first_character(self):
         with mock.patch.object(keys.sys, 'stdin', io.StringIO('q\n')):
@@ -60,7 +61,6 @@ class PipedInputTest(unittest.TestCase):
         broken.isatty.side_effect = ValueError('closed')
         with mock.patch.object(keys.sys, 'stdin', broken):
             self.assertFalse(keys.interactive())
-
 
 if __name__ == '__main__':
     unittest.main()

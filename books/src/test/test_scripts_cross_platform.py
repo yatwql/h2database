@@ -5,6 +5,7 @@ The toolchain is developed on Linux and used on Windows, so a missing `.ps1`
 means a workflow that silently only exists on one side. These checks are static
 (running PowerShell on Linux is not available), which is why they are cheap.
 """
+
 from __future__ import annotations
 
 import os
@@ -13,21 +14,20 @@ import unittest
 
 import _fixture
 
+TAGS = ('layer:infra', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
 SCRIPTS = os.path.join(BOOK_ROOT, 'scripts')
 PY_ROOT = _fixture.TOOLS_DIR
 
-
 def read_text(path: str) -> str:
     with open(path, encoding='utf-8') as fh:
         return fh.read()
 
-
 def pathlib_text(name: str) -> str:
     return read_text(os.path.join(SCRIPTS, name))
-
 
 class WrapperParityTest(unittest.TestCase):
     def shells(self) -> list[str]:
@@ -75,7 +75,6 @@ class WrapperParityTest(unittest.TestCase):
             with self.subTest(script=name):
                 self.assertRegex(pathlib_text(name), r'(@args|@Extra|@Rest)')
 
-
 class HookPortabilityTest(unittest.TestCase):
     """Hooks are POSIX shell; Windows users get the same tiers via scripts/."""
 
@@ -107,7 +106,6 @@ class HookPortabilityTest(unittest.TestCase):
                     if pattern.search(fh.read()):
                         offenders.append(os.path.relpath(path, PY_ROOT))
         self.assertEqual(offenders, [], f'POSIX-only shell calls: {offenders}')
-
 
 if __name__ == '__main__':
     unittest.main()

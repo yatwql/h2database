@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Outline: inventory -> chapter plan, conflicts, missing packages and CLI."""
+
 from __future__ import annotations
 
 import json
@@ -10,8 +11,9 @@ from unittest import mock
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('layer:ingest', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 class OutlineTest(unittest.TestCase):
     def setUp(self):
@@ -88,7 +90,6 @@ class OutlineTest(unittest.TestCase):
         code, out = _fixture.run_inproc(self.root, 'outline.py', '--json')
         self.assertEqual(code, 0)
         self.assertIn('chapters', json.loads(out[out.index('{'):]))
-
 
 if __name__ == '__main__':
     unittest.main()

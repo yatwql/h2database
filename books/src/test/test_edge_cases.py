@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Edge inputs: empty, zero-byte, BOM, CRLF, long lines, awkward paths."""
+
 from __future__ import annotations
 
 import os
@@ -8,8 +9,9 @@ import unittest
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('edge:input', 'layer:infra', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 class EdgeCaseTest(unittest.TestCase):
     def setUp(self):
@@ -93,7 +95,6 @@ class EdgeCaseTest(unittest.TestCase):
         code, out = _fixture.run_inproc(self.root, 'chapters.py')
         self.assertEqual(code, 2, out[-400:])
         self.assertNotIn('Traceback', out)
-
 
 if __name__ == '__main__':
     unittest.main()

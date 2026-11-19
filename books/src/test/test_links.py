@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Tests for the shared markdown helpers and the link/anchor audit."""
+
 import importlib
 import os
 import sys
 import tempfile
 import unittest
 from typing import ClassVar
+
+TAGS = ('layer:infra', 'tier:fast')
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -20,7 +23,6 @@ if TOOLS_DIR not in sys.path:
 _mdutil = importlib.import_module('lib._mdutil')
 _audit_links = importlib.import_module('links')
 
-
 class TestSlugify(unittest.TestCase):
     def test_basic(self):
         self.assertEqual(_mdutil.slugify('第3章 包结构'), '第3章-包结构')
@@ -30,7 +32,6 @@ class TestSlugify(unittest.TestCase):
 
     def test_lowercases_ascii(self):
         self.assertEqual(_mdutil.slugify('MVStore 架构'), 'mvstore-架构')
-
 
 class TestHeadingScan(unittest.TestCase):
     LINES: ClassVar[list[str]] = [
@@ -52,7 +53,6 @@ class TestHeadingScan(unittest.TestCase):
         headings = _mdutil.iter_headings(self.LINES)
         self.assertEqual([lvl for lvl, _t, _s in headings], [1, 2])
 
-
 class TestExternalDetection(unittest.TestCase):
     def test_external(self):
         for target in ('https://example.com', 'http://a.b', 'mailto:x@y.z'):
@@ -62,12 +62,10 @@ class TestExternalDetection(unittest.TestCase):
         for target in ('ch3-packages.md', '#anchor', 'back/glossary.md#term'):
             self.assertFalse(_mdutil.is_external(target), target)
 
-
 class TestLinkExtraction(unittest.TestCase):
     def test_inline_and_image(self):
         links = _mdutil.iter_links('见 [图注](ch3.md) 与 ![图](img/a.png)')
         self.assertEqual([t for _l, t in links], ['ch3.md', 'img/a.png'])
-
 
 class TestAuditLinks(unittest.TestCase):
     def setUp(self):
@@ -122,7 +120,6 @@ class TestAuditLinks(unittest.TestCase):
         page = self.write('ch3.md', '第一行\n\n见 [缺失](nope.md)\n')
         violations = self.audit(page)
         self.assertEqual(violations[0][1], 3)
-
 
 if __name__ == '__main__':
     unittest.main()

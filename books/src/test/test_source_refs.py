@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Coverage for source_refs: parsing, resolution, drift and the CLI."""
+
 from __future__ import annotations
 
 import io
@@ -12,12 +13,13 @@ from contextlib import redirect_stderr, redirect_stdout
 
 import _fixture
 
+TAGS = ('layer:infra', 'tier:fast')
+
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
 )
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
-
 
 class SourceReferenceAuditTest(unittest.TestCase):
     def setUp(self):
@@ -182,7 +184,6 @@ class SourceReferenceAuditTest(unittest.TestCase):
             with self.subTest(flag=flag):
                 code, _out, _err = self.run_main(flag, '--baseline', baseline)
                 self.assertIn(code, (0, 1, 2))
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -4,6 +4,7 @@
 An import-order regression inside a channel (path setup after the project
 imports, for instance) is invisible to in-process tests but breaks `bookctl`.
 """
+
 from __future__ import annotations
 
 import os
@@ -13,18 +14,18 @@ import unittest
 
 import _fixture
 
+TAGS = ('layer:infra', 'tier:fast')
+
 _fixture.ensure_tools_path()
 
 PY_ROOT = _fixture.TOOLS_DIR
 BOOK_ROOT = os.path.dirname(PY_ROOT)
 REPO_ROOT = os.path.dirname(BOOK_ROOT)
 
-
 def run(script: str, *args: str, stdin: str | None = None):
     return subprocess.run([sys.executable, os.path.join(PY_ROOT, script), *args],
                           capture_output=True, text=True, cwd=REPO_ROOT,
                           input=stdin, check=False, timeout=120)
-
 
 class ChannelLaunchTest(unittest.TestCase):
     def test_cli_status_runs_standalone(self):
@@ -60,7 +61,6 @@ class ChannelLaunchTest(unittest.TestCase):
                                 cwd=BOOK_ROOT, input='q', check=False, timeout=120)
         self.assertEqual(result.returncode, 0, result.stderr[-500:])
         self.assertNotIn('ModuleNotFoundError', result.stderr)
-
 
 if __name__ == '__main__':
     unittest.main()

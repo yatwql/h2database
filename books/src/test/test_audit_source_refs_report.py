@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Source refs: the report body for every verification status."""
+
 from __future__ import annotations
 
 import io
@@ -11,8 +12,9 @@ from unittest import mock
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('layer:audit', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 class SourceRefsReportTest(unittest.TestCase):
     def setUp(self):
@@ -72,7 +74,6 @@ class SourceRefsReportTest(unittest.TestCase):
         text = buffer.getvalue().strip()
         start = text.find('{')
         self.assertIsInstance(json.loads(text[start:]) if start >= 0 else {}, dict)
-
 
 if __name__ == '__main__':
     unittest.main()

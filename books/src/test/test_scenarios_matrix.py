@@ -4,6 +4,7 @@
 unittest has no markers, so each dimension is a subTest with labelled kwargs —
 a failure names the exact combination (`newline='crlf' chapter_layout='single'`).
 """
+
 from __future__ import annotations
 
 import itertools
@@ -14,8 +15,9 @@ import unittest
 
 import _fixture
 
-_fixture.ensure_tools_path()
+TAGS = ('scenario:matrix', 'layer:infra', 'tier:fast')
 
+_fixture.ensure_tools_path()
 
 class ScenarioMatrixTest(unittest.TestCase):
     """newline × chapter layout × style strictness, all four combinations."""
@@ -73,7 +75,6 @@ class ScenarioMatrixTest(unittest.TestCase):
                 self.assertIn(code, (0, 1), out[-400:])
                 self.assertNotIn('Traceback', out)
 
-
 class LanguageMatrixTest(unittest.TestCase):
     """digest → outline runs for every analysed language, not just Java."""
 
@@ -86,7 +87,6 @@ class LanguageMatrixTest(unittest.TestCase):
                 code, out = _fixture.run_inproc(root, 'digest.py')
                 self.assertIn(code, (0, 1, 2), out[-400:])
                 self.assertNotIn('Traceback', out)
-
 
 if __name__ == '__main__':
     unittest.main()
