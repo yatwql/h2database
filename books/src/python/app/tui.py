@@ -127,14 +127,16 @@ def menu_text() -> str:
         lines.append('')
     lines.append(f"   {_c('c', PALETTE['key'])} 配置   "
                  f"{_c('r', PALETTE['key'])} 刷新   "
-                 f"{_c('?', PALETTE['key'])} 帮助   "
-                 f"{_c('q', PALETTE['key'])} 退出")
+                 f"{_c('?', PALETTE['key'])} 帮助")
+    lines.append(f"   {_c('q', PALETTE['key'])} / {_c('0', PALETTE['key'])} 退出"
+                 f"   {_c('Ctrl+C', PALETTE['key'])} 退出")
     return '\n'.join(lines)
 
 
 def help_text() -> str:
     return ('数字键执行动作；`c` 进入配置修改（书名、版本、产物目录、语言、'
-            '日志级别、LLM provider）；`r` 重新读取配置；`q` 退出。\n'
+            '日志级别、LLM provider）；`r` 重新读取配置。\n'
+            '退出：`q`、`0` 或 `Ctrl+C`（三者都走同一条干净退出路径）。\n'
             '非交互场景用 `--once <动作>`，例如 `--once status`。')
 
 
