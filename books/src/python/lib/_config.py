@@ -181,6 +181,21 @@ def chapter_packages() -> dict[str, list[str]]:
     return dict(_CFG.get('chapters', {}).get('packages', {}))
 
 
+def chapter_titles() -> dict[str, list[str]]:
+    """Chapter file -> ordered section titles contributed by that file."""
+    return {k: list(v) for k, v in _CFG.get('chapters', {}).get('titles', {}).items()}
+
+
+def chapter_numbering() -> dict[str, list[int]]:
+    """Chapter file -> H1 chapter numbers it owns (unique across files)."""
+    return {k: list(v) for k, v in _CFG.get('chapters', {}).get('numbering', {}).items()}
+
+
+def chapter_coverage() -> dict[str, list[int]]:
+    """Chapter file -> book chapters it covers (may repeat across files)."""
+    return {k: list(v) for k, v in _CFG.get('chapters', {}).get('coverage', {}).items()}
+
+
 def missing_files() -> list[str]:
     """Configured chapter files that do not exist on disk."""
     names = list(_CFG.get('chapters', {}).get('files', []))

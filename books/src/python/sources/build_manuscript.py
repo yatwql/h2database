@@ -25,18 +25,22 @@ from lib import _config, _fsutil
 OUTLINE = os.path.join(_config.BOOK_ROOT, 'data', 'state', 'outline.json')
 SOURCE_ROOT = _config.source_tree('src_main')
 
-CHAPTER_SPEC = {
-    'ch1-2-architecture.md': [(1, 'H2 总体架构'), (2, '分层模块划分')],
-    'ch3-packages.md': [(3, '包结构与模块职责')],
-    'ch4-5-modules-processes.md': [(4, '模块边界与依赖治理'), (5, '进程内数据流')],
-    'ch6-1-data-structures.md': [(6, '数据结构：值、行与页')],
-    'ch6-2-storage-algorithms.md': [(7, '存储与压缩算法')],
-    'ch6-3-query-algorithms.md': [(8, '索引与表达式求值')],
-    'ch7-sql-execution.md': [(9, 'SQL 解析与执行')],
-    'ch8-query-optimizer.md': [(10, '查询优化器')],
-    'ch9-10-persistence-locking.md': [(11, '持久化'), (12, '并发控制')],
-    'ch11-12-guide-summary.md': [(13, '二次开发指南'), (14, '全书总结')],
-}
+def _spec_table() -> dict[str, list[tuple[int, str]]]:
+    """Chapter file -> [(H1 number, title)] derived from book.toml."""
+    numbers = _config.chapter_numbering()
+    titles = _config.chapter_titles()
+    table: dict[str, list[tuple[int, str]]] = {}
+    for name, nums in numbers.items():
+        names = titles.get(name, [])
+        pairs = []
+        for index, num in enumerate(nums):
+            title = names[index] if index < len(names) else (names[0] if names else name)
+            pairs.append((num, title))
+        table[name] = pairs
+    return table
+
+
+CHAPTER_SPEC: dict[str, list[tuple[int, str]]] = _spec_table()
 
 TYPE_EMOJI = ('🟢', '🔵', '🟠')
 ASPECTS = ('性能与规模', '并发与一致性', '扩展与兼容', '演化与版本')
@@ -336,8 +340,9 @@ def render_chapter(ch: dict) -> str:
 
 
 APPENDIX_SPEC = {
-    'appendix-a-case-studies.md': (13, '附录 A 源码坐标索引'),
-    'appendix-b-version-changes.md': (14, '附录 B 版本变更对照'),
+    name: (nums[0], f'附录 {chr(65 + index)} {((_config.chapter_titles().get(name) or [name])[0])}')
+    for index, (name, nums) in enumerate(_config.chapter_numbering().items())
+    if name.startswith('appendix-') and nums
 }
 
 

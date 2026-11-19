@@ -52,21 +52,10 @@ MS_DIR = _config.MANUSCRIPT_DIR
 
 # 章节文件 → 该文件覆盖的章节号集合（用于术语/索引命中归属）。
 # 双章文件按其内含章节展开；ch6 三个子文件均归属"第6章"。
-CHAPTER_CHAPTERS: dict[str, list[int]] = {
-    "ch1-2-architecture.md": [1, 2],
-    "ch3-packages.md": [3],
-    "ch4-5-modules-processes.md": [4, 5],
-    "ch6-1-data-structures.md": [6],
-    "ch6-2-storage-algorithms.md": [6],
-    "ch6-3-query-algorithms.md": [6],
-    "ch7-sql-execution.md": [7],
-    "ch8-query-optimizer.md": [8],
-    "ch9-10-persistence-locking.md": [9, 10],
-    "ch11-12-guide-summary.md": [11, 12],
-}
-# File list comes from book.toml (via _config) so layout changes stay in one place.
+
+# Chapter numbering and file list come from book.toml (via _config).
 CHAPTER_FILES: list[tuple[str, list[int]]] = [
-    (os.path.basename(path), CHAPTER_CHAPTERS.get(os.path.basename(path), []))
+    (os.path.basename(path), _config.chapter_coverage().get(os.path.basename(path), []))
     for path in _config.chapter_files(include_cover=False)
 ]
 
