@@ -2,7 +2,8 @@
 
 > 面向开发者的速查页。用户向文档请见：
 > [新建一本书](how-to-new-book.md) · [配置](how-to-config.md) · [CLI](how-to-use-cli.md) · [TUI](how-to-use-tui.md) ·
-> [Web](how-to-use-web.md) · [常见问题](faq.md)
+> [Web](how-to-use-web.md) · [常见问题](faq.md) ·
+> [全部脚本清单](scripts-and-reference.md)
 
 ## 0. 质量评分
 
@@ -25,12 +26,13 @@ Windows 用 `books\scripts\launch.ps1`（参数相同）。三个渠道共用 `c
 ## 1.5 提交前跑一遍快速档
 
 ```bash
-books/scripts/verify.sh          # fast：ruff + 结构门禁 + 单元套件（约 16 秒）
-books/scripts/verify.sh full     # 合入前：全部门禁
-books/scripts/verify.sh release  # 发布前：full + 慢档 + 产物
+books/scripts/check-fast.sh      # fast：ruff + 结构门禁 + 单元套件（约 16 秒）
+books/scripts/check-full.sh      # 合入前：全部门禁
+books/scripts/check-release.sh   # 发布前：full + 慢档 + 产物
 ```
 
-Windows 用 `books\scripts\verify.ps1`，参数相同。分档说明见
+Windows 用同名 `.ps1`。度量类用 `eval-score.sh`（六维评分）与
+`eval-coverage.sh`（覆盖率棘轮）。分档说明见
 [`testplan.md §1.2`](../managements/testplan.md)。
 
 ## 2. 单入口：make.py

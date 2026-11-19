@@ -155,13 +155,40 @@ def check(path: str, root: str | None = None) -> list[str]:
     return problems
 
 
+def check_scripts(scripts_dir: str | None = None) -> list[str]:
+    """Name convention for the top-level wrappers in books/scripts/.
+
+    `check-*` verifies (exit code decides), `eval-*` measures; the interactive
+    and setup entry points keep their historical names. One pattern per file, so
+    the directory itself documents what a script is for.
+    """
+    directory = scripts_dir or os.path.join(_config.BOOK_ROOT, 'scripts')
+    allowed = ('bookctl', 'launch', 'bootstrap', 'check', 'eval')
+    problems: list[str] = []
+    if not os.path.isdir(directory):
+        return problems
+    for name in sorted(os.listdir(directory)):
+        path = os.path.join(directory, name)
+        if not os.path.isfile(path) or name.startswith('.'):
+            continue
+        stem = name.rsplit('.', 1)[0]
+        if not name.endswith(('.sh', '.ps1')):
+            if name != 'bookctl':
+                problems.append(f'scripts/{name}: unexpected file (expected .sh/.ps1)')
+            continue
+        if not any(stem == prefix or stem.startswith(prefix + '-') for prefix in allowed):
+            problems.append(
+                f'scripts/{name}: name must start with one of {", ".join(allowed)}')
+    return problems
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--json', action='store_true')
     args = parser.parse_args(argv)
 
-    problems: list[str] = []
+    problems: list[str] = check_scripts()
     for path in scripts():
         try:
             problems += check(path)

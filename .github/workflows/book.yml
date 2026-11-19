@@ -1,6 +1,6 @@
 name: Book
 
-# Gate tiers (mirrored by scripts/verify.sh so local and CI agree):
+# Gate tiers (mirrored by scripts/check.sh so local and CI agree):
 #   fast   — every push / PR: lint, unit suite, structural + contract gates
 #   full   — master and tags: every gate (adds prose/content/metrics gates)
 #   release — tags: full + build artifacts uploaded for the release

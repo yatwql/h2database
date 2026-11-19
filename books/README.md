@@ -81,6 +81,7 @@ books/
 | [how-to-use-web.md](docs/manuals/how-to-use-web.md) | Web 控制台与 JSON API |
 | [faq.md](docs/manuals/faq.md) | 常见问题（环境、配置、门禁、交付、日志、LLM） |
 | [how-to-use.md](docs/manuals/how-to-use.md) | 门禁与脚本速查（面向开发者） |
+| [scripts-and-reference.md](docs/manuals/scripts-and-reference.md) | 全部脚本清单：命名约定、日常封装、各层入口、门禁→脚本对照 |
 
 **规范与设计（`docs/managements/`）**
 

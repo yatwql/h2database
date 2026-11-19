@@ -1,7 +1,7 @@
 # Local gate runner (Windows), mirroring the CI tiers in .github/workflows/book.yml.
-#   .\verify.ps1            fast tier
-#   .\verify.ps1 full       every gate
-#   .\verify.ps1 release    full + slow suite + artifacts
+#   .\check-fast.ps1        fast tier (~16s)
+#   .\check-full.ps1        every gate
+#   .\check-release.ps1     full + slow suite + artifacts
 param([ValidateSet('fast', 'full', 'release')][string]$Tier = 'fast')
 $ErrorActionPreference = 'Stop'
 

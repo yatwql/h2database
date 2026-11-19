@@ -48,7 +48,7 @@ books/
     h2-source-code-analysis.epub
   docs/
     managements/             # 全部管理与规范文档（见 §2）
-    manuals/                 # 使用手册（how-to-use.md：脚本用法唯一说明）
+    manuals/                 # 使用手册（scripts-and-reference.md：全部脚本清单）
 ```
 
 ## 2. 管理文档

@@ -25,6 +25,19 @@ python books/src/python/make.py deliver    # build + to_pdf + verify_pdf + to_ep
 
 PDF 生成较慢；日常编辑只要求 `make.py check` + `make.py build` 通过。CI（`.github/workflows/book.yml`）自动执行 lint + 单元测试 + 门禁 + 构建 + 幂等性校验。
 
+## 1.2 交付分档
+
+同一套门禁按"什么时候跑"分三档，本地脚本与 CI 一致（`.github/workflows/book.yml`）：
+
+| 档 | 触发 | 内容 | 本地命令 |
+| --- | --- | --- | --- |
+| fast | 每次提交 / PR | ruff + 结构门禁（architecture、script_contract、style_schema、llm_policy、versions、file_length）+ 单元套件（约 16s） | `scripts/check-fast.sh` |
+| full | 合入 master / 发布前 | 全部门禁（`make.py check --keep-going`） | `scripts/check-full.sh` |
+| release | 打版本标签 | full + 慢档（chromium/pandoc）+ `make.py deliver` 出产物 | `scripts/check-release.sh` |
+
+度量类单独命名：`scripts/eval-score.sh`（六维评分）、`scripts/eval-coverage.sh`
+（覆盖率棘轮）。分档只决定"跑到哪一步"，判据本身不分档。
+
 ## 2. 质量门禁
 
 ### 2.1 门禁分级

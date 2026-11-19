@@ -93,6 +93,29 @@ class ArchitectureRulesTest(unittest.TestCase):
         self.assert_rule('audit/x.py', '"""d"""\nP = "data/manuscript"\n',
                          'hardcodes repository path')
 
+    # -- scripts/ naming --------------------------------------------------
+    def test_scripts_directory_accepts_check_and_eval_prefixes(self):
+        for name in ('check-fast.sh', 'check.sh', 'eval-score.ps1',
+                     'launch.sh', 'bootstrap.ps1', 'bookctl'):
+            with self.subTest(name=name):
+                self.write('scripts/' + name, '#!/bin/sh\n')
+        self.assertEqual(self.mod.check_scripts(os.path.join(self.tmp.name, 'scripts')), [])
+
+    def test_scripts_directory_rejects_other_names(self):
+        self.write('scripts/verify.sh', '#!/bin/sh\n')
+        self.write('scripts/report.sh', '#!/bin/sh\n')
+        problems = self.mod.check_scripts(os.path.join(self.tmp.name, 'scripts'))
+        self.assertEqual(len(problems), 2)
+        self.assertTrue(all('must start with' in p for p in problems))
+
+    def test_scripts_directory_rejects_unknown_file_types(self):
+        self.write('scripts/notes.txt', 'x\n')
+        problems = self.mod.check_scripts(os.path.join(self.tmp.name, 'scripts'))
+        self.assertTrue(any('unexpected file' in p for p in problems))
+
+    def test_the_real_scripts_directory_follows_the_convention(self):
+        self.assertEqual(self.mod.check_scripts(), [])
+
     # -- the real tree ----------------------------------------------------
     def test_the_real_toolchain_satisfies_every_rule(self):
         code, out = _fixture.run_inproc(

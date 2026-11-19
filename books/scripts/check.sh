@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 # Local gate runner, mirroring the CI tiers in .github/workflows/book.yml.
 #
-#   scripts/verify.sh          fast   — lint + unit suite + structural gates (every commit)
-#   scripts/verify.sh full     full   — every gate, then the fast suite (before a merge)
-#   scripts/verify.sh release  release— full + slow suite + build artifacts (before a tag)
+#   scripts/check-fast.sh       recency,  ~16s   — lint + structural gates + unit suite
+#   scripts/check-full.sh       pre-merge        — every gate
+#   scripts/check-release.sh    pre-tag          — full + slow suite + artifacts
+#
+# Naming: `check-*` verifies (exit code decides), `eval-*` measures (scorecards,
+# coverage). Everything a developer runs day to day lives in this directory so
+# nobody has to remember python paths.
 #
 # Exit codes: 0 pass, 1 gate/test failure, 2 environment problem (missing python/.venv).
 set -euo pipefail
