@@ -23,11 +23,15 @@ class StepCommandTest(unittest.TestCase):
         self.runner = _fixture.load_module(BOOK_ROOT, 'check_runner')
 
     def test_every_step_maps_to_a_command(self):
-        for step in ('fast-gates', 'gates', 'tests', 'slow', 'deliver'):
+        for step in ('fast-gates', 'gates', 'slow', 'deliver'):
             with self.subTest(step=step):
                 command = self.runner._command(step)
                 self.assertTrue(command)
                 self.assertTrue(os.path.isabs(command[1]))
+
+    def test_the_tests_step_delegates_to_the_test_command(self):
+        command = self.runner._command('tests', 'tier_fast')
+        self.assertEqual(command, self.runner.tests_command('tier_fast'))
 
     def test_gates_step_keeps_going(self):
         self.assertIn('--keep-going', self.runner._command('gates'))
@@ -81,6 +85,75 @@ class RunStepTest(unittest.TestCase):
             self.runner.run_step('tests', self.log)
         with open(self.log, encoding='utf-8') as fh:
             self.assertIn('tests', fh.read())
+
+class MarkerSelectionTest(unittest.TestCase):
+    """The tier decides which tests run, via pytest marker expressions."""
+
+    def setUp(self):
+        self.runner = _fixture.load_module(BOOK_ROOT, 'check_runner')
+
+    def test_each_tier_declares_a_marker_expression(self):
+        self.assertEqual(self.runner.MODE_MARKERS['p0'], 'tier_fast')
+        self.assertEqual(self.runner.MODE_MARKERS['p1'], 'not tier_slow')
+        self.assertEqual(self.runner.MODE_MARKERS['p2'], '')
+
+    def test_pytest_command_carries_the_marker(self):
+        command = self.runner.tests_command('tier_fast')
+        self.assertIn('-m', command)
+        self.assertEqual(command[-1], 'tier_fast')
+
+    def test_pytest_command_without_a_marker_runs_everything(self):
+        command = self.runner.tests_command('')
+        # `-m pytest` is python's module switch; no marker expression follows it
+        self.assertEqual(command.count('-m'), 1)
+
+    def test_unittest_is_used_when_pytest_is_missing(self):
+        with mock.patch.object(self.runner.importlib.util, 'find_spec',
+                               return_value=None):
+            command = self.runner.tests_command('tier_fast')
+        self.assertIn('make.py', command[1])
+        self.assertIn('test', command)
+
+    def test_run_passes_the_tier_marker_to_the_steps(self):
+        seen = []
+
+        def fake_step(step, log_path, timeout=0, marker=''):
+            seen.append((step, marker))
+            return {'step': step, 'code': 0, 'seconds': 0.0}
+
+        with mock.patch.object(self.runner, 'run_step', side_effect=fake_step), \
+                mock.patch.object(self.runner, 'report_paths',
+                                  return_value=(os.path.join(tempfile.gettempdir(), 'a.log'),
+                                                os.path.join(tempfile.gettempdir(), 'a.json'))), \
+                mock.patch.object(self.runner._fsutil, 'write_text'), \
+                mock.patch('builtins.print'):
+            summary = self.runner.run('p0', only='tests')
+        self.assertEqual(seen, [('tests', 'tier_fast')])
+        self.assertEqual(summary['marker'], 'tier_fast')
+
+    def test_explicit_marker_overrides_the_tier_default(self):
+        seen = []
+
+        def fake_step(step, log_path, timeout=0, marker=''):
+            seen.append(marker)
+            return {'step': step, 'code': 0, 'seconds': 0.0}
+
+        with mock.patch.object(self.runner, 'run_step', side_effect=fake_step), \
+                mock.patch.object(self.runner, 'report_paths',
+                                  return_value=(os.path.join(tempfile.gettempdir(), 'b.log'),
+                                                os.path.join(tempfile.gettempdir(), 'b.json'))), \
+                mock.patch.object(self.runner._fsutil, 'write_text'), \
+                mock.patch('builtins.print'):
+            self.runner.run('p0', only='tests', marker='layer_audit')
+        self.assertEqual(seen, ['layer_audit'])
+
+    def test_main_forwards_the_marker_flag(self):
+        with mock.patch.object(self.runner, 'run',
+                               return_value={'ok': True, 'mode': 'p0'}) as run, \
+                redirect_stdout(io.StringIO()):
+            self.runner.main(['--marker', 'edge'])
+        self.assertEqual(run.call_args.kwargs['marker'], 'edge')
+
 
 class MainFlagsTest(unittest.TestCase):
     def setUp(self):

@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import importlib.util
 import json
 import os
 import platform
@@ -50,6 +51,14 @@ MODES = {
 }
 ALIASES = {'fast': 'p0', 'full': 'p1', 'release': 'p2'}
 
+# Marker expression per tier, the same idea as investor-review's runner modes:
+# the tier decides *which* tests run, not which assertions count.
+MODE_MARKERS = {
+    'p0': 'tier_fast',
+    'p1': 'not tier_slow',
+    'p2': '',
+}
+
 
 def machine_info() -> dict:
     """What the run happened on — the first thing to check when a tier differs."""
@@ -74,7 +83,17 @@ def select_steps(steps: tuple[str, ...], only: str = '', skip: str = '') -> tupl
     return chosen
 
 
-def _command(step: str) -> list[str] | None:
+def tests_command(marker: str = '') -> list[str]:
+    """Pytest command for a marker expression; unittest when pytest is absent."""
+    if importlib.util.find_spec('pytest') is not None:
+        command = [PY, '-m', 'pytest', TEST_REL, '-q']
+        if marker:
+            command += ['-m', marker]
+        return command
+    return [PY, os.path.join(PY_ROOT, 'make.py'), 'test']
+
+
+def _command(step: str, marker: str = '') -> list[str] | None:
     """Shell command for one step (None means the step is skipped with a note)."""
     if step == 'lint':
         if shutil.which('ruff'):
@@ -87,7 +106,7 @@ def _command(step: str) -> list[str] | None:
     if step == 'gates':
         return [PY, os.path.join(PY_ROOT, 'make.py'), 'check', '--keep-going']
     if step == 'tests':
-        return [PY, os.path.join(PY_ROOT, 'make.py'), 'test']
+        return tests_command(marker)
     if step == 'slow':
         return [PY, os.path.join(PY_ROOT, 'make.py'), 'test', '--full']
     if step == 'deliver':
@@ -103,9 +122,10 @@ def resolve_mode(mode: str) -> str:
     return key
 
 
-def run_step(step: str, log_path: str, timeout: float = 1800.0) -> dict:
+def run_step(step: str, log_path: str, timeout: float = 1800.0,
+             marker: str = '') -> dict:
     """Run one step, tee its output into the report, and summarise the result."""
-    command = _command(step)
+    command = _command(step, marker)
     started = time.perf_counter()
     if command is None:
         return {'step': step, 'code': 0, 'seconds': 0.0, 'skipped': 'tool not available'}
@@ -158,7 +178,8 @@ def _append_log(path: str, text: str) -> None:
 
 
 def run(mode: str, *, archive: bool = True, as_json: bool = False,
-        only: str = '', skip: str = '', timeout: float = 1800.0) -> dict:
+        only: str = '', skip: str = '', timeout: float = 1800.0,
+        marker: str = '') -> dict:
     """Run the steps of ``mode`` and return the summary (machine info included)."""
     key = resolve_mode(mode)
     label, all_steps = MODES[key]
@@ -170,15 +191,17 @@ def run(mode: str, *, archive: bool = True, as_json: bool = False,
     print(f'=== check {key} ({label}): {len(steps)} step(s) ===')
     results = []
     started = time.perf_counter()
+    active_marker = marker or MODE_MARKERS.get(key, '')
     for step in steps:
-        result = run_step(step, log_path, timeout)
+        result = run_step(step, log_path, timeout, active_marker)
         results.append(result)
         if result['code'] != 0:
             break
     elapsed = round(time.perf_counter() - started, 2)
     failed = [r for r in results if r['code'] != 0]
     summary = {'mode': key, 'label': label, 'ok': not failed,
-               'seconds': elapsed, 'steps': results, 'machine': machine_info(),
+               'seconds': elapsed, 'steps': results, 'marker': active_marker,
+               'machine': machine_info(),
                'log': log_path if archive else '', 'json': json_path if archive else ''}
     if failed:
         summary['failed_step'] = failed[0]['step']
@@ -211,9 +234,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument('--skip', default='', help='comma-separated steps to skip')
     parser.add_argument('--timeout', type=float, default=1800.0,
                         help='per-step timeout in seconds (default 1800)')
+    parser.add_argument('--marker', default='',
+                        help='pytest marker expression overriding the tier default')
     args = parser.parse_args(argv)
     summary = run(args.mode, archive=not args.no_archive, as_json=args.json,
-                  only=args.only, skip=args.skip, timeout=args.timeout)
+                  only=args.only, skip=args.skip, timeout=args.timeout,
+                  marker=args.marker)
     return 0 if summary['ok'] else 1
 
 

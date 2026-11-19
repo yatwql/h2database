@@ -49,6 +49,8 @@ python books/src/python/check_runner.py --mode p0 --skip slow --timeout 600
   `books/logs/check-latest.json`（失败可直接回看，不必重跑）
 - `.json` 里带 `machine` 段（python/平台/CPU/locale/仓库路径），排查"本机能过 CI 不能过"先看它
 - `--only` / `--skip` 选步骤，`--timeout` 是每步超时（默认 1800 秒，超时记为 124）
+- 测试步骤按档位自动带 marker：P0=`tier_fast`、P1=`not tier_slow`、P2=全量；
+  `--marker "<expr>"` 可覆盖，环境缺 pytest 时退回 `make.py test`
 
 ### 发布 `src/python/release.py`
 
