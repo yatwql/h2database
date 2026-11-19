@@ -18,6 +18,7 @@ import sys as _sys
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
 import glob
+import json
 import os
 import re
 import sys
@@ -61,6 +62,10 @@ def main(argv: list[str] | None = None) -> int:
     args = list(argv) if argv else list(sys.argv[1:])
     strict = '--strict' in args
     result = audit(chapter_files())
+    if '--json' in args:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        problems = bool(result['uncited'] or result['dangling'])
+        return 1 if (problems and strict) else 0
     print(f"Total figures: {result['total_figures']}")
     print(f"Total inline citations (如图 X-Y 所示): {result['total_citations']}")
     print(f"Files with uncited figures: {len(result['uncited'])}")

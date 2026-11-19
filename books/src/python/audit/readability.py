@@ -13,6 +13,7 @@ import sys as _sys
 # make the shared package importable when the script runs standalone
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -118,8 +119,10 @@ def check_caption_quality(path, lines):
                     f'图 {fig_id}: {caption[:60]}'
                 )
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     """Run the readability pass and print the report."""
+    args = list(argv) if argv else list(sys.argv[1:])
+    as_json = '--json' in args
     # --- Main pass: fence, width, box closure ---
     for path in DOCS:
         lines = path.read_text(encoding='utf-8').splitlines()
@@ -188,7 +191,9 @@ def main() -> int:
     for item in warnings[:120]:
         print('WARN:', item)
 
+    if as_json:
+        print(json.dumps({'failures': failures, 'warnings': warnings}, ensure_ascii=False))
     return 1 if failures else 0
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

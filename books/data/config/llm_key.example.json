@@ -1,15 +1,11 @@
 {
-  "_note": "复制为 llm_key.json 并填入密钥；该文件被 .gitignore 忽略，绝不入库",
+  "_note": "复制为 llm_key.json 填入 api_key；端点/模型在 llm_provider.json",
   "providers": {
     "deepseek-main": {
-      "api_key": "",
-      "model": "deepseek-v4-flash",
-      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+      "api_key": ""
     },
     "opencode-go": {
-      "api_key": "",
-      "model": "deepseek-v4.1-flash",
-      "endpoint": "https://opencode.ai/zen/go/v1/messages"
+      "api_key": ""
     }
   }
 }

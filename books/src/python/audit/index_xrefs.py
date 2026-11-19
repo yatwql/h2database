@@ -23,6 +23,7 @@ import sys as _sys
 # make the shared package importable when the script runs standalone
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
+import json
 import os
 import re
 import sys
@@ -200,7 +201,9 @@ def parse_index(path: str):
 
     return main_entries, sub_entries, see_alsos, sections
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    args = list(argv) if argv else list(sys.argv[1:])
+    as_json = '--json' in args
     if not os.path.exists(index_path):
         print(f'ERROR: index not found at {index_path}')
         return 1
@@ -306,7 +309,9 @@ def main() -> int:
     print(f'  total entries:   {main_count + sub_count}')
     print(f'  issues:          {issues}')
 
+    if as_json:
+        print(json.dumps({'issues': issues}, ensure_ascii=False))
     return 0 if issues == 0 else 1
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

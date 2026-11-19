@@ -188,7 +188,7 @@ def coverage() -> int:
     return report.returncode
 
 
-def main(argv: list[str]) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('command',
@@ -201,7 +201,12 @@ def main(argv: list[str]) -> int:
                         help='run every step even after a failure')
     parser.add_argument('--full', action='store_true',
                         help='also run the slow suite (chromium/pandoc)')
-    args = parser.parse_args(argv)
+
+    report_extras: list[str] = []
+    if argv and len(argv) > 0 and argv[0] == 'report':
+        args, report_extras = parser.parse_known_args(argv)
+    else:
+        args = parser.parse_args(argv)
 
     if args.command == 'doctor':
         return doctor()
@@ -210,7 +215,7 @@ def main(argv: list[str]) -> int:
         return coverage()
 
     if args.command == 'report':
-        return report(sys.argv[2:])
+        return report(report_extras)
 
     if args.full:
         os.environ['BOOK_SLOW'] = '1'

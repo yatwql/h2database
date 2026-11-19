@@ -38,3 +38,7 @@ books/data/config/llm_key.json
 .env
 .env.*
 !.env.example
+
+# coverage data is generated, never committed
+.coverage
+.coverage.*

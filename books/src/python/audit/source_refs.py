@@ -448,7 +448,7 @@ def main(argv: list[str] | None = None) -> int:
 
     h2_version = get_project_version()
     try:
-        print('Building class index from H2 source (h2/src/main/)...')
+        print(f'Building class index from the configured source tree: {SOURCE_DIR}')
         class_index = build_class_index()
         if not class_index:
             print(f'  [skip] H2 source tree not found at {SOURCE_DIR}; '

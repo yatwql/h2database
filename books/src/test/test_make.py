@@ -110,6 +110,11 @@ class SelectCase(unittest.TestCase):
             self.assertEqual(self.make.coverage(), 1)
         self.assertIn('FAIL', buffer.getvalue())
 
+    def test_main_report_forwards_its_own_arguments(self):
+        with mock.patch.object(self.make.subprocess, 'run', return_value=completed(0)) as run:
+            self.assertEqual(self.make.main(['report', '--json']), 0)
+        self.assertIn('--json', run.call_args[0][0])
+
     def test_report_delegates_to_the_scorecard(self):
         with mock.patch.object(self.make.subprocess, 'run', return_value=completed(0)) as run:
             self.assertEqual(self.make.report(['--json']), 0)

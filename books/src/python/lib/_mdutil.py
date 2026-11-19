@@ -11,6 +11,9 @@ import re
 _HEADING_RE = re.compile(r'^(#{1,6})\s+(.+?)\s*$')
 _FENCE_RE = re.compile(r'^\s*```')
 _SLUG_STRIP_RE = re.compile(r'[^\w\u4e00-\u9fff\u3400-\u4dbf\s-]')
+HTML_HEADING_RE = re.compile(r'<h([1-4])\s+id="([^"]*)"[^>]*>(.*?)</h\1>', re.DOTALL)
+_TAG_RE = re.compile(r'<[^>]+>')
+
 LINK_RE = re.compile(r'!?\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)')
 
 EXTERNAL_SCHEMES = ('http://', 'https://', 'mailto:', 'tel:', 'data:', 'ftp://')
@@ -21,6 +24,24 @@ def slugify(title: str) -> str:
     anchor = title.strip().lower()
     anchor = _SLUG_STRIP_RE.sub('', anchor)
     return anchor.replace(' ', '-')
+
+
+def plain_text(fragment: str) -> str:
+    """Inline HTML -> text (tags removed, zero-width space dropped)."""
+    return _TAG_RE.sub('', fragment).replace('\u200b', '').strip()
+
+
+def html_headings(html: str) -> list[dict]:
+    """Every ``<hN id="...">`` in document order as {index, level, id, text}.
+
+    One parser for the PDF pipeline (print, outline, verification), so heading
+    order and text can never drift between those steps.
+    """
+    return [{'index': index,
+             'level': int(match.group(1)),
+             'id': match.group(2),
+             'text': plain_text(match.group(3))}
+            for index, match in enumerate(HTML_HEADING_RE.finditer(html))]
 
 
 def iter_headings(lines: list[str]) -> list[tuple[int, str, str]]:

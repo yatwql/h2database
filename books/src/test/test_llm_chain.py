@@ -2,6 +2,7 @@
 """Priority chain, fallback and endpoint pacing (no network, no real sleeping)."""
 from __future__ import annotations
 
+import json
 import os
 import sys
 import tempfile
@@ -88,6 +89,20 @@ class ChainCase(unittest.TestCase):
         with mock.patch.object(self.llm.time, 'sleep') as sleep:
             self.llm._respect_pacing('primary', {})
         sleep.assert_not_called()
+
+    def test_endpoint_comes_from_the_provider_config(self):
+        spec = {'base_url': 'https://cfg.invalid/v1'}
+        self.assertEqual(self.llm._endpoint_for('primary', spec), 'https://cfg.invalid/v1')
+
+    def test_key_block_can_override_the_endpoint(self):
+        key_path = os.path.join(self.root, 'data', 'config', 'llm_key.json')
+        os.makedirs(os.path.dirname(key_path), exist_ok=True)
+        with open(key_path, 'w', encoding='utf-8') as fh:
+            json.dump({'providers': {'primary': {
+                'api_key': 'k', 'endpoint': 'https://proxy.invalid/v1/'}}}, fh)
+        spec = {'base_url': 'https://cfg.invalid/v1', 'credentials_ref': 'primary'}
+        self.assertEqual(self.llm._endpoint_for('primary', spec),
+                         'https://proxy.invalid/v1')
 
     def test_status_reports_the_priority_order(self):
         status = self.llm.status()

@@ -82,12 +82,12 @@ books/
 | [faq.md](docs/manuals/faq.md) | 常见问题（环境、配置、门禁、交付、日志、LLM） |
 | [how-to-use.md](docs/manuals/how-to-use.md) | 门禁与脚本速查（面向开发者） |
 
-**规范与设计（`docs/spec/`、`docs/plan/`）**
+**规范与设计（`docs/managements/`、`docs/plan/`）**
 
 | 文档 | 内容 |
 | ------ | ------ |
-| [analysis-doc-standard.md](docs/spec/analysis-doc-standard.md) | 源码分析文档的通用内容标准与验收清单 |
-| [technical.md](docs/spec/technical.md) | 工具链架构约束；§13 是文件职责分类的权威定义（结构/表述/名词 vs 规则/基础/外部服务） |
+| [analysis-doc-standard.md](docs/managements/analysis-doc-standard.md) | 源码分析文档的通用内容标准与验收清单 |
+| [technical.md](docs/managements/technical.md) | 工具链架构约束；§13 是文件职责分类的权威定义（结构/表述/名词 vs 规则/基础/外部服务） |
 | [toolchain-design.md](docs/plan/toolchain-design.md) | 流水线与配置模型的设计说明 |
 
 **管理文档（`docs/managements/`）**

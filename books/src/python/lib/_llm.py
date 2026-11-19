@@ -197,7 +197,7 @@ def _api_key(provider: str, spec: dict) -> str:
 
 
 def _model_for(provider: str, spec: dict, override: str | None = None) -> str:
-    """Caller override, then the key-file block, then the first configured model."""
+    """Caller override > key-file override > the provider's configured model."""
     if override:
         return override
     block = _key_block(provider, spec)
@@ -205,6 +205,12 @@ def _model_for(provider: str, spec: dict, override: str | None = None) -> str:
         return str(block['model'])
     models = spec.get('models') or ['']
     return str(models[0] or '')
+
+
+def _endpoint_for(provider: str, spec: dict) -> str:
+    """Provider config is authoritative; a key-file endpoint is an override."""
+    block = _key_block(provider, spec)
+    return str(block.get('endpoint') or spec.get('base_url') or '').rstrip('/')
 
 
 def _complete_anthropic(prompt: str, provider: str, spec: dict, params: dict,
@@ -224,7 +230,7 @@ def _complete_anthropic(prompt: str, provider: str, spec: dict, params: dict,
     headers = {'Content-Type': 'application/json',
                'x-api-key': api_key,
                'anthropic-version': spec.get('anthropic_version', '2023-06-01')}
-    data = _post_json(spec['base_url'].rstrip('/') + '/v1/messages', payload,
+    data = _post_json(_endpoint_for(provider, spec) + '/v1/messages', payload,
                       api_key, float(params.get('timeout_s', 60)), headers=headers)
     try:
         blocks = data['content']
@@ -262,7 +268,7 @@ def _attempt(prompt: str, provider: str, spec: dict, params: dict,
         'max_tokens': params.get('max_tokens', 2048),
         'reasoning_effort': params.get('thinking', 'low'),
     }
-    data = _post_json(spec['base_url'].rstrip('/') + '/chat/completions',
+    data = _post_json(_endpoint_for(provider, spec) + '/chat/completions',
                       payload, api_key, float(params.get('timeout_s', 60)))
     try:
         return data['choices'][0]['message']['content']

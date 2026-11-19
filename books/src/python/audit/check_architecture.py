@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Enforce the toolchain architecture constraints from docs/spec/technical.md.
+"""Enforce the toolchain architecture constraints from docs/managements/technical.md.
 
 Checks
   LAYER    import direction (lib <- ingest/manuscript/audit/render, no siblings)

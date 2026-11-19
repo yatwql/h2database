@@ -7,7 +7,7 @@
 ## 1. 分层与职责
 
 ```text
-lib/        公共库：配置读取、文件 IO、Markdown 工具。无业务判断，不写文件。
+lib/        公共库：配置读取、文件读写原语、Markdown/HTML 工具。不决定写什么、写哪里。
 ingest/     源码 → 手稿：只读源码树，只写 data/state 与 data/manuscript。
 manuscript/ 手稿维护：只读写 data/manuscript 与 data/state。
 audit/      质量门禁：只读；输出报告到 stdout，不修改仓库。
@@ -39,7 +39,9 @@ app/        入口层：cli.py / tui.py / web.py + actions.py，只编排，不�
 
 - 每个入口脚本：模块 docstring + `main(argv)`（或在 `__main__` 下执行）。
 - 退出码语义：`0` 通过、`1` 门禁失败、`2` 使用/配置错误。
-- 报告类脚本必须支持 `--json`（供 `make.py` 与 CI 汇总）。
+- 报告类脚本必须支持 `--json`（供 `make.py` 与 CI 汇总）；`main()` 形态的脚本
+  一律遵守，脚本形态（import 即执行，如 `style.py`、`smart.py`）不强制。
+- `main(argv)` 必须接受可选 argv（`argv=None` 时用 `sys.argv[1:]`），便于内嵌调用。
 
 ## 5. 事实与内容
 
@@ -62,6 +64,8 @@ app/        入口层：cli.py / tui.py / web.py + actions.py，只编排，不�
 - `make.py check` 是唯一入口；新增门禁必须同时登记 `testplan.md`，由
   `audit/gate_trace.py` 校验双向可追溯。
 - 门禁只读；任何会改仓库的动作都属于 `manuscript/` 或 `render/`，不进 `check`。
+- 例外只允许“显式维护开关”：`--update-baseline` / `--fix` 之类写 `data/baselines/`
+  或手稿的动作，必须在文档写明且默认关闭，`check` 永远不带这些开关。
 
 ## 9. 日志
 

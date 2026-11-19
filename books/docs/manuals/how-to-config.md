@@ -1,7 +1,7 @@
 # 配置指南
 
 工具链的所有可调项都来自 `books/data/`。**文件职责的权威定义**见
-[`technical.md §13`](../spec/technical.md)——那里区分「文档（结构/表述/名词）」与
+[`technical.md §13`](../managements/technical.md)——那里区分「文档（结构/表述/名词）」与
 「配置（规则/基础/外部服务）」，并给出每个文件改错的后果。本文只讲怎么改。脚本通过 `lib/_config.py` 读取，
 不在代码里硬编码；改配置不需要改代码，改完跑 `make.py check` 验证。
 
@@ -155,8 +155,9 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 场景）；`mock` 仍由代码支持，需要完全离线时临时加一个 `{"kind": "mock"}` 条目即可。
 
 密钥不写进仓库：环境变量（`api_key_env`）优先，其次 `data/config/llm_key.json`
-的 `providers.<credentials_ref>` 块（`api_key` / `model` / `endpoint`），该文件被
-`.gitignore` 忽略。
+的 `providers.<credentials_ref>.api_key`，该文件被 `.gitignore` 忽略。端点与模型
+只有一个事实来源——`llm_provider.json`；密钥块里写 `endpoint` / `model` 仅作临时
+覆盖（例如换网关），不写则完全跟配置走。
 
 **优先级与回退**：`providers.<名>.priority` 数值小者靠前。一次调用先走路由
 指定的 provider，失败（无密钥、端点报错、响应不可解析）则按 priority 依次回退，

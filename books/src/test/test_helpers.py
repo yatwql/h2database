@@ -204,8 +204,8 @@ class TestVerifyPdfOnSyntheticFile(FixtureCase):
         writer = PdfWriter()
         for _ in range(3):
             writer.add_blank_page(width=595, height=842)
-        writer.add_outline_item('第1章 测试章节', 0)
-        writer.add_outline_item('1.1 小节', 1)
+        writer.add_outline_item(title='第1章 测试章节', page_number=0)
+        writer.add_outline_item(title='1.1 小节', page_number=1)
 
         pdf_path = os.path.join(self.root, 'dist', 'synthetic.pdf')
         with open(pdf_path, 'wb') as fh:
@@ -267,3 +267,23 @@ class TestVerifyEpubFailures(FixtureCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class HtmlHeadingsCase(unittest.TestCase):
+    """One parser feeds the print, outline and verification steps."""
+
+    def setUp(self):
+        self.mdutil = importlib.import_module('lib._mdutil')
+
+    def test_parses_levels_ids_and_plain_text(self):
+        found = self.mdutil.html_headings(
+            '<h1 id="a">A <code>x</code></h1><h4 id="b">B</h4>')
+        self.assertEqual([(h['index'], h['level'], h['id'], h['text']) for h in found],
+                         [(0, 1, 'a', 'A x'), (1, 4, 'b', 'B')])
+
+    def test_ignores_headings_without_an_id(self):
+        self.assertEqual(self.mdutil.html_headings('<h2>no id</h2>'), [])
+
+    def test_drops_zero_width_space(self):
+        found = self.mdutil.html_headings('<h2 id="z">第1章\u200b标题</h2>')
+        self.assertEqual(found[0]['text'], '第1章标题')

@@ -279,12 +279,12 @@ def render_diff(current: dict[str, Any], baseline: dict[str, Any]) -> str:
     out.append(f"- 最小行数：{bb['min_lines']:,} → {cb['min_lines']:,}")
     return "\n".join(out) + "\n"
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--baseline", metavar="FILE", help="写入 JSON 基线快照到 FILE")
     p.add_argument("--diff", metavar="FILE", help="对比当前状态与 baseline JSON 文件")
     p.add_argument("--json", action="store_true", help="向 stdout 输出 JSON（机读）")
-    args = p.parse_args()
+    args = p.parse_args(argv)
 
     metrics = collect_metrics()
 
@@ -317,4 +317,4 @@ if __name__ == "__main__":
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

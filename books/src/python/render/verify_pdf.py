@@ -32,7 +32,7 @@ import re
 import sys
 from typing import Any
 
-from lib import _config, _fsutil
+from lib import _config, _fsutil, _mdutil
 
 try:
     from pypdf import PdfReader
@@ -58,8 +58,7 @@ class Report:
 
 def html_headings(html: str) -> list[tuple[int, str]]:
     """Return (level, plain text) for every H1-H4 with an id."""
-    found = re.findall(r'<h([1-4])\s+id="[^"]*"[^>]*>(.*?)</h\1>', html, re.DOTALL)
-    return [(int(level), re.sub(r'<[^>]+>', '', raw).strip()) for level, raw in found]
+    return [(item['level'], item['text']) for item in _mdutil.html_headings(html)]
 
 def outline_entries(reader) -> list[tuple[str, int, int]]:
     """Flatten the PDF outline into (title, page index, depth)."""

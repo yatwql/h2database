@@ -1,6 +1,6 @@
 # 写作风格指南
 
-> 与项目无关的通用质量要求见 [`../spec/analysis-doc-standard.md`](../spec/analysis-doc-standard.md)。
+> 与项目无关的通用质量要求见 [`analysis-doc-standard.md`](analysis-doc-standard.md)。
 
 > 轻量级风格参考，适用于 H2 源码分析文档的写作与修订。
 > 版本：v6.5

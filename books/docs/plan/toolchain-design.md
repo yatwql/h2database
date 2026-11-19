@@ -2,7 +2,7 @@
 
 > 本文件描述工具链**现在**的结构与约定，不记录演进过程。
 > 目录与归属见 `../managements/folder.md`；用法见 `../manuals/how-to-use.md`；
-> 内容标准见 `../spec/analysis-doc-standard.md`。
+> 内容标准见 `../managements/analysis-doc-standard.md`。
 
 ## 1. 两段式流水线
 

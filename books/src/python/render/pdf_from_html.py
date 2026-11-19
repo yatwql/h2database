@@ -21,7 +21,7 @@ import os
 import re
 from typing import Any
 
-from lib import _config, _fsutil
+from lib import _config, _fsutil, _mdutil
 from playwright.sync_api import sync_playwright
 from pypdf import PdfReader, PdfWriter
 
@@ -35,20 +35,19 @@ dist_dir = os.path.join(docs_dir, 'dist')
 html_path = _config.merged_html()
 pdf_path = _config.merged_pdf()
 
-HEADING_RE = re.compile(r'<h([1-4])\s+id="([^"]*)"[^>]*>(.*?)</h\1>', re.DOTALL)
 MARKER_MIN_LEN = 3
 FALLBACK_MIN_LEN = 5
 
 
 def plain(text: str) -> str:
     """Strip inline tags and the zero-width space the renderer inserts."""
-    return re.sub(r'<[^>]+>', '', text).replace('\u200b', '').strip()
+    return _mdutil.plain_text(text)
 
 
 def parse_headings(html: str) -> list[tuple[int, str, str]]:
     """Return (level, plain text, anchor id) for every H1-H4 with an id."""
-    return [(int(m.group(1)), plain(m.group(3)), m.group(2))
-            for m in HEADING_RE.finditer(html)]
+    return [(item['level'], item['text'], item['id'])
+            for item in _mdutil.html_headings(html)]
 
 
 def render_pdf(html: str, target: str, engine: Any = None) -> list[dict]:
