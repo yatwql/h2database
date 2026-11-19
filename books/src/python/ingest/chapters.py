@@ -20,7 +20,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _fsutil
+from lib import _config, _fsutil, _log
 
 OUTLINE = os.path.join(_config.BOOK_ROOT, 'data', 'state', 'outline.json')
 SOURCE_ROOT = _config.source_tree('src_main')
@@ -526,6 +526,9 @@ def _api_sample(pkg: str, class_name: str) -> list[str]:
 
 
 _INVENTORY: dict = {}
+
+
+LOG = _log.get_logger('ingest')
 
 
 def main(argv: list[str] | None = None) -> int:

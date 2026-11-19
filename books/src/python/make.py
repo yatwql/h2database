@@ -27,11 +27,12 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from lib import _config
+from lib import _config, _log
 
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 BOOK_ROOT = _config.BOOK_ROOT
 PY = sys.executable
+LOG = _log.get_logger('make')
 
 # (name, script or None for builtin, extra args, group)
 Step = tuple[str, str | None, tuple[str, ...], str]
@@ -109,9 +110,11 @@ def run_step(step: Step) -> tuple[str, int, float]:
         cmd = [PY, '-m', 'unittest', 'discover', '-s', tests_dir, '-t', tests_dir]
     else:
         cmd = [PY, os.path.join(TOOLS_DIR, script), *extra]
+    LOG.debug('run step %s: %s', name, ' '.join(cmd))
     proc = subprocess.run(cmd, capture_output=True, text=True, cwd=BOOK_ROOT, check=False)
     elapsed = time.perf_counter() - started
     if proc.returncode != 0:
+        LOG.warning('step %s failed rc=%s (%.2fs)', name, proc.returncode, elapsed)
         tail = (proc.stdout or '').strip().splitlines()[-8:]
         err = (proc.stderr or '').strip().splitlines()[-4:]
         print(f'  FAIL {name} (rc={proc.returncode})')
@@ -198,6 +201,7 @@ def main(argv: list[str]) -> int:
 
     failures: list[str] = []
     total = 0.0
+    LOG.info('make %s start (%d step(s))', args.command, len(steps))
     print(f'=== make {args.command}: {len(steps)} step(s) ===')
     for step in steps:
         name, code, elapsed = run_step(step)
@@ -206,14 +210,18 @@ def main(argv: list[str]) -> int:
             failures.append(name)
             if not args.keep_going:
                 break
-        elif args.timings:
-            print(f'  ok   {name} ({elapsed:.2f}s)')
+        else:
+            LOG.info('step %s ok (%.2fs)', name, elapsed)
+            if args.timings:
+                print(f'  ok   {name} ({elapsed:.2f}s)')
 
     if args.timings:
         print(f'  total {total:.2f}s')
     if failures:
+        LOG.error('make %s failed: %s', args.command, ', '.join(failures))
         print(f'FAILED: {", ".join(failures)}')
         return 1
+    LOG.info('make %s done in %.2fs', args.command, total)
     print('OK')
     return 0
 

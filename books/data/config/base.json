@@ -22,5 +22,10 @@
     "epub_max_mb": 10,
     "ascii_max_cols": 100,
     "max_style_warnings": 0
+  },
+  "logging": {
+    "level": "INFO",
+    "dir": "logs",
+    "retention_days": 14
   }
 }

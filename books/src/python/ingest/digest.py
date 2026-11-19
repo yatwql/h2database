@@ -21,7 +21,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _fsutil
+from lib import _config, _fsutil, _log
 
 IMPORT_RE = re.compile(r'^\s*import\s+(?:static\s+)?(org\.h2\.[\w.]+?)(?:\.\w+)?\s*;', re.MULTILINE)
 PKG_RE = re.compile(r'^\s*package\s+([\w.]+)\s*;', re.MULTILINE)
@@ -116,6 +116,9 @@ def digest(root: str) -> dict:
         },
         'packages': dict(sorted(packages.items())),
     }
+
+
+LOG = _log.get_logger('ingest')
 
 
 def main(argv: list[str] | None = None) -> int:

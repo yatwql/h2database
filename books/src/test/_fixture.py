@@ -316,11 +316,13 @@ def resolve_script(script: str) -> str:
 def refresh_config(root: str) -> None:
     """Point lib._config at ``root`` and drop every cached config module."""
     os.environ['BOOK_ROOT'] = root
-    for key in ('_config', 'lib._config'):
+    for key in ('_config', 'lib._config', 'lib._log', '_log'):
         sys.modules.pop(key, None)
     lib = sys.modules.get('lib')
-    if lib is not None and hasattr(lib, '_config'):
-        delattr(lib, '_config')
+    if lib is not None:
+        for attribute in ('_config', '_log'):
+            if hasattr(lib, attribute):
+                delattr(lib, attribute)
 
 def build_book(root: str, *, extra: dict[str, str] | None = None) -> str:
     """Materialise the fixture book under ``root`` and return the root path."""
@@ -397,7 +399,7 @@ def run_inproc(root: str, script: str, *args: str) -> tuple[int, str]:
             os.environ.pop('BOOK_ROOT', None)
         else:
             os.environ['BOOK_ROOT'] = previous_root
-        for key in ('_config', 'lib._config'):
+        for key in ('_config', 'lib._config', 'lib._log', '_log'):
             sys.modules.pop(key, None)
         lib_mod = sys.modules.get('lib')
         if lib_mod is not None and hasattr(lib_mod, '_config'):

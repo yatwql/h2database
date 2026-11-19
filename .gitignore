@@ -29,3 +29,4 @@ mdpdf.log
 __pycache__/
 .claude/worktrees/
 .claude/scratch/
+books/logs/

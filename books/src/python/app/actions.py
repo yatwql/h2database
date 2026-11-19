@@ -10,11 +10,12 @@ import os
 import subprocess
 import sys
 
-from lib import _config, _llm
+from lib import _config, _llm, _log
 
 PY_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO_ROOT = os.path.normpath(os.path.join(_config.BOOK_ROOT, '..'))
 MAKE = os.path.join(PY_ROOT, 'make.py')
+LOG = _log.get_logger('app')
 
 ACTIONS = {
     'status': '显示书籍、配置与 LLM 状态',
@@ -108,5 +109,9 @@ def run(action: str, **kwargs) -> tuple[int, str]:
         return llm_ask(kwargs.get('prompt', ''), kwargs.get('scenario', 'summary'))
     handler = DISPATCH.get(action)
     if handler is None:
+        LOG.warning('unknown action %r', action)
         return 2, f'error: unknown action {action!r}; known: {", ".join(sorted(DISPATCH))}\n'
-    return handler()
+    LOG.info('action %s start', action)
+    code, text = handler()
+    LOG.info('action %s done rc=%s (%d chars)', action, code, len(text))
+    return code, text
