@@ -1,0 +1,32 @@
+{
+  "_note": "LLM providers and routing. Secrets come from environment variables only.",
+  "providers": {
+    "mock": {
+      "kind": "mock",
+      "description": "Offline provider used by tests and dry runs."
+    },
+    "openai": {
+      "kind": "openai-compatible",
+      "base_url": "https://api.openai.com/v1",
+      "api_key_env": "OPENAI_API_KEY",
+      "models": ["gpt-4o-mini"]
+    },
+    "deepseek": {
+      "kind": "openai-compatible",
+      "base_url": "https://api.deepseek.com/v1",
+      "api_key_env": "DEEPSEEK_API_KEY",
+      "models": ["deepseek-chat"]
+    }
+  },
+  "default_provider": "mock",
+  "routing": {
+    "scenario": {
+      "chapter-draft": "mock",
+      "chapter-polish": "mock",
+      "summary": "mock",
+      "review": "mock"
+    },
+    "book": {},
+    "chapter": {}
+  }
+}

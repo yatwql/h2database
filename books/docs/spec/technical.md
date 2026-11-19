@@ -12,7 +12,11 @@ ingest/     源码 → 手稿：只读源码树，只写 data/state 与 data/man
 manuscript/ 手稿维护：只读写 data/manuscript 与 data/state。
 audit/      质量门禁：只读；输出报告到 stdout，不修改仓库。
 render/     交付渲染：只写 dist/，可读 manuscript 与 data/state。
+app/        入口层：cli.py / tui.py / web.py + actions.py，只编排，不含业务逻辑。
 ```
+
+**入口层约束**：三个渠道共用 `app/actions.py`；渠道层不得直接实现分析、渲染或
+校验逻辑，只能调用 `actions`（其内部调用 `make.py` 与 stage 1 脚本）。
 
 **依赖方向**：`lib ← ingest/manuscript/audit/render`。同层之间不得互相 import，
 下层不得反向依赖上层。

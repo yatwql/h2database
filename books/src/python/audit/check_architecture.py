@@ -29,7 +29,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lib import _config, _fsutil
 
 PY_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LAYERS = ('ingest', 'manuscript', 'audit', 'render')
+LAYERS = ('ingest', 'manuscript', 'audit', 'render', 'app')
 STDLIB_CLASH = {'types', 'html', 'json', 'logging', 'email', 'code', 'test', 'binascii'}
 PATH_LITERALS = ('books/', 'data/manuscript', 'data/config', 'data/tmpl')
 WRITE_CALLS = ('write_text', 'open(')

@@ -31,8 +31,11 @@ def scripts() -> list[str]:
     """Entry-point scripts (library modules under lib/ are exempt)."""
     root = os.path.join(_config.BOOK_ROOT, 'src', 'python')
     found = glob.glob(os.path.join(root, '**', '*.py'), recursive=True)
+    # library-style modules: shared helpers, not entry points
+    library = (os.sep + 'lib' + os.sep, os.sep + 'app' + os.sep + 'actions.py')
     return sorted(p for p in found
-                  if os.sep + 'lib' + os.sep not in p and not p.endswith('__init__.py'))
+                  if not any(marker in p for marker in library)
+                  and not p.endswith('__init__.py'))
 
 
 def check(path: str) -> list[str]:

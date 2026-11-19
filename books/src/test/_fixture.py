@@ -216,6 +216,18 @@ STYLE_JSON = {
                    "checklist_items": 5},
 }
 
+LLM_PROVIDER = {
+    "providers": {"mock": {"kind": "mock"}},
+    "default_provider": "mock",
+    "routing": {"scenario": {"summary": "mock"}, "book": {}, "chapter": {}},
+}
+
+LLM_SETTINGS = {
+    "defaults": {"temperature": 0.3, "max_tokens": 512, "timeout_s": 10, "retries": 0},
+    "scenarios": {"summary": {"max_tokens": 256}},
+    "books": {}, "chapters": {},
+}
+
 LANGUAGE_JSON = {
     "code": "zh",
     "sections": {"guide": "本章导读", "summary": "本章小结",
@@ -288,7 +300,7 @@ FILES = {
 }
 
 
-SUBDIRS = ('', 'lib', 'audit', 'manuscript', 'render', 'ingest')
+SUBDIRS = ('', 'lib', 'audit', 'manuscript', 'render', 'ingest', 'app')
 
 
 def resolve_script(script: str) -> str:
@@ -322,6 +334,10 @@ def build_book(root: str, *, extra: dict[str, str] | None = None) -> str:
     policy_dir = os.path.join(root, 'data', 'config')
     os.makedirs(policy_dir, exist_ok=True)
     for name, payload in (('base.json', BASE_JSON), ('style.json', STYLE_JSON)):
+        with open(os.path.join(policy_dir, name), 'w', encoding='utf-8') as fh:
+            json.dump(payload, fh, ensure_ascii=False, indent=2)
+    for name, payload in (('llm_provider.json', LLM_PROVIDER),
+                          ('llm_settings.json', LLM_SETTINGS)):
         with open(os.path.join(policy_dir, name), 'w', encoding='utf-8') as fh:
             json.dump(payload, fh, ensure_ascii=False, indent=2)
     language_dir = os.path.join(root, 'data', 'language')

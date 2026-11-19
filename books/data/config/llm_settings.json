@@ -1,0 +1,17 @@
+{
+  "_note": "Per-scenario generation settings; routing (which provider) lives in llm_provider.json.",
+  "defaults": {
+    "temperature": 0.3,
+    "max_tokens": 2048,
+    "timeout_s": 60,
+    "retries": 1
+  },
+  "scenarios": {
+    "chapter-draft": {"temperature": 0.4, "max_tokens": 4096},
+    "chapter-polish": {"temperature": 0.2, "max_tokens": 3072},
+    "summary": {"temperature": 0.1, "max_tokens": 800},
+    "review": {"temperature": 0.0, "max_tokens": 1200}
+  },
+  "books": {},
+  "chapters": {}
+}
