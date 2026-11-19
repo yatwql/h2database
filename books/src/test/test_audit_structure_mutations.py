@@ -66,6 +66,39 @@ class StructureMutationTest(unittest.TestCase):
         _code, out = self.run_gate()
         self.assertTrue(out)
 
+    def test_missing_artifacts_are_reported_not_raised(self):
+        """The HTML and merged-doc sections must degrade to a finding."""
+        code, out = self.run_gate()
+        self.assertIn(code, (0, 1))
+        self.assertNotIn('Traceback', out)
+        self.assertIn('HTML file not found', out)
+        self.assertIn('Merged doc not found', out)
+
+    def test_broken_html_toc_is_reported(self):
+        for script in ('cover.py', 'merge.py', 'to_html.py'):
+            self.assertIn(_fixture.run_inproc(self.root, script)[0], (0, 1))
+        html = os.path.join(self.root, 'dist', 'test-book.html')
+        with open(html, encoding='utf-8') as fh:
+            text = fh.read()
+        with open(html, 'w', encoding='utf-8') as fh:
+            fh.write(text.replace('href="#', 'href="#missing-', 1))
+        code, out = self.run_gate()
+        self.assertIn(code, (0, 1))
+        self.assertIn('broken anchors', out)
+
+    def test_missing_chapter_file_is_reported(self):
+        os.remove(self.chapter('ch2-test.md'))
+        code, out = self.run_gate()
+        self.assertIn(code, (0, 1))
+        self.assertNotIn('Traceback', out)
+
+    def test_invalid_utf8_chapter_is_reported(self):
+        with open(self.chapter('ch1-test.md'), 'wb') as fh:
+            fh.write(b'# \xff\xfe broken bytes\n')
+        code, out = self.run_gate()
+        self.assertIn(code, (0, 1))
+        self.assertNotIn('Traceback', out)
+
     def test_structure_runs_after_a_full_build(self):
         """HTML/merged/TOC checks only execute when the artifacts exist."""
         for script in ('cover.py', 'merge.py', 'to_html.py'):

@@ -60,7 +60,7 @@ print(f'[gate-level: {GATE_LEVEL}] running sections at or below {GATE_LEVEL}\n')
 
 def _count_lines(path: str) -> int:
     """Count lines in a UTF-8 text file."""
-    return len(_fsutil.read_lines_raw(path))
+    return len(safe_lines(path))
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 repo_root = os.path.normpath(os.path.join(script_dir, '..', '..', '..', '..'))
@@ -87,6 +87,34 @@ results = []
 # vs the alternative of restructuring 15 flat sections into functions.
 SECTION_LEVEL = 'p0'
 
+def safe_read(path: str) -> str:
+    """Read a text file for the checks; a decode failure becomes a finding.
+
+    A gate must never die on the input it is judging: a chapter that is not
+    valid UTF-8 has to show up as a failed check, not as a traceback.
+    """
+    try:
+        return _fsutil.read_text_raw(path)
+    except UnicodeDecodeError:
+        check(False, f'{path}: NOT valid UTF-8')
+        return ''
+    except OSError as exc:
+        check(False, f'{path}: cannot read ({exc})')
+        return ''
+
+
+def safe_lines(path: str) -> list[str]:
+    """Line reader that turns a decode failure into a finding (see safe_read)."""
+    try:
+        return _fsutil.read_lines_raw(path)
+    except UnicodeDecodeError:
+        check(False, f'{path}: NOT valid UTF-8')
+        return []
+    except OSError as exc:
+        check(False, f'{path}: cannot read ({exc})')
+        return []
+
+
 def check(ok, msg):
     if not gate(SECTION_LEVEL):
         return
@@ -110,7 +138,7 @@ def section(level: str, name: str) -> None:
 section('p0', 'Figure Numbering')
 global_by_ch: dict = {}  # ch (int or 'A'/'B'/…) -> [(file, base_num, full_num)]
 for f in CHAPTERS:
-    content = _fsutil.read_text_raw(f)
+    content = safe_read(f)
     # Numeric chapters
     figs = re.findall(r'\*\*图 (\d+)-(\d+[a-z]*):', content)
     for ch, num in figs:
@@ -155,7 +183,7 @@ for ch in sorted(global_by_ch, key=lambda k: (isinstance(k, str), k)):
 # 2. Cross-references
 section('p0', 'Cross-References')
 for f in CHAPTERS:
-    content = _fsutil.read_text_raw(f)
+    content = safe_read(f)
     refs = re.findall(r'详见第(\d+)章', content)
     other_refs = re.findall(r'第(\d+)章[^详]', content)
     all_refs = {int(r) for r in refs + other_refs if int(r) > 0}
@@ -180,7 +208,7 @@ section('p0', 'Code Fence Balance')
 total_fences = 0
 all_balanced = True
 for f in CHAPTERS:
-    lines = _fsutil.read_lines_raw(f)
+    lines = safe_lines(f)
     fences = sum(1 for line in lines if line.strip().startswith('```'))
     if fences % 2 != 0:
         all_balanced = False
@@ -193,7 +221,7 @@ check(all_balanced, f'Total: {total_fences} fences across all files')
 # 4. Heading hierarchy
 section('p0', 'Heading Hierarchy')
 for f in CHAPTERS:
-    lines = _fsutil.read_lines_raw(f)
+    lines = safe_lines(f)
     headings = []
     for i, line in enumerate(lines):
         m = re.match(r'^(#{1,4})\s', line)
@@ -209,7 +237,7 @@ for f in CHAPTERS:
 
 # 5. UTF-8 encoding
 section('p0', 'UTF-8 Encoding')
-for f in CHAPTERS + [os.path.join(dist_dir, 'h2-source-code-analysis.md'), os.path.join(dist_dir, 'h2-source-code-analysis.html')]:
+for f in CHAPTERS + [_config.merged_md(), _config.merged_html()]:
     try:
         _fsutil.read_text_raw(f)
         check(True, f'{f}: valid UTF-8')
@@ -221,7 +249,7 @@ for f in CHAPTERS + [os.path.join(dist_dir, 'h2-source-code-analysis.md'), os.pa
 # 6. HTML TOC check
 section('p0', 'HTML TOC')
 try:
-    html = _fsutil.read_text_raw(os.path.join(dist_dir, 'h2-source-code-analysis.html'))
+    html = _fsutil.read_text_raw(_config.merged_html())
     sidebar_nav_start = html.find('<nav id="sidebar">')
     sidebar_nav_end = html.find('</nav>', sidebar_nav_start)
     content_start = html.find('<main')
@@ -246,7 +274,7 @@ if required:
     missing_sections: list[str] = []
     chapter_only = [c for c in CHAPTERS if os.path.basename(c).startswith('ch')]
     for chapter in chapter_only:
-        text = _fsutil.read_text_raw(chapter)
+        text = safe_read(chapter)
         for name in required:
             # the section may be an H2/H3 heading or a bold blockquote marker
             pattern = rf'^(?:#{{2,3}}\s+\S+\s+{re.escape(name)}|>\s*\*\*{re.escape(name)}\*\*)'
@@ -263,7 +291,7 @@ section('p0', 'Merged Doc')
 try:
     ALL_MD = CHAPTERS + [_config.manuscript('cover.md')]
     md_lines = sum(_count_lines(f) for f in ALL_MD)
-    manifest_path = os.path.join(dist_dir, 'h2-source-code-analysis.md')
+    manifest_path = _config.merged_md()
     merged_text = _fsutil.read_text_raw(manifest_path)
     # the first line carries the tool/source/doc manifest plus a blank separator;
     # count only the manuscript content, the same way _count_lines does
@@ -354,7 +382,7 @@ if os.path.exists(index_path):
     # Validate chapter references match real files
     chapter_files_map = {}
     for f in CHAPTERS:
-        content = _fsutil.read_text_raw(f)
+        content = safe_read(f)
         # Find ALL H1 chapter headings in the file (handles combined files)
         for cm in re.finditer(r'^# 第(\d+)章', content, re.MULTILINE):
             ch = int(cm.group(1))
@@ -488,7 +516,7 @@ section('p1', 'Glossary Content')
 glossary_path = os.path.join(src_dir, 'back', 'glossary.md')
 glossary_ok = True
 if os.path.exists(glossary_path):
-    glossary_lines = _fsutil.read_lines_raw(glossary_path)
+    glossary_lines = safe_lines(glossary_path)
 
     glossary_content = ''.join(glossary_lines)
     entry_term_re = re.compile(r'^- \*\*([^*]+)\*\*')
