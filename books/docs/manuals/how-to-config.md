@@ -167,5 +167,5 @@ python books/src/python/make.py doctor   # 依赖与环境
 - **源码版本**：`base.json [sources].version` 优先，否则读源码清单（pom/pyproject/Cargo）。
 - **文档版本**：`book.toml [book].version`；管理文档头的 `> 版本：vX` 必须与之一致。
 
-`bk status` 会打印 `versions : tool … source … doc …`，合并稿首行写
+`bookctl status` 会打印 `versions : tool … source … doc …`，合并稿首行写
 `<!-- versions: … -->` manifest，`make.py check` 里的 `versions` 门禁负责校验。

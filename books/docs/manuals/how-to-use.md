@@ -1,7 +1,7 @@
 # 脚本与门禁速查
 
 > 面向开发者的速查页。用户向文档请见：
-> [配置](how-to-config.md) · [CLI](how-to-use-cli.md) · [TUI](how-to-use-tui.md) ·
+> [新建一本书](how-to-new-book.md) · [配置](how-to-config.md) · [CLI](how-to-use-cli.md) · [TUI](how-to-use-tui.md) ·
 > [Web](how-to-use-web.md) · [常见问题](faq.md)
 
 ## 0. 质量评分

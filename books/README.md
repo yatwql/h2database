@@ -21,11 +21,11 @@
 ```bash
 books/scripts/bootstrap.sh     # 创建 books/.venv 并装依赖（Windows: bootstrap.ps1）
 
-books/scripts/bk status        # 最短路径：cloak 掉 python 路径，直接跑动作
-books/scripts/bk check         # 全部门禁
-books/scripts/bk build         # 手稿 → 合并 Markdown + HTML
-books/scripts/bk test          # 测试（--full 含 chromium/pandoc 档）
-books/scripts/bk doctor        # 依赖与环境
+books/scripts/bookctl status        # 最短路径：cloak 掉 python 路径，直接跑动作
+books/scripts/bookctl check         # 全部门禁
+books/scripts/bookctl build         # 手稿 → 合并 Markdown + HTML
+books/scripts/bookctl test          # 测试（--full 含 chromium/pandoc 档）
+books/scripts/bookctl doctor        # 依赖与环境
 
 books/scripts/launch.sh        # TUI 菜单
 books/scripts/launch.sh cli    # CLI（与 bk 等价，可带子命令）
@@ -33,7 +33,7 @@ books/scripts/launch.sh web    # Web 控制台
 ```
 
 `bk` 是薄封装：解析解释器（`books/.venv` → `$PYTHON` → `python3`）后转发到
-`app/cli.py`；`bk make <args>` 直接透传 `make.py`。Windows 用 `bk.ps1`。
+`app/cli.py`；`bookctl make <args>` 直接透传 `make.py`。Windows 用 `bk.ps1`。
 
 不用启动脚本时：
 
@@ -74,6 +74,7 @@ books/
 
 | 文档 | 内容 |
 | ------ | ------ |
+| [how-to-new-book.md](docs/manuals/how-to-new-book.md) | 新建/翻译一本书：四份文件的职责与脚手架 |
 | [how-to-config.md](docs/manuals/how-to-config.md) | 如何配置：数据组织、基础、风格、语言包、LLM |
 | [how-to-use-cli.md](docs/manuals/how-to-use-cli.md) | CLI 用法、动作、退出码 |
 | [how-to-use-tui.md](docs/manuals/how-to-use-tui.md) | TUI 菜单与 `--once` 脚本化 |

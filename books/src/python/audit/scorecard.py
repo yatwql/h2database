@@ -84,12 +84,12 @@ def stability_score() -> tuple[int, list[str]]:
 def interaction_score() -> tuple[int, list[str]]:
     notes: list[str] = []
     points = 0
-    runners = ['launch.sh', 'launch.ps1', 'bk', 'bk.ps1', 'bootstrap.sh', 'bootstrap.ps1']
+    runners = ['launch.sh', 'launch.ps1', 'bookctl', 'bookctl.ps1', 'bootstrap.sh', 'bootstrap.ps1']
     present = sum(1 for name in runners
                   if os.path.isfile(os.path.join(_config.BOOK_ROOT, 'scripts', name)))
     points += 40 * present / len(runners)
-    manuals = ['how-to-config.md', 'how-to-use-cli.md', 'how-to-use-tui.md',
-               'how-to-use-web.md', 'faq.md']
+    manuals = ['how-to-new-book.md', 'how-to-config.md', 'how-to-use-cli.md',
+               'how-to-use-tui.md', 'how-to-use-web.md', 'faq.md']
     docs = sum(1 for name in manuals
                if os.path.isfile(os.path.join(_config.DOCS_DIR, 'manuals', name)))
     points += 30 * docs / len(manuals)

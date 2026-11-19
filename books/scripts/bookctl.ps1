@@ -1,10 +1,10 @@
 # Thin wrapper: run the books toolchain without typing python paths (Windows).
 #
-#   .\books\scripts\bk.ps1 status
-#   .\books\scripts\bk.ps1 check
-#   .\books\scripts\bk.ps1 test --full
-#   .\books\scripts\bk.ps1 make <args...>
-#   .\books\scripts\bk.ps1 doctor
+#   .\books\scripts\bookctl.ps1 status
+#   .\books\scripts\bookctl.ps1 check
+#   .\books\scripts\bookctl.ps1 test --full
+#   .\books\scripts\bookctl.ps1 make <args...>
+#   .\books\scripts\bookctl.ps1 doctor
 #
 # Interpreter resolution: books\.venv -> $env:PYTHON -> python.
 [CmdletBinding()]
@@ -30,6 +30,7 @@ if (-not (Get-Command $Python -ErrorAction SilentlyContinue)) {
 }
 
 switch ($Action) {
+    'new'    { & $Python (Join-Path $BookDir 'src\python\app\scaffold.py') @Rest }
     'make'   { & $Python $Make @Rest }
     'doctor' { & $Python $Make 'doctor' }
     'help'   { Get-Content $MyInvocation.MyCommand.Path | Select-Object -First 14 }

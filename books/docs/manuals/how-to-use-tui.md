@@ -3,7 +3,7 @@
 终端界面把动作、状态与常用配置放在一屏里，适合服务器或本地交互操作。
 
 ```bash
-books/scripts/bk                 # 等价于 books/scripts/launch.sh tui
+books/scripts/bookctl                 # 等价于 books/scripts/launch.sh tui
 books/scripts/launch.sh tui
 python books/src/python/app/tui.py
 ```
@@ -72,7 +72,7 @@ dist 的新值（当前 dist）: out
 
 ```bash
 python books/src/python/app/tui.py --once status   # 跑一个动作就退出
-books/scripts/bk status                            # 更快：直接用 CLI
+books/scripts/bookctl status                            # 更快：直接用 CLI
 echo 4 | python books/src/python/app/tui.py        # 管道输入也能用
 ```
 
