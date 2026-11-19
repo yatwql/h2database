@@ -146,6 +146,22 @@
     "preferred_terms": {
       "页 page": "page",
       "快照 snapshot": "snapshot"
+    },
+    "tone": "technical-reference",
+    "audience": "experienced engineers reading source code",
+    "sections": {
+      "body": {
+        "avg_sentence_good": 28,
+        "avg_sentence_bad": 45
+      },
+      "caption": {
+        "max_chars": 30,
+        "require_verb": true
+      },
+      "exercise": {
+        "max_sentence_chars": 60,
+        "min_items": 4
+      }
     }
   },
   "_schema": {

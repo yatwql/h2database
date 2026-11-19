@@ -84,6 +84,22 @@ def validate(style: dict) -> list[str]:
                       ('dup_good', 'dup_bad'), ('bullet_good', 'bullet_bad')):
         if good in prose and bad in prose and prose[good] > prose[bad]:
             problems.append(f'[prose].{good} must be <= {bad}')
+    for key in ('tone', 'audience'):
+        if not isinstance(prose.get(key), str) or not prose.get(key):
+            problems.append(f'[prose].{key} must be a non-empty string')
+    sections_cfg = prose.get('sections')
+    if not isinstance(sections_cfg, dict) or set(sections_cfg) != {'body', 'caption', 'exercise'}:
+        problems.append('[prose].sections must define body/caption/exercise')
+    else:
+        body = sections_cfg.get('body') or {}
+        if body.get('avg_sentence_good', 0) > body.get('avg_sentence_bad', 0):
+            problems.append('[prose.sections.body] good must be <= bad')
+        caption = sections_cfg.get('caption') or {}
+        if not isinstance(caption.get('max_chars'), int):
+            problems.append('[prose.sections.caption].max_chars must be an int')
+        exercise = sections_cfg.get('exercise') or {}
+        if not isinstance(exercise.get('min_items'), int) or exercise['min_items'] < 1:
+            problems.append('[prose.sections.exercise].min_items must be >= 1')
     composite = prose.get('min_composite')
     if not isinstance(composite, (int, float)) or not 0 < composite <= 100:
         problems.append('[prose].min_composite must be within (0, 100]')

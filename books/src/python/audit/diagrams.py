@@ -146,6 +146,7 @@ def load_baseline() -> set[str]:
 
 def save_baseline(violations: list[Violation]) -> None:
     payload = {
+        'updated': __import__('datetime').date.today().isoformat(),
         'note': 'Accepted ASCII diagram violations. Refresh with --update-baseline.',
         'accepted': sorted(_key(p, line, kind) for p, line, kind, _d in violations),
     }

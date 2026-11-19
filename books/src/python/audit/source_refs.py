@@ -306,6 +306,7 @@ def save_baseline(broken: list, source_version: str, path: str | None = None) ->
     """Record the current drift as accepted."""
     target = path or BASELINE_PATH
     payload = {
+        'updated': date.today().isoformat(),
         'source_version': source_version,
         'note': 'Accepted symbol drift. Refresh after an upstream update.',
         'accepted': sorted(
@@ -428,6 +429,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--update-baseline', action='store_true',
                         help='record current symbol drift as accepted')
+    parser.add_argument('--prune', action='store_true',
+                        help='drop accepted entries that now resolve')
     parser.add_argument('--json', action='store_true',
                         help='machine-readable summary')
     parser.add_argument('--suggest', action='store_true',
@@ -467,6 +470,16 @@ def main(argv: list[str] | None = None) -> int:
         baseline = load_baseline()
         new_drift, known_drift = split_drift(broken_symbols, baseline)
 
+        if args.prune:
+            remaining = [(claim, rel) for claim, rel in broken_symbols]
+            accepted = set(load_baseline().get('accepted', []))
+            kept = [(c, r) for c, r in remaining
+                    if _claim_key(c.doc_file, c.class_name, c.method) in accepted]
+            dropped = len(accepted) - len(kept)
+            save_baseline(kept, h2_version)
+            print(f'  baseline pruned: {dropped} resolved entr(ies) removed, '
+                  f'{len(kept)} kept')
+            return 0
         if args.update_baseline:
             save_baseline(broken_symbols, h2_version)
             print(f'  baseline updated: {len(broken_symbols)} accepted claim(s) '

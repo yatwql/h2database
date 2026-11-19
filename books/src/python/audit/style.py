@@ -240,6 +240,26 @@ def detect_weak_verb_xing(lines, fname):
                 continue
             warn(fname, i, f'弱动词构造："{verb}"，建议改为直接表达', level='WARN')
 
+FORBID_PHRASES = list((_config.STYLE_POLICY.get('prose') or {}).get('forbid_phrases') or [])
+
+
+def detect_forbidden_phrases(lines, fname):
+    """Flag phrases banned by style.json [prose].forbid_phrases."""
+    if not FORBID_PHRASES:
+        return
+    in_fence = False
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if stripped.startswith('```'):
+            in_fence = not in_fence
+            continue
+        if in_fence or not stripped or stripped.startswith(('>', '#', '|')):
+            continue
+        for phrase in FORBID_PHRASES:
+            if phrase in stripped:
+                warn(fname, i, f'禁用语："{phrase}"，改用客观陈述', level='WARN')
+
+
 def detect_excessive_de(lines, fname):
     """Detect excessive '的' in a single line as a marker of nested modification."""
     in_fence = False
@@ -391,11 +411,16 @@ def detect_colloquial(lines, fname):
     for i, line in enumerate(lines, 1):
         stripped = line.strip()
         if stripped.startswith('```'):
-            in_fence = not in_fence; continue
-        if in_fence or not stripped: continue
-        if re.match(r'^#{1,4}\s', stripped): continue
-        if stripped.startswith('>') or stripped == '---': continue
-        if re.match(r'^\|.*\|$', stripped): continue
+            in_fence = not in_fence
+            continue
+        if in_fence or not stripped:
+            continue
+        if re.match(r'^#{1,4}\s', stripped):
+            continue
+        if stripped.startswith('>') or stripped == '---':
+            continue
+        if re.match(r'^\|.*\|$', stripped):
+            continue
         for pattern, msg in patterns:
             if re.search(pattern, stripped):
                 warn(fname, i, msg)
@@ -412,11 +437,16 @@ def detect_redundant_adverbs(lines, fname):
     for i, line in enumerate(lines, 1):
         stripped = line.strip()
         if stripped.startswith('```'):
-            in_fence = not in_fence; continue
-        if in_fence or not stripped: continue
-        if re.match(r'^#{1,4}\s', stripped): continue
-        if stripped.startswith('>') or stripped == '---': continue
-        if re.match(r'^\|.*\|$', stripped): continue
+            in_fence = not in_fence
+            continue
+        if in_fence or not stripped:
+            continue
+        if re.match(r'^#{1,4}\s', stripped):
+            continue
+        if stripped.startswith('>') or stripped == '---':
+            continue
+        if re.match(r'^\|.*\|$', stripped):
+            continue
         for pattern, msg in patterns:
             if re.search(pattern, stripped):
                 warn(fname, i, msg, level='INFO')
@@ -433,11 +463,16 @@ def detect_vague_modifiers(lines, fname):
     for i, line in enumerate(lines, 1):
         stripped = line.strip()
         if stripped.startswith('```'):
-            in_fence = not in_fence; continue
-        if in_fence or not stripped: continue
-        if re.match(r'^#{1,4}\s', stripped): continue
-        if stripped.startswith('>') or stripped == '---': continue
-        if re.match(r'^\|.*\|$', stripped): continue
+            in_fence = not in_fence
+            continue
+        if in_fence or not stripped:
+            continue
+        if re.match(r'^#{1,4}\s', stripped):
+            continue
+        if stripped.startswith('>') or stripped == '---':
+            continue
+        if re.match(r'^\|.*\|$', stripped):
+            continue
         for pattern, msg in patterns:
             if re.search(pattern, stripped):
                 warn(fname, i, msg, level='INFO')
@@ -448,11 +483,16 @@ def detect_long_sentences(lines, fname):
     for i, line in enumerate(lines, 1):
         stripped = line.strip()
         if stripped.startswith('```'):
-            in_fence = not in_fence; continue
-        if in_fence or not stripped: continue
-        if re.match(r'^#{1,4}\s', stripped): continue
-        if stripped.startswith('>') or stripped == '---': continue
-        if re.match(r'^\|.*\|$', stripped): continue
+            in_fence = not in_fence
+            continue
+        if in_fence or not stripped:
+            continue
+        if re.match(r'^#{1,4}\s', stripped):
+            continue
+        if stripped.startswith('>') or stripped == '---':
+            continue
+        if re.match(r'^\|.*\|$', stripped):
+            continue
         segments = re.split(r'[，。；！？、]', stripped)
         for seg in segments:
             seg = seg.strip()
@@ -467,11 +507,16 @@ def detect_mixed_code(lines, fname):
     for i, line in enumerate(lines, 1):
         stripped = line.strip()
         if stripped.startswith('```'):
-            in_fence = not in_fence; continue
-        if in_fence or not stripped: continue
-        if re.match(r'^#{1,4}\s', stripped): continue
-        if stripped.startswith('>') or stripped == '---': continue
-        if re.match(r'^\|.*\|$', stripped): continue
+            in_fence = not in_fence
+            continue
+        if in_fence or not stripped:
+            continue
+        if re.match(r'^#{1,4}\s', stripped):
+            continue
+        if stripped.startswith('>') or stripped == '---':
+            continue
+        if re.match(r'^\|.*\|$', stripped):
+            continue
         for m in re.finditer(r'`([^`]+)`', stripped):
             code_content = m.group(1)
             has_cn = bool(re.search(r'[一-鿿]', code_content))
@@ -488,7 +533,7 @@ for fpath in chapter_files:
     lines = _fsutil.read_lines(fpath)
 
     # Remove trailing newlines for consistent processing
-    lines = [l.rstrip('\n\r') for l in lines]
+    lines = [line.rstrip('\n\r') for line in lines]
 
     # Run all detection modules (colloquial/redundant/vague/length/mixed)
     detect_colloquial(lines, fname)
@@ -502,6 +547,7 @@ for fpath in chapter_files:
     detect_repeated_connectors(lines, fname)
     detect_weak_verb_xing(lines, fname)
     detect_excessive_de(lines, fname)
+    detect_forbidden_phrases(lines, fname)
     detect_vague_qi(lines, fname)
     detect_passive_abuse(lines, fname)
     calculate_readability_metrics(lines, fname)
