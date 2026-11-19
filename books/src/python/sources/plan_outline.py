@@ -46,6 +46,7 @@ def build_outline() -> dict:
                 'lines': entry['lines'],
                 'files': entry['files'],
                 'summary': entry['summary'],
+                'depends_on': entry.get('depends_on', {}),
                 'key_classes': [
                     {'name': c['name'], 'lines': c['lines'], 'summary': c['summary'],
                      'public_methods': c['public_methods']}

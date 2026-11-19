@@ -41,6 +41,7 @@ books/
     h2-source-code-analysis-print.pdf
     h2-source-code-analysis.epub
   docs/
+    spec/                    # 通用规范（analysis-doc-standard.md：源码分析文档标准）
     managements/             # 项目管理文档（见 §2）
     manuals/                 # 使用手册（how-to-use.md：脚本用法唯一说明）
     plan/                    # 带日期的计划文档

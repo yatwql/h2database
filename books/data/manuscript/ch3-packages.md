@@ -181,7 +181,39 @@
 
 跨章衔接请对照第4章《包结构与模块职责》。
 
-## 3.5 术语对照
+## 3.5 依赖方向
+
+下表按源码中的 `import` 统计给出包间依赖，规模即耦合强度；重构时优先看右侧出现频次最高的包。
+
+| 包 | 依赖（前 4） |
+| --- | --- |
+| `org.h2.value` | `org.h2.util`, `org.h2.engine`, `org.h2.message`, `org.h2.api` |
+| `org.h2.command` | `org.h2.util.ParserUtil`, `org.h2.expression.function`, `org.h2.value`, `org.h2.expression` |
+| `org.h2.mvstore` | `org.h2.util`, `org.h2.compress`, `org.h2.store.fs`, `org.h2.store.fs.encrypt` |
+| `org.h2.util` | `org.h2.value`, `org.h2.engine`, `org.h2.message`, `org.h2.api` |
+| `org.h2.table` | `org.h2.value`, `org.h2.engine`, `org.h2.result`, `org.h2.index` |
+| `org.h2.engine` | `org.h2.util`, `org.h2.message`, `org.h2.value`, `org.h2.api` |
+| `org.h2.tools` | `org.h2.util`, `org.h2.engine`, `org.h2.value`, `org.h2.message` |
+| `org.h2.expression` | `org.h2.value`, `org.h2.table`, `org.h2.engine`, `org.h2.message` |
+| `org.h2.api` | `org.h2.security.auth`, `org.h2.value`, `org.h2.util.DateTimeUtils`, `org.h2.message` |
+| `org.h2.index` | `org.h2.result`, `org.h2.table`, `org.h2.value`, `org.h2.engine` |
+| `org.h2.result` | `org.h2.value`, `org.h2.engine`, `org.h2.util`, `org.h2.expression` |
+| `org.h2.schema` | `org.h2.engine`, `org.h2.value`, `org.h2.message`, `org.h2.table` |
+| `org.h2.store` | `org.h2.engine`, `org.h2.util`, `org.h2.message`, `org.h2.value` |
+
+## 3.6 设计权衡
+
+- 本章 13 个包中，抽样公开类型 78 个，其余为内部实现——公共面收敛是升级兼容性的前提。
+- 大型包通常承担"框架 + 默认实现"双重职责，扩展点集中在接口与抽象类。
+- 规模最大的类型往往是数据结构或调度器，改动成本最高，阅读优先级也最高。
+
+## 3.7 常见误区
+
+- 把包规模当复杂度：行数多的包常是类型族（如值类型），逻辑并不复杂。
+- 只读公开方法而不看调用点：真正的约束在调用方的加锁顺序与生命周期里。
+- 忽略 `package-info`：注释里写明的边界，往往正是重构时最容易踩的缝。
+
+## 3.8 术语对照
 
 本章出现的专业术语与书末术语表的对应关系：
 
@@ -194,13 +226,13 @@
 - **MVStore**：详见[术语表](back/glossary.md)对应条目。
 - **Parser**：详见[术语表](back/glossary.md)对应条目。
 
-## 3.6 本章小结
+## 3.9 本章小结
 
 - 本章覆盖 13 个包、119,252 行。
 - 关键入口与源码坐标见 §3.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
-## 3.7 延伸思考
+## 3.10 延伸思考
 
 下列题目把"读到的结构"转化为可应用的判断力。
 
@@ -224,6 +256,14 @@
 > 提示：回到 §3.1 的表格，按规模排序挑选目标包。
 > 回顾：§3.1 模块版图
 
-## 3.8 延展阅读
+## 3.11 阅读检查清单
+
+- 能否不看正文，画出本章包之间的依赖方向？
+- 能否指出本章最容易被并发影响的类型，并说明原因？
+- 能否用一个具体入口，把调用链从入口讲到落盘或返回？
+- 能否说出一个"看起来可以合并、实际不能合并"的包边界？
+- 能否指出一处"注释与实现对不上"的地方，并给出你信哪一边的理由？
+
+## 3.12 延展阅读
 
 - 详见第4章《包结构与模块职责》。

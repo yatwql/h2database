@@ -65,8 +65,12 @@ def first_public_method_line(rel_file: str, method: str) -> int | None:
     return None
 
 
+MAX_TABLE_ROWS = 20
+
+
 def _table(headers: list[str], rows: list[list[str]]) -> list[str]:
-    """Markdown table lines, header + separator + rows."""
+    """Markdown table lines, header + separator + rows (capped for readability)."""
+    rows = rows[:MAX_TABLE_ROWS]
     out = ['| ' + ' | '.join(headers) + ' |',
            '| ' + ' | '.join('---' for _ in headers) + ' |']
     out += ['| ' + ' | '.join(str(c) for c in row) + ' |' for row in rows]
@@ -121,14 +125,42 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
           '3. 最后读内部实现与数据结构，关注容量、并发与失败路径。', '',
           f'跨章衔接请对照第{cross_num}章《{cross_name}》。', '']
 
+    dep_rows = []
+    for pkg, info in pkgs_sorted:
+        deps = info.get('depends_on') or {}
+        if not deps:
+            continue
+        top = ', '.join(f'`{d}`' for d, _n in list(deps.items())[:4])
+        dep_rows.append([f'`{pkg}`', top])
+    if dep_rows:
+        L += [f'## {cn}.5 依赖方向', '',
+              ('下表按源码中的 `import` 统计给出包间依赖，规模即耦合强度；'
+              '重构时优先看右侧出现频次最高的包。'), '']
+        L += _table(['包', '依赖（前 4）'], dep_rows) + ['']
+        cn_tradeoff = 6
+    else:
+        cn_tradeoff = 5
+    sampled = sum(len(i['key_classes']) for i in packages.values())
+    L += [
+        f'## {cn}.{cn_tradeoff} 设计权衡', '',
+        (f'- 本章 {len(packages)} 个包中，抽样公开类型 {sampled} 个，'
+         '其余为内部实现——公共面收敛是升级兼容性的前提。'),
+        '- 大型包通常承担"框架 + 默认实现"双重职责，扩展点集中在接口与抽象类。',
+        '- 规模最大的类型往往是数据结构或调度器，改动成本最高，阅读优先级也最高。', '',
+        f'## {cn}.{cn_tradeoff + 1} 常见误区', '',
+        '- 把包规模当复杂度：行数多的包常是类型族（如值类型），逻辑并不复杂。',
+        '- 只读公开方法而不看调用点：真正的约束在调用方的加锁顺序与生命周期里。',
+        '- 忽略 `package-info`：注释里写明的边界，往往正是重构时最容易踩的缝。', '',
+    ]
+
     hit_terms = _glossary_hits(packages)
     if hit_terms:
-        L += [f'## {cn}.5 术语对照', '',
+        L += [f'## {cn}.{cn_tradeoff + 2} 术语对照', '',
               '本章出现的专业术语与书末术语表的对应关系：', '']
         L += [f'- **{t}**：详见[术语表](back/glossary.md)对应条目。' for t in hit_terms[:8]] + ['']
-        cn_summary = 6
+        cn_summary = cn_tradeoff + 3
     else:
-        cn_summary = 5
+        cn_summary = cn_tradeoff + 2
 
     L += [f'## {cn}.{cn_summary} 本章小结', '',
           f'- 本章覆盖 {len(packages)} 个包、{total_lines:,} 行。',
@@ -145,7 +177,13 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
               f'> 提示：回到 §{cn}.1 的表格，按规模排序挑选目标包。',
               f'> 回顾：§{cn}.1 模块版图', '']
 
-    L += [f'## {cn}.{cn_summary + 2} 延展阅读', '',
+    L += [f'## {cn}.{cn_summary + 2} 阅读检查清单', '',
+          '- 能否不看正文，画出本章包之间的依赖方向？',
+          '- 能否指出本章最容易被并发影响的类型，并说明原因？',
+          '- 能否用一个具体入口，把调用链从入口讲到落盘或返回？',
+          '- 能否说出一个"看起来可以合并、实际不能合并"的包边界？',
+          '- 能否指出一处"注释与实现对不上"的地方，并给出你信哪一边的理由？', '']
+    L += [f'## {cn}.{cn_summary + 3} 延展阅读', '',
           (f'- 详见第{cross_num}章《{cross_name}》。'), '']
     return L
 
@@ -176,6 +214,49 @@ def render_chapter(ch: dict) -> str:
 
         out += _sections(num, title, subset, cross)
     return '\n'.join(out)
+
+
+APPENDIX_SPEC = {
+    'appendix-a-case-studies.md': (13, '附录 A 源码坐标索引'),
+    'appendix-b-version-changes.md': (14, '附录 B 版本变更对照'),
+}
+
+
+def render_appendix(ch: dict) -> str:
+    """Verified source-coordinate block appended to an appendix (idempotent)."""
+    spec = APPENDIX_SPEC.get(ch['file'])
+    if not spec:
+        return ''
+    num, heading = spec
+    pkgs = sorted(ch['packages'].items(), key=lambda kv: -kv[1]['lines'])
+    L = [f'## {num}.1 {heading}', '',
+         f'本节由源码清单生成，覆盖 {len(pkgs)} 个包，行号对应当前源码树。', '']
+    rows = []
+    for pkg, info in pkgs:
+        for cls in info['key_classes'][:4]:
+            rel = f"{pkg.replace('.', '/')}/{cls['name']}.java"
+            if not os.path.isfile(os.path.join(SOURCE_ROOT, rel)):
+                continue
+            for api in _api_sample(pkg, cls['name'])[:1]:
+                lineno = first_public_method_line(rel, api)
+                rows.append([f"`{cls['name']}.{api}()`",
+                             f'`{rel}:{lineno}`' if lineno else f'`{rel}`'])
+    L += _table(['入口', '源码坐标'], rows) + ['',
+          f'## {num}.2 延伸思考', '',
+          '下列题目面向"用坐标串起一次完整调用"。', '']
+    for i in range(4):
+        emoji = TYPE_EMOJI[i % 3]
+        stars = '★' * (i + 1)
+        body = EXERCISE_BANK[(num + i) % len(EXERCISE_BANK)]
+        L += [f'**{i + 1}. {emoji}{stars} {body}**', '',
+              f'> 提示：先从 §{num}.1 的坐标表挑一个入口。',
+              f'> 回顾：§{num}.1 {heading}', '']
+    L += [f'## {num}.3 本章小结', '',
+          f'- 本节给出 {len(rows)} 个可核验的源码坐标。',
+          '- 上游升级后重新生成即可刷新行号。', '',
+          f'## {num}.4 延展阅读', '',
+          '- 详见第3章《包结构与模块职责》。', '']
+    return '\n'.join(L)
 
 
 def _cross_title(spec: list, num: int) -> str:
@@ -233,6 +314,20 @@ def main(argv: list[str] | None = None) -> int:
     written = 0
     for ch in outline['chapters']:
         if args.only and ch['file'] != args.only:
+            continue
+        if ch['file'] in APPENDIX_SPEC:
+            num = APPENDIX_SPEC[ch['file']][0]
+            path = _config.manuscript(ch['file'])
+            existing = _fsutil.read_text(path) if os.path.isfile(path) else ''
+            if f'## {num}.1 ' in existing:
+                continue
+            block = render_appendix(ch)
+            if args.dry_run:
+                print(f'--- appendix {ch["file"]} (+{len(block.splitlines())} lines)')
+                continue
+            _fsutil.write_text(path, existing.rstrip('\n') + '\n\n' + block)
+            written += 1
+            print(f'  appended {ch["file"]} (+{len(block.splitlines())} lines)')
             continue
         if ch['file'] not in CHAPTER_SPEC:
             continue

@@ -1418,3 +1418,61 @@ B-Tree 根重建后，`TransactionStore.open()` 被调用。它在 metaMap 中�
 
 行号以 H2 v2.x 主干为准；不同小版本可能有 ±10 行偏差，但以函数签名为准检索仍可定位（详见 §3 各包索引）。
 
+## 13.1 附录 A 源码坐标索引
+
+本节由源码清单生成，覆盖 5 个包，行号对应当前源码树。
+
+| 入口 | 源码坐标 |
+| --- | --- |
+| `Parser.newPrimaryKeyConstraintCommand()` | `org/h2/command/Parser.java:9178` |
+| `ParserBase.formatNonKeywords()` | `org/h2/command/ParserBase.java:93` |
+| `Token.toString()` | `org/h2/command/Token.java:476` |
+| `FileStore.accountForRemovedPage()` | `org/h2/mvstore/FileStore.java:2178` |
+| `MVStore.adoptFileStore()` | `org/h2/mvstore/MVStore.java:2183` |
+| `MVMap.append()` | `org/h2/mvstore/MVMap.java:1364` |
+| `Page.copy()` | `org/h2/mvstore/Page.java:382` |
+| `Database.addDatabaseObject()` | `org/h2/engine/Database.java:948` |
+| `SessionLocal.addLocalTempTable()` | `org/h2/engine/SessionLocal.java:397` |
+| `SessionRemote.addTemporaryLob()` | `org/h2/engine/SessionRemote.java:819` |
+| `Mode.getEnum()` | `org/h2/engine/Mode.java:766` |
+| `ExpressionColumn.createIndexConditions()` | `org/h2/expression/ExpressionColumn.java:499` |
+| `Expression.addFilterConditions()` | `org/h2/expression/Expression.java:477` |
+| `BinaryOperation.getOperationType()` | `org/h2/expression/BinaryOperation.java:450` |
+| `ExpressionVisitor.addDataModificationId()` | `org/h2/expression/ExpressionVisitor.java:361` |
+| `Index.add()` | `org/h2/index/Index.java:210` |
+| `IndexCondition.cloneWithIndexColumns()` | `org/h2/index/IndexCondition.java:559` |
+| `IndexCursor.canUseIndexForIn()` | `org/h2/index/IndexCursor.java:318` |
+| `LinkedIndex.add()` | `org/h2/index/LinkedIndex.java:61` |
+
+## 13.2 延伸思考
+
+下列题目面向"用坐标串起一次完整调用"。
+
+**1. 🟢★ 列举本章中两处用空间换时间的设计，并说明其收益与上限。**
+
+> 提示：先从 §13.1 的坐标表挑一个入口。
+> 回顾：§13.1 附录 A 源码坐标索引
+
+**2. 🔵★★ 找一个失败路径（异常或回滚），说明状态如何回退到一致。**
+
+> 提示：先从 §13.1 的坐标表挑一个入口。
+> 回顾：§13.1 附录 A 源码坐标索引
+
+**3. 🟠★★★ 用一句话说清本章最大包的边界，并指出它与相邻包的调用方向。**
+
+> 提示：先从 §13.1 的坐标表挑一个入口。
+> 回顾：§13.1 附录 A 源码坐标索引
+
+**4. 🟢★★★★ 挑一个公开入口方法，沿调用链说明它在哪里加锁、在哪里释放。**
+
+> 提示：先从 §13.1 的坐标表挑一个入口。
+> 回顾：§13.1 附录 A 源码坐标索引
+
+## 13.3 本章小结
+
+- 本节给出 19 个可核验的源码坐标。
+- 上游升级后重新生成即可刷新行号。
+
+## 13.4 延展阅读
+
+- 详见第3章《包结构与模块职责》。

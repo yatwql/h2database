@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from lib import _config, _fsutil
 
+IMPORT_RE = re.compile(r'^\s*import\s+(?:static\s+)?(org\.h2\.[\w.]+?)(?:\.\w+)?\s*;', re.MULTILINE)
 PKG_RE = re.compile(r'^\s*package\s+([\w.]+)\s*;', re.MULTILINE)
 PUBLIC_TYPE_RE = re.compile(
     r'^\s*public\s+(?:final\s+|abstract\s+|sealed\s+|non-sealed\s+)*'
@@ -73,6 +74,7 @@ def digest(root: str) -> dict:
         rel = os.path.relpath(dirpath, root).replace(os.sep, '.')
         pkg = 'default' if rel == '.' else rel
         entry = packages.setdefault(pkg, {
+            'depends_on': {}, 
             'path': os.path.relpath(dirpath, root).replace(os.sep, '/'),
             'summary': _package_javadoc(os.path.join(dirpath, 'package-info.java')),
             'files': 0, 'lines': 0, 'classes': [],
@@ -87,6 +89,9 @@ def digest(root: str) -> dict:
             entry['lines'] += lines
             public = PUBLIC_TYPE_RE.findall(text)
             methods = PUBLIC_METHOD_RE.findall(text)
+            for target in IMPORT_RE.findall(text):
+                if target != pkg and not target.startswith(pkg + '.'):
+                    entry['depends_on'][target] = entry['depends_on'].get(target, 0) + 1
             entry['classes'].append({
                 'name': name[:-5],
                 'file': os.path.relpath(path, root).replace(os.sep, '/'),
@@ -99,6 +104,8 @@ def digest(root: str) -> dict:
             })
     for entry in packages.values():
         entry['classes'].sort(key=lambda c: -c['lines'])
+        entry['depends_on'] = dict(sorted(entry['depends_on'].items(),
+                                          key=lambda kv: -kv[1])[:8])
         entry['public_classes'] = [c['name'] for c in entry['classes'] if c['public']]
     return {
         'root': os.path.abspath(root),

@@ -92,6 +92,7 @@ books/
 
 ## 进一步阅读
 
+- 源码分析文档的通用规范：`docs/spec/analysis-doc-standard.md`
 - 目录职责与归属规则：`docs/managements/folder.md`
 - 脚本用法与交付步骤：`docs/manuals/how-to-use.md`
 - 质量门禁与验证命令：`docs/managements/testplan.md`

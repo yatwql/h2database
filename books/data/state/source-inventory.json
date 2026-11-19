@@ -7,6 +7,7 @@
   },
   "packages": {
     "org.h2": {
+      "depends_on": {},
       "path": "org/h2",
       "summary": "Implementation of the JDBC driver.",
       "files": 1,
@@ -40,6 +41,15 @@
       ]
     },
     "org.h2.api": {
+      "depends_on": {
+        "org.h2.security.auth": 5,
+        "org.h2.value": 3,
+        "org.h2.util.DateTimeUtils": 2,
+        "org.h2.message": 1,
+        "org.h2.util": 1,
+        "org.h2.command.ddl": 1,
+        "org.h2.table": 1
+      },
       "path": "org/h2/api",
       "summary": "Contains interfaces for user-defined extensions, such as triggers and user-defined aggregate functions.",
       "files": 12,
@@ -230,6 +240,11 @@
       ]
     },
     "org.h2.bnf": {
+      "depends_on": {
+        "org.h2.util": 5,
+        "org.h2.command.dml": 1,
+        "org.h2.tools": 1
+      },
       "path": "org/h2/bnf",
       "summary": "The implementation of the BNF (Backus-Naur form) parser and tool.",
       "files": 11,
@@ -429,6 +444,13 @@
       ]
     },
     "org.h2.bnf.context": {
+      "depends_on": {
+        "org.h2.util": 8,
+        "org.h2.bnf": 7,
+        "org.h2.engine": 2,
+        "org.h2.jdbc": 1,
+        "org.h2.message": 1
+      },
       "path": "org/h2/bnf/context",
       "summary": "Classes that provide context for the BNF tool, in order to provide BNF-based auto-complete.",
       "files": 6,
@@ -552,6 +574,16 @@
       ]
     },
     "org.h2.command": {
+      "depends_on": {
+        "org.h2.util.ParserUtil": 188,
+        "org.h2.expression.function": 44,
+        "org.h2.value": 41,
+        "org.h2.expression": 39,
+        "org.h2.engine": 35,
+        "org.h2.result": 21,
+        "org.h2.table": 20,
+        "org.h2.expression.condition": 16
+      },
       "path": "org/h2/command",
       "summary": "This package contains the parser and the base classes for prepared SQL statements.",
       "files": 11,
@@ -788,6 +820,16 @@
       ]
     },
     "org.h2.command.ddl": {
+      "depends_on": {
+        "org.h2.engine": 151,
+        "org.h2.schema": 83,
+        "org.h2.table": 68,
+        "org.h2.command": 61,
+        "org.h2.message": 52,
+        "org.h2.api": 51,
+        "org.h2.constraint": 24,
+        "org.h2.expression": 19
+      },
       "path": "org/h2/command/ddl",
       "summary": "Contains DDL (data definition language) and related SQL statements.",
       "files": 63,
@@ -1910,6 +1952,16 @@
       ]
     },
     "org.h2.command.dml": {
+      "depends_on": {
+        "org.h2.engine": 59,
+        "org.h2.expression": 42,
+        "org.h2.result": 40,
+        "org.h2.command": 36,
+        "org.h2.table": 33,
+        "org.h2.value": 25,
+        "org.h2.util": 21,
+        "org.h2.message": 16
+      },
       "path": "org/h2/command/dml",
       "summary": "Contains DML (data manipulation language) and related SQL statements.",
       "files": 24,
@@ -2403,6 +2455,16 @@
       ]
     },
     "org.h2.command.query": {
+      "depends_on": {
+        "org.h2.table": 30,
+        "org.h2.expression": 28,
+        "org.h2.result": 19,
+        "org.h2.engine": 16,
+        "org.h2.value": 16,
+        "org.h2.util": 7,
+        "org.h2.message": 5,
+        "org.h2.api": 5
+      },
       "path": "org/h2/command/query",
       "summary": "Contains queries.",
       "files": 10,
@@ -2656,6 +2718,12 @@
       ]
     },
     "org.h2.compress": {
+      "depends_on": {
+        "org.h2.mvstore": 2,
+        "org.h2.api": 1,
+        "org.h2.util": 1,
+        "org.h2.engine": 1
+      },
       "path": "org/h2/compress",
       "summary": "Lossless data compression classes.",
       "files": 6,
@@ -2754,6 +2822,16 @@
       ]
     },
     "org.h2.constraint": {
+      "depends_on": {
+        "org.h2.table": 17,
+        "org.h2.expression": 8,
+        "org.h2.result": 8,
+        "org.h2.engine": 7,
+        "org.h2.schema": 7,
+        "org.h2.value": 7,
+        "org.h2.index": 6,
+        "org.h2.message": 4
+      },
       "path": "org/h2/constraint",
       "summary": "Database constraints such as check constraints, unique constraints, and referential constraints.",
       "files": 7,
@@ -2948,6 +3026,16 @@
       ]
     },
     "org.h2.engine": {
+      "depends_on": {
+        "org.h2.util": 55,
+        "org.h2.message": 33,
+        "org.h2.value": 26,
+        "org.h2.api": 18,
+        "org.h2.command": 16,
+        "org.h2.table": 16,
+        "org.h2.store": 13,
+        "org.h2.schema": 12
+      },
       "path": "org/h2/engine",
       "summary": "Contains high level classes of the database and classes that don't fit in another sub-package.",
       "files": 28,
@@ -3520,6 +3608,16 @@
       ]
     },
     "org.h2.expression": {
+      "depends_on": {
+        "org.h2.value": 125,
+        "org.h2.table": 37,
+        "org.h2.engine": 34,
+        "org.h2.message": 20,
+        "org.h2.util": 15,
+        "org.h2.api": 12,
+        "org.h2.util.DateTimeUtils": 8,
+        "org.h2.command.query": 7
+      },
       "path": "org/h2/expression",
       "summary": "Expressions include mathematical operations, simple values, and others.",
       "files": 35,
@@ -4239,6 +4337,16 @@
       ]
     },
     "org.h2.expression.aggregate": {
+      "depends_on": {
+        "org.h2.value": 72,
+        "org.h2.engine": 20,
+        "org.h2.expression": 14,
+        "org.h2.table": 10,
+        "org.h2.message": 9,
+        "org.h2.expression.analysis": 7,
+        "org.h2.command.query": 6,
+        "org.h2.api": 5
+      },
       "path": "org/h2/expression/aggregate",
       "summary": "Aggregate functions.",
       "files": 20,
@@ -4500,6 +4608,16 @@
       ]
     },
     "org.h2.expression.analysis": {
+      "depends_on": {
+        "org.h2.value": 12,
+        "org.h2.expression": 9,
+        "org.h2.table": 8,
+        "org.h2.command.query": 7,
+        "org.h2.engine": 5,
+        "org.h2.message": 4,
+        "org.h2.api": 3,
+        "org.h2.result": 3
+      },
       "path": "org/h2/expression/analysis",
       "summary": "Base classes for data analysis operations and implementations of window functions.",
       "files": 10,
@@ -4686,6 +4804,16 @@
       ]
     },
     "org.h2.expression.condition": {
+      "depends_on": {
+        "org.h2.value": 74,
+        "org.h2.expression": 73,
+        "org.h2.table": 33,
+        "org.h2.engine": 24,
+        "org.h2.index": 9,
+        "org.h2.message": 6,
+        "org.h2.util.json": 6,
+        "org.h2.command.query": 4
+      },
       "path": "org/h2/expression/condition",
       "summary": "Condition expressions.",
       "files": 21,
@@ -5164,6 +5292,16 @@
       ]
     },
     "org.h2.expression.function": {
+      "depends_on": {
+        "org.h2.value": 209,
+        "org.h2.expression": 103,
+        "org.h2.engine": 58,
+        "org.h2.message": 42,
+        "org.h2.util": 28,
+        "org.h2.api": 14,
+        "org.h2.table": 10,
+        "org.h2.schema": 9
+      },
       "path": "org/h2/expression/function",
       "summary": "Functions.",
       "files": 50,
@@ -5973,6 +6111,16 @@
       ]
     },
     "org.h2.expression.function.table": {
+      "depends_on": {
+        "org.h2.expression": 7,
+        "org.h2.result": 7,
+        "org.h2.value": 7,
+        "org.h2.engine": 6,
+        "org.h2.message": 5,
+        "org.h2.api": 4,
+        "org.h2.util": 4,
+        "org.h2.util.json": 2
+      },
       "path": "org/h2/expression/function/table",
       "summary": "Table value functions.",
       "files": 5,
@@ -6074,6 +6222,16 @@
       ]
     },
     "org.h2.fulltext": {
+      "depends_on": {
+        "org.h2.util": 6,
+        "org.h2.expression": 4,
+        "org.h2.engine": 3,
+        "org.h2.api": 2,
+        "org.h2.command": 2,
+        "org.h2.expression.condition": 2,
+        "org.h2.jdbc": 2,
+        "org.h2.message": 2
+      },
       "path": "org/h2/fulltext",
       "summary": "The native full text search implementation, and the wrapper for the Lucene full text search implementation.",
       "files": 4,
@@ -6158,6 +6316,16 @@
       ]
     },
     "org.h2.index": {
+      "depends_on": {
+        "org.h2.result": 51,
+        "org.h2.table": 41,
+        "org.h2.value": 27,
+        "org.h2.engine": 20,
+        "org.h2.message": 18,
+        "org.h2.command.query": 13,
+        "org.h2.expression": 8,
+        "org.h2.api": 3
+      },
       "path": "org/h2/index",
       "summary": "Various table index implementations, as well as cursors to navigate in an index.",
       "files": 23,
@@ -6617,6 +6785,16 @@
       ]
     },
     "org.h2.jdbc": {
+      "depends_on": {
+        "org.h2.value": 57,
+        "org.h2.message": 43,
+        "org.h2.util": 19,
+        "org.h2.engine": 17,
+        "org.h2.result": 13,
+        "org.h2.api": 9,
+        "org.h2.command": 5,
+        "org.h2.expression": 3
+      },
       "path": "org/h2/jdbc",
       "summary": "Implementation of the JDBC API (package {",
       "files": 27,
@@ -7237,6 +7415,16 @@
       ]
     },
     "org.h2.jdbc.meta": {
+      "depends_on": {
+        "org.h2.value": 28,
+        "org.h2.result": 11,
+        "org.h2.engine": 11,
+        "org.h2.mode": 4,
+        "org.h2.message": 4,
+        "org.h2.util": 4,
+        "org.h2.constraint": 4,
+        "org.h2.schema": 4
+      },
       "path": "org/h2/jdbc/meta",
       "summary": "Implementation of the JDBC database metadata API (package {",
       "files": 6,
@@ -7425,6 +7613,13 @@
       ]
     },
     "org.h2.jdbcx": {
+      "depends_on": {
+        "org.h2.message": 9,
+        "org.h2.jdbc": 2,
+        "org.h2.util": 2,
+        "org.h2.engine": 2,
+        "org.h2.api": 2
+      },
       "path": "org/h2/jdbcx",
       "summary": "Implementation of the extended JDBC API (package {",
       "files": 7,
@@ -7579,6 +7774,12 @@
       ]
     },
     "org.h2.jmx": {
+      "depends_on": {
+        "org.h2.engine": 4,
+        "org.h2.util": 2,
+        "org.h2.command": 1,
+        "org.h2.table": 1
+      },
       "path": "org/h2/jmx",
       "summary": "Implementation of the Java Management Extension (JMX) features.",
       "files": 3,
@@ -7641,6 +7842,14 @@
       ]
     },
     "org.h2.message": {
+      "depends_on": {
+        "org.h2.jdbc": 13,
+        "org.h2.util": 6,
+        "org.h2.engine": 2,
+        "org.h2.api": 2,
+        "org.h2.expression": 1,
+        "org.h2.store.fs": 1
+      },
       "path": "org/h2/message",
       "summary": "Trace (logging facility) and error message tool.",
       "files": 6,
@@ -7767,6 +7976,16 @@
       ]
     },
     "org.h2.mode": {
+      "depends_on": {
+        "org.h2.value": 52,
+        "org.h2.engine": 23,
+        "org.h2.expression": 20,
+        "org.h2.expression.function": 11,
+        "org.h2.message": 11,
+        "org.h2.util": 10,
+        "org.h2.table": 8,
+        "org.h2.api": 7
+      },
       "path": "org/h2/mode",
       "summary": "Utility classes for compatibility with other database, for example MySQL.",
       "files": 16,
@@ -8017,6 +8236,15 @@
       ]
     },
     "org.h2.mvstore": {
+      "depends_on": {
+        "org.h2.util": 10,
+        "org.h2.compress": 7,
+        "org.h2.store.fs": 5,
+        "org.h2.store.fs.encrypt": 4,
+        "org.h2.engine": 4,
+        "org.h2.engine.Constants": 4,
+        "org.h2.jdbc": 1
+      },
       "path": "org/h2/mvstore",
       "summary": "A persistent storage for tree maps.",
       "files": 20,
@@ -8487,6 +8715,10 @@
       ]
     },
     "org.h2.mvstore.cache": {
+      "depends_on": {
+        "org.h2.store.fs": 3,
+        "org.h2.mvstore": 1
+      },
       "path": "org/h2/mvstore/cache",
       "summary": "Classes related to caching.",
       "files": 2,
@@ -8556,6 +8788,16 @@
       ]
     },
     "org.h2.mvstore.db": {
+      "depends_on": {
+        "org.h2.value": 74,
+        "org.h2.mvstore": 35,
+        "org.h2.result": 29,
+        "org.h2.engine": 24,
+        "org.h2.table": 18,
+        "org.h2.mvstore.type": 17,
+        "org.h2.index": 17,
+        "org.h2.mvstore.tx": 13
+      },
       "path": "org/h2/mvstore/db",
       "summary": "Helper classes to use the MVStore in the H2 database.",
       "files": 16,
@@ -8977,6 +9219,10 @@
       ]
     },
     "org.h2.mvstore.rtree": {
+      "depends_on": {
+        "org.h2.mvstore": 6,
+        "org.h2.mvstore.type": 2
+      },
       "path": "org/h2/mvstore/rtree",
       "summary": "An R-tree implementation.",
       "files": 4,
@@ -9071,6 +9317,16 @@
       ]
     },
     "org.h2.mvstore.tx": {
+      "depends_on": {
+        "org.h2.mvstore": 26,
+        "org.h2.mvstore.type": 13,
+        "org.h2.value": 10,
+        "org.h2.value.VersionedValue": 10,
+        "org.h2.engine": 5,
+        "org.h2.mvstore.rtree": 2,
+        "org.h2.util": 2,
+        "org.h2.mvstore.MVMap": 1
+      },
       "path": "org/h2/mvstore/tx",
       "summary": "Helper classes to use the MVStore in a transactional manner.",
       "files": 13,
@@ -9340,6 +9596,11 @@
       ]
     },
     "org.h2.mvstore.type": {
+      "depends_on": {
+        "org.h2.mvstore": 16,
+        "org.h2.engine": 2,
+        "org.h2.util": 1
+      },
       "path": "org/h2/mvstore/type",
       "summary": "Data types and serialization / deserialization.",
       "files": 9,
@@ -9500,6 +9761,16 @@
       ]
     },
     "org.h2.result": {
+      "depends_on": {
+        "org.h2.value": 45,
+        "org.h2.engine": 21,
+        "org.h2.util": 8,
+        "org.h2.expression": 5,
+        "org.h2.message": 5,
+        "org.h2.table": 5,
+        "org.h2.mvstore.db": 2,
+        "org.h2.api": 2
+      },
       "path": "org/h2/result",
       "summary": "Implementation of row and internal result sets.",
       "files": 21,
@@ -9944,6 +10215,16 @@
       ]
     },
     "org.h2.schema": {
+      "depends_on": {
+        "org.h2.engine": 29,
+        "org.h2.value": 16,
+        "org.h2.message": 13,
+        "org.h2.table": 13,
+        "org.h2.util": 11,
+        "org.h2.expression": 7,
+        "org.h2.api": 7,
+        "org.h2.result": 4
+      },
       "path": "org/h2/schema",
       "summary": "Schema implementation and objects that are stored in a schema (for example, sequences and constants).",
       "files": 11,
@@ -10224,6 +10505,16 @@
       ]
     },
     "org.h2.security": {
+      "depends_on": {
+        "org.h2.util.Bits": 8,
+        "org.h2.util": 3,
+        "org.h2.engine": 2,
+        "org.h2.message": 2,
+        "org.h2.store": 2,
+        "org.h2.api": 1,
+        "org.h2.mvstore": 1,
+        "org.h2.store.fs": 1
+      },
       "path": "org/h2/security",
       "summary": "Security classes, such as encryption and cryptographically secure hash algorithms.",
       "files": 8,
@@ -10358,6 +10649,12 @@
       ]
     },
     "org.h2.security.auth": {
+      "depends_on": {
+        "org.h2.engine": 10,
+        "org.h2.util": 3,
+        "org.h2.api": 2,
+        "org.h2.message": 1
+      },
       "path": "org/h2/security/auth",
       "summary": "Authentication classes.",
       "files": 14,
@@ -10580,6 +10877,12 @@
       ]
     },
     "org.h2.security.auth.impl": {
+      "depends_on": {
+        "org.h2.security.auth": 13,
+        "org.h2.api": 5,
+        "org.h2.util": 3,
+        "org.h2.security": 1
+      },
       "path": "org/h2/security/auth/impl",
       "summary": "Authentication classes.",
       "files": 5,
@@ -10662,6 +10965,16 @@
       ]
     },
     "org.h2.server": {
+      "depends_on": {
+        "org.h2.util": 13,
+        "org.h2.engine": 9,
+        "org.h2.result": 4,
+        "org.h2.expression": 3,
+        "org.h2.value": 3,
+        "org.h2.api": 2,
+        "org.h2.jdbc": 2,
+        "org.h2.message": 2
+      },
       "path": "org/h2/server",
       "summary": "A TCP server.",
       "files": 4,
@@ -10739,6 +11052,16 @@
       ]
     },
     "org.h2.server.pg": {
+      "depends_on": {
+        "org.h2.value": 21,
+        "org.h2.util": 13,
+        "org.h2.engine": 6,
+        "org.h2.api": 2,
+        "org.h2.message": 2,
+        "org.h2.command": 2,
+        "org.h2.table": 2,
+        "org.h2.server": 1
+      },
       "path": "org/h2/server/pg",
       "summary": "PostgreSQL server implementation of this database.",
       "files": 2,
@@ -10788,6 +11111,16 @@
       ]
     },
     "org.h2.server.web": {
+      "depends_on": {
+        "org.h2.util": 30,
+        "org.h2.tools": 12,
+        "org.h2.bnf.context": 6,
+        "org.h2.engine": 5,
+        "org.h2.message": 4,
+        "org.h2.bnf": 2,
+        "org.h2.security": 2,
+        "org.h2.server": 2
+      },
       "path": "org/h2/server/web",
       "summary": "The H2 Console tool.",
       "files": 10,
@@ -10959,6 +11292,16 @@
       ]
     },
     "org.h2.store": {
+      "depends_on": {
+        "org.h2.engine": 16,
+        "org.h2.util": 14,
+        "org.h2.message": 11,
+        "org.h2.value": 8,
+        "org.h2.api": 4,
+        "org.h2.tools": 3,
+        "org.h2.util.Bits": 1,
+        "org.h2.Driver": 1
+      },
       "path": "org/h2/store",
       "summary": "Storage abstractions and helper classes.",
       "files": 17,
@@ -11251,6 +11594,10 @@
       ]
     },
     "org.h2.store.fs": {
+      "depends_on": {
+        "org.h2.util": 1,
+        "org.h2.engine": 1
+      },
       "path": "org/h2/store/fs",
       "summary": "A file system abstraction.",
       "files": 7,
@@ -11437,6 +11784,9 @@
       ]
     },
     "org.h2.store.fs.async": {
+      "depends_on": {
+        "org.h2.store.fs": 3
+      },
       "path": "org/h2/store/fs/async",
       "summary": "This file system stores files on disk and uses {",
       "files": 2,
@@ -11479,6 +11829,13 @@
       ]
     },
     "org.h2.store.fs.disk": {
+      "depends_on": {
+        "org.h2.store.fs": 2,
+        "org.h2.api": 1,
+        "org.h2.engine": 1,
+        "org.h2.message": 1,
+        "org.h2.util": 1
+      },
       "path": "org/h2/store/fs/disk",
       "summary": "This file system stores files on disk.",
       "files": 1,
@@ -11523,6 +11880,12 @@
       ]
     },
     "org.h2.store.fs.encrypt": {
+      "depends_on": {
+        "org.h2.store.fs": 4,
+        "org.h2.security": 3,
+        "org.h2.mvstore": 1,
+        "org.h2.util": 1
+      },
       "path": "org/h2/store/fs/encrypt",
       "summary": "An encrypted file system abstraction.",
       "files": 3,
@@ -11581,6 +11944,13 @@
       ]
     },
     "org.h2.store.fs.mem": {
+      "depends_on": {
+        "org.h2.store.fs": 3,
+        "org.h2.compress": 1,
+        "org.h2.util": 1,
+        "org.h2.api": 1,
+        "org.h2.message": 1
+      },
       "path": "org/h2/store/fs/mem",
       "summary": "This file system keeps files fully in memory.",
       "files": 4,
@@ -11669,6 +12039,11 @@
       ]
     },
     "org.h2.store.fs.niomapped": {
+      "depends_on": {
+        "org.h2.store.fs": 3,
+        "org.h2.engine": 1,
+        "org.h2.util": 1
+      },
       "path": "org/h2/store/fs/niomapped",
       "summary": "This file system stores files on disk and uses {",
       "files": 2,
@@ -11712,6 +12087,13 @@
       ]
     },
     "org.h2.store.fs.niomem": {
+      "depends_on": {
+        "org.h2.store.fs": 3,
+        "org.h2.compress": 1,
+        "org.h2.util": 1,
+        "org.h2.api": 1,
+        "org.h2.message": 1
+      },
       "path": "org/h2/store/fs/niomem",
       "summary": "This file system keeps files fully in off-java-heap memory.",
       "files": 4,
@@ -11801,6 +12183,9 @@
       ]
     },
     "org.h2.store.fs.rec": {
+      "depends_on": {
+        "org.h2.store.fs": 5
+      },
       "path": "org/h2/store/fs/rec",
       "summary": "A file system that records all write operations and can re-play them.",
       "files": 2,
@@ -11854,6 +12239,9 @@
       ]
     },
     "org.h2.store.fs.retry": {
+      "depends_on": {
+        "org.h2.store.fs": 3
+      },
       "path": "org/h2/store/fs/retry",
       "summary": "A file system that re-opens and re-tries the operation if the file was closed, because a thread was interrupted.",
       "files": 2,
@@ -11900,6 +12288,12 @@
       ]
     },
     "org.h2.store.fs.split": {
+      "depends_on": {
+        "org.h2.store.fs": 4,
+        "org.h2.message": 2,
+        "org.h2.engine": 1,
+        "org.h2.mvstore": 1
+      },
       "path": "org/h2/store/fs/split",
       "summary": "A file system that may split files into multiple smaller files (required for a FAT32 because it only support files up to 2 GiB).",
       "files": 2,
@@ -11951,6 +12345,12 @@
       ]
     },
     "org.h2.store.fs.zip": {
+      "depends_on": {
+        "org.h2.store.fs": 3,
+        "org.h2.message": 1,
+        "org.h2.store.fs.disk": 1,
+        "org.h2.util": 1
+      },
       "path": "org/h2/store/fs/zip",
       "summary": "A zip-file base file system abstraction.",
       "files": 2,
@@ -12014,6 +12414,16 @@
       ]
     },
     "org.h2.table": {
+      "depends_on": {
+        "org.h2.value": 59,
+        "org.h2.engine": 57,
+        "org.h2.result": 42,
+        "org.h2.index": 40,
+        "org.h2.schema": 37,
+        "org.h2.util": 36,
+        "org.h2.expression": 26,
+        "org.h2.message": 19
+      },
       "path": "org/h2/table",
       "summary": "Classes related to a table and table meta data.",
       "files": 31,
@@ -12705,6 +13115,16 @@
       ]
     },
     "org.h2.tools": {
+      "depends_on": {
+        "org.h2.util": 53,
+        "org.h2.engine": 14,
+        "org.h2.value": 14,
+        "org.h2.message": 12,
+        "org.h2.store": 10,
+        "org.h2.store.fs": 10,
+        "org.h2.mvstore": 7,
+        "org.h2.api": 6
+      },
       "path": "org/h2/tools",
       "summary": "Various tools.",
       "files": 23,
@@ -13165,6 +13585,16 @@
       ]
     },
     "org.h2.util": {
+      "depends_on": {
+        "org.h2.value": 35,
+        "org.h2.engine": 18,
+        "org.h2.message": 16,
+        "org.h2.api": 13,
+        "org.h2.store.fs": 5,
+        "org.h2.jdbc": 2,
+        "org.h2.mvstore": 1,
+        "org.h2.tools": 1
+      },
       "path": "org/h2/util",
       "summary": "Internal utility classes.",
       "files": 48,
@@ -14085,6 +14515,13 @@
       ]
     },
     "org.h2.util.geometry": {
+      "depends_on": {
+        "org.h2.util.json": 9,
+        "org.h2.util.Bits": 4,
+        "org.h2.util": 2,
+        "org.h2.message": 2,
+        "org.h2.api": 1
+      },
       "path": "org/h2/util/geometry",
       "summary": "Internal utility classes for GEOMETRY data type.",
       "files": 5,
@@ -14182,6 +14619,12 @@
       ]
     },
     "org.h2.util.json": {
+      "depends_on": {
+        "org.h2.util": 4,
+        "org.h2.value": 4,
+        "org.h2.message": 2,
+        "org.h2.api": 1
+      },
       "path": "org/h2/util/json",
       "summary": "Internal utility classes for JSON data type.",
       "files": 19,
@@ -14526,6 +14969,16 @@
       ]
     },
     "org.h2.value": {
+      "depends_on": {
+        "org.h2.util": 63,
+        "org.h2.engine": 59,
+        "org.h2.message": 40,
+        "org.h2.api": 37,
+        "org.h2.store": 17,
+        "org.h2.util.json": 11,
+        "org.h2.jdbc": 8,
+        "org.h2.util.Bits": 7
+      },
       "path": "org/h2/value",
       "summary": "Data type and value implementations.",
       "files": 55,
@@ -15814,6 +16267,13 @@
       ]
     },
     "org.h2.value.lob": {
+      "depends_on": {
+        "org.h2.store": 7,
+        "org.h2.value": 3,
+        "org.h2.engine": 3,
+        "org.h2.message": 1,
+        "org.h2.store.fs": 1
+      },
       "path": "org/h2/value/lob",
       "summary": "LOB data for values.",
       "files": 5,

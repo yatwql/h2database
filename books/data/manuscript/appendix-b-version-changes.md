@@ -39,3 +39,59 @@
 - **VersionedValue 序列化格式变更**：序列化从"先写 operationId varLong"改为"先写 flags 字节"——根据 flags 决定后续字段的存在。已持久化的旧版本（v2.4.240）数据文件不兼容此格式。**架构影响**：此变更意味着 v2.4.249-SNAPSHOT 无法直接读取 v2.4.240 创建的 MVStore 数据文件，需通过数据迁移或 DDL 重新导入。
 - **事务恢复排序**：非正常关闭后的残余事务按提交序列号（commitment order）排序注册，确保重放顺序正确。
 - **死锁修复**：`saveChunkMetadataChanges()` 去除忙等轮询；`acceptChunkOccupancyChanges()` 将未分配 chunk 的 `RemovedPageInfo` 压回队列。`Transaction.waitForThisToEnd()` 新增 `STATUS_COMMITTED` 检查。
+
+## 14.1 附录 B 版本变更对照
+
+本节由源码清单生成，覆盖 4 个包，行号对应当前源码树。
+
+| 入口 | 源码坐标 |
+| --- | --- |
+| `FileStore.accountForRemovedPage()` | `org/h2/mvstore/FileStore.java:2178` |
+| `MVStore.adoptFileStore()` | `org/h2/mvstore/MVStore.java:2183` |
+| `MVMap.append()` | `org/h2/mvstore/MVMap.java:1364` |
+| `Page.copy()` | `org/h2/mvstore/Page.java:382` |
+| `Database.addDatabaseObject()` | `org/h2/engine/Database.java:948` |
+| `SessionLocal.addLocalTempTable()` | `org/h2/engine/SessionLocal.java:397` |
+| `SessionRemote.addTemporaryLob()` | `org/h2/engine/SessionRemote.java:819` |
+| `Mode.getEnum()` | `org/h2/engine/Mode.java:766` |
+| `SimpleResultSet.absolute()` | `org/h2/tools/SimpleResultSet.java:2229` |
+| `Csv.close()` | `org/h2/tools/Csv.java:639` |
+| `Recover.checkPowerOff()` | `org/h2/tools/Recover.java:857` |
+| `Server.createPgServer()` | `org/h2/tools/Server.java:539` |
+| `ErrorCode.getState()` | `org/h2/api/ErrorCode.java:2317` |
+| `Interval.equals()` | `org/h2/api/Interval.java:617` |
+| `IntervalQualifier.getTypeName()` | `org/h2/api/IntervalQualifier.java:253` |
+| `H2Type.array()` | `org/h2/api/H2Type.java:258` |
+
+## 14.2 延伸思考
+
+下列题目面向"用坐标串起一次完整调用"。
+
+**1. 🟢★ 找一个失败路径（异常或回滚），说明状态如何回退到一致。**
+
+> 提示：先从 §14.1 的坐标表挑一个入口。
+> 回顾：§14.1 附录 B 版本变更对照
+
+**2. 🔵★★ 用一句话说清本章最大包的边界，并指出它与相邻包的调用方向。**
+
+> 提示：先从 §14.1 的坐标表挑一个入口。
+> 回顾：§14.1 附录 B 版本变更对照
+
+**3. 🟠★★★ 挑一个公开入口方法，沿调用链说明它在哪里加锁、在哪里释放。**
+
+> 提示：先从 §14.1 的坐标表挑一个入口。
+> 回顾：§14.1 附录 B 版本变更对照
+
+**4. 🟢★★★★ 如果要把本章的某个包拆成两个，你会沿哪条缝切，代价是什么？**
+
+> 提示：先从 §14.1 的坐标表挑一个入口。
+> 回顾：§14.1 附录 B 版本变更对照
+
+## 14.3 本章小结
+
+- 本节给出 16 个可核验的源码坐标。
+- 上游升级后重新生成即可刷新行号。
+
+## 14.4 延展阅读
+
+- 详见第3章《包结构与模块职责》。
