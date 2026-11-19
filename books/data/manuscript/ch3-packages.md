@@ -27,7 +27,7 @@
 
 ## 3.2 核心类型
 
-每个包取规模最大的若干类型，列出规模、公开方法数与自述职责。
+在 `org.h2.value` 之外，本章还有 12 个包；下表每包取前 4 个类型，按规模降序。
 
 ### 3.2.1 `org.h2.value`
 
@@ -148,7 +148,7 @@
 
 ## 3.3 关键 API 与源码坐标
 
-下表把公开入口与当前源码位置对应起来，行号由脚本核验。
+把 13 个包的关键入口与源码位置对应起来，共 20 条坐标，行号由脚本核验。
 
 | 入口 | 源码坐标 |
 | --- | --- |
@@ -173,11 +173,40 @@
 | `DateTimeUtils.absoluteDayFromDateValue()` | `org/h2/util/DateTimeUtils.java:873` |
 | `DateTimeUtils.absoluteDayFromYear()` | `org/h2/util/DateTimeUtils.java:857` |
 
+## 3.3.1 公共类型清单
+
+本章抽样类型按包分组，共 65 行；规模与公开方法数是阅读优先级的第一信号。
+
+| 类型 | 包 | 行数 | 公开方法 |
+| --- | --- | --- | --- |
+| `Value` | `org.h2.value` | 2,873 | 67 |
+| `TypeInfo` | `org.h2.value` | 1,539 | 23 |
+| `Transfer` | `org.h2.value` | 1,368 | 31 |
+| `DataType` | `org.h2.value` | 828 | 25 |
+| `ValueToObjectConverter` | `org.h2.value` | 642 | 6 |
+| `Parser` | `org.h2.command` | 9,470 | 9 |
+| `Tokenizer` | `org.h2.command` | 1,522 | 0 |
+| `ParserBase` | `org.h2.command` | 771 | 8 |
+| `Token` | `org.h2.command` | 758 | 5 |
+| `CommandInterface` | `org.h2.command` | 654 | 0 |
+| `FileStore` | `org.h2.mvstore` | 2,386 | 64 |
+| `MVStore` | `org.h2.mvstore` | 2,215 | 85 |
+| `MVMap` | `org.h2.mvstore` | 2,181 | 102 |
+| `Page` | `org.h2.mvstore` | 1,779 | 77 |
+| `DataUtils` | `org.h2.mvstore` | 1,185 | 45 |
+| `StringUtils` | `org.h2.util` | 1,415 | 55 |
+| `DateTimeUtils` | `org.h2.util` | 1,171 | 42 |
+| `DateTimeTemplate` | `org.h2.util` | 859 | 5 |
+| `IntervalUtils` | `org.h2.util` | 857 | 12 |
+| `Utils` | `org.h2.util` | 832 | 34 |
+
 ## 3.4 阅读路径
 
-1. 先读包注释与最大类型，建立职责边界。
-2. 再读公开入口，确认调用方向与加锁方式。
-3. 最后读内部实现与数据结构，关注容量、并发与失败路径。
+读 `org.h2.value` 的 55 个文件时，先看骨架类，再沿 `org.h2.util` 方向下钻。
+
+1. 先读 `org.h2.value` 的 package-info 与 `Value`，建立第3章的职责边界。
+2. 再读 `Value` 的 67 个公开入口，确认它对 `org.h2.util` 的调用方向与加锁方式。
+3. 最后读 `org.h2.store`（本章最小包，2,712 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第4章《包结构与模块职责》。
 
@@ -203,15 +232,21 @@
 
 ## 3.6 设计权衡
 
-- 本章 13 个包中，抽样公开类型 78 个，其余为内部实现——公共面收敛是升级兼容性的前提。
-- 大型包通常承担"框架 + 默认实现"双重职责，扩展点集中在接口与抽象类。
-- 规模最大的类型往往是数据结构或调度器，改动成本最高，阅读优先级也最高。
+- `org.h2.value` 用 55 个文件换到 15,501 行实现，平均每文件 281 行，其中 `Value` 独占 2,873 行、67 个公开方法。
+- 该包对外声明了 8 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
+- `org.h2.command`（15,014 行）与 `org.h2.value` 的职责差是本章最值得记的一条边界。
 
 ## 3.7 常见误区
 
-- 把包规模当复杂度：行数多的包常是类型族（如值类型），逻辑并不复杂。
-- 只读公开方法而不看调用点：真正的约束在调用方的加锁顺序与生命周期里。
-- 忽略 `package-info`：注释里写明的边界，往往正是重构时最容易踩的缝。
+- 把 `org.h2.value` 的 15,501 行当作复杂度上限：`Value` 之外的 54 个文件多为类型族与样板。
+- 只看 `Value` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
+- 把 `org.h2.value` 与 `org.h2.command` 视为可互换：前者 55 文件、后者 11 文件，扩展点分布完全不同。
+
+## 3.8 深读要点
+
+规模信号：`org.h2.value` 占本章 13% 的实现行数，改动风险最高。
+耦合信号：`org.h2.value` 依赖 8 个 `org.h2` 包，其中 `org.h2.util` 出现最频繁。
+入口信号：`Value` 的公开方法 67 个，读它等于读本章的主干。
 
 ## 3.8 术语对照
 
@@ -226,6 +261,21 @@
 - **MVStore**：详见[术语表](back/glossary.md)对应条目。
 - **Parser**：详见[术语表](back/glossary.md)对应条目。
 
+## 3.9 知识点清单
+
+1. `org.h2.value` 的 `Value`：2,873 行、67 个公开方法，职责按方法名归纳
+2. `org.h2.value` 的 `TypeInfo`：1,539 行、23 个公开方法，职责按方法名归纳
+3. `org.h2.command` 的 `Parser`：9,470 行、9 个公开方法，职责按方法名归纳
+4. `org.h2.command` 的 `Tokenizer`：1,522 行、0 个公开方法，职责按方法名归纳
+5. `org.h2.mvstore` 的 `FileStore`：2,386 行、64 个公开方法，职责按方法名归纳
+6. `org.h2.mvstore` 的 `MVStore`：2,215 行、85 个公开方法，职责按方法名归纳
+7. `org.h2.util` 的 `StringUtils`：1,415 行、55 个公开方法，职责按方法名归纳
+8. `org.h2.util` 的 `DateTimeUtils`：1,171 行、42 个公开方法，职责按方法名归纳
+9. `org.h2.table` 的 `InformationSchemaTable`：3,299 行、6 个公开方法，职责按方法名归纳
+10. `org.h2.table` 的 `InformationSchemaTableLegacy`：2,324 行、2 个公开方法，职责按方法名归纳
+11. `org.h2.engine` 的 `Database`：2,566 行、152 个公开方法，职责按方法名归纳
+12. `org.h2.engine` 的 `SessionLocal`：2,156 行、135 个公开方法，职责按方法名归纳
+
 ## 3.9 本章小结
 
 - 本章覆盖 13 个包、119,252 行。
@@ -234,35 +284,66 @@
 
 ## 3.10 延伸思考
 
-下列题目把"读到的结构"转化为可应用的判断力。
+**1. 🟢★ 指出 `org.h2.value` 中 `Value` 与 `TypeInfo` 的分工差异，并给出调用方向。**
 
-**1. 🟢★ 列举本章中两处用空间换时间的设计，并说明其收益与上限。**
+> 提示：第3章 §3.2 的表格给出 `Value` 的规模与公开方法数，先按那一行定位再进源码。
+> 回顾：§3.2 核心类型
 
-> 提示：回到 §3.1 的表格，按规模排序挑选目标包。
-> 回顾：§3.1 模块版图
+**2. 🔵★★ 围绕 `org.h2.command` 的 `Parser`，说明它为什么需要独立成类型而不是并入 `Tokenizer`。**
 
-**2. 🔵★★ 找一个失败路径（异常或回滚），说明状态如何回退到一致。**
+> 提示：第3章 §3.2 的表格给出 `Parser` 的规模与公开方法数，先按那一行定位再进源码。
+> 回顾：§3.2 核心类型
 
-> 提示：回到 §3.1 的表格，按规模排序挑选目标包。
-> 回顾：§3.1 模块版图
+**3. 🟠★★★ 以 `org.h2.mvstore` 的 `FileStore` 为入口，画出一次完整调用经过的包。**
 
-**3. 🟠★★★ 用一句话说清本章最大包的边界，并指出它与相邻包的调用方向。**
+> 提示：第3章 §3.2 的表格给出 `FileStore` 的规模与公开方法数，先按那一行定位再进源码。
+> 回顾：§3.2 核心类型
 
-> 提示：回到 §3.1 的表格，按规模排序挑选目标包。
-> 回顾：§3.1 模块版图
+**4. 🟢★★★★ 如果只保留 `org.h2.util` 的一个类型，你保留 `StringUtils` 还是 `DateTimeUtils`？说明代价。**
 
-**4. 🟢★★★★ 挑一个公开入口方法，沿调用链说明它在哪里加锁、在哪里释放。**
+> 提示：第3章 §3.2 的表格给出 `StringUtils` 的规模与公开方法数，先按那一行定位再进源码。
+> 回顾：§3.2 核心类型
 
-> 提示：回到 §3.1 的表格，按规模排序挑选目标包。
-> 回顾：§3.1 模块版图
+## 3.11 本章视角：演化与版本
 
-## 3.11 阅读检查清单
+- 以「演化与版本」看 `org.h2.value`：55 个文件、15,501 行，本章只展开与演化与版本相关的入口。
+- 对照 `org.h2.command`（15,014 行）：两者的演化与版本策略不同，差异落在 `Value` 的 67 个公开方法里。
+- 若演化与版本假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.util` 进入。
 
-- 能否不看正文，画出本章包之间的依赖方向？
-- 能否指出本章最容易被并发影响的类型，并说明原因？
-- 能否用一个具体入口，把调用链从入口讲到落盘或返回？
-- 能否说出一个"看起来可以合并、实际不能合并"的包边界？
-- 能否指出一处"注释与实现对不上"的地方，并给出你信哪一边的理由？
+## 3.11.1 依赖明细
+
+按 `import` 出现次数排序，数值越大耦合越深，重构窗口越窄。
+
+| 来源包 | 目标包 | 次数 |
+| --- | --- | --- |
+| `org.h2.value` | `org.h2.util` | 63 |
+| `org.h2.value` | `org.h2.engine` | 59 |
+| `org.h2.value` | `org.h2.message` | 40 |
+| `org.h2.command` | `org.h2.util.ParserUtil` | 188 |
+| `org.h2.command` | `org.h2.expression.function` | 44 |
+| `org.h2.command` | `org.h2.value` | 41 |
+| `org.h2.mvstore` | `org.h2.util` | 10 |
+| `org.h2.mvstore` | `org.h2.compress` | 7 |
+| `org.h2.mvstore` | `org.h2.store.fs` | 5 |
+| `org.h2.util` | `org.h2.value` | 35 |
+| `org.h2.util` | `org.h2.engine` | 18 |
+| `org.h2.util` | `org.h2.message` | 16 |
+| `org.h2.table` | `org.h2.value` | 59 |
+| `org.h2.table` | `org.h2.engine` | 57 |
+| `org.h2.table` | `org.h2.result` | 42 |
+| `org.h2.engine` | `org.h2.util` | 55 |
+| `org.h2.engine` | `org.h2.message` | 33 |
+| `org.h2.engine` | `org.h2.value` | 26 |
+| `org.h2.tools` | `org.h2.util` | 53 |
+| `org.h2.tools` | `org.h2.engine` | 14 |
+
+## 3.11.2 阅读检查清单
+
+- 不看正文，能否画出 `org.h2.value` 与 `org.h2.command` 之间的调用方向？
+- `Value` 是否涉及并发？依据是锁、可见性还是不可变？
+- 能否用一个入口，把 `org.h2.value` 的调用链讲到落盘或返回？
+- `org.h2.value` 与 `org.h2.command` 若合并，会丢掉哪个扩展点？
+- `org.h2.value` 的注释与实现若不一致，你信哪一边，为什么？
 
 ## 3.12 延展阅读
 

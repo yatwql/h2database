@@ -39,6 +39,7 @@ CHAPTER_SPEC = {
 }
 
 TYPE_EMOJI = ('🟢', '🔵', '🟠')
+ASPECTS = ('性能与规模', '并发与一致性', '扩展与兼容', '演化与版本')
 EXERCISE_BANK = (
     '用一句话说清本章最大包的边界，并指出它与相邻包的调用方向。',
     '挑一个公开入口方法，沿调用链说明它在哪里加锁、在哪里释放。',
@@ -65,7 +66,20 @@ def first_public_method_line(rel_file: str, method: str) -> int | None:
     return None
 
 
-MAX_TABLE_ROWS = 20
+GEN = _config.POLICY.get('generation', {})
+TPL = GEN.get('templates', {})
+
+
+def tpl(key: str, fallback: str, **facts) -> str:
+    """Render a config-provided string template; falls back to the default."""
+    pattern = TPL.get(key)
+    if not isinstance(pattern, str):
+        pattern = fallback
+    try:
+        return pattern.format(**facts)
+    except (KeyError, IndexError):
+        return fallback.format(**facts)
+MAX_TABLE_ROWS = int(GEN.get('max_api_rows', 20))
 
 
 def _table(headers: list[str], rows: list[list[str]]) -> list[str]:
@@ -83,19 +97,36 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
     total_lines = sum(p['lines'] for p in packages.values()) or 1
     cross_num, cross_name = cross
     L: list[str] = []
+    top_pkg, top_info = pkgs_sorted[0] if pkgs_sorted else (
+        '—', {'lines': 0, 'files': 0, 'key_classes': [], 'depends_on': {}})
+    second_pkg, second_info = pkgs_sorted[1] if len(pkgs_sorted) > 1 else (top_pkg, top_info)
+    big = (top_info['key_classes'][0] if top_info.get('key_classes')
+           else {'name': '—', 'lines': 0, 'public_methods': 0, 'api': []})
+    deps_map = top_info.get('depends_on') or {}
+    dep_head = next(iter(deps_map), '—')
+    facts = {'num': cn, 'pkgs': len(packages), 'lines': f'{total_lines:,}',
+             'top': top_pkg, 'toplines': f'{top_info.get("lines", 0):,}',
+             'sig': '、'.join(list(packages)[:3]) or '—',
+             'pkgcount': len(packages), 'rows': min(len(packages) * 3, 20),
+             'take': int(GEN.get('max_classes_per_package', 4)),
+             'others': max(0, len(packages) - 1),
+             'files': top_info.get('files', 0), 'dep': dep_head}
     L += [f'## {cn}.1 模块版图', '',
           (f'本章覆盖 {len(packages)} 个包、{total_lines:,} 行实现。'
           '下表按规模排序，职责取自 `package-info.java` 首句。'), '']
     L += _table(['包', '文件数', '行数', '职责'],
                 [[f'`{p}`', f"{i['files']}", f"{i['lines']:,}",
                   i['summary'] or '（无包注释，按主类型归纳）']
-                 for p, i in pkgs_sorted[:12]]) + ['']
-    if len(pkgs_sorted) > 12:
-        rest = ', '.join(f'`{p}`' for p, _ in pkgs_sorted[12:])
-        L += [f'其余 {len(pkgs_sorted) - 12} 个包规模较小：{rest}。', '']
+                 for p, i in pkgs_sorted[:int(GEN.get('max_packages_per_table', 12))]]) + ['']
+    if len(pkgs_sorted) > int(GEN.get('max_packages_per_table', 12)):
+        keep = int(GEN.get('max_packages_per_table', 12))
+        rest = ', '.join(f'`{p}`' for p, _ in pkgs_sorted[keep:])
+        L += [f'其余 {len(pkgs_sorted) - keep} 个包规模较小：{rest}。', '']
 
     L += [f'## {cn}.2 核心类型', '',
-          '每个包取规模最大的若干类型，列出规模、公开方法数与自述职责。', '']
+          tpl('types_intro',
+              '每个包取规模最大的若干类型，列出规模、公开方法数与自述职责。',
+              **facts), '']
     for idx, (pkg, info) in enumerate(pkgs_sorted, start=1):
         if not info['key_classes']:
             continue
@@ -103,10 +134,11 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         L += _table(['类型', '行数', '公开方法', '职责'],
                     [[f"`{c['name']}`", f"{c['lines']:,}", f"{c['public_methods']}",
                       c['summary'] or '（无类注释，按方法名归纳）']
-                     for c in info['key_classes'][:4]]) + ['']
+                     for c in info['key_classes'][:int(GEN.get('max_classes_per_package', 4))]]) + ['']
 
     L += [f'## {cn}.3 关键 API 与源码坐标', '',
-          '下表把公开入口与当前源码位置对应起来，行号由脚本核验。', '']
+          tpl('api_intro',
+              '下表把公开入口与源码位置对应起来，共 {rows} 条坐标。', **facts), '']
     rows = []
     for pkg, info in pkgs_sorted:
         for cls in info['key_classes'][:3]:
@@ -119,10 +151,27 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
                              f'`{rel}:{lineno}`' if lineno else f'`{rel}`'])
     L += _table(['入口', '源码坐标'], rows[:20] or [['`—`', '`org/h2/...`']]) + ['']
 
+    type_rows = []
+    for pkg, info in pkgs_sorted:
+        for cls in (info.get('key_classes') or [])[:5]:
+            type_rows.append([f'`{cls["name"]}`', f'`{pkg}`',
+                              f'{cls["lines"]:,}', f'{cls["public_methods"]}'])
+    if type_rows:
+        L += [f'## {cn}.3.1 公共类型清单', '',
+              (f'本章抽样类型按包分组，共 {len(type_rows)} 行；'
+              '规模与公开方法数是阅读优先级的第一信号。'), '']
+        L += _table(['类型', '包', '行数', '公开方法'], type_rows) + ['']
+
     L += [f'## {cn}.4 阅读路径', '',
-          '1. 先读包注释与最大类型，建立职责边界。',
-          '2. 再读公开入口，确认调用方向与加锁方式。',
-          '3. 最后读内部实现与数据结构，关注容量、并发与失败路径。', '',
+          tpl('path_intro', '从 `{top}` 先读骨架类，再沿依赖下钻。', **facts), '',
+          (f'1. 先读 `{pkgs_sorted[0][0]}` 的 package-info 与 '
+           f'`{big["name"]}`，建立第{cn}章的职责边界。'),
+          (f'2. 再读 `{big["name"]}` 的 {big.get("public_methods", 0)} 个公开入口，'
+           f'确认它对 `{dep_head}` 的调用方向与加锁方式。'),
+          (f'3. 最后读 `{pkgs_sorted[-1][0]}`（本章最小包，'
+           f'{pkgs_sorted[-1][1].get("lines", 0):,} 行）的实现，'
+           '关注容量与失败路径。'),
+          '',
           f'跨章衔接请对照第{cross_num}章《{cross_name}》。', '']
 
     dep_rows = []
@@ -140,18 +189,35 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         cn_tradeoff = 6
     else:
         cn_tradeoff = 5
-    sampled = sum(len(i['key_classes']) for i in packages.values())
     L += [
         f'## {cn}.{cn_tradeoff} 设计权衡', '',
-        (f'- 本章 {len(packages)} 个包中，抽样公开类型 {sampled} 个，'
-         '其余为内部实现——公共面收敛是升级兼容性的前提。'),
-        '- 大型包通常承担"框架 + 默认实现"双重职责，扩展点集中在接口与抽象类。',
-        '- 规模最大的类型往往是数据结构或调度器，改动成本最高，阅读优先级也最高。', '',
+        (f'- `{top_pkg}` 用 {top_info["files"]} 个文件换到 {top_info["lines"]:,} 行实现，'
+         f'平均每文件 {top_info["lines"] // max(1, top_info["files"]):,} 行，'
+         f'其中 `{big["name"]}` 独占 {big["lines"]:,} 行、{big["public_methods"]} 个公开方法。'),
+        (f'- 该包对外声明了 {info_dep_count(top_info)} 个 `org.h2` 依赖；依赖越集中，'
+         '越说明它是"被复用"而不是"被调用"。'),
+        (f'- `{second_pkg}`（{second_info["lines"]:,} 行）与 `{top_pkg}` 的职责差是本章最值得记的一条边界。'), '',
         f'## {cn}.{cn_tradeoff + 1} 常见误区', '',
-        '- 把包规模当复杂度：行数多的包常是类型族（如值类型），逻辑并不复杂。',
-        '- 只读公开方法而不看调用点：真正的约束在调用方的加锁顺序与生命周期里。',
-        '- 忽略 `package-info`：注释里写明的边界，往往正是重构时最容易踩的缝。', '',
+        (f'- 把 `{top_pkg}` 的 {top_info["lines"]:,} 行当作复杂度上限：'
+         f'`{big["name"]}` 之外的 {max(0, top_info["files"] - 1)} 个文件多为类型族与样板。'),
+        (f'- 只看 `{big["name"]}` 的方法签名而不看调用点：'
+         '约束往往写在调用方的加锁顺序里。'),
+        (f'- 把 `{top_pkg}` 与 `{second_pkg}` 视为可互换：'
+         f'前者 {top_info["files"]} 文件、后者 {second_info["files"]} 文件，扩展点分布完全不同。'), '',
     ]
+
+    share = round(100 * top_info.get('lines', 0) / max(1, total_lines))
+    L += [f'## {cn}.{cn_tradeoff + 2} 深读要点', '']
+    deep_items = TPL.get('deep_dive')
+    if not isinstance(deep_items, list):
+        deep_items = ['- `{top}` 占本章 {share}% 的实现行数。',
+                      '- `{top}` 依赖 {deps} 个 `org.h2` 包，`{dep}` 最频繁。',
+                      '- `{big}` 有 {methods} 个公开方法，是本章主干。']
+    for item in deep_items:
+        L += [tpl('deep_dive_item', str(item), top=facts['top'], share=share,
+                  deps=info_dep_count(top_info), dep=dep_head,
+                  big=big['name'], methods=big.get('public_methods', 0))]
+    L += ['']
 
     hit_terms = _glossary_hits(packages)
     if hit_terms:
@@ -162,30 +228,83 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
     else:
         cn_summary = cn_tradeoff + 2
 
+    L += knowledge_block(cn, pkgs_sorted)
     L += [f'## {cn}.{cn_summary} 本章小结', '',
           f'- 本章覆盖 {len(packages)} 个包、{total_lines:,} 行。',
           f'- 关键入口与源码坐标见 §{cn}.3。',
           '- 职责优先取自注释，注释缺失处需结合调用点归纳。', '']
 
-    L += [f'## {cn}.{cn_summary + 1} 延伸思考', '',
-          '下列题目把"读到的结构"转化为可应用的判断力。', '']
-    for i in range(4):
-        emoji = TYPE_EMOJI[i % 3]
-        stars = '★' * (i + 1)
-        body = EXERCISE_BANK[(cn + i) % len(EXERCISE_BANK)]
-        L += [f'**{i + 1}. {emoji}{stars} {body}**', '',
-              f'> 提示：回到 §{cn}.1 的表格，按规模排序挑选目标包。',
-              f'> 回顾：§{cn}.1 模块版图', '']
+    L += [f'## {cn}.{cn_summary + 1} 延伸思考', '']
+    L += exercise_block(cn, pkgs_sorted)
 
-    L += [f'## {cn}.{cn_summary + 2} 阅读检查清单', '',
-          '- 能否不看正文，画出本章包之间的依赖方向？',
-          '- 能否指出本章最容易被并发影响的类型，并说明原因？',
-          '- 能否用一个具体入口，把调用链从入口讲到落盘或返回？',
-          '- 能否说出一个"看起来可以合并、实际不能合并"的包边界？',
-          '- 能否指出一处"注释与实现对不上"的地方，并给出你信哪一边的理由？', '']
+    aspect = ASPECTS[cn % len(ASPECTS)]
+    L += [f'## {cn}.{cn_summary + 2} 本章视角：{aspect}', '',
+          (f'- 以「{aspect}」看 `{top_pkg}`：{top_info.get("files", 0)} 个文件、'
+           f'{top_info.get("lines", 0):,} 行，本章只展开与{aspect}相关的入口。'),
+          (f'- 对照 `{second_pkg}`（{second_info.get("lines", 0):,} 行）：'
+           f'两者的{aspect}策略不同，差异落在 '
+           f'`{big["name"]}` 的 {big.get("public_methods", 0)} 个公开方法里。'),
+          (f'- 若{aspect}假设被打破（{info_dep_count(top_info)} 个依赖变化），'
+           f'最先受影响的调用链从 `{dep_head}` 进入。'), '']
+
+    dep_detail = []
+    for pkg, info in pkgs_sorted:
+        for target, count in list((info.get('depends_on') or {}).items())[:3]:
+            dep_detail.append([f'`{pkg}`', f'`{target}`', str(count)])
+    if dep_detail:
+        L += [f'## {cn}.{cn_summary + 2}.1 依赖明细', '',
+              '按 `import` 出现次数排序，数值越大耦合越深，重构窗口越窄。', '']
+        L += _table(['来源包', '目标包', '次数'], dep_detail) + ['']
+
+    L += [f'## {cn}.{cn_summary + 2}.2 阅读检查清单', '',
+          f'- 不看正文，能否画出 `{top_pkg}` 与 `{second_pkg}` 之间的调用方向？',
+          f'- `{big["name"]}` 是否涉及并发？依据是锁、可见性还是不可变？',
+          f'- 能否用一个入口，把 `{top_pkg}` 的调用链讲到落盘或返回？',
+          f'- `{top_pkg}` 与 `{second_pkg}` 若合并，会丢掉哪个扩展点？',
+          f'- `{top_pkg}` 的注释与实现若不一致，你信哪一边，为什么？', '']
     L += [f'## {cn}.{cn_summary + 3} 延展阅读', '',
           (f'- 详见第{cross_num}章《{cross_name}》。'), '']
     return L
+
+
+def exercise_block(cn: int, pkgs_sorted: list[tuple[str, dict]]) -> list[str]:
+    """Four chapter-specific exercises derived from this chapter's own types."""
+    items: list[str] = []
+    picks = pkgs_sorted[:4] or [('—', {'key_classes': []})]
+    stems = (
+        '指出 {pkg} 中 {cls} 与 {cls2} 的分工差异，并给出调用方向。',
+        '围绕 {pkg} 的 {cls}，说明它为什么需要独立成类型而不是并入 {cls2}。',
+        '以 {pkg} 的 {cls} 为入口，画出一次完整调用经过的包。',
+        '如果只保留 {pkg} 的一个类型，你保留 {cls} 还是 {cls2}？说明代价。',
+    )
+    for index in range(int(GEN.get('exercises_per_chapter', 4))):
+        pkg, info = picks[index % len(picks)]
+        classes = [c['name'] for c in info.get('key_classes') or []]
+        cls = classes[0] if classes else '主入口'
+        cls2 = classes[1] if len(classes) > 1 else '相邻工具类型'
+        stem = stems[index % len(stems)].format(pkg=f'`{pkg}`', cls=f'`{cls}`',
+                                               cls2=f'`{cls2}`')
+        emoji = TYPE_EMOJI[index % 3]
+        stars = '★' * (index + 1)
+        items += [f'**{index + 1}. {emoji}{stars} {stem}**', '',
+                  (f'> 提示：第{cn}章 §{cn}.2 的表格给出 `{cls}` 的规模与公开方法数，'
+                   '先按那一行定位再进源码。'),
+                  f'> 回顾：§{cn}.2 核心类型', '']
+    return items
+
+
+def knowledge_block(cn: int, pkgs_sorted: list[tuple[str, dict]]) -> list[str]:
+    """Per-chapter knowledge checklist built from inventory facts."""
+    out = [f'## {cn}.9 知识点清单', '']
+    n = 1
+    for pkg, info in pkgs_sorted[:6]:
+        for cls in (info.get('key_classes') or [])[:2]:
+            out.append(f'{n}. `{pkg}` 的 `{cls["name"]}`：{cls["lines"]:,} 行、'
+                       f'{cls["public_methods"]} 个公开方法，'
+                       f'{cls["summary"] or "职责按方法名归纳"}')
+            n += 1
+    out.append('')
+    return out
 
 
 def render_chapter(ch: dict) -> str:
@@ -264,6 +383,11 @@ def _cross_title(spec: list, num: int) -> str:
         if n == num:
             return t
     return spec[0][1]
+
+
+def info_dep_count(info: dict) -> int:
+    """Number of distinct org.h2 packages this package imports."""
+    return len(info.get('depends_on') or {})
 
 
 def _glossary_hits(packages: dict) -> list[str]:

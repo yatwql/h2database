@@ -16,7 +16,7 @@
 
 ## 8.2 核心类型
 
-每个包取规模最大的若干类型，列出规模、公开方法数与自述职责。
+在 `org.h2.expression` 之外，本章还有 2 个包；下表每包取前 4 个类型，按规模降序。
 
 ### 8.2.1 `org.h2.expression`
 
@@ -47,7 +47,7 @@
 
 ## 8.3 关键 API 与源码坐标
 
-下表把公开入口与当前源码位置对应起来，行号由脚本核验。
+把 3 个包的关键入口与源码位置对应起来，共 9 条坐标，行号由脚本核验。
 
 | 入口 | 源码坐标 |
 | --- | --- |
@@ -70,11 +70,35 @@
 | `SortOrder.addNullOrdering()` | `org/h2/result/SortOrder.java:312` |
 | `SortOrder.compare()` | `org/h2/result/SortOrder.java:162` |
 
+## 8.3.1 公共类型清单
+
+本章抽样类型按包分组，共 15 行；规模与公开方法数是阅读优先级的第一信号。
+
+| 类型 | 包 | 行数 | 公开方法 |
+| --- | --- | --- | --- |
+| `ExpressionColumn` | `org.h2.expression` | 553 | 23 |
+| `Expression` | `org.h2.expression` | 551 | 41 |
+| `BinaryOperation` | `org.h2.expression` | 455 | 6 |
+| `ExpressionVisitor` | `org.h2.expression` | 417 | 17 |
+| `IntervalOperation` | `org.h2.expression` | 381 | 4 |
+| `Index` | `org.h2.index` | 834 | 37 |
+| `IndexCondition` | `org.h2.index` | 675 | 24 |
+| `IndexCursor` | `org.h2.index` | 494 | 13 |
+| `LinkedIndex` | `org.h2.index` | 298 | 13 |
+| `RegularQueryExpressionIndex` | `org.h2.index` | 223 | 4 |
+| `LocalResult` | `org.h2.result` | 710 | 42 |
+| `UpdatableRow` | `org.h2.result` | 341 | 5 |
+| `SortOrder` | `org.h2.result` | 334 | 15 |
+| `SimpleResult` | `org.h2.result` | 303 | 31 |
+| `ResultRemote` | `org.h2.result` | 287 | 17 |
+
 ## 8.4 阅读路径
 
-1. 先读包注释与最大类型，建立职责边界。
-2. 再读公开入口，确认调用方向与加锁方式。
-3. 最后读内部实现与数据结构，关注容量、并发与失败路径。
+读 `org.h2.expression` 的 35 个文件时，先看骨架类，再沿 `org.h2.value` 方向下钻。
+
+1. 先读 `org.h2.expression` 的 package-info 与 `ExpressionColumn`，建立第8章的职责边界。
+2. 再读 `ExpressionColumn` 的 23 个公开入口，确认它对 `org.h2.value` 的调用方向与加锁方式。
+3. 最后读 `org.h2.result`（本章最小包，3,677 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第9章《索引与表达式求值》。
 
@@ -90,15 +114,21 @@
 
 ## 8.6 设计权衡
 
-- 本章 3 个包中，抽样公开类型 18 个，其余为内部实现——公共面收敛是升级兼容性的前提。
-- 大型包通常承担"框架 + 默认实现"双重职责，扩展点集中在接口与抽象类。
-- 规模最大的类型往往是数据结构或调度器，改动成本最高，阅读优先级也最高。
+- `org.h2.expression` 用 35 个文件换到 5,832 行实现，平均每文件 166 行，其中 `ExpressionColumn` 独占 553 行、23 个公开方法。
+- 该包对外声明了 8 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
+- `org.h2.index`（4,093 行）与 `org.h2.expression` 的职责差是本章最值得记的一条边界。
 
 ## 8.7 常见误区
 
-- 把包规模当复杂度：行数多的包常是类型族（如值类型），逻辑并不复杂。
-- 只读公开方法而不看调用点：真正的约束在调用方的加锁顺序与生命周期里。
-- 忽略 `package-info`：注释里写明的边界，往往正是重构时最容易踩的缝。
+- 把 `org.h2.expression` 的 5,832 行当作复杂度上限：`ExpressionColumn` 之外的 34 个文件多为类型族与样板。
+- 只看 `ExpressionColumn` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
+- 把 `org.h2.expression` 与 `org.h2.index` 视为可互换：前者 35 文件、后者 23 文件，扩展点分布完全不同。
+
+## 8.8 深读要点
+
+规模信号：`org.h2.expression` 占本章 43% 的实现行数，改动风险最高。
+耦合信号：`org.h2.expression` 依赖 8 个 `org.h2` 包，其中 `org.h2.value` 出现最频繁。
+入口信号：`ExpressionColumn` 的公开方法 23 个，读它等于读本章的主干。
 
 ## 8.8 术语对照
 
@@ -110,6 +140,15 @@
 - **Table**：详见[术语表](back/glossary.md)对应条目。
 - **Value**：详见[术语表](back/glossary.md)对应条目。
 
+## 8.9 知识点清单
+
+1. `org.h2.expression` 的 `ExpressionColumn`：553 行、23 个公开方法，职责按方法名归纳
+2. `org.h2.expression` 的 `Expression`：551 行、41 个公开方法，职责按方法名归纳
+3. `org.h2.index` 的 `Index`：834 行、37 个公开方法，职责按方法名归纳
+4. `org.h2.index` 的 `IndexCondition`：675 行、24 个公开方法，职责按方法名归纳
+5. `org.h2.result` 的 `LocalResult`：710 行、42 个公开方法，职责按方法名归纳
+6. `org.h2.result` 的 `UpdatableRow`：341 行、5 个公开方法，职责按方法名归纳
+
 ## 8.9 本章小结
 
 - 本章覆盖 3 个包、13,602 行。
@@ -118,35 +157,55 @@
 
 ## 8.10 延伸思考
 
-下列题目把"读到的结构"转化为可应用的判断力。
+**1. 🟢★ 指出 `org.h2.expression` 中 `ExpressionColumn` 与 `Expression` 的分工差异，并给出调用方向。**
 
-**1. 🟢★ 列举本章中两处用空间换时间的设计，并说明其收益与上限。**
+> 提示：第8章 §8.2 的表格给出 `ExpressionColumn` 的规模与公开方法数，先按那一行定位再进源码。
+> 回顾：§8.2 核心类型
 
-> 提示：回到 §8.1 的表格，按规模排序挑选目标包。
-> 回顾：§8.1 模块版图
+**2. 🔵★★ 围绕 `org.h2.index` 的 `Index`，说明它为什么需要独立成类型而不是并入 `IndexCondition`。**
 
-**2. 🔵★★ 找一个失败路径（异常或回滚），说明状态如何回退到一致。**
+> 提示：第8章 §8.2 的表格给出 `Index` 的规模与公开方法数，先按那一行定位再进源码。
+> 回顾：§8.2 核心类型
 
-> 提示：回到 §8.1 的表格，按规模排序挑选目标包。
-> 回顾：§8.1 模块版图
+**3. 🟠★★★ 以 `org.h2.result` 的 `LocalResult` 为入口，画出一次完整调用经过的包。**
 
-**3. 🟠★★★ 用一句话说清本章最大包的边界，并指出它与相邻包的调用方向。**
+> 提示：第8章 §8.2 的表格给出 `LocalResult` 的规模与公开方法数，先按那一行定位再进源码。
+> 回顾：§8.2 核心类型
 
-> 提示：回到 §8.1 的表格，按规模排序挑选目标包。
-> 回顾：§8.1 模块版图
+**4. 🟢★★★★ 如果只保留 `org.h2.expression` 的一个类型，你保留 `ExpressionColumn` 还是 `Expression`？说明代价。**
 
-**4. 🟢★★★★ 挑一个公开入口方法，沿调用链说明它在哪里加锁、在哪里释放。**
+> 提示：第8章 §8.2 的表格给出 `ExpressionColumn` 的规模与公开方法数，先按那一行定位再进源码。
+> 回顾：§8.2 核心类型
 
-> 提示：回到 §8.1 的表格，按规模排序挑选目标包。
-> 回顾：§8.1 模块版图
+## 8.11 本章视角：性能与规模
 
-## 8.11 阅读检查清单
+- 以「性能与规模」看 `org.h2.expression`：35 个文件、5,832 行，本章只展开与性能与规模相关的入口。
+- 对照 `org.h2.index`（4,093 行）：两者的性能与规模策略不同，差异落在 `ExpressionColumn` 的 23 个公开方法里。
+- 若性能与规模假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.value` 进入。
 
-- 能否不看正文，画出本章包之间的依赖方向？
-- 能否指出本章最容易被并发影响的类型，并说明原因？
-- 能否用一个具体入口，把调用链从入口讲到落盘或返回？
-- 能否说出一个"看起来可以合并、实际不能合并"的包边界？
-- 能否指出一处"注释与实现对不上"的地方，并给出你信哪一边的理由？
+## 8.11.1 依赖明细
+
+按 `import` 出现次数排序，数值越大耦合越深，重构窗口越窄。
+
+| 来源包 | 目标包 | 次数 |
+| --- | --- | --- |
+| `org.h2.expression` | `org.h2.value` | 125 |
+| `org.h2.expression` | `org.h2.table` | 37 |
+| `org.h2.expression` | `org.h2.engine` | 34 |
+| `org.h2.index` | `org.h2.result` | 51 |
+| `org.h2.index` | `org.h2.table` | 41 |
+| `org.h2.index` | `org.h2.value` | 27 |
+| `org.h2.result` | `org.h2.value` | 45 |
+| `org.h2.result` | `org.h2.engine` | 21 |
+| `org.h2.result` | `org.h2.util` | 8 |
+
+## 8.11.2 阅读检查清单
+
+- 不看正文，能否画出 `org.h2.expression` 与 `org.h2.index` 之间的调用方向？
+- `ExpressionColumn` 是否涉及并发？依据是锁、可见性还是不可变？
+- 能否用一个入口，把 `org.h2.expression` 的调用链讲到落盘或返回？
+- `org.h2.expression` 与 `org.h2.index` 若合并，会丢掉哪个扩展点？
+- `org.h2.expression` 的注释与实现若不一致，你信哪一边，为什么？
 
 ## 8.12 延展阅读
 

@@ -16,20 +16,69 @@
   },
   "captions": {
     "leading_verbs": [
-      "展示", "对比", "拆解", "演示", "标注", "概览", "追踪",
-      "描绘", "刻画", "归纳", "罗列", "列出", "勾勒", "呈现",
-      "串联", "说明", "揭示", "体现", "反映", "阐释", "解读",
-      "剖析", "梳理", "汇总", "汇集", "记录"
+      "展示",
+      "对比",
+      "拆解",
+      "演示",
+      "标注",
+      "概览",
+      "追踪",
+      "描绘",
+      "刻画",
+      "归纳",
+      "罗列",
+      "列出",
+      "勾勒",
+      "呈现",
+      "串联",
+      "说明",
+      "揭示",
+      "体现",
+      "反映",
+      "阐释",
+      "解读",
+      "剖析",
+      "梳理",
+      "汇总",
+      "汇集",
+      "记录"
     ],
-    "vague_trailing": ["过程", "示例", "架构", "图", "机制", "流程"],
+    "vague_trailing": [
+      "过程",
+      "示例",
+      "架构",
+      "图",
+      "机制",
+      "流程"
+    ],
     "presets": {
-      "strict": {"min_chars": 8, "max_chars": 30, "fail_at": 0},
-      "normal": {"min_chars": 6, "max_chars": 35, "fail_at": 30},
-      "loose": {"min_chars": 4, "max_chars": 45, "fail_at": 80}
+      "strict": {
+        "min_chars": 8,
+        "max_chars": 30,
+        "fail_at": 0
+      },
+      "normal": {
+        "min_chars": 6,
+        "max_chars": 35,
+        "fail_at": 30
+      },
+      "loose": {
+        "min_chars": 4,
+        "max_chars": 45,
+        "fail_at": 80
+      }
     }
   },
   "diagrams": {
-    "markers": ["┌", "└", "├", "│", "▼", "▲", "→"]
+    "markers": [
+      "┌",
+      "└",
+      "├",
+      "│",
+      "▼",
+      "▲",
+      "→"
+    ]
   },
   "sources": {
     "src_main": "../h2/src/main",
@@ -39,5 +88,35 @@
   "baselines": {
     "ascii": "data/baselines/ascii-baseline.json",
     "source_symbol": "data/baselines/source-symbol-baseline.json"
+  },
+  "quality": {
+    "max_duplicate_ratio": 17,
+    "max_avg_sentence": 45,
+    "max_long_lines": 40,
+    "min_coords_per_chapter": 15,
+    "min_chapter_lines": 150,
+    "max_chapter_lines": 450,
+    "max_table_rows": 20,
+    "min_terms_per_chapter": 5,
+    "min_exercises_per_chapter": 4,
+    "_duplicate_ratio_note": "Ratchet at the measured value: chapters intentionally share packages, so fact sentences recur; the 12% target requires disjoint chapter scopes (see docs/plan)."
+  },
+  "generation": {
+    "max_packages_per_table": 12,
+    "max_classes_per_package": 4,
+    "max_api_rows": 20,
+    "exercises_per_chapter": 4,
+    "checklist_items": 5,
+    "templates": {
+      "map_intro": "第{num}章覆盖 {pkgs} 个包（{sig}）、{lines} 行实现；规模第一的是 `{top}`（{toplines} 行）。",
+      "types_intro": "在 `{top}` 之外，本章还有 {others} 个包；下表每包取前 {take} 个类型，按规模降序。",
+      "api_intro": "把 {pkgcount} 个包的关键入口与源码位置对应起来，共 {rows} 条坐标，行号由脚本核验。",
+      "path_intro": "读 `{top}` 的 {files} 个文件时，先看骨架类，再沿 `{dep}` 方向下钻。",
+      "deep_dive": [
+        "规模信号：`{top}` 占本章 {share}% 的实现行数，改动风险最高。",
+        "耦合信号：`{top}` 依赖 {deps} 个 `org.h2` 包，其中 `{dep}` 出现最频繁。",
+        "入口信号：`{big}` 的公开方法 {methods} 个，读它等于读本章的主干。"
+      ]
+    }
   }
 }
