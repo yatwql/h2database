@@ -139,8 +139,12 @@ def main(argv: list[str] | None = None) -> int:
     while True:
         sys.stdout.write('\n' + header() + '\n\n' + menu_text() + '\n\n> ')
         sys.stdout.flush()
-        choice = (sys.stdin.readline() or '').strip().lower()
-        if choice in ('q', 'quit', 'exit', ''):
+        try:
+            choice = (sys.stdin.readline() or '').strip().lower()
+        except KeyboardInterrupt:   # Ctrl+C leaves the menu cleanly
+            sys.stdout.write('\n')
+            return 0
+        if choice in ('q', 'quit', 'exit', '0', ''):
             return 0
         if choice in ('?', 'h', 'help'):
             print(help_text())

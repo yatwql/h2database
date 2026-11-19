@@ -100,6 +100,50 @@ class TestTuiSurface(SettingsCase):
         self.assertEqual(code, 0, out[-300:])
         self.assertIn('chapters', out)
 
+    def test_quit_with_zero(self):
+        tui = _fixture.load_module(self.root, 'tui')
+        import io
+        from contextlib import redirect_stdout
+        old = sys.stdin
+        sys.stdin = io.StringIO('0\n')
+        try:
+            with redirect_stdout(io.StringIO()):
+                code = tui.main([])
+        finally:
+            sys.stdin = old
+        self.assertEqual(code, 0)
+
+    def test_quit_with_q(self):
+        tui = _fixture.load_module(self.root, 'tui')
+        import io
+        from contextlib import redirect_stdout
+        old = sys.stdin
+        sys.stdin = io.StringIO('q\n')
+        try:
+            with redirect_stdout(io.StringIO()):
+                code = tui.main([])
+        finally:
+            sys.stdin = old
+        self.assertEqual(code, 0)
+
+    def test_ctrl_c_exits_cleanly(self):
+        tui = _fixture.load_module(self.root, 'tui')
+        import io
+        from contextlib import redirect_stdout
+
+        class Interrupting(io.StringIO):
+            def readline(self, *args, **kwargs):
+                raise KeyboardInterrupt
+
+        old = sys.stdin
+        sys.stdin = Interrupting()
+        try:
+            with redirect_stdout(io.StringIO()):
+                code = tui.main([])
+        finally:
+            sys.stdin = old
+        self.assertEqual(code, 0)
+
     def test_configure_rejects_unknown_choice(self):
         tui = _fixture.load_module(self.root, 'tui')
         answers = iter(['99'])
