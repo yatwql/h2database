@@ -75,62 +75,86 @@
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`StringUtils`**（`org.h2.util`，1,415 行，55 个公开方法）
+### 11.3.2.1 `StringUtils`
+
+`StringUtils` 位于 `org.h2.util`，1,415 行、55 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 10%，包级依赖 8 个。
 
-**`DateTimeUtils`**（`org.h2.util`，1,171 行，42 个公开方法）
+### 11.3.2.2 `DateTimeUtils`
+
+`DateTimeUtils` 位于 `org.h2.util`，1,171 行、42 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 8 个。
 
-**`DateTimeTemplate`**（`org.h2.util`，859 行，5 个公开方法）
+### 11.3.2.3 `DateTimeTemplate`
+
+`DateTimeTemplate` 位于 `org.h2.util`，859 行、5 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 8 个。
 
-**`IntervalUtils`**（`org.h2.util`，857 行，12 个公开方法）
+### 11.3.2.4 `IntervalUtils`
+
+`IntervalUtils` 位于 `org.h2.util`，857 行、12 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 8 个。
 
-**`Utils`**（`org.h2.util`，832 行，34 个公开方法）
+### 11.3.2.5 `Utils`
+
+`Utils` 位于 `org.h2.util`，832 行、34 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 8 个。
 
-**`JdbcUtils`**（`org.h2.util`，785 行，17 个公开方法）
+### 11.3.2.6 `JdbcUtils`
+
+`JdbcUtils` 位于 `org.h2.util`，785 行、17 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
 
-**`FileLock`**（`org.h2.store`，514 行，8 个公开方法）
+### 11.3.2.7 `FileLock`
+
+`FileLock` 位于 `org.h2.store`，514 行、8 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 19%，包级依赖 8 个。
 
-**`FileStore`**（`org.h2.store`，513 行，22 个公开方法）
+### 11.3.2.8 `FileStore`
+
+`FileStore` 位于 `org.h2.store`，513 行、22 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 19%，包级依赖 8 个。
 
-**`Data`**（`org.h2.store`，220 行，13 个公开方法）
+### 11.3.2.9 `Data`
+
+`Data` 位于 `org.h2.store`，220 行、13 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 8 个。
 
-**`RecoverTester`**（`org.h2.store`，176 行，3 个公开方法）
+### 11.3.2.10 `RecoverTester`
+
+`RecoverTester` 位于 `org.h2.store`，176 行、3 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 8 个。
 
-**`FileStoreInputStream`**（`org.h2.store`，155 行，5 个公开方法）
+### 11.3.2.11 `FileStoreInputStream`
+
+`FileStoreInputStream` 位于 `org.h2.store`，155 行、5 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 8 个。
 
-**`DataReader`**（`org.h2.store`，133 行，5 个公开方法）
+### 11.3.2.12 `DataReader`
+
+`DataReader` 位于 `org.h2.store`，133 行、5 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
@@ -268,11 +292,11 @@
 
 ## 11.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.util` 与 `org.h2.store` 之间的调用方向？
-- `StringUtils` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.util` 的调用链讲到落盘或返回？
-- `org.h2.util` 与 `org.h2.store` 若合并，会丢掉哪个扩展点？
-- `org.h2.util` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.util` 与 `org.h2.store` 的调用方向？`StringUtils` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.util` 的调用链讲到落盘或返回，并说清 `org.h2.util` 与 `org.h2.store` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.util` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 11.12 延展阅读
 
@@ -330,32 +354,44 @@
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`FileUtils`**（`org.h2.store.fs`，477 行，29 个公开方法）
+### 12.3.2.1 `FileUtils`
+
+`FileUtils` 位于 `org.h2.store.fs`，477 行、29 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 36%，包级依赖 2 个。
 
-**`FilePath`**（`org.h2.store.fs`，353 行，28 个公开方法）
+### 12.3.2.2 `FilePath`
+
+`FilePath` 位于 `org.h2.store.fs`，353 行、28 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 26%，包级依赖 2 个。
 
-**`FilePathWrapper`**（`org.h2.store.fs`，171 行，22 个公开方法）
+### 12.3.2.3 `FilePathWrapper`
+
+`FilePathWrapper` 位于 `org.h2.store.fs`，171 行、22 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 13%，包级依赖 2 个。
 
-**`FakeFileChannel`**（`org.h2.store.fs`，112 行，16 个公开方法）
+### 12.3.2.4 `FakeFileChannel`
+
+`FakeFileChannel` 位于 `org.h2.store.fs`，112 行、16 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 2 个。
 
-**`FileBase`**（`org.h2.store.fs`，92 行，10 个公开方法）
+### 12.3.2.5 `FileBase`
+
+`FileBase` 位于 `org.h2.store.fs`，92 行、10 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 7%，包级依赖 2 个。
 
-**`FileBaseDefault`**（`org.h2.store.fs`，69 行，5 个公开方法）
+### 12.3.2.6 `FileBaseDefault`
+
+`FileBaseDefault` 位于 `org.h2.store.fs`，69 行、5 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 2 个。
@@ -483,11 +519,11 @@
 
 ## 12.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.store.fs` 与 `org.h2.store.fs` 之间的调用方向？
-- `FileUtils` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.store.fs` 的调用链讲到落盘或返回？
-- `org.h2.store.fs` 与 `org.h2.store.fs` 若合并，会丢掉哪个扩展点？
-- `org.h2.store.fs` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.store.fs` 与 `org.h2.store.fs` 的调用方向？`FileUtils` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.store.fs` 的调用链讲到落盘或返回，并说清 `org.h2.store.fs` 与 `org.h2.store.fs` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.store.fs` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 12.12 跨章索引
 

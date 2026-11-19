@@ -108,5 +108,24 @@
     "index_see_also_min": 30,
     "glossary_min_entries": 60,
     "chapters_min_cross_refs": 1
+  },
+  "prose": {
+    "avg_sentence_good": 28,
+    "avg_sentence_bad": 45,
+    "long_ratio_good": 8,
+    "long_ratio_bad": 30,
+    "paragraph_good_min": 80,
+    "paragraph_good_max": 420,
+    "bullet_good": 12,
+    "bullet_bad": 60,
+    "coords_good": 20,
+    "coords_bad": 4,
+    "h3_good": 6,
+    "h3_bad": 0,
+    "dup_good": 5,
+    "dup_bad": 20,
+    "table_good": 0,
+    "table_bad": 20,
+    "min_composite": 80
   }
 }

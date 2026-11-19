@@ -54,32 +54,44 @@
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`Index`**（`org.h2.index`，834 行，37 个公开方法）
+### 8.3.2.1 `Index`
+
+`Index` 位于 `org.h2.index`，834 行、37 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 20%，包级依赖 8 个。
 
-**`IndexCondition`**（`org.h2.index`，675 行，24 个公开方法）
+### 8.3.2.2 `IndexCondition`
+
+`IndexCondition` 位于 `org.h2.index`，675 行、24 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 16%，包级依赖 8 个。
 
-**`IndexCursor`**（`org.h2.index`，494 行，13 个公开方法）
+### 8.3.2.3 `IndexCursor`
+
+`IndexCursor` 位于 `org.h2.index`，494 行、13 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 12%，包级依赖 8 个。
 
-**`LinkedIndex`**（`org.h2.index`，298 行，13 个公开方法）
+### 8.3.2.4 `LinkedIndex`
+
+`LinkedIndex` 位于 `org.h2.index`，298 行、13 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 7%，包级依赖 8 个。
 
-**`RegularQueryExpressionIndex`**（`org.h2.index`，223 行，4 个公开方法）
+### 8.3.2.5 `RegularQueryExpressionIndex`
+
+`RegularQueryExpressionIndex` 位于 `org.h2.index`，223 行、4 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
 
-**`IndexType`**（`org.h2.index`，222 行，16 个公开方法）
+### 8.3.2.6 `IndexType`
+
+`IndexType` 位于 `org.h2.index`，222 行、16 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
@@ -211,11 +223,11 @@
 
 ## 8.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.index` 与 `org.h2.index` 之间的调用方向？
-- `Index` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.index` 的调用链讲到落盘或返回？
-- `org.h2.index` 与 `org.h2.index` 若合并，会丢掉哪个扩展点？
-- `org.h2.index` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.index` 与 `org.h2.index` 的调用方向？`Index` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.index` 的调用链讲到落盘或返回，并说清 `org.h2.index` 与 `org.h2.index` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.index` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 8.12 延展阅读
 

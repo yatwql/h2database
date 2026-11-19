@@ -52,32 +52,44 @@
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`Parser`**（`org.h2.command`，9,470 行，9 个公开方法）
+### 4.3.2.1 `Parser`
+
+`Parser` 位于 `org.h2.command`，9,470 行、9 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 63%，包级依赖 8 个。
 
-**`Tokenizer`**（`org.h2.command`，1,522 行，0 个公开方法）
+### 4.3.2.2 `Tokenizer`
+
+`Tokenizer` 位于 `org.h2.command`，1,522 行、0 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 10%，包级依赖 8 个。
 
-**`ParserBase`**（`org.h2.command`，771 行，8 个公开方法）
+### 4.3.2.3 `ParserBase`
+
+`ParserBase` 位于 `org.h2.command`，771 行、8 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
 
-**`Token`**（`org.h2.command`，758 行，5 个公开方法）
+### 4.3.2.4 `Token`
+
+`Token` 位于 `org.h2.command`，758 行、5 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
 
-**`CommandInterface`**（`org.h2.command`，654 行，0 个公开方法）
+### 4.3.2.5 `CommandInterface`
+
+`CommandInterface` 位于 `org.h2.command`，654 行、0 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 4%，包级依赖 8 个。
 
-**`Prepared`**（`org.h2.command`，503 行，33 个公开方法）
+### 4.3.2.6 `Prepared`
+
+`Prepared` 位于 `org.h2.command`，503 行、33 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 3%，包级依赖 8 个。
@@ -202,11 +214,11 @@
 
 ## 4.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.command` 与 `org.h2.command` 之间的调用方向？
-- `Parser` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.command` 的调用链讲到落盘或返回？
-- `org.h2.command` 与 `org.h2.command` 若合并，会丢掉哪个扩展点？
-- `org.h2.command` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.command` 与 `org.h2.command` 的调用方向？`Parser` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.command` 的调用链讲到落盘或返回，并说清 `org.h2.command` 与 `org.h2.command` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.command` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 4.12 延展阅读
 
@@ -262,32 +274,44 @@
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`Parser`**（`org.h2.command`，9,470 行，9 个公开方法）
+### 5.3.2.1 `Parser`
+
+`Parser` 位于 `org.h2.command`，9,470 行、9 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 63%，包级依赖 8 个。
 
-**`Tokenizer`**（`org.h2.command`，1,522 行，0 个公开方法）
+### 5.3.2.2 `Tokenizer`
+
+`Tokenizer` 位于 `org.h2.command`，1,522 行、0 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 10%，包级依赖 8 个。
 
-**`ParserBase`**（`org.h2.command`，771 行，8 个公开方法）
+### 5.3.2.3 `ParserBase`
+
+`ParserBase` 位于 `org.h2.command`，771 行、8 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
 
-**`Token`**（`org.h2.command`，758 行，5 个公开方法）
+### 5.3.2.4 `Token`
+
+`Token` 位于 `org.h2.command`，758 行、5 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
 
-**`CommandInterface`**（`org.h2.command`，654 行，0 个公开方法）
+### 5.3.2.5 `CommandInterface`
+
+`CommandInterface` 位于 `org.h2.command`，654 行、0 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 4%，包级依赖 8 个。
 
-**`Prepared`**（`org.h2.command`，503 行，33 个公开方法）
+### 5.3.2.6 `Prepared`
+
+`Prepared` 位于 `org.h2.command`，503 行、33 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 3%，包级依赖 8 个。
@@ -412,11 +436,11 @@
 
 ## 5.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.command` 与 `org.h2.command` 之间的调用方向？
-- `Parser` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.command` 的调用链讲到落盘或返回？
-- `org.h2.command` 与 `org.h2.command` 若合并，会丢掉哪个扩展点？
-- `org.h2.command` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.command` 与 `org.h2.command` 的调用方向？`Parser` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.command` 的调用链讲到落盘或返回，并说清 `org.h2.command` 与 `org.h2.command` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.command` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 5.12 跨章索引
 

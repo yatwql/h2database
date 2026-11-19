@@ -75,62 +75,86 @@
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`Value`**（`org.h2.value`，2,873 行，67 个公开方法）
+### 6.3.2.1 `Value`
+
+`Value` 位于 `org.h2.value`，2,873 行、67 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 19%，包级依赖 8 个。
 
-**`TypeInfo`**（`org.h2.value`，1,539 行，23 个公开方法）
+### 6.3.2.2 `TypeInfo`
+
+`TypeInfo` 位于 `org.h2.value`，1,539 行、23 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 10%，包级依赖 8 个。
 
-**`Transfer`**（`org.h2.value`，1,368 行，31 个公开方法）
+### 6.3.2.3 `Transfer`
+
+`Transfer` 位于 `org.h2.value`，1,368 行、31 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 8 个。
 
-**`DataType`**（`org.h2.value`，828 行，25 个公开方法）
+### 6.3.2.4 `DataType`
+
+`DataType` 位于 `org.h2.value`，828 行、25 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
 
-**`ValueToObjectConverter`**（`org.h2.value`，642 行，6 个公开方法）
+### 6.3.2.5 `ValueToObjectConverter`
+
+`ValueToObjectConverter` 位于 `org.h2.value`，642 行、6 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 4%，包级依赖 8 个。
 
-**`ValueToObjectConverter2`**（`org.h2.value`，433 行，2 个公开方法）
+### 6.3.2.6 `ValueToObjectConverter2`
+
+`ValueToObjectConverter2` 位于 `org.h2.value`，433 行、2 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 3%，包级依赖 8 个。
 
-**`LocalResult`**（`org.h2.result`，710 行，42 个公开方法）
+### 6.3.2.7 `LocalResult`
+
+`LocalResult` 位于 `org.h2.result`，710 行、42 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 19%，包级依赖 8 个。
 
-**`UpdatableRow`**（`org.h2.result`，341 行，5 个公开方法）
+### 6.3.2.8 `UpdatableRow`
+
+`UpdatableRow` 位于 `org.h2.result`，341 行、5 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 8 个。
 
-**`SortOrder`**（`org.h2.result`，334 行，15 个公开方法）
+### 6.3.2.9 `SortOrder`
+
+`SortOrder` 位于 `org.h2.result`，334 行、15 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 8 个。
 
-**`SimpleResult`**（`org.h2.result`，303 行，31 个公开方法）
+### 6.3.2.10 `SimpleResult`
+
+`SimpleResult` 位于 `org.h2.result`，303 行、31 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 8 个。
 
-**`ResultRemote`**（`org.h2.result`，287 行，17 个公开方法）
+### 6.3.2.11 `ResultRemote`
+
+`ResultRemote` 位于 `org.h2.result`，287 行、17 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 8 个。
 
-**`RowFactory`**（`org.h2.result`，201 行，17 个公开方法）
+### 6.3.2.12 `RowFactory`
+
+`RowFactory` 位于 `org.h2.result`，201 行、17 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
@@ -268,11 +292,11 @@
 
 ## 6.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.value` 与 `org.h2.result` 之间的调用方向？
-- `Value` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.value` 的调用链讲到落盘或返回？
-- `org.h2.value` 与 `org.h2.result` 若合并，会丢掉哪个扩展点？
-- `org.h2.value` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.value` 与 `org.h2.result` 的调用方向？`Value` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.value` 的调用链讲到落盘或返回，并说清 `org.h2.value` 与 `org.h2.result` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.value` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 6.12 延展阅读
 

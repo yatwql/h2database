@@ -54,32 +54,44 @@
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`JdbcResultSet`**（`org.h2.jdbc`，4,291 行，199 个公开方法）
+### 13.3.2.1 `JdbcResultSet`
+
+`JdbcResultSet` 位于 `org.h2.jdbc`，4,291 行、199 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 25%，包级依赖 8 个。
 
-**`JdbcDatabaseMetaData`**（`org.h2.jdbc`，2,756 行，177 个公开方法）
+### 13.3.2.2 `JdbcDatabaseMetaData`
+
+`JdbcDatabaseMetaData` 位于 `org.h2.jdbc`，2,756 行、177 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 16%，包级依赖 8 个。
 
-**`JdbcConnection`**（`org.h2.jdbc`，1,930 行，62 个公开方法）
+### 13.3.2.3 `JdbcConnection`
+
+`JdbcConnection` 位于 `org.h2.jdbc`，1,930 行、62 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 11%，包级依赖 8 个。
 
-**`JdbcCallableStatement`**（`org.h2.jdbc`，1,863 行，117 个公开方法）
+### 13.3.2.4 `JdbcCallableStatement`
+
+`JdbcCallableStatement` 位于 `org.h2.jdbc`，1,863 行、117 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 11%，包级依赖 8 个。
 
-**`JdbcPreparedStatement`**（`org.h2.jdbc`，1,629 行，65 个公开方法）
+### 13.3.2.5 `JdbcPreparedStatement`
+
+`JdbcPreparedStatement` 位于 `org.h2.jdbc`，1,629 行、65 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 8 个。
 
-**`JdbcStatement`**（`org.h2.jdbc`，1,502 行，56 个公开方法）
+### 13.3.2.6 `JdbcStatement`
+
+`JdbcStatement` 位于 `org.h2.jdbc`，1,502 行、56 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 8 个。
@@ -205,11 +217,11 @@
 
 ## 13.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.jdbc` 与 `org.h2.jdbc` 之间的调用方向？
-- `JdbcResultSet` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.jdbc` 的调用链讲到落盘或返回？
-- `org.h2.jdbc` 与 `org.h2.jdbc` 若合并，会丢掉哪个扩展点？
-- `org.h2.jdbc` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.jdbc` 与 `org.h2.jdbc` 的调用方向？`JdbcResultSet` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.jdbc` 的调用链讲到落盘或返回，并说清 `org.h2.jdbc` 与 `org.h2.jdbc` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.jdbc` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 13.12 延展阅读
 
@@ -267,32 +279,44 @@
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`SimpleResultSet`**（`org.h2.tools`，2,480 行，228 个公开方法）
+### 14.3.2.1 `SimpleResultSet`
+
+`SimpleResultSet` 位于 `org.h2.tools`，2,480 行、228 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 23%，包级依赖 8 个。
 
-**`Csv`**（`org.h2.tools`，986 行，33 个公开方法）
+### 14.3.2.2 `Csv`
+
+`Csv` 位于 `org.h2.tools`，986 行、33 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 8 个。
 
-**`Recover`**（`org.h2.tools`，922 行，18 个公开方法）
+### 14.3.2.3 `Recover`
+
+`Recover` 位于 `org.h2.tools`，922 行、18 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 8 个。
 
-**`Server`**（`org.h2.tools`，823 行，19 个公开方法）
+### 14.3.2.4 `Server`
+
+`Server` 位于 `org.h2.tools`，823 行、19 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 8 个。
 
-**`DirectRecover`**（`org.h2.tools`，767 行，11 个公开方法）
+### 14.3.2.5 `DirectRecover`
+
+`DirectRecover` 位于 `org.h2.tools`，767 行、11 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 7%，包级依赖 8 个。
 
-**`Shell`**（`org.h2.tools`，639 行，7 个公开方法）
+### 14.3.2.6 `Shell`
+
+`Shell` 位于 `org.h2.tools`，639 行、7 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 8 个。
@@ -417,11 +441,11 @@
 
 ## 14.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.tools` 与 `org.h2.tools` 之间的调用方向？
-- `SimpleResultSet` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.tools` 的调用链讲到落盘或返回？
-- `org.h2.tools` 与 `org.h2.tools` 若合并，会丢掉哪个扩展点？
-- `org.h2.tools` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.tools` 与 `org.h2.tools` 的调用方向？`SimpleResultSet` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.tools` 的调用链讲到落盘或返回，并说清 `org.h2.tools` 与 `org.h2.tools` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.tools` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 14.12 跨章索引
 

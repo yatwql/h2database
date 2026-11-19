@@ -382,32 +382,44 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`Database`**（`org.h2.engine`，2,566 行，152 个公开方法）
+### 1.3.2.1 `Database`
+
+`Database` 位于 `org.h2.engine`，2,566 行、152 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 22%，包级依赖 8 个。
 
-**`SessionLocal`**（`org.h2.engine`，2,156 行，135 个公开方法）
+### 1.3.2.2 `SessionLocal`
+
+`SessionLocal` 位于 `org.h2.engine`，2,156 行、135 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 18%，包级依赖 8 个。
 
-**`SessionRemote`**（`org.h2.engine`，1,068 行，53 个公开方法）
+### 1.3.2.3 `SessionRemote`
+
+`SessionRemote` 位于 `org.h2.engine`，1,068 行、53 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 8 个。
 
-**`Mode`**（`org.h2.engine`，776 行，5 个公开方法）
+### 1.3.2.4 `Mode`
+
+`Mode` 位于 `org.h2.engine`，776 行、5 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 7%，包级依赖 8 个。
 
-**`ConnectionInfo`**（`org.h2.engine`，766 行，25 个公开方法）
+### 1.3.2.5 `ConnectionInfo`
+
+`ConnectionInfo` 位于 `org.h2.engine`，766 行、25 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 8 个。
 
-**`Constants`**（`org.h2.engine`，520 行，0 个公开方法）
+### 1.3.2.6 `Constants`
+
+`Constants` 位于 `org.h2.engine`，520 行、0 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 4%，包级依赖 8 个。
@@ -539,11 +551,11 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 1.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.engine` 与 `org.h2.engine` 之间的调用方向？
-- `Database` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.engine` 的调用链讲到落盘或返回？
-- `org.h2.engine` 与 `org.h2.engine` 若合并，会丢掉哪个扩展点？
-- `org.h2.engine` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.engine` 与 `org.h2.engine` 的调用方向？`Database` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.engine` 的调用链讲到落盘或返回，并说清 `org.h2.engine` 与 `org.h2.engine` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.engine` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 1.12 延展阅读
 
@@ -590,7 +602,9 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`Driver`**（`org.h2`，205 行，11 个公开方法）
+### 2.3.2.1 `Driver`
+
+`Driver` 位于 `org.h2`，205 行、11 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 100%，包级依赖 0 个。
@@ -687,11 +701,11 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 2.10.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2` 与 `org.h2` 之间的调用方向？
-- `Driver` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2` 的调用链讲到落盘或返回？
-- `org.h2` 与 `org.h2` 若合并，会丢掉哪个扩展点？
-- `org.h2` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2` 与 `org.h2` 的调用方向？`Driver` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2` 的调用链讲到落盘或返回，并说清 `org.h2` 与 `org.h2` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 2.11 跨章索引
 
@@ -781,62 +795,86 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`ErrorCode`**（`org.h2.api`，2,367 行，2 个公开方法）
+### 3.3.2.1 `ErrorCode`
+
+`ErrorCode` 位于 `org.h2.api`，2,367 行、2 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 57%，包级依赖 7 个。
 
-**`Interval`**（`org.h2.api`，636 行，33 个公开方法）
+### 3.3.2.2 `Interval`
+
+`Interval` 位于 `org.h2.api`，636 行、33 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 15%，包级依赖 7 个。
 
-**`IntervalQualifier`**（`org.h2.api`，353 行，13 个公开方法）
+### 3.3.2.3 `IntervalQualifier`
+
+`IntervalQualifier` 位于 `org.h2.api`，353 行、13 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 7 个。
 
-**`H2Type`**（`org.h2.api`，322 行，6 个公开方法）
+### 3.3.2.4 `H2Type`
+
+`H2Type` 位于 `org.h2.api`，322 行、6 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 7 个。
 
-**`DatabaseEventListener`**（`org.h2.api`，113 行，0 个公开方法）
+### 3.3.2.5 `DatabaseEventListener`
+
+`DatabaseEventListener` 位于 `org.h2.api`，113 行、0 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 3%，包级依赖 7 个。
 
-**`Trigger`**（`org.h2.api`，105 行，0 个公开方法）
+### 3.3.2.6 `Trigger`
+
+`Trigger` 位于 `org.h2.api`，105 行、0 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 3%，包级依赖 7 个。
 
-**`Schema`**（`org.h2.schema`，848 行，51 个公开方法）
+### 3.3.2.7 `Schema`
+
+`Schema` 位于 `org.h2.schema`，848 行、51 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 26%，包级依赖 8 个。
 
-**`Sequence`**（`org.h2.schema`，586 行，25 个公开方法）
+### 3.3.2.8 `Sequence`
+
+`Sequence` 位于 `org.h2.schema`，586 行、25 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 18%，包级依赖 8 个。
 
-**`FunctionAlias`**（`org.h2.schema`，562 行，22 个公开方法）
+### 3.3.2.9 `FunctionAlias`
+
+`FunctionAlias` 位于 `org.h2.schema`，562 行、22 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 17%，包级依赖 8 个。
 
-**`TriggerObject`**（`org.h2.schema`，543 行，28 个公开方法）
+### 3.3.2.10 `TriggerObject`
+
+`TriggerObject` 位于 `org.h2.schema`，543 行、28 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 17%，包级依赖 8 个。
 
-**`Domain`**（`org.h2.schema`，241 行，22 个公开方法）
+### 3.3.2.11 `Domain`
+
+`Domain` 位于 `org.h2.schema`，241 行、22 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 8 个。
 
-**`UserAggregate`**（`org.h2.schema`，120 行，9 个公开方法）
+### 3.3.2.12 `UserAggregate`
+
+`UserAggregate` 位于 `org.h2.schema`，120 行、9 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 4%，包级依赖 8 个。
@@ -974,11 +1012,11 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 3.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.api` 与 `org.h2.schema` 之间的调用方向？
-- `ErrorCode` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.api` 的调用链讲到落盘或返回？
-- `org.h2.api` 与 `org.h2.schema` 若合并，会丢掉哪个扩展点？
-- `org.h2.api` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.api` 与 `org.h2.schema` 的调用方向？`ErrorCode` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.api` 的调用链讲到落盘或返回，并说清 `org.h2.api` 与 `org.h2.schema` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.api` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 3.12 延展阅读
 
@@ -1037,32 +1075,44 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`Parser`**（`org.h2.command`，9,470 行，9 个公开方法）
+### 4.3.2.1 `Parser`
+
+`Parser` 位于 `org.h2.command`，9,470 行、9 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 63%，包级依赖 8 个。
 
-**`Tokenizer`**（`org.h2.command`，1,522 行，0 个公开方法）
+### 4.3.2.2 `Tokenizer`
+
+`Tokenizer` 位于 `org.h2.command`，1,522 行、0 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 10%，包级依赖 8 个。
 
-**`ParserBase`**（`org.h2.command`，771 行，8 个公开方法）
+### 4.3.2.3 `ParserBase`
+
+`ParserBase` 位于 `org.h2.command`，771 行、8 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
 
-**`Token`**（`org.h2.command`，758 行，5 个公开方法）
+### 4.3.2.4 `Token`
+
+`Token` 位于 `org.h2.command`，758 行、5 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
 
-**`CommandInterface`**（`org.h2.command`，654 行，0 个公开方法）
+### 4.3.2.5 `CommandInterface`
+
+`CommandInterface` 位于 `org.h2.command`，654 行、0 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 4%，包级依赖 8 个。
 
-**`Prepared`**（`org.h2.command`，503 行，33 个公开方法）
+### 4.3.2.6 `Prepared`
+
+`Prepared` 位于 `org.h2.command`，503 行、33 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 3%，包级依赖 8 个。
@@ -1187,11 +1237,11 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 4.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.command` 与 `org.h2.command` 之间的调用方向？
-- `Parser` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.command` 的调用链讲到落盘或返回？
-- `org.h2.command` 与 `org.h2.command` 若合并，会丢掉哪个扩展点？
-- `org.h2.command` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.command` 与 `org.h2.command` 的调用方向？`Parser` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.command` 的调用链讲到落盘或返回，并说清 `org.h2.command` 与 `org.h2.command` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.command` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 4.12 延展阅读
 
@@ -1247,32 +1297,44 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`Parser`**（`org.h2.command`，9,470 行，9 个公开方法）
+### 5.3.2.1 `Parser`
+
+`Parser` 位于 `org.h2.command`，9,470 行、9 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 63%，包级依赖 8 个。
 
-**`Tokenizer`**（`org.h2.command`，1,522 行，0 个公开方法）
+### 5.3.2.2 `Tokenizer`
+
+`Tokenizer` 位于 `org.h2.command`，1,522 行、0 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 10%，包级依赖 8 个。
 
-**`ParserBase`**（`org.h2.command`，771 行，8 个公开方法）
+### 5.3.2.3 `ParserBase`
+
+`ParserBase` 位于 `org.h2.command`，771 行、8 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
 
-**`Token`**（`org.h2.command`，758 行，5 个公开方法）
+### 5.3.2.4 `Token`
+
+`Token` 位于 `org.h2.command`，758 行、5 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
 
-**`CommandInterface`**（`org.h2.command`，654 行，0 个公开方法）
+### 5.3.2.5 `CommandInterface`
+
+`CommandInterface` 位于 `org.h2.command`，654 行、0 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 4%，包级依赖 8 个。
 
-**`Prepared`**（`org.h2.command`，503 行，33 个公开方法）
+### 5.3.2.6 `Prepared`
+
+`Prepared` 位于 `org.h2.command`，503 行、33 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 3%，包级依赖 8 个。
@@ -1397,11 +1459,11 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 5.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.command` 与 `org.h2.command` 之间的调用方向？
-- `Parser` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.command` 的调用链讲到落盘或返回？
-- `org.h2.command` 与 `org.h2.command` 若合并，会丢掉哪个扩展点？
-- `org.h2.command` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.command` 与 `org.h2.command` 的调用方向？`Parser` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.command` 的调用链讲到落盘或返回，并说清 `org.h2.command` 与 `org.h2.command` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.command` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 5.12 跨章索引
 
@@ -1491,62 +1553,86 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`Value`**（`org.h2.value`，2,873 行，67 个公开方法）
+### 6.3.2.1 `Value`
+
+`Value` 位于 `org.h2.value`，2,873 行、67 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 19%，包级依赖 8 个。
 
-**`TypeInfo`**（`org.h2.value`，1,539 行，23 个公开方法）
+### 6.3.2.2 `TypeInfo`
+
+`TypeInfo` 位于 `org.h2.value`，1,539 行、23 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 10%，包级依赖 8 个。
 
-**`Transfer`**（`org.h2.value`，1,368 行，31 个公开方法）
+### 6.3.2.3 `Transfer`
+
+`Transfer` 位于 `org.h2.value`，1,368 行、31 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 8 个。
 
-**`DataType`**（`org.h2.value`，828 行，25 个公开方法）
+### 6.3.2.4 `DataType`
+
+`DataType` 位于 `org.h2.value`，828 行、25 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
 
-**`ValueToObjectConverter`**（`org.h2.value`，642 行，6 个公开方法）
+### 6.3.2.5 `ValueToObjectConverter`
+
+`ValueToObjectConverter` 位于 `org.h2.value`，642 行、6 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 4%，包级依赖 8 个。
 
-**`ValueToObjectConverter2`**（`org.h2.value`，433 行，2 个公开方法）
+### 6.3.2.6 `ValueToObjectConverter2`
+
+`ValueToObjectConverter2` 位于 `org.h2.value`，433 行、2 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 3%，包级依赖 8 个。
 
-**`LocalResult`**（`org.h2.result`，710 行，42 个公开方法）
+### 6.3.2.7 `LocalResult`
+
+`LocalResult` 位于 `org.h2.result`，710 行、42 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 19%，包级依赖 8 个。
 
-**`UpdatableRow`**（`org.h2.result`，341 行，5 个公开方法）
+### 6.3.2.8 `UpdatableRow`
+
+`UpdatableRow` 位于 `org.h2.result`，341 行、5 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 8 个。
 
-**`SortOrder`**（`org.h2.result`，334 行，15 个公开方法）
+### 6.3.2.9 `SortOrder`
+
+`SortOrder` 位于 `org.h2.result`，334 行、15 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 8 个。
 
-**`SimpleResult`**（`org.h2.result`，303 行，31 个公开方法）
+### 6.3.2.10 `SimpleResult`
+
+`SimpleResult` 位于 `org.h2.result`，303 行、31 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 8 个。
 
-**`ResultRemote`**（`org.h2.result`，287 行，17 个公开方法）
+### 6.3.2.11 `ResultRemote`
+
+`ResultRemote` 位于 `org.h2.result`，287 行、17 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 8 个。
 
-**`RowFactory`**（`org.h2.result`，201 行，17 个公开方法）
+### 6.3.2.12 `RowFactory`
+
+`RowFactory` 位于 `org.h2.result`，201 行、17 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
@@ -1684,11 +1770,11 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 6.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.value` 与 `org.h2.result` 之间的调用方向？
-- `Value` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.value` 的调用链讲到落盘或返回？
-- `org.h2.value` 与 `org.h2.result` 若合并，会丢掉哪个扩展点？
-- `org.h2.value` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.value` 与 `org.h2.result` 的调用方向？`Value` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.value` 的调用链讲到落盘或返回，并说清 `org.h2.value` 与 `org.h2.result` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.value` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 6.12 延展阅读
 
@@ -1749,32 +1835,44 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`FileStore`**（`org.h2.mvstore`，2,386 行，64 个公开方法）
+### 7.3.2.1 `FileStore`
+
+`FileStore` 位于 `org.h2.mvstore`，2,386 行、64 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 16%，包级依赖 7 个。
 
-**`MVStore`**（`org.h2.mvstore`，2,215 行，85 个公开方法）
+### 7.3.2.2 `MVStore`
+
+`MVStore` 位于 `org.h2.mvstore`，2,215 行、85 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 15%，包级依赖 7 个。
 
-**`MVMap`**（`org.h2.mvstore`，2,181 行，102 个公开方法）
+### 7.3.2.3 `MVMap`
+
+`MVMap` 位于 `org.h2.mvstore`，2,181 行、102 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 15%，包级依赖 7 个。
 
-**`Page`**（`org.h2.mvstore`，1,779 行，77 个公开方法）
+### 7.3.2.4 `Page`
+
+`Page` 位于 `org.h2.mvstore`，1,779 行、77 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 12%，包级依赖 7 个。
 
-**`DataUtils`**（`org.h2.mvstore`，1,185 行，45 个公开方法）
+### 7.3.2.5 `DataUtils`
+
+`DataUtils` 位于 `org.h2.mvstore`，1,185 行、45 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 7 个。
 
-**`RandomAccessStore`**（`org.h2.mvstore`，851 行，10 个公开方法）
+### 7.3.2.6 `RandomAccessStore`
+
+`RandomAccessStore` 位于 `org.h2.mvstore`，851 行、10 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 7 个。
@@ -1906,11 +2004,11 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 7.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.mvstore` 与 `org.h2.mvstore` 之间的调用方向？
-- `FileStore` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.mvstore` 的调用链讲到落盘或返回？
-- `org.h2.mvstore` 与 `org.h2.mvstore` 若合并，会丢掉哪个扩展点？
-- `org.h2.mvstore` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.mvstore` 与 `org.h2.mvstore` 的调用方向？`FileStore` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.mvstore` 的调用链讲到落盘或返回，并说清 `org.h2.mvstore` 与 `org.h2.mvstore` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.mvstore` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 7.12 延展阅读
 
@@ -1971,32 +2069,44 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`Index`**（`org.h2.index`，834 行，37 个公开方法）
+### 8.3.2.1 `Index`
+
+`Index` 位于 `org.h2.index`，834 行、37 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 20%，包级依赖 8 个。
 
-**`IndexCondition`**（`org.h2.index`，675 行，24 个公开方法）
+### 8.3.2.2 `IndexCondition`
+
+`IndexCondition` 位于 `org.h2.index`，675 行、24 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 16%，包级依赖 8 个。
 
-**`IndexCursor`**（`org.h2.index`，494 行，13 个公开方法）
+### 8.3.2.3 `IndexCursor`
+
+`IndexCursor` 位于 `org.h2.index`，494 行、13 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 12%，包级依赖 8 个。
 
-**`LinkedIndex`**（`org.h2.index`，298 行，13 个公开方法）
+### 8.3.2.4 `LinkedIndex`
+
+`LinkedIndex` 位于 `org.h2.index`，298 行、13 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 7%，包级依赖 8 个。
 
-**`RegularQueryExpressionIndex`**（`org.h2.index`，223 行，4 个公开方法）
+### 8.3.2.5 `RegularQueryExpressionIndex`
+
+`RegularQueryExpressionIndex` 位于 `org.h2.index`，223 行、4 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
 
-**`IndexType`**（`org.h2.index`，222 行，16 个公开方法）
+### 8.3.2.6 `IndexType`
+
+`IndexType` 位于 `org.h2.index`，222 行、16 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
@@ -2128,11 +2238,11 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 8.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.index` 与 `org.h2.index` 之间的调用方向？
-- `Index` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.index` 的调用链讲到落盘或返回？
-- `org.h2.index` 与 `org.h2.index` 若合并，会丢掉哪个扩展点？
-- `org.h2.index` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.index` 与 `org.h2.index` 的调用方向？`Index` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.index` 的调用链讲到落盘或返回，并说清 `org.h2.index` 与 `org.h2.index` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.index` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 8.12 延展阅读
 
@@ -2252,82 +2362,114 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`ToCharFunction`**（`org.h2.expression.function`，1,156 行，8 个公开方法）
+### 9.3.2.1 `ToCharFunction`
+
+`ToCharFunction` 位于 `org.h2.expression.function`，1,156 行、8 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 12%，包级依赖 8 个。
 
-**`DateTimeFunction`**（`org.h2.expression.function`，1,081 行，7 个公开方法）
+### 9.3.2.2 `DateTimeFunction`
+
+`DateTimeFunction` 位于 `org.h2.expression.function`，1,081 行、7 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 11%，包级依赖 8 个。
 
-**`BitFunction`**（`org.h2.expression.function`，730 行，5 个公开方法）
+### 9.3.2.3 `BitFunction`
+
+`BitFunction` 位于 `org.h2.expression.function`，730 行、5 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 8 个。
 
-**`MathFunction`**（`org.h2.expression.function`，405 行，3 个公开方法）
+### 9.3.2.4 `MathFunction`
+
+`MathFunction` 位于 `org.h2.expression.function`，405 行、3 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 4%，包级依赖 8 个。
 
-**`AlterTableAlterColumn`**（`org.h2.command.ddl`，734 行，17 个公开方法）
+### 9.3.2.5 `AlterTableAlterColumn`
+
+`AlterTableAlterColumn` 位于 `org.h2.command.ddl`，734 行、17 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 10%，包级依赖 8 个。
 
-**`AlterTableAddConstraint`**（`org.h2.command.ddl`，520 行，18 个公开方法）
+### 9.3.2.6 `AlterTableAddConstraint`
+
+`AlterTableAddConstraint` 位于 `org.h2.command.ddl`，520 行、18 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 7%，包级依赖 8 个。
 
-**`SequenceOptions`**（`org.h2.command.ddl`，363 行，18 个公开方法）
+### 9.3.2.7 `SequenceOptions`
+
+`SequenceOptions` 位于 `org.h2.command.ddl`，363 行、18 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
 
-**`CreateTable`**（`org.h2.command.ddl`，275 行，17 个公开方法）
+### 9.3.2.8 `CreateTable`
+
+`CreateTable` 位于 `org.h2.command.ddl`，275 行、17 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 4%，包级依赖 8 个。
 
-**`ExpressionColumn`**（`org.h2.expression`，553 行，23 个公开方法）
+### 9.3.2.9 `ExpressionColumn`
+
+`ExpressionColumn` 位于 `org.h2.expression`，553 行、23 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 8 个。
 
-**`Expression`**（`org.h2.expression`，551 行，41 个公开方法）
+### 9.3.2.10 `Expression`
+
+`Expression` 位于 `org.h2.expression`，551 行、41 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 8 个。
 
-**`BinaryOperation`**（`org.h2.expression`，455 行，6 个公开方法）
+### 9.3.2.11 `BinaryOperation`
+
+`BinaryOperation` 位于 `org.h2.expression`，455 行、6 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 8 个。
 
-**`ExpressionVisitor`**（`org.h2.expression`，417 行，17 个公开方法）
+### 9.3.2.12 `ExpressionVisitor`
+
+`ExpressionVisitor` 位于 `org.h2.expression`，417 行、17 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 7%，包级依赖 8 个。
 
-**`ScriptCommand`**（`org.h2.command.dml`，858 行，23 个公开方法）
+### 9.3.2.13 `ScriptCommand`
+
+`ScriptCommand` 位于 `org.h2.command.dml`，858 行、23 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 15%，包级依赖 8 个。
 
-**`Set`**（`org.h2.command.dml`，652 行，9 个公开方法）
+### 9.3.2.14 `Set`
+
+`Set` 位于 `org.h2.command.dml`，652 行、9 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 11%，包级依赖 8 个。
 
-**`MergeUsing`**（`org.h2.command.dml`，598 行，20 个公开方法）
+### 9.3.2.15 `MergeUsing`
+
+`MergeUsing` 位于 `org.h2.command.dml`，598 行、20 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 10%，包级依赖 8 个。
 
-**`SetClauseList`**（`org.h2.command.dml`，507 行，3 个公开方法）
+### 9.3.2.16 `SetClauseList`
+
+`SetClauseList` 位于 `org.h2.command.dml`，507 行、3 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 8 个。
@@ -2477,11 +2619,11 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 9.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.expression.function` 与 `org.h2.command.ddl` 之间的调用方向？
-- `ToCharFunction` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.expression.function` 的调用链讲到落盘或返回？
-- `org.h2.expression.function` 与 `org.h2.command.ddl` 若合并，会丢掉哪个扩展点？
-- `org.h2.expression.function` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.expression.function` 与 `org.h2.command.ddl` 的调用方向？`ToCharFunction` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.expression.function` 的调用链讲到落盘或返回，并说清 `org.h2.expression.function` 与 `org.h2.command.ddl` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.expression.function` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 9.12 延展阅读
 
@@ -2563,62 +2705,86 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`InformationSchemaTable`**（`org.h2.table`，3,299 行，6 个公开方法）
+### 10.3.2.1 `InformationSchemaTable`
+
+`InformationSchemaTable` 位于 `org.h2.table`，3,299 行、6 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 25%，包级依赖 8 个。
 
-**`InformationSchemaTableLegacy`**（`org.h2.table`，2,324 行，2 个公开方法）
+### 10.3.2.2 `InformationSchemaTableLegacy`
+
+`InformationSchemaTableLegacy` 位于 `org.h2.table`，2,324 行、2 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 17%，包级依赖 8 个。
 
-**`Table`**（`org.h2.table`，1,446 行，98 个公开方法）
+### 10.3.2.3 `Table`
+
+`Table` 位于 `org.h2.table`，1,446 行、98 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 11%，包级依赖 8 个。
 
-**`TableFilter`**（`org.h2.table`，1,310 行，66 个公开方法）
+### 10.3.2.4 `TableFilter`
+
+`TableFilter` 位于 `org.h2.table`，1,310 行、66 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 10%，包级依赖 8 个。
 
-**`Column`**（`org.h2.table`，867 行，58 个公开方法）
+### 10.3.2.5 `Column`
+
+`Column` 位于 `org.h2.table`，867 行、58 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 8 个。
 
-**`TableLink`**（`org.h2.table`，718 行，35 个公开方法）
+### 10.3.2.6 `TableLink`
+
+`TableLink` 位于 `org.h2.table`，718 行、35 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
 
-**`WindowFrame`**（`org.h2.expression.analysis`，878 行，19 个公开方法）
+### 10.3.2.7 `WindowFrame`
+
+`WindowFrame` 位于 `org.h2.expression.analysis`，878 行、19 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 31%，包级依赖 8 个。
 
-**`DataAnalysisOperation`**（`org.h2.expression.analysis`，546 行，9 个公开方法）
+### 10.3.2.8 `DataAnalysisOperation`
+
+`DataAnalysisOperation` 位于 `org.h2.expression.analysis`，546 行、9 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 19%，包级依赖 8 个。
 
-**`WindowFunction`**（`org.h2.expression.analysis`，545 行，12 个公开方法）
+### 10.3.2.9 `WindowFunction`
+
+`WindowFunction` 位于 `org.h2.expression.analysis`，545 行、12 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 19%，包级依赖 8 个。
 
-**`Window`**（`org.h2.expression.analysis`，339 行，11 个公开方法）
+### 10.3.2.10 `Window`
+
+`Window` 位于 `org.h2.expression.analysis`，339 行、11 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 12%，包级依赖 8 个。
 
-**`WindowFrameBound`**（`org.h2.expression.analysis`，165 行，6 个公开方法）
+### 10.3.2.11 `WindowFrameBound`
+
+`WindowFrameBound` 位于 `org.h2.expression.analysis`，165 行、6 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 8 个。
 
-**`WindowFunctionType`**（`org.h2.expression.analysis`，142 行，3 个公开方法）
+### 10.3.2.12 `WindowFunctionType`
+
+`WindowFunctionType` 位于 `org.h2.expression.analysis`，142 行、3 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
@@ -2756,11 +2922,11 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 10.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.table` 与 `org.h2.expression.analysis` 之间的调用方向？
-- `InformationSchemaTable` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.table` 的调用链讲到落盘或返回？
-- `org.h2.table` 与 `org.h2.expression.analysis` 若合并，会丢掉哪个扩展点？
-- `org.h2.table` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.table` 与 `org.h2.expression.analysis` 的调用方向？`InformationSchemaTable` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.table` 的调用链讲到落盘或返回，并说清 `org.h2.table` 与 `org.h2.expression.analysis` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.table` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 10.12 延展阅读
 
@@ -2842,62 +3008,86 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`StringUtils`**（`org.h2.util`，1,415 行，55 个公开方法）
+### 11.3.2.1 `StringUtils`
+
+`StringUtils` 位于 `org.h2.util`，1,415 行、55 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 10%，包级依赖 8 个。
 
-**`DateTimeUtils`**（`org.h2.util`，1,171 行，42 个公开方法）
+### 11.3.2.2 `DateTimeUtils`
+
+`DateTimeUtils` 位于 `org.h2.util`，1,171 行、42 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 8 个。
 
-**`DateTimeTemplate`**（`org.h2.util`，859 行，5 个公开方法）
+### 11.3.2.3 `DateTimeTemplate`
+
+`DateTimeTemplate` 位于 `org.h2.util`，859 行、5 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 8 个。
 
-**`IntervalUtils`**（`org.h2.util`，857 行，12 个公开方法）
+### 11.3.2.4 `IntervalUtils`
+
+`IntervalUtils` 位于 `org.h2.util`，857 行、12 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 8 个。
 
-**`Utils`**（`org.h2.util`，832 行，34 个公开方法）
+### 11.3.2.5 `Utils`
+
+`Utils` 位于 `org.h2.util`，832 行、34 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 8 个。
 
-**`JdbcUtils`**（`org.h2.util`，785 行，17 个公开方法）
+### 11.3.2.6 `JdbcUtils`
+
+`JdbcUtils` 位于 `org.h2.util`，785 行、17 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
 
-**`FileLock`**（`org.h2.store`，514 行，8 个公开方法）
+### 11.3.2.7 `FileLock`
+
+`FileLock` 位于 `org.h2.store`，514 行、8 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 19%，包级依赖 8 个。
 
-**`FileStore`**（`org.h2.store`，513 行，22 个公开方法）
+### 11.3.2.8 `FileStore`
+
+`FileStore` 位于 `org.h2.store`，513 行、22 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 19%，包级依赖 8 个。
 
-**`Data`**（`org.h2.store`，220 行，13 个公开方法）
+### 11.3.2.9 `Data`
+
+`Data` 位于 `org.h2.store`，220 行、13 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 8 个。
 
-**`RecoverTester`**（`org.h2.store`，176 行，3 个公开方法）
+### 11.3.2.10 `RecoverTester`
+
+`RecoverTester` 位于 `org.h2.store`，176 行、3 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 8 个。
 
-**`FileStoreInputStream`**（`org.h2.store`，155 行，5 个公开方法）
+### 11.3.2.11 `FileStoreInputStream`
+
+`FileStoreInputStream` 位于 `org.h2.store`，155 行、5 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 8 个。
 
-**`DataReader`**（`org.h2.store`，133 行，5 个公开方法）
+### 11.3.2.12 `DataReader`
+
+`DataReader` 位于 `org.h2.store`，133 行、5 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
@@ -3035,11 +3225,11 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 11.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.util` 与 `org.h2.store` 之间的调用方向？
-- `StringUtils` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.util` 的调用链讲到落盘或返回？
-- `org.h2.util` 与 `org.h2.store` 若合并，会丢掉哪个扩展点？
-- `org.h2.util` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.util` 与 `org.h2.store` 的调用方向？`StringUtils` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.util` 的调用链讲到落盘或返回，并说清 `org.h2.util` 与 `org.h2.store` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.util` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 11.12 延展阅读
 
@@ -3097,32 +3287,44 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`FileUtils`**（`org.h2.store.fs`，477 行，29 个公开方法）
+### 12.3.2.1 `FileUtils`
+
+`FileUtils` 位于 `org.h2.store.fs`，477 行、29 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 36%，包级依赖 2 个。
 
-**`FilePath`**（`org.h2.store.fs`，353 行，28 个公开方法）
+### 12.3.2.2 `FilePath`
+
+`FilePath` 位于 `org.h2.store.fs`，353 行、28 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 26%，包级依赖 2 个。
 
-**`FilePathWrapper`**（`org.h2.store.fs`，171 行，22 个公开方法）
+### 12.3.2.3 `FilePathWrapper`
+
+`FilePathWrapper` 位于 `org.h2.store.fs`，171 行、22 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 13%，包级依赖 2 个。
 
-**`FakeFileChannel`**（`org.h2.store.fs`，112 行，16 个公开方法）
+### 12.3.2.4 `FakeFileChannel`
+
+`FakeFileChannel` 位于 `org.h2.store.fs`，112 行、16 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 2 个。
 
-**`FileBase`**（`org.h2.store.fs`，92 行，10 个公开方法）
+### 12.3.2.5 `FileBase`
+
+`FileBase` 位于 `org.h2.store.fs`，92 行、10 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 7%，包级依赖 2 个。
 
-**`FileBaseDefault`**（`org.h2.store.fs`，69 行，5 个公开方法）
+### 12.3.2.6 `FileBaseDefault`
+
+`FileBaseDefault` 位于 `org.h2.store.fs`，69 行、5 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 2 个。
@@ -3250,11 +3452,11 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 12.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.store.fs` 与 `org.h2.store.fs` 之间的调用方向？
-- `FileUtils` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.store.fs` 的调用链讲到落盘或返回？
-- `org.h2.store.fs` 与 `org.h2.store.fs` 若合并，会丢掉哪个扩展点？
-- `org.h2.store.fs` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.store.fs` 与 `org.h2.store.fs` 的调用方向？`FileUtils` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.store.fs` 的调用链讲到落盘或返回，并说清 `org.h2.store.fs` 与 `org.h2.store.fs` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.store.fs` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 12.12 跨章索引
 
@@ -3323,32 +3525,44 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`JdbcResultSet`**（`org.h2.jdbc`，4,291 行，199 个公开方法）
+### 13.3.2.1 `JdbcResultSet`
+
+`JdbcResultSet` 位于 `org.h2.jdbc`，4,291 行、199 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 25%，包级依赖 8 个。
 
-**`JdbcDatabaseMetaData`**（`org.h2.jdbc`，2,756 行，177 个公开方法）
+### 13.3.2.2 `JdbcDatabaseMetaData`
+
+`JdbcDatabaseMetaData` 位于 `org.h2.jdbc`，2,756 行、177 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 16%，包级依赖 8 个。
 
-**`JdbcConnection`**（`org.h2.jdbc`，1,930 行，62 个公开方法）
+### 13.3.2.3 `JdbcConnection`
+
+`JdbcConnection` 位于 `org.h2.jdbc`，1,930 行、62 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 11%，包级依赖 8 个。
 
-**`JdbcCallableStatement`**（`org.h2.jdbc`，1,863 行，117 个公开方法）
+### 13.3.2.4 `JdbcCallableStatement`
+
+`JdbcCallableStatement` 位于 `org.h2.jdbc`，1,863 行、117 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 11%，包级依赖 8 个。
 
-**`JdbcPreparedStatement`**（`org.h2.jdbc`，1,629 行，65 个公开方法）
+### 13.3.2.5 `JdbcPreparedStatement`
+
+`JdbcPreparedStatement` 位于 `org.h2.jdbc`，1,629 行、65 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 8 个。
 
-**`JdbcStatement`**（`org.h2.jdbc`，1,502 行，56 个公开方法）
+### 13.3.2.6 `JdbcStatement`
+
+`JdbcStatement` 位于 `org.h2.jdbc`，1,502 行、56 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 8 个。
@@ -3474,11 +3688,11 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 13.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.jdbc` 与 `org.h2.jdbc` 之间的调用方向？
-- `JdbcResultSet` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.jdbc` 的调用链讲到落盘或返回？
-- `org.h2.jdbc` 与 `org.h2.jdbc` 若合并，会丢掉哪个扩展点？
-- `org.h2.jdbc` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.jdbc` 与 `org.h2.jdbc` 的调用方向？`JdbcResultSet` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.jdbc` 的调用链讲到落盘或返回，并说清 `org.h2.jdbc` 与 `org.h2.jdbc` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.jdbc` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 13.12 延展阅读
 
@@ -3536,32 +3750,44 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`SimpleResultSet`**（`org.h2.tools`，2,480 行，228 个公开方法）
+### 14.3.2.1 `SimpleResultSet`
+
+`SimpleResultSet` 位于 `org.h2.tools`，2,480 行、228 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 23%，包级依赖 8 个。
 
-**`Csv`**（`org.h2.tools`，986 行，33 个公开方法）
+### 14.3.2.2 `Csv`
+
+`Csv` 位于 `org.h2.tools`，986 行、33 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 8 个。
 
-**`Recover`**（`org.h2.tools`，922 行，18 个公开方法）
+### 14.3.2.3 `Recover`
+
+`Recover` 位于 `org.h2.tools`，922 行、18 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 8 个。
 
-**`Server`**（`org.h2.tools`，823 行，19 个公开方法）
+### 14.3.2.4 `Server`
+
+`Server` 位于 `org.h2.tools`，823 行、19 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 8 个。
 
-**`DirectRecover`**（`org.h2.tools`，767 行，11 个公开方法）
+### 14.3.2.5 `DirectRecover`
+
+`DirectRecover` 位于 `org.h2.tools`，767 行、11 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 7%，包级依赖 8 个。
 
-**`Shell`**（`org.h2.tools`，639 行，7 个公开方法）
+### 14.3.2.6 `Shell`
+
+`Shell` 位于 `org.h2.tools`，639 行、7 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 8 个。
@@ -3686,11 +3912,11 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 14.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.tools` 与 `org.h2.tools` 之间的调用方向？
-- `SimpleResultSet` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.tools` 的调用链讲到落盘或返回？
-- `org.h2.tools` 与 `org.h2.tools` 若合并，会丢掉哪个扩展点？
-- `org.h2.tools` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.tools` 与 `org.h2.tools` 的调用方向？`SimpleResultSet` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.tools` 的调用链讲到落盘或返回，并说清 `org.h2.tools` 与 `org.h2.tools` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.tools` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 14.12 跨章索引
 

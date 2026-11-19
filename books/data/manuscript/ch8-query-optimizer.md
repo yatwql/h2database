@@ -75,62 +75,86 @@
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`InformationSchemaTable`**（`org.h2.table`，3,299 行，6 个公开方法）
+### 10.3.2.1 `InformationSchemaTable`
+
+`InformationSchemaTable` 位于 `org.h2.table`，3,299 行、6 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 25%，包级依赖 8 个。
 
-**`InformationSchemaTableLegacy`**（`org.h2.table`，2,324 行，2 个公开方法）
+### 10.3.2.2 `InformationSchemaTableLegacy`
+
+`InformationSchemaTableLegacy` 位于 `org.h2.table`，2,324 行、2 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 17%，包级依赖 8 个。
 
-**`Table`**（`org.h2.table`，1,446 行，98 个公开方法）
+### 10.3.2.3 `Table`
+
+`Table` 位于 `org.h2.table`，1,446 行、98 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 11%，包级依赖 8 个。
 
-**`TableFilter`**（`org.h2.table`，1,310 行，66 个公开方法）
+### 10.3.2.4 `TableFilter`
+
+`TableFilter` 位于 `org.h2.table`，1,310 行、66 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 10%，包级依赖 8 个。
 
-**`Column`**（`org.h2.table`，867 行，58 个公开方法）
+### 10.3.2.5 `Column`
+
+`Column` 位于 `org.h2.table`，867 行、58 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 8 个。
 
-**`TableLink`**（`org.h2.table`，718 行，35 个公开方法）
+### 10.3.2.6 `TableLink`
+
+`TableLink` 位于 `org.h2.table`，718 行、35 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
 
-**`WindowFrame`**（`org.h2.expression.analysis`，878 行，19 个公开方法）
+### 10.3.2.7 `WindowFrame`
+
+`WindowFrame` 位于 `org.h2.expression.analysis`，878 行、19 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 31%，包级依赖 8 个。
 
-**`DataAnalysisOperation`**（`org.h2.expression.analysis`，546 行，9 个公开方法）
+### 10.3.2.8 `DataAnalysisOperation`
+
+`DataAnalysisOperation` 位于 `org.h2.expression.analysis`，546 行、9 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 19%，包级依赖 8 个。
 
-**`WindowFunction`**（`org.h2.expression.analysis`，545 行，12 个公开方法）
+### 10.3.2.9 `WindowFunction`
+
+`WindowFunction` 位于 `org.h2.expression.analysis`，545 行、12 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 19%，包级依赖 8 个。
 
-**`Window`**（`org.h2.expression.analysis`，339 行，11 个公开方法）
+### 10.3.2.10 `Window`
+
+`Window` 位于 `org.h2.expression.analysis`，339 行、11 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 12%，包级依赖 8 个。
 
-**`WindowFrameBound`**（`org.h2.expression.analysis`，165 行，6 个公开方法）
+### 10.3.2.11 `WindowFrameBound`
+
+`WindowFrameBound` 位于 `org.h2.expression.analysis`，165 行、6 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 6%，包级依赖 8 个。
 
-**`WindowFunctionType`**（`org.h2.expression.analysis`，142 行，3 个公开方法）
+### 10.3.2.12 `WindowFunctionType`
+
+`WindowFunctionType` 位于 `org.h2.expression.analysis`，142 行、3 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 5%，包级依赖 8 个。
@@ -268,11 +292,11 @@
 
 ## 10.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.table` 与 `org.h2.expression.analysis` 之间的调用方向？
-- `InformationSchemaTable` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.table` 的调用链讲到落盘或返回？
-- `org.h2.table` 与 `org.h2.expression.analysis` 若合并，会丢掉哪个扩展点？
-- `org.h2.table` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.table` 与 `org.h2.expression.analysis` 的调用方向？`InformationSchemaTable` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.table` 的调用链讲到落盘或返回，并说清 `org.h2.table` 与 `org.h2.expression.analysis` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.table` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 10.12 延展阅读
 

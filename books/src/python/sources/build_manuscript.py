@@ -176,10 +176,11 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         L += [f'## {cn}.3.2 逐类导读', '',
               ('按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，'
               '便于按需下钻。'), '']
-        for pkg, cls in guide:
+        for n, (pkg, cls) in enumerate(guide, start=1):
             deps = info_dep_count(pkgs_sorted[[p for p, _ in pkgs_sorted].index(pkg)][1])
-            L += [(f'**`{cls["name"]}`**（`{pkg}`，{cls["lines"]:,} 行，'
-                  f'{cls["public_methods"]} 个公开方法）'),
+            L += [f'### {cn}.3.2.{n} `{cls["name"]}`', '',
+                  (f'`{cls["name"]}` 位于 `{pkg}`，{cls["lines"]:,} 行、'
+                   f'{cls["public_methods"]} 个公开方法。'),
                   '',
                   (f'- 职责：{cls["summary"] or "按方法名与调用点归纳"}'),
                   (f'- 规模：占该包 {round(100 * cls["lines"] / max(1, pkgs_sorted[[p for p, _ in pkgs_sorted].index(pkg)][1]["lines"]))}%，'
@@ -301,11 +302,17 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         L += _table(['来源包', '目标包', '次数'], dep_detail) + ['']
 
     L += [f'## {cn}.{cn_summary + 2}.2 阅读检查清单', '',
-          f'- 不看正文，能否画出 `{top_pkg}` 与 `{second_pkg}` 之间的调用方向？',
-          f'- `{big["name"]}` 是否涉及并发？依据是锁、可见性还是不可变？',
-          f'- 能否用一个入口，把 `{top_pkg}` 的调用链讲到落盘或返回？',
-          f'- `{top_pkg}` 与 `{second_pkg}` 若合并，会丢掉哪个扩展点？',
-          f'- `{top_pkg}` 的注释与实现若不一致，你信哪一边，为什么？', '']
+          (f'读完本章，先自问三个问题。能否不看正文画出 `{top_pkg}` 与 '
+           f'`{second_pkg}` 的调用方向？`{big["name"]}` 是否涉及并发，'
+           '依据是锁、可见性还是不可变？'),
+          '',
+          (f'再进一步，能否用一个入口把 `{top_pkg}` 的调用链讲到落盘或返回，'
+           f'并说清 `{top_pkg}` 与 `{second_pkg}` 合并会丢掉哪个扩展点？'),
+          '',
+          (f'最后一条留给判断力：若 `{top_pkg}` 的注释与实现对不上，'
+           '你信哪一边，为什么？'),
+          '']
+
     L += cross_index_block(cn, list(packages), cn_summary + 3)
     L += [f'## {cn}.{cn_summary + 3} 延展阅读', '',
           (f'- 详见第{cross_num}章《{cross_name}》。'), '']

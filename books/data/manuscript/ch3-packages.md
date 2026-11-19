@@ -75,62 +75,86 @@
 
 按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-**`ErrorCode`**（`org.h2.api`，2,367 行，2 个公开方法）
+### 3.3.2.1 `ErrorCode`
+
+`ErrorCode` 位于 `org.h2.api`，2,367 行、2 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 57%，包级依赖 7 个。
 
-**`Interval`**（`org.h2.api`，636 行，33 个公开方法）
+### 3.3.2.2 `Interval`
+
+`Interval` 位于 `org.h2.api`，636 行、33 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 15%，包级依赖 7 个。
 
-**`IntervalQualifier`**（`org.h2.api`，353 行，13 个公开方法）
+### 3.3.2.3 `IntervalQualifier`
+
+`IntervalQualifier` 位于 `org.h2.api`，353 行、13 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 9%，包级依赖 7 个。
 
-**`H2Type`**（`org.h2.api`，322 行，6 个公开方法）
+### 3.3.2.4 `H2Type`
+
+`H2Type` 位于 `org.h2.api`，322 行、6 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 7 个。
 
-**`DatabaseEventListener`**（`org.h2.api`，113 行，0 个公开方法）
+### 3.3.2.5 `DatabaseEventListener`
+
+`DatabaseEventListener` 位于 `org.h2.api`，113 行、0 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 3%，包级依赖 7 个。
 
-**`Trigger`**（`org.h2.api`，105 行，0 个公开方法）
+### 3.3.2.6 `Trigger`
+
+`Trigger` 位于 `org.h2.api`，105 行、0 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 3%，包级依赖 7 个。
 
-**`Schema`**（`org.h2.schema`，848 行，51 个公开方法）
+### 3.3.2.7 `Schema`
+
+`Schema` 位于 `org.h2.schema`，848 行、51 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 26%，包级依赖 8 个。
 
-**`Sequence`**（`org.h2.schema`，586 行，25 个公开方法）
+### 3.3.2.8 `Sequence`
+
+`Sequence` 位于 `org.h2.schema`，586 行、25 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 18%，包级依赖 8 个。
 
-**`FunctionAlias`**（`org.h2.schema`，562 行，22 个公开方法）
+### 3.3.2.9 `FunctionAlias`
+
+`FunctionAlias` 位于 `org.h2.schema`，562 行、22 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 17%，包级依赖 8 个。
 
-**`TriggerObject`**（`org.h2.schema`，543 行，28 个公开方法）
+### 3.3.2.10 `TriggerObject`
+
+`TriggerObject` 位于 `org.h2.schema`，543 行、28 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 17%，包级依赖 8 个。
 
-**`Domain`**（`org.h2.schema`，241 行，22 个公开方法）
+### 3.3.2.11 `Domain`
+
+`Domain` 位于 `org.h2.schema`，241 行、22 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 8%，包级依赖 8 个。
 
-**`UserAggregate`**（`org.h2.schema`，120 行，9 个公开方法）
+### 3.3.2.12 `UserAggregate`
+
+`UserAggregate` 位于 `org.h2.schema`，120 行、9 个公开方法。
 
 - 职责：按方法名与调用点归纳
 - 规模：占该包 4%，包级依赖 8 个。
@@ -268,11 +292,11 @@
 
 ## 3.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.api` 与 `org.h2.schema` 之间的调用方向？
-- `ErrorCode` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.api` 的调用链讲到落盘或返回？
-- `org.h2.api` 与 `org.h2.schema` 若合并，会丢掉哪个扩展点？
-- `org.h2.api` 的注释与实现若不一致，你信哪一边，为什么？
+读完本章，先自问三个问题。能否不看正文画出 `org.h2.api` 与 `org.h2.schema` 的调用方向？`ErrorCode` 是否涉及并发，依据是锁、可见性还是不可变？
+
+再进一步，能否用一个入口把 `org.h2.api` 的调用链讲到落盘或返回，并说清 `org.h2.api` 与 `org.h2.schema` 合并会丢掉哪个扩展点？
+
+最后一条留给判断力：若 `org.h2.api` 的注释与实现对不上，你信哪一边，为什么？
 
 ## 3.12 延展阅读
 
