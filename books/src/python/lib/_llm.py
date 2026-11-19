@@ -105,14 +105,15 @@ def _mock(prompt: str, spec: dict, params: dict) -> str:
             f'{prompt.strip()[:80]} …（{params.get("max_tokens", 0)} tokens 预算）')
 
 
-def _post_json(url: str, payload: dict, api_key: str, timeout: float) -> dict:
+def _post_json(url: str, payload: dict, api_key: str, timeout: float,
+               headers: dict | None = None) -> dict:
     """POST JSON to an https endpoint and return the decoded response."""
     parts = urlsplit(url)
     if parts.scheme != 'https':
         raise LLMError(f'provider endpoint must be https: {url}')
     body = json.dumps(payload).encode('utf-8')
-    headers = {'Content-Type': 'application/json',
-               'Authorization': f'Bearer {api_key}'}
+    headers = dict(headers or {'Content-Type': 'application/json',
+                               'Authorization': f'Bearer {api_key}'})
     connection = http.client.HTTPSConnection(parts.hostname or '', parts.port or 443,
                                              timeout=timeout)
     try:
@@ -140,6 +141,17 @@ def key_file() -> dict:
     return data if isinstance(data, dict) else {}
 
 
+def _key_block(provider: str, spec: dict) -> dict:
+    """Credential block for a provider (``providers.<ref>`` in the key file)."""
+    data = key_file()
+    ref = spec.get('credentials_ref') or provider
+    block = (data.get('providers') or {}).get(ref)
+    if isinstance(block, dict):
+        return block
+    flat = data.get('keys') or {}
+    return {'api_key': flat.get(provider, '')} if flat else {}
+
+
 def _api_key(provider: str, spec: dict) -> str:
     """Environment variable first, then the gitignored key file."""
     env_name = spec.get('api_key_env')
@@ -147,8 +159,51 @@ def _api_key(provider: str, spec: dict) -> str:
         value = os.environ.get(env_name, '')
         if value:
             return value
-    keys = key_file().get('keys') or {}
-    return str(keys.get(provider, '') or '')
+    block = _key_block(provider, spec)
+    if block.get('api_key'):
+        return str(block['api_key'])
+    return str((key_file().get('keys') or {}).get(provider, '') or '')
+
+
+def _model_for(provider: str, spec: dict, override: str | None = None) -> str:
+    """Caller override, then the key-file block, then the first configured model."""
+    if override:
+        return override
+    block = _key_block(provider, spec)
+    if block.get('model'):
+        return str(block['model'])
+    models = spec.get('models') or ['']
+    return str(models[0] or '')
+
+
+def _complete_anthropic(prompt: str, provider: str, spec: dict, params: dict,
+                        model: str | None) -> str:
+    """Anthropic Messages API (``/v1/messages``) with x-api-key auth."""
+    api_key = _api_key(provider, spec)
+    if not api_key:
+        raise LLMError(f'provider {provider!r} has no key: set '
+                       f'${spec.get("api_key_env")} or add it to '
+                       f'data/config/llm_key.json')
+    payload = {
+        'model': _model_for(provider, spec, model),
+        'max_tokens': params.get('max_tokens', 2048),
+        'temperature': params.get('temperature', 0.3),
+        'messages': [{'role': 'user', 'content': prompt}],
+    }
+    headers = {'Content-Type': 'application/json',
+               'x-api-key': api_key,
+               'anthropic-version': spec.get('anthropic_version', '2023-06-01')}
+    data = _post_json(spec['base_url'].rstrip('/') + '/v1/messages', payload,
+                      api_key, float(params.get('timeout_s', 60)), headers=headers)
+    try:
+        blocks = data['content']
+        text = ''.join(part.get('text', '') for part in blocks
+                       if isinstance(part, dict) and part.get('type', 'text') == 'text')
+    except (KeyError, TypeError) as exc:
+        raise LLMError(f'unexpected provider response: {data!r}') from exc
+    if not text:
+        raise LLMError(f'provider returned no text: {data!r}')
+    return text
 
 
 def complete(prompt: str, scenario: str = 'chapter-draft',
@@ -162,6 +217,9 @@ def complete(prompt: str, scenario: str = 'chapter-draft',
     if kind == 'mock':
         return _mock(prompt, spec, params)
 
+    if kind == 'anthropic':
+        return _complete_anthropic(prompt, resolved['provider'], spec, params, model)
+
     api_key = _api_key(resolved['provider'], spec)
     if not api_key:
         hint = spec.get('api_key_env') or 'llm_key.json'
@@ -169,7 +227,7 @@ def complete(prompt: str, scenario: str = 'chapter-draft',
                        f'set ${spec.get("api_key_env")} or add it to '
                        f'data/config/llm_key.json ({hint})')
 
-    model_name = model or (spec.get('models') or [''])[0]
+    model_name = _model_for(resolved['provider'], spec, model)
     payload = {
         'model': model_name,
         'messages': [{'role': 'user', 'content': prompt}],
@@ -188,12 +246,18 @@ def complete(prompt: str, scenario: str = 'chapter-draft',
 def status() -> dict:
     """Non-secret summary for CLIs and the web UI."""
     cfg = providers()
-    keys = key_file().get('keys') or {}
+    data = key_file()
+    blocks = data.get('providers') or {}
+    flat_keys = data.get('keys') or {}
+    configured = sorted(name for name, block in blocks.items()
+                        if isinstance(block, dict) and block.get('api_key'))
+    configured += sorted(name for name, value in flat_keys.items()
+                         if value and name not in configured)
     return {
         'key_source': _config.key_file() if os.path.exists(_config.key_file()) else '',
         'default_provider': cfg.get('default_provider'),
         'providers': sorted(cfg.get('providers') or {}),
         'routing': cfg.get('routing') or {},
         'scenarios': sorted(settings().get('scenarios') or {}),
-        'keys_configured': sorted(name for name, value in keys.items() if value),
+        'keys_configured': configured,
     }

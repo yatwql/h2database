@@ -2,6 +2,7 @@
 """The suite must never touch the network: prove it, and prove the guard."""
 from __future__ import annotations
 
+import json
 import os
 import socket
 import sys
@@ -122,3 +123,90 @@ class LLMOfflineCase(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class AnthropicTransportCase(unittest.TestCase):
+    """The Anthropic-compatible chain: no sockets, payload and auth verified."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.llm = _fixture.load_module(self.root, '_llm')
+        key_path = os.path.join(self.root, 'data', 'config', 'llm_key.json')
+        os.makedirs(os.path.dirname(key_path), exist_ok=True)
+        with open(key_path, 'w', encoding='utf-8') as fh:
+            json.dump({'providers': {
+                'kimi-main': {'api_key': 'sk-test', 'model': 'kimi-k2.6',
+                              'endpoint': 'https://api.example.invalid/anthropic/v1/messages'}
+            }}, fh)
+        config = self.llm.providers()
+        config['providers']['kimi-main'] = {
+            'kind': 'anthropic',
+            'base_url': 'https://api.example.invalid/anthropic',
+            'credentials_ref': 'kimi-main',
+            'api_key_env': 'KIMI_MAIN_API_KEY',
+            'models': ['kimi-k2.6'],
+        }
+        config['default_provider'] = 'kimi-main'
+        for scenario in config.setdefault('routing', {}).setdefault('scenario', {}).values():
+            if isinstance(scenario, dict):
+                scenario['provider'] = 'kimi-main'
+        patch = mock.patch.object(self.llm, 'providers', return_value=config)
+        patch.start()
+        self.addCleanup(patch.stop)
+        os.environ.pop('KIMI_MAIN_API_KEY', None)
+
+    def fake_connection(self, status: int = 200, body: bytes = b'{}'):
+        calls = {}
+
+        class Response:
+            def read(self_):
+                return body
+
+        class Connection:
+            def __init__(self_, host, port, timeout=None):
+                calls['host'] = host
+
+            def request(self_, method, path, body=None, headers=None):
+                calls['method'] = method
+                calls['path'] = path
+                calls['headers'] = dict(headers or {})
+                calls['payload'] = json.loads(body or b'{}')
+
+            def getresponse(self_):
+                return Response()
+
+            def close(self_):
+                return None
+
+        return Connection, calls
+
+    def test_messages_request_shape_and_headers(self):
+        connection, calls = self.fake_connection(
+            body=json.dumps({'content': [{'type': 'text', 'text': '回答'}]}).encode())
+        with mock.patch.object(self.llm.http.client, 'HTTPSConnection', connection):
+            text = self.llm.complete('你好')
+        self.assertEqual(text, '回答')
+        self.assertTrue(calls['path'].endswith('/v1/messages'))
+        self.assertEqual(calls['headers']['x-api-key'], 'sk-test')
+        self.assertIn('anthropic-version', calls['headers'])
+        self.assertEqual(calls['payload']['model'], 'kimi-k2.6')
+        self.assertEqual(calls['payload']['messages'][0]['content'], '你好')
+
+    def test_missing_text_is_an_error(self):
+        connection, _calls = self.fake_connection(body=b'{"content": []}')
+        with mock.patch.object(self.llm.http.client, 'HTTPSConnection', connection), \
+                self.assertRaises(self.llm.LLMError):
+            self.llm.complete('hi')
+
+    def test_missing_key_names_both_sources(self):
+        os.remove(os.path.join(self.root, 'data', 'config', 'llm_key.json'))
+        with self.assertRaises(self.llm.LLMError) as ctx:
+            self.llm.complete('hi')
+        self.assertIn('llm_key.json', str(ctx.exception))
+
+    def test_status_reports_configured_providers_without_secrets(self):
+        status = self.llm.status()
+        self.assertIn('kimi-main', status['keys_configured'])
+        self.assertNotIn('sk-test', json.dumps(status, ensure_ascii=False))

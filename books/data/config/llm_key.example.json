@@ -1,8 +1,25 @@
 {
   "_note": "复制为 llm_key.json 并填入密钥；该文件被 .gitignore 忽略，绝不入库",
-  "keys": {
-    "openai": "",
-    "anthropic": "",
-    "deepseek": ""
+  "providers": {
+    "kimi-main": {
+      "api_key": "",
+      "model": "kimi-k2.6",
+      "endpoint": "https://api.moonshot.cn/anthropic/v1/messages"
+    },
+    "deepseek-main": {
+      "api_key": "",
+      "model": "deepseek-v4-flash",
+      "endpoint": "https://api.deepseek.com/anthropic/v1/messages"
+    },
+    "opencode-go": {
+      "api_key": "",
+      "model": "GLM-5.3-Flash",
+      "endpoint": "https://opencode.ai/zen/go/v1/messages"
+    },
+    "kimi-code": {
+      "api_key": "",
+      "model": "kimi-for-coding",
+      "endpoint": "https://api.kimi.com/coding/v1/messages"
+    }
   }
 }
