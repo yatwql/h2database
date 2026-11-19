@@ -1,39 +1,9 @@
-# Local gate runner (Windows), mirroring the CI tiers in .github/workflows/book.yml.
-#   .\check-fast.ps1        fast tier (~16s)
-#   .\check-full.ps1        every gate
-#   .\check-release.ps1     full + slow suite + artifacts
-param([ValidateSet('fast', 'full', 'release')][string]$Tier = 'fast')
-$ErrorActionPreference = 'Stop'
-
+# Local gate runner (Windows). Orchestration lives in check_runner.py.
+param(
+    [ValidateSet('p0', 'p1', 'p2', 'fast', 'full', 'release')][string]$Tier = 'p0',
+    [Parameter(ValueFromRemainingArguments = $true)][string[]]$Extra
+)
 $BookDir = Split-Path -Parent $PSScriptRoot
-$RepoDir = Split-Path -Parent $BookDir
 $Python = Join-Path $BookDir '.venv\Scripts\python.exe'
 if (-not (Test-Path $Python)) { $Python = 'python' }
-Set-Location $RepoDir
-
-$FastGates = 'architecture,script_contract,style_schema,llm_policy,versions,file_length'
-
-function Say($text) { Write-Host "`n== $text" -ForegroundColor Cyan }
-
-Say 'lint (ruff)'
-try { & $Python -m ruff check books/src/python books/src/test }
-catch { Write-Warning 'ruff not installed; run pip install -r requirements-dev.txt' }
-
-Say 'structural gates'
-& $Python books/src/python/make.py check --only $FastGates
-
-Say 'unit suite (fast tier)'
-& $Python books/src/python/make.py test --timings
-
-if ($Tier -ne 'fast') {
-    Say 'every gate'
-    & $Python books/src/python/make.py check --keep-going --timings
-    if ($Tier -eq 'release') {
-        Say 'slow suite (browser + pandoc)'
-        $env:BOOK_SLOW = '1'
-        & $Python books/src/python/make.py test --full --timings
-        Say 'deliver artifacts'
-        & $Python books/src/python/make.py deliver --timings
-    }
-}
-Say "$Tier tier passed"
+& $Python (Join-Path $BookDir 'src\python\check_runner.py') --mode $Tier @Extra

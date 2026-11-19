@@ -1,2 +1,2 @@
-# Convenience wrapper: the full tier of check.ps1
-& (Join-Path $PSScriptRoot "check.ps1") -Tier full @args
+# Convenience wrapper: full tier (p1) of check.ps1
+& (Join-Path $PSScriptRoot "check.ps1") -Tier p1 @args

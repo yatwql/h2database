@@ -26,11 +26,51 @@
 | `check-fast.sh` / `.ps1` | P0：ruff + 结构门禁 + 单元套件（约 16 秒），每次提交跑 |
 | `check-full.sh` / `.ps1` | P1：全部门禁（合入前跑） |
 | `check-release.sh` / `.ps1` | P2：完整档 + 慢档（chromium/pandoc）+ `make.py deliver` |
-| `check.sh` / `check.ps1` | 上面三档的引擎，`check.sh fast\|full\|release` |
+| `check.sh` / `check.ps1` | 档位入口：`check.sh p0\|p1\|p2`（也接受 fast/full/release），其余参数透传 |
+| `release.sh` / `.ps1` | 发布流程：`status` / `gate`（P2）/ `publish --title`（P2 + 写发布清单）/ `manifest` |
+| `install-hooks.sh` / `.ps1` | 把 `core.hooksPath` 指到仓库内的 `.githooks/`（pre-commit=P0，pre-push=P1） |
 | `eval-score.sh` / `.ps1` | 六维发布评分（功能/稳定/交互/代码/文档风格/文档质量），`--json` 出机读 |
 | `eval-coverage.sh` / `.ps1` | 覆盖率 + 棘轮（低于 `base.json [toolchain].coverage_fail_under` 失败） |
 
 全部支持 `PYTHON=/path/to/python` 覆盖解释器。
+
+### 档位编排器 `src/python/check_runner.py`
+
+`check.sh` 只是它的薄封装；本地与 CI 共用同一份编排。
+
+```bash
+python books/src/python/check_runner.py --mode p0            # 提交门禁（约 16 秒）
+python books/src/python/check_runner.py --mode p1 --json     # 合入门禁，机读输出
+python books/src/python/check_runner.py --mode p2 --only gates,tests
+python books/src/python/check_runner.py --mode p0 --skip slow --timeout 600
+```
+
+- 每次运行写 `books/logs/check-<模式>-<时间戳>.log` 与同名 `.json`，并刷新
+  `books/logs/check-latest.json`（失败可直接回看，不必重跑）
+- `.json` 里带 `machine` 段（python/平台/CPU/locale/仓库路径），排查"本机能过 CI 不能过"先看它
+- `--only` / `--skip` 选步骤，`--timeout` 是每步超时（默认 1800 秒，超时记为 124）
+
+### 发布 `src/python/release.py`
+
+```bash
+books/scripts/release.sh status                 # 三个版本 + 产物是否存在
+books/scripts/release.sh gate                   # 跑 P2 档
+books/scripts/release.sh publish --title "6.5"  # 干净树才允许；P2 通过后写发布清单
+books/scripts/release.sh manifest               # 按当前产物重写清单
+```
+
+发布清单写到 `books/dist/release-<文档版本>.json`：三个版本、commit、产物字节数与
+SHA-256。`publish` 只写清单并提示 `git tag`，不代替你打标签。
+
+### Git 钩子
+
+```bash
+books/scripts/install-hooks.sh     # core.hooksPath=.githooks
+```
+
+- `pre-commit` 跑 P0（约 16 秒），`pre-push` 跑 P1
+- 临时绕过：`git commit --no-verify` / `git push --no-verify`
+- 钩子里的档位与 `src/python/check_runner.py` 同源，由 `books/src/test/test_release_and_runner.py` 守住不漂移
 
 ## 3. 单入口 `src/python/make.py`
 

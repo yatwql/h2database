@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# P0 gate before every commit: lint + structural gates + unit suite (~16s).
+#
+# Installed by books/scripts/install-hooks.sh (git config core.hooksPath .githooks).
+# Bypass for a deliberate work-in-progress commit with: git commit --no-verify
+# The tier list is shared with CI (books/src/python/check_runner.py --mode p0).
+set -euo pipefail
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+RUNNER="$REPO_ROOT/books/src/python/check_runner.py"
+PYTHON="${PYTHON:-$REPO_ROOT/books/.venv/bin/python}"
+[ -x "$PYTHON" ] || PYTHON="$(command -v python3)"
+[ -f "$RUNNER" ] || { echo "pre-commit: runner not found, skipping" >&2; exit 0; }
+
+echo "pre-commit: P0 tier (fast) …"
+exec "$PYTHON" "$RUNNER" --mode p0
