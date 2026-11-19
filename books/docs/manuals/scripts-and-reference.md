@@ -23,9 +23,9 @@
 | `launch.sh` / `launch.ps1` | 交互入口：默认进 TUI，`launch.sh cli <action>` / `launch.sh web` 切渠道 |
 | `bootstrap.sh` / `bootstrap.ps1` | 建 `.venv`、装依赖、装 chromium（首次使用跑一次） |
 | `new-book.sh` / `.ps1` | 脚手架：生成新书（或翻译版）的四份文档侧配置 + 按目标语言派生的 `style.json` |
-| `check-fast.sh` / `.ps1` | 快速档：ruff + 结构门禁 + 单元套件（约 16 秒），每次提交跑 |
-| `check-full.sh` / `.ps1` | 完整档：全部门禁（合入前跑） |
-| `check-release.sh` / `.ps1` | 发布档：完整档 + 慢档（chromium/pandoc）+ `make.py deliver` |
+| `check-fast.sh` / `.ps1` | P0：ruff + 结构门禁 + 单元套件（约 16 秒），每次提交跑 |
+| `check-full.sh` / `.ps1` | P1：全部门禁（合入前跑） |
+| `check-release.sh` / `.ps1` | P2：完整档 + 慢档（chromium/pandoc）+ `make.py deliver` |
 | `check.sh` / `check.ps1` | 上面三档的引擎，`check.sh fast\|full\|release` |
 | `eval-score.sh` / `.ps1` | 六维发布评分（功能/稳定/交互/代码/文档风格/文档质量），`--json` 出机读 |
 | `eval-coverage.sh` / `.ps1` | 覆盖率 + 棘轮（低于 `base.json [toolchain].coverage_fail_under` 失败） |
@@ -38,7 +38,7 @@
 
 | 命令 | 内容 |
 | --- | --- |
-| `check` | 27 道门禁（只读，不写产物） |
+| `check` | 26 道门禁（只读，不写产物） |
 | `build` | `cover.py` → `merge.py` → `to_html.py` |
 | `verify` | `check` 的语义别名 |
 | `test` | 单元套件；`--full` 加慢档，`--timings` 出耗时 |
@@ -118,8 +118,7 @@
 | `check_architecture.py` | 分层、依赖矩阵、渠道纯净、命名、docstring | ● |
 | `script_contract.py` | 每个脚本的 docstring / `main()` / 退出码 / `--json` 契约 | ● |
 | `llm_policy.py` | LLM 只在允许的层与场景使用；密钥文件不入库 | ● |
-| `code_traces.py` | 代码注释里的过程/历史痕迹 | ● |
-| `doc_traces.py` | 文档里的过程/历史痕迹 | ● |
+| `traces.py` | 过程/历史痕迹：`--kind docs`（文档）、`--kind code`（代码注释）、`--kind all`（默认） | ● |
 | `doc_drift.py` | 文档提到的路径/脚本/章节是否仍存在 | ● |
 | `file_length.py` | 文件行数预算 | ● |
 | `gate_trace.py` | `testplan.md` 门禁表与 `make.py` 步骤双向可追溯 | ● |

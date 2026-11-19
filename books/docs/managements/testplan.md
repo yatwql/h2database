@@ -29,11 +29,11 @@ PDF 生成较慢；日常编辑只要求 `make.py check` + `make.py build` 通�
 
 同一套门禁按"什么时候跑"分三档，本地脚本与 CI 一致（`.github/workflows/book.yml`）：
 
-| 档 | 触发 | 内容 | 本地命令 |
+| 档（P 级） | 触发 | 内容 | 本地命令 |
 | --- | --- | --- | --- |
-| fast | 每次提交 / PR | ruff + 结构门禁（architecture、script_contract、style_schema、llm_policy、versions、file_length）+ 单元套件（约 16s） | `scripts/check-fast.sh` |
-| full | 合入 master / 发布前 | 全部门禁（`make.py check --keep-going`） | `scripts/check-full.sh` |
-| release | 打版本标签 | full + 慢档（chromium/pandoc）+ `make.py deliver` 出产物 | `scripts/check-release.sh` |
+| fast（P0） | 每次提交 / PR | ruff + 结构门禁（architecture、script_contract、style_schema、llm_policy、versions、file_length）+ 单元套件（约 16s） | `scripts/check-fast.sh` |
+| full（P1） | 合入 master / 发布前 | 全部门禁（`make.py check --keep-going`） | `scripts/check-full.sh` |
+| release（P2） | 打版本标签 | full + 慢档（chromium/pandoc）+ `make.py deliver` 出产物 | `scripts/check-release.sh` |
 
 度量类单独命名：`scripts/eval-score.sh`（六维评分）、`scripts/eval-coverage.sh`
 （覆盖率棘轮）。分档只决定"跑到哪一步"，判据本身不分档。
@@ -116,13 +116,53 @@ python books/src/python/structure.py --gate-level p0  # 仅 p0
 | 文档一致性 | 文档中引用的路径、脚本、章节名、版本号与仓库实际一致 | `audit/doc_drift.py` | P0 |
 | 网络隔离 | 测试全程零出站连接：`_netguard` 在 `_fixture` 导入时接管 socket，只允许回环；LLM 一律 mock（`mock` provider 或打桩 `_post_json`），Playwright 用假引擎 | `src/test/_netguard.py`、`src/test/test_no_network.py` | P0 |
 | 覆盖率 | 分支覆盖率不低于 `base.json [toolchain].coverage_fail_under`（当前 77） | `make.py cover` | P1 |
-| 历史痕迹 | 文档与代码注释只描述当前状态，不含过程性记录 | `audit/doc_traces.py`、`audit/code_traces.py` | P0 |
+| 历史痕迹 | 文档与代码注释只描述当前状态，不含过程性记录（`--kind docs\|code` 选范围） | `audit/traces.py` | P0 |
 | 多入口一致 | CLI/TUI/Web 三个渠道共用 `core/actions.py`，`status` 与 `llm-ask` 均可运行 | `books/src/test/test_llm.py` | P1 |
 | LLM 配置 | provider 路由按 章节>书籍>场景 优先级解析；密钥只读环境变量；默认 mock 离线可跑 | `books/src/test/test_llm.py`、`data/config/llm_*.json` | P1 |
 | 运行日志 | 日志写 `books/logs/`，按天回滚；级别 `BOOK_LOG_LEVEL` > 配置 > INFO；DEBUG 更详尽 | `books/src/test/test_logging.py` | P1 |
 | 工具链测试 | 单元 + 集成测试全绿（109 例）：`make.py test` | `books/src/test/` | P0 |
 
 `structure.py` 默认（`--gate-level p2`）必须达到全部检查通过。
+
+## 2.3 一道门禁一个目的
+
+每道门禁只回答一个问题；出现第二个问题时拆新门禁，不叠加。`gate_trace.py`
+校验"`make.py` 里的步骤 ↔ 本节"双向一致。
+
+| 门禁 | 唯一目的 | 相邻门禁的分界 |
+| --- | --- | --- |
+| `structure.py` | 章节结构与图号/围栏/标题层级是否成立 | 只管"骨架"，不管文字好坏 |
+| `links.py` | 链接与锚点能否解析 | 只验可达性，不验内容 |
+| `crossrefs.py` | `详见第X章《…》` 是否指向真实章节 | 只验跨章引用，不验链接语法 |
+| `doc_drift.py` | 文档提到的路径/脚本/章节是否仍存在 | 只验"引用对象存在"，不验可达性 |
+| `index_xrefs.py` | 索引条目/see-also 是否指回真实位置 | 只针对索引文件 |
+| `captions.py` | 图注句式（动词开头、长度、含糊后缀） | 只管图注文字 |
+| `figures.py` | 图号格式与正文引用是否配对 | 只管编号与引用计数 |
+| `figure_clusters.py` | 图簇是否需要桥接句 | 只管多图成组的可读性 |
+| `diagrams.py` | ASCII 图宽度与边框闭合 | 只管 ```text 图块 |
+| `smart.py` | 图表覆盖密度（每章是否有足够图示） | 只出覆盖率，不评判单图 |
+| `exercises.py` | 延伸思考的数量/难度/提示/锚点 | 只管练习段 |
+| `style.py` | 写作硬规则（重复句、超长段、表格规模） | 只管结构化的文字规则 |
+| `style_rules.py` | `style.json [style_rules]` 的词表与排版规则 | 配置驱动，改词表不动代码 |
+| `style_schema.py` | `style.json` 结构是否合法、文档/配置是否混放 | 只验配置形状 |
+| `content_depth.py` | 内容深度（前向引用、术语覆盖、摘录新鲜度、练习指向） | 只管"读者能不能跟上" |
+| `source_refs.py` | 源码坐标与符号是否仍然有效 | 只验坐标，不验内容 |
+| `version_consistency.py` | 工具/源码/文档三版本一致 | 只管版本号 |
+| `check_architecture.py` | 分层、依赖矩阵、渠道纯净、命名、docstring | 只管结构约束 |
+| `script_contract.py` | 每个脚本的入口契约（docstring/main/退出码/`--json`） | 只管脚本外形 |
+| `llm_policy.py` | LLM 只允许出现在散文场景与允许的层；密钥文件不入库 | 只管 LLM 边界 |
+| `traces.py` | 文档与代码注释不得有过程痕迹（`--kind docs\|code\|all`） | 一个门禁两个范围，一个目的 |
+| `file_length.py` | 文件行数预算 | 只管规模 |
+| `gate_trace.py` | 门禁表与实现的双向可追溯 | 只管登记一致性 |
+| `typecheck.py` | pyright 静态类型检查 | 只管类型 |
+
+合并原则：目的相同且扫描面重叠 → 合并（`traces.py` 合并了原 `doc_traces` 与
+`code_traces`）；目的不同只是对象相近 → 保持独立（`captions`/`figures`/`diagrams`
+都看图，但判据互不重叠）。
+
+报告类（不是门禁，不进 `make.py check`，因此不写入上表）：六维计分卡（`make.py
+report` / `eval-score.sh`）、`balance` 的计量输出（`--json`），以及计分卡使用的
+文档风格度量（prose_quality，句长/列表/坐标密度），它出分不拦截。
 
 ## 3. 格式规范
 

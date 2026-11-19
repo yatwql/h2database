@@ -67,6 +67,8 @@ def main(argv: list[str] | None = None) -> int:
             problems.append(f'make.py gate "{name}" points at a missing script: {script}')
     for script in sorted(documented_paths):
         base = os.path.basename(script)
+        if base == 'make.py':
+            continue  # the runner names itself; it is not a gate
         if base not in present:
             problems.append(f'testplan.md names a missing script: {script}')
         elif base not in gate_basenames:

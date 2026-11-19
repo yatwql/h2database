@@ -25,7 +25,14 @@ cd "$REPO_DIR"
 
 FAST_GATES="architecture,script_contract,style_schema,llm_policy,versions,file_length"
 
-say() { printf '\n\033[1;36m== %s\033[0m\n' "$1"; }
+say() { printf '\n\033[1;36m== [%s] %s\033[0m\n' "$LEVEL" "$1"; }
+
+case "$TIER" in
+  fast) LEVEL=P0 ;;
+  full) LEVEL=P1 ;;
+  release) LEVEL=P2 ;;
+  *) LEVEL=P? ;;
+esac
 
 say "lint (ruff)"
 if "$PYTHON" -m ruff --version >/dev/null 2>&1; then
