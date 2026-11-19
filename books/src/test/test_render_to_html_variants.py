@@ -100,6 +100,23 @@ class ToHtmlVariantTest(unittest.TestCase):
         self.assertEqual(code, 0, out[-500:])
         self.assertIn('普通段落', html)
 
+    def test_cover_preamble_renders_author_tags_and_source_table(self):
+        preamble = (
+            '# 测试之书\n\n## 副标题\n\n'
+            '版本 v0.1 · 2026-01-01 · 100 行\n'
+            '深入剖析本书的全部实现细节。\n'
+            '共 12 章 + 5 附录 · 100 图\n\n'
+            '**作者：其·龙**\n**作者**: 其·龙\n\n'
+            '## 源代码信息\n\n'
+            '| 项目 | 值 |\n| --- | --- |\n| 版本 | 2.5.259 |\n\n')
+        merged = preamble + '\n# 第1章 测试\n\n正文。\n'
+        code, out, html = self.build(merged=merged)
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('class="author"', html)
+        self.assertIn('class="tags"', html)
+        self.assertIn('cover-info', html)
+        self.assertEqual(html.count('其·龙'), 1)  # the duplicate author line is deduped
+
     def test_headings_get_anchor_ids(self):
         _code, _out, html = self.build()
         self.assertRegex(html, r'<h1[^>]*id="')
