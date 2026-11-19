@@ -25,6 +25,8 @@ ACTIONS = {
     'test': '运行测试套件',
     'deliver': '构建 PDF 与 EPUB（按需）',
     'llm-ask': '用配置的 provider 回答一个问题',
+    'doctor': '依赖与环境自检',
+    'settings': '查看可修改的配置项',
 }
 
 
@@ -93,8 +95,23 @@ def llm_ask(prompt: str, scenario: str = 'summary') -> tuple[int, str]:
         return 2, f'error: {exc}\n'
 
 
+def doctor() -> tuple[int, str]:
+    return _make('doctor')
+
+
+def settings_table() -> tuple[int, str]:
+    """List the writable settings with their current values."""
+    from app import settings as settings_module
+    lines = [f"{'key':<14}{'value':<28}说明"]
+    for row in settings_module.list_settings():
+        lines.append(f"{row['key']:<14}{row['value']:<28}{row['description']}")
+    return 0, '\n'.join(lines) + '\n'
+
+
 DISPATCH = {
     'status': status,
+    'doctor': doctor,
+    'settings': settings_table,
     'analyze': analyze,
     'build': build,
     'check': check,

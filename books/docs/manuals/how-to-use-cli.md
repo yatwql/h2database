@@ -14,6 +14,8 @@ books/scripts/bk deliver             # PDF + EPUB
 books/scripts/bk llm "解释 MVCC"      # 用配置的 provider 回答
 books/scripts/bk make check --timings  # make.py 原样透传
 books/scripts/bk doctor              # 依赖与环境
+books/scripts/bk settings            # 列出可写配置项
+books/scripts/bk settings set dist out   # 改配置（写回配置文件并重载）
 ```
 
 等价的直接调用（CI/调试）：

@@ -303,12 +303,13 @@ try:
                 break
         if page_num is not None:
             cursor = page_num
-            parent = None
+            parent: Any = None
             for lvl in range(h['level'] - 1, 0, -1):
                 if lvl in outline_stack:
                     parent = outline_stack[lvl]
                     break
-            item = writer.add_outline_item(h['text'], page_num, parent=parent)
+            item = writer.add_outline_item(title=h['text'], page_number=page_num,
+                                          parent=parent)
             outline_stack[h['level']] = item
             found += 1
         else:

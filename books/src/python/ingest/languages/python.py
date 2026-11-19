@@ -30,22 +30,26 @@ class PythonAnalyzer(Analyzer):
         deps: dict[str, int] = {}
         lines = text.count('\n') + 1
         for node in tree.body:
+            rel = os.path.relpath(path)
             if isinstance(node, ast.ClassDef):
                 methods = [n.name for n in node.body
                            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
                            and not n.name.startswith('_')]
+                method_lines = {n.name: n.lineno for n in node.body
+                                if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
                 units.append(Unit(name=node.name, file=os.path.basename(path),
                                   lines=(getattr(node, 'end_lineno', node.lineno) - node.lineno + 1),
                                   public=not node.name.startswith('_'), kind='class',
                                   summary=first_sentence(ast.get_docstring(node) or ''),
-                                  api=methods))
+                                  api=methods, api_lines=method_lines, rel=rel))
             elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 if node.name.startswith('_'):
                     continue
                 units.append(Unit(name=node.name, file=os.path.basename(path),
                                   lines=(getattr(node, 'end_lineno', node.lineno) - node.lineno + 1),
                                   public=True, kind='function',
-                                  summary=first_sentence(ast.get_docstring(node) or '')))
+                                  summary=first_sentence(ast.get_docstring(node) or ''),
+                                  api_lines={node.name: node.lineno}, rel=rel))
             elif isinstance(node, ast.ImportFrom) and node.module:
                 head = node.module.split('.')[0]
                 deps[head] = deps.get(head, 0) + 1

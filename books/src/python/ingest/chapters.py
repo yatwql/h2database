@@ -145,13 +145,14 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
           tpl('api_intro',
               '下表把公开入口与源码位置对应起来，共 {rows} 条坐标。', **facts), '']
     rows = []
-    for pkg, info in pkgs_sorted:
+    for _pkg, info in pkgs_sorted:
         for cls in info['key_classes'][:3]:
-            rel = f"{pkg.replace('.', '/')}/{cls['name']}.java"
-            if not os.path.isfile(os.path.join(SOURCE_ROOT, rel)):
+            rel = cls.get('rel') or ''
+            api_lines = cls.get('api_lines') or {}
+            if not rel:
                 continue
-            for api in _api_sample(pkg, cls['name'])[:2]:
-                lineno = first_public_method_line(rel, api)
+            for api in cls.get('api', [])[:2]:
+                lineno = api_lines.get(api)
                 rows.append([f"`{cls['name']}.{api}()`",
                              f'`{rel}:{lineno}`' if lineno else f'`{rel}`'])
     L += _table(['入口', '源码坐标'], rows[:20] or [['`—`', '`org/h2/...`']]) + ['']
@@ -191,13 +192,14 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
                   ]
 
     coord_rows = []
-    for pkg, info in pkgs_sorted:
+    for _pkg, info in pkgs_sorted:
         for cls in (info.get('key_classes') or [])[:6]:
-            rel = f"{pkg.replace('.', '/')}/{cls['name']}.java"
-            if not os.path.isfile(os.path.join(SOURCE_ROOT, rel)):
+            rel = cls.get('rel') or ''
+            api_lines = cls.get('api_lines') or {}
+            if not rel:
                 continue
-            for api in _api_sample(pkg, cls['name'])[:6]:
-                lineno = first_public_method_line(rel, api)
+            for api in cls.get('api', [])[:6]:
+                lineno = api_lines.get(api)
                 if lineno:
                     coord_rows.append([f'`{cls["name"]}.{api}()`', f'`{rel}:{lineno}`'])
     if coord_rows:
@@ -448,13 +450,14 @@ def render_appendix(ch: dict) -> str:
         L += [('本附录不拥有源码包，内容以跨章引用为主；'
               '各包的实现细节见对应主责章节。'), '']
     rows = []
-    for pkg, info in pkgs:
+    for _pkg, info in pkgs:
         for cls in info['key_classes'][:4]:
-            rel = f"{pkg.replace('.', '/')}/{cls['name']}.java"
-            if not os.path.isfile(os.path.join(SOURCE_ROOT, rel)):
+            rel = cls.get('rel') or ''
+            api_lines = cls.get('api_lines') or {}
+            if not rel:
                 continue
-            for api in _api_sample(pkg, cls['name'])[:1]:
-                lineno = first_public_method_line(rel, api)
+            for api in cls.get('api', [])[:1]:
+                lineno = api_lines.get(api)
                 rows.append([f"`{cls['name']}.{api}()`",
                              f'`{rel}:{lineno}`' if lineno else f'`{rel}`'])
     L += _table(['入口', '源码坐标'], rows) + ['',

@@ -1,17 +1,17 @@
 # 第11章 持久化
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 3 个包、18,506 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 3 个包、18,539 行实现；读完应能说清这些包的职责边界与关键协作。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 ## 11.1 模块版图
 
-本章覆盖 2 个包、17,172 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 2 个包、17,194 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
-| `org.h2.util` | 48 | 14,460 | Internal utility classes. |
-| `org.h2.store` | 17 | 2,712 | Storage abstractions and helper classes. |
+| `org.h2.util` | 49 | 14,471 | （无包注释，按主类型归纳） |
+| `org.h2.store` | 18 | 2,723 | （无包注释，按主类型归纳） |
 
 ## 11.2 核心类型
 
@@ -41,18 +41,18 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `StringUtils.addAsterisk()` | `org/h2/util/StringUtils.java:283` |
-| `StringUtils.appendHex()` | `org/h2/util/StringUtils.java:1277` |
-| `DateTimeUtils.absoluteDayFromDateValue()` | `org/h2/util/DateTimeUtils.java:873` |
-| `DateTimeUtils.absoluteDayFromYear()` | `org/h2/util/DateTimeUtils.java:857` |
-| `DateTimeTemplate.format()` | `org/h2/util/DateTimeTemplate.java:178` |
-| `DateTimeTemplate.of()` | `org/h2/util/DateTimeTemplate.java:430` |
-| `FileLock.getFileLockMethod()` | `org/h2/store/FileLock.java:458` |
-| `FileLock.getUniqueId()` | `org/h2/store/FileLock.java:472` |
-| `FileStore.autoDelete()` | `org/h2/store/FileStore.java:429` |
-| `FileStore.close()` | `org/h2/store/FileStore.java:221` |
-| `Data.checkCapacity()` | `org/h2/store/Data.java:171` |
-| `Data.copyString()` | `org/h2/store/Data.java:204` |
+| `StringUtils.addAsterisk()` | `h2/src/main/org/h2/util/StringUtils.java:283` |
+| `StringUtils.appendHex()` | `h2/src/main/org/h2/util/StringUtils.java:1277` |
+| `DateTimeUtils.absoluteDayFromDateValue()` | `h2/src/main/org/h2/util/DateTimeUtils.java:873` |
+| `DateTimeUtils.absoluteDayFromYear()` | `h2/src/main/org/h2/util/DateTimeUtils.java:857` |
+| `DateTimeTemplate.format()` | `h2/src/main/org/h2/util/DateTimeTemplate.java:178` |
+| `DateTimeTemplate.of()` | `h2/src/main/org/h2/util/DateTimeTemplate.java:430` |
+| `FileLock.getFileLockMethod()` | `h2/src/main/org/h2/store/FileLock.java:458` |
+| `FileLock.getUniqueId()` | `h2/src/main/org/h2/store/FileLock.java:472` |
+| `FileStore.autoDelete()` | `h2/src/main/org/h2/store/FileStore.java:429` |
+| `FileStore.close()` | `h2/src/main/org/h2/store/FileStore.java:221` |
+| `Data.checkCapacity()` | `h2/src/main/org/h2/store/Data.java:171` |
+| `Data.copyString()` | `h2/src/main/org/h2/store/Data.java:204` |
 
 ## 11.3.1 公共类型清单
 
@@ -79,108 +79,108 @@
 
 `StringUtils` 位于 `org.h2.util`，1,415 行、55 个公开方法。它占该包实现的 10%，包内排名第 1。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（5 个），再决定是否顺带读同包的相邻类型。
 
 ### 11.3.2.2 `DateTimeUtils`
 
 `DateTimeUtils` 位于 `org.h2.util`，1,171 行、42 个公开方法。它占该包实现的 8%，包内排名第 2。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（5 个），再决定是否顺带读同包的相邻类型。
 
 ### 11.3.2.3 `DateTimeTemplate`
 
 `DateTimeTemplate` 位于 `org.h2.util`，859 行、5 个公开方法。它占该包实现的 6%，包内排名第 3。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（5 个），再决定是否顺带读同包的相邻类型。
 
 ### 11.3.2.4 `IntervalUtils`
 
 `IntervalUtils` 位于 `org.h2.util`，857 行、12 个公开方法。它占该包实现的 6%，包内排名第 4。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（5 个），再决定是否顺带读同包的相邻类型。
 
 ### 11.3.2.5 `Utils`
 
 `Utils` 位于 `org.h2.util`，832 行、34 个公开方法。它占该包实现的 6%，包内排名第 5。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（5 个），再决定是否顺带读同包的相邻类型。
 
 ### 11.3.2.6 `JdbcUtils`
 
 `JdbcUtils` 位于 `org.h2.util`，785 行、17 个公开方法。它占该包实现的 5%，包内排名第 6。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（5 个），再决定是否顺带读同包的相邻类型。
 
 ### 11.3.2.7 `FileLock`
 
 `FileLock` 位于 `org.h2.store`，514 行、8 个公开方法。它占该包实现的 19%，包内排名第 7。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（3 个），再决定是否顺带读同包的相邻类型。
 
 ### 11.3.2.8 `FileStore`
 
 `FileStore` 位于 `org.h2.store`，513 行、22 个公开方法。它占该包实现的 19%，包内排名第 8。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（3 个），再决定是否顺带读同包的相邻类型。
 
 ### 11.3.2.9 `Data`
 
 `Data` 位于 `org.h2.store`，220 行、13 个公开方法。它占该包实现的 8%，包内排名第 9。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（3 个），再决定是否顺带读同包的相邻类型。
 
 ### 11.3.2.10 `RecoverTester`
 
 `RecoverTester` 位于 `org.h2.store`，176 行、3 个公开方法。它占该包实现的 6%，包内排名第 10。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（3 个），再决定是否顺带读同包的相邻类型。
 
 ### 11.3.2.11 `FileStoreInputStream`
 
 `FileStoreInputStream` 位于 `org.h2.store`，155 行、5 个公开方法。它占该包实现的 6%，包内排名第 11。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（3 个），再决定是否顺带读同包的相邻类型。
 
 ### 11.3.2.12 `DataReader`
 
 `DataReader` 位于 `org.h2.store`，133 行、5 个公开方法。它占该包实现的 5%，包内排名第 12。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（3 个），再决定是否顺带读同包的相邻类型。
 
 ## 11.3.2 源码坐标明细
 
-本章主责包中 45 个公开入口的行号，按类聚簇，可直接跳转阅读。
+本章主责包中 62 个公开入口的行号，按类聚簇，可直接跳转阅读。
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `StringUtils.addAsterisk()` | `org/h2/util/StringUtils.java:283` |
-| `StringUtils.appendHex()` | `org/h2/util/StringUtils.java:1277` |
-| `StringUtils.appendToLength()` | `org/h2/util/StringUtils.java:1360` |
-| `StringUtils.appendTwoDigits()` | `org/h2/util/StringUtils.java:1327` |
-| `DateTimeUtils.absoluteDayFromDateValue()` | `org/h2/util/DateTimeUtils.java:873` |
-| `DateTimeUtils.absoluteDayFromYear()` | `org/h2/util/DateTimeUtils.java:857` |
-| `DateTimeUtils.appendDate()` | `org/h2/util/DateTimeUtils.java:981` |
-| `DateTimeUtils.appendTime()` | `org/h2/util/DateTimeUtils.java:1003` |
-| `DateTimeTemplate.format()` | `org/h2/util/DateTimeTemplate.java:178` |
-| `DateTimeTemplate.of()` | `org/h2/util/DateTimeTemplate.java:430` |
-| `DateTimeTemplate.parse()` | `org/h2/util/DateTimeTemplate.java:183` |
-| `IntervalUtils.appendInterval()` | `org/h2/util/IntervalUtils.java:402` |
-| `IntervalUtils.daysFromInterval()` | `org/h2/util/IntervalUtils.java:724` |
-| `IntervalUtils.hoursFromInterval()` | `org/h2/util/IntervalUtils.java:753` |
-| `IntervalUtils.intervalFromAbsolute()` | `org/h2/util/IntervalUtils.java:540` |
-| `Utils.callMethod()` | `org/h2/util/Utils.java:465` |
-| `Utils.callStaticMethod()` | `org/h2/util/Utils.java:446` |
-| `Utils.cloneByteArray()` | `org/h2/util/Utils.java:218` |
-| `Utils.collectGarbage()` | `org/h2/util/Utils.java:289` |
-| `JdbcUtils.addClassFactory()` | `org/h2/util/JdbcUtils.java:114` |
+| `StringUtils.addAsterisk()` | `h2/src/main/org/h2/util/StringUtils.java:283` |
+| `StringUtils.appendHex()` | `h2/src/main/org/h2/util/StringUtils.java:1277` |
+| `StringUtils.appendToLength()` | `h2/src/main/org/h2/util/StringUtils.java:1360` |
+| `StringUtils.appendTwoDigits()` | `h2/src/main/org/h2/util/StringUtils.java:1327` |
+| `StringUtils.appendZeroPadded()` | `h2/src/main/org/h2/util/StringUtils.java:1342` |
+| `StringUtils.arrayCombine()` | `h2/src/main/org/h2/util/StringUtils.java:525` |
+| `DateTimeUtils.absoluteDayFromDateValue()` | `h2/src/main/org/h2/util/DateTimeUtils.java:873` |
+| `DateTimeUtils.absoluteDayFromYear()` | `h2/src/main/org/h2/util/DateTimeUtils.java:857` |
+| `DateTimeUtils.appendDate()` | `h2/src/main/org/h2/util/DateTimeUtils.java:981` |
+| `DateTimeUtils.appendTime()` | `h2/src/main/org/h2/util/DateTimeUtils.java:1003` |
+| `DateTimeUtils.appendTimeZone()` | `h2/src/main/org/h2/util/DateTimeUtils.java:1063` |
+| `DateTimeUtils.convertScale()` | `h2/src/main/org/h2/util/DateTimeUtils.java:1123` |
+| `DateTimeTemplate.format()` | `h2/src/main/org/h2/util/DateTimeTemplate.java:178` |
+| `DateTimeTemplate.of()` | `h2/src/main/org/h2/util/DateTimeTemplate.java:430` |
+| `DateTimeTemplate.parse()` | `h2/src/main/org/h2/util/DateTimeTemplate.java:183` |
+| `IntervalUtils.appendInterval()` | `h2/src/main/org/h2/util/IntervalUtils.java:402` |
+| `IntervalUtils.daysFromInterval()` | `h2/src/main/org/h2/util/IntervalUtils.java:724` |
+| `IntervalUtils.hoursFromInterval()` | `h2/src/main/org/h2/util/IntervalUtils.java:753` |
+| `IntervalUtils.intervalFromAbsolute()` | `h2/src/main/org/h2/util/IntervalUtils.java:540` |
+| `IntervalUtils.intervalToAbsolute()` | `h2/src/main/org/h2/util/IntervalUtils.java:472` |
 
 ## 11.4 阅读路径
 
-读 `org.h2.util` 的 48 个文件时，先看骨架类，再沿 `org.h2.value` 方向下钻。
+读 `org.h2.util` 的 49 个文件时，先看骨架类，再沿 `org.h2` 方向下钻。
 
 1. 先读 `org.h2.util` 的 package-info 与 `StringUtils`，建立第11章的职责边界。
-2. 再读 `StringUtils` 的 55 个公开入口，确认它对 `org.h2.value` 的调用方向与加锁方式。
-3. 最后读 `org.h2.store`（本章最小包，2,712 行）的实现，关注容量与失败路径。
+2. 再读 `StringUtils` 的 55 个公开入口，确认它对 `org.h2` 的调用方向与加锁方式。
+3. 最后读 `org.h2.store`（本章最小包，2,723 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第12章《并发控制》。
 
@@ -190,31 +190,31 @@
 
 | 包 | 依赖（前 4） |
 | --- | --- |
-| `org.h2.util` | `org.h2.value`, `org.h2.engine`, `org.h2.message`, `org.h2.api` |
-| `org.h2.store` | `org.h2.engine`, `org.h2.util`, `org.h2.message`, `org.h2.value` |
+| `org.h2.util` | `org.h2`, `org.h2.util.DateTimeTemplate`, `org.h2.store`, `org.h2.mvstore` |
+| `org.h2.store` | `org.h2`, `org.h2.util`, `org.h2.store.fs` |
 
 ## 11.6 设计权衡
 
-`org.h2.util` 有 48 个文件、14,460 行。平均每文件 301 行。
+`org.h2.util` 有 49 个文件、14,471 行。平均每文件 295 行。
 
 其中 `StringUtils` 独占 1,415 行，55 个公开方法。规模集中，风险也集中。
 
-它对外声明 8 个 `org.h2` 依赖，最重的是 `org.h2.value`。依赖越集中，越说明它是被复用的底座。
+它对外声明 5 个 `org.h2` 依赖，最重的是 `org.h2`。依赖越集中，越说明它是被复用的底座。
 
-与 `org.h2.store`（2,712 行）的分工是本章最该记住的边界。前者偏实现，后者偏编排。合并会打散扩展点。
+与 `org.h2.store`（2,723 行）的分工是本章最该记住的边界。前者偏实现，后者偏编排。合并会打散扩展点。
 
 ## 11.7 常见误区
 
-把 `org.h2.util` 的行数当作复杂度上限是误读。`StringUtils` 之外还有 47 个文件，其中多为类型族与样板。
+把 `org.h2.util` 的行数当作复杂度上限是误读。`StringUtils` 之外还有 48 个文件，其中多为类型族与样板。
 
 只读 `StringUtils` 的签名而不看调用点，也会踩坑。真正的约束写在调用方的加锁顺序里。
 
-`org.h2.util` 与 `org.h2.store` 不能互换。前者 48 个文件，后者 17 个文件，扩展点分布完全不同。
+`org.h2.util` 与 `org.h2.store` 不能互换。前者 49 个文件，后者 18 个文件，扩展点分布完全不同。
 
 ## 11.8 深读要点
 
 规模信号：`org.h2.util` 占本章 84% 的实现行数，改动风险最高。
-耦合信号：`org.h2.util` 依赖 8 个 `org.h2` 包，其中 `org.h2.value` 出现最频繁。
+耦合信号：`org.h2.util` 依赖 5 个 `org.h2` 包，其中 `org.h2` 出现最频繁。
 入口信号：`StringUtils` 的公开方法 55 个，读它等于读本章的主干。
 
 ## 11.8 术语对照
@@ -243,7 +243,7 @@
 
 ## 11.9 本章小结
 
-- 本章覆盖 2 个包、17,172 行。
+- 本章覆盖 2 个包、17,194 行。
 - 关键入口与源码坐标见 §11.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -271,9 +271,9 @@
 
 ## 11.11 本章视角：演化与版本
 
-- 以「演化与版本」看 `org.h2.util`：48 个文件、14,460 行，本章只展开与演化与版本相关的入口。
-- 对照 `org.h2.store`（2,712 行）：两者的演化与版本策略不同，差异落在 `StringUtils` 的 55 个公开方法里。
-- 若演化与版本假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.value` 进入。
+- 以「演化与版本」看 `org.h2.util`：49 个文件、14,471 行，本章只展开与演化与版本相关的入口。
+- 对照 `org.h2.store`（2,723 行）：两者的演化与版本策略不同，差异落在 `StringUtils` 的 55 个公开方法里。
+- 若演化与版本假设被打破（5 个依赖变化），最先受影响的调用链从 `org.h2` 进入。
 
 ## 11.11.1 依赖明细
 
@@ -281,12 +281,12 @@
 
 | 来源包 | 目标包 | 次数 |
 | --- | --- | --- |
-| `org.h2.util` | `org.h2.value` | 35 |
-| `org.h2.util` | `org.h2.engine` | 18 |
-| `org.h2.util` | `org.h2.message` | 16 |
-| `org.h2.store` | `org.h2.engine` | 16 |
-| `org.h2.store` | `org.h2.util` | 14 |
-| `org.h2.store` | `org.h2.message` | 11 |
+| `org.h2.util` | `org.h2` | 89 |
+| `org.h2.util` | `org.h2.util.DateTimeTemplate` | 16 |
+| `org.h2.util` | `org.h2.store` | 5 |
+| `org.h2.store` | `org.h2` | 59 |
+| `org.h2.store` | `org.h2.util` | 1 |
+| `org.h2.store` | `org.h2.store.fs` | 1 |
 
 ## 11.11.2 阅读检查清单
 
@@ -304,11 +304,11 @@
 
 ## 12.1 模块版图
 
-本章覆盖 1 个包、1,334 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 1 个包、1,345 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
-| `org.h2.store.fs` | 7 | 1,334 | A file system abstraction. |
+| `org.h2.store.fs` | 8 | 1,345 | （无包注释，按主类型归纳） |
 
 ## 12.2 核心类型
 
@@ -329,12 +329,12 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `FileUtils.canWrite()` | `org/h2/store/fs/FileUtils.java:317` |
-| `FileUtils.createDirectories()` | `org/h2/store/fs/FileUtils.java:372` |
-| `FilePath.canWrite()` | `org/h2/store/fs/FilePath.java:201` |
-| `FilePath.createDirectory()` | `org/h2/store/fs/FilePath.java:206` |
-| `FilePathWrapper.canWrite()` | `org/h2/store/fs/FilePathWrapper.java:72` |
-| `FilePathWrapper.createDirectory()` | `org/h2/store/fs/FilePathWrapper.java:77` |
+| `FileUtils.canWrite()` | `h2/src/main/org/h2/store/fs/FileUtils.java:317` |
+| `FileUtils.createDirectories()` | `h2/src/main/org/h2/store/fs/FileUtils.java:372` |
+| `FilePath.canWrite()` | `h2/src/main/org/h2/store/fs/FilePath.java:201` |
+| `FilePath.createDirectory()` | `h2/src/main/org/h2/store/fs/FilePath.java:206` |
+| `FilePathWrapper.canWrite()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:72` |
+| `FilePathWrapper.createDirectory()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:77` |
 
 ## 12.3.1 公共类型清单
 
@@ -354,74 +354,74 @@
 
 ### 12.3.2.1 `FileUtils`
 
-`FileUtils` 位于 `org.h2.store.fs`，477 行、29 个公开方法。它占该包实现的 36%，包内排名第 1。
+`FileUtils` 位于 `org.h2.store.fs`，477 行、29 个公开方法。它占该包实现的 35%，包内排名第 1。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（1 个），再决定是否顺带读同包的相邻类型。
 
 ### 12.3.2.2 `FilePath`
 
 `FilePath` 位于 `org.h2.store.fs`，353 行、28 个公开方法。它占该包实现的 26%，包内排名第 2。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（1 个），再决定是否顺带读同包的相邻类型。
 
 ### 12.3.2.3 `FilePathWrapper`
 
 `FilePathWrapper` 位于 `org.h2.store.fs`，171 行、22 个公开方法。它占该包实现的 13%，包内排名第 3。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（1 个），再决定是否顺带读同包的相邻类型。
 
 ### 12.3.2.4 `FakeFileChannel`
 
 `FakeFileChannel` 位于 `org.h2.store.fs`，112 行、16 个公开方法。它占该包实现的 8%，包内排名第 4。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（1 个），再决定是否顺带读同包的相邻类型。
 
 ### 12.3.2.5 `FileBase`
 
 `FileBase` 位于 `org.h2.store.fs`，92 行、10 个公开方法。它占该包实现的 7%，包内排名第 5。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（1 个），再决定是否顺带读同包的相邻类型。
 
 ### 12.3.2.6 `FileBaseDefault`
 
 `FileBaseDefault` 位于 `org.h2.store.fs`，69 行、5 个公开方法。它占该包实现的 5%，包内排名第 6。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（1 个），再决定是否顺带读同包的相邻类型。
 
 ## 12.3.2 源码坐标明细
 
-本章主责包中 24 个公开入口的行号，按类聚簇，可直接跳转阅读。
+本章主责包中 34 个公开入口的行号，按类聚簇，可直接跳转阅读。
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `FileUtils.canWrite()` | `org/h2/store/fs/FileUtils.java:317` |
-| `FileUtils.createDirectories()` | `org/h2/store/fs/FileUtils.java:372` |
-| `FileUtils.createDirectory()` | `org/h2/store/fs/FileUtils.java:84` |
-| `FileUtils.createFile()` | `org/h2/store/fs/FileUtils.java:96` |
-| `FilePath.canWrite()` | `org/h2/store/fs/FilePath.java:201` |
-| `FilePath.createDirectory()` | `org/h2/store/fs/FilePath.java:206` |
-| `FilePath.createFile()` | `org/h2/store/fs/FilePath.java:132` |
-| `FilePath.createTempFile()` | `org/h2/store/fs/FilePath.java:284` |
-| `FilePathWrapper.canWrite()` | `org/h2/store/fs/FilePathWrapper.java:72` |
-| `FilePathWrapper.createDirectory()` | `org/h2/store/fs/FilePathWrapper.java:77` |
-| `FilePathWrapper.createFile()` | `org/h2/store/fs/FilePathWrapper.java:82` |
-| `FilePathWrapper.createTempFile()` | `org/h2/store/fs/FilePathWrapper.java:166` |
-| `FakeFileChannel.force()` | `org/h2/store/fs/FakeFileChannel.java:109` |
-| `FakeFileChannel.lock()` | `org/h2/store/fs/FakeFileChannel.java:34` |
-| `FakeFileChannel.map()` | `org/h2/store/fs/FakeFileChannel.java:39` |
-| `FakeFileChannel.position()` | `org/h2/store/fs/FakeFileChannel.java:44` |
-| `FileBase.force()` | `org/h2/store/fs/FileBase.java:42` |
-| `FileBase.lock()` | `org/h2/store/fs/FileBase.java:52` |
-| `FileBase.map()` | `org/h2/store/fs/FileBase.java:58` |
-| `FileBase.read()` | `org/h2/store/fs/FileBase.java:22` |
+| `FileUtils.canWrite()` | `h2/src/main/org/h2/store/fs/FileUtils.java:317` |
+| `FileUtils.createDirectories()` | `h2/src/main/org/h2/store/fs/FileUtils.java:372` |
+| `FileUtils.createDirectory()` | `h2/src/main/org/h2/store/fs/FileUtils.java:84` |
+| `FileUtils.createFile()` | `h2/src/main/org/h2/store/fs/FileUtils.java:96` |
+| `FileUtils.createTempFile()` | `h2/src/main/org/h2/store/fs/FileUtils.java:412` |
+| `FileUtils.delete()` | `h2/src/main/org/h2/store/fs/FileUtils.java:108` |
+| `FilePath.canWrite()` | `h2/src/main/org/h2/store/fs/FilePath.java:201` |
+| `FilePath.createDirectory()` | `h2/src/main/org/h2/store/fs/FilePath.java:206` |
+| `FilePath.createFile()` | `h2/src/main/org/h2/store/fs/FilePath.java:132` |
+| `FilePath.createTempFile()` | `h2/src/main/org/h2/store/fs/FilePath.java:284` |
+| `FilePath.delete()` | `h2/src/main/org/h2/store/fs/FilePath.java:145` |
+| `FilePath.exists()` | `h2/src/main/org/h2/store/fs/FilePath.java:139` |
+| `FilePathWrapper.canWrite()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:72` |
+| `FilePathWrapper.createDirectory()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:77` |
+| `FilePathWrapper.createFile()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:82` |
+| `FilePathWrapper.createTempFile()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:166` |
+| `FilePathWrapper.delete()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:87` |
+| `FilePathWrapper.exists()` | `h2/src/main/org/h2/store/fs/FilePathWrapper.java:92` |
+| `FakeFileChannel.force()` | `h2/src/main/org/h2/store/fs/FakeFileChannel.java:109` |
+| `FakeFileChannel.lock()` | `h2/src/main/org/h2/store/fs/FakeFileChannel.java:34` |
 
 ## 12.4 阅读路径
 
-读 `org.h2.store.fs` 的 7 个文件时，先看骨架类，再沿 `org.h2.util` 方向下钻。
+读 `org.h2.store.fs` 的 8 个文件时，先看骨架类，再沿 `org.h2` 方向下钻。
 
 1. 先读 `org.h2.store.fs` 的 package-info 与 `FileUtils`，建立第12章的职责边界。
-2. 再读 `FileUtils` 的 29 个公开入口，确认它对 `org.h2.util` 的调用方向与加锁方式。
-3. 最后读 `org.h2.store.fs`（本章最小包，1,334 行）的实现，关注容量与失败路径。
+2. 再读 `FileUtils` 的 29 个公开入口，确认它对 `org.h2` 的调用方向与加锁方式。
+3. 最后读 `org.h2.store.fs`（本章最小包，1,345 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第11章《持久化》。
 
@@ -431,30 +431,30 @@
 
 | 包 | 依赖（前 4） |
 | --- | --- |
-| `org.h2.store.fs` | `org.h2.util`, `org.h2.engine` |
+| `org.h2.store.fs` | `org.h2` |
 
 ## 12.6 设计权衡
 
-`org.h2.store.fs` 有 7 个文件、1,334 行。平均每文件 190 行。
+`org.h2.store.fs` 有 8 个文件、1,345 行。平均每文件 168 行。
 
 其中 `FileUtils` 独占 477 行，29 个公开方法。规模集中，风险也集中。
 
-它对外声明 2 个 `org.h2` 依赖，最重的是 `org.h2.util`。依赖越集中，越说明它是被复用的底座。
+它对外声明 1 个 `org.h2` 依赖，最重的是 `org.h2`。依赖越集中，越说明它是被复用的底座。
 
-与 `org.h2.store.fs`（1,334 行）的分工是本章最该记住的边界。前者偏实现，后者偏编排。合并会打散扩展点。
+与 `org.h2.store.fs`（1,345 行）的分工是本章最该记住的边界。前者偏实现，后者偏编排。合并会打散扩展点。
 
 ## 12.7 常见误区
 
-把 `org.h2.store.fs` 的行数当作复杂度上限是误读。`FileUtils` 之外还有 6 个文件，其中多为类型族与样板。
+把 `org.h2.store.fs` 的行数当作复杂度上限是误读。`FileUtils` 之外还有 7 个文件，其中多为类型族与样板。
 
 只读 `FileUtils` 的签名而不看调用点，也会踩坑。真正的约束写在调用方的加锁顺序里。
 
-`org.h2.store.fs` 与 `org.h2.store.fs` 不能互换。前者 7 个文件，后者 7 个文件，扩展点分布完全不同。
+`org.h2.store.fs` 与 `org.h2.store.fs` 不能互换。前者 8 个文件，后者 8 个文件，扩展点分布完全不同。
 
 ## 12.8 深读要点
 
 规模信号：`org.h2.store.fs` 占本章 100% 的实现行数，改动风险最高。
-耦合信号：`org.h2.store.fs` 依赖 2 个 `org.h2` 包，其中 `org.h2.util` 出现最频繁。
+耦合信号：`org.h2.store.fs` 依赖 1 个 `org.h2` 包，其中 `org.h2` 出现最频繁。
 入口信号：`FileUtils` 的公开方法 29 个，读它等于读本章的主干。
 
 ## 12.8 术语对照
@@ -478,7 +478,7 @@
 
 ## 12.9 本章小结
 
-- 本章覆盖 1 个包、1,334 行。
+- 本章覆盖 1 个包、1,345 行。
 - 关键入口与源码坐标见 §12.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -506,9 +506,9 @@
 
 ## 12.11 本章视角：性能与规模
 
-- 以「性能与规模」看 `org.h2.store.fs`：7 个文件、1,334 行，本章只展开与性能与规模相关的入口。
-- 对照 `org.h2.store.fs`（1,334 行）：两者的性能与规模策略不同，差异落在 `FileUtils` 的 29 个公开方法里。
-- 若性能与规模假设被打破（2 个依赖变化），最先受影响的调用链从 `org.h2.util` 进入。
+- 以「性能与规模」看 `org.h2.store.fs`：8 个文件、1,345 行，本章只展开与性能与规模相关的入口。
+- 对照 `org.h2.store.fs`（1,345 行）：两者的性能与规模策略不同，差异落在 `FileUtils` 的 29 个公开方法里。
+- 若性能与规模假设被打破（1 个依赖变化），最先受影响的调用链从 `org.h2` 进入。
 
 ## 12.11.1 依赖明细
 
@@ -516,8 +516,7 @@
 
 | 来源包 | 目标包 | 次数 |
 | --- | --- | --- |
-| `org.h2.store.fs` | `org.h2.util` | 1 |
-| `org.h2.store.fs` | `org.h2.engine` | 1 |
+| `org.h2.store.fs` | `org.h2` | 2 |
 
 ## 12.11.2 阅读检查清单
 

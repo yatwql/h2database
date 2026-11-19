@@ -35,9 +35,16 @@ class RustAnalyzer(Analyzer):
                 line.strip().lstrip('/').strip() for line in doc.group(1).split('\n')))
         names = ITEM_RE.findall(text) or ANY_ITEM_RE.findall(text)
         api = FN_RE.findall(text)
+        api_lines: dict[str, int] = {}
+        for lineno, line in enumerate(text.split('\n'), start=1):
+            match = FN_RE.match(line)
+            if match:
+                api_lines.setdefault(match.group(1), lineno)
+        rel = os.path.relpath(path)
         units = [Unit(name=name, file=os.path.basename(path), lines=lines,
                       public=bool(ITEM_RE.findall(text)), kind='item',
-                      summary=summary, api=api) for name in names[:1]]
+                      summary=summary, api=api, api_lines=api_lines, rel=rel)
+                 for name in names[:1]]
         deps: dict[str, int] = {}
         for target in USE_RE.findall(text):
             deps[target] = deps.get(target, 0) + 1

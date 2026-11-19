@@ -1,16 +1,16 @@
 # 第13章 二次开发指南
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、28,187 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、28,213 行实现；读完应能说清这些包的职责边界与关键协作。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 ## 13.1 模块版图
 
-本章覆盖 1 个包、17,319 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 1 个包、17,330 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
-| `org.h2.jdbc` | 27 | 17,319 | Implementation of the JDBC API (package { |
+| `org.h2.jdbc` | 28 | 17,330 | （无包注释，按主类型归纳） |
 
 ## 13.2 核心类型
 
@@ -31,12 +31,12 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `JdbcResultSet.absolute()` | `org/h2/jdbc/JdbcResultSet.java:3173` |
-| `JdbcResultSet.afterLast()` | `org/h2/jdbc/JdbcResultSet.java:3105` |
-| `JdbcDatabaseMetaData.allProceduresAreCallable()` | `org/h2/jdbc/JdbcDatabaseMetaData.java:305` |
-| `JdbcDatabaseMetaData.allTablesAreSelectable()` | `org/h2/jdbc/JdbcDatabaseMetaData.java:316` |
-| `JdbcConnection.abort()` | `org/h2/jdbc/JdbcConnection.java:1832` |
-| `JdbcConnection.clearWarnings()` | `org/h2/jdbc/JdbcConnection.java:655` |
+| `JdbcResultSet.absolute()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3173` |
+| `JdbcResultSet.afterLast()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3105` |
+| `JdbcDatabaseMetaData.allProceduresAreCallable()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:305` |
+| `JdbcDatabaseMetaData.allTablesAreSelectable()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:316` |
+| `JdbcConnection.abort()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:1832` |
+| `JdbcConnection.clearWarnings()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:655` |
 
 ## 13.3.1 公共类型清单
 
@@ -58,72 +58,72 @@
 
 `JdbcResultSet` 位于 `org.h2.jdbc`，4,291 行、199 个公开方法。它占该包实现的 25%，包内排名第 1。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
 
 ### 13.3.2.2 `JdbcDatabaseMetaData`
 
 `JdbcDatabaseMetaData` 位于 `org.h2.jdbc`，2,756 行、177 个公开方法。它占该包实现的 16%，包内排名第 2。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
 
 ### 13.3.2.3 `JdbcConnection`
 
 `JdbcConnection` 位于 `org.h2.jdbc`，1,930 行、62 个公开方法。它占该包实现的 11%，包内排名第 3。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
 
 ### 13.3.2.4 `JdbcCallableStatement`
 
 `JdbcCallableStatement` 位于 `org.h2.jdbc`，1,863 行、117 个公开方法。它占该包实现的 11%，包内排名第 4。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
 
 ### 13.3.2.5 `JdbcPreparedStatement`
 
 `JdbcPreparedStatement` 位于 `org.h2.jdbc`，1,629 行、65 个公开方法。它占该包实现的 9%，包内排名第 5。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
 
 ### 13.3.2.6 `JdbcStatement`
 
 `JdbcStatement` 位于 `org.h2.jdbc`，1,502 行、56 个公开方法。它占该包实现的 9%，包内排名第 6。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
 
 ## 13.3.2 源码坐标明细
 
-本章主责包中 24 个公开入口的行号，按类聚簇，可直接跳转阅读。
+本章主责包中 36 个公开入口的行号，按类聚簇，可直接跳转阅读。
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `JdbcResultSet.absolute()` | `org/h2/jdbc/JdbcResultSet.java:3173` |
-| `JdbcResultSet.afterLast()` | `org/h2/jdbc/JdbcResultSet.java:3105` |
-| `JdbcResultSet.beforeFirst()` | `org/h2/jdbc/JdbcResultSet.java:3086` |
-| `JdbcResultSet.cancelRowUpdates()` | `org/h2/jdbc/JdbcResultSet.java:3432` |
-| `JdbcDatabaseMetaData.allProceduresAreCallable()` | `org/h2/jdbc/JdbcDatabaseMetaData.java:305` |
-| `JdbcDatabaseMetaData.allTablesAreSelectable()` | `org/h2/jdbc/JdbcDatabaseMetaData.java:316` |
-| `JdbcDatabaseMetaData.autoCommitFailureClosesAllResultSets()` | `org/h2/jdbc/JdbcDatabaseMetaData.java:2598` |
-| `JdbcDatabaseMetaData.dataDefinitionCausesTransactionCommit()` | `org/h2/jdbc/JdbcDatabaseMetaData.java:1814` |
-| `JdbcConnection.abort()` | `org/h2/jdbc/JdbcConnection.java:1832` |
-| `JdbcConnection.clearWarnings()` | `org/h2/jdbc/JdbcConnection.java:655` |
-| `JdbcConnection.close()` | `org/h2/jdbc/JdbcConnection.java:355` |
-| `JdbcConnection.commit()` | `org/h2/jdbc/JdbcConnection.java:480` |
-| `JdbcCallableStatement.executeLargeUpdate()` | `org/h2/jdbc/JdbcCallableStatement.java:119` |
-| `JdbcCallableStatement.executeUpdate()` | `org/h2/jdbc/JdbcCallableStatement.java:89` |
-| `JdbcCallableStatement.getArray()` | `org/h2/jdbc/JdbcCallableStatement.java:512` |
-| `JdbcCallableStatement.getBigDecimal()` | `org/h2/jdbc/JdbcCallableStatement.java:351` |
-| `JdbcPreparedStatement.addBatch()` | `org/h2/jdbc/JdbcPreparedStatement.java:326` |
-| `JdbcPreparedStatement.clearBatch()` | `org/h2/jdbc/JdbcPreparedStatement.java:1222` |
-| `JdbcPreparedStatement.clearParameters()` | `org/h2/jdbc/JdbcPreparedStatement.java:289` |
-| `JdbcPreparedStatement.close()` | `org/h2/jdbc/JdbcPreparedStatement.java:1238` |
+| `JdbcResultSet.absolute()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3173` |
+| `JdbcResultSet.afterLast()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3105` |
+| `JdbcResultSet.beforeFirst()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3086` |
+| `JdbcResultSet.cancelRowUpdates()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:3432` |
+| `JdbcResultSet.clearWarnings()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:260` |
+| `JdbcResultSet.close()` | `h2/src/main/org/h2/jdbc/JdbcResultSet.java:188` |
+| `JdbcDatabaseMetaData.allProceduresAreCallable()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:305` |
+| `JdbcDatabaseMetaData.allTablesAreSelectable()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:316` |
+| `JdbcDatabaseMetaData.autoCommitFailureClosesAllResultSets()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:2598` |
+| `JdbcDatabaseMetaData.dataDefinitionCausesTransactionCommit()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:1814` |
+| `JdbcDatabaseMetaData.dataDefinitionIgnoredInTransactions()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:1825` |
+| `JdbcDatabaseMetaData.deletesAreDetected()` | `h2/src/main/org/h2/jdbc/JdbcDatabaseMetaData.java:1950` |
+| `JdbcConnection.abort()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:1832` |
+| `JdbcConnection.clearWarnings()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:655` |
+| `JdbcConnection.close()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:355` |
+| `JdbcConnection.commit()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:480` |
+| `JdbcConnection.createArrayOf()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:1521` |
+| `JdbcConnection.createBlob()` | `h2/src/main/org/h2/jdbc/JdbcConnection.java:1468` |
+| `JdbcCallableStatement.executeLargeUpdate()` | `h2/src/main/org/h2/jdbc/JdbcCallableStatement.java:119` |
+| `JdbcCallableStatement.executeUpdate()` | `h2/src/main/org/h2/jdbc/JdbcCallableStatement.java:89` |
 
 ## 13.4 阅读路径
 
-读 `org.h2.jdbc` 的 27 个文件时，先看骨架类，再沿 `org.h2.value` 方向下钻。
+读 `org.h2.jdbc` 的 28 个文件时，先看骨架类，再沿 `org.h2` 方向下钻。
 
 1. 先读 `org.h2.jdbc` 的 package-info 与 `JdbcResultSet`，建立第13章的职责边界。
-2. 再读 `JdbcResultSet` 的 199 个公开入口，确认它对 `org.h2.value` 的调用方向与加锁方式。
-3. 最后读 `org.h2.jdbc`（本章最小包，17,319 行）的实现，关注容量与失败路径。
+2. 再读 `JdbcResultSet` 的 199 个公开入口，确认它对 `org.h2` 的调用方向与加锁方式。
+3. 最后读 `org.h2.jdbc`（本章最小包，17,330 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第14章《全书总结》。
 
@@ -133,30 +133,30 @@
 
 | 包 | 依赖（前 4） |
 | --- | --- |
-| `org.h2.jdbc` | `org.h2.value`, `org.h2.message`, `org.h2.util`, `org.h2.engine` |
+| `org.h2.jdbc` | `org.h2`, `org.h2.engine` |
 
 ## 13.6 设计权衡
 
-`org.h2.jdbc` 有 27 个文件、17,319 行。平均每文件 641 行。
+`org.h2.jdbc` 有 28 个文件、17,330 行。平均每文件 618 行。
 
 其中 `JdbcResultSet` 独占 4,291 行，199 个公开方法。规模集中，风险也集中。
 
-它对外声明 8 个 `org.h2` 依赖，最重的是 `org.h2.value`。依赖越集中，越说明它是被复用的底座。
+它对外声明 2 个 `org.h2` 依赖，最重的是 `org.h2`。依赖越集中，越说明它是被复用的底座。
 
-与 `org.h2.jdbc`（17,319 行）的分工是本章最该记住的边界。前者偏实现，后者偏编排。合并会打散扩展点。
+与 `org.h2.jdbc`（17,330 行）的分工是本章最该记住的边界。前者偏实现，后者偏编排。合并会打散扩展点。
 
 ## 13.7 常见误区
 
-把 `org.h2.jdbc` 的行数当作复杂度上限是误读。`JdbcResultSet` 之外还有 26 个文件，其中多为类型族与样板。
+把 `org.h2.jdbc` 的行数当作复杂度上限是误读。`JdbcResultSet` 之外还有 27 个文件，其中多为类型族与样板。
 
 只读 `JdbcResultSet` 的签名而不看调用点，也会踩坑。真正的约束写在调用方的加锁顺序里。
 
-`org.h2.jdbc` 与 `org.h2.jdbc` 不能互换。前者 27 个文件，后者 27 个文件，扩展点分布完全不同。
+`org.h2.jdbc` 与 `org.h2.jdbc` 不能互换。前者 28 个文件，后者 28 个文件，扩展点分布完全不同。
 
 ## 13.8 深读要点
 
 规模信号：`org.h2.jdbc` 占本章 100% 的实现行数，改动风险最高。
-耦合信号：`org.h2.jdbc` 依赖 8 个 `org.h2` 包，其中 `org.h2.value` 出现最频繁。
+耦合信号：`org.h2.jdbc` 依赖 2 个 `org.h2` 包，其中 `org.h2` 出现最频繁。
 入口信号：`JdbcResultSet` 的公开方法 199 个，读它等于读本章的主干。
 
 ## 13.8 术语对照
@@ -177,7 +177,7 @@
 
 ## 13.9 本章小结
 
-- 本章覆盖 1 个包、17,319 行。
+- 本章覆盖 1 个包、17,330 行。
 - 关键入口与源码坐标见 §13.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -205,9 +205,9 @@
 
 ## 13.11 本章视角：并发与一致性
 
-- 以「并发与一致性」看 `org.h2.jdbc`：27 个文件、17,319 行，本章只展开与并发与一致性相关的入口。
-- 对照 `org.h2.jdbc`（17,319 行）：两者的并发与一致性策略不同，差异落在 `JdbcResultSet` 的 199 个公开方法里。
-- 若并发与一致性假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.value` 进入。
+- 以「并发与一致性」看 `org.h2.jdbc`：28 个文件、17,330 行，本章只展开与并发与一致性相关的入口。
+- 对照 `org.h2.jdbc`（17,330 行）：两者的并发与一致性策略不同，差异落在 `JdbcResultSet` 的 199 个公开方法里。
+- 若并发与一致性假设被打破（2 个依赖变化），最先受影响的调用链从 `org.h2` 进入。
 
 ## 13.11.1 依赖明细
 
@@ -215,9 +215,8 @@
 
 | 来源包 | 目标包 | 次数 |
 | --- | --- | --- |
-| `org.h2.jdbc` | `org.h2.value` | 57 |
-| `org.h2.jdbc` | `org.h2.message` | 43 |
-| `org.h2.jdbc` | `org.h2.util` | 19 |
+| `org.h2.jdbc` | `org.h2` | 169 |
+| `org.h2.jdbc` | `org.h2.engine` | 1 |
 
 ## 13.11.2 阅读检查清单
 
@@ -235,11 +234,11 @@
 
 ## 14.1 模块版图
 
-本章覆盖 1 个包、10,868 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 1 个包、10,883 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
-| `org.h2.tools` | 23 | 10,868 | Various tools. |
+| `org.h2.tools` | 24 | 10,883 | （无包注释，按主类型归纳） |
 
 ## 14.2 核心类型
 
@@ -260,12 +259,12 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `SimpleResultSet.absolute()` | `org/h2/tools/SimpleResultSet.java:2229` |
-| `SimpleResultSet.addColumn()` | `org/h2/tools/SimpleResultSet.java:100` |
-| `Csv.close()` | `org/h2/tools/Csv.java:639` |
-| `Csv.getBinaryColumns()` | `org/h2/tools/Csv.java:909` |
-| `Recover.checkPowerOff()` | `org/h2/tools/Recover.java:857` |
-| `Recover.checkWritingAllowed()` | `org/h2/tools/Recover.java:865` |
+| `SimpleResultSet.absolute()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:2229` |
+| `SimpleResultSet.addColumn()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:100` |
+| `Csv.close()` | `h2/src/main/org/h2/tools/Csv.java:639` |
+| `Csv.getBinaryColumns()` | `h2/src/main/org/h2/tools/Csv.java:909` |
+| `Recover.checkPowerOff()` | `h2/src/main/org/h2/tools/Recover.java:857` |
+| `Recover.checkWritingAllowed()` | `h2/src/main/org/h2/tools/Recover.java:865` |
 
 ## 14.3.1 公共类型清单
 
@@ -321,38 +320,38 @@
 
 ## 14.3.2 源码坐标明细
 
-本章主责包中 24 个公开入口的行号，按类聚簇，可直接跳转阅读。
+本章主责包中 36 个公开入口的行号，按类聚簇，可直接跳转阅读。
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `SimpleResultSet.absolute()` | `org/h2/tools/SimpleResultSet.java:2229` |
-| `SimpleResultSet.addColumn()` | `org/h2/tools/SimpleResultSet.java:100` |
-| `SimpleResultSet.addRow()` | `org/h2/tools/SimpleResultSet.java:133` |
-| `SimpleResultSet.afterLast()` | `org/h2/tools/SimpleResultSet.java:2069` |
-| `Csv.close()` | `org/h2/tools/Csv.java:639` |
-| `Csv.getBinaryColumns()` | `org/h2/tools/Csv.java:909` |
-| `Csv.getCaseSensitiveColumnNames()` | `org/h2/tools/Csv.java:687` |
-| `Csv.getEscapeCharacter()` | `org/h2/tools/Csv.java:782` |
-| `Recover.checkPowerOff()` | `org/h2/tools/Recover.java:857` |
-| `Recover.checkWritingAllowed()` | `org/h2/tools/Recover.java:865` |
-| `Recover.execute()` | `org/h2/tools/Recover.java:239` |
-| `Recover.getCompareMode()` | `org/h2/tools/Recover.java:918` |
-| `Server.createPgServer()` | `org/h2/tools/Server.java:539` |
-| `Server.createTcpServer()` | `org/h2/tools/Server.java:511` |
-| `Server.createWebServer()` | `org/h2/tools/Server.java:466` |
-| `Server.getPort()` | `org/h2/tools/Server.java:640` |
-| `DirectRecover.close()` | `org/h2/tools/DirectRecover.java:462` |
-| `DirectRecover.execute()` | `org/h2/tools/DirectRecover.java:759` |
-| `DirectRecover.finish()` | `org/h2/tools/DirectRecover.java:178` |
-| `DirectRecover.getAvailableCompressionTypes()` | `org/h2/tools/DirectRecover.java:723` |
+| `SimpleResultSet.absolute()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:2229` |
+| `SimpleResultSet.addColumn()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:100` |
+| `SimpleResultSet.addRow()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:133` |
+| `SimpleResultSet.afterLast()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:2069` |
+| `SimpleResultSet.beforeFirst()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:242` |
+| `SimpleResultSet.cancelRowUpdates()` | `h2/src/main/org/h2/tools/SimpleResultSet.java:2077` |
+| `Csv.close()` | `h2/src/main/org/h2/tools/Csv.java:639` |
+| `Csv.getBinaryColumns()` | `h2/src/main/org/h2/tools/Csv.java:909` |
+| `Csv.getCaseSensitiveColumnNames()` | `h2/src/main/org/h2/tools/Csv.java:687` |
+| `Csv.getEscapeCharacter()` | `h2/src/main/org/h2/tools/Csv.java:782` |
+| `Csv.getFieldDelimiter()` | `h2/src/main/org/h2/tools/Csv.java:743` |
+| `Csv.getFieldSeparatorRead()` | `h2/src/main/org/h2/tools/Csv.java:705` |
+| `Recover.checkPowerOff()` | `h2/src/main/org/h2/tools/Recover.java:857` |
+| `Recover.checkWritingAllowed()` | `h2/src/main/org/h2/tools/Recover.java:865` |
+| `Recover.execute()` | `h2/src/main/org/h2/tools/Recover.java:239` |
+| `Recover.getCompareMode()` | `h2/src/main/org/h2/tools/Recover.java:918` |
+| `Recover.getDatabasePath()` | `h2/src/main/org/h2/tools/Recover.java:841` |
+| `Recover.getLobFileListCache()` | `h2/src/main/org/h2/tools/Recover.java:889` |
+| `Server.createPgServer()` | `h2/src/main/org/h2/tools/Server.java:539` |
+| `Server.createTcpServer()` | `h2/src/main/org/h2/tools/Server.java:511` |
 
 ## 14.4 阅读路径
 
-读 `org.h2.tools` 的 23 个文件时，先看骨架类，再沿 `org.h2.util` 方向下钻。
+读 `org.h2.tools` 的 24 个文件时，先看骨架类，再沿 `org.h2` 方向下钻。
 
 1. 先读 `org.h2.tools` 的 package-info 与 `SimpleResultSet`，建立第14章的职责边界。
-2. 再读 `SimpleResultSet` 的 228 个公开入口，确认它对 `org.h2.util` 的调用方向与加锁方式。
-3. 最后读 `org.h2.tools`（本章最小包，10,868 行）的实现，关注容量与失败路径。
+2. 再读 `SimpleResultSet` 的 228 个公开入口，确认它对 `org.h2` 的调用方向与加锁方式。
+3. 最后读 `org.h2.tools`（本章最小包，10,883 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第13章《二次开发指南》。
 
@@ -362,30 +361,30 @@
 
 | 包 | 依赖（前 4） |
 | --- | --- |
-| `org.h2.tools` | `org.h2.util`, `org.h2.engine`, `org.h2.value`, `org.h2.message` |
+| `org.h2.tools` | `org.h2`, `org.h2.store`, `org.h2.mvstore`, `org.h2.server` |
 
 ## 14.6 设计权衡
 
-`org.h2.tools` 有 23 个文件、10,868 行。平均每文件 472 行。
+`org.h2.tools` 有 24 个文件、10,883 行。平均每文件 453 行。
 
 其中 `SimpleResultSet` 独占 2,480 行，228 个公开方法。规模集中，风险也集中。
 
-它对外声明 8 个 `org.h2` 依赖，最重的是 `org.h2.util`。依赖越集中，越说明它是被复用的底座。
+它对外声明 8 个 `org.h2` 依赖，最重的是 `org.h2`。依赖越集中，越说明它是被复用的底座。
 
-与 `org.h2.tools`（10,868 行）的分工是本章最该记住的边界。前者偏实现，后者偏编排。合并会打散扩展点。
+与 `org.h2.tools`（10,883 行）的分工是本章最该记住的边界。前者偏实现，后者偏编排。合并会打散扩展点。
 
 ## 14.7 常见误区
 
-把 `org.h2.tools` 的行数当作复杂度上限是误读。`SimpleResultSet` 之外还有 22 个文件，其中多为类型族与样板。
+把 `org.h2.tools` 的行数当作复杂度上限是误读。`SimpleResultSet` 之外还有 23 个文件，其中多为类型族与样板。
 
 只读 `SimpleResultSet` 的签名而不看调用点，也会踩坑。真正的约束写在调用方的加锁顺序里。
 
-`org.h2.tools` 与 `org.h2.tools` 不能互换。前者 23 个文件，后者 23 个文件，扩展点分布完全不同。
+`org.h2.tools` 与 `org.h2.tools` 不能互换。前者 24 个文件，后者 24 个文件，扩展点分布完全不同。
 
 ## 14.8 深读要点
 
 规模信号：`org.h2.tools` 占本章 100% 的实现行数，改动风险最高。
-耦合信号：`org.h2.tools` 依赖 8 个 `org.h2` 包，其中 `org.h2.util` 出现最频繁。
+耦合信号：`org.h2.tools` 依赖 8 个 `org.h2` 包，其中 `org.h2` 出现最频繁。
 入口信号：`SimpleResultSet` 的公开方法 228 个，读它等于读本章的主干。
 
 ## 14.8 术语对照
@@ -405,7 +404,7 @@
 
 ## 14.9 本章小结
 
-- 本章覆盖 1 个包、10,868 行。
+- 本章覆盖 1 个包、10,883 行。
 - 关键入口与源码坐标见 §14.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -433,9 +432,9 @@
 
 ## 14.11 本章视角：扩展与兼容
 
-- 以「扩展与兼容」看 `org.h2.tools`：23 个文件、10,868 行，本章只展开与扩展与兼容相关的入口。
-- 对照 `org.h2.tools`（10,868 行）：两者的扩展与兼容策略不同，差异落在 `SimpleResultSet` 的 228 个公开方法里。
-- 若扩展与兼容假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.util` 进入。
+- 以「扩展与兼容」看 `org.h2.tools`：24 个文件、10,883 行，本章只展开与扩展与兼容相关的入口。
+- 对照 `org.h2.tools`（10,883 行）：两者的扩展与兼容策略不同，差异落在 `SimpleResultSet` 的 228 个公开方法里。
+- 若扩展与兼容假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2` 进入。
 
 ## 14.11.1 依赖明细
 
@@ -443,9 +442,9 @@
 
 | 来源包 | 目标包 | 次数 |
 | --- | --- | --- |
-| `org.h2.tools` | `org.h2.util` | 53 |
-| `org.h2.tools` | `org.h2.engine` | 14 |
-| `org.h2.tools` | `org.h2.value` | 14 |
+| `org.h2.tools` | `org.h2` | 130 |
+| `org.h2.tools` | `org.h2.store` | 10 |
+| `org.h2.tools` | `org.h2.mvstore` | 7 |
 
 ## 14.11.2 阅读检查清单
 

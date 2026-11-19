@@ -93,7 +93,8 @@ def check(path: str) -> list[str]:
     if layer == 'audit' and name != 'check_architecture' \
             and (name.startswith(('audit_', 'check_')) or name.endswith('_check')):
         problems.append(f'{rel}: redundant audit/check prefix or suffix')
-    if name.startswith('_') and layer != 'lib' and not path.endswith('__init__.py'):
+    in_library_pkg = (os.sep + 'languages' + os.sep) in path or (os.sep + 'lib' + os.sep) in path
+    if name.startswith('_') and not in_library_pkg and not path.endswith('__init__.py'):
         problems.append(f'{rel}: CLI entry point must not start with an underscore')
 
     # EXIT: report scripts expose --json

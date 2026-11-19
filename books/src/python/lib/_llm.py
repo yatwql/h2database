@@ -61,10 +61,16 @@ def resolve(scenario: str, book: str | None = None,
     """Resolve provider + parameters for one call (chapter > book > scenario)."""
     cfg = providers()
     routing = cfg.get('routing') or {}
-    provider = (_pick(routing.get('chapter'), chapter)
-                or _pick(routing.get('book'), book)
-                or _pick(routing.get('scenario'), scenario)
-                or cfg.get('default_provider'))
+    entry = (_pick(routing.get('chapter'), chapter)
+             or _pick(routing.get('book'), book)
+             or _pick(routing.get('scenario'), scenario))
+    thinking_route = None
+    if isinstance(entry, dict):
+        thinking_route = entry.get('thinking')
+        provider = entry.get('provider')
+    else:
+        provider = entry
+    provider = provider or cfg.get('default_provider')
     if not provider:
         raise LLMError('no provider resolved and no default_provider configured')
     spec = (cfg.get('providers') or {}).get(provider)
@@ -76,12 +82,21 @@ def resolve(scenario: str, book: str | None = None,
               **((cfg_settings.get('scenarios') or {}).get(scenario) or {}),
               **((cfg_settings.get('books') or {}).get(book or '') or {}),
               **((cfg_settings.get('chapters') or {}).get(chapter or '') or {})}
+    thinking = (thinking_route
+                or ((cfg_settings.get('thinking') or {}).get(chapter or ''))
+                or ((cfg_settings.get('thinking') or {}).get(book or ''))
+                or ((cfg_settings.get('thinking') or {}).get(scenario))
+                or merged.get('thinking') or 'low')
+    levels = cfg.get('thinking_levels') or ['off', 'low', 'medium', 'high']
+    if thinking not in levels:
+        raise LLMError(f'unknown thinking level {thinking!r}; expected one of {levels}')
+    merged['thinking'] = thinking
     return {'provider': provider, 'spec': spec, 'settings': merged}
 
 
 def _mock(prompt: str, spec: dict, params: dict) -> str:
     """Deterministic offline answer: enough to exercise the pipeline."""
-    return (f'[mock:{spec.get("kind", "mock")}] '
+    return (f'[mock:{spec.get("kind", "mock")}/{params.get("thinking", "low")}] '
             f'{prompt.strip()[:80]} …（{params.get("max_tokens", 0)} tokens 预算）')
 
 
@@ -131,6 +146,7 @@ def complete(prompt: str, scenario: str = 'chapter-draft',
         'messages': [{'role': 'user', 'content': prompt}],
         'temperature': params.get('temperature', 0.3),
         'max_tokens': params.get('max_tokens', 2048),
+        'reasoning_effort': params.get('thinking', 'low'),
     }
     data = _post_json(spec['base_url'].rstrip('/') + '/chat/completions',
                       payload, api_key, float(params.get('timeout_s', 60)))

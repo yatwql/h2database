@@ -77,3 +77,13 @@ app/        入口层：cli.py / tui.py / web.py + actions.py，只编排，不�
   文档与代码不再各自列依赖表。
 - 核心链路（ingest/audit 结构门禁）只依赖标准库；PDF/EPUB 相关脚本在缺少
   `pypdf`/`playwright`/`pandoc` 时必须以清晰信息退出（码 2），不得抛裸 traceback。
+
+## 11. LLM 使用边界（用在刀刃上）
+
+- **允许**：散文生成与评审（`chapter-draft`、`chapter-polish`、`summary`、`review`）。
+- **禁止**：任何事实与结构判断——章节结构、源码坐标、跨章引用、链接、重复度、
+  文风度量、图注、索引、术语、表格，全部保持确定性。
+- **执行**：`audit/llm_policy.py` 检查只有 `app/` 与 `ingest/` 可导入 `lib._llm`，
+  `audit/` 门禁一律不得调用；策略清单在 `llm_settings.json [policy]`。
+- **强度**：路由可按场景/书籍/章节指定 `thinking`（`off|low|medium|high`），
+  缺省 `low`；强度随请求传为 `reasoning_effort`。

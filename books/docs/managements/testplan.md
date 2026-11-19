@@ -60,11 +60,13 @@ python books/src/python/structure.py --gate-level p0  # 仅 p0
 | 编码 | Markdown 和 HTML 均为有效 UTF-8 | `structure.py`（UTF-8 encoding） | P0 |
 | CSS 渲染钩子 | to_html.py 含 9 项关键 CSS 标记（h1 装饰、复制按钮、面包屑等） | `structure.py`（CSS style checks） | P0 |
 | 索引完整性 | 索引 ≥ 120 条；每章 ≥ 5 条；章节引用对应实际内容 | `structure.py`（index integrity） | P1 |
-| 索引层级 | 主条目 ≥ 150；子条目 ≥ 50；see-also ≥ 30；see-also 全部解析；子条目章节 ∈ 1-12 | `structure.py`、`index.py --hierarchy-check`、`index_xrefs.py` | P1 |
+| 索引层级 | 主条目 ≥ 150；子条目 ≥ 50；see-also ≥ 30；see-also 全部解析；子条目章节 ∈ 1-12 | `structure.py`、`index_xrefs.py` | P1 |
 | 术语完整性 | 术语 ≥ 60 条；每条有对应章节引用；引用章节号 ∈ 1-12 | `structure.py`（glossary content） | P1 |
-| 工具脚本可用性 | `glossary.py` / `index.py` 语法有效 | `structure.py`（glossary builder checks） | P1 |
+| 工具脚本可用性 | 术语表与索引生成脚本语法有效 | `structure.py`（builder checks） | P1 |
+| 图注质量（预留） | 见下方图注动宾结构行 | `captions.py` | P2 |
+| 章节互引 | `详见第X章《…》` 与真实 H1 一致 | `crossrefs.py` | P0 |
 | 图注动宾结构 | 全书图注以批准动词起首；长度 ∈ [8, 30] 字；无模糊后缀；strict 阈值下违规 = 0 | `captions.py --threshold strict` | P2 |
-| 图簇桥接 | 3+ 张图在 ≤ 40 行内连续出现的"图簇"，前置一句桥接叙事点名所有图 | `figure_clusters.py --window 40 --needs-bridge`（应输出空清单） | P2 |
+| 图簇桥接 | 3+ 张图在 ≤ 40 行内连续出现的"图簇"，前置一句桥接叙事点名所有图 | `figure_clusters.py`（参数 `--window 40 --needs-bridge`，应输出空清单） | P2 |
 | 延伸思考 | 14 章节槽全部含 `## N.X 延伸思考` 小节；每章 ≥ 3 题；每题含难度/题型 emoji + 提示行 + 含锚点的回顾行；全书 ≥ 50 题 | `structure.py`、`exercises.py` | P2 |
 | 写作风格审计 | `style.py` 0 WARN | `structure.py`（style check） | P2 |
 | 版本统计 | cover 统计先更新；管理文档版本一致 | `cover.py`, 人工核对 | P0 |
@@ -83,7 +85,13 @@ python books/src/python/structure.py --gate-level p0  # 仅 p0
 | ASCII 图质量 | 图宽 ≤ `ascii_max_cols`（CJK 记 2 列）；无行尾空格/制表符；单图不混用框线与 ASCII 边框；已知项走基线 | `diagrams.py`、`books/data/baselines/ascii-baseline.json` | P1 |
 | EPUB 结构 | mimetype 首条且未压缩、container/OPF 可解析、manifest 与 spine 全部可解析、nav 链接全部命中、体积 ≤ `epub_max_mb` | `verify_epub.py` | P1 |
 | PDF 交付 | outline 与 HTML 标题逐一对应、outline 层级跟随标题层级、印刷 TOC 链接按序且在页内、字体全部嵌入、体积 ≤ `pdf_max_mb` | `verify_pdf.py --require-toc-links` | P1 |
+| LLM 边界 | LLM 只用于散文生成/评审场景；门禁与事实链路不得调用 | `llm_policy.py` | P1 |
 | 架构约束 | 分层依赖方向、门禁只读、不硬编码路径、命名不遮蔽标准库 | `audit/check_architecture.py` | P0 |
+| 图号引用 | 图号唯一、正文引用可解析 | `figures.py` | P1 |
+| 章节均衡 | 每章行数/图数/坐标分布 | `balance.py` | P2 |
+| EPUB 生成 | pandoc 可用时生成 EPUB | `to_epub.py` | P3 |
+| 类型检查 | pyright 可用时检查工具链类型（缺失则跳过） | `typecheck.py` | P1 |
+| 门禁追溯 | make.py 的每个门禁都在 testplan 登记，反之亦然 | `gate_trace.py` | P0 |
 | 文件长度 | 源码 ≤900 行、测试 ≤1200 行、文档 ≤1200 行（手稿附录 ≤2000） | `audit/file_length.py` | P0 |
 | 脚本契约 | 每个入口脚本有模块说明、可执行入口、必要时说明退出码 | `audit/script_contract.py` | P0 |
 | 文档一致性 | 文档中引用的路径、脚本、章节名、版本号与仓库实际一致 | `audit/doc_drift.py` | P0 |

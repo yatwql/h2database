@@ -103,3 +103,51 @@ class TestChannels(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestThinkingLevels(unittest.TestCase):
+    """Routing may pin a thinking level per scenario/book/chapter."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.config_dir = os.path.join(self.root, 'data', 'config')
+        with open(os.path.join(self.config_dir, 'llm_provider.json'), 'w', encoding='utf-8') as fh:
+            json.dump({'providers': {'mock': {'kind': 'mock'}},
+                       'default_provider': 'mock',
+                       'thinking_levels': ['off', 'low', 'medium', 'high'],
+                       'routing': {'scenario': {'summary': {'provider': 'mock',
+                                                           'thinking': 'high'},
+                                                'review': 'mock'},
+                                   'book': {}, 'chapter': {}}}, fh)
+        with open(os.path.join(self.config_dir, 'llm_settings.json'), 'w', encoding='utf-8') as fh:
+            json.dump({'defaults': {'thinking': 'low'}, 'scenarios': {},
+                       'thinking': {'review': 'medium'}, 'books': {}, 'chapters': {}}, fh)
+
+    def module(self):
+        return _fixture.load_module(self.root, '_llm')
+
+    def test_scenario_thinking_from_routing(self):
+        self.assertEqual(self.module().resolve('summary')['settings']['thinking'], 'high')
+
+    def test_scenario_thinking_from_settings(self):
+        self.assertEqual(self.module().resolve('review')['settings']['thinking'], 'medium')
+
+    def test_default_thinking(self):
+        self.assertEqual(self.module().resolve('chapter-draft')['settings']['thinking'], 'low')
+
+    def test_mock_reports_thinking(self):
+        llm = self.module()
+        self.assertIn('high', llm.complete('x', scenario='summary'))
+
+    def test_invalid_thinking_rejected(self):
+        llm = self.module()
+        prov = os.path.join(self.config_dir, 'llm_provider.json')
+        with open(prov, encoding='utf-8') as fh:
+            payload = json.load(fh)
+        payload['routing']['scenario']['summary']['thinking'] = 'extreme'
+        with open(prov, 'w', encoding='utf-8') as fh:
+            json.dump(payload, fh)
+        with self.assertRaises(llm.LLMError):
+            llm.resolve('summary')

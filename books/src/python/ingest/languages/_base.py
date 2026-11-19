@@ -38,12 +38,16 @@ class Unit:
     kind: str
     summary: str = ''
     api: list[str] = field(default_factory=list)
+    api_lines: dict[str, int] = field(default_factory=dict)
+    rel: str = ''
 
     def as_dict(self) -> dict:
         return {
-            'name': self.name, 'file': self.file, 'lines': self.lines,
-            'public': self.public, 'kind': self.kind, 'summary': self.summary,
-            'public_methods': len(self.api), 'api': sorted(set(self.api))[:24],
+            'name': self.name, 'file': self.file, 'rel': self.rel,
+            'lines': self.lines, 'public': self.public, 'kind': self.kind,
+            'summary': self.summary, 'public_methods': len(self.api),
+            'api': sorted(set(self.api))[:24],
+            'api_lines': dict(sorted(self.api_lines.items())[:24]),
         }
 
 

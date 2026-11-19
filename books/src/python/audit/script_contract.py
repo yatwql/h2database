@@ -34,6 +34,7 @@ def scripts() -> list[str]:
     # library-style modules: shared helpers, not entry points
     library = (os.sep + 'lib' + os.sep,
                os.sep + 'app' + os.sep + 'actions.py',
+               os.sep + 'app' + os.sep + 'settings.py',
                os.sep + 'ingest' + os.sep + 'languages' + os.sep)
     return sorted(p for p in found
                   if not any(marker in p for marker in library)

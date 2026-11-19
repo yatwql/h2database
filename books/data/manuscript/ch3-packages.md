@@ -1,17 +1,17 @@
 # 第3章 包结构与模块职责
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、7,363 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、7,387 行实现；读完应能说清这些包的职责边界与关键协作。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 ## 3.1 模块版图
 
-本章覆盖 2 个包、7,363 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 2 个包、7,387 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
-| `org.h2.api` | 12 | 4,150 | Contains interfaces for user-defined extensions, such as triggers and user-defined aggregate functions. |
-| `org.h2.schema` | 11 | 3,213 | Schema implementation and objects that are stored in a schema (for example, sequences and constants). |
+| `org.h2.api` | 13 | 4,162 | （无包注释，按主类型归纳） |
+| `org.h2.schema` | 12 | 3,225 | （无包注释，按主类型归纳） |
 
 ## 3.2 核心类型
 
@@ -41,18 +41,18 @@
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `ErrorCode.getState()` | `org/h2/api/ErrorCode.java:2317` |
-| `ErrorCode.isCommon()` | `org/h2/api/ErrorCode.java:2287` |
-| `Interval.equals()` | `org/h2/api/Interval.java:617` |
-| `Interval.getDays()` | `org/h2/api/Interval.java:543` |
-| `IntervalQualifier.getTypeName()` | `org/h2/api/IntervalQualifier.java:253` |
-| `IntervalQualifier.hasDays()` | `org/h2/api/IntervalQualifier.java:165` |
-| `Schema.add()` | `org/h2/schema/Schema.java:267` |
-| `Schema.canDrop()` | `org/h2/schema/Schema.java:92` |
-| `Sequence.close()` | `org/h2/schema/Sequence.java:553` |
-| `Sequence.flush()` | `org/h2/schema/Sequence.java:510` |
-| `FunctionAlias.compareTo()` | `org/h2/schema/FunctionAlias.java:546` |
-| `FunctionAlias.findJavaMethod()` | `org/h2/schema/FunctionAlias.java:243` |
+| `ErrorCode.getState()` | `h2/src/main/org/h2/api/ErrorCode.java:2317` |
+| `ErrorCode.isCommon()` | `h2/src/main/org/h2/api/ErrorCode.java:2287` |
+| `Interval.equals()` | `h2/src/main/org/h2/api/Interval.java:617` |
+| `Interval.getDays()` | `h2/src/main/org/h2/api/Interval.java:543` |
+| `IntervalQualifier.getTypeName()` | `h2/src/main/org/h2/api/IntervalQualifier.java:253` |
+| `IntervalQualifier.hasDays()` | `h2/src/main/org/h2/api/IntervalQualifier.java:165` |
+| `Schema.add()` | `h2/src/main/org/h2/schema/Schema.java:267` |
+| `Schema.canDrop()` | `h2/src/main/org/h2/schema/Schema.java:92` |
+| `Sequence.close()` | `h2/src/main/org/h2/schema/Sequence.java:553` |
+| `Sequence.flush()` | `h2/src/main/org/h2/schema/Sequence.java:510` |
+| `FunctionAlias.compareTo()` | `h2/src/main/org/h2/schema/FunctionAlias.java:546` |
+| `FunctionAlias.findJavaMethod()` | `h2/src/main/org/h2/schema/FunctionAlias.java:243` |
 
 ## 3.3.1 公共类型清单
 
@@ -79,108 +79,108 @@
 
 `ErrorCode` 位于 `org.h2.api`，2,367 行、2 个公开方法。它占该包实现的 57%，包内排名第 1。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（7 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（4 个），再决定是否顺带读同包的相邻类型。
 
 ### 3.3.2.2 `Interval`
 
 `Interval` 位于 `org.h2.api`，636 行、33 个公开方法。它占该包实现的 15%，包内排名第 2。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（7 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（4 个），再决定是否顺带读同包的相邻类型。
 
 ### 3.3.2.3 `IntervalQualifier`
 
-`IntervalQualifier` 位于 `org.h2.api`，353 行、13 个公开方法。它占该包实现的 9%，包内排名第 3。
+`IntervalQualifier` 位于 `org.h2.api`，353 行、13 个公开方法。它占该包实现的 8%，包内排名第 3。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（7 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（4 个），再决定是否顺带读同包的相邻类型。
 
 ### 3.3.2.4 `H2Type`
 
 `H2Type` 位于 `org.h2.api`，322 行、6 个公开方法。它占该包实现的 8%，包内排名第 4。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（7 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（4 个），再决定是否顺带读同包的相邻类型。
 
 ### 3.3.2.5 `DatabaseEventListener`
 
 `DatabaseEventListener` 位于 `org.h2.api`，113 行、0 个公开方法。它占该包实现的 3%，包内排名第 5。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（7 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（4 个），再决定是否顺带读同包的相邻类型。
 
 ### 3.3.2.6 `Trigger`
 
 `Trigger` 位于 `org.h2.api`，105 行、0 个公开方法。它占该包实现的 3%，包内排名第 6。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（7 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（4 个），再决定是否顺带读同包的相邻类型。
 
 ### 3.3.2.7 `Schema`
 
 `Schema` 位于 `org.h2.schema`，848 行、51 个公开方法。它占该包实现的 26%，包内排名第 7。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
 
 ### 3.3.2.8 `Sequence`
 
 `Sequence` 位于 `org.h2.schema`，586 行、25 个公开方法。它占该包实现的 18%，包内排名第 8。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
 
 ### 3.3.2.9 `FunctionAlias`
 
 `FunctionAlias` 位于 `org.h2.schema`，562 行、22 个公开方法。它占该包实现的 17%，包内排名第 9。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
 
 ### 3.3.2.10 `TriggerObject`
 
 `TriggerObject` 位于 `org.h2.schema`，543 行、28 个公开方法。它占该包实现的 17%，包内排名第 10。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
 
 ### 3.3.2.11 `Domain`
 
-`Domain` 位于 `org.h2.schema`，241 行、22 个公开方法。它占该包实现的 8%，包内排名第 11。
+`Domain` 位于 `org.h2.schema`，241 行、22 个公开方法。它占该包实现的 7%，包内排名第 11。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
 
 ### 3.3.2.12 `UserAggregate`
 
 `UserAggregate` 位于 `org.h2.schema`，120 行、9 个公开方法。它占该包实现的 4%，包内排名第 12。
 
-职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（8 个），再决定是否顺带读同包的相邻类型。
+职责一句话：按方法名与调用点归纳。读它之前先看包级依赖（2 个），再决定是否顺带读同包的相邻类型。
 
 ## 3.3.2 源码坐标明细
 
-本章主责包中 38 个公开入口的行号，按类聚簇，可直接跳转阅读。
+本章主责包中 56 个公开入口的行号，按类聚簇，可直接跳转阅读。
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `ErrorCode.getState()` | `org/h2/api/ErrorCode.java:2317` |
-| `ErrorCode.isCommon()` | `org/h2/api/ErrorCode.java:2287` |
-| `Interval.equals()` | `org/h2/api/Interval.java:617` |
-| `Interval.getDays()` | `org/h2/api/Interval.java:543` |
-| `Interval.getHours()` | `org/h2/api/Interval.java:552` |
-| `Interval.getLeading()` | `org/h2/api/Interval.java:506` |
-| `IntervalQualifier.getTypeName()` | `org/h2/api/IntervalQualifier.java:253` |
-| `IntervalQualifier.hasDays()` | `org/h2/api/IntervalQualifier.java:165` |
-| `IntervalQualifier.hasHours()` | `org/h2/api/IntervalQualifier.java:182` |
-| `IntervalQualifier.hasMinutes()` | `org/h2/api/IntervalQualifier.java:201` |
-| `H2Type.array()` | `org/h2/api/H2Type.java:258` |
-| `H2Type.getName()` | `org/h2/api/H2Type.java:296` |
-| `H2Type.getVendor()` | `org/h2/api/H2Type.java:301` |
-| `H2Type.getVendorTypeNumber()` | `org/h2/api/H2Type.java:312` |
-| `Schema.add()` | `org/h2/schema/Schema.java:267` |
-| `Schema.canDrop()` | `org/h2/schema/Schema.java:92` |
-| `Schema.createSynonym()` | `org/h2/schema/Schema.java:814` |
-| `Schema.createTable()` | `org/h2/schema/Schema.java:786` |
-| `Sequence.close()` | `org/h2/schema/Sequence.java:553` |
-| `Sequence.flush()` | `org/h2/schema/Sequence.java:510` |
+| `ErrorCode.getState()` | `h2/src/main/org/h2/api/ErrorCode.java:2317` |
+| `ErrorCode.isCommon()` | `h2/src/main/org/h2/api/ErrorCode.java:2287` |
+| `Interval.equals()` | `h2/src/main/org/h2/api/Interval.java:617` |
+| `Interval.getDays()` | `h2/src/main/org/h2/api/Interval.java:543` |
+| `Interval.getHours()` | `h2/src/main/org/h2/api/Interval.java:552` |
+| `Interval.getLeading()` | `h2/src/main/org/h2/api/Interval.java:506` |
+| `Interval.getMinutes()` | `h2/src/main/org/h2/api/Interval.java:561` |
+| `Interval.getMonths()` | `h2/src/main/org/h2/api/Interval.java:534` |
+| `IntervalQualifier.getTypeName()` | `h2/src/main/org/h2/api/IntervalQualifier.java:253` |
+| `IntervalQualifier.hasDays()` | `h2/src/main/org/h2/api/IntervalQualifier.java:165` |
+| `IntervalQualifier.hasHours()` | `h2/src/main/org/h2/api/IntervalQualifier.java:182` |
+| `IntervalQualifier.hasMinutes()` | `h2/src/main/org/h2/api/IntervalQualifier.java:201` |
+| `IntervalQualifier.hasMonths()` | `h2/src/main/org/h2/api/IntervalQualifier.java:156` |
+| `IntervalQualifier.hasMultipleFields()` | `h2/src/main/org/h2/api/IntervalQualifier.java:237` |
+| `H2Type.array()` | `h2/src/main/org/h2/api/H2Type.java:258` |
+| `H2Type.getName()` | `h2/src/main/org/h2/api/H2Type.java:296` |
+| `H2Type.getVendor()` | `h2/src/main/org/h2/api/H2Type.java:301` |
+| `H2Type.getVendorTypeNumber()` | `h2/src/main/org/h2/api/H2Type.java:312` |
+| `H2Type.row()` | `h2/src/main/org/h2/api/H2Type.java:270` |
+| `H2Type.toString()` | `h2/src/main/org/h2/api/H2Type.java:317` |
 
 ## 3.4 阅读路径
 
-读 `org.h2.api` 的 12 个文件时，先看骨架类，再沿 `org.h2.security.auth` 方向下钻。
+读 `org.h2.api` 的 13 个文件时，先看骨架类，再沿 `org.h2` 方向下钻。
 
 1. 先读 `org.h2.api` 的 package-info 与 `ErrorCode`，建立第3章的职责边界。
-2. 再读 `ErrorCode` 的 2 个公开入口，确认它对 `org.h2.security.auth` 的调用方向与加锁方式。
-3. 最后读 `org.h2.schema`（本章最小包，3,213 行）的实现，关注容量与失败路径。
+2. 再读 `ErrorCode` 的 2 个公开入口，确认它对 `org.h2` 的调用方向与加锁方式。
+3. 最后读 `org.h2.schema`（本章最小包，3,225 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第4章《包结构与模块职责》。
 
@@ -190,38 +190,37 @@
 
 | 包 | 依赖（前 4） |
 | --- | --- |
-| `org.h2.api` | `org.h2.security.auth`, `org.h2.value`, `org.h2.util.DateTimeUtils`, `org.h2.message` |
-| `org.h2.schema` | `org.h2.engine`, `org.h2.value`, `org.h2.message`, `org.h2.table` |
+| `org.h2.api` | `org.h2`, `org.h2.security`, `org.h2.util`, `org.h2.command` |
+| `org.h2.schema` | `org.h2`, `org.h2.command` |
 
 ## 3.6 设计权衡
 
-`org.h2.api` 有 12 个文件、4,150 行。平均每文件 345 行。
+`org.h2.api` 有 13 个文件、4,162 行。平均每文件 320 行。
 
 其中 `ErrorCode` 独占 2,367 行，2 个公开方法。规模集中，风险也集中。
 
-它对外声明 7 个 `org.h2` 依赖，最重的是 `org.h2.security.auth`。依赖越集中，越说明它是被复用的底座。
+它对外声明 4 个 `org.h2` 依赖，最重的是 `org.h2`。依赖越集中，越说明它是被复用的底座。
 
-与 `org.h2.schema`（3,213 行）的分工是本章最该记住的边界。前者偏实现，后者偏编排。合并会打散扩展点。
+与 `org.h2.schema`（3,225 行）的分工是本章最该记住的边界。前者偏实现，后者偏编排。合并会打散扩展点。
 
 ## 3.7 常见误区
 
-把 `org.h2.api` 的行数当作复杂度上限是误读。`ErrorCode` 之外还有 11 个文件，其中多为类型族与样板。
+把 `org.h2.api` 的行数当作复杂度上限是误读。`ErrorCode` 之外还有 12 个文件，其中多为类型族与样板。
 
 只读 `ErrorCode` 的签名而不看调用点，也会踩坑。真正的约束写在调用方的加锁顺序里。
 
-`org.h2.api` 与 `org.h2.schema` 不能互换。前者 12 个文件，后者 11 个文件，扩展点分布完全不同。
+`org.h2.api` 与 `org.h2.schema` 不能互换。前者 13 个文件，后者 12 个文件，扩展点分布完全不同。
 
 ## 3.8 深读要点
 
 规模信号：`org.h2.api` 占本章 56% 的实现行数，改动风险最高。
-耦合信号：`org.h2.api` 依赖 7 个 `org.h2` 包，其中 `org.h2.security.auth` 出现最频繁。
+耦合信号：`org.h2.api` 依赖 4 个 `org.h2` 包，其中 `org.h2` 出现最频繁。
 入口信号：`ErrorCode` 的公开方法 2 个，读它等于读本章的主干。
 
 ## 3.8 术语对照
 
 本章出现的专业术语与书末术语表的对应关系：
 
-- **Aggregate**：详见[术语表](back/glossary.md)对应条目。
 - **H2**：详见[术语表](back/glossary.md)对应条目。
 - **Schema**：详见[术语表](back/glossary.md)对应条目。
 - **Column**：详见[术语表](back/glossary.md)对应条目。
@@ -229,6 +228,7 @@
 - **DbSettings**：详见[术语表](back/glossary.md)对应条目。
 - **Driver**：详见[术语表](back/glossary.md)对应条目。
 - **Engine**：详见[术语表](back/glossary.md)对应条目。
+- **FilePath**：详见[术语表](back/glossary.md)对应条目。
 
 ## 3.9 知识点清单
 
@@ -243,7 +243,7 @@
 
 ## 3.9 本章小结
 
-- 本章覆盖 2 个包、7,363 行。
+- 本章覆盖 2 个包、7,387 行。
 - 关键入口与源码坐标见 §3.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -271,9 +271,9 @@
 
 ## 3.11 本章视角：演化与版本
 
-- 以「演化与版本」看 `org.h2.api`：12 个文件、4,150 行，本章只展开与演化与版本相关的入口。
-- 对照 `org.h2.schema`（3,213 行）：两者的演化与版本策略不同，差异落在 `ErrorCode` 的 2 个公开方法里。
-- 若演化与版本假设被打破（7 个依赖变化），最先受影响的调用链从 `org.h2.security.auth` 进入。
+- 以「演化与版本」看 `org.h2.api`：13 个文件、4,162 行，本章只展开与演化与版本相关的入口。
+- 对照 `org.h2.schema`（3,225 行）：两者的演化与版本策略不同，差异落在 `ErrorCode` 的 2 个公开方法里。
+- 若演化与版本假设被打破（4 个依赖变化），最先受影响的调用链从 `org.h2` 进入。
 
 ## 3.11.1 依赖明细
 
@@ -281,12 +281,11 @@
 
 | 来源包 | 目标包 | 次数 |
 | --- | --- | --- |
-| `org.h2.api` | `org.h2.security.auth` | 5 |
-| `org.h2.api` | `org.h2.value` | 3 |
-| `org.h2.api` | `org.h2.util.DateTimeUtils` | 2 |
-| `org.h2.schema` | `org.h2.engine` | 29 |
-| `org.h2.schema` | `org.h2.value` | 16 |
-| `org.h2.schema` | `org.h2.message` | 13 |
+| `org.h2.api` | `org.h2` | 6 |
+| `org.h2.api` | `org.h2.security` | 5 |
+| `org.h2.api` | `org.h2.util` | 2 |
+| `org.h2.schema` | `org.h2` | 109 |
+| `org.h2.schema` | `org.h2.command` | 3 |
 
 ## 3.11.2 阅读检查清单
 

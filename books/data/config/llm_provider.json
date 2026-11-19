@@ -9,24 +9,46 @@
       "kind": "openai-compatible",
       "base_url": "https://api.openai.com/v1",
       "api_key_env": "OPENAI_API_KEY",
-      "models": ["gpt-4o-mini"]
+      "models": [
+        "gpt-4o-mini"
+      ]
     },
     "deepseek": {
       "kind": "openai-compatible",
       "base_url": "https://api.deepseek.com/v1",
       "api_key_env": "DEEPSEEK_API_KEY",
-      "models": ["deepseek-chat"]
+      "models": [
+        "deepseek-chat"
+      ]
     }
   },
   "default_provider": "mock",
   "routing": {
     "scenario": {
-      "chapter-draft": "mock",
-      "chapter-polish": "mock",
-      "summary": "mock",
-      "review": "mock"
+      "chapter-draft": {
+        "provider": "mock",
+        "thinking": "medium"
+      },
+      "chapter-polish": {
+        "provider": "mock",
+        "thinking": "high"
+      },
+      "summary": {
+        "provider": "mock",
+        "thinking": "low"
+      },
+      "review": {
+        "provider": "mock",
+        "thinking": "high"
+      }
     },
     "book": {},
     "chapter": {}
-  }
+  },
+  "thinking_levels": [
+    "off",
+    "low",
+    "medium",
+    "high"
+  ]
 }

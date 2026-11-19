@@ -15,7 +15,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app import actions
+from app import actions, settings
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -26,6 +26,23 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument('prompt', nargs='*', help='prompt for llm-ask')
     parser.add_argument('--scenario', default='summary', help='LLM scenario for llm-ask')
     args = parser.parse_args(argv)
+
+    if args.action == 'settings':
+        tail = list(args.prompt)
+        if tail and tail[0] == 'set':
+            if len(tail) < 3:
+                sys.stderr.write('usage: cli.py settings set <key> <value>\n')
+                return 2
+            try:
+                stored = settings.set_value(tail[1], ' '.join(tail[2:]))
+            except (KeyError, ValueError) as exc:
+                sys.stderr.write(f'error: {exc}\n')
+                return 2
+            sys.stdout.write(f'{tail[1]} = {stored}\n')
+            return 0
+        code, text = actions.run('settings')
+        sys.stdout.write(text)
+        return code
 
     kwargs = {}
     if args.action == 'llm-ask':

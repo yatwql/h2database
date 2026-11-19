@@ -4,14 +4,48 @@
     "temperature": 0.3,
     "max_tokens": 2048,
     "timeout_s": 60,
-    "retries": 1
+    "retries": 1,
+    "thinking": "low"
   },
   "scenarios": {
-    "chapter-draft": {"temperature": 0.4, "max_tokens": 4096},
-    "chapter-polish": {"temperature": 0.2, "max_tokens": 3072},
-    "summary": {"temperature": 0.1, "max_tokens": 800},
-    "review": {"temperature": 0.0, "max_tokens": 1200}
+    "chapter-draft": {
+      "temperature": 0.4,
+      "max_tokens": 4096
+    },
+    "chapter-polish": {
+      "temperature": 0.2,
+      "max_tokens": 3072
+    },
+    "summary": {
+      "temperature": 0.1,
+      "max_tokens": 800
+    },
+    "review": {
+      "temperature": 0.0,
+      "max_tokens": 1200
+    }
   },
   "books": {},
-  "chapters": {}
+  "chapters": {},
+  "policy": {
+    "note": "LLM is only allowed for prose generation/review; facts, structure and metrics stay deterministic.",
+    "llm_scenarios": [
+      "chapter-draft",
+      "chapter-polish",
+      "summary",
+      "review"
+    ],
+    "deterministic": [
+      "structure",
+      "coordinates",
+      "crossrefs",
+      "links",
+      "duplicates",
+      "prose-metrics",
+      "captions",
+      "index",
+      "glossary",
+      "tables"
+    ]
+  }
 }

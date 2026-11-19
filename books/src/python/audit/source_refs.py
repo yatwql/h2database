@@ -33,7 +33,7 @@ from lib import _config, _fsutil
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, '..', '..', '..', '..'))
 DOCS_DIR = _config.MANUSCRIPT_DIR
-FILE_SUFFIX = _config.SOURCES.get('file_suffix', '.java')
+SUFFIXES = _config.source_suffixes()
 PACKAGE_PREFIX = _config.SOURCES.get('package_prefix') or 'unknown'
 SOURCE_DIR = _config.source_tree('src_main')
 POM_PATH = _config.source_tree('pom_root')
@@ -55,7 +55,7 @@ CHAPTER_FILES = [
 ]
 
 # Pattern: ClassName.java:lineno (also captures start of range ClassName.java:start-end)
-REF_RE = re.compile(r'\b(\w+)' + re.escape(FILE_SUFFIX) + r':(\d+)')
+REF_RE = re.compile(r'\b(\w+)(?:' + '|'.join(re.escape(x) for x in SUFFIXES) + r'):(\d+)')
 
 # ---------------------------------------------------------------------------
 # Data types
@@ -87,10 +87,10 @@ class Verification(NamedTuple):
 
 
 def get_h2_version() -> str:
-    """Extract H2 version from pom.xml."""
+    """Project version from the configured build file (empty when absent)."""
     try:
         lines = _fsutil.read_lines(POM_PATH)
-    except SystemExit:
+    except (SystemExit, OSError):
         return 'unknown'
     for line in lines:
         m = re.search(r'<version>(.+?)</version>', line)
@@ -105,8 +105,8 @@ def build_class_index() -> dict:
         return index
     for root, _dirs, files in os.walk(SOURCE_DIR):
         for f in files:
-            if f.endswith('.java'):
-                name = f[:-5]          # strip '.java'
+            if f.endswith(tuple(SUFFIXES)):
+                name = os.path.splitext(f)[0]
                 index[name].append(os.path.join(root, f))
     return index
 
@@ -299,11 +299,8 @@ def suggest_renames(claim, class_index: dict) -> list[str]:
 # Reporting
 # ---------------------------------------------------------------------------
 def format_rel_path(path: str) -> str:
-    """Convert an absolute file path to org/h2/... relative form."""
-    rel = os.path.relpath(path, SOURCE_DIR).replace('\\', '/')
-    if rel.startswith('org/h2/'):
-        return rel
-    return f'org/h2/{rel}'
+    """Convert an absolute file path to its source-root relative form."""
+    return os.path.relpath(path, SOURCE_DIR).replace('\\', '/')
 
 def print_report(results: list, class_index: dict) -> None:
     """Print the formatted freshness report."""

@@ -253,6 +253,16 @@ def source_languages() -> list[str]:
     return [str(item) for item in raw]
 
 
+def source_suffixes() -> list[str]:
+    """File suffixes for every configured source language."""
+    mapping = SOURCES.get('suffixes') or {}
+    langs = source_languages()
+    found = [mapping[lang] for lang in langs if lang in mapping]
+    if not found:
+        found = [SOURCES.get('file_suffix') or '.java']
+    return sorted(set(found))
+
+
 def missing_files() -> list[str]:
     """Configured chapter files that do not exist on disk."""
     names = list(_CFG.get('chapters', {}).get('files', []))

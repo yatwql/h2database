@@ -13,7 +13,12 @@
     "language": "java",
     "languages": [
       "java"
-    ]
+    ],
+    "suffixes": {
+      "java": ".java",
+      "python": ".py",
+      "rust": ".rs"
+    }
   },
   "baselines": {
     "ascii": "data/baselines/ascii-baseline.json",

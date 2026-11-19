@@ -41,9 +41,16 @@ class JavaAnalyzer(Analyzer):
             summary = first_sentence(TAG_RE.sub(' ', doc.group(1)).replace('*', ' '))
         names = TYPE_RE.findall(text) or ANY_TYPE_RE.findall(text)
         api = METHOD_RE.findall(text)
+        api_lines: dict[str, int] = {}
+        for lineno, line in enumerate(text.split('\n'), start=1):
+            match = METHOD_RE.match(line)
+            if match:
+                api_lines.setdefault(match.group(1), lineno)
+        rel = os.path.relpath(path)
         units = [Unit(name=name, file=os.path.basename(path), lines=lines,
                       public=bool(TYPE_RE.findall(text)), kind='type',
-                      summary=summary, api=api) for name in names[:1]]
+                      summary=summary, api=api, api_lines=api_lines, rel=rel)
+                 for name in names[:1]]
         deps: dict[str, int] = {}
         for target in IMPORT_RE.findall(text):
             parent = target.rsplit('.', 1)[0]

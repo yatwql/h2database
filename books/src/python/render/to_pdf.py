@@ -337,12 +337,13 @@ try:
             # Advance current_page but NOT past page_num, so subsequent
             # headings on the same page still find it.
             current_page = page_num
-            parent = None
+            parent: Any = None
             for lvl in range(level - 1, 0, -1):
                 if lvl in outline_stack:
                     parent = outline_stack[lvl]
                     break
-            item = writer.add_outline_item(text, page_num, parent=parent)
+            item = writer.add_outline_item(title=text, page_number=page_num,
+                                          parent=parent)
             outline_stack[level] = item
             found_count += 1
         else:

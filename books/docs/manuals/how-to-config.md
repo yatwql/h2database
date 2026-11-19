@@ -112,6 +112,20 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 优先级：`chapter` > `book` > `scenario` > `default_provider`。密钥只读环境变量
 （`api_key_env` 指向的变量名），不写进仓库；`mock` 可离线跑通全链路。
 
+**强度（thinking level）**：路由项可写成对象，按场景指定思考强度：
+
+```json
+{"routing": {"scenario": {
+   "chapter-draft": {"provider": "openai", "thinking": "medium"},
+   "chapter-polish": {"provider": "openai", "thinking": "high"},
+   "summary": {"provider": "mock", "thinking": "low"}}},
+ "thinking_levels": ["off", "low", "medium", "high"]}
+```
+
+缺省强度来自 `llm_settings.json` 的 `defaults.thinking`（默认 `low`），也可在
+`thinking.scenario/book/chapter` 覆盖；越界值直接报错。强度会作为
+`reasoning_effort` 传给 openai-compatible provider，`mock` 会把它回显出来便于测试。
+
 ## 6. 改完怎么验证
 
 ```bash
