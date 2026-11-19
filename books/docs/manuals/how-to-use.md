@@ -20,7 +20,7 @@ python books/src/python/make.py doctor     # 可选依赖检查（pandoc / playw
 通用参数：
 
 | 参数 | 作用 |
-|------|------|
+| --- | --- |
 | `--only NAME[,NAME]` | 只跑指定步骤 |
 | `--skip NAME[,NAME]` | 跳过指定步骤 |
 | `--timings` | 打印每步耗时 |
@@ -110,7 +110,7 @@ python books/src/python/verify_epub.py         # EPUB 结构校验
 ## 5. 依赖
 
 | 依赖 | 用途 | 缺失时 |
-|------|------|--------|
+| --- | --- | --- |
 | Python 3.11+ | 全部脚本（需要标准库 `tomllib`） | 无法运行 |
 | `pypdf` | PDF 校验、TOC 链接 | PDF 校验跳过 |
 | `playwright` + chromium | PDF 渲染 | 只能校验已有 PDF |

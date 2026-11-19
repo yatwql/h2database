@@ -1,109 +1,57 @@
-# H2 Database 源码分析 — 实施计划
+# 实施与维护计划
 
-> 版本：v6.1
-> 最后更新：2026-06-15
-
----
+> 版本：v6.1 · 更新：2026-06-16
 
 ## 1. 当前状态
 
-文档已发布 v6.0 工业级技术书籍质量里程碑，并在 v6.1 扩展了 EPUB 交付形态：
+- 手稿由源码事实驱动生成：`sources/digest_source.py` → `plan_outline.py` → `build_manuscript.py`。
+- 章节采用单主责包映射，非主责章节用跨章索引跳转。
+- 四层配置：`data/tmpl/book.toml`（数据组织）、`data/config/base.json`（基础）、
+  `data/config/style.json`（风格）、`data/language/zh.json`（语言包）。
+- 质量门禁：结构（`audit/final_check.py`）、事实（`sources/source_freshness_check.py`）、
+  图书质量（`audit/audit_book_quality.py`）、文风（`audit/audit_prose_quality.py`）、
+  交付（`render/verify_pdf.py`、`render/verify_epub.py`）。
+- 工具链设计说明见 `books/docs/plan/toolchain-design.md`。
 
-- 12 章 + 5 附录已交付（A 端到端案例研究、B 源码版本变更说明、C 术语表、D 概念索引、E 参考文献）。
-- 正式源码、管理文档与交付工具统一位于 `books/`。
-- 标准 MD/HTML 验证链路通过；PDF / 印刷级 PDF / EPUB 按需生成。
-- 全部历史审查问题均在 `books/docs/managements/review-findings.md` 中关闭（第 7 轮含 R7-1..R7-17 与 R8-1）。
+## 2. 例行工作流
 
-具体统计（行数、图数、术语表/索引条目数、工具脚本数）以 `books/cover.md` 自动更新结果与 `books/src/python/final_check.py` 输出为准，本文件不再重复维护数字。
-
-## 2. 正式目录
-
-```text
-books/
-  cover.md
-  front/                          # 书籍前件（preface, copyright, how-to-read）
-  ch1-2-architecture.md
-  ch3-packages.md
-  ch4-5-modules-processes.md
-  ch6-1-data-structures.md
-  ch6-2-storage-algorithms.md
-  ch6-3-query-algorithms.md
-  ch7-sql-execution.md
-  ch8-query-optimizer.md
-  ch9-10-persistence-locking.md
-  ch11-12-guide-summary.md
-  appendix-a-case-studies.md      # 附录 A
-  appendix-b-version-changes.md   # 附录 B
-  back/glossary.md                # 附录 C 术语表
-  back/index.md                   # 附录 D 概念索引
-  back/references.md              # 附录 E 参考文献
-  management/                     # 管理文档（README, requirements, plan, testplan, changelog, review-findings, style-guide, baseline-*.json）
-  plan/                           # 阶段性实施计划（版本路线、详细 PRD/任务清单）
-  h2-source-code-analysis.md      # 合并 Markdown 交付物
-  tools/                          # 正式生成、审计与验证脚本
+```bash
+python books/src/python/make.py check      # 全部门禁（只读）
+python books/src/python/make.py build      # 统计 + 合并 Markdown + HTML
+python books/src/python/make.py test       # 单元与集成测试
+python books/src/python/make.py deliver    # 按需：PDF + EPUB + 校验
 ```
 
-## 3. 验证流程
+源码更新后重生成手稿：
 
-标准验证流程与 PDF 交付命令详见 `books/docs/managements/testplan.md` 第 1 节。本章节不重复维护命令清单。
+```bash
+python books/src/python/sources/digest_source.py
+python books/src/python/sources/plan_outline.py
+python books/src/python/sources/build_manuscript.py
+python books/src/python/make.py check
+```
 
-## 4. 阶段进展
+## 3. 维护策略
 
-- v1.0 – v5.0：12 章并行撰写、合并/HTML/PDF 工具链、图表与结构审查、工具迁移到 `books/src/python/`、管理文档职责收敛、写作风格增强。
-- v5.1 – v5.6（v6.0 Phase A–F）：基线度量、ch7-8 拆分、前后件深度化、端到端案例研究附录、图注与图簇桥接质量、章末延伸思考。
-- v5.7：附录 A/B 拆分、HTML 视觉与交互修复、后件升级为附录 C/D/E、管理文档归一。
-- v5.8（Phase G）：印刷级 PDF 渲染管道（独立产出）—— 章首装饰页、TOC 虚线对齐、印刷级页眉页脚。
-- v6.0（Phase H 收尾）：门禁分级（P0/P1/P2）落地、`final_check.py --gate-level` 入口、testplan.md 门禁演进史、v6.0 全量回归发布。
-- v6.1（按需交付物扩展）：EPUB 输出形态（pandoc 渲染管道 `generate_epub.py`，最终交付阶段按需生成）。
+- **配置唯一**：路径、阈值、文案、模板只在配置文件中维护，脚本不硬编码。
+- **事实优先**：手稿中的源码坐标与 `Class.method(` 断言由脚本核验，上游升级后重生成。
+- **基线记账**：已知问题记录在 `data/baselines/`，阈值收紧前先清账。
+- **门禁前置**：`make.py check` 通过才允许构建交付物。
 
-每个版本的具体增量、工具新增、文件变更记录均在 `books/docs/managements/changelog.md` 中维护；v6.0 阶段路线见 `books/docs/plan/2026-06-15-001-feat-industrial-book-quality-plan.md`。
+## 4. 后续增强项
 
-## 5. 管理文档职责
+| 项目 | 说明 | 优先级 |
+| --- | --- | --- |
+| 语言包扩展 | 支持英文与技术文档双语输出 | P2 |
+| 图示增强 | 关键流程由 ASCII 升级为结构化图 | P3 |
+| 增量生成 | 仅重渲染变更章节，缩短大书构建时间 | P3 |
+| 更多源码语言 | 从 Java 扩展到 Kotlin/Go 等（解析器可插拔） | P4 |
 
-管理文档职责分配见 `books/docs/managements/README.md` 与项目根 `CLAUDE.md` 的「Management Document Authority」节。核心原则：同一事实只维护在一个权威位置。
-
-## 6. 维护策略
-
-- 发现新问题时先登记到 `books/docs/managements/review-findings.md`，修复完成后同步记录到 `books/docs/managements/changelog.md`。
-- 不保留一次性修复脚本、临时压缩包、`__pycache__` 或外部 session 文件。
-- 本项目 session 文件只保留在仓库 `.claude/` 目录中。
-- 建议在 H2 上游版本升级或源码大改后，运行 `python books/src/python/source_freshness_check.py` 检查源码引用保鲜状态。
-
-## 7. 后续增强项
-
-| 特性 | 说明 | 优先级 |
-|------|------|--------|
-| API 文档索引 | 从 javadoc 或源码生成关键类速查表 | P3 |
-| 交互式图表 | 评估将部分 ASCII 图迁移为 Mermaid/HTML 交互图 | P3 |
-| 英文版本 | 翻译为英文版 | P4 |
-| CI 集成 | 将标准验证链路接入 GitHub Actions | P4 |
-
-## 8. 风险与应对
+## 5. 风险与应对
 
 | 风险 | 应对 |
-|------|------|
-| 源文件与合并文档不同步 | 运行 `rebuild_merged.py` 和 `final_check.py` |
-| 统计数据漂移 | 先运行 `cover_stats.py`，统计以 cover/final_check 为准 |
-| HTML TOC 或围栏状态回归 | 运行 `generate_html.py` 和 `final_check.py` |
-| PDF 大纲/目录失效 | 正式交付前运行 PDF 三步验证 |
-| 管理文档重复维护导致冲突 | 保持职责分离，删除重复段落，使用交叉引用 |
-
-## 9. 当前在建项：源码重分析 → 手稿重生成
-
-上游源码更新（H2 2.5.259-SNAPSHOT，843 个 Java 文件 / 231k 行）后，手稿改为
-"事实驱动重生成 + 十轮质量复盘"：
-
-- 阶段一（源码 → 手稿）：`sources/digest_source.py` 产出版图清单，
-  `sources/plan_outline.py` 生成章节大纲与覆盖矩阵，`sources/build_manuscript.py`
-  依据事实渲染章节（包版图、核心类型、源码坐标、练习）。
-- 阶段二（手稿 → 文档）：沿用 `render/` 与 `audit/` 既有门禁。
-- 质量复盘：十轮递进，每轮"度量 → 改进生成器 → 重生成 → 复核门禁"，
-  度量口径与验收标准见 `books/docs/plan/2026-06-16-001-manuscript-regeneration.md`。
-
-### 9.1 在建子项
-
-| 立项 | 目标 | 设计文档 |
-|------|------|----------|
-| 章节范围去重叠 | 已完成：重复句 16.5% → 4.3%，阈值收紧到 12% | `docs/plan/2026-06-16-002-chapter-scope-disjoint.md` |
-| 工具链通用化（配置已分三类：数据组织/基础/风格） | 去 H2 特化，成为通用源码分析出版工具 | `docs/plan/2026-06-16-003-toolchain-generality.md` |
-
+| --- | --- |
+| 源码升级导致坐标漂移 | 重跑 stage 1，`source_freshness_check.py` 复核 |
+| 统计数字与手稿不一致 | `make.py build` 重新统计，`final_check.py` 校验 |
+| 章节结构回归 | `audit_book_quality.py` 与 `final_check.py` 拦截 |
+| 交付物失效 | 交付前运行 PDF/EPUB 校验 |

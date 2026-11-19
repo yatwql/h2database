@@ -54,7 +54,7 @@ per_chapter = ["本章导读", "本章小结", "延伸思考", "延展阅读"]
 [chapters.packages]
 # Single-owner mapping: every source package is described by exactly one chapter.
 # Non-owner chapters reference the owner instead of re-describing it (see
-# docs/plan/2026-06-16-002-chapter-scope-disjoint.md).
+# docs/plan/toolchain-design.md).
 "ch1-2-architecture.md" = ["org.h2", "org.h2.engine"]
 "ch3-packages.md" = ["org.h2.api", "org.h2.schema"]
 "ch4-5-modules-processes.md" = ["org.h2.command"]

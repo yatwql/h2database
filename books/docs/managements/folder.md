@@ -60,15 +60,13 @@ books/docs/managements/
   plan.md                    # 工作流、维护策略、风险、后续工作
   testplan.md                # 质量门禁与验证命令（验证的唯一权威）
   changelog.md               # 版本历史
-  review-findings.md         # 评审问题与关闭状态
   folder.md                  # 本文件：目录结构
-  archive/                   # 历史文档
 ```
 
 ## 2.1 配置分三类
 
 | 类别 | 文件 | 放什么 | 换项目是否要改 |
-|------|------|--------|---------------|
+| --- | --- | --- | --- |
 | 数据组织 | `data/tmpl/book.toml` | 书名/版本、路径、章节清单、标题、编号、覆盖归属、包映射 | 是（每个项目不同） |
 | 基础配置 | `data/config/base.json` | 源码树位置、文件后缀、包前缀、语言、基线与状态路径、PDF/EPUB/ASCII/覆盖率预算 | 部分（指向新源码树） |
 | 书籍风格 | `data/config/style.json` | 展示文案、章节骨架、图注词表与预设、图示标记、写作阈值、生成能力与模板 | 通常否 |
@@ -83,8 +81,7 @@ books/docs/managements/
   由 `make.py build` / `make.py deliver` 重新生成。
 - **工具链只在 `src/python/`**：正式交付脚本；临时脚本不得入库。
 - **测试只在 `src/test/`**：`make.py test` 跑全部；`make.py cover` 带覆盖率棘轮。
-- **管理文档只在 `docs/managements/`**：需求、计划、测试、变更、评审批次分文件维护，
-  互不重复。
+- **管理文档只在 `docs/managements/`**：需求、计划、测试、变更各一份，互不重复。
 
 ## 4. 常用入口
 

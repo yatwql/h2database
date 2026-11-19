@@ -23,7 +23,7 @@
 **stage 1（源码 → 手稿）**
 
 | 步骤 | 脚本 | 产出 |
-|------|------|------|
+| --- | --- | --- |
 | 抽取版图 | `sources/digest_source.py` | 包/文件/行数、`package-info` 职责、核心类型、公开 API → `data/state/source-inventory.json` |
 | 规划章节 | `sources/plan_outline.py` | 章节 → 包的映射与覆盖矩阵（缺包即报）→ `data/state/outline.json` |
 | 渲染章节 | `sources/build_manuscript.py` | 每章的模块版图、核心类型、源码坐标、术语对照、小结、练习 |
@@ -68,13 +68,13 @@ books/
              # audit/ 质量门禁、render/ 交付渲染
     test/    # 单元 + 集成测试（BOOK_SLOW=1 打开慢速档）
   dist/      # 交付产物（HTML/PDF/EPUB，gitignored）
-  docs/      # managements/ 项目管理文档、manuals/ 使用手册、plan/ 迭代设计、archive/ 归档
+  docs/      # managements/ 项目管理文档、manuals/ 使用手册、plan/ 设计说明
 ```
 
 ## 质量门禁（摘）
 
 | 类别 | 门禁 | 脚本 |
-|------|------|------|
+| --- | --- | --- |
 | 结构 | 章节/段落/图号/围栏/TOC/UTF-8 完整性 | `audit/final_check.py` |
 | 事实 | `Class.java:line` 与 `Class.method(` 断言核对源码 | `sources/source_freshness_check.py` |
 | 一致性 | 链接与锚点、索引 see-also、术语覆盖、跨章引用 | `audit/_audit_links.py` 等 |
@@ -100,4 +100,4 @@ books/
 - 脚本用法与交付步骤：`docs/manuals/how-to-use.md`
 - 质量门禁与验证命令：`docs/managements/testplan.md`
 - 写作与格式规范：`docs/managements/style-guide.md`
-- 迭代设计（重生成与十轮质量复盘）：`docs/plan/2026-06-16-001-manuscript-regeneration.md`
+- 工具链设计（当前状态）：`docs/plan/toolchain-design.md`

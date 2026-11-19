@@ -13,7 +13,7 @@
 ## 2. 交付物
 
 | 产物 | 路径 | 说明 |
-|------|------|------|
+| --- | --- | --- |
 | 源章节 | `books/ch*.md` | 10 个源文件覆盖 12 章 |
 | 附录 A 端到端案例研究 | `books/appendix-a-case-studies.md` | SELECT / COMMIT / 崩溃恢复三案例 |
 | 附录 B 源码版本变更说明 | `books/appendix-b-version-changes.md` | v2.4.240 → v2.4.249-SNAPSHOT 关键变更 |

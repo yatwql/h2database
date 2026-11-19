@@ -302,7 +302,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## H2 Database 源码全面分析与解读
 
-版本 v6.1 · 2026-06-15 · 6,564 行 · 12 章 + 5 附录
+版本 v6.1 · 2026-06-15 · 6,817 行 · 12 章 + 5 附录
 
 **作者：其·龙（Stallman Wang）**
 **联系邮箱：[stallman.wang@foxmail.com](mailto:stallman.wang@foxmail.com)**
