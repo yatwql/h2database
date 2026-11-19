@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import importlib
 import os
 import unittest
 
@@ -10,7 +11,8 @@ import _fixture
 
 _fixture.ensure_tools_path()
 
-import _tags
+# imported through importlib: no import statement may follow the path setup
+_tags = importlib.import_module('_tags')
 
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 TAGS = ('layer:infra', 'tier:fast')
