@@ -1,4 +1,5 @@
 {
+  "ownership_conflicts": {},
   "source_root": "/lzcapp/document/codebase/h2db/h2/src/main",
   "source_totals": {
     "packages": 58,
@@ -75,115 +76,10 @@
               "public_methods": 0
             }
           ]
-        },
-        "org.h2.jdbc": {
-          "lines": 17319,
-          "files": 27,
-          "summary": "Implementation of the JDBC API (package {",
-          "depends_on": {
-            "org.h2.value": 57,
-            "org.h2.message": 43,
-            "org.h2.util": 19,
-            "org.h2.engine": 17,
-            "org.h2.result": 13,
-            "org.h2.api": 9,
-            "org.h2.command": 5,
-            "org.h2.expression": 3
-          },
-          "key_classes": [
-            {
-              "name": "JdbcResultSet",
-              "lines": 4291,
-              "summary": "",
-              "public_methods": 199
-            },
-            {
-              "name": "JdbcDatabaseMetaData",
-              "lines": 2756,
-              "summary": "",
-              "public_methods": 177
-            },
-            {
-              "name": "JdbcConnection",
-              "lines": 1930,
-              "summary": "",
-              "public_methods": 62
-            },
-            {
-              "name": "JdbcCallableStatement",
-              "lines": 1863,
-              "summary": "",
-              "public_methods": 117
-            },
-            {
-              "name": "JdbcPreparedStatement",
-              "lines": 1629,
-              "summary": "",
-              "public_methods": 65
-            },
-            {
-              "name": "JdbcStatement",
-              "lines": 1502,
-              "summary": "",
-              "public_methods": 56
-            }
-          ]
-        },
-        "org.h2.api": {
-          "lines": 4150,
-          "files": 12,
-          "summary": "Contains interfaces for user-defined extensions, such as triggers and user-defined aggregate functions.",
-          "depends_on": {
-            "org.h2.security.auth": 5,
-            "org.h2.value": 3,
-            "org.h2.util.DateTimeUtils": 2,
-            "org.h2.message": 1,
-            "org.h2.util": 1,
-            "org.h2.command.ddl": 1,
-            "org.h2.table": 1
-          },
-          "key_classes": [
-            {
-              "name": "ErrorCode",
-              "lines": 2367,
-              "summary": "",
-              "public_methods": 2
-            },
-            {
-              "name": "Interval",
-              "lines": 636,
-              "summary": "",
-              "public_methods": 33
-            },
-            {
-              "name": "IntervalQualifier",
-              "lines": 353,
-              "summary": "",
-              "public_methods": 13
-            },
-            {
-              "name": "H2Type",
-              "lines": 322,
-              "summary": "",
-              "public_methods": 6
-            },
-            {
-              "name": "DatabaseEventListener",
-              "lines": 113,
-              "summary": "",
-              "public_methods": 0
-            },
-            {
-              "name": "Trigger",
-              "lines": 105,
-              "summary": "",
-              "public_methods": 0
-            }
-          ]
         }
       },
       "missing_packages": [],
-      "source_lines": 33513
+      "source_lines": 12044
     },
     {
       "file": "ch3-packages.md",
@@ -240,323 +136,6 @@
             }
           ]
         },
-        "org.h2.command": {
-          "lines": 15014,
-          "files": 11,
-          "summary": "This package contains the parser and the base classes for prepared SQL statements.",
-          "depends_on": {
-            "org.h2.util.ParserUtil": 188,
-            "org.h2.expression.function": 44,
-            "org.h2.value": 41,
-            "org.h2.expression": 39,
-            "org.h2.engine": 35,
-            "org.h2.result": 21,
-            "org.h2.table": 20,
-            "org.h2.expression.condition": 16
-          },
-          "key_classes": [
-            {
-              "name": "Parser",
-              "lines": 9470,
-              "summary": "",
-              "public_methods": 9
-            },
-            {
-              "name": "Tokenizer",
-              "lines": 1522,
-              "summary": "",
-              "public_methods": 0
-            },
-            {
-              "name": "ParserBase",
-              "lines": 771,
-              "summary": "",
-              "public_methods": 8
-            },
-            {
-              "name": "Token",
-              "lines": 758,
-              "summary": "",
-              "public_methods": 5
-            },
-            {
-              "name": "CommandInterface",
-              "lines": 654,
-              "summary": "",
-              "public_methods": 0
-            },
-            {
-              "name": "Prepared",
-              "lines": 503,
-              "summary": "",
-              "public_methods": 33
-            }
-          ]
-        },
-        "org.h2.engine": {
-          "lines": 11839,
-          "files": 28,
-          "summary": "Contains high level classes of the database and classes that don't fit in another sub-package.",
-          "depends_on": {
-            "org.h2.util": 55,
-            "org.h2.message": 33,
-            "org.h2.value": 26,
-            "org.h2.api": 18,
-            "org.h2.command": 16,
-            "org.h2.table": 16,
-            "org.h2.store": 13,
-            "org.h2.schema": 12
-          },
-          "key_classes": [
-            {
-              "name": "Database",
-              "lines": 2566,
-              "summary": "",
-              "public_methods": 152
-            },
-            {
-              "name": "SessionLocal",
-              "lines": 2156,
-              "summary": "",
-              "public_methods": 135
-            },
-            {
-              "name": "SessionRemote",
-              "lines": 1068,
-              "summary": "",
-              "public_methods": 53
-            },
-            {
-              "name": "Mode",
-              "lines": 776,
-              "summary": "",
-              "public_methods": 5
-            },
-            {
-              "name": "ConnectionInfo",
-              "lines": 766,
-              "summary": "",
-              "public_methods": 25
-            },
-            {
-              "name": "Constants",
-              "lines": 520,
-              "summary": "",
-              "public_methods": 0
-            }
-          ]
-        },
-        "org.h2.expression": {
-          "lines": 5832,
-          "files": 35,
-          "summary": "Expressions include mathematical operations, simple values, and others.",
-          "depends_on": {
-            "org.h2.value": 125,
-            "org.h2.table": 37,
-            "org.h2.engine": 34,
-            "org.h2.message": 20,
-            "org.h2.util": 15,
-            "org.h2.api": 12,
-            "org.h2.util.DateTimeUtils": 8,
-            "org.h2.command.query": 7
-          },
-          "key_classes": [
-            {
-              "name": "ExpressionColumn",
-              "lines": 553,
-              "summary": "",
-              "public_methods": 23
-            },
-            {
-              "name": "Expression",
-              "lines": 551,
-              "summary": "",
-              "public_methods": 41
-            },
-            {
-              "name": "BinaryOperation",
-              "lines": 455,
-              "summary": "",
-              "public_methods": 6
-            },
-            {
-              "name": "ExpressionVisitor",
-              "lines": 417,
-              "summary": "",
-              "public_methods": 17
-            },
-            {
-              "name": "IntervalOperation",
-              "lines": 381,
-              "summary": "",
-              "public_methods": 4
-            },
-            {
-              "name": "SimpleCase",
-              "lines": 289,
-              "summary": "",
-              "public_methods": 12
-            }
-          ]
-        },
-        "org.h2.index": {
-          "lines": 4093,
-          "files": 23,
-          "summary": "Various table index implementations, as well as cursors to navigate in an index.",
-          "depends_on": {
-            "org.h2.result": 51,
-            "org.h2.table": 41,
-            "org.h2.value": 27,
-            "org.h2.engine": 20,
-            "org.h2.message": 18,
-            "org.h2.command.query": 13,
-            "org.h2.expression": 8,
-            "org.h2.api": 3
-          },
-          "key_classes": [
-            {
-              "name": "Index",
-              "lines": 834,
-              "summary": "",
-              "public_methods": 37
-            },
-            {
-              "name": "IndexCondition",
-              "lines": 675,
-              "summary": "",
-              "public_methods": 24
-            },
-            {
-              "name": "IndexCursor",
-              "lines": 494,
-              "summary": "",
-              "public_methods": 13
-            },
-            {
-              "name": "LinkedIndex",
-              "lines": 298,
-              "summary": "",
-              "public_methods": 13
-            },
-            {
-              "name": "RegularQueryExpressionIndex",
-              "lines": 223,
-              "summary": "",
-              "public_methods": 4
-            },
-            {
-              "name": "IndexType",
-              "lines": 222,
-              "summary": "",
-              "public_methods": 16
-            }
-          ]
-        },
-        "org.h2.mvstore": {
-          "lines": 14505,
-          "files": 20,
-          "summary": "A persistent storage for tree maps.",
-          "depends_on": {
-            "org.h2.util": 10,
-            "org.h2.compress": 7,
-            "org.h2.store.fs": 5,
-            "org.h2.store.fs.encrypt": 4,
-            "org.h2.engine": 4,
-            "org.h2.engine.Constants": 4,
-            "org.h2.jdbc": 1
-          },
-          "key_classes": [
-            {
-              "name": "FileStore",
-              "lines": 2386,
-              "summary": "",
-              "public_methods": 64
-            },
-            {
-              "name": "MVStore",
-              "lines": 2215,
-              "summary": "",
-              "public_methods": 85
-            },
-            {
-              "name": "MVMap",
-              "lines": 2181,
-              "summary": "",
-              "public_methods": 102
-            },
-            {
-              "name": "Page",
-              "lines": 1779,
-              "summary": "",
-              "public_methods": 77
-            },
-            {
-              "name": "DataUtils",
-              "lines": 1185,
-              "summary": "",
-              "public_methods": 45
-            },
-            {
-              "name": "RandomAccessStore",
-              "lines": 851,
-              "summary": "",
-              "public_methods": 10
-            }
-          ]
-        },
-        "org.h2.result": {
-          "lines": 3677,
-          "files": 21,
-          "summary": "Implementation of row and internal result sets.",
-          "depends_on": {
-            "org.h2.value": 45,
-            "org.h2.engine": 21,
-            "org.h2.util": 8,
-            "org.h2.expression": 5,
-            "org.h2.message": 5,
-            "org.h2.table": 5,
-            "org.h2.mvstore.db": 2,
-            "org.h2.api": 2
-          },
-          "key_classes": [
-            {
-              "name": "LocalResult",
-              "lines": 710,
-              "summary": "",
-              "public_methods": 42
-            },
-            {
-              "name": "UpdatableRow",
-              "lines": 341,
-              "summary": "",
-              "public_methods": 5
-            },
-            {
-              "name": "SortOrder",
-              "lines": 334,
-              "summary": "",
-              "public_methods": 15
-            },
-            {
-              "name": "SimpleResult",
-              "lines": 303,
-              "summary": "",
-              "public_methods": 31
-            },
-            {
-              "name": "ResultRemote",
-              "lines": 287,
-              "summary": "",
-              "public_methods": 17
-            },
-            {
-              "name": "RowFactory",
-              "lines": 201,
-              "summary": "",
-              "public_methods": 17
-            }
-          ]
-        },
         "org.h2.schema": {
           "lines": 3213,
           "files": 11,
@@ -609,332 +188,14 @@
               "public_methods": 9
             }
           ]
-        },
-        "org.h2.store": {
-          "lines": 2712,
-          "files": 17,
-          "summary": "Storage abstractions and helper classes.",
-          "depends_on": {
-            "org.h2.engine": 16,
-            "org.h2.util": 14,
-            "org.h2.message": 11,
-            "org.h2.value": 8,
-            "org.h2.api": 4,
-            "org.h2.tools": 3,
-            "org.h2.util.Bits": 1,
-            "org.h2.Driver": 1
-          },
-          "key_classes": [
-            {
-              "name": "FileLock",
-              "lines": 514,
-              "summary": "",
-              "public_methods": 8
-            },
-            {
-              "name": "FileStore",
-              "lines": 513,
-              "summary": "",
-              "public_methods": 22
-            },
-            {
-              "name": "Data",
-              "lines": 220,
-              "summary": "",
-              "public_methods": 13
-            },
-            {
-              "name": "RecoverTester",
-              "lines": 176,
-              "summary": "",
-              "public_methods": 3
-            },
-            {
-              "name": "FileStoreInputStream",
-              "lines": 155,
-              "summary": "",
-              "public_methods": 5
-            },
-            {
-              "name": "DataReader",
-              "lines": 133,
-              "summary": "",
-              "public_methods": 5
-            }
-          ]
-        },
-        "org.h2.table": {
-          "lines": 13388,
-          "files": 31,
-          "summary": "Classes related to a table and table meta data.",
-          "depends_on": {
-            "org.h2.value": 59,
-            "org.h2.engine": 57,
-            "org.h2.result": 42,
-            "org.h2.index": 40,
-            "org.h2.schema": 37,
-            "org.h2.util": 36,
-            "org.h2.expression": 26,
-            "org.h2.message": 19
-          },
-          "key_classes": [
-            {
-              "name": "InformationSchemaTable",
-              "lines": 3299,
-              "summary": "",
-              "public_methods": 6
-            },
-            {
-              "name": "InformationSchemaTableLegacy",
-              "lines": 2324,
-              "summary": "",
-              "public_methods": 2
-            },
-            {
-              "name": "Table",
-              "lines": 1446,
-              "summary": "",
-              "public_methods": 98
-            },
-            {
-              "name": "TableFilter",
-              "lines": 1310,
-              "summary": "",
-              "public_methods": 66
-            },
-            {
-              "name": "Column",
-              "lines": 867,
-              "summary": "",
-              "public_methods": 58
-            },
-            {
-              "name": "TableLink",
-              "lines": 718,
-              "summary": "",
-              "public_methods": 35
-            }
-          ]
-        },
-        "org.h2.tools": {
-          "lines": 10868,
-          "files": 23,
-          "summary": "Various tools.",
-          "depends_on": {
-            "org.h2.util": 53,
-            "org.h2.engine": 14,
-            "org.h2.value": 14,
-            "org.h2.message": 12,
-            "org.h2.store": 10,
-            "org.h2.store.fs": 10,
-            "org.h2.mvstore": 7,
-            "org.h2.api": 6
-          },
-          "key_classes": [
-            {
-              "name": "SimpleResultSet",
-              "lines": 2480,
-              "summary": "",
-              "public_methods": 228
-            },
-            {
-              "name": "Csv",
-              "lines": 986,
-              "summary": "",
-              "public_methods": 33
-            },
-            {
-              "name": "Recover",
-              "lines": 922,
-              "summary": "",
-              "public_methods": 18
-            },
-            {
-              "name": "Server",
-              "lines": 823,
-              "summary": "",
-              "public_methods": 19
-            },
-            {
-              "name": "DirectRecover",
-              "lines": 767,
-              "summary": "",
-              "public_methods": 11
-            },
-            {
-              "name": "Shell",
-              "lines": 639,
-              "summary": "",
-              "public_methods": 7
-            }
-          ]
-        },
-        "org.h2.util": {
-          "lines": 14460,
-          "files": 48,
-          "summary": "Internal utility classes.",
-          "depends_on": {
-            "org.h2.value": 35,
-            "org.h2.engine": 18,
-            "org.h2.message": 16,
-            "org.h2.api": 13,
-            "org.h2.store.fs": 5,
-            "org.h2.jdbc": 2,
-            "org.h2.mvstore": 1,
-            "org.h2.tools": 1
-          },
-          "key_classes": [
-            {
-              "name": "StringUtils",
-              "lines": 1415,
-              "summary": "",
-              "public_methods": 55
-            },
-            {
-              "name": "DateTimeUtils",
-              "lines": 1171,
-              "summary": "",
-              "public_methods": 42
-            },
-            {
-              "name": "DateTimeTemplate",
-              "lines": 859,
-              "summary": "",
-              "public_methods": 5
-            },
-            {
-              "name": "IntervalUtils",
-              "lines": 857,
-              "summary": "",
-              "public_methods": 12
-            },
-            {
-              "name": "Utils",
-              "lines": 832,
-              "summary": "",
-              "public_methods": 34
-            },
-            {
-              "name": "JdbcUtils",
-              "lines": 785,
-              "summary": "",
-              "public_methods": 17
-            }
-          ]
-        },
-        "org.h2.value": {
-          "lines": 15501,
-          "files": 55,
-          "summary": "Data type and value implementations.",
-          "depends_on": {
-            "org.h2.util": 63,
-            "org.h2.engine": 59,
-            "org.h2.message": 40,
-            "org.h2.api": 37,
-            "org.h2.store": 17,
-            "org.h2.util.json": 11,
-            "org.h2.jdbc": 8,
-            "org.h2.util.Bits": 7
-          },
-          "key_classes": [
-            {
-              "name": "Value",
-              "lines": 2873,
-              "summary": "",
-              "public_methods": 67
-            },
-            {
-              "name": "TypeInfo",
-              "lines": 1539,
-              "summary": "",
-              "public_methods": 23
-            },
-            {
-              "name": "Transfer",
-              "lines": 1368,
-              "summary": "",
-              "public_methods": 31
-            },
-            {
-              "name": "DataType",
-              "lines": 828,
-              "summary": "",
-              "public_methods": 25
-            },
-            {
-              "name": "ValueToObjectConverter",
-              "lines": 642,
-              "summary": "",
-              "public_methods": 6
-            },
-            {
-              "name": "ValueToObjectConverter2",
-              "lines": 433,
-              "summary": "",
-              "public_methods": 2
-            }
-          ]
         }
       },
       "missing_packages": [],
-      "source_lines": 119252
+      "source_lines": 7363
     },
     {
       "file": "ch4-5-modules-processes.md",
       "packages": {
-        "org.h2.engine": {
-          "lines": 11839,
-          "files": 28,
-          "summary": "Contains high level classes of the database and classes that don't fit in another sub-package.",
-          "depends_on": {
-            "org.h2.util": 55,
-            "org.h2.message": 33,
-            "org.h2.value": 26,
-            "org.h2.api": 18,
-            "org.h2.command": 16,
-            "org.h2.table": 16,
-            "org.h2.store": 13,
-            "org.h2.schema": 12
-          },
-          "key_classes": [
-            {
-              "name": "Database",
-              "lines": 2566,
-              "summary": "",
-              "public_methods": 152
-            },
-            {
-              "name": "SessionLocal",
-              "lines": 2156,
-              "summary": "",
-              "public_methods": 135
-            },
-            {
-              "name": "SessionRemote",
-              "lines": 1068,
-              "summary": "",
-              "public_methods": 53
-            },
-            {
-              "name": "Mode",
-              "lines": 776,
-              "summary": "",
-              "public_methods": 5
-            },
-            {
-              "name": "ConnectionInfo",
-              "lines": 766,
-              "summary": "",
-              "public_methods": 25
-            },
-            {
-              "name": "Constants",
-              "lines": 520,
-              "summary": "",
-              "public_methods": 0
-            }
-          ]
-        },
         "org.h2.command": {
           "lines": 15014,
           "files": 11,
@@ -987,172 +248,14 @@
               "public_methods": 33
             }
           ]
-        },
-        "org.h2.store": {
-          "lines": 2712,
-          "files": 17,
-          "summary": "Storage abstractions and helper classes.",
-          "depends_on": {
-            "org.h2.engine": 16,
-            "org.h2.util": 14,
-            "org.h2.message": 11,
-            "org.h2.value": 8,
-            "org.h2.api": 4,
-            "org.h2.tools": 3,
-            "org.h2.util.Bits": 1,
-            "org.h2.Driver": 1
-          },
-          "key_classes": [
-            {
-              "name": "FileLock",
-              "lines": 514,
-              "summary": "",
-              "public_methods": 8
-            },
-            {
-              "name": "FileStore",
-              "lines": 513,
-              "summary": "",
-              "public_methods": 22
-            },
-            {
-              "name": "Data",
-              "lines": 220,
-              "summary": "",
-              "public_methods": 13
-            },
-            {
-              "name": "RecoverTester",
-              "lines": 176,
-              "summary": "",
-              "public_methods": 3
-            },
-            {
-              "name": "FileStoreInputStream",
-              "lines": 155,
-              "summary": "",
-              "public_methods": 5
-            },
-            {
-              "name": "DataReader",
-              "lines": 133,
-              "summary": "",
-              "public_methods": 5
-            }
-          ]
-        },
-        "org.h2.mvstore": {
-          "lines": 14505,
-          "files": 20,
-          "summary": "A persistent storage for tree maps.",
-          "depends_on": {
-            "org.h2.util": 10,
-            "org.h2.compress": 7,
-            "org.h2.store.fs": 5,
-            "org.h2.store.fs.encrypt": 4,
-            "org.h2.engine": 4,
-            "org.h2.engine.Constants": 4,
-            "org.h2.jdbc": 1
-          },
-          "key_classes": [
-            {
-              "name": "FileStore",
-              "lines": 2386,
-              "summary": "",
-              "public_methods": 64
-            },
-            {
-              "name": "MVStore",
-              "lines": 2215,
-              "summary": "",
-              "public_methods": 85
-            },
-            {
-              "name": "MVMap",
-              "lines": 2181,
-              "summary": "",
-              "public_methods": 102
-            },
-            {
-              "name": "Page",
-              "lines": 1779,
-              "summary": "",
-              "public_methods": 77
-            },
-            {
-              "name": "DataUtils",
-              "lines": 1185,
-              "summary": "",
-              "public_methods": 45
-            },
-            {
-              "name": "RandomAccessStore",
-              "lines": 851,
-              "summary": "",
-              "public_methods": 10
-            }
-          ]
         }
       },
       "missing_packages": [],
-      "source_lines": 44070
+      "source_lines": 15014
     },
     {
       "file": "ch6-1-data-structures.md",
       "packages": {
-        "org.h2.result": {
-          "lines": 3677,
-          "files": 21,
-          "summary": "Implementation of row and internal result sets.",
-          "depends_on": {
-            "org.h2.value": 45,
-            "org.h2.engine": 21,
-            "org.h2.util": 8,
-            "org.h2.expression": 5,
-            "org.h2.message": 5,
-            "org.h2.table": 5,
-            "org.h2.mvstore.db": 2,
-            "org.h2.api": 2
-          },
-          "key_classes": [
-            {
-              "name": "LocalResult",
-              "lines": 710,
-              "summary": "",
-              "public_methods": 42
-            },
-            {
-              "name": "UpdatableRow",
-              "lines": 341,
-              "summary": "",
-              "public_methods": 5
-            },
-            {
-              "name": "SortOrder",
-              "lines": 334,
-              "summary": "",
-              "public_methods": 15
-            },
-            {
-              "name": "SimpleResult",
-              "lines": 303,
-              "summary": "",
-              "public_methods": 31
-            },
-            {
-              "name": "ResultRemote",
-              "lines": 287,
-              "summary": "",
-              "public_methods": 17
-            },
-            {
-              "name": "RowFactory",
-              "lines": 201,
-              "summary": "",
-              "public_methods": 17
-            }
-          ]
-        },
         "org.h2.value": {
           "lines": 15501,
           "files": 55,
@@ -1206,106 +309,54 @@
             }
           ]
         },
-        "org.h2.mvstore": {
-          "lines": 14505,
-          "files": 20,
-          "summary": "A persistent storage for tree maps.",
+        "org.h2.result": {
+          "lines": 3677,
+          "files": 21,
+          "summary": "Implementation of row and internal result sets.",
           "depends_on": {
-            "org.h2.util": 10,
-            "org.h2.compress": 7,
-            "org.h2.store.fs": 5,
-            "org.h2.store.fs.encrypt": 4,
-            "org.h2.engine": 4,
-            "org.h2.engine.Constants": 4,
-            "org.h2.jdbc": 1
+            "org.h2.value": 45,
+            "org.h2.engine": 21,
+            "org.h2.util": 8,
+            "org.h2.expression": 5,
+            "org.h2.message": 5,
+            "org.h2.table": 5,
+            "org.h2.mvstore.db": 2,
+            "org.h2.api": 2
           },
           "key_classes": [
             {
-              "name": "FileStore",
-              "lines": 2386,
-              "summary": "",
-              "public_methods": 64
-            },
-            {
-              "name": "MVStore",
-              "lines": 2215,
-              "summary": "",
-              "public_methods": 85
-            },
-            {
-              "name": "MVMap",
-              "lines": 2181,
-              "summary": "",
-              "public_methods": 102
-            },
-            {
-              "name": "Page",
-              "lines": 1779,
-              "summary": "",
-              "public_methods": 77
-            },
-            {
-              "name": "DataUtils",
-              "lines": 1185,
-              "summary": "",
-              "public_methods": 45
-            },
-            {
-              "name": "RandomAccessStore",
-              "lines": 851,
-              "summary": "",
-              "public_methods": 10
-            }
-          ]
-        },
-        "org.h2.util": {
-          "lines": 14460,
-          "files": 48,
-          "summary": "Internal utility classes.",
-          "depends_on": {
-            "org.h2.value": 35,
-            "org.h2.engine": 18,
-            "org.h2.message": 16,
-            "org.h2.api": 13,
-            "org.h2.store.fs": 5,
-            "org.h2.jdbc": 2,
-            "org.h2.mvstore": 1,
-            "org.h2.tools": 1
-          },
-          "key_classes": [
-            {
-              "name": "StringUtils",
-              "lines": 1415,
-              "summary": "",
-              "public_methods": 55
-            },
-            {
-              "name": "DateTimeUtils",
-              "lines": 1171,
+              "name": "LocalResult",
+              "lines": 710,
               "summary": "",
               "public_methods": 42
             },
             {
-              "name": "DateTimeTemplate",
-              "lines": 859,
+              "name": "UpdatableRow",
+              "lines": 341,
               "summary": "",
               "public_methods": 5
             },
             {
-              "name": "IntervalUtils",
-              "lines": 857,
+              "name": "SortOrder",
+              "lines": 334,
               "summary": "",
-              "public_methods": 12
+              "public_methods": 15
             },
             {
-              "name": "Utils",
-              "lines": 832,
+              "name": "SimpleResult",
+              "lines": 303,
               "summary": "",
-              "public_methods": 34
+              "public_methods": 31
             },
             {
-              "name": "JdbcUtils",
-              "lines": 785,
+              "name": "ResultRemote",
+              "lines": 287,
+              "summary": "",
+              "public_methods": 17
+            },
+            {
+              "name": "RowFactory",
+              "lines": 201,
               "summary": "",
               "public_methods": 17
             }
@@ -1313,7 +364,7 @@
         }
       },
       "missing_packages": [],
-      "source_lines": 48143
+      "source_lines": 19178
     },
     {
       "file": "ch6-2-storage-algorithms.md",
@@ -1369,110 +420,10 @@
               "public_methods": 10
             }
           ]
-        },
-        "org.h2.store": {
-          "lines": 2712,
-          "files": 17,
-          "summary": "Storage abstractions and helper classes.",
-          "depends_on": {
-            "org.h2.engine": 16,
-            "org.h2.util": 14,
-            "org.h2.message": 11,
-            "org.h2.value": 8,
-            "org.h2.api": 4,
-            "org.h2.tools": 3,
-            "org.h2.util.Bits": 1,
-            "org.h2.Driver": 1
-          },
-          "key_classes": [
-            {
-              "name": "FileLock",
-              "lines": 514,
-              "summary": "",
-              "public_methods": 8
-            },
-            {
-              "name": "FileStore",
-              "lines": 513,
-              "summary": "",
-              "public_methods": 22
-            },
-            {
-              "name": "Data",
-              "lines": 220,
-              "summary": "",
-              "public_methods": 13
-            },
-            {
-              "name": "RecoverTester",
-              "lines": 176,
-              "summary": "",
-              "public_methods": 3
-            },
-            {
-              "name": "FileStoreInputStream",
-              "lines": 155,
-              "summary": "",
-              "public_methods": 5
-            },
-            {
-              "name": "DataReader",
-              "lines": 133,
-              "summary": "",
-              "public_methods": 5
-            }
-          ]
-        },
-        "org.h2.store.fs": {
-          "lines": 1334,
-          "files": 7,
-          "summary": "A file system abstraction.",
-          "depends_on": {
-            "org.h2.util": 1,
-            "org.h2.engine": 1
-          },
-          "key_classes": [
-            {
-              "name": "FileUtils",
-              "lines": 477,
-              "summary": "",
-              "public_methods": 29
-            },
-            {
-              "name": "FilePath",
-              "lines": 353,
-              "summary": "",
-              "public_methods": 28
-            },
-            {
-              "name": "FilePathWrapper",
-              "lines": 171,
-              "summary": "",
-              "public_methods": 22
-            },
-            {
-              "name": "FakeFileChannel",
-              "lines": 112,
-              "summary": "",
-              "public_methods": 16
-            },
-            {
-              "name": "FileBase",
-              "lines": 92,
-              "summary": "",
-              "public_methods": 10
-            },
-            {
-              "name": "FileBaseDefault",
-              "lines": 69,
-              "summary": "",
-              "public_methods": 5
-            }
-          ]
         }
       },
       "missing_packages": [],
-      "source_lines": 18551
+      "source_lines": 14505
     },
     {
       "file": "ch6-3-query-algorithms.md",
@@ -1529,7 +480,14 @@
               "public_methods": 16
             }
           ]
-        },
+        }
+      },
+      "missing_packages": [],
+      "source_lines": 4093
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "packages": {
         "org.h2.expression": {
           "lines": 5832,
           "files": 35,
@@ -1583,116 +541,56 @@
             }
           ]
         },
-        "org.h2.result": {
-          "lines": 3677,
-          "files": 21,
-          "summary": "Implementation of row and internal result sets.",
+        "org.h2.expression.function": {
+          "lines": 9509,
+          "files": 50,
+          "summary": "Functions.",
           "depends_on": {
-            "org.h2.value": 45,
-            "org.h2.engine": 21,
-            "org.h2.util": 8,
-            "org.h2.expression": 5,
-            "org.h2.message": 5,
-            "org.h2.table": 5,
-            "org.h2.mvstore.db": 2,
-            "org.h2.api": 2
+            "org.h2.value": 209,
+            "org.h2.expression": 103,
+            "org.h2.engine": 58,
+            "org.h2.message": 42,
+            "org.h2.util": 28,
+            "org.h2.api": 14,
+            "org.h2.table": 10,
+            "org.h2.schema": 9
           },
           "key_classes": [
             {
-              "name": "LocalResult",
-              "lines": 710,
-              "summary": "",
-              "public_methods": 42
-            },
-            {
-              "name": "UpdatableRow",
-              "lines": 341,
-              "summary": "",
-              "public_methods": 5
-            },
-            {
-              "name": "SortOrder",
-              "lines": 334,
-              "summary": "",
-              "public_methods": 15
-            },
-            {
-              "name": "SimpleResult",
-              "lines": 303,
-              "summary": "",
-              "public_methods": 31
-            },
-            {
-              "name": "ResultRemote",
-              "lines": 287,
-              "summary": "",
-              "public_methods": 17
-            },
-            {
-              "name": "RowFactory",
-              "lines": 201,
-              "summary": "",
-              "public_methods": 17
-            }
-          ]
-        }
-      },
-      "missing_packages": [],
-      "source_lines": 13602
-    },
-    {
-      "file": "ch7-sql-execution.md",
-      "packages": {
-        "org.h2.command": {
-          "lines": 15014,
-          "files": 11,
-          "summary": "This package contains the parser and the base classes for prepared SQL statements.",
-          "depends_on": {
-            "org.h2.util.ParserUtil": 188,
-            "org.h2.expression.function": 44,
-            "org.h2.value": 41,
-            "org.h2.expression": 39,
-            "org.h2.engine": 35,
-            "org.h2.result": 21,
-            "org.h2.table": 20,
-            "org.h2.expression.condition": 16
-          },
-          "key_classes": [
-            {
-              "name": "Parser",
-              "lines": 9470,
-              "summary": "",
-              "public_methods": 9
-            },
-            {
-              "name": "Tokenizer",
-              "lines": 1522,
-              "summary": "",
-              "public_methods": 0
-            },
-            {
-              "name": "ParserBase",
-              "lines": 771,
+              "name": "ToCharFunction",
+              "lines": 1156,
               "summary": "",
               "public_methods": 8
             },
             {
-              "name": "Token",
-              "lines": 758,
+              "name": "DateTimeFunction",
+              "lines": 1081,
+              "summary": "",
+              "public_methods": 7
+            },
+            {
+              "name": "BitFunction",
+              "lines": 730,
               "summary": "",
               "public_methods": 5
             },
             {
-              "name": "CommandInterface",
-              "lines": 654,
+              "name": "MathFunction",
+              "lines": 405,
               "summary": "",
-              "public_methods": 0
+              "public_methods": 3
             },
             {
-              "name": "Prepared",
-              "lines": 503,
+              "name": "DateTimeFormatFunction",
+              "lines": 339,
               "summary": "",
-              "public_methods": 33
+              "public_methods": 7
+            },
+            {
+              "name": "StringFunction1",
+              "lines": 284,
+              "summary": "",
+              "public_methods": 3
             }
           ]
         },
@@ -1801,173 +699,14 @@
               "public_methods": 9
             }
           ]
-        },
-        "org.h2.expression": {
-          "lines": 5832,
-          "files": 35,
-          "summary": "Expressions include mathematical operations, simple values, and others.",
-          "depends_on": {
-            "org.h2.value": 125,
-            "org.h2.table": 37,
-            "org.h2.engine": 34,
-            "org.h2.message": 20,
-            "org.h2.util": 15,
-            "org.h2.api": 12,
-            "org.h2.util.DateTimeUtils": 8,
-            "org.h2.command.query": 7
-          },
-          "key_classes": [
-            {
-              "name": "ExpressionColumn",
-              "lines": 553,
-              "summary": "",
-              "public_methods": 23
-            },
-            {
-              "name": "Expression",
-              "lines": 551,
-              "summary": "",
-              "public_methods": 41
-            },
-            {
-              "name": "BinaryOperation",
-              "lines": 455,
-              "summary": "",
-              "public_methods": 6
-            },
-            {
-              "name": "ExpressionVisitor",
-              "lines": 417,
-              "summary": "",
-              "public_methods": 17
-            },
-            {
-              "name": "IntervalOperation",
-              "lines": 381,
-              "summary": "",
-              "public_methods": 4
-            },
-            {
-              "name": "SimpleCase",
-              "lines": 289,
-              "summary": "",
-              "public_methods": 12
-            }
-          ]
-        },
-        "org.h2.expression.function": {
-          "lines": 9509,
-          "files": 50,
-          "summary": "Functions.",
-          "depends_on": {
-            "org.h2.value": 209,
-            "org.h2.expression": 103,
-            "org.h2.engine": 58,
-            "org.h2.message": 42,
-            "org.h2.util": 28,
-            "org.h2.api": 14,
-            "org.h2.table": 10,
-            "org.h2.schema": 9
-          },
-          "key_classes": [
-            {
-              "name": "ToCharFunction",
-              "lines": 1156,
-              "summary": "",
-              "public_methods": 8
-            },
-            {
-              "name": "DateTimeFunction",
-              "lines": 1081,
-              "summary": "",
-              "public_methods": 7
-            },
-            {
-              "name": "BitFunction",
-              "lines": 730,
-              "summary": "",
-              "public_methods": 5
-            },
-            {
-              "name": "MathFunction",
-              "lines": 405,
-              "summary": "",
-              "public_methods": 3
-            },
-            {
-              "name": "DateTimeFormatFunction",
-              "lines": 339,
-              "summary": "",
-              "public_methods": 7
-            },
-            {
-              "name": "StringFunction1",
-              "lines": 284,
-              "summary": "",
-              "public_methods": 3
-            }
-          ]
         }
       },
       "missing_packages": [],
-      "source_lines": 43366
+      "source_lines": 28352
     },
     {
       "file": "ch8-query-optimizer.md",
       "packages": {
-        "org.h2.index": {
-          "lines": 4093,
-          "files": 23,
-          "summary": "Various table index implementations, as well as cursors to navigate in an index.",
-          "depends_on": {
-            "org.h2.result": 51,
-            "org.h2.table": 41,
-            "org.h2.value": 27,
-            "org.h2.engine": 20,
-            "org.h2.message": 18,
-            "org.h2.command.query": 13,
-            "org.h2.expression": 8,
-            "org.h2.api": 3
-          },
-          "key_classes": [
-            {
-              "name": "Index",
-              "lines": 834,
-              "summary": "",
-              "public_methods": 37
-            },
-            {
-              "name": "IndexCondition",
-              "lines": 675,
-              "summary": "",
-              "public_methods": 24
-            },
-            {
-              "name": "IndexCursor",
-              "lines": 494,
-              "summary": "",
-              "public_methods": 13
-            },
-            {
-              "name": "LinkedIndex",
-              "lines": 298,
-              "summary": "",
-              "public_methods": 13
-            },
-            {
-              "name": "RegularQueryExpressionIndex",
-              "lines": 223,
-              "summary": "",
-              "public_methods": 4
-            },
-            {
-              "name": "IndexType",
-              "lines": 222,
-              "summary": "",
-              "public_methods": 16
-            }
-          ]
-        },
         "org.h2.table": {
           "lines": 13388,
           "files": 31,
@@ -2076,7 +815,7 @@
         }
       },
       "missing_packages": [],
-      "source_lines": 20347
+      "source_lines": 16254
     },
     {
       "file": "ch9-10-persistence-locking.md",
@@ -2134,108 +873,50 @@
             }
           ]
         },
-        "org.h2.mvstore": {
-          "lines": 14505,
-          "files": 20,
-          "summary": "A persistent storage for tree maps.",
+        "org.h2.store.fs": {
+          "lines": 1334,
+          "files": 7,
+          "summary": "A file system abstraction.",
           "depends_on": {
-            "org.h2.util": 10,
-            "org.h2.compress": 7,
-            "org.h2.store.fs": 5,
-            "org.h2.store.fs.encrypt": 4,
-            "org.h2.engine": 4,
-            "org.h2.engine.Constants": 4,
-            "org.h2.jdbc": 1
+            "org.h2.util": 1,
+            "org.h2.engine": 1
           },
           "key_classes": [
             {
-              "name": "FileStore",
-              "lines": 2386,
+              "name": "FileUtils",
+              "lines": 477,
               "summary": "",
-              "public_methods": 64
+              "public_methods": 29
             },
             {
-              "name": "MVStore",
-              "lines": 2215,
+              "name": "FilePath",
+              "lines": 353,
               "summary": "",
-              "public_methods": 85
+              "public_methods": 28
             },
             {
-              "name": "MVMap",
-              "lines": 2181,
+              "name": "FilePathWrapper",
+              "lines": 171,
               "summary": "",
-              "public_methods": 102
+              "public_methods": 22
             },
             {
-              "name": "Page",
-              "lines": 1779,
+              "name": "FakeFileChannel",
+              "lines": 112,
               "summary": "",
-              "public_methods": 77
+              "public_methods": 16
             },
             {
-              "name": "DataUtils",
-              "lines": 1185,
-              "summary": "",
-              "public_methods": 45
-            },
-            {
-              "name": "RandomAccessStore",
-              "lines": 851,
+              "name": "FileBase",
+              "lines": 92,
               "summary": "",
               "public_methods": 10
-            }
-          ]
-        },
-        "org.h2.engine": {
-          "lines": 11839,
-          "files": 28,
-          "summary": "Contains high level classes of the database and classes that don't fit in another sub-package.",
-          "depends_on": {
-            "org.h2.util": 55,
-            "org.h2.message": 33,
-            "org.h2.value": 26,
-            "org.h2.api": 18,
-            "org.h2.command": 16,
-            "org.h2.table": 16,
-            "org.h2.store": 13,
-            "org.h2.schema": 12
-          },
-          "key_classes": [
-            {
-              "name": "Database",
-              "lines": 2566,
-              "summary": "",
-              "public_methods": 152
             },
             {
-              "name": "SessionLocal",
-              "lines": 2156,
-              "summary": "",
-              "public_methods": 135
-            },
-            {
-              "name": "SessionRemote",
-              "lines": 1068,
-              "summary": "",
-              "public_methods": 53
-            },
-            {
-              "name": "Mode",
-              "lines": 776,
+              "name": "FileBaseDefault",
+              "lines": 69,
               "summary": "",
               "public_methods": 5
-            },
-            {
-              "name": "ConnectionInfo",
-              "lines": 766,
-              "summary": "",
-              "public_methods": 25
-            },
-            {
-              "name": "Constants",
-              "lines": 520,
-              "summary": "",
-              "public_methods": 0
             }
           ]
         },
@@ -2294,7 +975,7 @@
         }
       },
       "missing_packages": [],
-      "source_lines": 43516
+      "source_lines": 18506
     },
     {
       "file": "ch11-12-guide-summary.md",
@@ -2352,602 +1033,74 @@
             }
           ]
         },
-        "org.h2.api": {
-          "lines": 4150,
-          "files": 12,
-          "summary": "Contains interfaces for user-defined extensions, such as triggers and user-defined aggregate functions.",
+        "org.h2.jdbc": {
+          "lines": 17319,
+          "files": 27,
+          "summary": "Implementation of the JDBC API (package {",
           "depends_on": {
-            "org.h2.security.auth": 5,
-            "org.h2.value": 3,
-            "org.h2.util.DateTimeUtils": 2,
-            "org.h2.message": 1,
-            "org.h2.util": 1,
-            "org.h2.command.ddl": 1,
-            "org.h2.table": 1
+            "org.h2.value": 57,
+            "org.h2.message": 43,
+            "org.h2.util": 19,
+            "org.h2.engine": 17,
+            "org.h2.result": 13,
+            "org.h2.api": 9,
+            "org.h2.command": 5,
+            "org.h2.expression": 3
           },
           "key_classes": [
             {
-              "name": "ErrorCode",
-              "lines": 2367,
+              "name": "JdbcResultSet",
+              "lines": 4291,
               "summary": "",
-              "public_methods": 2
+              "public_methods": 199
             },
             {
-              "name": "Interval",
-              "lines": 636,
+              "name": "JdbcDatabaseMetaData",
+              "lines": 2756,
               "summary": "",
-              "public_methods": 33
+              "public_methods": 177
             },
             {
-              "name": "IntervalQualifier",
-              "lines": 353,
+              "name": "JdbcConnection",
+              "lines": 1930,
               "summary": "",
-              "public_methods": 13
+              "public_methods": 62
             },
             {
-              "name": "H2Type",
-              "lines": 322,
+              "name": "JdbcCallableStatement",
+              "lines": 1863,
               "summary": "",
-              "public_methods": 6
+              "public_methods": 117
             },
             {
-              "name": "DatabaseEventListener",
-              "lines": 113,
+              "name": "JdbcPreparedStatement",
+              "lines": 1629,
               "summary": "",
-              "public_methods": 0
+              "public_methods": 65
             },
             {
-              "name": "Trigger",
-              "lines": 105,
+              "name": "JdbcStatement",
+              "lines": 1502,
               "summary": "",
-              "public_methods": 0
-            }
-          ]
-        },
-        "org.h2.util": {
-          "lines": 14460,
-          "files": 48,
-          "summary": "Internal utility classes.",
-          "depends_on": {
-            "org.h2.value": 35,
-            "org.h2.engine": 18,
-            "org.h2.message": 16,
-            "org.h2.api": 13,
-            "org.h2.store.fs": 5,
-            "org.h2.jdbc": 2,
-            "org.h2.mvstore": 1,
-            "org.h2.tools": 1
-          },
-          "key_classes": [
-            {
-              "name": "StringUtils",
-              "lines": 1415,
-              "summary": "",
-              "public_methods": 55
-            },
-            {
-              "name": "DateTimeUtils",
-              "lines": 1171,
-              "summary": "",
-              "public_methods": 42
-            },
-            {
-              "name": "DateTimeTemplate",
-              "lines": 859,
-              "summary": "",
-              "public_methods": 5
-            },
-            {
-              "name": "IntervalUtils",
-              "lines": 857,
-              "summary": "",
-              "public_methods": 12
-            },
-            {
-              "name": "Utils",
-              "lines": 832,
-              "summary": "",
-              "public_methods": 34
-            },
-            {
-              "name": "JdbcUtils",
-              "lines": 785,
-              "summary": "",
-              "public_methods": 17
+              "public_methods": 56
             }
           ]
         }
       },
       "missing_packages": [],
-      "source_lines": 29478
+      "source_lines": 28187
     },
     {
       "file": "appendix-a-case-studies.md",
-      "packages": {
-        "org.h2.engine": {
-          "lines": 11839,
-          "files": 28,
-          "summary": "Contains high level classes of the database and classes that don't fit in another sub-package.",
-          "depends_on": {
-            "org.h2.util": 55,
-            "org.h2.message": 33,
-            "org.h2.value": 26,
-            "org.h2.api": 18,
-            "org.h2.command": 16,
-            "org.h2.table": 16,
-            "org.h2.store": 13,
-            "org.h2.schema": 12
-          },
-          "key_classes": [
-            {
-              "name": "Database",
-              "lines": 2566,
-              "summary": "",
-              "public_methods": 152
-            },
-            {
-              "name": "SessionLocal",
-              "lines": 2156,
-              "summary": "",
-              "public_methods": 135
-            },
-            {
-              "name": "SessionRemote",
-              "lines": 1068,
-              "summary": "",
-              "public_methods": 53
-            },
-            {
-              "name": "Mode",
-              "lines": 776,
-              "summary": "",
-              "public_methods": 5
-            },
-            {
-              "name": "ConnectionInfo",
-              "lines": 766,
-              "summary": "",
-              "public_methods": 25
-            },
-            {
-              "name": "Constants",
-              "lines": 520,
-              "summary": "",
-              "public_methods": 0
-            }
-          ]
-        },
-        "org.h2.command": {
-          "lines": 15014,
-          "files": 11,
-          "summary": "This package contains the parser and the base classes for prepared SQL statements.",
-          "depends_on": {
-            "org.h2.util.ParserUtil": 188,
-            "org.h2.expression.function": 44,
-            "org.h2.value": 41,
-            "org.h2.expression": 39,
-            "org.h2.engine": 35,
-            "org.h2.result": 21,
-            "org.h2.table": 20,
-            "org.h2.expression.condition": 16
-          },
-          "key_classes": [
-            {
-              "name": "Parser",
-              "lines": 9470,
-              "summary": "",
-              "public_methods": 9
-            },
-            {
-              "name": "Tokenizer",
-              "lines": 1522,
-              "summary": "",
-              "public_methods": 0
-            },
-            {
-              "name": "ParserBase",
-              "lines": 771,
-              "summary": "",
-              "public_methods": 8
-            },
-            {
-              "name": "Token",
-              "lines": 758,
-              "summary": "",
-              "public_methods": 5
-            },
-            {
-              "name": "CommandInterface",
-              "lines": 654,
-              "summary": "",
-              "public_methods": 0
-            },
-            {
-              "name": "Prepared",
-              "lines": 503,
-              "summary": "",
-              "public_methods": 33
-            }
-          ]
-        },
-        "org.h2.mvstore": {
-          "lines": 14505,
-          "files": 20,
-          "summary": "A persistent storage for tree maps.",
-          "depends_on": {
-            "org.h2.util": 10,
-            "org.h2.compress": 7,
-            "org.h2.store.fs": 5,
-            "org.h2.store.fs.encrypt": 4,
-            "org.h2.engine": 4,
-            "org.h2.engine.Constants": 4,
-            "org.h2.jdbc": 1
-          },
-          "key_classes": [
-            {
-              "name": "FileStore",
-              "lines": 2386,
-              "summary": "",
-              "public_methods": 64
-            },
-            {
-              "name": "MVStore",
-              "lines": 2215,
-              "summary": "",
-              "public_methods": 85
-            },
-            {
-              "name": "MVMap",
-              "lines": 2181,
-              "summary": "",
-              "public_methods": 102
-            },
-            {
-              "name": "Page",
-              "lines": 1779,
-              "summary": "",
-              "public_methods": 77
-            },
-            {
-              "name": "DataUtils",
-              "lines": 1185,
-              "summary": "",
-              "public_methods": 45
-            },
-            {
-              "name": "RandomAccessStore",
-              "lines": 851,
-              "summary": "",
-              "public_methods": 10
-            }
-          ]
-        },
-        "org.h2.index": {
-          "lines": 4093,
-          "files": 23,
-          "summary": "Various table index implementations, as well as cursors to navigate in an index.",
-          "depends_on": {
-            "org.h2.result": 51,
-            "org.h2.table": 41,
-            "org.h2.value": 27,
-            "org.h2.engine": 20,
-            "org.h2.message": 18,
-            "org.h2.command.query": 13,
-            "org.h2.expression": 8,
-            "org.h2.api": 3
-          },
-          "key_classes": [
-            {
-              "name": "Index",
-              "lines": 834,
-              "summary": "",
-              "public_methods": 37
-            },
-            {
-              "name": "IndexCondition",
-              "lines": 675,
-              "summary": "",
-              "public_methods": 24
-            },
-            {
-              "name": "IndexCursor",
-              "lines": 494,
-              "summary": "",
-              "public_methods": 13
-            },
-            {
-              "name": "LinkedIndex",
-              "lines": 298,
-              "summary": "",
-              "public_methods": 13
-            },
-            {
-              "name": "RegularQueryExpressionIndex",
-              "lines": 223,
-              "summary": "",
-              "public_methods": 4
-            },
-            {
-              "name": "IndexType",
-              "lines": 222,
-              "summary": "",
-              "public_methods": 16
-            }
-          ]
-        },
-        "org.h2.expression": {
-          "lines": 5832,
-          "files": 35,
-          "summary": "Expressions include mathematical operations, simple values, and others.",
-          "depends_on": {
-            "org.h2.value": 125,
-            "org.h2.table": 37,
-            "org.h2.engine": 34,
-            "org.h2.message": 20,
-            "org.h2.util": 15,
-            "org.h2.api": 12,
-            "org.h2.util.DateTimeUtils": 8,
-            "org.h2.command.query": 7
-          },
-          "key_classes": [
-            {
-              "name": "ExpressionColumn",
-              "lines": 553,
-              "summary": "",
-              "public_methods": 23
-            },
-            {
-              "name": "Expression",
-              "lines": 551,
-              "summary": "",
-              "public_methods": 41
-            },
-            {
-              "name": "BinaryOperation",
-              "lines": 455,
-              "summary": "",
-              "public_methods": 6
-            },
-            {
-              "name": "ExpressionVisitor",
-              "lines": 417,
-              "summary": "",
-              "public_methods": 17
-            },
-            {
-              "name": "IntervalOperation",
-              "lines": 381,
-              "summary": "",
-              "public_methods": 4
-            },
-            {
-              "name": "SimpleCase",
-              "lines": 289,
-              "summary": "",
-              "public_methods": 12
-            }
-          ]
-        }
-      },
+      "packages": {},
       "missing_packages": [],
-      "source_lines": 51283
+      "source_lines": 0
     },
     {
       "file": "appendix-b-version-changes.md",
-      "packages": {
-        "org.h2.api": {
-          "lines": 4150,
-          "files": 12,
-          "summary": "Contains interfaces for user-defined extensions, such as triggers and user-defined aggregate functions.",
-          "depends_on": {
-            "org.h2.security.auth": 5,
-            "org.h2.value": 3,
-            "org.h2.util.DateTimeUtils": 2,
-            "org.h2.message": 1,
-            "org.h2.util": 1,
-            "org.h2.command.ddl": 1,
-            "org.h2.table": 1
-          },
-          "key_classes": [
-            {
-              "name": "ErrorCode",
-              "lines": 2367,
-              "summary": "",
-              "public_methods": 2
-            },
-            {
-              "name": "Interval",
-              "lines": 636,
-              "summary": "",
-              "public_methods": 33
-            },
-            {
-              "name": "IntervalQualifier",
-              "lines": 353,
-              "summary": "",
-              "public_methods": 13
-            },
-            {
-              "name": "H2Type",
-              "lines": 322,
-              "summary": "",
-              "public_methods": 6
-            },
-            {
-              "name": "DatabaseEventListener",
-              "lines": 113,
-              "summary": "",
-              "public_methods": 0
-            },
-            {
-              "name": "Trigger",
-              "lines": 105,
-              "summary": "",
-              "public_methods": 0
-            }
-          ]
-        },
-        "org.h2.engine": {
-          "lines": 11839,
-          "files": 28,
-          "summary": "Contains high level classes of the database and classes that don't fit in another sub-package.",
-          "depends_on": {
-            "org.h2.util": 55,
-            "org.h2.message": 33,
-            "org.h2.value": 26,
-            "org.h2.api": 18,
-            "org.h2.command": 16,
-            "org.h2.table": 16,
-            "org.h2.store": 13,
-            "org.h2.schema": 12
-          },
-          "key_classes": [
-            {
-              "name": "Database",
-              "lines": 2566,
-              "summary": "",
-              "public_methods": 152
-            },
-            {
-              "name": "SessionLocal",
-              "lines": 2156,
-              "summary": "",
-              "public_methods": 135
-            },
-            {
-              "name": "SessionRemote",
-              "lines": 1068,
-              "summary": "",
-              "public_methods": 53
-            },
-            {
-              "name": "Mode",
-              "lines": 776,
-              "summary": "",
-              "public_methods": 5
-            },
-            {
-              "name": "ConnectionInfo",
-              "lines": 766,
-              "summary": "",
-              "public_methods": 25
-            },
-            {
-              "name": "Constants",
-              "lines": 520,
-              "summary": "",
-              "public_methods": 0
-            }
-          ]
-        },
-        "org.h2.mvstore": {
-          "lines": 14505,
-          "files": 20,
-          "summary": "A persistent storage for tree maps.",
-          "depends_on": {
-            "org.h2.util": 10,
-            "org.h2.compress": 7,
-            "org.h2.store.fs": 5,
-            "org.h2.store.fs.encrypt": 4,
-            "org.h2.engine": 4,
-            "org.h2.engine.Constants": 4,
-            "org.h2.jdbc": 1
-          },
-          "key_classes": [
-            {
-              "name": "FileStore",
-              "lines": 2386,
-              "summary": "",
-              "public_methods": 64
-            },
-            {
-              "name": "MVStore",
-              "lines": 2215,
-              "summary": "",
-              "public_methods": 85
-            },
-            {
-              "name": "MVMap",
-              "lines": 2181,
-              "summary": "",
-              "public_methods": 102
-            },
-            {
-              "name": "Page",
-              "lines": 1779,
-              "summary": "",
-              "public_methods": 77
-            },
-            {
-              "name": "DataUtils",
-              "lines": 1185,
-              "summary": "",
-              "public_methods": 45
-            },
-            {
-              "name": "RandomAccessStore",
-              "lines": 851,
-              "summary": "",
-              "public_methods": 10
-            }
-          ]
-        },
-        "org.h2.tools": {
-          "lines": 10868,
-          "files": 23,
-          "summary": "Various tools.",
-          "depends_on": {
-            "org.h2.util": 53,
-            "org.h2.engine": 14,
-            "org.h2.value": 14,
-            "org.h2.message": 12,
-            "org.h2.store": 10,
-            "org.h2.store.fs": 10,
-            "org.h2.mvstore": 7,
-            "org.h2.api": 6
-          },
-          "key_classes": [
-            {
-              "name": "SimpleResultSet",
-              "lines": 2480,
-              "summary": "",
-              "public_methods": 228
-            },
-            {
-              "name": "Csv",
-              "lines": 986,
-              "summary": "",
-              "public_methods": 33
-            },
-            {
-              "name": "Recover",
-              "lines": 922,
-              "summary": "",
-              "public_methods": 18
-            },
-            {
-              "name": "Server",
-              "lines": 823,
-              "summary": "",
-              "public_methods": 19
-            },
-            {
-              "name": "DirectRecover",
-              "lines": 767,
-              "summary": "",
-              "public_methods": 11
-            },
-            {
-              "name": "Shell",
-              "lines": 639,
-              "summary": "",
-              "public_methods": 7
-            }
-          ]
-        }
-      },
+      "packages": {},
       "missing_packages": [],
-      "source_lines": 41362
+      "source_lines": 0
     }
   ]
 }

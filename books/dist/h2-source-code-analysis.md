@@ -302,7 +302,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## H2 Database 源码全面分析与解读
 
-版本 v6.1 · 2026-06-15 · 6,058 行 · 12 章 + 5 附录
+版本 v6.1 · 2026-06-15 · 6,564 行 · 12 章 + 5 附录
 
 **作者：其·龙（Stallman Wang）**
 **联系邮箱：[stallman.wang@foxmail.com](mailto:stallman.wang@foxmail.com)**
@@ -323,38 +323,28 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | 代码总规模 | 1,187 个文件 · 328,971 行 |
 | 源码变更 | 2026-05-25（基于上游 v2.4.240 的 44 次提交更新） |
 
-共 10 个经典算法 · 20 幅 ASCII 示意图 · 245 处源码引用
+共 10 个经典算法 · 20 幅 ASCII 示意图 · 411 处源码引用
 
 ---
 # 第1章 H2 总体架构
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 4 个包、33,513 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、12,044 行实现；读完应能说清这些包的职责边界与关键协作。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 ## 1.1 模块版图
 
-本章覆盖 2 个包、29,158 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 1 个包、11,839 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
-| `org.h2.jdbc` | 27 | 17,319 | Implementation of the JDBC API (package { |
 | `org.h2.engine` | 28 | 11,839 | Contains high level classes of the database and classes that don't fit in another sub-package. |
 
 ## 1.2 核心类型
 
-在 `org.h2.jdbc` 之外，本章还有 1 个包；下表每包取前 4 个类型，按规模降序。
+在 `org.h2.engine` 之外，本章还有 0 个包；下表每包取前 4 个类型，按规模降序。
 
-### 1.2.1 `org.h2.jdbc`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `JdbcResultSet` | 4,291 | 199 | （无类注释，按方法名归纳） |
-| `JdbcDatabaseMetaData` | 2,756 | 177 | （无类注释，按方法名归纳） |
-| `JdbcConnection` | 1,930 | 62 | （无类注释，按方法名归纳） |
-| `JdbcCallableStatement` | 1,863 | 117 | （无类注释，按方法名归纳） |
-
-### 1.2.2 `org.h2.engine`
+### 1.2.1 `org.h2.engine`
 
 | 类型 | 行数 | 公开方法 | 职责 |
 | --- | --- | --- | --- |
@@ -365,16 +355,10 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 1.3 关键 API 与源码坐标
 
-把 2 个包的关键入口与源码位置对应起来，共 6 条坐标，行号由脚本核验。
+把 1 个包的关键入口与源码位置对应起来，共 3 条坐标，行号由脚本核验。
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `JdbcResultSet.absolute()` | `org/h2/jdbc/JdbcResultSet.java:3173` |
-| `JdbcResultSet.afterLast()` | `org/h2/jdbc/JdbcResultSet.java:3105` |
-| `JdbcDatabaseMetaData.allProceduresAreCallable()` | `org/h2/jdbc/JdbcDatabaseMetaData.java:305` |
-| `JdbcDatabaseMetaData.allTablesAreSelectable()` | `org/h2/jdbc/JdbcDatabaseMetaData.java:316` |
-| `JdbcConnection.abort()` | `org/h2/jdbc/JdbcConnection.java:1832` |
-| `JdbcConnection.clearWarnings()` | `org/h2/jdbc/JdbcConnection.java:655` |
 | `Database.addDatabaseObject()` | `org/h2/engine/Database.java:948` |
 | `Database.addSchemaObject()` | `org/h2/engine/Database.java:923` |
 | `SessionLocal.addLocalTempTable()` | `org/h2/engine/SessionLocal.java:397` |
@@ -384,27 +368,83 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 1.3.1 公共类型清单
 
-本章抽样类型按包分组，共 10 行；规模与公开方法数是阅读优先级的第一信号。
+本章抽样类型按包分组，共 5 行；规模与公开方法数是阅读优先级的第一信号。
 
 | 类型 | 包 | 行数 | 公开方法 |
 | --- | --- | --- | --- |
-| `JdbcResultSet` | `org.h2.jdbc` | 4,291 | 199 |
-| `JdbcDatabaseMetaData` | `org.h2.jdbc` | 2,756 | 177 |
-| `JdbcConnection` | `org.h2.jdbc` | 1,930 | 62 |
-| `JdbcCallableStatement` | `org.h2.jdbc` | 1,863 | 117 |
-| `JdbcPreparedStatement` | `org.h2.jdbc` | 1,629 | 65 |
 | `Database` | `org.h2.engine` | 2,566 | 152 |
 | `SessionLocal` | `org.h2.engine` | 2,156 | 135 |
 | `SessionRemote` | `org.h2.engine` | 1,068 | 53 |
 | `Mode` | `org.h2.engine` | 776 | 5 |
 | `ConnectionInfo` | `org.h2.engine` | 766 | 25 |
 
+## 1.3.2 逐类导读
+
+按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
+
+**`Database`**（`org.h2.engine`，2,566 行，152 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 22%，包级依赖 8 个。
+
+**`SessionLocal`**（`org.h2.engine`，2,156 行，135 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 18%，包级依赖 8 个。
+
+**`SessionRemote`**（`org.h2.engine`，1,068 行，53 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 9%，包级依赖 8 个。
+
+**`Mode`**（`org.h2.engine`，776 行，5 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 7%，包级依赖 8 个。
+
+**`ConnectionInfo`**（`org.h2.engine`，766 行，25 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 6%，包级依赖 8 个。
+
+**`Constants`**（`org.h2.engine`，520 行，0 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 4%，包级依赖 8 个。
+
+## 1.3.2 源码坐标明细
+
+本章主责包中 20 个公开入口的行号，按类聚簇，可直接跳转阅读。
+
+| 入口 | 源码坐标 |
+| --- | --- |
+| `Database.addDatabaseObject()` | `org/h2/engine/Database.java:948` |
+| `Database.addSchemaObject()` | `org/h2/engine/Database.java:923` |
+| `Database.allocateObjectId()` | `org/h2/engine/Database.java:1369` |
+| `Database.checkPowerOff()` | `org/h2/engine/Database.java:475` |
+| `SessionLocal.addLocalTempTable()` | `org/h2/engine/SessionLocal.java:397` |
+| `SessionLocal.addLocalTempTableConstraint()` | `org/h2/engine/SessionLocal.java:510` |
+| `SessionLocal.addLocalTempTableIndex()` | `org/h2/engine/SessionLocal.java:454` |
+| `SessionLocal.addProcedure()` | `org/h2/engine/SessionLocal.java:1424` |
+| `SessionRemote.addTemporaryLob()` | `org/h2/engine/SessionRemote.java:819` |
+| `SessionRemote.autoCommitIfCluster()` | `org/h2/engine/SessionRemote.java:296` |
+| `SessionRemote.cancel()` | `org/h2/engine/SessionRemote.java:197` |
+| `SessionRemote.cancelStatement()` | `org/h2/engine/SessionRemote.java:208` |
+| `Mode.getEnum()` | `org/h2/engine/Mode.java:766` |
+| `Mode.getInstance()` | `org/h2/engine/Mode.java:754` |
+| `Mode.getName()` | `org/h2/engine/Mode.java:762` |
+| `Mode.getRegular()` | `org/h2/engine/Mode.java:758` |
+| `ConnectionInfo.cleanAuthenticationInfo()` | `org/h2/engine/ConnectionInfo.java:761` |
+| `ConnectionInfo.clone()` | `org/h2/engine/ConnectionInfo.java:185` |
+| `ConnectionInfo.getDbSettings()` | `org/h2/engine/ConnectionInfo.java:717` |
+| `ConnectionInfo.getFilePasswordHash()` | `org/h2/engine/ConnectionInfo.java:480` |
+
 ## 1.4 阅读路径
 
-读 `org.h2.jdbc` 的 27 个文件时，先看骨架类，再沿 `org.h2.value` 方向下钻。
+读 `org.h2.engine` 的 28 个文件时，先看骨架类，再沿 `org.h2.util` 方向下钻。
 
-1. 先读 `org.h2.jdbc` 的 package-info 与 `JdbcResultSet`，建立第1章的职责边界。
-2. 再读 `JdbcResultSet` 的 199 个公开入口，确认它对 `org.h2.value` 的调用方向与加锁方式。
+1. 先读 `org.h2.engine` 的 package-info 与 `Database`，建立第1章的职责边界。
+2. 再读 `Database` 的 152 个公开入口，确认它对 `org.h2.util` 的调用方向与加锁方式。
 3. 最后读 `org.h2.engine`（本章最小包，11,839 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第2章《分层模块划分》。
@@ -415,26 +455,25 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 包 | 依赖（前 4） |
 | --- | --- |
-| `org.h2.jdbc` | `org.h2.value`, `org.h2.message`, `org.h2.util`, `org.h2.engine` |
 | `org.h2.engine` | `org.h2.util`, `org.h2.message`, `org.h2.value`, `org.h2.api` |
 
 ## 1.6 设计权衡
 
-- `org.h2.jdbc` 用 27 个文件换到 17,319 行实现，平均每文件 641 行，其中 `JdbcResultSet` 独占 4,291 行、199 个公开方法。
+- `org.h2.engine` 用 28 个文件换到 11,839 行实现，平均每文件 422 行，其中 `Database` 独占 2,566 行、152 个公开方法。
 - 该包对外声明了 8 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
-- `org.h2.engine`（11,839 行）与 `org.h2.jdbc` 的职责差是本章最值得记的一条边界。
+- `org.h2.engine`（11,839 行）与 `org.h2.engine` 的职责差是本章最值得记的一条边界。
 
 ## 1.7 常见误区
 
-- 把 `org.h2.jdbc` 的 17,319 行当作复杂度上限：`JdbcResultSet` 之外的 26 个文件多为类型族与样板。
-- 只看 `JdbcResultSet` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
-- 把 `org.h2.jdbc` 与 `org.h2.engine` 视为可互换：前者 27 文件、后者 28 文件，扩展点分布完全不同。
+- 把 `org.h2.engine` 的 11,839 行当作复杂度上限：`Database` 之外的 27 个文件多为类型族与样板。
+- 只看 `Database` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
+- 把 `org.h2.engine` 与 `org.h2.engine` 视为可互换：前者 28 文件、后者 28 文件，扩展点分布完全不同。
 
 ## 1.8 深读要点
 
-规模信号：`org.h2.jdbc` 占本章 59% 的实现行数，改动风险最高。
-耦合信号：`org.h2.jdbc` 依赖 8 个 `org.h2` 包，其中 `org.h2.value` 出现最频繁。
-入口信号：`JdbcResultSet` 的公开方法 199 个，读它等于读本章的主干。
+规模信号：`org.h2.engine` 占本章 100% 的实现行数，改动风险最高。
+耦合信号：`org.h2.engine` 依赖 8 个 `org.h2` 包，其中 `org.h2.util` 出现最频繁。
+入口信号：`Database` 的公开方法 152 个，读它等于读本章的主干。
 
 ## 1.8 术语对照
 
@@ -443,26 +482,28 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - **Database**：详见[术语表](back/glossary.md)对应条目。
 - **Engine**：详见[术语表](back/glossary.md)对应条目。
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **JDBC**：详见[术语表](back/glossary.md)对应条目。
+- **CAS (Compare-And-Swap)**：详见[术语表](back/glossary.md)对应条目。
+- **CTE**：详见[术语表](back/glossary.md)对应条目。
+- **JSON**：详见[术语表](back/glossary.md)对应条目。
+- **LSM-Tree / Log-Structured Merge-Tree**：详见[术语表](back/glossary.md)对应条目。
+- **PageStore**：详见[术语表](back/glossary.md)对应条目。
 
 ## 1.9 知识点清单
 
-1. `org.h2.jdbc` 的 `JdbcResultSet`：4,291 行、199 个公开方法，职责按方法名归纳
-2. `org.h2.jdbc` 的 `JdbcDatabaseMetaData`：2,756 行、177 个公开方法，职责按方法名归纳
-3. `org.h2.engine` 的 `Database`：2,566 行、152 个公开方法，职责按方法名归纳
-4. `org.h2.engine` 的 `SessionLocal`：2,156 行、135 个公开方法，职责按方法名归纳
+1. `org.h2.engine` 的 `Database`：2,566 行、152 个公开方法，职责按方法名归纳
+2. `org.h2.engine` 的 `SessionLocal`：2,156 行、135 个公开方法，职责按方法名归纳
 
 ## 1.9 本章小结
 
-- 本章覆盖 2 个包、29,158 行。
+- 本章覆盖 1 个包、11,839 行。
 - 关键入口与源码坐标见 §1.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
 ## 1.10 延伸思考
 
-**1. 🟢★ 指出 `org.h2.jdbc` 中 `JdbcResultSet` 与 `JdbcDatabaseMetaData` 的分工差异，并给出调用方向。**
+**1. 🟢★ 指出 `org.h2.engine` 中 `Database` 与 `SessionLocal` 的分工差异，并给出调用方向。**
 
-> 提示：第1章 §1.2 的表格给出 `JdbcResultSet` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第1章 §1.2 的表格给出 `Database` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§1.2 核心类型
 
 **2. 🔵★★ 围绕 `org.h2.engine` 的 `Database`，说明它为什么需要独立成类型而不是并入 `SessionLocal`。**
@@ -470,9 +511,9 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 > 提示：第1章 §1.2 的表格给出 `Database` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§1.2 核心类型
 
-**3. 🟠★★★ 以 `org.h2.jdbc` 的 `JdbcResultSet` 为入口，画出一次完整调用经过的包。**
+**3. 🟠★★★ 以 `org.h2.engine` 的 `Database` 为入口，画出一次完整调用经过的包。**
 
-> 提示：第1章 §1.2 的表格给出 `JdbcResultSet` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第1章 §1.2 的表格给出 `Database` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§1.2 核心类型
 
 **4. 🟢★★★★ 如果只保留 `org.h2.engine` 的一个类型，你保留 `Database` 还是 `SessionLocal`？说明代价。**
@@ -482,9 +523,9 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 1.11 本章视角：并发与一致性
 
-- 以「并发与一致性」看 `org.h2.jdbc`：27 个文件、17,319 行，本章只展开与并发与一致性相关的入口。
-- 对照 `org.h2.engine`（11,839 行）：两者的并发与一致性策略不同，差异落在 `JdbcResultSet` 的 199 个公开方法里。
-- 若并发与一致性假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.value` 进入。
+- 以「并发与一致性」看 `org.h2.engine`：28 个文件、11,839 行，本章只展开与并发与一致性相关的入口。
+- 对照 `org.h2.engine`（11,839 行）：两者的并发与一致性策略不同，差异落在 `Database` 的 152 个公开方法里。
+- 若并发与一致性假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.util` 进入。
 
 ## 1.11.1 依赖明细
 
@@ -492,20 +533,17 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 来源包 | 目标包 | 次数 |
 | --- | --- | --- |
-| `org.h2.jdbc` | `org.h2.value` | 57 |
-| `org.h2.jdbc` | `org.h2.message` | 43 |
-| `org.h2.jdbc` | `org.h2.util` | 19 |
 | `org.h2.engine` | `org.h2.util` | 55 |
 | `org.h2.engine` | `org.h2.message` | 33 |
 | `org.h2.engine` | `org.h2.value` | 26 |
 
 ## 1.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.jdbc` 与 `org.h2.engine` 之间的调用方向？
-- `JdbcResultSet` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.jdbc` 的调用链讲到落盘或返回？
-- `org.h2.jdbc` 与 `org.h2.engine` 若合并，会丢掉哪个扩展点？
-- `org.h2.jdbc` 的注释与实现若不一致，你信哪一边，为什么？
+- 不看正文，能否画出 `org.h2.engine` 与 `org.h2.engine` 之间的调用方向？
+- `Database` 是否涉及并发？依据是锁、可见性还是不可变？
+- 能否用一个入口，把 `org.h2.engine` 的调用链讲到落盘或返回？
+- `org.h2.engine` 与 `org.h2.engine` 若合并，会丢掉哪个扩展点？
+- `org.h2.engine` 的注释与实现若不一致，你信哪一边，为什么？
 
 ## 1.12 延展阅读
 
@@ -515,18 +553,177 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 2.1 模块版图
 
-本章覆盖 2 个包、4,355 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 1 个包、205 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
-| `org.h2.api` | 12 | 4,150 | Contains interfaces for user-defined extensions, such as triggers and user-defined aggregate functions. |
 | `org.h2` | 1 | 205 | Implementation of the JDBC driver. |
 
 ## 2.2 核心类型
 
+在 `org.h2` 之外，本章还有 0 个包；下表每包取前 4 个类型，按规模降序。
+
+### 2.2.1 `org.h2`
+
+| 类型 | 行数 | 公开方法 | 职责 |
+| --- | --- | --- | --- |
+| `Driver` | 205 | 11 | （无类注释，按方法名归纳） |
+
+## 2.3 关键 API 与源码坐标
+
+把 1 个包的关键入口与源码位置对应起来，共 3 条坐标，行号由脚本核验。
+
+| 入口 | 源码坐标 |
+| --- | --- |
+| `Driver.acceptsURL()` | `org/h2/Driver.java:76` |
+| `Driver.connect()` | `org/h2/Driver.java:55` |
+
+## 2.3.1 公共类型清单
+
+本章抽样类型按包分组，共 1 行；规模与公开方法数是阅读优先级的第一信号。
+
+| 类型 | 包 | 行数 | 公开方法 |
+| --- | --- | --- | --- |
+| `Driver` | `org.h2` | 205 | 11 |
+
+## 2.3.2 逐类导读
+
+按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
+
+**`Driver`**（`org.h2`，205 行，11 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 100%，包级依赖 0 个。
+
+## 2.3.2 源码坐标明细
+
+本章主责包中 4 个公开入口的行号，按类聚簇，可直接跳转阅读。
+
+| 入口 | 源码坐标 |
+| --- | --- |
+| `Driver.acceptsURL()` | `org/h2/Driver.java:76` |
+| `Driver.connect()` | `org/h2/Driver.java:55` |
+| `Driver.getMajorVersion()` | `org/h2/Driver.java:95` |
+| `Driver.getMinorVersion()` | `org/h2/Driver.java:106` |
+
+## 2.4 阅读路径
+
+读 `org.h2` 的 1 个文件时，先看骨架类，再沿 `—` 方向下钻。
+
+1. 先读 `org.h2` 的 package-info 与 `Driver`，建立第2章的职责边界。
+2. 再读 `Driver` 的 11 个公开入口，确认它对 `—` 的调用方向与加锁方式。
+3. 最后读 `org.h2`（本章最小包，205 行）的实现，关注容量与失败路径。
+
+跨章衔接请对照第1章《H2 总体架构》。
+
+## 2.5 设计权衡
+
+- `org.h2` 用 1 个文件换到 205 行实现，平均每文件 205 行，其中 `Driver` 独占 205 行、11 个公开方法。
+- 该包对外声明了 0 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
+- `org.h2`（205 行）与 `org.h2` 的职责差是本章最值得记的一条边界。
+
+## 2.6 常见误区
+
+- 把 `org.h2` 的 205 行当作复杂度上限：`Driver` 之外的 0 个文件多为类型族与样板。
+- 只看 `Driver` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
+- 把 `org.h2` 与 `org.h2` 视为可互换：前者 1 文件、后者 1 文件，扩展点分布完全不同。
+
+## 2.7 深读要点
+
+规模信号：`org.h2` 占本章 100% 的实现行数，改动风险最高。
+耦合信号：`org.h2` 依赖 0 个 `org.h2` 包，其中 `—` 出现最频繁。
+入口信号：`Driver` 的公开方法 11 个，读它等于读本章的主干。
+
+## 2.7 术语对照
+
+本章出现的专业术语与书末术语表的对应关系：
+
+- **Driver**：详见[术语表](back/glossary.md)对应条目。
+- **H2**：详见[术语表](back/glossary.md)对应条目。
+- **JDBC**：详见[术语表](back/glossary.md)对应条目。
+- **ConnectionInfo**：详见[术语表](back/glossary.md)对应条目。
+- **Database**：详见[术语表](back/glossary.md)对应条目。
+- **Engine**：详见[术语表](back/glossary.md)对应条目。
+- **Expression**：详见[术语表](back/glossary.md)对应条目。
+- **FilePathDisk**：详见[术语表](back/glossary.md)对应条目。
+
+## 2.9 知识点清单
+
+1. `org.h2` 的 `Driver`：205 行、11 个公开方法，职责按方法名归纳
+
+## 2.8 本章小结
+
+- 本章覆盖 1 个包、205 行。
+- 关键入口与源码坐标见 §2.3。
+- 职责优先取自注释，注释缺失处需结合调用点归纳。
+
+## 2.9 延伸思考
+
+**1. 🟢★ 指出 `org.h2` 中 `Driver` 与 `相邻工具类型` 的分工差异，并给出调用方向。**
+
+> 提示：第2章 §2.2 的表格给出 `Driver` 的规模与公开方法数，先按那一行定位再进源码。
+> 回顾：§2.2 核心类型
+
+**2. 🔵★★ 围绕 `org.h2` 的 `Driver`，说明它为什么需要独立成类型而不是并入 `相邻工具类型`。**
+
+> 提示：第2章 §2.2 的表格给出 `Driver` 的规模与公开方法数，先按那一行定位再进源码。
+> 回顾：§2.2 核心类型
+
+**3. 🟠★★★ 以 `org.h2` 的 `Driver` 为入口，画出一次完整调用经过的包。**
+
+> 提示：第2章 §2.2 的表格给出 `Driver` 的规模与公开方法数，先按那一行定位再进源码。
+> 回顾：§2.2 核心类型
+
+**4. 🟢★★★★ 如果只保留 `org.h2` 的一个类型，你保留 `Driver` 还是 `相邻工具类型`？说明代价。**
+
+> 提示：第2章 §2.2 的表格给出 `Driver` 的规模与公开方法数，先按那一行定位再进源码。
+> 回顾：§2.2 核心类型
+
+## 2.10 本章视角：扩展与兼容
+
+- 以「扩展与兼容」看 `org.h2`：1 个文件、205 行，本章只展开与扩展与兼容相关的入口。
+- 对照 `org.h2`（205 行）：两者的扩展与兼容策略不同，差异落在 `Driver` 的 11 个公开方法里。
+- 若扩展与兼容假设被打破（0 个依赖变化），最先受影响的调用链从 `—` 进入。
+
+## 2.10.2 阅读检查清单
+
+- 不看正文，能否画出 `org.h2` 与 `org.h2` 之间的调用方向？
+- `Driver` 是否涉及并发？依据是锁、可见性还是不可变？
+- 能否用一个入口，把 `org.h2` 的调用链讲到落盘或返回？
+- `org.h2` 与 `org.h2` 若合并，会丢掉哪个扩展点？
+- `org.h2` 的注释与实现若不一致，你信哪一边，为什么？
+
+## 2.11 跨章索引
+
+本章引用但不展开的包，按下面这张表跳到主责章节阅读。
+
+| 包 | 主责章节 |
+| --- | --- |
+| `org.h2` | 第1章《H2 总体架构》 |
+
+## 2.11 延展阅读
+
+- 详见第1章《H2 总体架构》。
+# 第3章 包结构与模块职责
+
+> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、7,363 行实现；读完应能说清这些包的职责边界与关键协作。
+
+> **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
+
+## 3.1 模块版图
+
+本章覆盖 2 个包、7,363 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+
+| 包 | 文件数 | 行数 | 职责 |
+| --- | --- | --- | --- |
+| `org.h2.api` | 12 | 4,150 | Contains interfaces for user-defined extensions, such as triggers and user-defined aggregate functions. |
+| `org.h2.schema` | 11 | 3,213 | Schema implementation and objects that are stored in a schema (for example, sequences and constants). |
+
+## 3.2 核心类型
+
 在 `org.h2.api` 之外，本章还有 1 个包；下表每包取前 4 个类型，按规模降序。
 
-### 2.2.1 `org.h2.api`
+### 3.2.1 `org.h2.api`
 
 | 类型 | 行数 | 公开方法 | 职责 |
 | --- | --- | --- | --- |
@@ -535,13 +732,16 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `IntervalQualifier` | 353 | 13 | （无类注释，按方法名归纳） |
 | `H2Type` | 322 | 6 | （无类注释，按方法名归纳） |
 
-### 2.2.2 `org.h2`
+### 3.2.2 `org.h2.schema`
 
 | 类型 | 行数 | 公开方法 | 职责 |
 | --- | --- | --- | --- |
-| `Driver` | 205 | 11 | （无类注释，按方法名归纳） |
+| `Schema` | 848 | 51 | （无类注释，按方法名归纳） |
+| `Sequence` | 586 | 25 | （无类注释，按方法名归纳） |
+| `FunctionAlias` | 562 | 22 | （无类注释，按方法名归纳） |
+| `TriggerObject` | 543 | 28 | （无类注释，按方法名归纳） |
 
-## 2.3 关键 API 与源码坐标
+## 3.3 关键 API 与源码坐标
 
 把 2 个包的关键入口与源码位置对应起来，共 6 条坐标，行号由脚本核验。
 
@@ -553,12 +753,16 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `Interval.getDays()` | `org/h2/api/Interval.java:543` |
 | `IntervalQualifier.getTypeName()` | `org/h2/api/IntervalQualifier.java:253` |
 | `IntervalQualifier.hasDays()` | `org/h2/api/IntervalQualifier.java:165` |
-| `Driver.acceptsURL()` | `org/h2/Driver.java:76` |
-| `Driver.connect()` | `org/h2/Driver.java:55` |
+| `Schema.add()` | `org/h2/schema/Schema.java:267` |
+| `Schema.canDrop()` | `org/h2/schema/Schema.java:92` |
+| `Sequence.close()` | `org/h2/schema/Sequence.java:553` |
+| `Sequence.flush()` | `org/h2/schema/Sequence.java:510` |
+| `FunctionAlias.compareTo()` | `org/h2/schema/FunctionAlias.java:546` |
+| `FunctionAlias.findJavaMethod()` | `org/h2/schema/FunctionAlias.java:243` |
 
-## 2.3.1 公共类型清单
+## 3.3.1 公共类型清单
 
-本章抽样类型按包分组，共 6 行；规模与公开方法数是阅读优先级的第一信号。
+本章抽样类型按包分组，共 10 行；规模与公开方法数是阅读优先级的第一信号。
 
 | 类型 | 包 | 行数 | 公开方法 |
 | --- | --- | --- | --- |
@@ -567,323 +771,110 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `IntervalQualifier` | `org.h2.api` | 353 | 13 |
 | `H2Type` | `org.h2.api` | 322 | 6 |
 | `DatabaseEventListener` | `org.h2.api` | 113 | 0 |
-| `Driver` | `org.h2` | 205 | 11 |
+| `Schema` | `org.h2.schema` | 848 | 51 |
+| `Sequence` | `org.h2.schema` | 586 | 25 |
+| `FunctionAlias` | `org.h2.schema` | 562 | 22 |
+| `TriggerObject` | `org.h2.schema` | 543 | 28 |
+| `Domain` | `org.h2.schema` | 241 | 22 |
 
-## 2.4 阅读路径
+## 3.3.2 逐类导读
 
-读 `org.h2.api` 的 12 个文件时，先看骨架类，再沿 `org.h2.security.auth` 方向下钻。
+按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
 
-1. 先读 `org.h2.api` 的 package-info 与 `ErrorCode`，建立第2章的职责边界。
-2. 再读 `ErrorCode` 的 2 个公开入口，确认它对 `org.h2.security.auth` 的调用方向与加锁方式。
-3. 最后读 `org.h2`（本章最小包，205 行）的实现，关注容量与失败路径。
+**`ErrorCode`**（`org.h2.api`，2,367 行，2 个公开方法）
 
-跨章衔接请对照第1章《H2 总体架构》。
+- 职责：按方法名与调用点归纳
+- 规模：占该包 57%，包级依赖 7 个。
 
-## 2.5 依赖方向
+**`Interval`**（`org.h2.api`，636 行，33 个公开方法）
 
-下表按源码中的 `import` 统计给出包间依赖，规模即耦合强度；重构时优先看右侧出现频次最高的包。
+- 职责：按方法名与调用点归纳
+- 规模：占该包 15%，包级依赖 7 个。
 
-| 包 | 依赖（前 4） |
-| --- | --- |
-| `org.h2.api` | `org.h2.security.auth`, `org.h2.value`, `org.h2.util.DateTimeUtils`, `org.h2.message` |
+**`IntervalQualifier`**（`org.h2.api`，353 行，13 个公开方法）
 
-## 2.6 设计权衡
+- 职责：按方法名与调用点归纳
+- 规模：占该包 9%，包级依赖 7 个。
 
-- `org.h2.api` 用 12 个文件换到 4,150 行实现，平均每文件 345 行，其中 `ErrorCode` 独占 2,367 行、2 个公开方法。
-- 该包对外声明了 7 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
-- `org.h2`（205 行）与 `org.h2.api` 的职责差是本章最值得记的一条边界。
+**`H2Type`**（`org.h2.api`，322 行，6 个公开方法）
 
-## 2.7 常见误区
+- 职责：按方法名与调用点归纳
+- 规模：占该包 8%，包级依赖 7 个。
 
-- 把 `org.h2.api` 的 4,150 行当作复杂度上限：`ErrorCode` 之外的 11 个文件多为类型族与样板。
-- 只看 `ErrorCode` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
-- 把 `org.h2.api` 与 `org.h2` 视为可互换：前者 12 文件、后者 1 文件，扩展点分布完全不同。
+**`DatabaseEventListener`**（`org.h2.api`，113 行，0 个公开方法）
 
-## 2.8 深读要点
+- 职责：按方法名与调用点归纳
+- 规模：占该包 3%，包级依赖 7 个。
 
-规模信号：`org.h2.api` 占本章 95% 的实现行数，改动风险最高。
-耦合信号：`org.h2.api` 依赖 7 个 `org.h2` 包，其中 `org.h2.security.auth` 出现最频繁。
-入口信号：`ErrorCode` 的公开方法 2 个，读它等于读本章的主干。
+**`Trigger`**（`org.h2.api`，105 行，0 个公开方法）
 
-## 2.8 术语对照
+- 职责：按方法名与调用点归纳
+- 规模：占该包 3%，包级依赖 7 个。
 
-本章出现的专业术语与书末术语表的对应关系：
+**`Schema`**（`org.h2.schema`，848 行，51 个公开方法）
 
-- **Aggregate**：详见[术语表](back/glossary.md)对应条目。
-- **Driver**：详见[术语表](back/glossary.md)对应条目。
-- **H2**：详见[术语表](back/glossary.md)对应条目。
-- **JDBC**：详见[术语表](back/glossary.md)对应条目。
+- 职责：按方法名与调用点归纳
+- 规模：占该包 26%，包级依赖 8 个。
 
-## 2.9 知识点清单
+**`Sequence`**（`org.h2.schema`，586 行，25 个公开方法）
 
-1. `org.h2.api` 的 `ErrorCode`：2,367 行、2 个公开方法，职责按方法名归纳
-2. `org.h2.api` 的 `Interval`：636 行、33 个公开方法，职责按方法名归纳
-3. `org.h2` 的 `Driver`：205 行、11 个公开方法，职责按方法名归纳
+- 职责：按方法名与调用点归纳
+- 规模：占该包 18%，包级依赖 8 个。
 
-## 2.9 本章小结
+**`FunctionAlias`**（`org.h2.schema`，562 行，22 个公开方法）
 
-- 本章覆盖 2 个包、4,355 行。
-- 关键入口与源码坐标见 §2.3。
-- 职责优先取自注释，注释缺失处需结合调用点归纳。
+- 职责：按方法名与调用点归纳
+- 规模：占该包 17%，包级依赖 8 个。
 
-## 2.10 延伸思考
+**`TriggerObject`**（`org.h2.schema`，543 行，28 个公开方法）
 
-**1. 🟢★ 指出 `org.h2.api` 中 `ErrorCode` 与 `Interval` 的分工差异，并给出调用方向。**
+- 职责：按方法名与调用点归纳
+- 规模：占该包 17%，包级依赖 8 个。
 
-> 提示：第2章 §2.2 的表格给出 `ErrorCode` 的规模与公开方法数，先按那一行定位再进源码。
-> 回顾：§2.2 核心类型
+**`Domain`**（`org.h2.schema`，241 行，22 个公开方法）
 
-**2. 🔵★★ 围绕 `org.h2` 的 `Driver`，说明它为什么需要独立成类型而不是并入 `相邻工具类型`。**
+- 职责：按方法名与调用点归纳
+- 规模：占该包 8%，包级依赖 8 个。
 
-> 提示：第2章 §2.2 的表格给出 `Driver` 的规模与公开方法数，先按那一行定位再进源码。
-> 回顾：§2.2 核心类型
+**`UserAggregate`**（`org.h2.schema`，120 行，9 个公开方法）
 
-**3. 🟠★★★ 以 `org.h2.api` 的 `ErrorCode` 为入口，画出一次完整调用经过的包。**
+- 职责：按方法名与调用点归纳
+- 规模：占该包 4%，包级依赖 8 个。
 
-> 提示：第2章 §2.2 的表格给出 `ErrorCode` 的规模与公开方法数，先按那一行定位再进源码。
-> 回顾：§2.2 核心类型
+## 3.3.2 源码坐标明细
 
-**4. 🟢★★★★ 如果只保留 `org.h2` 的一个类型，你保留 `Driver` 还是 `相邻工具类型`？说明代价。**
-
-> 提示：第2章 §2.2 的表格给出 `Driver` 的规模与公开方法数，先按那一行定位再进源码。
-> 回顾：§2.2 核心类型
-
-## 2.11 本章视角：扩展与兼容
-
-- 以「扩展与兼容」看 `org.h2.api`：12 个文件、4,150 行，本章只展开与扩展与兼容相关的入口。
-- 对照 `org.h2`（205 行）：两者的扩展与兼容策略不同，差异落在 `ErrorCode` 的 2 个公开方法里。
-- 若扩展与兼容假设被打破（7 个依赖变化），最先受影响的调用链从 `org.h2.security.auth` 进入。
-
-## 2.11.1 依赖明细
-
-按 `import` 出现次数排序，数值越大耦合越深，重构窗口越窄。
-
-| 来源包 | 目标包 | 次数 |
-| --- | --- | --- |
-| `org.h2.api` | `org.h2.security.auth` | 5 |
-| `org.h2.api` | `org.h2.value` | 3 |
-| `org.h2.api` | `org.h2.util.DateTimeUtils` | 2 |
-
-## 2.11.2 阅读检查清单
-
-- 不看正文，能否画出 `org.h2.api` 与 `org.h2` 之间的调用方向？
-- `ErrorCode` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.api` 的调用链讲到落盘或返回？
-- `org.h2.api` 与 `org.h2` 若合并，会丢掉哪个扩展点？
-- `org.h2.api` 的注释与实现若不一致，你信哪一边，为什么？
-
-## 2.12 延展阅读
-
-- 详见第1章《H2 总体架构》。
-# 第3章 包结构与模块职责
-
-> **本章导读**：本章由源码清单汇总而成，覆盖 13 个包、119,252 行实现；读完应能说清这些包的职责边界与关键协作。
-
-> **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
-
-## 3.1 模块版图
-
-本章覆盖 13 个包、119,252 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
-
-| 包 | 文件数 | 行数 | 职责 |
-| --- | --- | --- | --- |
-| `org.h2.value` | 55 | 15,501 | Data type and value implementations. |
-| `org.h2.command` | 11 | 15,014 | This package contains the parser and the base classes for prepared SQL statements. |
-| `org.h2.mvstore` | 20 | 14,505 | A persistent storage for tree maps. |
-| `org.h2.util` | 48 | 14,460 | Internal utility classes. |
-| `org.h2.table` | 31 | 13,388 | Classes related to a table and table meta data. |
-| `org.h2.engine` | 28 | 11,839 | Contains high level classes of the database and classes that don't fit in another sub-package. |
-| `org.h2.tools` | 23 | 10,868 | Various tools. |
-| `org.h2.expression` | 35 | 5,832 | Expressions include mathematical operations, simple values, and others. |
-| `org.h2.api` | 12 | 4,150 | Contains interfaces for user-defined extensions, such as triggers and user-defined aggregate functions. |
-| `org.h2.index` | 23 | 4,093 | Various table index implementations, as well as cursors to navigate in an index. |
-| `org.h2.result` | 21 | 3,677 | Implementation of row and internal result sets. |
-| `org.h2.schema` | 11 | 3,213 | Schema implementation and objects that are stored in a schema (for example, sequences and constants). |
-
-其余 1 个包规模较小：`org.h2.store`。
-
-## 3.2 核心类型
-
-在 `org.h2.value` 之外，本章还有 12 个包；下表每包取前 4 个类型，按规模降序。
-
-### 3.2.1 `org.h2.value`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `Value` | 2,873 | 67 | （无类注释，按方法名归纳） |
-| `TypeInfo` | 1,539 | 23 | （无类注释，按方法名归纳） |
-| `Transfer` | 1,368 | 31 | （无类注释，按方法名归纳） |
-| `DataType` | 828 | 25 | （无类注释，按方法名归纳） |
-
-### 3.2.2 `org.h2.command`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `Parser` | 9,470 | 9 | （无类注释，按方法名归纳） |
-| `Tokenizer` | 1,522 | 0 | （无类注释，按方法名归纳） |
-| `ParserBase` | 771 | 8 | （无类注释，按方法名归纳） |
-| `Token` | 758 | 5 | （无类注释，按方法名归纳） |
-
-### 3.2.3 `org.h2.mvstore`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `FileStore` | 2,386 | 64 | （无类注释，按方法名归纳） |
-| `MVStore` | 2,215 | 85 | （无类注释，按方法名归纳） |
-| `MVMap` | 2,181 | 102 | （无类注释，按方法名归纳） |
-| `Page` | 1,779 | 77 | （无类注释，按方法名归纳） |
-
-### 3.2.4 `org.h2.util`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `StringUtils` | 1,415 | 55 | （无类注释，按方法名归纳） |
-| `DateTimeUtils` | 1,171 | 42 | （无类注释，按方法名归纳） |
-| `DateTimeTemplate` | 859 | 5 | （无类注释，按方法名归纳） |
-| `IntervalUtils` | 857 | 12 | （无类注释，按方法名归纳） |
-
-### 3.2.5 `org.h2.table`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `InformationSchemaTable` | 3,299 | 6 | （无类注释，按方法名归纳） |
-| `InformationSchemaTableLegacy` | 2,324 | 2 | （无类注释，按方法名归纳） |
-| `Table` | 1,446 | 98 | （无类注释，按方法名归纳） |
-| `TableFilter` | 1,310 | 66 | （无类注释，按方法名归纳） |
-
-### 3.2.6 `org.h2.engine`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `Database` | 2,566 | 152 | （无类注释，按方法名归纳） |
-| `SessionLocal` | 2,156 | 135 | （无类注释，按方法名归纳） |
-| `SessionRemote` | 1,068 | 53 | （无类注释，按方法名归纳） |
-| `Mode` | 776 | 5 | （无类注释，按方法名归纳） |
-
-### 3.2.7 `org.h2.tools`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `SimpleResultSet` | 2,480 | 228 | （无类注释，按方法名归纳） |
-| `Csv` | 986 | 33 | （无类注释，按方法名归纳） |
-| `Recover` | 922 | 18 | （无类注释，按方法名归纳） |
-| `Server` | 823 | 19 | （无类注释，按方法名归纳） |
-
-### 3.2.8 `org.h2.expression`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `ExpressionColumn` | 553 | 23 | （无类注释，按方法名归纳） |
-| `Expression` | 551 | 41 | （无类注释，按方法名归纳） |
-| `BinaryOperation` | 455 | 6 | （无类注释，按方法名归纳） |
-| `ExpressionVisitor` | 417 | 17 | （无类注释，按方法名归纳） |
-
-### 3.2.9 `org.h2.api`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `ErrorCode` | 2,367 | 2 | （无类注释，按方法名归纳） |
-| `Interval` | 636 | 33 | （无类注释，按方法名归纳） |
-| `IntervalQualifier` | 353 | 13 | （无类注释，按方法名归纳） |
-| `H2Type` | 322 | 6 | （无类注释，按方法名归纳） |
-
-### 3.2.10 `org.h2.index`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `Index` | 834 | 37 | （无类注释，按方法名归纳） |
-| `IndexCondition` | 675 | 24 | （无类注释，按方法名归纳） |
-| `IndexCursor` | 494 | 13 | （无类注释，按方法名归纳） |
-| `LinkedIndex` | 298 | 13 | （无类注释，按方法名归纳） |
-
-### 3.2.11 `org.h2.result`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `LocalResult` | 710 | 42 | （无类注释，按方法名归纳） |
-| `UpdatableRow` | 341 | 5 | （无类注释，按方法名归纳） |
-| `SortOrder` | 334 | 15 | （无类注释，按方法名归纳） |
-| `SimpleResult` | 303 | 31 | （无类注释，按方法名归纳） |
-
-### 3.2.12 `org.h2.schema`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `Schema` | 848 | 51 | （无类注释，按方法名归纳） |
-| `Sequence` | 586 | 25 | （无类注释，按方法名归纳） |
-| `FunctionAlias` | 562 | 22 | （无类注释，按方法名归纳） |
-| `TriggerObject` | 543 | 28 | （无类注释，按方法名归纳） |
-
-### 3.2.13 `org.h2.store`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `FileLock` | 514 | 8 | （无类注释，按方法名归纳） |
-| `FileStore` | 513 | 22 | （无类注释，按方法名归纳） |
-| `Data` | 220 | 13 | （无类注释，按方法名归纳） |
-| `RecoverTester` | 176 | 3 | （无类注释，按方法名归纳） |
-
-## 3.3 关键 API 与源码坐标
-
-把 13 个包的关键入口与源码位置对应起来，共 20 条坐标，行号由脚本核验。
+本章主责包中 38 个公开入口的行号，按类聚簇，可直接跳转阅读。
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Value.add()` | `org/h2/value/Value.java:929` |
-| `Value.castTo()` | `org/h2/value/Value.java:1105` |
-| `TypeInfo.areSameTypes()` | `org/h2/value/TypeInfo.java:738` |
-| `TypeInfo.checkComparable()` | `org/h2/value/TypeInfo.java:764` |
-| `Transfer.close()` | `org/h2/value/Transfer.java:478` |
-| `Transfer.flush()` | `org/h2/value/Transfer.java:216` |
-| `Parser.newPrimaryKeyConstraintCommand()` | `org/h2/command/Parser.java:9178` |
-| `Parser.parseDomainConstraintExpression()` | `org/h2/command/Parser.java:9446` |
-| `ParserBase.formatNonKeywords()` | `org/h2/command/ParserBase.java:93` |
-| `ParserBase.getLastParseIndex()` | `org/h2/command/ParserBase.java:743` |
-| `FileStore.accountForRemovedPage()` | `org/h2/mvstore/FileStore.java:2178` |
-| `FileStore.backup()` | `org/h2/mvstore/FileStore.java:1432` |
-| `MVStore.adoptFileStore()` | `org/h2/mvstore/MVStore.java:2183` |
-| `MVStore.autoCommitBufferSize()` | `org/h2/mvstore/MVStore.java:2003` |
-| `MVMap.append()` | `org/h2/mvstore/MVMap.java:1364` |
-| `MVMap.ceilingKey()` | `org/h2/mvstore/MVMap.java:325` |
-| `StringUtils.addAsterisk()` | `org/h2/util/StringUtils.java:283` |
-| `StringUtils.appendHex()` | `org/h2/util/StringUtils.java:1277` |
-| `DateTimeUtils.absoluteDayFromDateValue()` | `org/h2/util/DateTimeUtils.java:873` |
-| `DateTimeUtils.absoluteDayFromYear()` | `org/h2/util/DateTimeUtils.java:857` |
-
-## 3.3.1 公共类型清单
-
-本章抽样类型按包分组，共 65 行；规模与公开方法数是阅读优先级的第一信号。
-
-| 类型 | 包 | 行数 | 公开方法 |
-| --- | --- | --- | --- |
-| `Value` | `org.h2.value` | 2,873 | 67 |
-| `TypeInfo` | `org.h2.value` | 1,539 | 23 |
-| `Transfer` | `org.h2.value` | 1,368 | 31 |
-| `DataType` | `org.h2.value` | 828 | 25 |
-| `ValueToObjectConverter` | `org.h2.value` | 642 | 6 |
-| `Parser` | `org.h2.command` | 9,470 | 9 |
-| `Tokenizer` | `org.h2.command` | 1,522 | 0 |
-| `ParserBase` | `org.h2.command` | 771 | 8 |
-| `Token` | `org.h2.command` | 758 | 5 |
-| `CommandInterface` | `org.h2.command` | 654 | 0 |
-| `FileStore` | `org.h2.mvstore` | 2,386 | 64 |
-| `MVStore` | `org.h2.mvstore` | 2,215 | 85 |
-| `MVMap` | `org.h2.mvstore` | 2,181 | 102 |
-| `Page` | `org.h2.mvstore` | 1,779 | 77 |
-| `DataUtils` | `org.h2.mvstore` | 1,185 | 45 |
-| `StringUtils` | `org.h2.util` | 1,415 | 55 |
-| `DateTimeUtils` | `org.h2.util` | 1,171 | 42 |
-| `DateTimeTemplate` | `org.h2.util` | 859 | 5 |
-| `IntervalUtils` | `org.h2.util` | 857 | 12 |
-| `Utils` | `org.h2.util` | 832 | 34 |
+| `ErrorCode.getState()` | `org/h2/api/ErrorCode.java:2317` |
+| `ErrorCode.isCommon()` | `org/h2/api/ErrorCode.java:2287` |
+| `Interval.equals()` | `org/h2/api/Interval.java:617` |
+| `Interval.getDays()` | `org/h2/api/Interval.java:543` |
+| `Interval.getHours()` | `org/h2/api/Interval.java:552` |
+| `Interval.getLeading()` | `org/h2/api/Interval.java:506` |
+| `IntervalQualifier.getTypeName()` | `org/h2/api/IntervalQualifier.java:253` |
+| `IntervalQualifier.hasDays()` | `org/h2/api/IntervalQualifier.java:165` |
+| `IntervalQualifier.hasHours()` | `org/h2/api/IntervalQualifier.java:182` |
+| `IntervalQualifier.hasMinutes()` | `org/h2/api/IntervalQualifier.java:201` |
+| `H2Type.array()` | `org/h2/api/H2Type.java:258` |
+| `H2Type.getName()` | `org/h2/api/H2Type.java:296` |
+| `H2Type.getVendor()` | `org/h2/api/H2Type.java:301` |
+| `H2Type.getVendorTypeNumber()` | `org/h2/api/H2Type.java:312` |
+| `Schema.add()` | `org/h2/schema/Schema.java:267` |
+| `Schema.canDrop()` | `org/h2/schema/Schema.java:92` |
+| `Schema.createSynonym()` | `org/h2/schema/Schema.java:814` |
+| `Schema.createTable()` | `org/h2/schema/Schema.java:786` |
+| `Sequence.close()` | `org/h2/schema/Sequence.java:553` |
+| `Sequence.flush()` | `org/h2/schema/Sequence.java:510` |
 
 ## 3.4 阅读路径
 
-读 `org.h2.value` 的 55 个文件时，先看骨架类，再沿 `org.h2.util` 方向下钻。
+读 `org.h2.api` 的 12 个文件时，先看骨架类，再沿 `org.h2.security.auth` 方向下钻。
 
-1. 先读 `org.h2.value` 的 package-info 与 `Value`，建立第3章的职责边界。
-2. 再读 `Value` 的 67 个公开入口，确认它对 `org.h2.util` 的调用方向与加锁方式。
-3. 最后读 `org.h2.store`（本章最小包，2,712 行）的实现，关注容量与失败路径。
+1. 先读 `org.h2.api` 的 package-info 与 `ErrorCode`，建立第3章的职责边界。
+2. 再读 `ErrorCode` 的 2 个公开入口，确认它对 `org.h2.security.auth` 的调用方向与加锁方式。
+3. 最后读 `org.h2.schema`（本章最小包，3,213 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第4章《包结构与模块职责》。
 
@@ -893,99 +884,80 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 包 | 依赖（前 4） |
 | --- | --- |
-| `org.h2.value` | `org.h2.util`, `org.h2.engine`, `org.h2.message`, `org.h2.api` |
-| `org.h2.command` | `org.h2.util.ParserUtil`, `org.h2.expression.function`, `org.h2.value`, `org.h2.expression` |
-| `org.h2.mvstore` | `org.h2.util`, `org.h2.compress`, `org.h2.store.fs`, `org.h2.store.fs.encrypt` |
-| `org.h2.util` | `org.h2.value`, `org.h2.engine`, `org.h2.message`, `org.h2.api` |
-| `org.h2.table` | `org.h2.value`, `org.h2.engine`, `org.h2.result`, `org.h2.index` |
-| `org.h2.engine` | `org.h2.util`, `org.h2.message`, `org.h2.value`, `org.h2.api` |
-| `org.h2.tools` | `org.h2.util`, `org.h2.engine`, `org.h2.value`, `org.h2.message` |
-| `org.h2.expression` | `org.h2.value`, `org.h2.table`, `org.h2.engine`, `org.h2.message` |
 | `org.h2.api` | `org.h2.security.auth`, `org.h2.value`, `org.h2.util.DateTimeUtils`, `org.h2.message` |
-| `org.h2.index` | `org.h2.result`, `org.h2.table`, `org.h2.value`, `org.h2.engine` |
-| `org.h2.result` | `org.h2.value`, `org.h2.engine`, `org.h2.util`, `org.h2.expression` |
 | `org.h2.schema` | `org.h2.engine`, `org.h2.value`, `org.h2.message`, `org.h2.table` |
-| `org.h2.store` | `org.h2.engine`, `org.h2.util`, `org.h2.message`, `org.h2.value` |
 
 ## 3.6 设计权衡
 
-- `org.h2.value` 用 55 个文件换到 15,501 行实现，平均每文件 281 行，其中 `Value` 独占 2,873 行、67 个公开方法。
-- 该包对外声明了 8 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
-- `org.h2.command`（15,014 行）与 `org.h2.value` 的职责差是本章最值得记的一条边界。
+- `org.h2.api` 用 12 个文件换到 4,150 行实现，平均每文件 345 行，其中 `ErrorCode` 独占 2,367 行、2 个公开方法。
+- 该包对外声明了 7 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
+- `org.h2.schema`（3,213 行）与 `org.h2.api` 的职责差是本章最值得记的一条边界。
 
 ## 3.7 常见误区
 
-- 把 `org.h2.value` 的 15,501 行当作复杂度上限：`Value` 之外的 54 个文件多为类型族与样板。
-- 只看 `Value` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
-- 把 `org.h2.value` 与 `org.h2.command` 视为可互换：前者 55 文件、后者 11 文件，扩展点分布完全不同。
+- 把 `org.h2.api` 的 4,150 行当作复杂度上限：`ErrorCode` 之外的 11 个文件多为类型族与样板。
+- 只看 `ErrorCode` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
+- 把 `org.h2.api` 与 `org.h2.schema` 视为可互换：前者 12 文件、后者 11 文件，扩展点分布完全不同。
 
 ## 3.8 深读要点
 
-规模信号：`org.h2.value` 占本章 13% 的实现行数，改动风险最高。
-耦合信号：`org.h2.value` 依赖 8 个 `org.h2` 包，其中 `org.h2.util` 出现最频繁。
-入口信号：`Value` 的公开方法 67 个，读它等于读本章的主干。
+规模信号：`org.h2.api` 占本章 56% 的实现行数，改动风险最高。
+耦合信号：`org.h2.api` 依赖 7 个 `org.h2` 包，其中 `org.h2.security.auth` 出现最频繁。
+入口信号：`ErrorCode` 的公开方法 2 个，读它等于读本章的主干。
 
 ## 3.8 术语对照
 
 本章出现的专业术语与书末术语表的对应关系：
 
 - **Aggregate**：详见[术语表](back/glossary.md)对应条目。
-- **Database**：详见[术语表](back/glossary.md)对应条目。
-- **Engine**：详见[术语表](back/glossary.md)对应条目。
-- **Expression**：详见[术语表](back/glossary.md)对应条目。
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **Index**：详见[术语表](back/glossary.md)对应条目。
-- **MVStore**：详见[术语表](back/glossary.md)对应条目。
-- **Parser**：详见[术语表](back/glossary.md)对应条目。
+- **Schema**：详见[术语表](back/glossary.md)对应条目。
+- **Column**：详见[术语表](back/glossary.md)对应条目。
+- **Database**：详见[术语表](back/glossary.md)对应条目。
+- **DbSettings**：详见[术语表](back/glossary.md)对应条目。
+- **Driver**：详见[术语表](back/glossary.md)对应条目。
+- **Engine**：详见[术语表](back/glossary.md)对应条目。
 
 ## 3.9 知识点清单
 
-1. `org.h2.value` 的 `Value`：2,873 行、67 个公开方法，职责按方法名归纳
-2. `org.h2.value` 的 `TypeInfo`：1,539 行、23 个公开方法，职责按方法名归纳
-3. `org.h2.command` 的 `Parser`：9,470 行、9 个公开方法，职责按方法名归纳
-4. `org.h2.command` 的 `Tokenizer`：1,522 行、0 个公开方法，职责按方法名归纳
-5. `org.h2.mvstore` 的 `FileStore`：2,386 行、64 个公开方法，职责按方法名归纳
-6. `org.h2.mvstore` 的 `MVStore`：2,215 行、85 个公开方法，职责按方法名归纳
-7. `org.h2.util` 的 `StringUtils`：1,415 行、55 个公开方法，职责按方法名归纳
-8. `org.h2.util` 的 `DateTimeUtils`：1,171 行、42 个公开方法，职责按方法名归纳
-9. `org.h2.table` 的 `InformationSchemaTable`：3,299 行、6 个公开方法，职责按方法名归纳
-10. `org.h2.table` 的 `InformationSchemaTableLegacy`：2,324 行、2 个公开方法，职责按方法名归纳
-11. `org.h2.engine` 的 `Database`：2,566 行、152 个公开方法，职责按方法名归纳
-12. `org.h2.engine` 的 `SessionLocal`：2,156 行、135 个公开方法，职责按方法名归纳
+1. `org.h2.api` 的 `ErrorCode`：2,367 行、2 个公开方法，职责按方法名归纳
+2. `org.h2.api` 的 `Interval`：636 行、33 个公开方法，职责按方法名归纳
+3. `org.h2.schema` 的 `Schema`：848 行、51 个公开方法，职责按方法名归纳
+4. `org.h2.schema` 的 `Sequence`：586 行、25 个公开方法，职责按方法名归纳
 
 ## 3.9 本章小结
 
-- 本章覆盖 13 个包、119,252 行。
+- 本章覆盖 2 个包、7,363 行。
 - 关键入口与源码坐标见 §3.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
 ## 3.10 延伸思考
 
-**1. 🟢★ 指出 `org.h2.value` 中 `Value` 与 `TypeInfo` 的分工差异，并给出调用方向。**
+**1. 🟢★ 指出 `org.h2.api` 中 `ErrorCode` 与 `Interval` 的分工差异，并给出调用方向。**
 
-> 提示：第3章 §3.2 的表格给出 `Value` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第3章 §3.2 的表格给出 `ErrorCode` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§3.2 核心类型
 
-**2. 🔵★★ 围绕 `org.h2.command` 的 `Parser`，说明它为什么需要独立成类型而不是并入 `Tokenizer`。**
+**2. 🔵★★ 围绕 `org.h2.schema` 的 `Schema`，说明它为什么需要独立成类型而不是并入 `Sequence`。**
 
-> 提示：第3章 §3.2 的表格给出 `Parser` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第3章 §3.2 的表格给出 `Schema` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§3.2 核心类型
 
-**3. 🟠★★★ 以 `org.h2.mvstore` 的 `FileStore` 为入口，画出一次完整调用经过的包。**
+**3. 🟠★★★ 以 `org.h2.api` 的 `ErrorCode` 为入口，画出一次完整调用经过的包。**
 
-> 提示：第3章 §3.2 的表格给出 `FileStore` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第3章 §3.2 的表格给出 `ErrorCode` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§3.2 核心类型
 
-**4. 🟢★★★★ 如果只保留 `org.h2.util` 的一个类型，你保留 `StringUtils` 还是 `DateTimeUtils`？说明代价。**
+**4. 🟢★★★★ 如果只保留 `org.h2.schema` 的一个类型，你保留 `Schema` 还是 `Sequence`？说明代价。**
 
-> 提示：第3章 §3.2 的表格给出 `StringUtils` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第3章 §3.2 的表格给出 `Schema` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§3.2 核心类型
 
 ## 3.11 本章视角：演化与版本
 
-- 以「演化与版本」看 `org.h2.value`：55 个文件、15,501 行，本章只展开与演化与版本相关的入口。
-- 对照 `org.h2.command`（15,014 行）：两者的演化与版本策略不同，差异落在 `Value` 的 67 个公开方法里。
-- 若演化与版本假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.util` 进入。
+- 以「演化与版本」看 `org.h2.api`：12 个文件、4,150 行，本章只展开与演化与版本相关的入口。
+- 对照 `org.h2.schema`（3,213 行）：两者的演化与版本策略不同，差异落在 `ErrorCode` 的 2 个公开方法里。
+- 若演化与版本假设被打破（7 个依赖变化），最先受影响的调用链从 `org.h2.security.auth` 进入。
 
 ## 3.11.1 依赖明细
 
@@ -993,56 +965,41 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 来源包 | 目标包 | 次数 |
 | --- | --- | --- |
-| `org.h2.value` | `org.h2.util` | 63 |
-| `org.h2.value` | `org.h2.engine` | 59 |
-| `org.h2.value` | `org.h2.message` | 40 |
-| `org.h2.command` | `org.h2.util.ParserUtil` | 188 |
-| `org.h2.command` | `org.h2.expression.function` | 44 |
-| `org.h2.command` | `org.h2.value` | 41 |
-| `org.h2.mvstore` | `org.h2.util` | 10 |
-| `org.h2.mvstore` | `org.h2.compress` | 7 |
-| `org.h2.mvstore` | `org.h2.store.fs` | 5 |
-| `org.h2.util` | `org.h2.value` | 35 |
-| `org.h2.util` | `org.h2.engine` | 18 |
-| `org.h2.util` | `org.h2.message` | 16 |
-| `org.h2.table` | `org.h2.value` | 59 |
-| `org.h2.table` | `org.h2.engine` | 57 |
-| `org.h2.table` | `org.h2.result` | 42 |
-| `org.h2.engine` | `org.h2.util` | 55 |
-| `org.h2.engine` | `org.h2.message` | 33 |
-| `org.h2.engine` | `org.h2.value` | 26 |
-| `org.h2.tools` | `org.h2.util` | 53 |
-| `org.h2.tools` | `org.h2.engine` | 14 |
+| `org.h2.api` | `org.h2.security.auth` | 5 |
+| `org.h2.api` | `org.h2.value` | 3 |
+| `org.h2.api` | `org.h2.util.DateTimeUtils` | 2 |
+| `org.h2.schema` | `org.h2.engine` | 29 |
+| `org.h2.schema` | `org.h2.value` | 16 |
+| `org.h2.schema` | `org.h2.message` | 13 |
 
 ## 3.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.value` 与 `org.h2.command` 之间的调用方向？
-- `Value` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.value` 的调用链讲到落盘或返回？
-- `org.h2.value` 与 `org.h2.command` 若合并，会丢掉哪个扩展点？
-- `org.h2.value` 的注释与实现若不一致，你信哪一边，为什么？
+- 不看正文，能否画出 `org.h2.api` 与 `org.h2.schema` 之间的调用方向？
+- `ErrorCode` 是否涉及并发？依据是锁、可见性还是不可变？
+- 能否用一个入口，把 `org.h2.api` 的调用链讲到落盘或返回？
+- `org.h2.api` 与 `org.h2.schema` 若合并，会丢掉哪个扩展点？
+- `org.h2.api` 的注释与实现若不一致，你信哪一边，为什么？
 
 ## 3.12 延展阅读
 
 - 详见第4章《包结构与模块职责》。
 # 第4章 模块边界与依赖治理
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 4 个包、44,070 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 1 个包、15,014 行实现；读完应能说清这些包的职责边界与关键协作。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 ## 4.1 模块版图
 
-本章覆盖 2 个包、29,519 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 1 个包、15,014 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
 | `org.h2.command` | 11 | 15,014 | This package contains the parser and the base classes for prepared SQL statements. |
-| `org.h2.mvstore` | 20 | 14,505 | A persistent storage for tree maps. |
 
 ## 4.2 核心类型
 
-在 `org.h2.command` 之外，本章还有 1 个包；下表每包取前 4 个类型，按规模降序。
+在 `org.h2.command` 之外，本章还有 0 个包；下表每包取前 4 个类型，按规模降序。
 
 ### 4.2.1 `org.h2.command`
 
@@ -1053,18 +1010,9 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `ParserBase` | 771 | 8 | （无类注释，按方法名归纳） |
 | `Token` | 758 | 5 | （无类注释，按方法名归纳） |
 
-### 4.2.2 `org.h2.mvstore`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `FileStore` | 2,386 | 64 | （无类注释，按方法名归纳） |
-| `MVStore` | 2,215 | 85 | （无类注释，按方法名归纳） |
-| `MVMap` | 2,181 | 102 | （无类注释，按方法名归纳） |
-| `Page` | 1,779 | 77 | （无类注释，按方法名归纳） |
-
 ## 4.3 关键 API 与源码坐标
 
-把 2 个包的关键入口与源码位置对应起来，共 6 条坐标，行号由脚本核验。
+把 1 个包的关键入口与源码位置对应起来，共 3 条坐标，行号由脚本核验。
 
 | 入口 | 源码坐标 |
 | --- | --- |
@@ -1072,16 +1020,10 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `Parser.parseDomainConstraintExpression()` | `org/h2/command/Parser.java:9446` |
 | `ParserBase.formatNonKeywords()` | `org/h2/command/ParserBase.java:93` |
 | `ParserBase.getLastParseIndex()` | `org/h2/command/ParserBase.java:743` |
-| `FileStore.accountForRemovedPage()` | `org/h2/mvstore/FileStore.java:2178` |
-| `FileStore.backup()` | `org/h2/mvstore/FileStore.java:1432` |
-| `MVStore.adoptFileStore()` | `org/h2/mvstore/MVStore.java:2183` |
-| `MVStore.autoCommitBufferSize()` | `org/h2/mvstore/MVStore.java:2003` |
-| `MVMap.append()` | `org/h2/mvstore/MVMap.java:1364` |
-| `MVMap.ceilingKey()` | `org/h2/mvstore/MVMap.java:325` |
 
 ## 4.3.1 公共类型清单
 
-本章抽样类型按包分组，共 10 行；规模与公开方法数是阅读优先级的第一信号。
+本章抽样类型按包分组，共 5 行；规模与公开方法数是阅读优先级的第一信号。
 
 | 类型 | 包 | 行数 | 公开方法 |
 | --- | --- | --- | --- |
@@ -1090,11 +1032,60 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `ParserBase` | `org.h2.command` | 771 | 8 |
 | `Token` | `org.h2.command` | 758 | 5 |
 | `CommandInterface` | `org.h2.command` | 654 | 0 |
-| `FileStore` | `org.h2.mvstore` | 2,386 | 64 |
-| `MVStore` | `org.h2.mvstore` | 2,215 | 85 |
-| `MVMap` | `org.h2.mvstore` | 2,181 | 102 |
-| `Page` | `org.h2.mvstore` | 1,779 | 77 |
-| `DataUtils` | `org.h2.mvstore` | 1,185 | 45 |
+
+## 4.3.2 逐类导读
+
+按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
+
+**`Parser`**（`org.h2.command`，9,470 行，9 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 63%，包级依赖 8 个。
+
+**`Tokenizer`**（`org.h2.command`，1,522 行，0 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 10%，包级依赖 8 个。
+
+**`ParserBase`**（`org.h2.command`，771 行，8 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 5%，包级依赖 8 个。
+
+**`Token`**（`org.h2.command`，758 行，5 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 5%，包级依赖 8 个。
+
+**`CommandInterface`**（`org.h2.command`，654 行，0 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 4%，包级依赖 8 个。
+
+**`Prepared`**（`org.h2.command`，503 行，33 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 3%，包级依赖 8 个。
+
+## 4.3.2 源码坐标明细
+
+本章主责包中 13 个公开入口的行号，按类聚簇，可直接跳转阅读。
+
+| 入口 | 源码坐标 |
+| --- | --- |
+| `Parser.newPrimaryKeyConstraintCommand()` | `org/h2/command/Parser.java:9178` |
+| `Parser.parseDomainConstraintExpression()` | `org/h2/command/Parser.java:9446` |
+| `Parser.parseExpression()` | `org/h2/command/Parser.java:9434` |
+| `Parser.parseTableName()` | `org/h2/command/Parser.java:9463` |
+| `ParserBase.formatNonKeywords()` | `org/h2/command/ParserBase.java:93` |
+| `ParserBase.getLastParseIndex()` | `org/h2/command/ParserBase.java:743` |
+| `ParserBase.parseColumnList()` | `org/h2/command/ParserBase.java:247` |
+| `ParserBase.parseNonKeywords()` | `org/h2/command/ParserBase.java:72` |
+| `Token.toString()` | `org/h2/command/Token.java:476` |
+| `Prepared.checkCanceled()` | `org/h2/command/Prepared.java:340` |
+| `Prepared.collectDependencies()` | `org/h2/command/Prepared.java:486` |
+| `Prepared.getCurrentRowNumber()` | `org/h2/command/Prepared.java:418` |
+| `Prepared.getParameters()` | `org/h2/command/Prepared.java:167` |
 
 ## 4.4 阅读路径
 
@@ -1102,7 +1093,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 1. 先读 `org.h2.command` 的 package-info 与 `Parser`，建立第4章的职责边界。
 2. 再读 `Parser` 的 9 个公开入口，确认它对 `org.h2.util.ParserUtil` 的调用方向与加锁方式。
-3. 最后读 `org.h2.mvstore`（本章最小包，14,505 行）的实现，关注容量与失败路径。
+3. 最后读 `org.h2.command`（本章最小包，15,014 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第5章《进程内数据流》。
 
@@ -1113,23 +1104,22 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | 包 | 依赖（前 4） |
 | --- | --- |
 | `org.h2.command` | `org.h2.util.ParserUtil`, `org.h2.expression.function`, `org.h2.value`, `org.h2.expression` |
-| `org.h2.mvstore` | `org.h2.util`, `org.h2.compress`, `org.h2.store.fs`, `org.h2.store.fs.encrypt` |
 
 ## 4.6 设计权衡
 
 - `org.h2.command` 用 11 个文件换到 15,014 行实现，平均每文件 1,364 行，其中 `Parser` 独占 9,470 行、9 个公开方法。
 - 该包对外声明了 8 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
-- `org.h2.mvstore`（14,505 行）与 `org.h2.command` 的职责差是本章最值得记的一条边界。
+- `org.h2.command`（15,014 行）与 `org.h2.command` 的职责差是本章最值得记的一条边界。
 
 ## 4.7 常见误区
 
 - 把 `org.h2.command` 的 15,014 行当作复杂度上限：`Parser` 之外的 10 个文件多为类型族与样板。
 - 只看 `Parser` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
-- 把 `org.h2.command` 与 `org.h2.mvstore` 视为可互换：前者 11 文件、后者 20 文件，扩展点分布完全不同。
+- 把 `org.h2.command` 与 `org.h2.command` 视为可互换：前者 11 文件、后者 11 文件，扩展点分布完全不同。
 
 ## 4.8 深读要点
 
-规模信号：`org.h2.command` 占本章 51% 的实现行数，改动风险最高。
+规模信号：`org.h2.command` 占本章 100% 的实现行数，改动风险最高。
 耦合信号：`org.h2.command` 依赖 8 个 `org.h2` 包，其中 `org.h2.util.ParserUtil` 出现最频繁。
 入口信号：`Parser` 的公开方法 9 个，读它等于读本章的主干。
 
@@ -1138,19 +1128,22 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 本章出现的专业术语与书末术语表的对应关系：
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **MVStore**：详见[术语表](back/glossary.md)对应条目。
 - **Parser**：详见[术语表](back/glossary.md)对应条目。
+- **Deadlock**：详见[术语表](back/glossary.md)对应条目。
+- **Expression**：详见[术语表](back/glossary.md)对应条目。
+- **Index**：详见[术语表](back/glossary.md)对应条目。
+- **IndexCondition**：详见[术语表](back/glossary.md)对应条目。
+- **Meta Lock**：详见[术语表](back/glossary.md)对应条目。
+- **MVMap**：详见[术语表](back/glossary.md)对应条目。
 
 ## 4.9 知识点清单
 
 1. `org.h2.command` 的 `Parser`：9,470 行、9 个公开方法，职责按方法名归纳
 2. `org.h2.command` 的 `Tokenizer`：1,522 行、0 个公开方法，职责按方法名归纳
-3. `org.h2.mvstore` 的 `FileStore`：2,386 行、64 个公开方法，职责按方法名归纳
-4. `org.h2.mvstore` 的 `MVStore`：2,215 行、85 个公开方法，职责按方法名归纳
 
 ## 4.9 本章小结
 
-- 本章覆盖 2 个包、29,519 行。
+- 本章覆盖 1 个包、15,014 行。
 - 关键入口与源码坐标见 §4.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -1161,9 +1154,9 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 > 提示：第4章 §4.2 的表格给出 `Parser` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§4.2 核心类型
 
-**2. 🔵★★ 围绕 `org.h2.mvstore` 的 `FileStore`，说明它为什么需要独立成类型而不是并入 `MVStore`。**
+**2. 🔵★★ 围绕 `org.h2.command` 的 `Parser`，说明它为什么需要独立成类型而不是并入 `Tokenizer`。**
 
-> 提示：第4章 §4.2 的表格给出 `FileStore` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第4章 §4.2 的表格给出 `Parser` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§4.2 核心类型
 
 **3. 🟠★★★ 以 `org.h2.command` 的 `Parser` 为入口，画出一次完整调用经过的包。**
@@ -1171,15 +1164,15 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 > 提示：第4章 §4.2 的表格给出 `Parser` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§4.2 核心类型
 
-**4. 🟢★★★★ 如果只保留 `org.h2.mvstore` 的一个类型，你保留 `FileStore` 还是 `MVStore`？说明代价。**
+**4. 🟢★★★★ 如果只保留 `org.h2.command` 的一个类型，你保留 `Parser` 还是 `Tokenizer`？说明代价。**
 
-> 提示：第4章 §4.2 的表格给出 `FileStore` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第4章 §4.2 的表格给出 `Parser` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§4.2 核心类型
 
 ## 4.11 本章视角：性能与规模
 
 - 以「性能与规模」看 `org.h2.command`：11 个文件、15,014 行，本章只展开与性能与规模相关的入口。
-- 对照 `org.h2.mvstore`（14,505 行）：两者的性能与规模策略不同，差异落在 `Parser` 的 9 个公开方法里。
+- 对照 `org.h2.command`（15,014 行）：两者的性能与规模策略不同，差异落在 `Parser` 的 9 个公开方法里。
 - 若性能与规模假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.util.ParserUtil` 进入。
 
 ## 4.11.1 依赖明细
@@ -1191,16 +1184,13 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `org.h2.command` | `org.h2.util.ParserUtil` | 188 |
 | `org.h2.command` | `org.h2.expression.function` | 44 |
 | `org.h2.command` | `org.h2.value` | 41 |
-| `org.h2.mvstore` | `org.h2.util` | 10 |
-| `org.h2.mvstore` | `org.h2.compress` | 7 |
-| `org.h2.mvstore` | `org.h2.store.fs` | 5 |
 
 ## 4.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.command` 与 `org.h2.mvstore` 之间的调用方向？
+- 不看正文，能否画出 `org.h2.command` 与 `org.h2.command` 之间的调用方向？
 - `Parser` 是否涉及并发？依据是锁、可见性还是不可变？
 - 能否用一个入口，把 `org.h2.command` 的调用链讲到落盘或返回？
-- `org.h2.command` 与 `org.h2.mvstore` 若合并，会丢掉哪个扩展点？
+- `org.h2.command` 与 `org.h2.command` 若合并，会丢掉哪个扩展点？
 - `org.h2.command` 的注释与实现若不一致，你信哪一边，为什么？
 
 ## 4.12 延展阅读
@@ -1211,78 +1201,109 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 5.1 模块版图
 
-本章覆盖 2 个包、14,551 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 1 个包、15,014 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
-| `org.h2.engine` | 28 | 11,839 | Contains high level classes of the database and classes that don't fit in another sub-package. |
-| `org.h2.store` | 17 | 2,712 | Storage abstractions and helper classes. |
+| `org.h2.command` | 11 | 15,014 | This package contains the parser and the base classes for prepared SQL statements. |
 
 ## 5.2 核心类型
 
-在 `org.h2.engine` 之外，本章还有 1 个包；下表每包取前 4 个类型，按规模降序。
+在 `org.h2.command` 之外，本章还有 0 个包；下表每包取前 4 个类型，按规模降序。
 
-### 5.2.1 `org.h2.engine`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `Database` | 2,566 | 152 | （无类注释，按方法名归纳） |
-| `SessionLocal` | 2,156 | 135 | （无类注释，按方法名归纳） |
-| `SessionRemote` | 1,068 | 53 | （无类注释，按方法名归纳） |
-| `Mode` | 776 | 5 | （无类注释，按方法名归纳） |
-
-### 5.2.2 `org.h2.store`
+### 5.2.1 `org.h2.command`
 
 | 类型 | 行数 | 公开方法 | 职责 |
 | --- | --- | --- | --- |
-| `FileLock` | 514 | 8 | （无类注释，按方法名归纳） |
-| `FileStore` | 513 | 22 | （无类注释，按方法名归纳） |
-| `Data` | 220 | 13 | （无类注释，按方法名归纳） |
-| `RecoverTester` | 176 | 3 | （无类注释，按方法名归纳） |
+| `Parser` | 9,470 | 9 | （无类注释，按方法名归纳） |
+| `Tokenizer` | 1,522 | 0 | （无类注释，按方法名归纳） |
+| `ParserBase` | 771 | 8 | （无类注释，按方法名归纳） |
+| `Token` | 758 | 5 | （无类注释，按方法名归纳） |
 
 ## 5.3 关键 API 与源码坐标
 
-把 2 个包的关键入口与源码位置对应起来，共 6 条坐标，行号由脚本核验。
+把 1 个包的关键入口与源码位置对应起来，共 3 条坐标，行号由脚本核验。
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Database.addDatabaseObject()` | `org/h2/engine/Database.java:948` |
-| `Database.addSchemaObject()` | `org/h2/engine/Database.java:923` |
-| `SessionLocal.addLocalTempTable()` | `org/h2/engine/SessionLocal.java:397` |
-| `SessionLocal.addLocalTempTableConstraint()` | `org/h2/engine/SessionLocal.java:510` |
-| `SessionRemote.addTemporaryLob()` | `org/h2/engine/SessionRemote.java:819` |
-| `SessionRemote.autoCommitIfCluster()` | `org/h2/engine/SessionRemote.java:296` |
-| `FileLock.getFileLockMethod()` | `org/h2/store/FileLock.java:458` |
-| `FileLock.getUniqueId()` | `org/h2/store/FileLock.java:472` |
-| `FileStore.autoDelete()` | `org/h2/store/FileStore.java:429` |
-| `FileStore.close()` | `org/h2/store/FileStore.java:221` |
-| `Data.checkCapacity()` | `org/h2/store/Data.java:171` |
-| `Data.copyString()` | `org/h2/store/Data.java:204` |
+| `Parser.newPrimaryKeyConstraintCommand()` | `org/h2/command/Parser.java:9178` |
+| `Parser.parseDomainConstraintExpression()` | `org/h2/command/Parser.java:9446` |
+| `ParserBase.formatNonKeywords()` | `org/h2/command/ParserBase.java:93` |
+| `ParserBase.getLastParseIndex()` | `org/h2/command/ParserBase.java:743` |
 
 ## 5.3.1 公共类型清单
 
-本章抽样类型按包分组，共 10 行；规模与公开方法数是阅读优先级的第一信号。
+本章抽样类型按包分组，共 5 行；规模与公开方法数是阅读优先级的第一信号。
 
 | 类型 | 包 | 行数 | 公开方法 |
 | --- | --- | --- | --- |
-| `Database` | `org.h2.engine` | 2,566 | 152 |
-| `SessionLocal` | `org.h2.engine` | 2,156 | 135 |
-| `SessionRemote` | `org.h2.engine` | 1,068 | 53 |
-| `Mode` | `org.h2.engine` | 776 | 5 |
-| `ConnectionInfo` | `org.h2.engine` | 766 | 25 |
-| `FileLock` | `org.h2.store` | 514 | 8 |
-| `FileStore` | `org.h2.store` | 513 | 22 |
-| `Data` | `org.h2.store` | 220 | 13 |
-| `RecoverTester` | `org.h2.store` | 176 | 3 |
-| `FileStoreInputStream` | `org.h2.store` | 155 | 5 |
+| `Parser` | `org.h2.command` | 9,470 | 9 |
+| `Tokenizer` | `org.h2.command` | 1,522 | 0 |
+| `ParserBase` | `org.h2.command` | 771 | 8 |
+| `Token` | `org.h2.command` | 758 | 5 |
+| `CommandInterface` | `org.h2.command` | 654 | 0 |
+
+## 5.3.2 逐类导读
+
+按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
+
+**`Parser`**（`org.h2.command`，9,470 行，9 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 63%，包级依赖 8 个。
+
+**`Tokenizer`**（`org.h2.command`，1,522 行，0 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 10%，包级依赖 8 个。
+
+**`ParserBase`**（`org.h2.command`，771 行，8 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 5%，包级依赖 8 个。
+
+**`Token`**（`org.h2.command`，758 行，5 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 5%，包级依赖 8 个。
+
+**`CommandInterface`**（`org.h2.command`，654 行，0 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 4%，包级依赖 8 个。
+
+**`Prepared`**（`org.h2.command`，503 行，33 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 3%，包级依赖 8 个。
+
+## 5.3.2 源码坐标明细
+
+本章主责包中 13 个公开入口的行号，按类聚簇，可直接跳转阅读。
+
+| 入口 | 源码坐标 |
+| --- | --- |
+| `Parser.newPrimaryKeyConstraintCommand()` | `org/h2/command/Parser.java:9178` |
+| `Parser.parseDomainConstraintExpression()` | `org/h2/command/Parser.java:9446` |
+| `Parser.parseExpression()` | `org/h2/command/Parser.java:9434` |
+| `Parser.parseTableName()` | `org/h2/command/Parser.java:9463` |
+| `ParserBase.formatNonKeywords()` | `org/h2/command/ParserBase.java:93` |
+| `ParserBase.getLastParseIndex()` | `org/h2/command/ParserBase.java:743` |
+| `ParserBase.parseColumnList()` | `org/h2/command/ParserBase.java:247` |
+| `ParserBase.parseNonKeywords()` | `org/h2/command/ParserBase.java:72` |
+| `Token.toString()` | `org/h2/command/Token.java:476` |
+| `Prepared.checkCanceled()` | `org/h2/command/Prepared.java:340` |
+| `Prepared.collectDependencies()` | `org/h2/command/Prepared.java:486` |
+| `Prepared.getCurrentRowNumber()` | `org/h2/command/Prepared.java:418` |
+| `Prepared.getParameters()` | `org/h2/command/Prepared.java:167` |
 
 ## 5.4 阅读路径
 
-读 `org.h2.engine` 的 28 个文件时，先看骨架类，再沿 `org.h2.util` 方向下钻。
+读 `org.h2.command` 的 11 个文件时，先看骨架类，再沿 `org.h2.util.ParserUtil` 方向下钻。
 
-1. 先读 `org.h2.engine` 的 package-info 与 `Database`，建立第5章的职责边界。
-2. 再读 `Database` 的 152 个公开入口，确认它对 `org.h2.util` 的调用方向与加锁方式。
-3. 最后读 `org.h2.store`（本章最小包，2,712 行）的实现，关注容量与失败路径。
+1. 先读 `org.h2.command` 的 package-info 与 `Parser`，建立第5章的职责边界。
+2. 再读 `Parser` 的 9 个公开入口，确认它对 `org.h2.util.ParserUtil` 的调用方向与加锁方式。
+3. 最后读 `org.h2.command`（本章最小包，15,014 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第4章《模块边界与依赖治理》。
 
@@ -1292,75 +1313,77 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 包 | 依赖（前 4） |
 | --- | --- |
-| `org.h2.engine` | `org.h2.util`, `org.h2.message`, `org.h2.value`, `org.h2.api` |
-| `org.h2.store` | `org.h2.engine`, `org.h2.util`, `org.h2.message`, `org.h2.value` |
+| `org.h2.command` | `org.h2.util.ParserUtil`, `org.h2.expression.function`, `org.h2.value`, `org.h2.expression` |
 
 ## 5.6 设计权衡
 
-- `org.h2.engine` 用 28 个文件换到 11,839 行实现，平均每文件 422 行，其中 `Database` 独占 2,566 行、152 个公开方法。
+- `org.h2.command` 用 11 个文件换到 15,014 行实现，平均每文件 1,364 行，其中 `Parser` 独占 9,470 行、9 个公开方法。
 - 该包对外声明了 8 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
-- `org.h2.store`（2,712 行）与 `org.h2.engine` 的职责差是本章最值得记的一条边界。
+- `org.h2.command`（15,014 行）与 `org.h2.command` 的职责差是本章最值得记的一条边界。
 
 ## 5.7 常见误区
 
-- 把 `org.h2.engine` 的 11,839 行当作复杂度上限：`Database` 之外的 27 个文件多为类型族与样板。
-- 只看 `Database` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
-- 把 `org.h2.engine` 与 `org.h2.store` 视为可互换：前者 28 文件、后者 17 文件，扩展点分布完全不同。
+- 把 `org.h2.command` 的 15,014 行当作复杂度上限：`Parser` 之外的 10 个文件多为类型族与样板。
+- 只看 `Parser` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
+- 把 `org.h2.command` 与 `org.h2.command` 视为可互换：前者 11 文件、后者 11 文件，扩展点分布完全不同。
 
 ## 5.8 深读要点
 
-规模信号：`org.h2.engine` 占本章 81% 的实现行数，改动风险最高。
-耦合信号：`org.h2.engine` 依赖 8 个 `org.h2` 包，其中 `org.h2.util` 出现最频繁。
-入口信号：`Database` 的公开方法 152 个，读它等于读本章的主干。
+规模信号：`org.h2.command` 占本章 100% 的实现行数，改动风险最高。
+耦合信号：`org.h2.command` 依赖 8 个 `org.h2` 包，其中 `org.h2.util.ParserUtil` 出现最频繁。
+入口信号：`Parser` 的公开方法 9 个，读它等于读本章的主干。
 
 ## 5.8 术语对照
 
 本章出现的专业术语与书末术语表的对应关系：
 
-- **Database**：详见[术语表](back/glossary.md)对应条目。
-- **Engine**：详见[术语表](back/glossary.md)对应条目。
 - **H2**：详见[术语表](back/glossary.md)对应条目。
+- **Parser**：详见[术语表](back/glossary.md)对应条目。
+- **CommitDecisionMaker**：详见[术语表](back/glossary.md)对应条目。
+- **DDL**：详见[术语表](back/glossary.md)对应条目。
+- **DML**：详见[术语表](back/glossary.md)对应条目。
+- **FreeSpaceBitSet**：详见[术语表](back/glossary.md)对应条目。
+- **RollbackDecisionMaker**：详见[术语表](back/glossary.md)对应条目。
+- **Savepoint**：详见[术语表](back/glossary.md)对应条目。
 
 ## 5.9 知识点清单
 
-1. `org.h2.engine` 的 `Database`：2,566 行、152 个公开方法，职责按方法名归纳
-2. `org.h2.engine` 的 `SessionLocal`：2,156 行、135 个公开方法，职责按方法名归纳
-3. `org.h2.store` 的 `FileLock`：514 行、8 个公开方法，职责按方法名归纳
-4. `org.h2.store` 的 `FileStore`：513 行、22 个公开方法，职责按方法名归纳
+1. `org.h2.command` 的 `Parser`：9,470 行、9 个公开方法，职责按方法名归纳
+2. `org.h2.command` 的 `Tokenizer`：1,522 行、0 个公开方法，职责按方法名归纳
 
 ## 5.9 本章小结
 
-- 本章覆盖 2 个包、14,551 行。
+- 本章覆盖 1 个包、15,014 行。
 - 关键入口与源码坐标见 §5.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
 ## 5.10 延伸思考
 
-**1. 🟢★ 指出 `org.h2.engine` 中 `Database` 与 `SessionLocal` 的分工差异，并给出调用方向。**
+**1. 🟢★ 指出 `org.h2.command` 中 `Parser` 与 `Tokenizer` 的分工差异，并给出调用方向。**
 
-> 提示：第5章 §5.2 的表格给出 `Database` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第5章 §5.2 的表格给出 `Parser` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§5.2 核心类型
 
-**2. 🔵★★ 围绕 `org.h2.store` 的 `FileLock`，说明它为什么需要独立成类型而不是并入 `FileStore`。**
+**2. 🔵★★ 围绕 `org.h2.command` 的 `Parser`，说明它为什么需要独立成类型而不是并入 `Tokenizer`。**
 
-> 提示：第5章 §5.2 的表格给出 `FileLock` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第5章 §5.2 的表格给出 `Parser` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§5.2 核心类型
 
-**3. 🟠★★★ 以 `org.h2.engine` 的 `Database` 为入口，画出一次完整调用经过的包。**
+**3. 🟠★★★ 以 `org.h2.command` 的 `Parser` 为入口，画出一次完整调用经过的包。**
 
-> 提示：第5章 §5.2 的表格给出 `Database` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第5章 §5.2 的表格给出 `Parser` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§5.2 核心类型
 
-**4. 🟢★★★★ 如果只保留 `org.h2.store` 的一个类型，你保留 `FileLock` 还是 `FileStore`？说明代价。**
+**4. 🟢★★★★ 如果只保留 `org.h2.command` 的一个类型，你保留 `Parser` 还是 `Tokenizer`？说明代价。**
 
-> 提示：第5章 §5.2 的表格给出 `FileLock` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第5章 §5.2 的表格给出 `Parser` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§5.2 核心类型
 
 ## 5.11 本章视角：并发与一致性
 
-- 以「并发与一致性」看 `org.h2.engine`：28 个文件、11,839 行，本章只展开与并发与一致性相关的入口。
-- 对照 `org.h2.store`（2,712 行）：两者的并发与一致性策略不同，差异落在 `Database` 的 152 个公开方法里。
-- 若并发与一致性假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.util` 进入。
+- 以「并发与一致性」看 `org.h2.command`：11 个文件、15,014 行，本章只展开与并发与一致性相关的入口。
+- 对照 `org.h2.command`（15,014 行）：两者的并发与一致性策略不同，差异落在 `Parser` 的 9 个公开方法里。
+- 若并发与一致性假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.util.ParserUtil` 进入。
 
 ## 5.11.1 依赖明细
 
@@ -1368,44 +1391,47 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 来源包 | 目标包 | 次数 |
 | --- | --- | --- |
-| `org.h2.engine` | `org.h2.util` | 55 |
-| `org.h2.engine` | `org.h2.message` | 33 |
-| `org.h2.engine` | `org.h2.value` | 26 |
-| `org.h2.store` | `org.h2.engine` | 16 |
-| `org.h2.store` | `org.h2.util` | 14 |
-| `org.h2.store` | `org.h2.message` | 11 |
+| `org.h2.command` | `org.h2.util.ParserUtil` | 188 |
+| `org.h2.command` | `org.h2.expression.function` | 44 |
+| `org.h2.command` | `org.h2.value` | 41 |
 
 ## 5.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.engine` 与 `org.h2.store` 之间的调用方向？
-- `Database` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.engine` 的调用链讲到落盘或返回？
-- `org.h2.engine` 与 `org.h2.store` 若合并，会丢掉哪个扩展点？
-- `org.h2.engine` 的注释与实现若不一致，你信哪一边，为什么？
+- 不看正文，能否画出 `org.h2.command` 与 `org.h2.command` 之间的调用方向？
+- `Parser` 是否涉及并发？依据是锁、可见性还是不可变？
+- 能否用一个入口，把 `org.h2.command` 的调用链讲到落盘或返回？
+- `org.h2.command` 与 `org.h2.command` 若合并，会丢掉哪个扩展点？
+- `org.h2.command` 的注释与实现若不一致，你信哪一边，为什么？
+
+## 5.12 跨章索引
+
+本章引用但不展开的包，按下面这张表跳到主责章节阅读。
+
+| 包 | 主责章节 |
+| --- | --- |
+| `org.h2.command` | 第4章《模块边界与依赖治理》 |
 
 ## 5.12 延展阅读
 
 - 详见第4章《模块边界与依赖治理》。
 # 第6章 数据结构：值、行与页
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 4 个包、48,143 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、19,178 行实现；读完应能说清这些包的职责边界与关键协作。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 ## 6.1 模块版图
 
-本章覆盖 4 个包、48,143 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 2 个包、19,178 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
 | `org.h2.value` | 55 | 15,501 | Data type and value implementations. |
-| `org.h2.mvstore` | 20 | 14,505 | A persistent storage for tree maps. |
-| `org.h2.util` | 48 | 14,460 | Internal utility classes. |
 | `org.h2.result` | 21 | 3,677 | Implementation of row and internal result sets. |
 
 ## 6.2 核心类型
 
-在 `org.h2.value` 之外，本章还有 3 个包；下表每包取前 4 个类型，按规模降序。
+在 `org.h2.value` 之外，本章还有 1 个包；下表每包取前 4 个类型，按规模降序。
 
 ### 6.2.1 `org.h2.value`
 
@@ -1416,25 +1442,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `Transfer` | 1,368 | 31 | （无类注释，按方法名归纳） |
 | `DataType` | 828 | 25 | （无类注释，按方法名归纳） |
 
-### 6.2.2 `org.h2.mvstore`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `FileStore` | 2,386 | 64 | （无类注释，按方法名归纳） |
-| `MVStore` | 2,215 | 85 | （无类注释，按方法名归纳） |
-| `MVMap` | 2,181 | 102 | （无类注释，按方法名归纳） |
-| `Page` | 1,779 | 77 | （无类注释，按方法名归纳） |
-
-### 6.2.3 `org.h2.util`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `StringUtils` | 1,415 | 55 | （无类注释，按方法名归纳） |
-| `DateTimeUtils` | 1,171 | 42 | （无类注释，按方法名归纳） |
-| `DateTimeTemplate` | 859 | 5 | （无类注释，按方法名归纳） |
-| `IntervalUtils` | 857 | 12 | （无类注释，按方法名归纳） |
-
-### 6.2.4 `org.h2.result`
+### 6.2.2 `org.h2.result`
 
 | 类型 | 行数 | 公开方法 | 职责 |
 | --- | --- | --- | --- |
@@ -1445,7 +1453,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 6.3 关键 API 与源码坐标
 
-把 4 个包的关键入口与源码位置对应起来，共 12 条坐标，行号由脚本核验。
+把 2 个包的关键入口与源码位置对应起来，共 6 条坐标，行号由脚本核验。
 
 | 入口 | 源码坐标 |
 | --- | --- |
@@ -1455,24 +1463,16 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `TypeInfo.checkComparable()` | `org/h2/value/TypeInfo.java:764` |
 | `Transfer.close()` | `org/h2/value/Transfer.java:478` |
 | `Transfer.flush()` | `org/h2/value/Transfer.java:216` |
-| `FileStore.accountForRemovedPage()` | `org/h2/mvstore/FileStore.java:2178` |
-| `FileStore.backup()` | `org/h2/mvstore/FileStore.java:1432` |
-| `MVStore.adoptFileStore()` | `org/h2/mvstore/MVStore.java:2183` |
-| `MVStore.autoCommitBufferSize()` | `org/h2/mvstore/MVStore.java:2003` |
-| `MVMap.append()` | `org/h2/mvstore/MVMap.java:1364` |
-| `MVMap.ceilingKey()` | `org/h2/mvstore/MVMap.java:325` |
-| `StringUtils.addAsterisk()` | `org/h2/util/StringUtils.java:283` |
-| `StringUtils.appendHex()` | `org/h2/util/StringUtils.java:1277` |
-| `DateTimeUtils.absoluteDayFromDateValue()` | `org/h2/util/DateTimeUtils.java:873` |
-| `DateTimeUtils.absoluteDayFromYear()` | `org/h2/util/DateTimeUtils.java:857` |
-| `DateTimeTemplate.format()` | `org/h2/util/DateTimeTemplate.java:178` |
-| `DateTimeTemplate.of()` | `org/h2/util/DateTimeTemplate.java:430` |
 | `LocalResult.addRow()` | `org/h2/result/LocalResult.java:420` |
 | `LocalResult.addRowForTable()` | `org/h2/result/LocalResult.java:404` |
+| `UpdatableRow.deleteRow()` | `org/h2/result/UpdatableRow.java:257` |
+| `UpdatableRow.insertRow()` | `org/h2/result/UpdatableRow.java:309` |
+| `SortOrder.addNullOrdering()` | `org/h2/result/SortOrder.java:312` |
+| `SortOrder.compare()` | `org/h2/result/SortOrder.java:162` |
 
 ## 6.3.1 公共类型清单
 
-本章抽样类型按包分组，共 20 行；规模与公开方法数是阅读优先级的第一信号。
+本章抽样类型按包分组，共 10 行；规模与公开方法数是阅读优先级的第一信号。
 
 | 类型 | 包 | 行数 | 公开方法 |
 | --- | --- | --- | --- |
@@ -1481,21 +1481,102 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `Transfer` | `org.h2.value` | 1,368 | 31 |
 | `DataType` | `org.h2.value` | 828 | 25 |
 | `ValueToObjectConverter` | `org.h2.value` | 642 | 6 |
-| `FileStore` | `org.h2.mvstore` | 2,386 | 64 |
-| `MVStore` | `org.h2.mvstore` | 2,215 | 85 |
-| `MVMap` | `org.h2.mvstore` | 2,181 | 102 |
-| `Page` | `org.h2.mvstore` | 1,779 | 77 |
-| `DataUtils` | `org.h2.mvstore` | 1,185 | 45 |
-| `StringUtils` | `org.h2.util` | 1,415 | 55 |
-| `DateTimeUtils` | `org.h2.util` | 1,171 | 42 |
-| `DateTimeTemplate` | `org.h2.util` | 859 | 5 |
-| `IntervalUtils` | `org.h2.util` | 857 | 12 |
-| `Utils` | `org.h2.util` | 832 | 34 |
 | `LocalResult` | `org.h2.result` | 710 | 42 |
 | `UpdatableRow` | `org.h2.result` | 341 | 5 |
 | `SortOrder` | `org.h2.result` | 334 | 15 |
 | `SimpleResult` | `org.h2.result` | 303 | 31 |
 | `ResultRemote` | `org.h2.result` | 287 | 17 |
+
+## 6.3.2 逐类导读
+
+按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
+
+**`Value`**（`org.h2.value`，2,873 行，67 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 19%，包级依赖 8 个。
+
+**`TypeInfo`**（`org.h2.value`，1,539 行，23 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 10%，包级依赖 8 个。
+
+**`Transfer`**（`org.h2.value`，1,368 行，31 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 9%，包级依赖 8 个。
+
+**`DataType`**（`org.h2.value`，828 行，25 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 5%，包级依赖 8 个。
+
+**`ValueToObjectConverter`**（`org.h2.value`，642 行，6 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 4%，包级依赖 8 个。
+
+**`ValueToObjectConverter2`**（`org.h2.value`，433 行，2 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 3%，包级依赖 8 个。
+
+**`LocalResult`**（`org.h2.result`，710 行，42 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 19%，包级依赖 8 个。
+
+**`UpdatableRow`**（`org.h2.result`，341 行，5 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 9%，包级依赖 8 个。
+
+**`SortOrder`**（`org.h2.result`，334 行，15 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 9%，包级依赖 8 个。
+
+**`SimpleResult`**（`org.h2.result`，303 行，31 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 8%，包级依赖 8 个。
+
+**`ResultRemote`**（`org.h2.result`，287 行，17 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 8%，包级依赖 8 个。
+
+**`RowFactory`**（`org.h2.result`，201 行，17 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 5%，包级依赖 8 个。
+
+## 6.3.2 源码坐标明细
+
+本章主责包中 46 个公开入口的行号，按类聚簇，可直接跳转阅读。
+
+| 入口 | 源码坐标 |
+| --- | --- |
+| `Value.add()` | `org/h2/value/Value.java:929` |
+| `Value.castTo()` | `org/h2/value/Value.java:1105` |
+| `Value.charLength()` | `org/h2/value/Value.java:2832` |
+| `Value.clearCache()` | `org/h2/value/Value.java:773` |
+| `TypeInfo.areSameTypes()` | `org/h2/value/TypeInfo.java:738` |
+| `TypeInfo.checkComparable()` | `org/h2/value/TypeInfo.java:764` |
+| `TypeInfo.equals()` | `org/h2/value/TypeInfo.java:1397` |
+| `TypeInfo.getDecimalPrecision()` | `org/h2/value/TypeInfo.java:1490` |
+| `Transfer.close()` | `org/h2/value/Transfer.java:478` |
+| `Transfer.flush()` | `org/h2/value/Transfer.java:216` |
+| `Transfer.getSocket()` | `org/h2/value/Transfer.java:1289` |
+| `Transfer.getVersion()` | `org/h2/value/Transfer.java:1330` |
+| `DataType.addPrecision()` | `org/h2/value/DataType.java:791` |
+| `DataType.areStableComparable()` | `org/h2/value/DataType.java:592` |
+| `DataType.convertSQLTypeToValueType()` | `org/h2/value/DataType.java:366` |
+| `DataType.convertTypeToSQLType()` | `org/h2/value/DataType.java:343` |
+| `ValueToObjectConverter.getDefaultClass()` | `org/h2/value/ValueToObjectConverter.java:403` |
+| `ValueToObjectConverter.objectToValue()` | `org/h2/value/ValueToObjectConverter.java:85` |
+| `ValueToObjectConverter.readValue()` | `org/h2/value/ValueToObjectConverter.java:624` |
+| `ValueToObjectConverter.valueToDefaultArray()` | `org/h2/value/ValueToObjectConverter.java:603` |
 
 ## 6.4 阅读路径
 
@@ -1514,25 +1595,23 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | 包 | 依赖（前 4） |
 | --- | --- |
 | `org.h2.value` | `org.h2.util`, `org.h2.engine`, `org.h2.message`, `org.h2.api` |
-| `org.h2.mvstore` | `org.h2.util`, `org.h2.compress`, `org.h2.store.fs`, `org.h2.store.fs.encrypt` |
-| `org.h2.util` | `org.h2.value`, `org.h2.engine`, `org.h2.message`, `org.h2.api` |
 | `org.h2.result` | `org.h2.value`, `org.h2.engine`, `org.h2.util`, `org.h2.expression` |
 
 ## 6.6 设计权衡
 
 - `org.h2.value` 用 55 个文件换到 15,501 行实现，平均每文件 281 行，其中 `Value` 独占 2,873 行、67 个公开方法。
 - 该包对外声明了 8 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
-- `org.h2.mvstore`（14,505 行）与 `org.h2.value` 的职责差是本章最值得记的一条边界。
+- `org.h2.result`（3,677 行）与 `org.h2.value` 的职责差是本章最值得记的一条边界。
 
 ## 6.7 常见误区
 
 - 把 `org.h2.value` 的 15,501 行当作复杂度上限：`Value` 之外的 54 个文件多为类型族与样板。
 - 只看 `Value` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
-- 把 `org.h2.value` 与 `org.h2.mvstore` 视为可互换：前者 55 文件、后者 20 文件，扩展点分布完全不同。
+- 把 `org.h2.value` 与 `org.h2.result` 视为可互换：前者 55 文件、后者 21 文件，扩展点分布完全不同。
 
 ## 6.8 深读要点
 
-规模信号：`org.h2.value` 占本章 32% 的实现行数，改动风险最高。
+规模信号：`org.h2.value` 占本章 81% 的实现行数，改动风险最高。
 耦合信号：`org.h2.value` 依赖 8 个 `org.h2` 包，其中 `org.h2.util` 出现最频繁。
 入口信号：`Value` 的公开方法 67 个，读它等于读本章的主干。
 
@@ -1541,23 +1620,24 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 本章出现的专业术语与书末术语表的对应关系：
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **MVStore**：详见[术语表](back/glossary.md)对应条目。
 - **Value**：详见[术语表](back/glossary.md)对应条目。
+- **Append-Only**：详见[术语表](back/glossary.md)对应条目。
+- **B-Tree**：详见[术语表](back/glossary.md)对应条目。
+- **Chunk**：详见[术语表](back/glossary.md)对应条目。
+- **COW / Copy-on-Write**：详见[术语表](back/glossary.md)对应条目。
+- **Compact**：详见[术语表](back/glossary.md)对应条目。
+- **Free Space**：详见[术语表](back/glossary.md)对应条目。
 
 ## 6.9 知识点清单
 
 1. `org.h2.value` 的 `Value`：2,873 行、67 个公开方法，职责按方法名归纳
 2. `org.h2.value` 的 `TypeInfo`：1,539 行、23 个公开方法，职责按方法名归纳
-3. `org.h2.mvstore` 的 `FileStore`：2,386 行、64 个公开方法，职责按方法名归纳
-4. `org.h2.mvstore` 的 `MVStore`：2,215 行、85 个公开方法，职责按方法名归纳
-5. `org.h2.util` 的 `StringUtils`：1,415 行、55 个公开方法，职责按方法名归纳
-6. `org.h2.util` 的 `DateTimeUtils`：1,171 行、42 个公开方法，职责按方法名归纳
-7. `org.h2.result` 的 `LocalResult`：710 行、42 个公开方法，职责按方法名归纳
-8. `org.h2.result` 的 `UpdatableRow`：341 行、5 个公开方法，职责按方法名归纳
+3. `org.h2.result` 的 `LocalResult`：710 行、42 个公开方法，职责按方法名归纳
+4. `org.h2.result` 的 `UpdatableRow`：341 行、5 个公开方法，职责按方法名归纳
 
 ## 6.9 本章小结
 
-- 本章覆盖 4 个包、48,143 行。
+- 本章覆盖 2 个包、19,178 行。
 - 关键入口与源码坐标见 §6.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -1568,14 +1648,14 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 > 提示：第6章 §6.2 的表格给出 `Value` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§6.2 核心类型
 
-**2. 🔵★★ 围绕 `org.h2.mvstore` 的 `FileStore`，说明它为什么需要独立成类型而不是并入 `MVStore`。**
+**2. 🔵★★ 围绕 `org.h2.result` 的 `LocalResult`，说明它为什么需要独立成类型而不是并入 `UpdatableRow`。**
 
-> 提示：第6章 §6.2 的表格给出 `FileStore` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第6章 §6.2 的表格给出 `LocalResult` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§6.2 核心类型
 
-**3. 🟠★★★ 以 `org.h2.util` 的 `StringUtils` 为入口，画出一次完整调用经过的包。**
+**3. 🟠★★★ 以 `org.h2.value` 的 `Value` 为入口，画出一次完整调用经过的包。**
 
-> 提示：第6章 §6.2 的表格给出 `StringUtils` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第6章 §6.2 的表格给出 `Value` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§6.2 核心类型
 
 **4. 🟢★★★★ 如果只保留 `org.h2.result` 的一个类型，你保留 `LocalResult` 还是 `UpdatableRow`？说明代价。**
@@ -1586,7 +1666,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 ## 6.11 本章视角：扩展与兼容
 
 - 以「扩展与兼容」看 `org.h2.value`：55 个文件、15,501 行，本章只展开与扩展与兼容相关的入口。
-- 对照 `org.h2.mvstore`（14,505 行）：两者的扩展与兼容策略不同，差异落在 `Value` 的 67 个公开方法里。
+- 对照 `org.h2.result`（3,677 行）：两者的扩展与兼容策略不同，差异落在 `Value` 的 67 个公开方法里。
 - 若扩展与兼容假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.util` 进入。
 
 ## 6.11.1 依赖明细
@@ -1598,22 +1678,16 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `org.h2.value` | `org.h2.util` | 63 |
 | `org.h2.value` | `org.h2.engine` | 59 |
 | `org.h2.value` | `org.h2.message` | 40 |
-| `org.h2.mvstore` | `org.h2.util` | 10 |
-| `org.h2.mvstore` | `org.h2.compress` | 7 |
-| `org.h2.mvstore` | `org.h2.store.fs` | 5 |
-| `org.h2.util` | `org.h2.value` | 35 |
-| `org.h2.util` | `org.h2.engine` | 18 |
-| `org.h2.util` | `org.h2.message` | 16 |
 | `org.h2.result` | `org.h2.value` | 45 |
 | `org.h2.result` | `org.h2.engine` | 21 |
 | `org.h2.result` | `org.h2.util` | 8 |
 
 ## 6.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.value` 与 `org.h2.mvstore` 之间的调用方向？
+- 不看正文，能否画出 `org.h2.value` 与 `org.h2.result` 之间的调用方向？
 - `Value` 是否涉及并发？依据是锁、可见性还是不可变？
 - 能否用一个入口，把 `org.h2.value` 的调用链讲到落盘或返回？
-- `org.h2.value` 与 `org.h2.mvstore` 若合并，会丢掉哪个扩展点？
+- `org.h2.value` 与 `org.h2.result` 若合并，会丢掉哪个扩展点？
 - `org.h2.value` 的注释与实现若不一致，你信哪一边，为什么？
 
 ## 6.12 延展阅读
@@ -1621,23 +1695,21 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - 详见第7章《数据结构：值、行与页》。
 # 第7章 存储与压缩算法
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 3 个包、18,551 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 1 个包、14,505 行实现；读完应能说清这些包的职责边界与关键协作。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 ## 7.1 模块版图
 
-本章覆盖 3 个包、18,551 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 1 个包、14,505 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
 | `org.h2.mvstore` | 20 | 14,505 | A persistent storage for tree maps. |
-| `org.h2.store` | 17 | 2,712 | Storage abstractions and helper classes. |
-| `org.h2.store.fs` | 7 | 1,334 | A file system abstraction. |
 
 ## 7.2 核心类型
 
-在 `org.h2.mvstore` 之外，本章还有 2 个包；下表每包取前 4 个类型，按规模降序。
+在 `org.h2.mvstore` 之外，本章还有 0 个包；下表每包取前 4 个类型，按规模降序。
 
 ### 7.2.1 `org.h2.mvstore`
 
@@ -1648,27 +1720,9 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `MVMap` | 2,181 | 102 | （无类注释，按方法名归纳） |
 | `Page` | 1,779 | 77 | （无类注释，按方法名归纳） |
 
-### 7.2.2 `org.h2.store`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `FileLock` | 514 | 8 | （无类注释，按方法名归纳） |
-| `FileStore` | 513 | 22 | （无类注释，按方法名归纳） |
-| `Data` | 220 | 13 | （无类注释，按方法名归纳） |
-| `RecoverTester` | 176 | 3 | （无类注释，按方法名归纳） |
-
-### 7.2.3 `org.h2.store.fs`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `FileUtils` | 477 | 29 | （无类注释，按方法名归纳） |
-| `FilePath` | 353 | 28 | （无类注释，按方法名归纳） |
-| `FilePathWrapper` | 171 | 22 | （无类注释，按方法名归纳） |
-| `FakeFileChannel` | 112 | 16 | （无类注释，按方法名归纳） |
-
 ## 7.3 关键 API 与源码坐标
 
-把 3 个包的关键入口与源码位置对应起来，共 9 条坐标，行号由脚本核验。
+把 1 个包的关键入口与源码位置对应起来，共 3 条坐标，行号由脚本核验。
 
 | 入口 | 源码坐标 |
 | --- | --- |
@@ -1678,22 +1732,10 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `MVStore.autoCommitBufferSize()` | `org/h2/mvstore/MVStore.java:2003` |
 | `MVMap.append()` | `org/h2/mvstore/MVMap.java:1364` |
 | `MVMap.ceilingKey()` | `org/h2/mvstore/MVMap.java:325` |
-| `FileLock.getFileLockMethod()` | `org/h2/store/FileLock.java:458` |
-| `FileLock.getUniqueId()` | `org/h2/store/FileLock.java:472` |
-| `FileStore.autoDelete()` | `org/h2/store/FileStore.java:429` |
-| `FileStore.close()` | `org/h2/store/FileStore.java:221` |
-| `Data.checkCapacity()` | `org/h2/store/Data.java:171` |
-| `Data.copyString()` | `org/h2/store/Data.java:204` |
-| `FileUtils.canWrite()` | `org/h2/store/fs/FileUtils.java:317` |
-| `FileUtils.createDirectories()` | `org/h2/store/fs/FileUtils.java:372` |
-| `FilePath.canWrite()` | `org/h2/store/fs/FilePath.java:201` |
-| `FilePath.createDirectory()` | `org/h2/store/fs/FilePath.java:206` |
-| `FilePathWrapper.canWrite()` | `org/h2/store/fs/FilePathWrapper.java:72` |
-| `FilePathWrapper.createDirectory()` | `org/h2/store/fs/FilePathWrapper.java:77` |
 
 ## 7.3.1 公共类型清单
 
-本章抽样类型按包分组，共 15 行；规模与公开方法数是阅读优先级的第一信号。
+本章抽样类型按包分组，共 5 行；规模与公开方法数是阅读优先级的第一信号。
 
 | 类型 | 包 | 行数 | 公开方法 |
 | --- | --- | --- | --- |
@@ -1702,16 +1744,67 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `MVMap` | `org.h2.mvstore` | 2,181 | 102 |
 | `Page` | `org.h2.mvstore` | 1,779 | 77 |
 | `DataUtils` | `org.h2.mvstore` | 1,185 | 45 |
-| `FileLock` | `org.h2.store` | 514 | 8 |
-| `FileStore` | `org.h2.store` | 513 | 22 |
-| `Data` | `org.h2.store` | 220 | 13 |
-| `RecoverTester` | `org.h2.store` | 176 | 3 |
-| `FileStoreInputStream` | `org.h2.store` | 155 | 5 |
-| `FileUtils` | `org.h2.store.fs` | 477 | 29 |
-| `FilePath` | `org.h2.store.fs` | 353 | 28 |
-| `FilePathWrapper` | `org.h2.store.fs` | 171 | 22 |
-| `FakeFileChannel` | `org.h2.store.fs` | 112 | 16 |
-| `FileBase` | `org.h2.store.fs` | 92 | 10 |
+
+## 7.3.2 逐类导读
+
+按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
+
+**`FileStore`**（`org.h2.mvstore`，2,386 行，64 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 16%，包级依赖 7 个。
+
+**`MVStore`**（`org.h2.mvstore`，2,215 行，85 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 15%，包级依赖 7 个。
+
+**`MVMap`**（`org.h2.mvstore`，2,181 行，102 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 15%，包级依赖 7 个。
+
+**`Page`**（`org.h2.mvstore`，1,779 行，77 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 12%，包级依赖 7 个。
+
+**`DataUtils`**（`org.h2.mvstore`，1,185 行，45 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 8%，包级依赖 7 个。
+
+**`RandomAccessStore`**（`org.h2.mvstore`，851 行，10 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 6%，包级依赖 7 个。
+
+## 7.3.2 源码坐标明细
+
+本章主责包中 24 个公开入口的行号，按类聚簇，可直接跳转阅读。
+
+| 入口 | 源码坐标 |
+| --- | --- |
+| `FileStore.accountForRemovedPage()` | `org/h2/mvstore/FileStore.java:2178` |
+| `FileStore.backup()` | `org/h2/mvstore/FileStore.java:1432` |
+| `FileStore.bind()` | `org/h2/mvstore/FileStore.java:281` |
+| `FileStore.clear()` | `org/h2/mvstore/FileStore.java:1397` |
+| `MVStore.adoptFileStore()` | `org/h2/mvstore/MVStore.java:2183` |
+| `MVStore.autoCommitBufferSize()` | `org/h2/mvstore/MVStore.java:2003` |
+| `MVStore.autoCommitDisabled()` | `org/h2/mvstore/MVStore.java:1981` |
+| `MVStore.autoCompactFillRate()` | `org/h2/mvstore/MVStore.java:2021` |
+| `MVMap.append()` | `org/h2/mvstore/MVMap.java:1364` |
+| `MVMap.ceilingKey()` | `org/h2/mvstore/MVMap.java:325` |
+| `MVMap.clear()` | `org/h2/mvstore/MVMap.java:441` |
+| `MVMap.contains()` | `org/h2/mvstore/MVMap.java:763` |
+| `Page.copy()` | `org/h2/mvstore/Page.java:382` |
+| `Page.createEmptyLeaf()` | `org/h2/mvstore/Page.java:156` |
+| `Page.createKeyStorage()` | `org/h2/mvstore/Page.java:1001` |
+| `Page.createNode()` | `org/h2/mvstore/Page.java:188` |
+| `DataUtils.appendMap()` | `org/h2/mvstore/DataUtils.java:690` |
+| `DataUtils.checkArgument()` | `org/h2/mvstore/DataUtils.java:955` |
+| `DataUtils.composePagePos()` | `org/h2/mvstore/DataUtils.java:627` |
+| `DataUtils.composeTocElement()` | `org/h2/mvstore/DataUtils.java:660` |
 
 ## 7.4 阅读路径
 
@@ -1719,7 +1812,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 1. 先读 `org.h2.mvstore` 的 package-info 与 `FileStore`，建立第7章的职责边界。
 2. 再读 `FileStore` 的 64 个公开入口，确认它对 `org.h2.util` 的调用方向与加锁方式。
-3. 最后读 `org.h2.store.fs`（本章最小包，1,334 行）的实现，关注容量与失败路径。
+3. 最后读 `org.h2.mvstore`（本章最小包，14,505 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第8章《存储与压缩算法》。
 
@@ -1730,24 +1823,22 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | 包 | 依赖（前 4） |
 | --- | --- |
 | `org.h2.mvstore` | `org.h2.util`, `org.h2.compress`, `org.h2.store.fs`, `org.h2.store.fs.encrypt` |
-| `org.h2.store` | `org.h2.engine`, `org.h2.util`, `org.h2.message`, `org.h2.value` |
-| `org.h2.store.fs` | `org.h2.util`, `org.h2.engine` |
 
 ## 7.6 设计权衡
 
 - `org.h2.mvstore` 用 20 个文件换到 14,505 行实现，平均每文件 725 行，其中 `FileStore` 独占 2,386 行、64 个公开方法。
 - 该包对外声明了 7 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
-- `org.h2.store`（2,712 行）与 `org.h2.mvstore` 的职责差是本章最值得记的一条边界。
+- `org.h2.mvstore`（14,505 行）与 `org.h2.mvstore` 的职责差是本章最值得记的一条边界。
 
 ## 7.7 常见误区
 
 - 把 `org.h2.mvstore` 的 14,505 行当作复杂度上限：`FileStore` 之外的 19 个文件多为类型族与样板。
 - 只看 `FileStore` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
-- 把 `org.h2.mvstore` 与 `org.h2.store` 视为可互换：前者 20 文件、后者 17 文件，扩展点分布完全不同。
+- 把 `org.h2.mvstore` 与 `org.h2.mvstore` 视为可互换：前者 20 文件、后者 20 文件，扩展点分布完全不同。
 
 ## 7.8 深读要点
 
-规模信号：`org.h2.mvstore` 占本章 78% 的实现行数，改动风险最高。
+规模信号：`org.h2.mvstore` 占本章 100% 的实现行数，改动风险最高。
 耦合信号：`org.h2.mvstore` 依赖 7 个 `org.h2` 包，其中 `org.h2.util` 出现最频繁。
 入口信号：`FileStore` 的公开方法 64 个，读它等于读本章的主干。
 
@@ -1757,19 +1848,21 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
 - **MVStore**：详见[术语表](back/glossary.md)对应条目。
+- **AbstractAggregate**：详见[术语表](back/glossary.md)对应条目。
+- **Aggregate**：详见[术语表](back/glossary.md)对应条目。
+- **CommandContainer**：详见[术语表](back/glossary.md)对应条目。
+- **DML**：详见[术语表](back/glossary.md)对应条目。
+- **LOB**：详见[术语表](back/glossary.md)对应条目。
+- **LocalResult**：详见[术语表](back/glossary.md)对应条目。
 
 ## 7.9 知识点清单
 
 1. `org.h2.mvstore` 的 `FileStore`：2,386 行、64 个公开方法，职责按方法名归纳
 2. `org.h2.mvstore` 的 `MVStore`：2,215 行、85 个公开方法，职责按方法名归纳
-3. `org.h2.store` 的 `FileLock`：514 行、8 个公开方法，职责按方法名归纳
-4. `org.h2.store` 的 `FileStore`：513 行、22 个公开方法，职责按方法名归纳
-5. `org.h2.store.fs` 的 `FileUtils`：477 行、29 个公开方法，职责按方法名归纳
-6. `org.h2.store.fs` 的 `FilePath`：353 行、28 个公开方法，职责按方法名归纳
 
 ## 7.9 本章小结
 
-- 本章覆盖 3 个包、18,551 行。
+- 本章覆盖 1 个包、14,505 行。
 - 关键入口与源码坐标见 §7.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -1780,14 +1873,14 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 > 提示：第7章 §7.2 的表格给出 `FileStore` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§7.2 核心类型
 
-**2. 🔵★★ 围绕 `org.h2.store` 的 `FileLock`，说明它为什么需要独立成类型而不是并入 `FileStore`。**
+**2. 🔵★★ 围绕 `org.h2.mvstore` 的 `FileStore`，说明它为什么需要独立成类型而不是并入 `MVStore`。**
 
-> 提示：第7章 §7.2 的表格给出 `FileLock` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第7章 §7.2 的表格给出 `FileStore` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§7.2 核心类型
 
-**3. 🟠★★★ 以 `org.h2.store.fs` 的 `FileUtils` 为入口，画出一次完整调用经过的包。**
+**3. 🟠★★★ 以 `org.h2.mvstore` 的 `FileStore` 为入口，画出一次完整调用经过的包。**
 
-> 提示：第7章 §7.2 的表格给出 `FileUtils` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第7章 §7.2 的表格给出 `FileStore` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§7.2 核心类型
 
 **4. 🟢★★★★ 如果只保留 `org.h2.mvstore` 的一个类型，你保留 `FileStore` 还是 `MVStore`？说明代价。**
@@ -1798,7 +1891,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 ## 7.11 本章视角：演化与版本
 
 - 以「演化与版本」看 `org.h2.mvstore`：20 个文件、14,505 行，本章只展开与演化与版本相关的入口。
-- 对照 `org.h2.store`（2,712 行）：两者的演化与版本策略不同，差异落在 `FileStore` 的 64 个公开方法里。
+- 对照 `org.h2.mvstore`（14,505 行）：两者的演化与版本策略不同，差异落在 `FileStore` 的 64 个公开方法里。
 - 若演化与版本假设被打破（7 个依赖变化），最先受影响的调用链从 `org.h2.util` 进入。
 
 ## 7.11.1 依赖明细
@@ -1810,18 +1903,13 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `org.h2.mvstore` | `org.h2.util` | 10 |
 | `org.h2.mvstore` | `org.h2.compress` | 7 |
 | `org.h2.mvstore` | `org.h2.store.fs` | 5 |
-| `org.h2.store` | `org.h2.engine` | 16 |
-| `org.h2.store` | `org.h2.util` | 14 |
-| `org.h2.store` | `org.h2.message` | 11 |
-| `org.h2.store.fs` | `org.h2.util` | 1 |
-| `org.h2.store.fs` | `org.h2.engine` | 1 |
 
 ## 7.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.mvstore` 与 `org.h2.store` 之间的调用方向？
+- 不看正文，能否画出 `org.h2.mvstore` 与 `org.h2.mvstore` 之间的调用方向？
 - `FileStore` 是否涉及并发？依据是锁、可见性还是不可变？
 - 能否用一个入口，把 `org.h2.mvstore` 的调用链讲到落盘或返回？
-- `org.h2.mvstore` 与 `org.h2.store` 若合并，会丢掉哪个扩展点？
+- `org.h2.mvstore` 与 `org.h2.mvstore` 若合并，会丢掉哪个扩展点？
 - `org.h2.mvstore` 的注释与实现若不一致，你信哪一边，为什么？
 
 ## 7.12 延展阅读
@@ -1829,34 +1917,23 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - 详见第8章《存储与压缩算法》。
 # 第8章 索引与表达式求值
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 3 个包、13,602 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 1 个包、4,093 行实现；读完应能说清这些包的职责边界与关键协作。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 ## 8.1 模块版图
 
-本章覆盖 3 个包、13,602 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 1 个包、4,093 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
-| `org.h2.expression` | 35 | 5,832 | Expressions include mathematical operations, simple values, and others. |
 | `org.h2.index` | 23 | 4,093 | Various table index implementations, as well as cursors to navigate in an index. |
-| `org.h2.result` | 21 | 3,677 | Implementation of row and internal result sets. |
 
 ## 8.2 核心类型
 
-在 `org.h2.expression` 之外，本章还有 2 个包；下表每包取前 4 个类型，按规模降序。
+在 `org.h2.index` 之外，本章还有 0 个包；下表每包取前 4 个类型，按规模降序。
 
-### 8.2.1 `org.h2.expression`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `ExpressionColumn` | 553 | 23 | （无类注释，按方法名归纳） |
-| `Expression` | 551 | 41 | （无类注释，按方法名归纳） |
-| `BinaryOperation` | 455 | 6 | （无类注释，按方法名归纳） |
-| `ExpressionVisitor` | 417 | 17 | （无类注释，按方法名归纳） |
-
-### 8.2.2 `org.h2.index`
+### 8.2.1 `org.h2.index`
 
 | 类型 | 行数 | 公开方法 | 职责 |
 | --- | --- | --- | --- |
@@ -1865,69 +1942,99 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `IndexCursor` | 494 | 13 | （无类注释，按方法名归纳） |
 | `LinkedIndex` | 298 | 13 | （无类注释，按方法名归纳） |
 
-### 8.2.3 `org.h2.result`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `LocalResult` | 710 | 42 | （无类注释，按方法名归纳） |
-| `UpdatableRow` | 341 | 5 | （无类注释，按方法名归纳） |
-| `SortOrder` | 334 | 15 | （无类注释，按方法名归纳） |
-| `SimpleResult` | 303 | 31 | （无类注释，按方法名归纳） |
-
 ## 8.3 关键 API 与源码坐标
 
-把 3 个包的关键入口与源码位置对应起来，共 9 条坐标，行号由脚本核验。
+把 1 个包的关键入口与源码位置对应起来，共 3 条坐标，行号由脚本核验。
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `ExpressionColumn.createIndexConditions()` | `org/h2/expression/ExpressionColumn.java:499` |
-| `ExpressionColumn.getAlias()` | `org/h2/expression/ExpressionColumn.java:404` |
-| `Expression.addFilterConditions()` | `org/h2/expression/Expression.java:477` |
-| `Expression.createIndexConditions()` | `org/h2/expression/Expression.java:354` |
-| `BinaryOperation.getOperationType()` | `org/h2/expression/BinaryOperation.java:450` |
-| `BinaryOperation.getUnenclosedSQL()` | `org/h2/expression/BinaryOperation.java:74` |
 | `Index.add()` | `org/h2/index/Index.java:210` |
 | `Index.areRowsEquivalent()` | `org/h2/index/Index.java:379` |
 | `IndexCondition.cloneWithIndexColumns()` | `org/h2/index/IndexCondition.java:559` |
 | `IndexCondition.get()` | `org/h2/index/IndexCondition.java:122` |
 | `IndexCursor.canUseIndexForIn()` | `org/h2/index/IndexCursor.java:318` |
 | `IndexCursor.find()` | `org/h2/index/IndexCursor.java:289` |
-| `LocalResult.addRow()` | `org/h2/result/LocalResult.java:420` |
-| `LocalResult.addRowForTable()` | `org/h2/result/LocalResult.java:404` |
-| `UpdatableRow.deleteRow()` | `org/h2/result/UpdatableRow.java:257` |
-| `UpdatableRow.insertRow()` | `org/h2/result/UpdatableRow.java:309` |
-| `SortOrder.addNullOrdering()` | `org/h2/result/SortOrder.java:312` |
-| `SortOrder.compare()` | `org/h2/result/SortOrder.java:162` |
 
 ## 8.3.1 公共类型清单
 
-本章抽样类型按包分组，共 15 行；规模与公开方法数是阅读优先级的第一信号。
+本章抽样类型按包分组，共 5 行；规模与公开方法数是阅读优先级的第一信号。
 
 | 类型 | 包 | 行数 | 公开方法 |
 | --- | --- | --- | --- |
-| `ExpressionColumn` | `org.h2.expression` | 553 | 23 |
-| `Expression` | `org.h2.expression` | 551 | 41 |
-| `BinaryOperation` | `org.h2.expression` | 455 | 6 |
-| `ExpressionVisitor` | `org.h2.expression` | 417 | 17 |
-| `IntervalOperation` | `org.h2.expression` | 381 | 4 |
 | `Index` | `org.h2.index` | 834 | 37 |
 | `IndexCondition` | `org.h2.index` | 675 | 24 |
 | `IndexCursor` | `org.h2.index` | 494 | 13 |
 | `LinkedIndex` | `org.h2.index` | 298 | 13 |
 | `RegularQueryExpressionIndex` | `org.h2.index` | 223 | 4 |
-| `LocalResult` | `org.h2.result` | 710 | 42 |
-| `UpdatableRow` | `org.h2.result` | 341 | 5 |
-| `SortOrder` | `org.h2.result` | 334 | 15 |
-| `SimpleResult` | `org.h2.result` | 303 | 31 |
-| `ResultRemote` | `org.h2.result` | 287 | 17 |
+
+## 8.3.2 逐类导读
+
+按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
+
+**`Index`**（`org.h2.index`，834 行，37 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 20%，包级依赖 8 个。
+
+**`IndexCondition`**（`org.h2.index`，675 行，24 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 16%，包级依赖 8 个。
+
+**`IndexCursor`**（`org.h2.index`，494 行，13 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 12%，包级依赖 8 个。
+
+**`LinkedIndex`**（`org.h2.index`，298 行，13 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 7%，包级依赖 8 个。
+
+**`RegularQueryExpressionIndex`**（`org.h2.index`，223 行，4 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 5%，包级依赖 8 个。
+
+**`IndexType`**（`org.h2.index`，222 行，16 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 5%，包级依赖 8 个。
+
+## 8.3.2 源码坐标明细
+
+本章主责包中 24 个公开入口的行号，按类聚簇，可直接跳转阅读。
+
+| 入口 | 源码坐标 |
+| --- | --- |
+| `Index.add()` | `org/h2/index/Index.java:210` |
+| `Index.areRowsEquivalent()` | `org/h2/index/Index.java:379` |
+| `Index.canFindNext()` | `org/h2/index/Index.java:302` |
+| `Index.canGetFirstOrLast()` | `org/h2/index/Index.java:293` |
+| `IndexCondition.cloneWithIndexColumns()` | `org/h2/index/IndexCondition.java:559` |
+| `IndexCondition.get()` | `org/h2/index/IndexCondition.java:122` |
+| `IndexCondition.getColumn()` | `org/h2/index/IndexCondition.java:472` |
+| `IndexCondition.getColumns()` | `org/h2/index/IndexCondition.java:485` |
+| `IndexCursor.canUseIndexForIn()` | `org/h2/index/IndexCursor.java:318` |
+| `IndexCursor.find()` | `org/h2/index/IndexCursor.java:289` |
+| `IndexCursor.get()` | `org/h2/index/IndexCursor.java:411` |
+| `IndexCursor.getEnd()` | `org/h2/index/IndexCursor.java:406` |
+| `LinkedIndex.add()` | `org/h2/index/LinkedIndex.java:61` |
+| `LinkedIndex.checkRename()` | `org/h2/index/LinkedIndex.java:199` |
+| `LinkedIndex.close()` | `org/h2/index/LinkedIndex.java:52` |
+| `LinkedIndex.find()` | `org/h2/index/LinkedIndex.java:90` |
+| `RegularQueryExpressionIndex.find()` | `org/h2/index/RegularQueryExpressionIndex.java:161` |
+| `RegularQueryExpressionIndex.findByGeometry()` | `org/h2/index/RegularQueryExpressionIndex.java:166` |
+| `RegularQueryExpressionIndex.getCost()` | `org/h2/index/RegularQueryExpressionIndex.java:155` |
+| `RegularQueryExpressionIndex.isExpired()` | `org/h2/index/RegularQueryExpressionIndex.java:149` |
 
 ## 8.4 阅读路径
 
-读 `org.h2.expression` 的 35 个文件时，先看骨架类，再沿 `org.h2.value` 方向下钻。
+读 `org.h2.index` 的 23 个文件时，先看骨架类，再沿 `org.h2.result` 方向下钻。
 
-1. 先读 `org.h2.expression` 的 package-info 与 `ExpressionColumn`，建立第8章的职责边界。
-2. 再读 `ExpressionColumn` 的 23 个公开入口，确认它对 `org.h2.value` 的调用方向与加锁方式。
-3. 最后读 `org.h2.result`（本章最小包，3,677 行）的实现，关注容量与失败路径。
+1. 先读 `org.h2.index` 的 package-info 与 `Index`，建立第8章的职责边界。
+2. 再读 `Index` 的 37 个公开入口，确认它对 `org.h2.result` 的调用方向与加锁方式。
+3. 最后读 `org.h2.index`（本章最小包，4,093 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第9章《索引与表达式求值》。
 
@@ -1937,58 +2044,55 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 包 | 依赖（前 4） |
 | --- | --- |
-| `org.h2.expression` | `org.h2.value`, `org.h2.table`, `org.h2.engine`, `org.h2.message` |
 | `org.h2.index` | `org.h2.result`, `org.h2.table`, `org.h2.value`, `org.h2.engine` |
-| `org.h2.result` | `org.h2.value`, `org.h2.engine`, `org.h2.util`, `org.h2.expression` |
 
 ## 8.6 设计权衡
 
-- `org.h2.expression` 用 35 个文件换到 5,832 行实现，平均每文件 166 行，其中 `ExpressionColumn` 独占 553 行、23 个公开方法。
+- `org.h2.index` 用 23 个文件换到 4,093 行实现，平均每文件 177 行，其中 `Index` 独占 834 行、37 个公开方法。
 - 该包对外声明了 8 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
-- `org.h2.index`（4,093 行）与 `org.h2.expression` 的职责差是本章最值得记的一条边界。
+- `org.h2.index`（4,093 行）与 `org.h2.index` 的职责差是本章最值得记的一条边界。
 
 ## 8.7 常见误区
 
-- 把 `org.h2.expression` 的 5,832 行当作复杂度上限：`ExpressionColumn` 之外的 34 个文件多为类型族与样板。
-- 只看 `ExpressionColumn` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
-- 把 `org.h2.expression` 与 `org.h2.index` 视为可互换：前者 35 文件、后者 23 文件，扩展点分布完全不同。
+- 把 `org.h2.index` 的 4,093 行当作复杂度上限：`Index` 之外的 22 个文件多为类型族与样板。
+- 只看 `Index` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
+- 把 `org.h2.index` 与 `org.h2.index` 视为可互换：前者 23 文件、后者 23 文件，扩展点分布完全不同。
 
 ## 8.8 深读要点
 
-规模信号：`org.h2.expression` 占本章 43% 的实现行数，改动风险最高。
-耦合信号：`org.h2.expression` 依赖 8 个 `org.h2` 包，其中 `org.h2.value` 出现最频繁。
-入口信号：`ExpressionColumn` 的公开方法 23 个，读它等于读本章的主干。
+规模信号：`org.h2.index` 占本章 100% 的实现行数，改动风险最高。
+耦合信号：`org.h2.index` 依赖 8 个 `org.h2` 包，其中 `org.h2.result` 出现最频繁。
+入口信号：`Index` 的公开方法 37 个，读它等于读本章的主干。
 
 ## 8.8 术语对照
 
 本章出现的专业术语与书末术语表的对应关系：
 
-- **Expression**：详见[术语表](back/glossary.md)对应条目。
 - **H2**：详见[术语表](back/glossary.md)对应条目。
 - **Index**：详见[术语表](back/glossary.md)对应条目。
 - **Table**：详见[术语表](back/glossary.md)对应条目。
-- **Value**：详见[术语表](back/glossary.md)对应条目。
+- **CBO / Cost-Based Optimization**：详见[术语表](back/glossary.md)对应条目。
+- **Genetic Algorithm**：详见[术语表](back/glossary.md)对应条目。
+- **Hybrid Strategy**：详见[术语表](back/glossary.md)对应条目。
+- **IndexCondition**：详见[术语表](back/glossary.md)对应条目。
+- **Optimizer**：详见[术语表](back/glossary.md)对应条目。
 
 ## 8.9 知识点清单
 
-1. `org.h2.expression` 的 `ExpressionColumn`：553 行、23 个公开方法，职责按方法名归纳
-2. `org.h2.expression` 的 `Expression`：551 行、41 个公开方法，职责按方法名归纳
-3. `org.h2.index` 的 `Index`：834 行、37 个公开方法，职责按方法名归纳
-4. `org.h2.index` 的 `IndexCondition`：675 行、24 个公开方法，职责按方法名归纳
-5. `org.h2.result` 的 `LocalResult`：710 行、42 个公开方法，职责按方法名归纳
-6. `org.h2.result` 的 `UpdatableRow`：341 行、5 个公开方法，职责按方法名归纳
+1. `org.h2.index` 的 `Index`：834 行、37 个公开方法，职责按方法名归纳
+2. `org.h2.index` 的 `IndexCondition`：675 行、24 个公开方法，职责按方法名归纳
 
 ## 8.9 本章小结
 
-- 本章覆盖 3 个包、13,602 行。
+- 本章覆盖 1 个包、4,093 行。
 - 关键入口与源码坐标见 §8.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
 ## 8.10 延伸思考
 
-**1. 🟢★ 指出 `org.h2.expression` 中 `ExpressionColumn` 与 `Expression` 的分工差异，并给出调用方向。**
+**1. 🟢★ 指出 `org.h2.index` 中 `Index` 与 `IndexCondition` 的分工差异，并给出调用方向。**
 
-> 提示：第8章 §8.2 的表格给出 `ExpressionColumn` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第8章 §8.2 的表格给出 `Index` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§8.2 核心类型
 
 **2. 🔵★★ 围绕 `org.h2.index` 的 `Index`，说明它为什么需要独立成类型而不是并入 `IndexCondition`。**
@@ -1996,21 +2100,21 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 > 提示：第8章 §8.2 的表格给出 `Index` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§8.2 核心类型
 
-**3. 🟠★★★ 以 `org.h2.result` 的 `LocalResult` 为入口，画出一次完整调用经过的包。**
+**3. 🟠★★★ 以 `org.h2.index` 的 `Index` 为入口，画出一次完整调用经过的包。**
 
-> 提示：第8章 §8.2 的表格给出 `LocalResult` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第8章 §8.2 的表格给出 `Index` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§8.2 核心类型
 
-**4. 🟢★★★★ 如果只保留 `org.h2.expression` 的一个类型，你保留 `ExpressionColumn` 还是 `Expression`？说明代价。**
+**4. 🟢★★★★ 如果只保留 `org.h2.index` 的一个类型，你保留 `Index` 还是 `IndexCondition`？说明代价。**
 
-> 提示：第8章 §8.2 的表格给出 `ExpressionColumn` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第8章 §8.2 的表格给出 `Index` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§8.2 核心类型
 
 ## 8.11 本章视角：性能与规模
 
-- 以「性能与规模」看 `org.h2.expression`：35 个文件、5,832 行，本章只展开与性能与规模相关的入口。
-- 对照 `org.h2.index`（4,093 行）：两者的性能与规模策略不同，差异落在 `ExpressionColumn` 的 23 个公开方法里。
-- 若性能与规模假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.value` 进入。
+- 以「性能与规模」看 `org.h2.index`：23 个文件、4,093 行，本章只展开与性能与规模相关的入口。
+- 对照 `org.h2.index`（4,093 行）：两者的性能与规模策略不同，差异落在 `Index` 的 37 个公开方法里。
+- 若性能与规模假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.result` 进入。
 
 ## 8.11.1 依赖明细
 
@@ -2018,40 +2122,33 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 来源包 | 目标包 | 次数 |
 | --- | --- | --- |
-| `org.h2.expression` | `org.h2.value` | 125 |
-| `org.h2.expression` | `org.h2.table` | 37 |
-| `org.h2.expression` | `org.h2.engine` | 34 |
 | `org.h2.index` | `org.h2.result` | 51 |
 | `org.h2.index` | `org.h2.table` | 41 |
 | `org.h2.index` | `org.h2.value` | 27 |
-| `org.h2.result` | `org.h2.value` | 45 |
-| `org.h2.result` | `org.h2.engine` | 21 |
-| `org.h2.result` | `org.h2.util` | 8 |
 
 ## 8.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.expression` 与 `org.h2.index` 之间的调用方向？
-- `ExpressionColumn` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.expression` 的调用链讲到落盘或返回？
-- `org.h2.expression` 与 `org.h2.index` 若合并，会丢掉哪个扩展点？
-- `org.h2.expression` 的注释与实现若不一致，你信哪一边，为什么？
+- 不看正文，能否画出 `org.h2.index` 与 `org.h2.index` 之间的调用方向？
+- `Index` 是否涉及并发？依据是锁、可见性还是不可变？
+- 能否用一个入口，把 `org.h2.index` 的调用链讲到落盘或返回？
+- `org.h2.index` 与 `org.h2.index` 若合并，会丢掉哪个扩展点？
+- `org.h2.index` 的注释与实现若不一致，你信哪一边，为什么？
 
 ## 8.12 延展阅读
 
 - 详见第9章《索引与表达式求值》。
 # 第9章 SQL 解析与执行
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 5 个包、43,366 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 4 个包、28,352 行实现；读完应能说清这些包的职责边界与关键协作。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 ## 9.1 模块版图
 
-本章覆盖 5 个包、43,366 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 4 个包、28,352 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
-| `org.h2.command` | 11 | 15,014 | This package contains the parser and the base classes for prepared SQL statements. |
 | `org.h2.expression.function` | 50 | 9,509 | Functions. |
 | `org.h2.command.ddl` | 63 | 7,262 | Contains DDL (data definition language) and related SQL statements. |
 | `org.h2.expression` | 35 | 5,832 | Expressions include mathematical operations, simple values, and others. |
@@ -2059,18 +2156,9 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 9.2 核心类型
 
-在 `org.h2.command` 之外，本章还有 4 个包；下表每包取前 4 个类型，按规模降序。
+在 `org.h2.expression.function` 之外，本章还有 3 个包；下表每包取前 4 个类型，按规模降序。
 
-### 9.2.1 `org.h2.command`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `Parser` | 9,470 | 9 | （无类注释，按方法名归纳） |
-| `Tokenizer` | 1,522 | 0 | （无类注释，按方法名归纳） |
-| `ParserBase` | 771 | 8 | （无类注释，按方法名归纳） |
-| `Token` | 758 | 5 | （无类注释，按方法名归纳） |
-
-### 9.2.2 `org.h2.expression.function`
+### 9.2.1 `org.h2.expression.function`
 
 | 类型 | 行数 | 公开方法 | 职责 |
 | --- | --- | --- | --- |
@@ -2079,7 +2167,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `BitFunction` | 730 | 5 | （无类注释，按方法名归纳） |
 | `MathFunction` | 405 | 3 | （无类注释，按方法名归纳） |
 
-### 9.2.3 `org.h2.command.ddl`
+### 9.2.2 `org.h2.command.ddl`
 
 | 类型 | 行数 | 公开方法 | 职责 |
 | --- | --- | --- | --- |
@@ -2088,7 +2176,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `SequenceOptions` | 363 | 18 | （无类注释，按方法名归纳） |
 | `CreateTable` | 275 | 17 | （无类注释，按方法名归纳） |
 
-### 9.2.4 `org.h2.expression`
+### 9.2.3 `org.h2.expression`
 
 | 类型 | 行数 | 公开方法 | 职责 |
 | --- | --- | --- | --- |
@@ -2097,7 +2185,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `BinaryOperation` | 455 | 6 | （无类注释，按方法名归纳） |
 | `ExpressionVisitor` | 417 | 17 | （无类注释，按方法名归纳） |
 
-### 9.2.5 `org.h2.command.dml`
+### 9.2.4 `org.h2.command.dml`
 
 | 类型 | 行数 | 公开方法 | 职责 |
 | --- | --- | --- | --- |
@@ -2108,14 +2196,10 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 9.3 关键 API 与源码坐标
 
-把 5 个包的关键入口与源码位置对应起来，共 15 条坐标，行号由脚本核验。
+把 4 个包的关键入口与源码位置对应起来，共 12 条坐标，行号由脚本核验。
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Parser.newPrimaryKeyConstraintCommand()` | `org/h2/command/Parser.java:9178` |
-| `Parser.parseDomainConstraintExpression()` | `org/h2/command/Parser.java:9446` |
-| `ParserBase.formatNonKeywords()` | `org/h2/command/ParserBase.java:93` |
-| `ParserBase.getLastParseIndex()` | `org/h2/command/ParserBase.java:743` |
 | `ToCharFunction.apply()` | `org/h2/expression/function/ToCharFunction.java:1088` |
 | `ToCharFunction.clearNames()` | `org/h2/expression/function/ToCharFunction.java:552` |
 | `DateTimeFunction.dateadd()` | `org/h2/expression/function/DateTimeFunction.java:656` |
@@ -2132,18 +2216,17 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `ExpressionColumn.getAlias()` | `org/h2/expression/ExpressionColumn.java:404` |
 | `Expression.addFilterConditions()` | `org/h2/expression/Expression.java:477` |
 | `Expression.createIndexConditions()` | `org/h2/expression/Expression.java:354` |
+| `BinaryOperation.getOperationType()` | `org/h2/expression/BinaryOperation.java:450` |
+| `BinaryOperation.getUnenclosedSQL()` | `org/h2/expression/BinaryOperation.java:74` |
+| `ScriptCommand.close()` | `org/h2/command/dml/ScriptCommand.java:677` |
+| `ScriptCommand.collectDependencies()` | `org/h2/command/dml/ScriptCommand.java:119` |
 
 ## 9.3.1 公共类型清单
 
-本章抽样类型按包分组，共 25 行；规模与公开方法数是阅读优先级的第一信号。
+本章抽样类型按包分组，共 20 行；规模与公开方法数是阅读优先级的第一信号。
 
 | 类型 | 包 | 行数 | 公开方法 |
 | --- | --- | --- | --- |
-| `Parser` | `org.h2.command` | 9,470 | 9 |
-| `Tokenizer` | `org.h2.command` | 1,522 | 0 |
-| `ParserBase` | `org.h2.command` | 771 | 8 |
-| `Token` | `org.h2.command` | 758 | 5 |
-| `CommandInterface` | `org.h2.command` | 654 | 0 |
 | `ToCharFunction` | `org.h2.expression.function` | 1,156 | 8 |
 | `DateTimeFunction` | `org.h2.expression.function` | 1,081 | 7 |
 | `BitFunction` | `org.h2.expression.function` | 730 | 5 |
@@ -2159,13 +2242,129 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `BinaryOperation` | `org.h2.expression` | 455 | 6 |
 | `ExpressionVisitor` | `org.h2.expression` | 417 | 17 |
 | `IntervalOperation` | `org.h2.expression` | 381 | 4 |
+| `ScriptCommand` | `org.h2.command.dml` | 858 | 23 |
+| `Set` | `org.h2.command.dml` | 652 | 9 |
+| `MergeUsing` | `org.h2.command.dml` | 598 | 20 |
+| `SetClauseList` | `org.h2.command.dml` | 507 | 3 |
+| `Insert` | `org.h2.command.dml` | 456 | 19 |
+
+## 9.3.2 逐类导读
+
+按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
+
+**`ToCharFunction`**（`org.h2.expression.function`，1,156 行，8 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 12%，包级依赖 8 个。
+
+**`DateTimeFunction`**（`org.h2.expression.function`，1,081 行，7 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 11%，包级依赖 8 个。
+
+**`BitFunction`**（`org.h2.expression.function`，730 行，5 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 8%，包级依赖 8 个。
+
+**`MathFunction`**（`org.h2.expression.function`，405 行，3 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 4%，包级依赖 8 个。
+
+**`AlterTableAlterColumn`**（`org.h2.command.ddl`，734 行，17 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 10%，包级依赖 8 个。
+
+**`AlterTableAddConstraint`**（`org.h2.command.ddl`，520 行，18 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 7%，包级依赖 8 个。
+
+**`SequenceOptions`**（`org.h2.command.ddl`，363 行，18 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 5%，包级依赖 8 个。
+
+**`CreateTable`**（`org.h2.command.ddl`，275 行，17 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 4%，包级依赖 8 个。
+
+**`ExpressionColumn`**（`org.h2.expression`，553 行，23 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 9%，包级依赖 8 个。
+
+**`Expression`**（`org.h2.expression`，551 行，41 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 9%，包级依赖 8 个。
+
+**`BinaryOperation`**（`org.h2.expression`，455 行，6 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 8%，包级依赖 8 个。
+
+**`ExpressionVisitor`**（`org.h2.expression`，417 行，17 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 7%，包级依赖 8 个。
+
+**`ScriptCommand`**（`org.h2.command.dml`，858 行，23 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 15%，包级依赖 8 个。
+
+**`Set`**（`org.h2.command.dml`，652 行，9 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 11%，包级依赖 8 个。
+
+**`MergeUsing`**（`org.h2.command.dml`，598 行，20 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 10%，包级依赖 8 个。
+
+**`SetClauseList`**（`org.h2.command.dml`，507 行，3 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 9%，包级依赖 8 个。
+
+## 9.3.2 源码坐标明细
+
+本章主责包中 93 个公开入口的行号，按类聚簇，可直接跳转阅读。
+
+| 入口 | 源码坐标 |
+| --- | --- |
+| `ToCharFunction.apply()` | `org/h2/expression/function/ToCharFunction.java:1088` |
+| `ToCharFunction.clearNames()` | `org/h2/expression/function/ToCharFunction.java:552` |
+| `ToCharFunction.getDateNames()` | `org/h2/expression/function/ToCharFunction.java:527` |
+| `ToCharFunction.getName()` | `org/h2/expression/function/ToCharFunction.java:1151` |
+| `DateTimeFunction.dateadd()` | `org/h2/expression/function/DateTimeFunction.java:656` |
+| `DateTimeFunction.getField()` | `org/h2/expression/function/DateTimeFunction.java:241` |
+| `DateTimeFunction.getFieldName()` | `org/h2/expression/function/DateTimeFunction.java:337` |
+| `DateTimeFunction.getName()` | `org/h2/expression/function/DateTimeFunction.java:1076` |
+| `BitFunction.checkArgType()` | `org/h2/expression/function/BitFunction.java:709` |
+| `BitFunction.getBitwise()` | `org/h2/expression/function/BitFunction.java:455` |
+| `BitFunction.getName()` | `org/h2/expression/function/BitFunction.java:725` |
+| `BitFunction.getValue()` | `org/h2/expression/function/BitFunction.java:123` |
+| `MathFunction.getName()` | `org/h2/expression/function/MathFunction.java:400` |
+| `MathFunction.getValue()` | `org/h2/expression/function/MathFunction.java:87` |
+| `MathFunction.optimize()` | `org/h2/expression/function/MathFunction.java:216` |
+| `DateTimeFormatFunction.equals()` | `org/h2/expression/function/DateTimeFormatFunction.java:69` |
+| `DateTimeFormatFunction.formatDateTime()` | `org/h2/expression/function/DateTimeFormatFunction.java:155` |
+| `DateTimeFormatFunction.getName()` | `org/h2/expression/function/DateTimeFormatFunction.java:334` |
+| `DateTimeFormatFunction.getValue()` | `org/h2/expression/function/DateTimeFormatFunction.java:119` |
+| `StringFunction1.getName()` | `org/h2/expression/function/StringFunction1.java:279` |
 
 ## 9.4 阅读路径
 
-读 `org.h2.command` 的 11 个文件时，先看骨架类，再沿 `org.h2.util.ParserUtil` 方向下钻。
+读 `org.h2.expression.function` 的 50 个文件时，先看骨架类，再沿 `org.h2.value` 方向下钻。
 
-1. 先读 `org.h2.command` 的 package-info 与 `Parser`，建立第9章的职责边界。
-2. 再读 `Parser` 的 9 个公开入口，确认它对 `org.h2.util.ParserUtil` 的调用方向与加锁方式。
+1. 先读 `org.h2.expression.function` 的 package-info 与 `ToCharFunction`，建立第9章的职责边界。
+2. 再读 `ToCharFunction` 的 8 个公开入口，确认它对 `org.h2.value` 的调用方向与加锁方式。
 3. 最后读 `org.h2.command.dml`（本章最小包，5,749 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第10章《SQL 解析与执行》。
@@ -2176,7 +2375,6 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 包 | 依赖（前 4） |
 | --- | --- |
-| `org.h2.command` | `org.h2.util.ParserUtil`, `org.h2.expression.function`, `org.h2.value`, `org.h2.expression` |
 | `org.h2.expression.function` | `org.h2.value`, `org.h2.expression`, `org.h2.engine`, `org.h2.message` |
 | `org.h2.command.ddl` | `org.h2.engine`, `org.h2.schema`, `org.h2.table`, `org.h2.command` |
 | `org.h2.expression` | `org.h2.value`, `org.h2.table`, `org.h2.engine`, `org.h2.message` |
@@ -2184,21 +2382,21 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 9.6 设计权衡
 
-- `org.h2.command` 用 11 个文件换到 15,014 行实现，平均每文件 1,364 行，其中 `Parser` 独占 9,470 行、9 个公开方法。
+- `org.h2.expression.function` 用 50 个文件换到 9,509 行实现，平均每文件 190 行，其中 `ToCharFunction` 独占 1,156 行、8 个公开方法。
 - 该包对外声明了 8 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
-- `org.h2.expression.function`（9,509 行）与 `org.h2.command` 的职责差是本章最值得记的一条边界。
+- `org.h2.command.ddl`（7,262 行）与 `org.h2.expression.function` 的职责差是本章最值得记的一条边界。
 
 ## 9.7 常见误区
 
-- 把 `org.h2.command` 的 15,014 行当作复杂度上限：`Parser` 之外的 10 个文件多为类型族与样板。
-- 只看 `Parser` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
-- 把 `org.h2.command` 与 `org.h2.expression.function` 视为可互换：前者 11 文件、后者 50 文件，扩展点分布完全不同。
+- 把 `org.h2.expression.function` 的 9,509 行当作复杂度上限：`ToCharFunction` 之外的 49 个文件多为类型族与样板。
+- 只看 `ToCharFunction` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
+- 把 `org.h2.expression.function` 与 `org.h2.command.ddl` 视为可互换：前者 50 文件、后者 63 文件，扩展点分布完全不同。
 
 ## 9.8 深读要点
 
-规模信号：`org.h2.command` 占本章 35% 的实现行数，改动风险最高。
-耦合信号：`org.h2.command` 依赖 8 个 `org.h2` 包，其中 `org.h2.util.ParserUtil` 出现最频繁。
-入口信号：`Parser` 的公开方法 9 个，读它等于读本章的主干。
+规模信号：`org.h2.expression.function` 占本章 34% 的实现行数，改动风险最高。
+耦合信号：`org.h2.expression.function` 依赖 8 个 `org.h2` 包，其中 `org.h2.value` 出现最频繁。
+入口信号：`ToCharFunction` 的公开方法 8 个，读它等于读本章的主干。
 
 ## 9.8 术语对照
 
@@ -2208,55 +2406,55 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - **DML**：详见[术语表](back/glossary.md)对应条目。
 - **Expression**：详见[术语表](back/glossary.md)对应条目。
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **Parser**：详见[术语表](back/glossary.md)对应条目。
 - **Value**：详见[术语表](back/glossary.md)对应条目。
+- **Append-Only**：详见[术语表](back/glossary.md)对应条目。
+- **BackgroundWriter**：详见[术语表](back/glossary.md)对应条目。
+- **Block**：详见[术语表](back/glossary.md)对应条目。
 
 ## 9.9 知识点清单
 
-1. `org.h2.command` 的 `Parser`：9,470 行、9 个公开方法，职责按方法名归纳
-2. `org.h2.command` 的 `Tokenizer`：1,522 行、0 个公开方法，职责按方法名归纳
-3. `org.h2.expression.function` 的 `ToCharFunction`：1,156 行、8 个公开方法，职责按方法名归纳
-4. `org.h2.expression.function` 的 `DateTimeFunction`：1,081 行、7 个公开方法，职责按方法名归纳
-5. `org.h2.command.ddl` 的 `AlterTableAlterColumn`：734 行、17 个公开方法，职责按方法名归纳
-6. `org.h2.command.ddl` 的 `AlterTableAddConstraint`：520 行、18 个公开方法，职责按方法名归纳
-7. `org.h2.expression` 的 `ExpressionColumn`：553 行、23 个公开方法，职责按方法名归纳
-8. `org.h2.expression` 的 `Expression`：551 行、41 个公开方法，职责按方法名归纳
-9. `org.h2.command.dml` 的 `ScriptCommand`：858 行、23 个公开方法，职责按方法名归纳
-10. `org.h2.command.dml` 的 `Set`：652 行、9 个公开方法，职责按方法名归纳
+1. `org.h2.expression.function` 的 `ToCharFunction`：1,156 行、8 个公开方法，职责按方法名归纳
+2. `org.h2.expression.function` 的 `DateTimeFunction`：1,081 行、7 个公开方法，职责按方法名归纳
+3. `org.h2.command.ddl` 的 `AlterTableAlterColumn`：734 行、17 个公开方法，职责按方法名归纳
+4. `org.h2.command.ddl` 的 `AlterTableAddConstraint`：520 行、18 个公开方法，职责按方法名归纳
+5. `org.h2.expression` 的 `ExpressionColumn`：553 行、23 个公开方法，职责按方法名归纳
+6. `org.h2.expression` 的 `Expression`：551 行、41 个公开方法，职责按方法名归纳
+7. `org.h2.command.dml` 的 `ScriptCommand`：858 行、23 个公开方法，职责按方法名归纳
+8. `org.h2.command.dml` 的 `Set`：652 行、9 个公开方法，职责按方法名归纳
 
 ## 9.9 本章小结
 
-- 本章覆盖 5 个包、43,366 行。
+- 本章覆盖 4 个包、28,352 行。
 - 关键入口与源码坐标见 §9.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
 ## 9.10 延伸思考
 
-**1. 🟢★ 指出 `org.h2.command` 中 `Parser` 与 `Tokenizer` 的分工差异，并给出调用方向。**
-
-> 提示：第9章 §9.2 的表格给出 `Parser` 的规模与公开方法数，先按那一行定位再进源码。
-> 回顾：§9.2 核心类型
-
-**2. 🔵★★ 围绕 `org.h2.expression.function` 的 `ToCharFunction`，说明它为什么需要独立成类型而不是并入 `DateTimeFunction`。**
+**1. 🟢★ 指出 `org.h2.expression.function` 中 `ToCharFunction` 与 `DateTimeFunction` 的分工差异，并给出调用方向。**
 
 > 提示：第9章 §9.2 的表格给出 `ToCharFunction` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§9.2 核心类型
 
-**3. 🟠★★★ 以 `org.h2.command.ddl` 的 `AlterTableAlterColumn` 为入口，画出一次完整调用经过的包。**
+**2. 🔵★★ 围绕 `org.h2.command.ddl` 的 `AlterTableAlterColumn`，说明它为什么需要独立成类型而不是并入 `AlterTableAddConstraint`。**
 
 > 提示：第9章 §9.2 的表格给出 `AlterTableAlterColumn` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§9.2 核心类型
 
-**4. 🟢★★★★ 如果只保留 `org.h2.expression` 的一个类型，你保留 `ExpressionColumn` 还是 `Expression`？说明代价。**
+**3. 🟠★★★ 以 `org.h2.expression` 的 `ExpressionColumn` 为入口，画出一次完整调用经过的包。**
 
 > 提示：第9章 §9.2 的表格给出 `ExpressionColumn` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§9.2 核心类型
 
+**4. 🟢★★★★ 如果只保留 `org.h2.command.dml` 的一个类型，你保留 `ScriptCommand` 还是 `Set`？说明代价。**
+
+> 提示：第9章 §9.2 的表格给出 `ScriptCommand` 的规模与公开方法数，先按那一行定位再进源码。
+> 回顾：§9.2 核心类型
+
 ## 9.11 本章视角：并发与一致性
 
-- 以「并发与一致性」看 `org.h2.command`：11 个文件、15,014 行，本章只展开与并发与一致性相关的入口。
-- 对照 `org.h2.expression.function`（9,509 行）：两者的并发与一致性策略不同，差异落在 `Parser` 的 9 个公开方法里。
-- 若并发与一致性假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.util.ParserUtil` 进入。
+- 以「并发与一致性」看 `org.h2.expression.function`：50 个文件、9,509 行，本章只展开与并发与一致性相关的入口。
+- 对照 `org.h2.command.ddl`（7,262 行）：两者的并发与一致性策略不同，差异落在 `ToCharFunction` 的 8 个公开方法里。
+- 若并发与一致性假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.value` 进入。
 
 ## 9.11.1 依赖明细
 
@@ -2264,9 +2462,6 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 来源包 | 目标包 | 次数 |
 | --- | --- | --- |
-| `org.h2.command` | `org.h2.util.ParserUtil` | 188 |
-| `org.h2.command` | `org.h2.expression.function` | 44 |
-| `org.h2.command` | `org.h2.value` | 41 |
 | `org.h2.expression.function` | `org.h2.value` | 209 |
 | `org.h2.expression.function` | `org.h2.expression` | 103 |
 | `org.h2.expression.function` | `org.h2.engine` | 58 |
@@ -2282,34 +2477,33 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 9.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.command` 与 `org.h2.expression.function` 之间的调用方向？
-- `Parser` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.command` 的调用链讲到落盘或返回？
-- `org.h2.command` 与 `org.h2.expression.function` 若合并，会丢掉哪个扩展点？
-- `org.h2.command` 的注释与实现若不一致，你信哪一边，为什么？
+- 不看正文，能否画出 `org.h2.expression.function` 与 `org.h2.command.ddl` 之间的调用方向？
+- `ToCharFunction` 是否涉及并发？依据是锁、可见性还是不可变？
+- 能否用一个入口，把 `org.h2.expression.function` 的调用链讲到落盘或返回？
+- `org.h2.expression.function` 与 `org.h2.command.ddl` 若合并，会丢掉哪个扩展点？
+- `org.h2.expression.function` 的注释与实现若不一致，你信哪一边，为什么？
 
 ## 9.12 延展阅读
 
 - 详见第10章《SQL 解析与执行》。
 # 第10章 查询优化器
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 3 个包、20,347 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、16,254 行实现；读完应能说清这些包的职责边界与关键协作。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 ## 10.1 模块版图
 
-本章覆盖 3 个包、20,347 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 2 个包、16,254 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
 | `org.h2.table` | 31 | 13,388 | Classes related to a table and table meta data. |
-| `org.h2.index` | 23 | 4,093 | Various table index implementations, as well as cursors to navigate in an index. |
 | `org.h2.expression.analysis` | 10 | 2,866 | Base classes for data analysis operations and implementations of window functions. |
 
 ## 10.2 核心类型
 
-在 `org.h2.table` 之外，本章还有 2 个包；下表每包取前 4 个类型，按规模降序。
+在 `org.h2.table` 之外，本章还有 1 个包；下表每包取前 4 个类型，按规模降序。
 
 ### 10.2.1 `org.h2.table`
 
@@ -2320,16 +2514,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `Table` | 1,446 | 98 | （无类注释，按方法名归纳） |
 | `TableFilter` | 1,310 | 66 | （无类注释，按方法名归纳） |
 
-### 10.2.2 `org.h2.index`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `Index` | 834 | 37 | （无类注释，按方法名归纳） |
-| `IndexCondition` | 675 | 24 | （无类注释，按方法名归纳） |
-| `IndexCursor` | 494 | 13 | （无类注释，按方法名归纳） |
-| `LinkedIndex` | 298 | 13 | （无类注释，按方法名归纳） |
-
-### 10.2.3 `org.h2.expression.analysis`
+### 10.2.2 `org.h2.expression.analysis`
 
 | 类型 | 行数 | 公开方法 | 职责 |
 | --- | --- | --- | --- |
@@ -2340,7 +2525,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 10.3 关键 API 与源码坐标
 
-把 3 个包的关键入口与源码位置对应起来，共 9 条坐标，行号由脚本核验。
+把 2 个包的关键入口与源码位置对应起来，共 6 条坐标，行号由脚本核验。
 
 | 入口 | 源码坐标 |
 | --- | --- |
@@ -2350,12 +2535,6 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `InformationSchemaTableLegacy.getMaxDataModificationId()` | `org/h2/table/InformationSchemaTableLegacy.java:2310` |
 | `Table.addConstraint()` | `org/h2/table/Table.java:1109` |
 | `Table.addDependencies()` | `org/h2/table/Table.java:417` |
-| `Index.add()` | `org/h2/index/Index.java:210` |
-| `Index.areRowsEquivalent()` | `org/h2/index/Index.java:379` |
-| `IndexCondition.cloneWithIndexColumns()` | `org/h2/index/IndexCondition.java:559` |
-| `IndexCondition.get()` | `org/h2/index/IndexCondition.java:122` |
-| `IndexCursor.canUseIndexForIn()` | `org/h2/index/IndexCursor.java:318` |
-| `IndexCursor.find()` | `org/h2/index/IndexCursor.java:289` |
 | `WindowFrame.getEndIndex()` | `org/h2/expression/analysis/WindowFrame.java:239` |
 | `WindowFrame.getExclusion()` | `org/h2/expression/analysis/WindowFrame.java:439` |
 | `DataAnalysisOperation.getOverCondition()` | `org/h2/expression/analysis/DataAnalysisOperation.java:97` |
@@ -2365,7 +2544,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 10.3.1 公共类型清单
 
-本章抽样类型按包分组，共 15 行；规模与公开方法数是阅读优先级的第一信号。
+本章抽样类型按包分组，共 10 行；规模与公开方法数是阅读优先级的第一信号。
 
 | 类型 | 包 | 行数 | 公开方法 |
 | --- | --- | --- | --- |
@@ -2374,16 +2553,102 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `Table` | `org.h2.table` | 1,446 | 98 |
 | `TableFilter` | `org.h2.table` | 1,310 | 66 |
 | `Column` | `org.h2.table` | 867 | 58 |
-| `Index` | `org.h2.index` | 834 | 37 |
-| `IndexCondition` | `org.h2.index` | 675 | 24 |
-| `IndexCursor` | `org.h2.index` | 494 | 13 |
-| `LinkedIndex` | `org.h2.index` | 298 | 13 |
-| `RegularQueryExpressionIndex` | `org.h2.index` | 223 | 4 |
 | `WindowFrame` | `org.h2.expression.analysis` | 878 | 19 |
 | `DataAnalysisOperation` | `org.h2.expression.analysis` | 546 | 9 |
 | `WindowFunction` | `org.h2.expression.analysis` | 545 | 12 |
 | `Window` | `org.h2.expression.analysis` | 339 | 11 |
 | `WindowFrameBound` | `org.h2.expression.analysis` | 165 | 6 |
+
+## 10.3.2 逐类导读
+
+按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
+
+**`InformationSchemaTable`**（`org.h2.table`，3,299 行，6 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 25%，包级依赖 8 个。
+
+**`InformationSchemaTableLegacy`**（`org.h2.table`，2,324 行，2 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 17%，包级依赖 8 个。
+
+**`Table`**（`org.h2.table`，1,446 行，98 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 11%，包级依赖 8 个。
+
+**`TableFilter`**（`org.h2.table`，1,310 行，66 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 10%，包级依赖 8 个。
+
+**`Column`**（`org.h2.table`，867 行，58 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 6%，包级依赖 8 个。
+
+**`TableLink`**（`org.h2.table`，718 行，35 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 5%，包级依赖 8 个。
+
+**`WindowFrame`**（`org.h2.expression.analysis`，878 行，19 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 31%，包级依赖 8 个。
+
+**`DataAnalysisOperation`**（`org.h2.expression.analysis`，546 行，9 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 19%，包级依赖 8 个。
+
+**`WindowFunction`**（`org.h2.expression.analysis`，545 行，12 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 19%，包级依赖 8 个。
+
+**`Window`**（`org.h2.expression.analysis`，339 行，11 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 12%，包级依赖 8 个。
+
+**`WindowFrameBound`**（`org.h2.expression.analysis`，165 行，6 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 6%，包级依赖 8 个。
+
+**`WindowFunctionType`**（`org.h2.expression.analysis`，142 行，3 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 5%，包级依赖 8 个。
+
+## 10.3.2 源码坐标明细
+
+本章主责包中 45 个公开入口的行号，按类聚簇，可直接跳转阅读。
+
+| 入口 | 源码坐标 |
+| --- | --- |
+| `InformationSchemaTable.canGetRowCount()` | `org/h2/table/InformationSchemaTable.java:3057` |
+| `InformationSchemaTable.generateRows()` | `org/h2/table/InformationSchemaTable.java:881` |
+| `InformationSchemaTable.getMaxDataModificationId()` | `org/h2/table/InformationSchemaTable.java:2974` |
+| `InformationSchemaTable.getRowCount()` | `org/h2/table/InformationSchemaTable.java:2993` |
+| `InformationSchemaTableLegacy.generateRows()` | `org/h2/table/InformationSchemaTableLegacy.java:731` |
+| `InformationSchemaTableLegacy.getMaxDataModificationId()` | `org/h2/table/InformationSchemaTableLegacy.java:2310` |
+| `Table.addConstraint()` | `org/h2/table/Table.java:1109` |
+| `Table.addDependencies()` | `org/h2/table/Table.java:417` |
+| `Table.addDependentMaterializedView()` | `org/h2/table/Table.java:1091` |
+| `Table.addDependentView()` | `org/h2/table/Table.java:1082` |
+| `TableFilter.accept()` | `org/h2/table/TableFilter.java:1304` |
+| `TableFilter.addCommonJoinColumnToExclude()` | `org/h2/table/TableFilter.java:1195` |
+| `TableFilter.addCommonJoinColumns()` | `org/h2/table/TableFilter.java:1179` |
+| `TableFilter.addFilter()` | `org/h2/table/TableFilter.java:676` |
+| `Column.convert()` | `org/h2/table/Column.java:182` |
+| `Column.copy()` | `org/h2/table/Column.java:846` |
+| `Column.equals()` | `org/h2/table/Column.java:144` |
+| `Column.getClone()` | `org/h2/table/Column.java:169` |
+| `TableLink.addIndex()` | `org/h2/table/TableLink.java:398` |
+| `TableLink.addRow()` | `org/h2/table/TableLink.java:426` |
 
 ## 10.4 阅读路径
 
@@ -2402,24 +2667,23 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | 包 | 依赖（前 4） |
 | --- | --- |
 | `org.h2.table` | `org.h2.value`, `org.h2.engine`, `org.h2.result`, `org.h2.index` |
-| `org.h2.index` | `org.h2.result`, `org.h2.table`, `org.h2.value`, `org.h2.engine` |
 | `org.h2.expression.analysis` | `org.h2.value`, `org.h2.expression`, `org.h2.table`, `org.h2.command.query` |
 
 ## 10.6 设计权衡
 
 - `org.h2.table` 用 31 个文件换到 13,388 行实现，平均每文件 431 行，其中 `InformationSchemaTable` 独占 3,299 行、6 个公开方法。
 - 该包对外声明了 8 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
-- `org.h2.index`（4,093 行）与 `org.h2.table` 的职责差是本章最值得记的一条边界。
+- `org.h2.expression.analysis`（2,866 行）与 `org.h2.table` 的职责差是本章最值得记的一条边界。
 
 ## 10.7 常见误区
 
 - 把 `org.h2.table` 的 13,388 行当作复杂度上限：`InformationSchemaTable` 之外的 30 个文件多为类型族与样板。
 - 只看 `InformationSchemaTable` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
-- 把 `org.h2.table` 与 `org.h2.index` 视为可互换：前者 31 文件、后者 23 文件，扩展点分布完全不同。
+- 把 `org.h2.table` 与 `org.h2.expression.analysis` 视为可互换：前者 31 文件、后者 10 文件，扩展点分布完全不同。
 
 ## 10.8 深读要点
 
-规模信号：`org.h2.table` 占本章 66% 的实现行数，改动风险最高。
+规模信号：`org.h2.table` 占本章 82% 的实现行数，改动风险最高。
 耦合信号：`org.h2.table` 依赖 8 个 `org.h2` 包，其中 `org.h2.value` 出现最频繁。
 入口信号：`InformationSchemaTable` 的公开方法 6 个，读它等于读本章的主干。
 
@@ -2429,21 +2693,23 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 - **Expression**：详见[术语表](back/glossary.md)对应条目。
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **Index**：详见[术语表](back/glossary.md)对应条目。
 - **Table**：详见[术语表](back/glossary.md)对应条目。
+- **ACID**：详见[术语表](back/glossary.md)对应条目。
+- **CAS (Compare-And-Swap)**：详见[术语表](back/glossary.md)对应条目。
+- **Deadlock**：详见[术语表](back/glossary.md)对应条目。
+- **Lock**：详见[术语表](back/glossary.md)对应条目。
+- **Meta Lock**：详见[术语表](back/glossary.md)对应条目。
 
 ## 10.9 知识点清单
 
 1. `org.h2.table` 的 `InformationSchemaTable`：3,299 行、6 个公开方法，职责按方法名归纳
 2. `org.h2.table` 的 `InformationSchemaTableLegacy`：2,324 行、2 个公开方法，职责按方法名归纳
-3. `org.h2.index` 的 `Index`：834 行、37 个公开方法，职责按方法名归纳
-4. `org.h2.index` 的 `IndexCondition`：675 行、24 个公开方法，职责按方法名归纳
-5. `org.h2.expression.analysis` 的 `WindowFrame`：878 行、19 个公开方法，职责按方法名归纳
-6. `org.h2.expression.analysis` 的 `DataAnalysisOperation`：546 行、9 个公开方法，职责按方法名归纳
+3. `org.h2.expression.analysis` 的 `WindowFrame`：878 行、19 个公开方法，职责按方法名归纳
+4. `org.h2.expression.analysis` 的 `DataAnalysisOperation`：546 行、9 个公开方法，职责按方法名归纳
 
 ## 10.9 本章小结
 
-- 本章覆盖 3 个包、20,347 行。
+- 本章覆盖 2 个包、16,254 行。
 - 关键入口与源码坐标见 §10.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -2454,25 +2720,25 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 > 提示：第10章 §10.2 的表格给出 `InformationSchemaTable` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§10.2 核心类型
 
-**2. 🔵★★ 围绕 `org.h2.index` 的 `Index`，说明它为什么需要独立成类型而不是并入 `IndexCondition`。**
-
-> 提示：第10章 §10.2 的表格给出 `Index` 的规模与公开方法数，先按那一行定位再进源码。
-> 回顾：§10.2 核心类型
-
-**3. 🟠★★★ 以 `org.h2.expression.analysis` 的 `WindowFrame` 为入口，画出一次完整调用经过的包。**
+**2. 🔵★★ 围绕 `org.h2.expression.analysis` 的 `WindowFrame`，说明它为什么需要独立成类型而不是并入 `DataAnalysisOperation`。**
 
 > 提示：第10章 §10.2 的表格给出 `WindowFrame` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§10.2 核心类型
 
-**4. 🟢★★★★ 如果只保留 `org.h2.table` 的一个类型，你保留 `InformationSchemaTable` 还是 `InformationSchemaTableLegacy`？说明代价。**
+**3. 🟠★★★ 以 `org.h2.table` 的 `InformationSchemaTable` 为入口，画出一次完整调用经过的包。**
 
 > 提示：第10章 §10.2 的表格给出 `InformationSchemaTable` 的规模与公开方法数，先按那一行定位再进源码。
+> 回顾：§10.2 核心类型
+
+**4. 🟢★★★★ 如果只保留 `org.h2.expression.analysis` 的一个类型，你保留 `WindowFrame` 还是 `DataAnalysisOperation`？说明代价。**
+
+> 提示：第10章 §10.2 的表格给出 `WindowFrame` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§10.2 核心类型
 
 ## 10.11 本章视角：扩展与兼容
 
 - 以「扩展与兼容」看 `org.h2.table`：31 个文件、13,388 行，本章只展开与扩展与兼容相关的入口。
-- 对照 `org.h2.index`（4,093 行）：两者的扩展与兼容策略不同，差异落在 `InformationSchemaTable` 的 6 个公开方法里。
+- 对照 `org.h2.expression.analysis`（2,866 行）：两者的扩展与兼容策略不同，差异落在 `InformationSchemaTable` 的 6 个公开方法里。
 - 若扩展与兼容假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.value` 进入。
 
 ## 10.11.1 依赖明细
@@ -2484,19 +2750,16 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `org.h2.table` | `org.h2.value` | 59 |
 | `org.h2.table` | `org.h2.engine` | 57 |
 | `org.h2.table` | `org.h2.result` | 42 |
-| `org.h2.index` | `org.h2.result` | 51 |
-| `org.h2.index` | `org.h2.table` | 41 |
-| `org.h2.index` | `org.h2.value` | 27 |
 | `org.h2.expression.analysis` | `org.h2.value` | 12 |
 | `org.h2.expression.analysis` | `org.h2.expression` | 9 |
 | `org.h2.expression.analysis` | `org.h2.table` | 8 |
 
 ## 10.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.table` 与 `org.h2.index` 之间的调用方向？
+- 不看正文，能否画出 `org.h2.table` 与 `org.h2.expression.analysis` 之间的调用方向？
 - `InformationSchemaTable` 是否涉及并发？依据是锁、可见性还是不可变？
 - 能否用一个入口，把 `org.h2.table` 的调用链讲到落盘或返回？
-- `org.h2.table` 与 `org.h2.index` 若合并，会丢掉哪个扩展点？
+- `org.h2.table` 与 `org.h2.expression.analysis` 若合并，会丢掉哪个扩展点？
 - `org.h2.table` 的注释与实现若不一致，你信哪一边，为什么？
 
 ## 10.12 延展阅读
@@ -2504,33 +2767,24 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 - 详见第11章《查询优化器》。
 # 第11章 持久化
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 4 个包、43,516 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 3 个包、18,506 行实现；读完应能说清这些包的职责边界与关键协作。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 ## 11.1 模块版图
 
-本章覆盖 2 个包、28,965 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 2 个包、17,172 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
-| `org.h2.mvstore` | 20 | 14,505 | A persistent storage for tree maps. |
 | `org.h2.util` | 48 | 14,460 | Internal utility classes. |
+| `org.h2.store` | 17 | 2,712 | Storage abstractions and helper classes. |
 
 ## 11.2 核心类型
 
-在 `org.h2.mvstore` 之外，本章还有 1 个包；下表每包取前 4 个类型，按规模降序。
+在 `org.h2.util` 之外，本章还有 1 个包；下表每包取前 4 个类型，按规模降序。
 
-### 11.2.1 `org.h2.mvstore`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `FileStore` | 2,386 | 64 | （无类注释，按方法名归纳） |
-| `MVStore` | 2,215 | 85 | （无类注释，按方法名归纳） |
-| `MVMap` | 2,181 | 102 | （无类注释，按方法名归纳） |
-| `Page` | 1,779 | 77 | （无类注释，按方法名归纳） |
-
-### 11.2.2 `org.h2.util`
+### 11.2.1 `org.h2.util`
 
 | 类型 | 行数 | 公开方法 | 职责 |
 | --- | --- | --- | --- |
@@ -2539,24 +2793,33 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | `DateTimeTemplate` | 859 | 5 | （无类注释，按方法名归纳） |
 | `IntervalUtils` | 857 | 12 | （无类注释，按方法名归纳） |
 
+### 11.2.2 `org.h2.store`
+
+| 类型 | 行数 | 公开方法 | 职责 |
+| --- | --- | --- | --- |
+| `FileLock` | 514 | 8 | （无类注释，按方法名归纳） |
+| `FileStore` | 513 | 22 | （无类注释，按方法名归纳） |
+| `Data` | 220 | 13 | （无类注释，按方法名归纳） |
+| `RecoverTester` | 176 | 3 | （无类注释，按方法名归纳） |
+
 ## 11.3 关键 API 与源码坐标
 
 把 2 个包的关键入口与源码位置对应起来，共 6 条坐标，行号由脚本核验。
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `FileStore.accountForRemovedPage()` | `org/h2/mvstore/FileStore.java:2178` |
-| `FileStore.backup()` | `org/h2/mvstore/FileStore.java:1432` |
-| `MVStore.adoptFileStore()` | `org/h2/mvstore/MVStore.java:2183` |
-| `MVStore.autoCommitBufferSize()` | `org/h2/mvstore/MVStore.java:2003` |
-| `MVMap.append()` | `org/h2/mvstore/MVMap.java:1364` |
-| `MVMap.ceilingKey()` | `org/h2/mvstore/MVMap.java:325` |
 | `StringUtils.addAsterisk()` | `org/h2/util/StringUtils.java:283` |
 | `StringUtils.appendHex()` | `org/h2/util/StringUtils.java:1277` |
 | `DateTimeUtils.absoluteDayFromDateValue()` | `org/h2/util/DateTimeUtils.java:873` |
 | `DateTimeUtils.absoluteDayFromYear()` | `org/h2/util/DateTimeUtils.java:857` |
 | `DateTimeTemplate.format()` | `org/h2/util/DateTimeTemplate.java:178` |
 | `DateTimeTemplate.of()` | `org/h2/util/DateTimeTemplate.java:430` |
+| `FileLock.getFileLockMethod()` | `org/h2/store/FileLock.java:458` |
+| `FileLock.getUniqueId()` | `org/h2/store/FileLock.java:472` |
+| `FileStore.autoDelete()` | `org/h2/store/FileStore.java:429` |
+| `FileStore.close()` | `org/h2/store/FileStore.java:221` |
+| `Data.checkCapacity()` | `org/h2/store/Data.java:171` |
+| `Data.copyString()` | `org/h2/store/Data.java:204` |
 
 ## 11.3.1 公共类型清单
 
@@ -2564,24 +2827,115 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 类型 | 包 | 行数 | 公开方法 |
 | --- | --- | --- | --- |
-| `FileStore` | `org.h2.mvstore` | 2,386 | 64 |
-| `MVStore` | `org.h2.mvstore` | 2,215 | 85 |
-| `MVMap` | `org.h2.mvstore` | 2,181 | 102 |
-| `Page` | `org.h2.mvstore` | 1,779 | 77 |
-| `DataUtils` | `org.h2.mvstore` | 1,185 | 45 |
 | `StringUtils` | `org.h2.util` | 1,415 | 55 |
 | `DateTimeUtils` | `org.h2.util` | 1,171 | 42 |
 | `DateTimeTemplate` | `org.h2.util` | 859 | 5 |
 | `IntervalUtils` | `org.h2.util` | 857 | 12 |
 | `Utils` | `org.h2.util` | 832 | 34 |
+| `FileLock` | `org.h2.store` | 514 | 8 |
+| `FileStore` | `org.h2.store` | 513 | 22 |
+| `Data` | `org.h2.store` | 220 | 13 |
+| `RecoverTester` | `org.h2.store` | 176 | 3 |
+| `FileStoreInputStream` | `org.h2.store` | 155 | 5 |
+
+## 11.3.2 逐类导读
+
+按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
+
+**`StringUtils`**（`org.h2.util`，1,415 行，55 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 10%，包级依赖 8 个。
+
+**`DateTimeUtils`**（`org.h2.util`，1,171 行，42 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 8%，包级依赖 8 个。
+
+**`DateTimeTemplate`**（`org.h2.util`，859 行，5 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 6%，包级依赖 8 个。
+
+**`IntervalUtils`**（`org.h2.util`，857 行，12 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 6%，包级依赖 8 个。
+
+**`Utils`**（`org.h2.util`，832 行，34 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 6%，包级依赖 8 个。
+
+**`JdbcUtils`**（`org.h2.util`，785 行，17 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 5%，包级依赖 8 个。
+
+**`FileLock`**（`org.h2.store`，514 行，8 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 19%，包级依赖 8 个。
+
+**`FileStore`**（`org.h2.store`，513 行，22 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 19%，包级依赖 8 个。
+
+**`Data`**（`org.h2.store`，220 行，13 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 8%，包级依赖 8 个。
+
+**`RecoverTester`**（`org.h2.store`，176 行，3 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 6%，包级依赖 8 个。
+
+**`FileStoreInputStream`**（`org.h2.store`，155 行，5 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 6%，包级依赖 8 个。
+
+**`DataReader`**（`org.h2.store`，133 行，5 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 5%，包级依赖 8 个。
+
+## 11.3.2 源码坐标明细
+
+本章主责包中 45 个公开入口的行号，按类聚簇，可直接跳转阅读。
+
+| 入口 | 源码坐标 |
+| --- | --- |
+| `StringUtils.addAsterisk()` | `org/h2/util/StringUtils.java:283` |
+| `StringUtils.appendHex()` | `org/h2/util/StringUtils.java:1277` |
+| `StringUtils.appendToLength()` | `org/h2/util/StringUtils.java:1360` |
+| `StringUtils.appendTwoDigits()` | `org/h2/util/StringUtils.java:1327` |
+| `DateTimeUtils.absoluteDayFromDateValue()` | `org/h2/util/DateTimeUtils.java:873` |
+| `DateTimeUtils.absoluteDayFromYear()` | `org/h2/util/DateTimeUtils.java:857` |
+| `DateTimeUtils.appendDate()` | `org/h2/util/DateTimeUtils.java:981` |
+| `DateTimeUtils.appendTime()` | `org/h2/util/DateTimeUtils.java:1003` |
+| `DateTimeTemplate.format()` | `org/h2/util/DateTimeTemplate.java:178` |
+| `DateTimeTemplate.of()` | `org/h2/util/DateTimeTemplate.java:430` |
+| `DateTimeTemplate.parse()` | `org/h2/util/DateTimeTemplate.java:183` |
+| `IntervalUtils.appendInterval()` | `org/h2/util/IntervalUtils.java:402` |
+| `IntervalUtils.daysFromInterval()` | `org/h2/util/IntervalUtils.java:724` |
+| `IntervalUtils.hoursFromInterval()` | `org/h2/util/IntervalUtils.java:753` |
+| `IntervalUtils.intervalFromAbsolute()` | `org/h2/util/IntervalUtils.java:540` |
+| `Utils.callMethod()` | `org/h2/util/Utils.java:465` |
+| `Utils.callStaticMethod()` | `org/h2/util/Utils.java:446` |
+| `Utils.cloneByteArray()` | `org/h2/util/Utils.java:218` |
+| `Utils.collectGarbage()` | `org/h2/util/Utils.java:289` |
+| `JdbcUtils.addClassFactory()` | `org/h2/util/JdbcUtils.java:114` |
 
 ## 11.4 阅读路径
 
-读 `org.h2.mvstore` 的 20 个文件时，先看骨架类，再沿 `org.h2.util` 方向下钻。
+读 `org.h2.util` 的 48 个文件时，先看骨架类，再沿 `org.h2.value` 方向下钻。
 
-1. 先读 `org.h2.mvstore` 的 package-info 与 `FileStore`，建立第11章的职责边界。
-2. 再读 `FileStore` 的 64 个公开入口，确认它对 `org.h2.util` 的调用方向与加锁方式。
-3. 最后读 `org.h2.util`（本章最小包，14,460 行）的实现，关注容量与失败路径。
+1. 先读 `org.h2.util` 的 package-info 与 `StringUtils`，建立第11章的职责边界。
+2. 再读 `StringUtils` 的 55 个公开入口，确认它对 `org.h2.value` 的调用方向与加锁方式。
+3. 最后读 `org.h2.store`（本章最小包，2,712 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第12章《并发控制》。
 
@@ -2591,74 +2945,80 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 包 | 依赖（前 4） |
 | --- | --- |
-| `org.h2.mvstore` | `org.h2.util`, `org.h2.compress`, `org.h2.store.fs`, `org.h2.store.fs.encrypt` |
 | `org.h2.util` | `org.h2.value`, `org.h2.engine`, `org.h2.message`, `org.h2.api` |
+| `org.h2.store` | `org.h2.engine`, `org.h2.util`, `org.h2.message`, `org.h2.value` |
 
 ## 11.6 设计权衡
 
-- `org.h2.mvstore` 用 20 个文件换到 14,505 行实现，平均每文件 725 行，其中 `FileStore` 独占 2,386 行、64 个公开方法。
-- 该包对外声明了 7 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
-- `org.h2.util`（14,460 行）与 `org.h2.mvstore` 的职责差是本章最值得记的一条边界。
+- `org.h2.util` 用 48 个文件换到 14,460 行实现，平均每文件 301 行，其中 `StringUtils` 独占 1,415 行、55 个公开方法。
+- 该包对外声明了 8 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
+- `org.h2.store`（2,712 行）与 `org.h2.util` 的职责差是本章最值得记的一条边界。
 
 ## 11.7 常见误区
 
-- 把 `org.h2.mvstore` 的 14,505 行当作复杂度上限：`FileStore` 之外的 19 个文件多为类型族与样板。
-- 只看 `FileStore` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
-- 把 `org.h2.mvstore` 与 `org.h2.util` 视为可互换：前者 20 文件、后者 48 文件，扩展点分布完全不同。
+- 把 `org.h2.util` 的 14,460 行当作复杂度上限：`StringUtils` 之外的 47 个文件多为类型族与样板。
+- 只看 `StringUtils` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
+- 把 `org.h2.util` 与 `org.h2.store` 视为可互换：前者 48 文件、后者 17 文件，扩展点分布完全不同。
 
 ## 11.8 深读要点
 
-规模信号：`org.h2.mvstore` 占本章 50% 的实现行数，改动风险最高。
-耦合信号：`org.h2.mvstore` 依赖 7 个 `org.h2` 包，其中 `org.h2.util` 出现最频繁。
-入口信号：`FileStore` 的公开方法 64 个，读它等于读本章的主干。
+规模信号：`org.h2.util` 占本章 84% 的实现行数，改动风险最高。
+耦合信号：`org.h2.util` 依赖 8 个 `org.h2` 包，其中 `org.h2.value` 出现最频繁。
+入口信号：`StringUtils` 的公开方法 55 个，读它等于读本章的主干。
 
 ## 11.8 术语对照
 
 本章出现的专业术语与书末术语表的对应关系：
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **MVStore**：详见[术语表](back/glossary.md)对应条目。
+- **Aggregate**：详见[术语表](back/glossary.md)对应条目。
+- **ISODEBUG**：详见[术语表](back/glossary.md)对应条目。
+- **Maven**：详见[术语表](back/glossary.md)对应条目。
+- **MVStoreTool**：详见[术语表](back/glossary.md)对应条目。
+- **Query**：详见[术语表](back/glossary.md)对应条目。
+- **Select**：详见[术语表](back/glossary.md)对应条目。
+- **SmallLRUCache**：详见[术语表](back/glossary.md)对应条目。
 
 ## 11.9 知识点清单
 
-1. `org.h2.mvstore` 的 `FileStore`：2,386 行、64 个公开方法，职责按方法名归纳
-2. `org.h2.mvstore` 的 `MVStore`：2,215 行、85 个公开方法，职责按方法名归纳
-3. `org.h2.util` 的 `StringUtils`：1,415 行、55 个公开方法，职责按方法名归纳
-4. `org.h2.util` 的 `DateTimeUtils`：1,171 行、42 个公开方法，职责按方法名归纳
+1. `org.h2.util` 的 `StringUtils`：1,415 行、55 个公开方法，职责按方法名归纳
+2. `org.h2.util` 的 `DateTimeUtils`：1,171 行、42 个公开方法，职责按方法名归纳
+3. `org.h2.store` 的 `FileLock`：514 行、8 个公开方法，职责按方法名归纳
+4. `org.h2.store` 的 `FileStore`：513 行、22 个公开方法，职责按方法名归纳
 
 ## 11.9 本章小结
 
-- 本章覆盖 2 个包、28,965 行。
+- 本章覆盖 2 个包、17,172 行。
 - 关键入口与源码坐标见 §11.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
 ## 11.10 延伸思考
 
-**1. 🟢★ 指出 `org.h2.mvstore` 中 `FileStore` 与 `MVStore` 的分工差异，并给出调用方向。**
-
-> 提示：第11章 §11.2 的表格给出 `FileStore` 的规模与公开方法数，先按那一行定位再进源码。
-> 回顾：§11.2 核心类型
-
-**2. 🔵★★ 围绕 `org.h2.util` 的 `StringUtils`，说明它为什么需要独立成类型而不是并入 `DateTimeUtils`。**
+**1. 🟢★ 指出 `org.h2.util` 中 `StringUtils` 与 `DateTimeUtils` 的分工差异，并给出调用方向。**
 
 > 提示：第11章 §11.2 的表格给出 `StringUtils` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§11.2 核心类型
 
-**3. 🟠★★★ 以 `org.h2.mvstore` 的 `FileStore` 为入口，画出一次完整调用经过的包。**
+**2. 🔵★★ 围绕 `org.h2.store` 的 `FileLock`，说明它为什么需要独立成类型而不是并入 `FileStore`。**
 
-> 提示：第11章 §11.2 的表格给出 `FileStore` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第11章 §11.2 的表格给出 `FileLock` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§11.2 核心类型
 
-**4. 🟢★★★★ 如果只保留 `org.h2.util` 的一个类型，你保留 `StringUtils` 还是 `DateTimeUtils`？说明代价。**
+**3. 🟠★★★ 以 `org.h2.util` 的 `StringUtils` 为入口，画出一次完整调用经过的包。**
 
 > 提示：第11章 §11.2 的表格给出 `StringUtils` 的规模与公开方法数，先按那一行定位再进源码。
+> 回顾：§11.2 核心类型
+
+**4. 🟢★★★★ 如果只保留 `org.h2.store` 的一个类型，你保留 `FileLock` 还是 `FileStore`？说明代价。**
+
+> 提示：第11章 §11.2 的表格给出 `FileLock` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§11.2 核心类型
 
 ## 11.11 本章视角：演化与版本
 
-- 以「演化与版本」看 `org.h2.mvstore`：20 个文件、14,505 行，本章只展开与演化与版本相关的入口。
-- 对照 `org.h2.util`（14,460 行）：两者的演化与版本策略不同，差异落在 `FileStore` 的 64 个公开方法里。
-- 若演化与版本假设被打破（7 个依赖变化），最先受影响的调用链从 `org.h2.util` 进入。
+- 以「演化与版本」看 `org.h2.util`：48 个文件、14,460 行，本章只展开与演化与版本相关的入口。
+- 对照 `org.h2.store`（2,712 行）：两者的演化与版本策略不同，差异落在 `StringUtils` 的 55 个公开方法里。
+- 若演化与版本假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.value` 进入。
 
 ## 11.11.1 依赖明细
 
@@ -2666,20 +3026,20 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 来源包 | 目标包 | 次数 |
 | --- | --- | --- |
-| `org.h2.mvstore` | `org.h2.util` | 10 |
-| `org.h2.mvstore` | `org.h2.compress` | 7 |
-| `org.h2.mvstore` | `org.h2.store.fs` | 5 |
 | `org.h2.util` | `org.h2.value` | 35 |
 | `org.h2.util` | `org.h2.engine` | 18 |
 | `org.h2.util` | `org.h2.message` | 16 |
+| `org.h2.store` | `org.h2.engine` | 16 |
+| `org.h2.store` | `org.h2.util` | 14 |
+| `org.h2.store` | `org.h2.message` | 11 |
 
 ## 11.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.mvstore` 与 `org.h2.util` 之间的调用方向？
-- `FileStore` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.mvstore` 的调用链讲到落盘或返回？
-- `org.h2.mvstore` 与 `org.h2.util` 若合并，会丢掉哪个扩展点？
-- `org.h2.mvstore` 的注释与实现若不一致，你信哪一边，为什么？
+- 不看正文，能否画出 `org.h2.util` 与 `org.h2.store` 之间的调用方向？
+- `StringUtils` 是否涉及并发？依据是锁、可见性还是不可变？
+- 能否用一个入口，把 `org.h2.util` 的调用链讲到落盘或返回？
+- `org.h2.util` 与 `org.h2.store` 若合并，会丢掉哪个扩展点？
+- `org.h2.util` 的注释与实现若不一致，你信哪一边，为什么？
 
 ## 11.12 延展阅读
 
@@ -2689,78 +3049,118 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 12.1 模块版图
 
-本章覆盖 2 个包、14,551 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 1 个包、1,334 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
-| `org.h2.engine` | 28 | 11,839 | Contains high level classes of the database and classes that don't fit in another sub-package. |
-| `org.h2.store` | 17 | 2,712 | Storage abstractions and helper classes. |
+| `org.h2.store.fs` | 7 | 1,334 | A file system abstraction. |
 
 ## 12.2 核心类型
 
-在 `org.h2.engine` 之外，本章还有 1 个包；下表每包取前 4 个类型，按规模降序。
+在 `org.h2.store.fs` 之外，本章还有 0 个包；下表每包取前 4 个类型，按规模降序。
 
-### 12.2.1 `org.h2.engine`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `Database` | 2,566 | 152 | （无类注释，按方法名归纳） |
-| `SessionLocal` | 2,156 | 135 | （无类注释，按方法名归纳） |
-| `SessionRemote` | 1,068 | 53 | （无类注释，按方法名归纳） |
-| `Mode` | 776 | 5 | （无类注释，按方法名归纳） |
-
-### 12.2.2 `org.h2.store`
+### 12.2.1 `org.h2.store.fs`
 
 | 类型 | 行数 | 公开方法 | 职责 |
 | --- | --- | --- | --- |
-| `FileLock` | 514 | 8 | （无类注释，按方法名归纳） |
-| `FileStore` | 513 | 22 | （无类注释，按方法名归纳） |
-| `Data` | 220 | 13 | （无类注释，按方法名归纳） |
-| `RecoverTester` | 176 | 3 | （无类注释，按方法名归纳） |
+| `FileUtils` | 477 | 29 | （无类注释，按方法名归纳） |
+| `FilePath` | 353 | 28 | （无类注释，按方法名归纳） |
+| `FilePathWrapper` | 171 | 22 | （无类注释，按方法名归纳） |
+| `FakeFileChannel` | 112 | 16 | （无类注释，按方法名归纳） |
 
 ## 12.3 关键 API 与源码坐标
 
-把 2 个包的关键入口与源码位置对应起来，共 6 条坐标，行号由脚本核验。
+把 1 个包的关键入口与源码位置对应起来，共 3 条坐标，行号由脚本核验。
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `Database.addDatabaseObject()` | `org/h2/engine/Database.java:948` |
-| `Database.addSchemaObject()` | `org/h2/engine/Database.java:923` |
-| `SessionLocal.addLocalTempTable()` | `org/h2/engine/SessionLocal.java:397` |
-| `SessionLocal.addLocalTempTableConstraint()` | `org/h2/engine/SessionLocal.java:510` |
-| `SessionRemote.addTemporaryLob()` | `org/h2/engine/SessionRemote.java:819` |
-| `SessionRemote.autoCommitIfCluster()` | `org/h2/engine/SessionRemote.java:296` |
-| `FileLock.getFileLockMethod()` | `org/h2/store/FileLock.java:458` |
-| `FileLock.getUniqueId()` | `org/h2/store/FileLock.java:472` |
-| `FileStore.autoDelete()` | `org/h2/store/FileStore.java:429` |
-| `FileStore.close()` | `org/h2/store/FileStore.java:221` |
-| `Data.checkCapacity()` | `org/h2/store/Data.java:171` |
-| `Data.copyString()` | `org/h2/store/Data.java:204` |
+| `FileUtils.canWrite()` | `org/h2/store/fs/FileUtils.java:317` |
+| `FileUtils.createDirectories()` | `org/h2/store/fs/FileUtils.java:372` |
+| `FilePath.canWrite()` | `org/h2/store/fs/FilePath.java:201` |
+| `FilePath.createDirectory()` | `org/h2/store/fs/FilePath.java:206` |
+| `FilePathWrapper.canWrite()` | `org/h2/store/fs/FilePathWrapper.java:72` |
+| `FilePathWrapper.createDirectory()` | `org/h2/store/fs/FilePathWrapper.java:77` |
 
 ## 12.3.1 公共类型清单
 
-本章抽样类型按包分组，共 10 行；规模与公开方法数是阅读优先级的第一信号。
+本章抽样类型按包分组，共 5 行；规模与公开方法数是阅读优先级的第一信号。
 
 | 类型 | 包 | 行数 | 公开方法 |
 | --- | --- | --- | --- |
-| `Database` | `org.h2.engine` | 2,566 | 152 |
-| `SessionLocal` | `org.h2.engine` | 2,156 | 135 |
-| `SessionRemote` | `org.h2.engine` | 1,068 | 53 |
-| `Mode` | `org.h2.engine` | 776 | 5 |
-| `ConnectionInfo` | `org.h2.engine` | 766 | 25 |
-| `FileLock` | `org.h2.store` | 514 | 8 |
-| `FileStore` | `org.h2.store` | 513 | 22 |
-| `Data` | `org.h2.store` | 220 | 13 |
-| `RecoverTester` | `org.h2.store` | 176 | 3 |
-| `FileStoreInputStream` | `org.h2.store` | 155 | 5 |
+| `FileUtils` | `org.h2.store.fs` | 477 | 29 |
+| `FilePath` | `org.h2.store.fs` | 353 | 28 |
+| `FilePathWrapper` | `org.h2.store.fs` | 171 | 22 |
+| `FakeFileChannel` | `org.h2.store.fs` | 112 | 16 |
+| `FileBase` | `org.h2.store.fs` | 92 | 10 |
+
+## 12.3.2 逐类导读
+
+按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
+
+**`FileUtils`**（`org.h2.store.fs`，477 行，29 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 36%，包级依赖 2 个。
+
+**`FilePath`**（`org.h2.store.fs`，353 行，28 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 26%，包级依赖 2 个。
+
+**`FilePathWrapper`**（`org.h2.store.fs`，171 行，22 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 13%，包级依赖 2 个。
+
+**`FakeFileChannel`**（`org.h2.store.fs`，112 行，16 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 8%，包级依赖 2 个。
+
+**`FileBase`**（`org.h2.store.fs`，92 行，10 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 7%，包级依赖 2 个。
+
+**`FileBaseDefault`**（`org.h2.store.fs`，69 行，5 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 5%，包级依赖 2 个。
+
+## 12.3.2 源码坐标明细
+
+本章主责包中 24 个公开入口的行号，按类聚簇，可直接跳转阅读。
+
+| 入口 | 源码坐标 |
+| --- | --- |
+| `FileUtils.canWrite()` | `org/h2/store/fs/FileUtils.java:317` |
+| `FileUtils.createDirectories()` | `org/h2/store/fs/FileUtils.java:372` |
+| `FileUtils.createDirectory()` | `org/h2/store/fs/FileUtils.java:84` |
+| `FileUtils.createFile()` | `org/h2/store/fs/FileUtils.java:96` |
+| `FilePath.canWrite()` | `org/h2/store/fs/FilePath.java:201` |
+| `FilePath.createDirectory()` | `org/h2/store/fs/FilePath.java:206` |
+| `FilePath.createFile()` | `org/h2/store/fs/FilePath.java:132` |
+| `FilePath.createTempFile()` | `org/h2/store/fs/FilePath.java:284` |
+| `FilePathWrapper.canWrite()` | `org/h2/store/fs/FilePathWrapper.java:72` |
+| `FilePathWrapper.createDirectory()` | `org/h2/store/fs/FilePathWrapper.java:77` |
+| `FilePathWrapper.createFile()` | `org/h2/store/fs/FilePathWrapper.java:82` |
+| `FilePathWrapper.createTempFile()` | `org/h2/store/fs/FilePathWrapper.java:166` |
+| `FakeFileChannel.force()` | `org/h2/store/fs/FakeFileChannel.java:109` |
+| `FakeFileChannel.lock()` | `org/h2/store/fs/FakeFileChannel.java:34` |
+| `FakeFileChannel.map()` | `org/h2/store/fs/FakeFileChannel.java:39` |
+| `FakeFileChannel.position()` | `org/h2/store/fs/FakeFileChannel.java:44` |
+| `FileBase.force()` | `org/h2/store/fs/FileBase.java:42` |
+| `FileBase.lock()` | `org/h2/store/fs/FileBase.java:52` |
+| `FileBase.map()` | `org/h2/store/fs/FileBase.java:58` |
+| `FileBase.read()` | `org/h2/store/fs/FileBase.java:22` |
 
 ## 12.4 阅读路径
 
-读 `org.h2.engine` 的 28 个文件时，先看骨架类，再沿 `org.h2.util` 方向下钻。
+读 `org.h2.store.fs` 的 7 个文件时，先看骨架类，再沿 `org.h2.util` 方向下钻。
 
-1. 先读 `org.h2.engine` 的 package-info 与 `Database`，建立第12章的职责边界。
-2. 再读 `Database` 的 152 个公开入口，确认它对 `org.h2.util` 的调用方向与加锁方式。
-3. 最后读 `org.h2.store`（本章最小包，2,712 行）的实现，关注容量与失败路径。
+1. 先读 `org.h2.store.fs` 的 package-info 与 `FileUtils`，建立第12章的职责边界。
+2. 再读 `FileUtils` 的 29 个公开入口，确认它对 `org.h2.util` 的调用方向与加锁方式。
+3. 最后读 `org.h2.store.fs`（本章最小包，1,334 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第11章《持久化》。
 
@@ -2770,75 +3170,74 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 包 | 依赖（前 4） |
 | --- | --- |
-| `org.h2.engine` | `org.h2.util`, `org.h2.message`, `org.h2.value`, `org.h2.api` |
-| `org.h2.store` | `org.h2.engine`, `org.h2.util`, `org.h2.message`, `org.h2.value` |
+| `org.h2.store.fs` | `org.h2.util`, `org.h2.engine` |
 
 ## 12.6 设计权衡
 
-- `org.h2.engine` 用 28 个文件换到 11,839 行实现，平均每文件 422 行，其中 `Database` 独占 2,566 行、152 个公开方法。
-- 该包对外声明了 8 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
-- `org.h2.store`（2,712 行）与 `org.h2.engine` 的职责差是本章最值得记的一条边界。
+- `org.h2.store.fs` 用 7 个文件换到 1,334 行实现，平均每文件 190 行，其中 `FileUtils` 独占 477 行、29 个公开方法。
+- 该包对外声明了 2 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
+- `org.h2.store.fs`（1,334 行）与 `org.h2.store.fs` 的职责差是本章最值得记的一条边界。
 
 ## 12.7 常见误区
 
-- 把 `org.h2.engine` 的 11,839 行当作复杂度上限：`Database` 之外的 27 个文件多为类型族与样板。
-- 只看 `Database` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
-- 把 `org.h2.engine` 与 `org.h2.store` 视为可互换：前者 28 文件、后者 17 文件，扩展点分布完全不同。
+- 把 `org.h2.store.fs` 的 1,334 行当作复杂度上限：`FileUtils` 之外的 6 个文件多为类型族与样板。
+- 只看 `FileUtils` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
+- 把 `org.h2.store.fs` 与 `org.h2.store.fs` 视为可互换：前者 7 文件、后者 7 文件，扩展点分布完全不同。
 
 ## 12.8 深读要点
 
-规模信号：`org.h2.engine` 占本章 81% 的实现行数，改动风险最高。
-耦合信号：`org.h2.engine` 依赖 8 个 `org.h2` 包，其中 `org.h2.util` 出现最频繁。
-入口信号：`Database` 的公开方法 152 个，读它等于读本章的主干。
+规模信号：`org.h2.store.fs` 占本章 100% 的实现行数，改动风险最高。
+耦合信号：`org.h2.store.fs` 依赖 2 个 `org.h2` 包，其中 `org.h2.util` 出现最频繁。
+入口信号：`FileUtils` 的公开方法 29 个，读它等于读本章的主干。
 
 ## 12.8 术语对照
 
 本章出现的专业术语与书末术语表的对应关系：
 
-- **Database**：详见[术语表](back/glossary.md)对应条目。
-- **Engine**：详见[术语表](back/glossary.md)对应条目。
 - **H2**：详见[术语表](back/glossary.md)对应条目。
+- **Bloom 过滤**：详见[术语表](back/glossary.md)对应条目。
+- **Single Writer**：详见[术语表](back/glossary.md)对应条目。
+- **TransactionMap**：详见[术语表](back/glossary.md)对应条目。
+- **Write Amplification**：详见[术语表](back/glossary.md)对应条目。
 
 ## 12.9 知识点清单
 
-1. `org.h2.engine` 的 `Database`：2,566 行、152 个公开方法，职责按方法名归纳
-2. `org.h2.engine` 的 `SessionLocal`：2,156 行、135 个公开方法，职责按方法名归纳
-3. `org.h2.store` 的 `FileLock`：514 行、8 个公开方法，职责按方法名归纳
-4. `org.h2.store` 的 `FileStore`：513 行、22 个公开方法，职责按方法名归纳
+1. `org.h2.store.fs` 的 `FileUtils`：477 行、29 个公开方法，职责按方法名归纳
+2. `org.h2.store.fs` 的 `FilePath`：353 行、28 个公开方法，职责按方法名归纳
 
 ## 12.9 本章小结
 
-- 本章覆盖 2 个包、14,551 行。
+- 本章覆盖 1 个包、1,334 行。
 - 关键入口与源码坐标见 §12.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
 ## 12.10 延伸思考
 
-**1. 🟢★ 指出 `org.h2.engine` 中 `Database` 与 `SessionLocal` 的分工差异，并给出调用方向。**
+**1. 🟢★ 指出 `org.h2.store.fs` 中 `FileUtils` 与 `FilePath` 的分工差异，并给出调用方向。**
 
-> 提示：第12章 §12.2 的表格给出 `Database` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第12章 §12.2 的表格给出 `FileUtils` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§12.2 核心类型
 
-**2. 🔵★★ 围绕 `org.h2.store` 的 `FileLock`，说明它为什么需要独立成类型而不是并入 `FileStore`。**
+**2. 🔵★★ 围绕 `org.h2.store.fs` 的 `FileUtils`，说明它为什么需要独立成类型而不是并入 `FilePath`。**
 
-> 提示：第12章 §12.2 的表格给出 `FileLock` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第12章 §12.2 的表格给出 `FileUtils` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§12.2 核心类型
 
-**3. 🟠★★★ 以 `org.h2.engine` 的 `Database` 为入口，画出一次完整调用经过的包。**
+**3. 🟠★★★ 以 `org.h2.store.fs` 的 `FileUtils` 为入口，画出一次完整调用经过的包。**
 
-> 提示：第12章 §12.2 的表格给出 `Database` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第12章 §12.2 的表格给出 `FileUtils` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§12.2 核心类型
 
-**4. 🟢★★★★ 如果只保留 `org.h2.store` 的一个类型，你保留 `FileLock` 还是 `FileStore`？说明代价。**
+**4. 🟢★★★★ 如果只保留 `org.h2.store.fs` 的一个类型，你保留 `FileUtils` 还是 `FilePath`？说明代价。**
 
-> 提示：第12章 §12.2 的表格给出 `FileLock` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第12章 §12.2 的表格给出 `FileUtils` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§12.2 核心类型
 
 ## 12.11 本章视角：性能与规模
 
-- 以「性能与规模」看 `org.h2.engine`：28 个文件、11,839 行，本章只展开与性能与规模相关的入口。
-- 对照 `org.h2.store`（2,712 行）：两者的性能与规模策略不同，差异落在 `Database` 的 152 个公开方法里。
-- 若性能与规模假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.util` 进入。
+- 以「性能与规模」看 `org.h2.store.fs`：7 个文件、1,334 行，本章只展开与性能与规模相关的入口。
+- 对照 `org.h2.store.fs`（1,334 行）：两者的性能与规模策略不同，差异落在 `FileUtils` 的 29 个公开方法里。
+- 若性能与规模假设被打破（2 个依赖变化），最先受影响的调用链从 `org.h2.util` 进入。
 
 ## 12.11.1 依赖明细
 
@@ -2846,104 +3245,148 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 来源包 | 目标包 | 次数 |
 | --- | --- | --- |
-| `org.h2.engine` | `org.h2.util` | 55 |
-| `org.h2.engine` | `org.h2.message` | 33 |
-| `org.h2.engine` | `org.h2.value` | 26 |
-| `org.h2.store` | `org.h2.engine` | 16 |
-| `org.h2.store` | `org.h2.util` | 14 |
-| `org.h2.store` | `org.h2.message` | 11 |
+| `org.h2.store.fs` | `org.h2.util` | 1 |
+| `org.h2.store.fs` | `org.h2.engine` | 1 |
 
 ## 12.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.engine` 与 `org.h2.store` 之间的调用方向？
-- `Database` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.engine` 的调用链讲到落盘或返回？
-- `org.h2.engine` 与 `org.h2.store` 若合并，会丢掉哪个扩展点？
-- `org.h2.engine` 的注释与实现若不一致，你信哪一边，为什么？
+- 不看正文，能否画出 `org.h2.store.fs` 与 `org.h2.store.fs` 之间的调用方向？
+- `FileUtils` 是否涉及并发？依据是锁、可见性还是不可变？
+- 能否用一个入口，把 `org.h2.store.fs` 的调用链讲到落盘或返回？
+- `org.h2.store.fs` 与 `org.h2.store.fs` 若合并，会丢掉哪个扩展点？
+- `org.h2.store.fs` 的注释与实现若不一致，你信哪一边，为什么？
+
+## 12.12 跨章索引
+
+本章引用但不展开的包，按下面这张表跳到主责章节阅读。
+
+| 包 | 主责章节 |
+| --- | --- |
+| `org.h2.store.fs` | 第11章《持久化》 |
 
 ## 12.12 延展阅读
 
 - 详见第11章《持久化》。
 # 第13章 二次开发指南
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 3 个包、29,478 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、28,187 行实现；读完应能说清这些包的职责边界与关键协作。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 ## 13.1 模块版图
 
-本章覆盖 2 个包、25,328 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 1 个包、17,319 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
-| `org.h2.util` | 48 | 14,460 | Internal utility classes. |
-| `org.h2.tools` | 23 | 10,868 | Various tools. |
+| `org.h2.jdbc` | 27 | 17,319 | Implementation of the JDBC API (package { |
 
 ## 13.2 核心类型
 
-在 `org.h2.util` 之外，本章还有 1 个包；下表每包取前 4 个类型，按规模降序。
+在 `org.h2.jdbc` 之外，本章还有 0 个包；下表每包取前 4 个类型，按规模降序。
 
-### 13.2.1 `org.h2.util`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `StringUtils` | 1,415 | 55 | （无类注释，按方法名归纳） |
-| `DateTimeUtils` | 1,171 | 42 | （无类注释，按方法名归纳） |
-| `DateTimeTemplate` | 859 | 5 | （无类注释，按方法名归纳） |
-| `IntervalUtils` | 857 | 12 | （无类注释，按方法名归纳） |
-
-### 13.2.2 `org.h2.tools`
+### 13.2.1 `org.h2.jdbc`
 
 | 类型 | 行数 | 公开方法 | 职责 |
 | --- | --- | --- | --- |
-| `SimpleResultSet` | 2,480 | 228 | （无类注释，按方法名归纳） |
-| `Csv` | 986 | 33 | （无类注释，按方法名归纳） |
-| `Recover` | 922 | 18 | （无类注释，按方法名归纳） |
-| `Server` | 823 | 19 | （无类注释，按方法名归纳） |
+| `JdbcResultSet` | 4,291 | 199 | （无类注释，按方法名归纳） |
+| `JdbcDatabaseMetaData` | 2,756 | 177 | （无类注释，按方法名归纳） |
+| `JdbcConnection` | 1,930 | 62 | （无类注释，按方法名归纳） |
+| `JdbcCallableStatement` | 1,863 | 117 | （无类注释，按方法名归纳） |
 
 ## 13.3 关键 API 与源码坐标
 
-把 2 个包的关键入口与源码位置对应起来，共 6 条坐标，行号由脚本核验。
+把 1 个包的关键入口与源码位置对应起来，共 3 条坐标，行号由脚本核验。
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `StringUtils.addAsterisk()` | `org/h2/util/StringUtils.java:283` |
-| `StringUtils.appendHex()` | `org/h2/util/StringUtils.java:1277` |
-| `DateTimeUtils.absoluteDayFromDateValue()` | `org/h2/util/DateTimeUtils.java:873` |
-| `DateTimeUtils.absoluteDayFromYear()` | `org/h2/util/DateTimeUtils.java:857` |
-| `DateTimeTemplate.format()` | `org/h2/util/DateTimeTemplate.java:178` |
-| `DateTimeTemplate.of()` | `org/h2/util/DateTimeTemplate.java:430` |
-| `SimpleResultSet.absolute()` | `org/h2/tools/SimpleResultSet.java:2229` |
-| `SimpleResultSet.addColumn()` | `org/h2/tools/SimpleResultSet.java:100` |
-| `Csv.close()` | `org/h2/tools/Csv.java:639` |
-| `Csv.getBinaryColumns()` | `org/h2/tools/Csv.java:909` |
-| `Recover.checkPowerOff()` | `org/h2/tools/Recover.java:857` |
-| `Recover.checkWritingAllowed()` | `org/h2/tools/Recover.java:865` |
+| `JdbcResultSet.absolute()` | `org/h2/jdbc/JdbcResultSet.java:3173` |
+| `JdbcResultSet.afterLast()` | `org/h2/jdbc/JdbcResultSet.java:3105` |
+| `JdbcDatabaseMetaData.allProceduresAreCallable()` | `org/h2/jdbc/JdbcDatabaseMetaData.java:305` |
+| `JdbcDatabaseMetaData.allTablesAreSelectable()` | `org/h2/jdbc/JdbcDatabaseMetaData.java:316` |
+| `JdbcConnection.abort()` | `org/h2/jdbc/JdbcConnection.java:1832` |
+| `JdbcConnection.clearWarnings()` | `org/h2/jdbc/JdbcConnection.java:655` |
 
 ## 13.3.1 公共类型清单
 
-本章抽样类型按包分组，共 10 行；规模与公开方法数是阅读优先级的第一信号。
+本章抽样类型按包分组，共 5 行；规模与公开方法数是阅读优先级的第一信号。
 
 | 类型 | 包 | 行数 | 公开方法 |
 | --- | --- | --- | --- |
-| `StringUtils` | `org.h2.util` | 1,415 | 55 |
-| `DateTimeUtils` | `org.h2.util` | 1,171 | 42 |
-| `DateTimeTemplate` | `org.h2.util` | 859 | 5 |
-| `IntervalUtils` | `org.h2.util` | 857 | 12 |
-| `Utils` | `org.h2.util` | 832 | 34 |
-| `SimpleResultSet` | `org.h2.tools` | 2,480 | 228 |
-| `Csv` | `org.h2.tools` | 986 | 33 |
-| `Recover` | `org.h2.tools` | 922 | 18 |
-| `Server` | `org.h2.tools` | 823 | 19 |
-| `DirectRecover` | `org.h2.tools` | 767 | 11 |
+| `JdbcResultSet` | `org.h2.jdbc` | 4,291 | 199 |
+| `JdbcDatabaseMetaData` | `org.h2.jdbc` | 2,756 | 177 |
+| `JdbcConnection` | `org.h2.jdbc` | 1,930 | 62 |
+| `JdbcCallableStatement` | `org.h2.jdbc` | 1,863 | 117 |
+| `JdbcPreparedStatement` | `org.h2.jdbc` | 1,629 | 65 |
+
+## 13.3.2 逐类导读
+
+按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
+
+**`JdbcResultSet`**（`org.h2.jdbc`，4,291 行，199 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 25%，包级依赖 8 个。
+
+**`JdbcDatabaseMetaData`**（`org.h2.jdbc`，2,756 行，177 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 16%，包级依赖 8 个。
+
+**`JdbcConnection`**（`org.h2.jdbc`，1,930 行，62 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 11%，包级依赖 8 个。
+
+**`JdbcCallableStatement`**（`org.h2.jdbc`，1,863 行，117 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 11%，包级依赖 8 个。
+
+**`JdbcPreparedStatement`**（`org.h2.jdbc`，1,629 行，65 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 9%，包级依赖 8 个。
+
+**`JdbcStatement`**（`org.h2.jdbc`，1,502 行，56 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 9%，包级依赖 8 个。
+
+## 13.3.2 源码坐标明细
+
+本章主责包中 24 个公开入口的行号，按类聚簇，可直接跳转阅读。
+
+| 入口 | 源码坐标 |
+| --- | --- |
+| `JdbcResultSet.absolute()` | `org/h2/jdbc/JdbcResultSet.java:3173` |
+| `JdbcResultSet.afterLast()` | `org/h2/jdbc/JdbcResultSet.java:3105` |
+| `JdbcResultSet.beforeFirst()` | `org/h2/jdbc/JdbcResultSet.java:3086` |
+| `JdbcResultSet.cancelRowUpdates()` | `org/h2/jdbc/JdbcResultSet.java:3432` |
+| `JdbcDatabaseMetaData.allProceduresAreCallable()` | `org/h2/jdbc/JdbcDatabaseMetaData.java:305` |
+| `JdbcDatabaseMetaData.allTablesAreSelectable()` | `org/h2/jdbc/JdbcDatabaseMetaData.java:316` |
+| `JdbcDatabaseMetaData.autoCommitFailureClosesAllResultSets()` | `org/h2/jdbc/JdbcDatabaseMetaData.java:2598` |
+| `JdbcDatabaseMetaData.dataDefinitionCausesTransactionCommit()` | `org/h2/jdbc/JdbcDatabaseMetaData.java:1814` |
+| `JdbcConnection.abort()` | `org/h2/jdbc/JdbcConnection.java:1832` |
+| `JdbcConnection.clearWarnings()` | `org/h2/jdbc/JdbcConnection.java:655` |
+| `JdbcConnection.close()` | `org/h2/jdbc/JdbcConnection.java:355` |
+| `JdbcConnection.commit()` | `org/h2/jdbc/JdbcConnection.java:480` |
+| `JdbcCallableStatement.executeLargeUpdate()` | `org/h2/jdbc/JdbcCallableStatement.java:119` |
+| `JdbcCallableStatement.executeUpdate()` | `org/h2/jdbc/JdbcCallableStatement.java:89` |
+| `JdbcCallableStatement.getArray()` | `org/h2/jdbc/JdbcCallableStatement.java:512` |
+| `JdbcCallableStatement.getBigDecimal()` | `org/h2/jdbc/JdbcCallableStatement.java:351` |
+| `JdbcPreparedStatement.addBatch()` | `org/h2/jdbc/JdbcPreparedStatement.java:326` |
+| `JdbcPreparedStatement.clearBatch()` | `org/h2/jdbc/JdbcPreparedStatement.java:1222` |
+| `JdbcPreparedStatement.clearParameters()` | `org/h2/jdbc/JdbcPreparedStatement.java:289` |
+| `JdbcPreparedStatement.close()` | `org/h2/jdbc/JdbcPreparedStatement.java:1238` |
 
 ## 13.4 阅读路径
 
-读 `org.h2.util` 的 48 个文件时，先看骨架类，再沿 `org.h2.value` 方向下钻。
+读 `org.h2.jdbc` 的 27 个文件时，先看骨架类，再沿 `org.h2.value` 方向下钻。
 
-1. 先读 `org.h2.util` 的 package-info 与 `StringUtils`，建立第13章的职责边界。
-2. 再读 `StringUtils` 的 55 个公开入口，确认它对 `org.h2.value` 的调用方向与加锁方式。
-3. 最后读 `org.h2.tools`（本章最小包，10,868 行）的实现，关注容量与失败路径。
+1. 先读 `org.h2.jdbc` 的 package-info 与 `JdbcResultSet`，建立第13章的职责边界。
+2. 再读 `JdbcResultSet` 的 199 个公开入口，确认它对 `org.h2.value` 的调用方向与加锁方式。
+3. 最后读 `org.h2.jdbc`（本章最小包，17,319 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第14章《全书总结》。
 
@@ -2953,72 +3396,70 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 包 | 依赖（前 4） |
 | --- | --- |
-| `org.h2.util` | `org.h2.value`, `org.h2.engine`, `org.h2.message`, `org.h2.api` |
-| `org.h2.tools` | `org.h2.util`, `org.h2.engine`, `org.h2.value`, `org.h2.message` |
+| `org.h2.jdbc` | `org.h2.value`, `org.h2.message`, `org.h2.util`, `org.h2.engine` |
 
 ## 13.6 设计权衡
 
-- `org.h2.util` 用 48 个文件换到 14,460 行实现，平均每文件 301 行，其中 `StringUtils` 独占 1,415 行、55 个公开方法。
+- `org.h2.jdbc` 用 27 个文件换到 17,319 行实现，平均每文件 641 行，其中 `JdbcResultSet` 独占 4,291 行、199 个公开方法。
 - 该包对外声明了 8 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
-- `org.h2.tools`（10,868 行）与 `org.h2.util` 的职责差是本章最值得记的一条边界。
+- `org.h2.jdbc`（17,319 行）与 `org.h2.jdbc` 的职责差是本章最值得记的一条边界。
 
 ## 13.7 常见误区
 
-- 把 `org.h2.util` 的 14,460 行当作复杂度上限：`StringUtils` 之外的 47 个文件多为类型族与样板。
-- 只看 `StringUtils` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
-- 把 `org.h2.util` 与 `org.h2.tools` 视为可互换：前者 48 文件、后者 23 文件，扩展点分布完全不同。
+- 把 `org.h2.jdbc` 的 17,319 行当作复杂度上限：`JdbcResultSet` 之外的 26 个文件多为类型族与样板。
+- 只看 `JdbcResultSet` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
+- 把 `org.h2.jdbc` 与 `org.h2.jdbc` 视为可互换：前者 27 文件、后者 27 文件，扩展点分布完全不同。
 
 ## 13.8 深读要点
 
-规模信号：`org.h2.util` 占本章 57% 的实现行数，改动风险最高。
-耦合信号：`org.h2.util` 依赖 8 个 `org.h2` 包，其中 `org.h2.value` 出现最频繁。
-入口信号：`StringUtils` 的公开方法 55 个，读它等于读本章的主干。
+规模信号：`org.h2.jdbc` 占本章 100% 的实现行数，改动风险最高。
+耦合信号：`org.h2.jdbc` 依赖 8 个 `org.h2` 包，其中 `org.h2.value` 出现最频繁。
+入口信号：`JdbcResultSet` 的公开方法 199 个，读它等于读本章的主干。
 
 ## 13.8 术语对照
 
 本章出现的专业术语与书末术语表的对应关系：
 
 - **H2**：详见[术语表](back/glossary.md)对应条目。
+- **JDBC**：详见[术语表](back/glossary.md)对应条目。
 
 ## 13.9 知识点清单
 
-1. `org.h2.util` 的 `StringUtils`：1,415 行、55 个公开方法，职责按方法名归纳
-2. `org.h2.util` 的 `DateTimeUtils`：1,171 行、42 个公开方法，职责按方法名归纳
-3. `org.h2.tools` 的 `SimpleResultSet`：2,480 行、228 个公开方法，职责按方法名归纳
-4. `org.h2.tools` 的 `Csv`：986 行、33 个公开方法，职责按方法名归纳
+1. `org.h2.jdbc` 的 `JdbcResultSet`：4,291 行、199 个公开方法，职责按方法名归纳
+2. `org.h2.jdbc` 的 `JdbcDatabaseMetaData`：2,756 行、177 个公开方法，职责按方法名归纳
 
 ## 13.9 本章小结
 
-- 本章覆盖 2 个包、25,328 行。
+- 本章覆盖 1 个包、17,319 行。
 - 关键入口与源码坐标见 §13.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
 ## 13.10 延伸思考
 
-**1. 🟢★ 指出 `org.h2.util` 中 `StringUtils` 与 `DateTimeUtils` 的分工差异，并给出调用方向。**
+**1. 🟢★ 指出 `org.h2.jdbc` 中 `JdbcResultSet` 与 `JdbcDatabaseMetaData` 的分工差异，并给出调用方向。**
 
-> 提示：第13章 §13.2 的表格给出 `StringUtils` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第13章 §13.2 的表格给出 `JdbcResultSet` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§13.2 核心类型
 
-**2. 🔵★★ 围绕 `org.h2.tools` 的 `SimpleResultSet`，说明它为什么需要独立成类型而不是并入 `Csv`。**
+**2. 🔵★★ 围绕 `org.h2.jdbc` 的 `JdbcResultSet`，说明它为什么需要独立成类型而不是并入 `JdbcDatabaseMetaData`。**
 
-> 提示：第13章 §13.2 的表格给出 `SimpleResultSet` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第13章 §13.2 的表格给出 `JdbcResultSet` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§13.2 核心类型
 
-**3. 🟠★★★ 以 `org.h2.util` 的 `StringUtils` 为入口，画出一次完整调用经过的包。**
+**3. 🟠★★★ 以 `org.h2.jdbc` 的 `JdbcResultSet` 为入口，画出一次完整调用经过的包。**
 
-> 提示：第13章 §13.2 的表格给出 `StringUtils` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第13章 §13.2 的表格给出 `JdbcResultSet` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§13.2 核心类型
 
-**4. 🟢★★★★ 如果只保留 `org.h2.tools` 的一个类型，你保留 `SimpleResultSet` 还是 `Csv`？说明代价。**
+**4. 🟢★★★★ 如果只保留 `org.h2.jdbc` 的一个类型，你保留 `JdbcResultSet` 还是 `JdbcDatabaseMetaData`？说明代价。**
 
-> 提示：第13章 §13.2 的表格给出 `SimpleResultSet` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第13章 §13.2 的表格给出 `JdbcResultSet` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§13.2 核心类型
 
 ## 13.11 本章视角：并发与一致性
 
-- 以「并发与一致性」看 `org.h2.util`：48 个文件、14,460 行，本章只展开与并发与一致性相关的入口。
-- 对照 `org.h2.tools`（10,868 行）：两者的并发与一致性策略不同，差异落在 `StringUtils` 的 55 个公开方法里。
+- 以「并发与一致性」看 `org.h2.jdbc`：27 个文件、17,319 行，本章只展开与并发与一致性相关的入口。
+- 对照 `org.h2.jdbc`（17,319 行）：两者的并发与一致性策略不同，差异落在 `JdbcResultSet` 的 199 个公开方法里。
 - 若并发与一致性假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.value` 进入。
 
 ## 13.11.1 依赖明细
@@ -3027,20 +3468,17 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 来源包 | 目标包 | 次数 |
 | --- | --- | --- |
-| `org.h2.util` | `org.h2.value` | 35 |
-| `org.h2.util` | `org.h2.engine` | 18 |
-| `org.h2.util` | `org.h2.message` | 16 |
-| `org.h2.tools` | `org.h2.util` | 53 |
-| `org.h2.tools` | `org.h2.engine` | 14 |
-| `org.h2.tools` | `org.h2.value` | 14 |
+| `org.h2.jdbc` | `org.h2.value` | 57 |
+| `org.h2.jdbc` | `org.h2.message` | 43 |
+| `org.h2.jdbc` | `org.h2.util` | 19 |
 
 ## 13.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.util` 与 `org.h2.tools` 之间的调用方向？
-- `StringUtils` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.util` 的调用链讲到落盘或返回？
-- `org.h2.util` 与 `org.h2.tools` 若合并，会丢掉哪个扩展点？
-- `org.h2.util` 的注释与实现若不一致，你信哪一边，为什么？
+- 不看正文，能否画出 `org.h2.jdbc` 与 `org.h2.jdbc` 之间的调用方向？
+- `JdbcResultSet` 是否涉及并发？依据是锁、可见性还是不可变？
+- 能否用一个入口，把 `org.h2.jdbc` 的调用链讲到落盘或返回？
+- `org.h2.jdbc` 与 `org.h2.jdbc` 若合并，会丢掉哪个扩展点？
+- `org.h2.jdbc` 的注释与实现若不一致，你信哪一边，为什么？
 
 ## 13.12 延展阅读
 
@@ -3050,24 +3488,24 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## 14.1 模块版图
 
-本章覆盖 1 个包、4,150 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 1 个包、10,868 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
-| `org.h2.api` | 12 | 4,150 | Contains interfaces for user-defined extensions, such as triggers and user-defined aggregate functions. |
+| `org.h2.tools` | 23 | 10,868 | Various tools. |
 
 ## 14.2 核心类型
 
-在 `org.h2.api` 之外，本章还有 0 个包；下表每包取前 4 个类型，按规模降序。
+在 `org.h2.tools` 之外，本章还有 0 个包；下表每包取前 4 个类型，按规模降序。
 
-### 14.2.1 `org.h2.api`
+### 14.2.1 `org.h2.tools`
 
 | 类型 | 行数 | 公开方法 | 职责 |
 | --- | --- | --- | --- |
-| `ErrorCode` | 2,367 | 2 | （无类注释，按方法名归纳） |
-| `Interval` | 636 | 33 | （无类注释，按方法名归纳） |
-| `IntervalQualifier` | 353 | 13 | （无类注释，按方法名归纳） |
-| `H2Type` | 322 | 6 | （无类注释，按方法名归纳） |
+| `SimpleResultSet` | 2,480 | 228 | （无类注释，按方法名归纳） |
+| `Csv` | 986 | 33 | （无类注释，按方法名归纳） |
+| `Recover` | 922 | 18 | （无类注释，按方法名归纳） |
+| `Server` | 823 | 19 | （无类注释，按方法名归纳） |
 
 ## 14.3 关键 API 与源码坐标
 
@@ -3075,12 +3513,12 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 入口 | 源码坐标 |
 | --- | --- |
-| `ErrorCode.getState()` | `org/h2/api/ErrorCode.java:2317` |
-| `ErrorCode.isCommon()` | `org/h2/api/ErrorCode.java:2287` |
-| `Interval.equals()` | `org/h2/api/Interval.java:617` |
-| `Interval.getDays()` | `org/h2/api/Interval.java:543` |
-| `IntervalQualifier.getTypeName()` | `org/h2/api/IntervalQualifier.java:253` |
-| `IntervalQualifier.hasDays()` | `org/h2/api/IntervalQualifier.java:165` |
+| `SimpleResultSet.absolute()` | `org/h2/tools/SimpleResultSet.java:2229` |
+| `SimpleResultSet.addColumn()` | `org/h2/tools/SimpleResultSet.java:100` |
+| `Csv.close()` | `org/h2/tools/Csv.java:639` |
+| `Csv.getBinaryColumns()` | `org/h2/tools/Csv.java:909` |
+| `Recover.checkPowerOff()` | `org/h2/tools/Recover.java:857` |
+| `Recover.checkWritingAllowed()` | `org/h2/tools/Recover.java:865` |
 
 ## 14.3.1 公共类型清单
 
@@ -3088,19 +3526,80 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 类型 | 包 | 行数 | 公开方法 |
 | --- | --- | --- | --- |
-| `ErrorCode` | `org.h2.api` | 2,367 | 2 |
-| `Interval` | `org.h2.api` | 636 | 33 |
-| `IntervalQualifier` | `org.h2.api` | 353 | 13 |
-| `H2Type` | `org.h2.api` | 322 | 6 |
-| `DatabaseEventListener` | `org.h2.api` | 113 | 0 |
+| `SimpleResultSet` | `org.h2.tools` | 2,480 | 228 |
+| `Csv` | `org.h2.tools` | 986 | 33 |
+| `Recover` | `org.h2.tools` | 922 | 18 |
+| `Server` | `org.h2.tools` | 823 | 19 |
+| `DirectRecover` | `org.h2.tools` | 767 | 11 |
+
+## 14.3.2 逐类导读
+
+按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
+
+**`SimpleResultSet`**（`org.h2.tools`，2,480 行，228 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 23%，包级依赖 8 个。
+
+**`Csv`**（`org.h2.tools`，986 行，33 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 9%，包级依赖 8 个。
+
+**`Recover`**（`org.h2.tools`，922 行，18 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 8%，包级依赖 8 个。
+
+**`Server`**（`org.h2.tools`，823 行，19 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 8%，包级依赖 8 个。
+
+**`DirectRecover`**（`org.h2.tools`，767 行，11 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 7%，包级依赖 8 个。
+
+**`Shell`**（`org.h2.tools`，639 行，7 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 6%，包级依赖 8 个。
+
+## 14.3.2 源码坐标明细
+
+本章主责包中 24 个公开入口的行号，按类聚簇，可直接跳转阅读。
+
+| 入口 | 源码坐标 |
+| --- | --- |
+| `SimpleResultSet.absolute()` | `org/h2/tools/SimpleResultSet.java:2229` |
+| `SimpleResultSet.addColumn()` | `org/h2/tools/SimpleResultSet.java:100` |
+| `SimpleResultSet.addRow()` | `org/h2/tools/SimpleResultSet.java:133` |
+| `SimpleResultSet.afterLast()` | `org/h2/tools/SimpleResultSet.java:2069` |
+| `Csv.close()` | `org/h2/tools/Csv.java:639` |
+| `Csv.getBinaryColumns()` | `org/h2/tools/Csv.java:909` |
+| `Csv.getCaseSensitiveColumnNames()` | `org/h2/tools/Csv.java:687` |
+| `Csv.getEscapeCharacter()` | `org/h2/tools/Csv.java:782` |
+| `Recover.checkPowerOff()` | `org/h2/tools/Recover.java:857` |
+| `Recover.checkWritingAllowed()` | `org/h2/tools/Recover.java:865` |
+| `Recover.execute()` | `org/h2/tools/Recover.java:239` |
+| `Recover.getCompareMode()` | `org/h2/tools/Recover.java:918` |
+| `Server.createPgServer()` | `org/h2/tools/Server.java:539` |
+| `Server.createTcpServer()` | `org/h2/tools/Server.java:511` |
+| `Server.createWebServer()` | `org/h2/tools/Server.java:466` |
+| `Server.getPort()` | `org/h2/tools/Server.java:640` |
+| `DirectRecover.close()` | `org/h2/tools/DirectRecover.java:462` |
+| `DirectRecover.execute()` | `org/h2/tools/DirectRecover.java:759` |
+| `DirectRecover.finish()` | `org/h2/tools/DirectRecover.java:178` |
+| `DirectRecover.getAvailableCompressionTypes()` | `org/h2/tools/DirectRecover.java:723` |
 
 ## 14.4 阅读路径
 
-读 `org.h2.api` 的 12 个文件时，先看骨架类，再沿 `org.h2.security.auth` 方向下钻。
+读 `org.h2.tools` 的 23 个文件时，先看骨架类，再沿 `org.h2.util` 方向下钻。
 
-1. 先读 `org.h2.api` 的 package-info 与 `ErrorCode`，建立第14章的职责边界。
-2. 再读 `ErrorCode` 的 2 个公开入口，确认它对 `org.h2.security.auth` 的调用方向与加锁方式。
-3. 最后读 `org.h2.api`（本章最小包，4,150 行）的实现，关注容量与失败路径。
+1. 先读 `org.h2.tools` 的 package-info 与 `SimpleResultSet`，建立第14章的职责边界。
+2. 再读 `SimpleResultSet` 的 228 个公开入口，确认它对 `org.h2.util` 的调用方向与加锁方式。
+3. 最后读 `org.h2.tools`（本章最小包，10,868 行）的实现，关注容量与失败路径。
 
 跨章衔接请对照第13章《二次开发指南》。
 
@@ -3110,71 +3609,70 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 包 | 依赖（前 4） |
 | --- | --- |
-| `org.h2.api` | `org.h2.security.auth`, `org.h2.value`, `org.h2.util.DateTimeUtils`, `org.h2.message` |
+| `org.h2.tools` | `org.h2.util`, `org.h2.engine`, `org.h2.value`, `org.h2.message` |
 
 ## 14.6 设计权衡
 
-- `org.h2.api` 用 12 个文件换到 4,150 行实现，平均每文件 345 行，其中 `ErrorCode` 独占 2,367 行、2 个公开方法。
-- 该包对外声明了 7 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
-- `org.h2.api`（4,150 行）与 `org.h2.api` 的职责差是本章最值得记的一条边界。
+- `org.h2.tools` 用 23 个文件换到 10,868 行实现，平均每文件 472 行，其中 `SimpleResultSet` 独占 2,480 行、228 个公开方法。
+- 该包对外声明了 8 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
+- `org.h2.tools`（10,868 行）与 `org.h2.tools` 的职责差是本章最值得记的一条边界。
 
 ## 14.7 常见误区
 
-- 把 `org.h2.api` 的 4,150 行当作复杂度上限：`ErrorCode` 之外的 11 个文件多为类型族与样板。
-- 只看 `ErrorCode` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
-- 把 `org.h2.api` 与 `org.h2.api` 视为可互换：前者 12 文件、后者 12 文件，扩展点分布完全不同。
+- 把 `org.h2.tools` 的 10,868 行当作复杂度上限：`SimpleResultSet` 之外的 22 个文件多为类型族与样板。
+- 只看 `SimpleResultSet` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
+- 把 `org.h2.tools` 与 `org.h2.tools` 视为可互换：前者 23 文件、后者 23 文件，扩展点分布完全不同。
 
 ## 14.8 深读要点
 
-规模信号：`org.h2.api` 占本章 100% 的实现行数，改动风险最高。
-耦合信号：`org.h2.api` 依赖 7 个 `org.h2` 包，其中 `org.h2.security.auth` 出现最频繁。
-入口信号：`ErrorCode` 的公开方法 2 个，读它等于读本章的主干。
+规模信号：`org.h2.tools` 占本章 100% 的实现行数，改动风险最高。
+耦合信号：`org.h2.tools` 依赖 8 个 `org.h2` 包，其中 `org.h2.util` 出现最频繁。
+入口信号：`SimpleResultSet` 的公开方法 228 个，读它等于读本章的主干。
 
 ## 14.8 术语对照
 
 本章出现的专业术语与书末术语表的对应关系：
 
-- **Aggregate**：详见[术语表](back/glossary.md)对应条目。
 - **H2**：详见[术语表](back/glossary.md)对应条目。
 
 ## 14.9 知识点清单
 
-1. `org.h2.api` 的 `ErrorCode`：2,367 行、2 个公开方法，职责按方法名归纳
-2. `org.h2.api` 的 `Interval`：636 行、33 个公开方法，职责按方法名归纳
+1. `org.h2.tools` 的 `SimpleResultSet`：2,480 行、228 个公开方法，职责按方法名归纳
+2. `org.h2.tools` 的 `Csv`：986 行、33 个公开方法，职责按方法名归纳
 
 ## 14.9 本章小结
 
-- 本章覆盖 1 个包、4,150 行。
+- 本章覆盖 1 个包、10,868 行。
 - 关键入口与源码坐标见 §14.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
 ## 14.10 延伸思考
 
-**1. 🟢★ 指出 `org.h2.api` 中 `ErrorCode` 与 `Interval` 的分工差异，并给出调用方向。**
+**1. 🟢★ 指出 `org.h2.tools` 中 `SimpleResultSet` 与 `Csv` 的分工差异，并给出调用方向。**
 
-> 提示：第14章 §14.2 的表格给出 `ErrorCode` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第14章 §14.2 的表格给出 `SimpleResultSet` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§14.2 核心类型
 
-**2. 🔵★★ 围绕 `org.h2.api` 的 `ErrorCode`，说明它为什么需要独立成类型而不是并入 `Interval`。**
+**2. 🔵★★ 围绕 `org.h2.tools` 的 `SimpleResultSet`，说明它为什么需要独立成类型而不是并入 `Csv`。**
 
-> 提示：第14章 §14.2 的表格给出 `ErrorCode` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第14章 §14.2 的表格给出 `SimpleResultSet` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§14.2 核心类型
 
-**3. 🟠★★★ 以 `org.h2.api` 的 `ErrorCode` 为入口，画出一次完整调用经过的包。**
+**3. 🟠★★★ 以 `org.h2.tools` 的 `SimpleResultSet` 为入口，画出一次完整调用经过的包。**
 
-> 提示：第14章 §14.2 的表格给出 `ErrorCode` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第14章 §14.2 的表格给出 `SimpleResultSet` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§14.2 核心类型
 
-**4. 🟢★★★★ 如果只保留 `org.h2.api` 的一个类型，你保留 `ErrorCode` 还是 `Interval`？说明代价。**
+**4. 🟢★★★★ 如果只保留 `org.h2.tools` 的一个类型，你保留 `SimpleResultSet` 还是 `Csv`？说明代价。**
 
-> 提示：第14章 §14.2 的表格给出 `ErrorCode` 的规模与公开方法数，先按那一行定位再进源码。
+> 提示：第14章 §14.2 的表格给出 `SimpleResultSet` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§14.2 核心类型
 
 ## 14.11 本章视角：扩展与兼容
 
-- 以「扩展与兼容」看 `org.h2.api`：12 个文件、4,150 行，本章只展开与扩展与兼容相关的入口。
-- 对照 `org.h2.api`（4,150 行）：两者的扩展与兼容策略不同，差异落在 `ErrorCode` 的 2 个公开方法里。
-- 若扩展与兼容假设被打破（7 个依赖变化），最先受影响的调用链从 `org.h2.security.auth` 进入。
+- 以「扩展与兼容」看 `org.h2.tools`：23 个文件、10,868 行，本章只展开与扩展与兼容相关的入口。
+- 对照 `org.h2.tools`（10,868 行）：两者的扩展与兼容策略不同，差异落在 `SimpleResultSet` 的 228 个公开方法里。
+- 若扩展与兼容假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.util` 进入。
 
 ## 14.11.1 依赖明细
 
@@ -3182,17 +3680,25 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 | 来源包 | 目标包 | 次数 |
 | --- | --- | --- |
-| `org.h2.api` | `org.h2.security.auth` | 5 |
-| `org.h2.api` | `org.h2.value` | 3 |
-| `org.h2.api` | `org.h2.util.DateTimeUtils` | 2 |
+| `org.h2.tools` | `org.h2.util` | 53 |
+| `org.h2.tools` | `org.h2.engine` | 14 |
+| `org.h2.tools` | `org.h2.value` | 14 |
 
 ## 14.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.api` 与 `org.h2.api` 之间的调用方向？
-- `ErrorCode` 是否涉及并发？依据是锁、可见性还是不可变？
-- 能否用一个入口，把 `org.h2.api` 的调用链讲到落盘或返回？
-- `org.h2.api` 与 `org.h2.api` 若合并，会丢掉哪个扩展点？
-- `org.h2.api` 的注释与实现若不一致，你信哪一边，为什么？
+- 不看正文，能否画出 `org.h2.tools` 与 `org.h2.tools` 之间的调用方向？
+- `SimpleResultSet` 是否涉及并发？依据是锁、可见性还是不可变？
+- 能否用一个入口，把 `org.h2.tools` 的调用链讲到落盘或返回？
+- `org.h2.tools` 与 `org.h2.tools` 若合并，会丢掉哪个扩展点？
+- `org.h2.tools` 的注释与实现若不一致，你信哪一边，为什么？
+
+## 14.12 跨章索引
+
+本章引用但不展开的包，按下面这张表跳到主责章节阅读。
+
+| 包 | 主责章节 |
+| --- | --- |
+| `org.h2.tools` | 第13章《二次开发指南》 |
 
 ## 14.12 延展阅读
 

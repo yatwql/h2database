@@ -71,7 +71,7 @@
     ]
   },
   "quality": {
-    "max_duplicate_ratio": 17,
+    "max_duplicate_ratio": 12,
     "max_avg_sentence": 45,
     "max_long_lines": 40,
     "min_coords_per_chapter": 15,
@@ -80,7 +80,7 @@
     "max_table_rows": 20,
     "min_terms_per_chapter": 5,
     "min_exercises_per_chapter": 4,
-    "_duplicate_ratio_note": "Ratchet at the measured value: chapters intentionally share packages, so fact sentences recur; the 12% target requires disjoint chapter scopes (see docs/plan)."
+    "_duplicate_ratio_note": "Single-owner chapter scopes brought prose duplication to ~4%; the gate is kept at 12% so a regression is caught without blocking legitimate overlap."
   },
   "generation": {
     "max_packages_per_table": 12,

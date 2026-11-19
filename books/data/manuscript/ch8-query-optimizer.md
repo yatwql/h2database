@@ -1,22 +1,21 @@
 # 第10章 查询优化器
 
-> **本章导读**：本章由源码清单汇总而成，覆盖 3 个包、20,347 行实现；读完应能说清这些包的职责边界与关键协作。
+> **本章导读**：本章由源码清单汇总而成，覆盖 2 个包、16,254 行实现；读完应能说清这些包的职责边界与关键协作。
 
 > **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。
 
 ## 10.1 模块版图
 
-本章覆盖 3 个包、20,347 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
+本章覆盖 2 个包、16,254 行实现。下表按规模排序，职责取自 `package-info.java` 首句。
 
 | 包 | 文件数 | 行数 | 职责 |
 | --- | --- | --- | --- |
 | `org.h2.table` | 31 | 13,388 | Classes related to a table and table meta data. |
-| `org.h2.index` | 23 | 4,093 | Various table index implementations, as well as cursors to navigate in an index. |
 | `org.h2.expression.analysis` | 10 | 2,866 | Base classes for data analysis operations and implementations of window functions. |
 
 ## 10.2 核心类型
 
-在 `org.h2.table` 之外，本章还有 2 个包；下表每包取前 4 个类型，按规模降序。
+在 `org.h2.table` 之外，本章还有 1 个包；下表每包取前 4 个类型，按规模降序。
 
 ### 10.2.1 `org.h2.table`
 
@@ -27,16 +26,7 @@
 | `Table` | 1,446 | 98 | （无类注释，按方法名归纳） |
 | `TableFilter` | 1,310 | 66 | （无类注释，按方法名归纳） |
 
-### 10.2.2 `org.h2.index`
-
-| 类型 | 行数 | 公开方法 | 职责 |
-| --- | --- | --- | --- |
-| `Index` | 834 | 37 | （无类注释，按方法名归纳） |
-| `IndexCondition` | 675 | 24 | （无类注释，按方法名归纳） |
-| `IndexCursor` | 494 | 13 | （无类注释，按方法名归纳） |
-| `LinkedIndex` | 298 | 13 | （无类注释，按方法名归纳） |
-
-### 10.2.3 `org.h2.expression.analysis`
+### 10.2.2 `org.h2.expression.analysis`
 
 | 类型 | 行数 | 公开方法 | 职责 |
 | --- | --- | --- | --- |
@@ -47,7 +37,7 @@
 
 ## 10.3 关键 API 与源码坐标
 
-把 3 个包的关键入口与源码位置对应起来，共 9 条坐标，行号由脚本核验。
+把 2 个包的关键入口与源码位置对应起来，共 6 条坐标，行号由脚本核验。
 
 | 入口 | 源码坐标 |
 | --- | --- |
@@ -57,12 +47,6 @@
 | `InformationSchemaTableLegacy.getMaxDataModificationId()` | `org/h2/table/InformationSchemaTableLegacy.java:2310` |
 | `Table.addConstraint()` | `org/h2/table/Table.java:1109` |
 | `Table.addDependencies()` | `org/h2/table/Table.java:417` |
-| `Index.add()` | `org/h2/index/Index.java:210` |
-| `Index.areRowsEquivalent()` | `org/h2/index/Index.java:379` |
-| `IndexCondition.cloneWithIndexColumns()` | `org/h2/index/IndexCondition.java:559` |
-| `IndexCondition.get()` | `org/h2/index/IndexCondition.java:122` |
-| `IndexCursor.canUseIndexForIn()` | `org/h2/index/IndexCursor.java:318` |
-| `IndexCursor.find()` | `org/h2/index/IndexCursor.java:289` |
 | `WindowFrame.getEndIndex()` | `org/h2/expression/analysis/WindowFrame.java:239` |
 | `WindowFrame.getExclusion()` | `org/h2/expression/analysis/WindowFrame.java:439` |
 | `DataAnalysisOperation.getOverCondition()` | `org/h2/expression/analysis/DataAnalysisOperation.java:97` |
@@ -72,7 +56,7 @@
 
 ## 10.3.1 公共类型清单
 
-本章抽样类型按包分组，共 15 行；规模与公开方法数是阅读优先级的第一信号。
+本章抽样类型按包分组，共 10 行；规模与公开方法数是阅读优先级的第一信号。
 
 | 类型 | 包 | 行数 | 公开方法 |
 | --- | --- | --- | --- |
@@ -81,16 +65,102 @@
 | `Table` | `org.h2.table` | 1,446 | 98 |
 | `TableFilter` | `org.h2.table` | 1,310 | 66 |
 | `Column` | `org.h2.table` | 867 | 58 |
-| `Index` | `org.h2.index` | 834 | 37 |
-| `IndexCondition` | `org.h2.index` | 675 | 24 |
-| `IndexCursor` | `org.h2.index` | 494 | 13 |
-| `LinkedIndex` | `org.h2.index` | 298 | 13 |
-| `RegularQueryExpressionIndex` | `org.h2.index` | 223 | 4 |
 | `WindowFrame` | `org.h2.expression.analysis` | 878 | 19 |
 | `DataAnalysisOperation` | `org.h2.expression.analysis` | 546 | 9 |
 | `WindowFunction` | `org.h2.expression.analysis` | 545 | 12 |
 | `Window` | `org.h2.expression.analysis` | 339 | 11 |
 | `WindowFrameBound` | `org.h2.expression.analysis` | 165 | 6 |
+
+## 10.3.2 逐类导读
+
+按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，便于按需下钻。
+
+**`InformationSchemaTable`**（`org.h2.table`，3,299 行，6 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 25%，包级依赖 8 个。
+
+**`InformationSchemaTableLegacy`**（`org.h2.table`，2,324 行，2 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 17%，包级依赖 8 个。
+
+**`Table`**（`org.h2.table`，1,446 行，98 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 11%，包级依赖 8 个。
+
+**`TableFilter`**（`org.h2.table`，1,310 行，66 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 10%，包级依赖 8 个。
+
+**`Column`**（`org.h2.table`，867 行，58 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 6%，包级依赖 8 个。
+
+**`TableLink`**（`org.h2.table`，718 行，35 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 5%，包级依赖 8 个。
+
+**`WindowFrame`**（`org.h2.expression.analysis`，878 行，19 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 31%，包级依赖 8 个。
+
+**`DataAnalysisOperation`**（`org.h2.expression.analysis`，546 行，9 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 19%，包级依赖 8 个。
+
+**`WindowFunction`**（`org.h2.expression.analysis`，545 行，12 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 19%，包级依赖 8 个。
+
+**`Window`**（`org.h2.expression.analysis`，339 行，11 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 12%，包级依赖 8 个。
+
+**`WindowFrameBound`**（`org.h2.expression.analysis`，165 行，6 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 6%，包级依赖 8 个。
+
+**`WindowFunctionType`**（`org.h2.expression.analysis`，142 行，3 个公开方法）
+
+- 职责：按方法名与调用点归纳
+- 规模：占该包 5%，包级依赖 8 个。
+
+## 10.3.2 源码坐标明细
+
+本章主责包中 45 个公开入口的行号，按类聚簇，可直接跳转阅读。
+
+| 入口 | 源码坐标 |
+| --- | --- |
+| `InformationSchemaTable.canGetRowCount()` | `org/h2/table/InformationSchemaTable.java:3057` |
+| `InformationSchemaTable.generateRows()` | `org/h2/table/InformationSchemaTable.java:881` |
+| `InformationSchemaTable.getMaxDataModificationId()` | `org/h2/table/InformationSchemaTable.java:2974` |
+| `InformationSchemaTable.getRowCount()` | `org/h2/table/InformationSchemaTable.java:2993` |
+| `InformationSchemaTableLegacy.generateRows()` | `org/h2/table/InformationSchemaTableLegacy.java:731` |
+| `InformationSchemaTableLegacy.getMaxDataModificationId()` | `org/h2/table/InformationSchemaTableLegacy.java:2310` |
+| `Table.addConstraint()` | `org/h2/table/Table.java:1109` |
+| `Table.addDependencies()` | `org/h2/table/Table.java:417` |
+| `Table.addDependentMaterializedView()` | `org/h2/table/Table.java:1091` |
+| `Table.addDependentView()` | `org/h2/table/Table.java:1082` |
+| `TableFilter.accept()` | `org/h2/table/TableFilter.java:1304` |
+| `TableFilter.addCommonJoinColumnToExclude()` | `org/h2/table/TableFilter.java:1195` |
+| `TableFilter.addCommonJoinColumns()` | `org/h2/table/TableFilter.java:1179` |
+| `TableFilter.addFilter()` | `org/h2/table/TableFilter.java:676` |
+| `Column.convert()` | `org/h2/table/Column.java:182` |
+| `Column.copy()` | `org/h2/table/Column.java:846` |
+| `Column.equals()` | `org/h2/table/Column.java:144` |
+| `Column.getClone()` | `org/h2/table/Column.java:169` |
+| `TableLink.addIndex()` | `org/h2/table/TableLink.java:398` |
+| `TableLink.addRow()` | `org/h2/table/TableLink.java:426` |
 
 ## 10.4 阅读路径
 
@@ -109,24 +179,23 @@
 | 包 | 依赖（前 4） |
 | --- | --- |
 | `org.h2.table` | `org.h2.value`, `org.h2.engine`, `org.h2.result`, `org.h2.index` |
-| `org.h2.index` | `org.h2.result`, `org.h2.table`, `org.h2.value`, `org.h2.engine` |
 | `org.h2.expression.analysis` | `org.h2.value`, `org.h2.expression`, `org.h2.table`, `org.h2.command.query` |
 
 ## 10.6 设计权衡
 
 - `org.h2.table` 用 31 个文件换到 13,388 行实现，平均每文件 431 行，其中 `InformationSchemaTable` 独占 3,299 行、6 个公开方法。
 - 该包对外声明了 8 个 `org.h2` 依赖；依赖越集中，越说明它是"被复用"而不是"被调用"。
-- `org.h2.index`（4,093 行）与 `org.h2.table` 的职责差是本章最值得记的一条边界。
+- `org.h2.expression.analysis`（2,866 行）与 `org.h2.table` 的职责差是本章最值得记的一条边界。
 
 ## 10.7 常见误区
 
 - 把 `org.h2.table` 的 13,388 行当作复杂度上限：`InformationSchemaTable` 之外的 30 个文件多为类型族与样板。
 - 只看 `InformationSchemaTable` 的方法签名而不看调用点：约束往往写在调用方的加锁顺序里。
-- 把 `org.h2.table` 与 `org.h2.index` 视为可互换：前者 31 文件、后者 23 文件，扩展点分布完全不同。
+- 把 `org.h2.table` 与 `org.h2.expression.analysis` 视为可互换：前者 31 文件、后者 10 文件，扩展点分布完全不同。
 
 ## 10.8 深读要点
 
-规模信号：`org.h2.table` 占本章 66% 的实现行数，改动风险最高。
+规模信号：`org.h2.table` 占本章 82% 的实现行数，改动风险最高。
 耦合信号：`org.h2.table` 依赖 8 个 `org.h2` 包，其中 `org.h2.value` 出现最频繁。
 入口信号：`InformationSchemaTable` 的公开方法 6 个，读它等于读本章的主干。
 
@@ -136,21 +205,23 @@
 
 - **Expression**：详见[术语表](back/glossary.md)对应条目。
 - **H2**：详见[术语表](back/glossary.md)对应条目。
-- **Index**：详见[术语表](back/glossary.md)对应条目。
 - **Table**：详见[术语表](back/glossary.md)对应条目。
+- **ACID**：详见[术语表](back/glossary.md)对应条目。
+- **CAS (Compare-And-Swap)**：详见[术语表](back/glossary.md)对应条目。
+- **Deadlock**：详见[术语表](back/glossary.md)对应条目。
+- **Lock**：详见[术语表](back/glossary.md)对应条目。
+- **Meta Lock**：详见[术语表](back/glossary.md)对应条目。
 
 ## 10.9 知识点清单
 
 1. `org.h2.table` 的 `InformationSchemaTable`：3,299 行、6 个公开方法，职责按方法名归纳
 2. `org.h2.table` 的 `InformationSchemaTableLegacy`：2,324 行、2 个公开方法，职责按方法名归纳
-3. `org.h2.index` 的 `Index`：834 行、37 个公开方法，职责按方法名归纳
-4. `org.h2.index` 的 `IndexCondition`：675 行、24 个公开方法，职责按方法名归纳
-5. `org.h2.expression.analysis` 的 `WindowFrame`：878 行、19 个公开方法，职责按方法名归纳
-6. `org.h2.expression.analysis` 的 `DataAnalysisOperation`：546 行、9 个公开方法，职责按方法名归纳
+3. `org.h2.expression.analysis` 的 `WindowFrame`：878 行、19 个公开方法，职责按方法名归纳
+4. `org.h2.expression.analysis` 的 `DataAnalysisOperation`：546 行、9 个公开方法，职责按方法名归纳
 
 ## 10.9 本章小结
 
-- 本章覆盖 3 个包、20,347 行。
+- 本章覆盖 2 个包、16,254 行。
 - 关键入口与源码坐标见 §10.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
@@ -161,25 +232,25 @@
 > 提示：第10章 §10.2 的表格给出 `InformationSchemaTable` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§10.2 核心类型
 
-**2. 🔵★★ 围绕 `org.h2.index` 的 `Index`，说明它为什么需要独立成类型而不是并入 `IndexCondition`。**
-
-> 提示：第10章 §10.2 的表格给出 `Index` 的规模与公开方法数，先按那一行定位再进源码。
-> 回顾：§10.2 核心类型
-
-**3. 🟠★★★ 以 `org.h2.expression.analysis` 的 `WindowFrame` 为入口，画出一次完整调用经过的包。**
+**2. 🔵★★ 围绕 `org.h2.expression.analysis` 的 `WindowFrame`，说明它为什么需要独立成类型而不是并入 `DataAnalysisOperation`。**
 
 > 提示：第10章 §10.2 的表格给出 `WindowFrame` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§10.2 核心类型
 
-**4. 🟢★★★★ 如果只保留 `org.h2.table` 的一个类型，你保留 `InformationSchemaTable` 还是 `InformationSchemaTableLegacy`？说明代价。**
+**3. 🟠★★★ 以 `org.h2.table` 的 `InformationSchemaTable` 为入口，画出一次完整调用经过的包。**
 
 > 提示：第10章 §10.2 的表格给出 `InformationSchemaTable` 的规模与公开方法数，先按那一行定位再进源码。
+> 回顾：§10.2 核心类型
+
+**4. 🟢★★★★ 如果只保留 `org.h2.expression.analysis` 的一个类型，你保留 `WindowFrame` 还是 `DataAnalysisOperation`？说明代价。**
+
+> 提示：第10章 §10.2 的表格给出 `WindowFrame` 的规模与公开方法数，先按那一行定位再进源码。
 > 回顾：§10.2 核心类型
 
 ## 10.11 本章视角：扩展与兼容
 
 - 以「扩展与兼容」看 `org.h2.table`：31 个文件、13,388 行，本章只展开与扩展与兼容相关的入口。
-- 对照 `org.h2.index`（4,093 行）：两者的扩展与兼容策略不同，差异落在 `InformationSchemaTable` 的 6 个公开方法里。
+- 对照 `org.h2.expression.analysis`（2,866 行）：两者的扩展与兼容策略不同，差异落在 `InformationSchemaTable` 的 6 个公开方法里。
 - 若扩展与兼容假设被打破（8 个依赖变化），最先受影响的调用链从 `org.h2.value` 进入。
 
 ## 10.11.1 依赖明细
@@ -191,19 +262,16 @@
 | `org.h2.table` | `org.h2.value` | 59 |
 | `org.h2.table` | `org.h2.engine` | 57 |
 | `org.h2.table` | `org.h2.result` | 42 |
-| `org.h2.index` | `org.h2.result` | 51 |
-| `org.h2.index` | `org.h2.table` | 41 |
-| `org.h2.index` | `org.h2.value` | 27 |
 | `org.h2.expression.analysis` | `org.h2.value` | 12 |
 | `org.h2.expression.analysis` | `org.h2.expression` | 9 |
 | `org.h2.expression.analysis` | `org.h2.table` | 8 |
 
 ## 10.11.2 阅读检查清单
 
-- 不看正文，能否画出 `org.h2.table` 与 `org.h2.index` 之间的调用方向？
+- 不看正文，能否画出 `org.h2.table` 与 `org.h2.expression.analysis` 之间的调用方向？
 - `InformationSchemaTable` 是否涉及并发？依据是锁、可见性还是不可变？
 - 能否用一个入口，把 `org.h2.table` 的调用链讲到落盘或返回？
-- `org.h2.table` 与 `org.h2.index` 若合并，会丢掉哪个扩展点？
+- `org.h2.table` 与 `org.h2.expression.analysis` 若合并，会丢掉哪个扩展点？
 - `org.h2.table` 的注释与实现若不一致，你信哪一边，为什么？
 
 ## 10.12 延展阅读

@@ -167,6 +167,41 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
               '规模与公开方法数是阅读优先级的第一信号。'), '']
         L += _table(['类型', '包', '行数', '公开方法'], type_rows) + ['']
 
+    take = 8 if len(pkgs_sorted) <= 2 else 4
+    guide = []
+    for pkg, info in pkgs_sorted:
+        for cls in (info.get('key_classes') or [])[:take]:
+            guide.append((pkg, cls))
+    if guide:
+        L += [f'## {cn}.3.2 逐类导读', '',
+              ('按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，'
+              '便于按需下钻。'), '']
+        for pkg, cls in guide:
+            deps = info_dep_count(pkgs_sorted[[p for p, _ in pkgs_sorted].index(pkg)][1])
+            L += [(f'**`{cls["name"]}`**（`{pkg}`，{cls["lines"]:,} 行，'
+                  f'{cls["public_methods"]} 个公开方法）'),
+                  '',
+                  (f'- 职责：{cls["summary"] or "按方法名与调用点归纳"}'),
+                  (f'- 规模：占该包 {round(100 * cls["lines"] / max(1, pkgs_sorted[[p for p, _ in pkgs_sorted].index(pkg)][1]["lines"]))}%，'
+                   f'包级依赖 {deps} 个。'),
+                  '',
+                  ]
+    coord_rows = []
+    for pkg, info in pkgs_sorted:
+        for cls in (info.get('key_classes') or [])[:6]:
+            rel = f"{pkg.replace('.', '/')}/{cls['name']}.java"
+            if not os.path.isfile(os.path.join(SOURCE_ROOT, rel)):
+                continue
+            for api in _api_sample(pkg, cls['name'])[:6]:
+                lineno = first_public_method_line(rel, api)
+                if lineno:
+                    coord_rows.append([f'`{cls["name"]}.{api}()`', f'`{rel}:{lineno}`'])
+    if coord_rows:
+        L += [f'## {cn}.3.2 源码坐标明细', '',
+              (f'本章主责包中 {len(coord_rows)} 个公开入口的行号，'
+              '按类聚簇，可直接跳转阅读。'), '']
+        L += _table(['入口', '源码坐标'], coord_rows) + ['']
+
     L += [f'## {cn}.4 阅读路径', '',
           tpl('path_intro', '从 `{top}` 先读骨架类，再沿依赖下钻。', **facts), '',
           (f'1. 先读 `{pkgs_sorted[0][0]}` 的 package-info 与 '
@@ -225,6 +260,10 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
     L += ['']
 
     hit_terms = _glossary_hits(packages)
+    cited_terms = glossary_terms_for_chapter(cn)
+    for term in cited_terms:
+        if term not in hit_terms:
+            hit_terms.append(term)
     if hit_terms:
         L += [f'## {cn}.{cn_tradeoff + 2} 术语对照', '',
               '本章出现的专业术语与书末术语表的对应关系：', '']
@@ -267,6 +306,7 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
           f'- 能否用一个入口，把 `{top_pkg}` 的调用链讲到落盘或返回？',
           f'- `{top_pkg}` 与 `{second_pkg}` 若合并，会丢掉哪个扩展点？',
           f'- `{top_pkg}` 的注释与实现若不一致，你信哪一边，为什么？', '']
+    L += cross_index_block(cn, list(packages), cn_summary + 3)
     L += [f'## {cn}.{cn_summary + 3} 延展阅读', '',
           (f'- 详见第{cross_num}章《{cross_name}》。'), '']
     return L
@@ -312,6 +352,30 @@ def knowledge_block(cn: int, pkgs_sorted: list[tuple[str, dict]]) -> list[str]:
     return out
 
 
+def cross_index_block(cn: int, packages: list[str], nxt: int) -> list[str]:
+    """Navigation table: each covered package -> the chapter that owns it."""
+    owners = _config.chapter_packages()
+    chapter_titles = _config.chapter_titles()
+    numbering = _config.chapter_numbering()
+    owner_of: dict[str, tuple[int, str]] = {}
+    for chapter, pkgs in owners.items():
+        nums = numbering.get(chapter) or [0]
+        names = chapter_titles.get(chapter) or [chapter]
+        for package in pkgs:
+            owner_of[package] = (nums[0], names[0])
+    rows = []
+    for package in packages:
+        owner = owner_of.get(package)
+        if owner and owner[0] != cn:
+            rows.append([f'`{package}`', f'第{owner[0]}章《{owner[1]}》'])
+    if not rows:
+        return []
+    out = [f'## {cn}.{nxt} 跨章索引', '',
+           '本章引用但不展开的包，按下面这张表跳到主责章节阅读。', '']
+    out += _table(['包', '主责章节'], rows) + ['']
+    return out
+
+
 def render_chapter(ch: dict) -> str:
     name = ch['file']
     spec = CHAPTER_SPEC.get(name)
@@ -354,8 +418,12 @@ def render_appendix(ch: dict) -> str:
         return ''
     num, heading = spec
     pkgs = sorted(ch['packages'].items(), key=lambda kv: -kv[1]['lines'])
-    L = [f'## {num}.1 {heading}', '',
-         f'本节由源码清单生成，覆盖 {len(pkgs)} 个包，行号对应当前源码树。', '']
+    L = [f'## {num}.1 {heading}', '']
+    if pkgs:
+        L += [f'本节由源码清单生成，覆盖 {len(pkgs)} 个包，行号对应当前源码树。', '']
+    else:
+        L += [('本附录不拥有源码包，内容以跨章引用为主；'
+              '各包的实现细节见对应主责章节。'), '']
     rows = []
     for pkg, info in pkgs:
         for cls in info['key_classes'][:4]:
@@ -394,6 +462,18 @@ def _cross_title(spec: list, num: int) -> str:
 def info_dep_count(info: dict) -> int:
     """Number of distinct project packages this package imports."""
     return len(info.get('depends_on') or {})
+
+
+def glossary_terms_for_chapter(cn: int) -> list[str]:
+    """Glossary terms whose entry cites this chapter number."""
+    text = _fsutil.read_text(_config.glossary_path())
+    entries = re.split(r'^- \*\*', text, flags=re.MULTILINE)[1:]
+    hits = []
+    for entry in entries:
+        term = entry.split('**', 1)[0].strip()
+        if re.search(rf'第{cn}章', entry):
+            hits.append(term)
+    return hits
 
 
 def _glossary_hits(packages: dict) -> list[str]:

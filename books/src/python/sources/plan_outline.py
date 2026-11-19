@@ -25,6 +25,16 @@ INVENTORY = os.path.join(_config.BOOK_ROOT, 'data', 'state', 'source-inventory.j
 OUTLINE = os.path.join(_config.BOOK_ROOT, 'data', 'state', 'outline.json')
 
 
+def ownership_conflicts(mapping: dict[str, list[str]]) -> dict[str, list[str]]:
+    """Packages claimed by more than one chapter (single-owner rule)."""
+    owners: dict[str, list[str]] = {}
+    for chapter, packages in mapping.items():
+        for package in packages:
+            owners.setdefault(package, []).append(chapter)
+    return {package: chapters for package, chapters in owners.items()
+            if len(chapters) > 1}
+
+
 def build_outline() -> dict:
     try:
         inventory = json.loads(_fsutil.read_text(INVENTORY))
@@ -59,7 +69,9 @@ def build_outline() -> dict:
             'missing_packages': missing,
             'source_lines': sum(p['lines'] for p in resolved.values()),
         })
+    conflicts = ownership_conflicts(mapping)
     return {
+        'ownership_conflicts': conflicts,
         'source_root': inventory['root'],
         'source_totals': inventory['totals'],
         'chapters': chapters,
@@ -84,6 +96,10 @@ def main(argv: list[str] | None = None) -> int:
     _fsutil.ensure_dir(OUTLINE)
     _fsutil.write_text(OUTLINE, json.dumps(outline, ensure_ascii=False, indent=2) + '\n')
     print(f'outline -> {os.path.relpath(OUTLINE, _config.BOOK_ROOT)}')
+    if outline['ownership_conflicts']:
+        print('warning: packages claimed by several chapters:')
+        for package, chapters in sorted(outline['ownership_conflicts'].items()):
+            print(f'  {package}: {", ".join(chapters)}')
     for ch in outline['chapters']:
         mark = ' [missing: ' + ', '.join(ch['missing_packages']) + ']' if ch['missing_packages'] else ''
         print(f"  {ch['file']:<34} {len(ch['packages']):>2} pkgs  "
