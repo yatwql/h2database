@@ -239,6 +239,25 @@ try:
 except FileNotFoundError:
     check(False, 'HTML file not found')
 
+# 6b. Required sections per chapter
+section('p1', 'Required Sections')
+required = list(_config.REQUIRED_SECTIONS)
+if required:
+    missing_sections: list[str] = []
+    chapter_only = [c for c in CHAPTERS if os.path.basename(c).startswith('ch')]
+    for chapter in chapter_only:
+        text = _fsutil.read_text_raw(chapter)
+        for name in required:
+            # the section may be an H2/H3 heading or a bold blockquote marker
+            pattern = rf'^(?:#{{2,3}}\s+\S+\s+{re.escape(name)}|>\s*\*\*{re.escape(name)}\*\*)'
+            if not re.search(pattern, text, re.MULTILINE):
+                missing_sections.append(f'{os.path.basename(chapter)}: {name}')
+    check(not missing_sections,
+          f'章节必备段落齐全（{len(required)} 项/章）'
+          if not missing_sections else f'missing {missing_sections[:4]}')
+else:
+    check(True, 'no required sections configured')
+
 # 7. Merged doc consistency
 section('p0', 'Merged Doc')
 try:
@@ -369,7 +388,10 @@ if os.path.exists(index_path):
                 capture_output=True, text=True, encoding='utf-8',
             check=False
             )
-            check(res.returncode == 0, 'Index hierarchy floor (main>=150, sub>=50, see-also>=30)')
+            floor = (f"main>={_config.THRESHOLDS.get('index_main_min', 150)}, "
+                     f"sub>={_config.THRESHOLDS.get('index_sub_min', 50)}, "
+                     f"see-also>={_config.THRESHOLDS.get('index_see_also_min', 30)}")
+            check(res.returncode == 0, f'Index hierarchy floor ({floor})')
         except Exception as exc:  # noqa: BLE001 - each sub-check reports failure instead of aborting the run
             check(False, f'Index hierarchy check failed to run: {exc}')
 
@@ -449,8 +471,10 @@ if os.path.exists(exercises_tool):
         total = payload.get('exercises_total', 0)
         ok = payload.get('chapters_pass', 0)
         all_ch = payload.get('chapters_total', 0)
-        check(ok == all_ch and total >= 50,
-              f'延伸思考: {ok}/{all_ch} chapters pass; total exercises {total} (floor 50)')
+        exercises_floor = int(_config.THRESHOLDS.get('exercises_min_total', 50))
+        check(ok == all_ch and total >= exercises_floor,
+              f'延伸思考: {ok}/{all_ch} chapters pass; total exercises {total} '
+              f'(floor {exercises_floor})')
     except Exception as exc:  # noqa: BLE001 - each sub-check reports failure instead of aborting the run
         check(False, f'Exercise audit failed to run: {exc}')
 else:
@@ -494,7 +518,9 @@ if os.path.exists(glossary_path):
         entry_blocks.append((current_term, ''.join(current_body)))
 
     entry_count = len(entry_blocks)
-    check(entry_count >= 60, f'Glossary: {entry_count} entries (target: >= 60)')
+    glossary_min = int(_config.THRESHOLDS.get('glossary_min_entries', 60))
+    check(entry_count >= glossary_min,
+          f'Glossary: {entry_count} entries (target: >= {glossary_min})')
 
     # Validate every entry block has at least one chapter reference somewhere
     # within its body (handles both legacy single-line and v6.0 multi-line).

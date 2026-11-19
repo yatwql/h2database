@@ -116,9 +116,12 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
              'take': int(GEN.get('max_classes_per_package', 4)),
              'others': max(0, len(packages) - 1),
              'files': top_info.get('files', 0), 'dep': dep_head}
+    facts_intro = {'num': cn, 'pkgs': len(packages), 'lines': f'{total_lines:,}',
+                   'sig': '、'.join(list(packages)[:3]) or '—',
+                   'top': next(iter(packages), '—')}
     L += [f'## {cn}.1 模块版图', '',
-          (f'本章覆盖 {len(packages)} 个包、{total_lines:,} 行实现。'
-          '下表按规模排序，职责取自 `package-info.java` 首句。'), '']
+          tpl('map_intro', '本章覆盖 {pkgs} 个包、{lines} 行实现。',
+              **facts_intro), '']
     L += _table(['包', '文件数', '行数', '职责'],
                 [[f'`{p}`', f"{i['files']}", f"{i['lines']:,}",
                   i['summary'] or '（无包注释，按主类型归纳）']
@@ -317,7 +320,9 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
               '按 `import` 出现次数排序，数值越大耦合越深，重构窗口越窄。', '']
         L += _table(['来源包', '目标包', '次数'], dep_detail) + ['']
 
+    checklist_items = int(GEN.get('checklist_items', 5))
     L += [f'## {cn}.{cn_summary + 2}.2 阅读检查清单', '',
+          (f'本章给出 {checklist_items} 条自查项，逐条确认后再进入下一章。'), '',
           (f'读完本章，先自问三个问题。能否不看正文画出 `{top_pkg}` 与 '
            f'`{second_pkg}` 的调用方向？`{big["name"]}` 是否涉及并发，'
            '依据是锁、可见性还是不可变？'),

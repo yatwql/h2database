@@ -2,7 +2,17 @@
   "_note": "Book style: display copy, section skeleton, caption vocabulary, writing thresholds, generation templates.",
   "project": {},
   "sections": {
-    "per_chapter": []
+    "per_chapter": [
+      "本章导读",
+      "本章小结",
+      "延伸思考",
+      "延展阅读"
+    ],
+    "optional": [
+      "术语参考",
+      "知识点清单",
+      "阅读检查清单"
+    ]
   },
   "captions": {
     "leading_verbs": [
@@ -126,6 +136,38 @@
     "dup_bad": 20,
     "table_good": 0,
     "table_bad": 20,
-    "min_composite": 80
+    "min_composite": 80,
+    "forbid_phrases": [
+      "本文",
+      "我们",
+      "上面说到",
+      "众所周知"
+    ],
+    "preferred_terms": {
+      "页 page": "page",
+      "快照 snapshot": "snapshot"
+    }
+  },
+  "_schema": {
+    "version": 1,
+    "note": "Validated by audit/style_schema.py; unknown keys fail the gate."
+  },
+  "limits": {
+    "sources": {
+      "limit": 900,
+      "warn": 700
+    },
+    "tests": {
+      "limit": 1200,
+      "warn": 900
+    },
+    "docs": {
+      "limit": 1200,
+      "warn": 900
+    },
+    "manuscript": {
+      "limit": 2000,
+      "warn": 1500
+    }
   }
 }

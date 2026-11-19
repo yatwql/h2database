@@ -82,6 +82,22 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 
 阈值只在这里改；`min_composite`、`max_duplicate_ratio` 等是棘轮，收紧前先清账。
 
+### style.json 键一览
+
+| 段 | 键 | 作用 |
+|----|----|------|
+| `project` | `display_title_*`、`author`、`running_head` | 渲染文案（HTML/PDF/EPUB） |
+| `sections` | `per_chapter`、`optional` | 必备段落（结构门禁按此检查）与允许的可选段落 |
+| `captions` | `leading_verbs`、`vague_trailing`、`presets.{strict,normal,loose}` | 图注动宾词表与阈值预设（min_chars < max_chars、fail_at ≥ 0） |
+| `diagrams` | `markers` | ASCII 图的框线/箭头字符集 |
+| `quality` | 章节行数、表格行数、重复度、坐标密度、术语与练习下限 | 图书质量门禁阈值 |
+| `prose` | 句长/段落/列表/重复度的好与坏锚点、`min_composite`、`forbid_phrases` | 文风评分与禁用语 |
+| `generation` | 表格容量、练习数、清单条数、四段引言与深读要点模板 | 生成器的可调参数 |
+| `limits` | `sources/tests/docs/manuscript` 的 `limit`/`warn` | 文件长度预算 |
+
+改完运行 `python books/src/python/make.py check`：`style_schema.py` 会先校验结构
+（未知键、缺字段、区间不合理都会失败），再由各门禁按新阈值执行。
+
 ## 4. 语言包（language/zh.json）
 
 ```json

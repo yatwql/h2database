@@ -96,6 +96,7 @@ python books/src/python/structure.py --gate-level p0  # 仅 p0
 | EPUB 生成 | pandoc 可用时生成 EPUB | `to_epub.py` | P3 |
 | 类型检查 | pyright 可用时检查工具链类型（缺失则跳过） | `typecheck.py` | P1 |
 | 门禁追溯 | make.py 的每个门禁都在 testplan 登记，反之亦然 | `gate_trace.py` | P0 |
+| 配置结构 | `style.json` 只含已知顶层键、必备字段齐全、阈值区间合理（min<max、比例 0-100） | `style_schema.py` | P0 |
 | 文件长度 | 源码 ≤900 行、测试 ≤1200 行、文档 ≤1200 行（手稿附录 ≤2000） | `audit/file_length.py` | P0 |
 | 脚本契约 | 每个入口脚本有模块说明、可执行入口、必要时说明退出码 | `audit/script_contract.py` | P0 |
 | 文档一致性 | 文档中引用的路径、脚本、章节名、版本号与仓库实际一致 | `audit/doc_drift.py` | P0 |
