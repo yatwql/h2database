@@ -80,13 +80,20 @@ def header() -> str:
     label_width = max(_width(label) for label, _value in facts) + 1
 
     title_left = _c(_config.app_name(), PALETTE['product_accent'])
+    updated = _config.tool_updated()
     title_rest = (f" · {_config.app_name_zh()}  "
-                  f"{_c('v' + info['tool_version'], PALETTE['hint'])}")
-    product_plain = f' {_config.app_name()} · {_config.app_name_zh()}  v{info["tool_version"]}'
-    book_plain = f' 书籍 {info["title"]}  v{info["version"]}'
+                  f"{_c('v' + info['tool_version'], PALETTE['hint'])}"
+                  + (f"  {_c('更新 ' + updated, PALETTE['hint'])}" if updated else ''))
+    product_plain = (f' {_config.app_name()} · {_config.app_name_zh()}  '
+                     f'v{info["tool_version"]}'
+                     + (f'  更新 {updated}' if updated else ''))
+    book_date = _config.book_updated()
+    book_plain = (f' 书籍 {info["title"]}  v{info["version"]}'
+                  + (f'  更新 {book_date}' if book_date else ''))
     book_line = (f' {_c("书籍", PALETTE["label"])} '
                  f'{_c(info["title"], PALETTE["book"])}'
-                 f'  {_c("v" + info["version"], PALETTE["hint"])}')
+                 f'  {_c("v" + info["version"], PALETTE["hint"])}'
+                 + (f'  {_c("更新 " + book_date, PALETTE["hint"])}' if book_date else ''))
 
     inner = max(_width(product_plain), _width(book_plain),
                 max(_width(f' {label} {value}') for label, value in facts)) + 1

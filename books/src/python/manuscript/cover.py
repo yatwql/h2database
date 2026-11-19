@@ -57,6 +57,12 @@ for fname in source_files:
 cover_path = _config.manuscript('cover.md')
 cover = _fsutil.read_text(cover_path)
 
+# Update the book's last-update date (git date of the manuscript, else mtime)
+book_date = _config.book_updated()
+if book_date:
+    cover = re.sub(r'(版本\s+v[\d.]+\s+·\s+)\d{4}-\d{2}-\d{2}',
+                   rf'\g<1>{book_date}', cover)
+
 # Update line count
 cover = re.sub(r'(版本\s+v[\d.]+\s+·\s+\d+-\d+-\d+\s+·\s+)[\d,]+\s+行',
                rf'\g<1>{total_lines:,} 行', cover)

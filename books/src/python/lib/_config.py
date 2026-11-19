@@ -13,9 +13,11 @@ Two layers, both read here so no script hard-codes either:
 """
 from __future__ import annotations
 
+import datetime
 import glob
 import json
 import os
+import subprocess
 import tomllib
 
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -119,6 +121,7 @@ PROJECT: dict = dict(_CFG.get('project', {}))
 
 
 LANGUAGE_DIR = os.path.join(BOOK_ROOT, 'data', 'language')
+_LAST_CHANGE: dict[str, str] = {}
 LANGUAGE_CODE = os.environ.get('BOOK_LANGUAGE') or 'zh'
 
 
@@ -250,6 +253,44 @@ def chapter_packages() -> dict[str, list[str]]:
 def chapter_titles() -> dict[str, list[str]]:
     """Chapter file -> ordered section titles contributed by that file."""
     return {k: list(v) for k, v in _CFG.get('chapters', {}).get('titles', {}).items()}
+
+
+def _last_change(rel_path: str) -> str:
+    """ISO date of the last change under ``rel_path`` (git first, then mtime)."""
+    cached = _LAST_CHANGE.get(rel_path)
+    if cached:
+        return cached
+    stamp = ''
+    try:
+        result = subprocess.run(
+            ['git', 'log', '-1', '--format=%cs', '--', rel_path],
+            cwd=BOOK_ROOT, capture_output=True, text=True, timeout=20, check=False)
+        stamp = (result.stdout or '').strip()
+    except (OSError, subprocess.SubprocessError):
+        stamp = ''
+    if not stamp:
+        newest = 0.0
+        root = os.path.join(BOOK_ROOT, rel_path)
+        for base, _dirs, files in os.walk(root):
+            for name in files:
+                try:
+                    newest = max(newest, os.path.getmtime(os.path.join(base, name)))
+                except OSError:
+                    continue
+        stamp = datetime.date.fromtimestamp(newest).isoformat() if newest else ''
+    _LAST_CHANGE[rel_path] = stamp
+    return stamp
+
+
+def tool_updated() -> str:
+    """Date the toolchain code last changed (version bumps are not required)."""
+    return _last_change('src/python')
+
+
+def book_updated() -> str:
+    """Date the manuscript last changed."""
+    rel = os.path.relpath(MANUSCRIPT_DIR, BOOK_ROOT)
+    return _last_change(rel)
 
 
 def key_file() -> str:
