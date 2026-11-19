@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Thin wrapper: run the books toolchain without typing python paths.
+#
+#   books/scripts/bk status            # book + config + LLM status
+#   books/scripts/bk analyze           # source -> manuscript
+#   books/scripts/bk build             # manuscript -> markdown + html
+#   books/scripts/bk check             # every quality gate
+#   books/scripts/bk test [--full]     # test suite
+#   books/scripts/bk deliver           # PDF + EPUB on demand
+#   books/scripts/bk llm "问题"         # ask the configured provider
+#   books/scripts/bk make <args...>    # raw make.py passthrough
+#   books/scripts/bk doctor            # dependency / environment report
+#
+# Interpreter resolution: books/.venv -> $PYTHON -> python3.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BOOK_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+APP="$BOOK_DIR/src/python/app/cli.py"
+MAKE="$BOOK_DIR/src/python/make.py"
+
+if [ -z "${PYTHON:-}" ] && [ -x "$BOOK_DIR/.venv/bin/python" ]; then
+  PYTHON="$BOOK_DIR/.venv/bin/python"
+fi
+PYTHON="${PYTHON:-python3}"
+
+if ! command -v "$PYTHON" >/dev/null 2>&1 && [ ! -x "$PYTHON" ]; then
+  echo "error: python not found (run books/scripts/bootstrap.sh)" >&2
+  exit 2
+fi
+
+action="${1:-help}"
+shift || true
+
+case "$action" in
+  make)   exec "$PYTHON" "$MAKE" "$@" ;;
+  doctor) exec "$PYTHON" "$MAKE" doctor ;;
+  help|-h|--help)
+    sed -n '2,16p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    ;;
+  *)
+    exec "$PYTHON" "$APP" "$action" "$@"
+    ;;
+esac

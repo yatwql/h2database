@@ -1,7 +1,8 @@
-# 脚本使用手册（books/src/python）
+# 脚本与门禁速查
 
-> 本文件是工具链使用方式的唯一说明。`CLAUDE.md` 只保留指向本文的链接。
-> 目录结构与文件职责见 `books/docs/managements/folder.md`。
+> 面向开发者的速查页。用户向文档请见：
+> [配置](how-to-config.md) · [CLI](how-to-use-cli.md) · [TUI](how-to-use-tui.md) ·
+> [Web](how-to-use-web.md) · [常见问题](faq.md)
 
 ## 1. 启动方式
 

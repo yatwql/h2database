@@ -1,108 +1,102 @@
-# books — 源代码分析 → 专业文档生成工具链
+# books — 源码分析文档生成工具链
 
-面向"读源码、出文档"的工程化工具链：把一份 Java 源码树，变成结构可校验、
-事实可追溯、可交付为 Markdown / HTML / PDF / EPUB 的专业技术书。
+把一个源码仓库变成一本可交付的技术书：读源码 → 生成手稿 → 出 Markdown/HTML/PDF/EPUB，
+全程由门禁把关（结构、事实、文风、交付）。
 
-当前实例是《H2 Database 源码分析》（中文），但流水线与具体项目无关：
-换一份源码树、改一份章节映射，即可产出另一本书。
+当前实例是《H2 数据库引擎源码剖析》；工具链与具体项目无关，换一份源码树与章节映射
+即可生成另一本书。支持 Java / Python / Rust 源码（可多语言混跑）。
 
-## 它解决什么问题
+## 能做什么
 
-人工读几十万行源码写书，三个环节最易失控：**范围**（哪些包必须覆盖）、
-**事实**（引用的类、方法、行号是否真实存在）、**一致性**（章节、图注、索引、
-交叉引用、交付物是否对齐）。本工具链把这三件事都变成可执行、可复现的门禁。
+| 能力 | 说明 |
+|------|------|
+| 源码 → 手稿 | 抽取包/模块版图、核心类型、公开 API、依赖方向，按章节映射生成手稿 |
+| 手稿 → 文档 | 合并 Markdown、HTML（侧边栏 TOC）、PDF（大纲/页内目录）、EPUB |
+| 质量门禁 | 20 道：结构完整性、源码坐标可核验、链接锚点、图注、术语/索引、文风评分、交付校验 |
+| 多入口 | CLI、TUI、Web 控制台共用同一套动作 |
+| 可配置 | 数据组织 / 基础 / 风格三层配置 + 语言包 + LLM provider 路由 |
 
-## 两段式流水线
-
-```text
-源码树 ──stage 1: 事实抽取──▶ 手稿 (data/manuscript)
-                                    │
-                                    └──stage 2: 渲染与校验──▶ dist/{md,html,pdf,epub}
-```
-
-**stage 1（源码 → 手稿）**
-
-| 步骤 | 脚本 | 产出 |
-| --- | --- | --- |
-| 抽取版图 | `ingest/digest.py` | 包/文件/行数、`package-info` 职责、核心类型、公开 API → `data/state/source-inventory.json` |
-| 规划章节 | `ingest/outline.py` | 章节 → 包的映射与覆盖矩阵（缺包即报）→ `data/state/outline.json` |
-| 渲染章节 | `ingest/chapters.py` | 每章的模块版图、核心类型、源码坐标、术语对照、小结、练习 |
-
-**stage 2（手稿 → 文档）**
-
-`render/` 负责合并、HTML、PDF、EPUB；`audit/` 是 14 道质量门禁
-（结构、图注、链接、索引、术语、源码引用、可读性、ASCII 图宽度、交付物结构）。
-
-## 5 分钟上手
+## 快速开始
 
 ```bash
-# 0) 也可以从启动脚本进入（Linux/macOS，Windows 用 launch.ps1）
-books/scripts/launch.sh          # TUI
-books/scripts/launch.sh cli status
-books/scripts/launch.sh web --port 8080
+books/scripts/bootstrap.sh     # 创建 books/.venv 并装依赖（Windows: bootstrap.ps1）
 
-# 1) 全部门禁（只读，不写产物）
-python books/src/python/make.py check
+books/scripts/bk status        # 最短路径：cloak 掉 python 路径，直接跑动作
+books/scripts/bk check         # 全部门禁
+books/scripts/bk build         # 手稿 → 合并 Markdown + HTML
+books/scripts/bk test          # 测试（--full 含 chromium/pandoc 档）
+books/scripts/bk doctor        # 依赖与环境
 
-# 2) 构建：封面统计 → 合并 Markdown → HTML
-python books/src/python/make.py build
+books/scripts/launch.sh        # TUI 菜单
+books/scripts/launch.sh cli    # CLI（与 bk 等价，可带子命令）
+books/scripts/launch.sh web    # Web 控制台
+```
 
-# 3) 测试（快速档 ~9s；含 chromium/pandoc 的全量档加 --full）
-python books/src/python/make.py test
+`bk` 是薄封装：解析解释器（`books/.venv` → `$PYTHON` → `python3`）后转发到
+`app/cli.py`；`bk make <args>` 直接透传 `make.py`。Windows 用 `bk.ps1`。
 
-# 4) 按需交付 PDF + EPUB（带结构校验）
-python books/src/python/make.py deliver
+不用启动脚本时：
+
+```bash
+python books/src/python/make.py check   # 全部门禁（只读）
+python books/src/python/make.py build   # 手稿 → 合并 Markdown + HTML
+python books/src/python/make.py test    # 测试（快档；--full 含 chromium/pandoc 档）
+python books/src/python/make.py deliver # 按需：PDF + EPUB + 校验
 ```
 
 源码更新后重生成手稿：
 
 ```bash
-python books/src/python/ingest/digest.py
-python books/src/python/ingest/outline.py
-python books/src/python/ingest/chapters.py
+python books/src/python/ingest/digest.py     # 源码 → data/state/source-inventory.json
+python books/src/python/ingest/outline.py    # 章节大纲 + 覆盖矩阵
+python books/src/python/ingest/chapters.py   # 渲染章节
 ```
 
-## 目录一览
+## 目录
 
 ```text
 books/
-  data/      # 输入与状态：tmpl/book.toml（内容组织）、config/config.json（工具链策略）、
-             # manuscript/（手稿）、baselines/（已知问题基线）、state/（抽取结果）
+  data/      # 输入与状态：tmpl/（书与章节组织）、config/（基础与风格）、
+             # language/（语言包）、manuscript/（手稿）、baselines/、state/
   src/
-    python/  # 工具链：lib/ 公共库、ingest/ 源码抽取、manuscript/ 手稿维护、
-             # audit/ 质量门禁、render/ 交付渲染
-    test/    # 单元 + 集成测试（BOOK_SLOW=1 打开慢速档）
-  dist/      # 交付产物（HTML/PDF/EPUB，gitignored）
-  docs/      # managements/ 项目管理文档、manuals/ 使用手册、plan/ 设计说明
+    python/  # lib/ 公共库、ingest/ 源码抽取（languages/ 分语言分析器）、
+             # manuscript/ 手稿维护、audit/ 门禁、render/ 交付、app/ 入口
+    test/    # 单元 + 集成 + 通用性回归
+  scripts/   # launch.sh/.ps1（启动）、bootstrap.sh/.ps1（环境）
+  dist/      # 产物（gitignored）
+  logs/      # 运行日志（gitignored）
+  docs/      # 用户文档 / 管理文档 / 规范 / 设计
 ```
 
-## 质量门禁（摘）
+## 文档索引
 
-| 类别 | 门禁 | 脚本 |
-| --- | --- | --- |
-| 结构 | 章节/段落/图号/围栏/TOC/UTF-8 完整性 | `audit/structure.py` |
-| 事实 | `Class.java:line` 与 `Class.method(` 断言核对源码 | `audit/source_refs.py` |
-| 一致性 | 链接与锚点、索引 see-also、术语覆盖、跨章引用 | `audit/links.py` 等 |
-| 叙事 | 图注动宾、图簇桥接、长句与重复、ASCII 图宽度 | `audit/captions.py` 等 |
-| 交付 | PDF outline/字体嵌入、EPUB 容器与 nav | `render/verify_pdf.py`、`render/verify_epub.py` |
+**用户文档（`docs/manuals/`）**
 
-配置分三类：`data/tmpl/book.toml`（数据组织：章节、标题、编号、包映射）、
-`data/config/base.json`（基础：源码树、文件后缀、包前缀、基线、预算）、
-`data/config/style.json`（风格：文案、骨架、图注词表、写作阈值、生成模板）、
-`data/language/zh.json`（语言包：章节骨架名与提示语）、`data/tmpl/case-studies.toml`（案例流水线）。
-脚本不硬编码任何路径、阈值或文案。
+| 文档 | 内容 |
+|------|------|
+| [how-to-config.md](docs/manuals/how-to-config.md) | 如何配置：数据组织、基础、风格、语言包、LLM |
+| [how-to-use-cli.md](docs/manuals/how-to-use-cli.md) | CLI 用法、动作、退出码 |
+| [how-to-use-tui.md](docs/manuals/how-to-use-tui.md) | TUI 菜单与 `--once` 脚本化 |
+| [how-to-use-web.md](docs/manuals/how-to-use-web.md) | Web 控制台与 JSON API |
+| [faq.md](docs/manuals/faq.md) | 常见问题（环境、配置、门禁、交付、日志、LLM） |
+| [how-to-use.md](docs/manuals/how-to-use.md) | 门禁与脚本速查（面向开发者） |
 
-## 迁移到别的项目
+**规范与设计（`docs/spec/`、`docs/plan/`）**
 
-1. 改 `data/tmpl/book.toml`：`[paths]`、`[chapters].files`、`[chapters.packages]`。
-2. 改 `data/config/base.json`：`sources.src_main`、`file_suffix`、`package_prefix`。
-3. 按需调 `data/config/style.json`（风格/阈值），重跑 stage 1 三步，再 `make.py check`。
+| 文档 | 内容 |
+|------|------|
+| [analysis-doc-standard.md](docs/spec/analysis-doc-standard.md) | 源码分析文档的通用内容标准与验收清单 |
+| [technical.md](docs/spec/technical.md) | 工具链架构约束（分层、契约、命名、日志、环境） |
+| [toolchain-design.md](docs/plan/toolchain-design.md) | 流水线与配置模型的设计说明 |
 
-## 进一步阅读
+**管理文档（`docs/managements/`）**
 
-- 源码分析文档的通用规范：`docs/spec/analysis-doc-standard.md`
-- 目录职责与归属规则：`docs/managements/folder.md`
-- 脚本用法与交付步骤：`docs/manuals/how-to-use.md`
-- 质量门禁与验证命令：`docs/managements/testplan.md`
-- 写作与格式规范：`docs/managements/style-guide.md`
-- 工具链设计（当前状态）：`docs/plan/toolchain-design.md`
+| 文档 | 内容 |
+|------|------|
+| [folder.md](docs/managements/folder.md) | 目录结构与文件归属 |
+| [requirements.md](docs/managements/requirements.md) | 范围与交付物 |
+| [plan.md](docs/managements/plan.md) | 工作流、维护策略、在建项、风险 |
+| [testplan.md](docs/managements/testplan.md) | 质量门禁与验证命令（验证唯一权威） |
+| [changelog.md](docs/managements/changelog.md) | 版本历史 |
+| [style-guide.md](docs/managements/style-guide.md) | 写作与格式规范 |
+| [README.md](docs/managements/README.md) | 管理文档索引 |
