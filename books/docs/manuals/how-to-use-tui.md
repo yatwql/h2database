@@ -108,5 +108,5 @@ books/scripts/bookctl status                            # 更快：直接用 CLI
 echo 4 | python books/src/python/app/tui.py        # 管道输入也能用
 ```
 
-TUI、CLI、Web 共用 `app/actions.py`（动作）与 `app/settings.py`（配置），
+TUI、CLI、Web 共用 `core/actions.py`（动作）与 `core/settings.py`（配置），
 三者行为一致。

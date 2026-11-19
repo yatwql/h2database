@@ -34,13 +34,25 @@ LAYERS = ('core', 'ingest', 'manuscript', 'audit', 'render', 'app')
 CHANNELS = 'app'
 CHANNEL_FORBIDDEN_LAYERS = ('ingest', 'manuscript', 'audit', 'render')
 CHANNEL_FORBIDDEN_CALLS = ('subprocess', 'write_text', "'w'", '"w"')
+
+# Who may import whom. Anything not listed is a violation; the matrix is the
+# contract, the checks below only explain the breach.
+DEPENDENCY_MATRIX: dict[str, frozenset[str]] = {
+    'lib': frozenset(),
+    'core': frozenset({'lib'}),
+    'ingest': frozenset({'lib'}),
+    'manuscript': frozenset({'lib'}),
+    'audit': frozenset({'lib'}),
+    'render': frozenset({'lib'}),
+    'app': frozenset({'lib', 'core', 'app'}),
+}
 STDLIB_CLASH = {'types', 'html', 'json', 'logging', 'email', 'code', 'test', 'binascii'}
 PATH_LITERALS = ('books/', 'data/manuscript', 'data/config', 'data/tmpl')
 WRITE_CALLS = ('write_text', 'open(')
 
 
-def layer_of(path: str) -> str:
-    rel = os.path.relpath(path, PY_ROOT).replace(os.sep, '/')
+def layer_of(path: str, root: str | None = None) -> str:
+    rel = os.path.relpath(path, root or PY_ROOT).replace(os.sep, '/')
     return rel.split('/')[0] if '/' in rel else ''
 
 
@@ -62,12 +74,27 @@ def imports_of(path: str) -> list[str]:
     return found
 
 
-def check(path: str) -> list[str]:
+def check(path: str, root: str | None = None) -> list[str]:
     problems: list[str] = []
     rel = os.path.relpath(path, os.path.join(_config.BOOK_ROOT, '..'))
-    layer = layer_of(path)
+    layer = layer_of(path, root)
     name = os.path.basename(path)[:-3]
     source = _fsutil.read_text(path)
+    tree = ast.parse(source)
+
+    # DOCSTRING: every module says what it is (naming is not documentation)
+    if ast.get_docstring(tree) is None and not path.endswith('__init__.py'):
+        problems.append(f'{rel}: missing module docstring')
+
+    # MATRIX: the dependency matrix is authoritative - allowed edges only
+    allowed = DEPENDENCY_MATRIX.get(layer)
+    if allowed is not None:
+        for module in imports_of(path):
+            head = module.split('.')[0]
+            if head in DEPENDENCY_MATRIX and head != layer and head not in allowed:
+                problems.append(
+                    f'{rel}: layer "{layer}" may not import "{module}" '
+                    f'(allowed: {sorted(allowed) or "none"})')
 
     # LAYER: no sibling imports, no dependencies on render from below
     for module in imports_of(path):

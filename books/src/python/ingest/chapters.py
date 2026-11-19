@@ -58,18 +58,6 @@ PUBLIC_METHOD_LINE = re.compile(
     r'[\w<>\[\],.?\s]+\s+(\w+)\s*\(')
 
 
-def first_public_method_line(rel_file: str, method: str) -> int | None:
-    """1-based line of the first ``public ... method(`` in a source file."""
-    path = os.path.join(SOURCE_ROOT, rel_file)
-    if not os.path.isfile(path):
-        return None
-    for lineno, line in enumerate(_fsutil.read_lines(path), start=1):
-        m = PUBLIC_METHOD_LINE.match(line)
-        if m and m.group(1) == method:
-            return lineno
-    return None
-
-
 PKG_PREFIX = _config.SOURCES.get('package_prefix') or 'unknown'
 GEN = _config.POLICY.get('generation', {})
 TPL = _config.templates()
@@ -594,15 +582,6 @@ def _glossary_hits(packages: dict) -> list[str]:
 
 
 _GLOSSARY: list[str] | None = None
-
-
-def _api_sample(pkg: str, class_name: str) -> list[str]:
-    inventory = _INVENTORY
-    entry = inventory['packages'].get(pkg, {})
-    for cls in entry.get('classes', []):
-        if cls['name'] == class_name:
-            return cls['api'][:4]
-    return []
 
 
 _INVENTORY: dict = {}

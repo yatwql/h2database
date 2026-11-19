@@ -79,9 +79,6 @@ REVIEW_RE = re.compile(r'^>\s*' + REVIEW_MARK + r'[：:]\s*(.+)')
 # The review line must contain at least one §X.Y or 第X章 anchor.
 ANCHOR_RE = re.compile(r'§\d+(?:\.\d+)*[a-z]?|第\d+章')
 
-def _is_in_fence(idx: int, fence_state: list[bool]) -> bool:
-    return fence_state[idx]
-
 def _scan_fences(lines: list[str]) -> list[bool]:
     """Mark each line as inside-fence so we don't pattern-match diagram art."""
     inside = [False] * len(lines)

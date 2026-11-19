@@ -4,30 +4,72 @@
 > 目录职责见 `../managements/folder.md`；用法见 `../manuals/how-to-use.md`；
 > 内容标准见 `analysis-doc-standard.md`。
 
-## 1. 分层与职责
+## 1. 分层、依赖与渠道纯净
 
-```text
-lib/        公共库：配置读取、文件读写原语、Markdown/HTML 工具。不决定写什么、写哪里。
-ingest/     源码 → 手稿：只读源码树，只写 data/state 与 data/manuscript。
-manuscript/ 手稿维护：只读写 data/manuscript 与 data/state。
-audit/      质量门禁：只读；输出报告到 stdout，不修改仓库。
-render/     交付渲染：只写 dist/，可读 manuscript 与 data/state。
-core/       领域层：actions（动作执行）、settings（可改配置）、menu（菜单模型与
-            运行回报）、scaffold（新书脚手架）。业务规则只允许写在这一层。
-app/        渠道层：cli.py / tui.py / web.py / keys.py，只做渲染与按键分发，
-            通过 core.actions 执行，不含任何业务判断。
-```
+### 1.1 层与职责
 
-**入口层约束**：三个渠道共用 `app/actions.py`；渠道层不得直接实现分析、渲染或
-校验逻辑，只能调用 `actions`（其内部调用 `make.py` 与 stage 1 脚本）。
+| 层 | 职责 | 可写 | 可导入 |
+| --- | --- | --- | --- |
+| `lib/` | 配置读取、文件读写原语、Markdown/HTML 工具。不决定写什么、写哪里 | 仅经调用方 | 无（只用标准库） |
+| `core/` | 领域层：`actions`（动作执行）、`settings`（可改配置）、`menu`（菜单模型与运行回报）、`scaffold`（新书脚手架） | 经 `actions` 触发 | `lib` |
+| `ingest/` | 源码 → 手稿：读源码树，写 `data/state` 与 `data/manuscript` | `data/state`、手稿 | `lib` |
+| `manuscript/` | 手稿维护：术语、索引、封面、案例 | 手稿、`data/state` | `lib` |
+| `audit/` | 质量门禁：只读，报告到 stdout（基线类脚本仅写 `data/baselines/`） | 基线除外不写 | `lib` |
+| `render/` | 交付渲染：写 `dist/` | `dist/` | `lib` |
+| `app/` | 渠道层：`cli` / `tui` / `web` / `keys`，只做渲染与按键分发 | 不写 | `lib`、`core`、`app` |
 
-**依赖方向**：`lib ← core ← {ingest, manuscript, audit, render} ← app`。
-同层之间不得互相 import；`app` 只能向上调用 `core`（以及 `lib` 取展示配置），
-不得直接 import `ingest/manuscript/audit/render/make`；`core` 不得反向依赖 `app`。
+### 1.2 依赖矩阵（唯一权威）
 
-**渠道纯净**（`audit/check_architecture.py` 机检）：`app/` 内不得出现
-`subprocess`、`write_text`、写模式 `open`，也不得持有动作表、确认策略、菜单模型
-这类规则——它们属于 `core/menu.py` 与 `core/actions.py`。
+| 从 \ 到 | lib | core | ingest | manuscript | audit | render | app |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| lib | – | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| core | ✓ | – | ✗ | ✗ | ✗ | ✗ | ✗ |
+| ingest | ✓ | ✗ | – | ✗ | ✗ | ✗ | ✗ |
+| manuscript | ✓ | ✗ | ✗ | – | ✗ | ✗ | ✗ |
+| audit | ✓ | ✗ | ✗ | ✗ | – | ✗ | ✗ |
+| render | ✓ | ✗ | ✗ | ✗ | ✗ | – | ✗ |
+| app | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ |
+
+同层之间不得互相 import；唯一的上行边是 `app → core`。矩阵写在
+`audit/check_architecture.py` 的 `DEPENDENCY_MATRIX`，新增边必须先改矩阵。
+
+### 1.3 渠道纯净
+
+`app/` 只做四件事：渲染界面、读按键、调 `core.actions`、把 `core.menu` 的结论
+打印出来。因此渠道内**禁止**：
+
+- import `ingest/manuscript/audit/render`，也禁止直接驱动 `make.py`；
+- 出现 `subprocess`、`write_text`、写模式 `open`（写文件属于 `core` / engine）；
+- 持有业务规则：动作表、确认策略、菜单模型、默认光标、LLM 判定一律在
+  `core/menu.py`；可改配置项与校验在 `core/settings.py`；动作执行在
+  `core/actions.py`。
+
+三个渠道共用 `core/actions.py`，所以 CLI / TUI / Web 的行为天然一致。
+
+### 1.4 门禁只读与维护开关
+
+`audit/` 的脚本默认只读；唯一允许写入的是基线类脚本（`--update-baseline`
+等显式开关写 `data/baselines/`）。`make.py check` 永远不带这些开关。
+
+### 1.5 每条规则由谁机检
+
+| 规则 | 判据 | 机检 |
+| --- | --- | --- |
+| A1 依赖矩阵 | 只允许矩阵内的边 | `check_architecture.DEPENDENCY_MATRIX` |
+| A2 渠道纯净 | 渠道无引擎 import、无 `subprocess`/写文件 | `check_architecture`（`CHANNEL_*`） |
+| A3 领域不反向依赖 | `core` 不 import `app`（矩阵已覆盖，规则单独报错） | `check_architecture`（DIRECTION） |
+| A4 门禁只读 | `audit/` 无写调用（基线除外） | `check_architecture`（WRITE） |
+| A5 无硬编码路径 | 除 `lib` 外不得出现仓库路径字面量 | `check_architecture`（CONFIG） |
+| A6 命名 | 不与标准库同名、无 `check_*`/`_audit_*` 冗余前缀、入口不加下划线 | `check_architecture`（NAMING） |
+| A7 模块 docstring | 每个模块首行说明自身职责 | `check_architecture`（DOCSTRING） |
+| A8 报告脚本 `--json` | `audit/` 中带 argparse 的报告须支持 `--json` | `check_architecture`（EXIT） |
+| A9 配置/文档分离 | `style.json` 不含模板与展示文案 | `style_schema` |
+| A10 LLM 使用边界 | 只有 `core`/`ingest` 可调用 LLM | `llm_policy` |
+| A11 入口契约 | docstring + `main()`/守卫 + 退出码 + 库模块豁免 | `script_contract` |
+| A12 文件规模 | 源码/测试/文档/附录行数上限 | `file_length` |
+
+规则与文档条目一一对应：新增规则要同时改本节、`check_architecture.py` 与
+`testplan.md`。
 
 ## 2. 配置与常量
 
@@ -80,7 +122,7 @@ app/        渠道层：cli.py / tui.py / web.py / keys.py，只做渲染与按�
 - 位置：`books/logs/books.log`，按天回滚（`books.log.YYYY-MM-DD`），默认保留 14 天。
 - 级别：`BOOK_LOG_LEVEL` 环境变量 > `data/config/base.json [logging].level` > INFO；DEBUG 记录每步参数、耗时与计数。
 - 出口：文件记录全部（INFO 起），控制台只输出 WARNING 及以上，避免刷屏。
-- 实现：`lib/_log.py`（DailyRotatingHandler 幂等初始化），入口（`make.py`、`app/actions.py`、`ingest/*`）只调用 `_log.get_logger(...)`。
+- 实现：`lib/_log.py`（DailyRotatingHandler 幂等初始化），入口（`make.py`、`core/actions.py`、`ingest/*`）只调用 `_log.get_logger(...)`。
 
 ## 10. 环境与依赖
 

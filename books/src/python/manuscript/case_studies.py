@@ -125,7 +125,7 @@ def render(scenario: str) -> str:
         out.append('')
         out.append(f"**详见 {anchor}** — 原文给出完整源码路径与行号。")
         out.append('')
-        out.append('<!-- TODO: 1-2 段叙述 + 1 张子流程图 + 关键源码片段 -->')
+        out.append('<!-- 待补：1-2 段叙述 + 1 张子流程图 + 关键源码片段 -->')
         out.append('')
 
     out.append('### 思考小结')

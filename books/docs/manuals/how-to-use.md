@@ -19,7 +19,7 @@ books/scripts/launch.sh            # TUI 菜单（Linux/macOS）
 books/scripts/launch.sh cli status # CLI
 books/scripts/launch.sh web        # Web 控制台
 ```
-Windows 用 `books\scripts\launch.ps1`（参数相同）。三个渠道共用 `app/actions.py`，
+Windows 用 `books\scripts\launch.ps1`（参数相同）。三个渠道共用 `core/actions.py`，
 也可直接 `python books/src/python/app/{cli,tui,web}.py`。
 
 ## 2. 单入口：make.py

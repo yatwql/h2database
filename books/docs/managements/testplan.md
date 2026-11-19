@@ -104,7 +104,7 @@ python books/src/python/structure.py --gate-level p0  # 仅 p0
 | 网络隔离 | 测试全程零出站连接：`_netguard` 在 `_fixture` 导入时接管 socket，只允许回环；LLM 一律 mock（`mock` provider 或打桩 `_post_json`），Playwright 用假引擎 | `src/test/_netguard.py`、`src/test/test_no_network.py` | P0 |
 | 覆盖率 | 分支覆盖率不低于 `base.json [toolchain].coverage_fail_under`（当前 77） | `make.py cover` | P1 |
 | 历史痕迹 | 文档与代码注释只描述当前状态，不含过程性记录 | `audit/doc_traces.py`、`audit/code_traces.py` | P0 |
-| 多入口一致 | CLI/TUI/Web 三个渠道共用 `app/actions.py`，`status` 与 `llm-ask` 均可运行 | `books/src/test/test_llm.py` | P1 |
+| 多入口一致 | CLI/TUI/Web 三个渠道共用 `core/actions.py`，`status` 与 `llm-ask` 均可运行 | `books/src/test/test_llm.py` | P1 |
 | LLM 配置 | provider 路由按 章节>书籍>场景 优先级解析；密钥只读环境变量；默认 mock 离线可跑 | `books/src/test/test_llm.py`、`data/config/llm_*.json` | P1 |
 | 运行日志 | 日志写 `books/logs/`，按天回滚；级别 `BOOK_LOG_LEVEL` > 配置 > INFO；DEBUG 更详尽 | `books/src/test/test_logging.py` | P1 |
 | 工具链测试 | 单元 + 集成测试全绿（109 例）：`make.py test` | `books/src/test/` | P0 |
