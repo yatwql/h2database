@@ -94,9 +94,11 @@ def _windows_getch() -> str:
 
     # getwch() exists on CPython/Windows (str); getch() is the documented
     # fallback and returns bytes, so every read is normalised to text.
-    read = getattr(msvcrt, 'getwch', None) or msvcrt.getch
+    read = getattr(msvcrt, 'getwch', None) or getattr(msvcrt, 'getch', None)
 
     def next_char() -> str:
+        if read is None:  # pragma: no cover - every CPython has getch
+            raise RuntimeError('msvcrt exposes neither getwch nor getch')
         value = read()
         return value.decode('utf-8', 'replace') if isinstance(value, bytes) else str(value)
 

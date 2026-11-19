@@ -61,8 +61,9 @@ jobs:
           cache: pip
           cache-dependency-path: books/requirements-dev.txt
       - run: python -m pip install -r books/requirements-dev.txt
-      - name: unit suite
-        run: python books/src/python/make.py test --timings
+      - name: unit suite (fast marker)
+        # tier_slow needs chromium/pandoc; only the slow job installs them
+        run: python -m pytest books/src/test -q -m tier_fast
 
   gates:
     name: Full gate set
@@ -79,6 +80,9 @@ jobs:
           cache: pip
           cache-dependency-path: books/requirements-dev.txt
       - run: python -m pip install -r books/requirements-dev.txt
+      - name: build artifacts
+        # structure and doc_drift judge books/dist; a fresh checkout has none
+        run: python books/src/python/make.py build --timings
       - name: every gate
         run: python books/src/python/make.py check --keep-going --timings
 

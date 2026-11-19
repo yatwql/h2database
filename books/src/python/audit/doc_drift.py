@@ -44,7 +44,16 @@ def _repo_root(explicit: str | None = None) -> str:
     return explicit or REPO_ROOT
 
 
+def _generated_prefix() -> str:
+    """Repository-relative prefix of the build output directory."""
+    dist = os.path.relpath(_config.DIST_DIR, os.path.dirname(_config.BOOK_ROOT))
+    return dist.replace(os.sep, '/').rstrip('/') + '/'
+
+
 def _exists(rel: str, repo_root: str | None = None) -> bool:
+    # build outputs are generated, so they are absent from a fresh checkout
+    if rel.startswith(_generated_prefix()):
+        return True
     root = _repo_root(repo_root)
     if '*' in rel:
         return bool(glob.glob(os.path.join(root, rel), recursive=True))
