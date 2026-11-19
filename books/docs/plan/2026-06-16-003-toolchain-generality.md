@@ -43,9 +43,11 @@ project/<name>.toml        项目档案（待建）：把上述 base/style 组�
 
 1. `[project]` 渲染文案：页面标题、作者、页眉页脚、EPUB 元数据（`render/*`）。
 2. `[sources]` 语言/扩展名：`.java`、包前缀、类后缀（`sources/source_freshness_check.py`）。
-3. `language/zh.json`：把中文写作规则从 `audit/*` 抽出（图注动词、章节骨架名、提示语）。
-4. `build_case_study_outline.py` 的场景表改成 `data/tmpl/case-studies.toml`。
-5. 增加"无源码书目"回归：`tests/` 里用第二份极简源码树跑通 stage 1。
+3. ~~`language/zh.json`：把中文写作规则从 `audit/*` 抽出~~（已完成：`data/language/zh.json`
+   驱动 `_audit_exercises` 的章节名/提示语与 `_annotate_terms` 的术语提示行）。
+4. ~~`build_case_study_outline.py` 的场景表改成 `data/tmpl/case-studies.toml`~~（已完成）。
+5. ~~增加"无源码书目"回归：`src/test/` 用第二份极简源码树跑通 stage 1~~（已完成：
+   `test_generic_source.py` + `fixtures/mini-java`）。
 
 ## 4. 验收
 

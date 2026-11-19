@@ -31,7 +31,12 @@ _fsutil.pin_stdout_utf8()
 docs_dir = _config.BOOK_ROOT
 src_dir = _config.MANUSCRIPT_DIR
 dist_dir = _config.DIST_DIR
-glossary_path = os.path.join(src_dir, 'back', 'glossary.md')
+LANG = _config.language()
+LANG_TERMS = LANG.get('terms', {})
+REFERENCE_LINE = LANG_TERMS.get('reference_line', '术语参考')
+GLOSSARY_TITLE = LANG_TERMS.get('glossary_title', '术语表')
+GLOSSARY_LINK = LANG_TERMS.get('glossary_link', 'back/glossary.md')
+glossary_path = os.path.join(src_dir, GLOSSARY_LINK)
 
 def _read_lines(path: str) -> list[str]:
     """Read a UTF-8 text file, exiting with a clean message on I/O failure."""
@@ -423,7 +428,8 @@ def main(argv: list[str]) -> int:
 
     # Default: insert the glossary reference into unannotated chapters.
     chapter_files = sorted(glob.glob(os.path.join(src_dir, 'ch[0-9]*.md')))
-    glossary_ref = '> **术语参考**: 本章涉及的专业术语详见书末[术语表](back/glossary.md)。\n'
+    glossary_ref = (f'> **{REFERENCE_LINE}**: 本章涉及的专业术语详见书末'
+                    f'[{GLOSSARY_TITLE}]({GLOSSARY_LINK})。\n')
     count = 0
 
     for fpath in chapter_files:

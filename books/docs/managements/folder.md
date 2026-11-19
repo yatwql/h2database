@@ -9,10 +9,13 @@
 books/
   data/                      # 输入数据：配置 + 手稿 + 机器维护的状态
     tmpl/
-      book.toml              # 内容组织：路径、章节顺序、必备段落、书籍元信息
+      book.toml              # 内容组织：路径、章节顺序、标题与编号、包映射
+      case-studies.toml      # 案例流水线（scenario -> steps）
     config/
       base.json              # 基础配置：源码树、文件后缀/包前缀、状态与基线路径、工具链预算
       style.json             # 书籍风格：展示文案、章节骨架、图注词表、写作阈值、生成模板
+    language/
+      zh.json                # 语言包：章节骨架名、图注提示语、术语提示、标点规则
     baselines/
       ascii-baseline.json    # ASCII 图已知问题基线（--update-baseline 生成）
       source-symbol-baseline.json  # 源码符号漂移基线

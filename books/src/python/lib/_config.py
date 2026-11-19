@@ -118,6 +118,26 @@ REQUIRED_SECTIONS: list[str] = list(SECTIONS.get('per_chapter', []))
 PROJECT: dict = dict(_CFG.get('project', {}))
 
 
+LANGUAGE_DIR = os.path.join(BOOK_ROOT, 'data', 'language')
+LANGUAGE_CODE = os.environ.get('BOOK_LANGUAGE') or 'zh'
+
+
+def language() -> dict:
+    """Language pack for the current manuscript language (data/language/<code>.json)."""
+    path = os.path.join(LANGUAGE_DIR, f'{LANGUAGE_CODE}.json')
+    data = _read_policy(path)
+    if not data:
+        data = {'code': LANGUAGE_CODE,
+                'sections': {k: v for k, v in SECTIONS.items() if isinstance(v, str)}}
+    return data
+
+
+def language_section(key: str, default: str = '') -> str:
+    """A section heading name from the language pack (falls back to book.toml)."""
+    sections = language().get('sections') or {}
+    return str(sections.get(key) or REQUIRED_SECTIONS and default or default)
+
+
 def project(key: str, default: str = '') -> str:
     """Display copy for the renderers (title, author, running head, ...)."""
     return str(PROJECT.get(key) or default)

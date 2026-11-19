@@ -83,7 +83,8 @@ books/
 
 配置分三类：`data/tmpl/book.toml`（数据组织：章节、标题、编号、包映射）、
 `data/config/base.json`（基础：源码树、文件后缀、包前缀、基线、预算）、
-`data/config/style.json`（风格：文案、骨架、图注词表、写作阈值、生成模板）。
+`data/config/style.json`（风格：文案、骨架、图注词表、写作阈值、生成模板）、
+`data/language/zh.json`（语言包：章节骨架名与提示语）、`data/tmpl/case-studies.toml`（案例流水线）。
 脚本不硬编码任何路径、阈值或文案。
 
 ## 迁移到别的项目

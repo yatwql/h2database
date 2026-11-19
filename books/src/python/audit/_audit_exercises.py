@@ -52,9 +52,15 @@ MS_DIR = _config.MANUSCRIPT_DIR
 # Match `## N.X 延伸思考` where N is the chapter number and X is the local
 # subsection index. We accept any subsection number — placement enforcement
 # (between 本章小结 and 延展阅读) is checked separately.
-HEADING_EXERCISES = re.compile(r'^## (\d+)\.(\d+)\s+延伸思考\s*$')
-HEADING_SUMMARY = re.compile(r'^## (\d+)\.(\d+)\s+本章小结\s*$')
-HEADING_FURTHER = re.compile(r'^## (\d+)\.(\d+)\s+延展阅读\s*$')
+LANG = _config.language().get('sections', {})
+EXERCISES_TITLE = LANG.get('exercises', '延伸思考')
+SUMMARY_TITLE = LANG.get('summary', '本章小结')
+FURTHER_TITLE = LANG.get('further', '延展阅读')
+HINT_MARK = _config.language().get('exercise', {}).get('hint_prefix', '提示')
+REVIEW_MARK = _config.language().get('exercise', {}).get('review_prefix', '回顾')
+HEADING_EXERCISES = re.compile(r'^## (\d+)\.(\d+)\s+' + EXERCISES_TITLE + r'\s*$')
+HEADING_SUMMARY = re.compile(r'^## (\d+)\.(\d+)\s+' + SUMMARY_TITLE + r'\s*$')
+HEADING_FURTHER = re.compile(r'^## (\d+)\.(\d+)\s+' + FURTHER_TITLE + r'\s*$')
 HEADING_CHAPTER = re.compile(r'^# 第(\d+)章')
 HEADING_H2_ANY = re.compile(r'^## ')
 
@@ -67,8 +73,8 @@ EXERCISE_LEAD = re.compile(
 
 # Hint and review markers — both are blockquote lines but the wording is
 # fixed so the audit can recognise them deterministically.
-HINT_RE = re.compile(r'^>\s*提示[：:]\s*(.+)')
-REVIEW_RE = re.compile(r'^>\s*回顾[：:]\s*(.+)')
+HINT_RE = re.compile(r'^>\s*' + HINT_MARK + r'[：:]\s*(.+)')
+REVIEW_RE = re.compile(r'^>\s*' + REVIEW_MARK + r'[：:]\s*(.+)')
 
 # The review line must contain at least one §X.Y or 第X章 anchor.
 ANCHOR_RE = re.compile(r'§\d+(?:\.\d+)*[a-z]?|第\d+章')

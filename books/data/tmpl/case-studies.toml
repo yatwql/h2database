@@ -1,0 +1,167 @@
+# Case-study pipelines: each scenario is an ordered list of steps.
+# component / anchor / decision are rendered into the appendix draft.
+
+[scenarios.select]
+title = "select"
+[[scenarios.select.steps]]
+component = "JDBC 入口"
+anchor = "§7.1"
+decision = "JdbcStatement 如何拿到 SessionLocal 并通过 prepareCommand 进入引擎层"
+[[scenarios.select.steps]]
+component = "Tokenizer 词法分析"
+anchor = "§3.4"
+decision = "关键字识别 / 字符串字面量 / 标识符的边界处理"
+[[scenarios.select.steps]]
+component = "Parser 递归下降"
+anchor = "§7.2"
+decision = "parseSelect 的状态转换与表达式优先级处理"
+[[scenarios.select.steps]]
+component = "Prepared 编译缓存"
+anchor = "§7.4"
+decision = "CommandContainer 如何通过 schema 版本号判定重编译"
+[[scenarios.select.steps]]
+component = "Optimizer 选择执行计划"
+anchor = "§8.1"
+decision = "canStop 终止条件与 Hybrid 策略的入口"
+[[scenarios.select.steps]]
+component = "TableFilter 索引选择"
+anchor = "§8.4"
+decision = "IndexCondition 三类（EQUALITY/RANGE/SPATIAL）匹配规则"
+[[scenarios.select.steps]]
+component = "B-Tree 路径查找"
+anchor = "§6.1"
+decision = "Counted B-Tree 的二分定位与叶节点定位"
+[[scenarios.select.steps]]
+component = "Page / Chunk 加载"
+anchor = "§9.6"
+decision = "Page Pointer 解码与跨 Chunk 引用的命中路径"
+[[scenarios.select.steps]]
+component = "LIRS 缓存命中"
+anchor = "§6.5"
+decision = "热/冷队列在点查负载下的命中模式"
+[[scenarios.select.steps]]
+component = "FileStore 物理读"
+anchor = "§9.1"
+decision = "何时走 FileChannel.read，何时复用映射页"
+[[scenarios.select.steps]]
+component = "Value 比较与回填"
+anchor = "§3.10"
+decision = "ValueInteger 与 SQL Long 的类型协调"
+[[scenarios.select.steps]]
+component = "LocalResult 行打包"
+anchor = "§7.5"
+decision = "单行结果集的零拷贝直返路径"
+[[scenarios.select.steps]]
+component = "JDBC 返回 ResultSet"
+anchor = "§7.1"
+decision = "JdbcResultSet 的迭代与 close 的资源释放"
+
+[scenarios.commit]
+title = "commit"
+[[scenarios.commit.steps]]
+component = "Session.beginTransaction"
+anchor = "§7.1.5"
+decision = "事务对象如何在 SessionLocal 上初始化并取得 transactionId"
+[[scenarios.commit.steps]]
+component = "TransactionStore 注册"
+anchor = "§4.5"
+decision = "OPEN 状态的写入与 Undo Log 的 MVMap 占位"
+[[scenarios.commit.steps]]
+component = "INSERT 写入"
+anchor = "§5.2"
+decision = "TransactionMap.put 在快照视图与底层 MVMap 之间的 CAS 协议"
+[[scenarios.commit.steps]]
+component = "Undo Log 累积"
+anchor = "§5.5"
+decision = "每条 (transactionId, key, oldValue) 三元组的写时序"
+[[scenarios.commit.steps]]
+component = "UPDATE 路径"
+anchor = "§5.3"
+decision = "VersionedValue 的 committed/uncommitted 切换与冲突检测"
+[[scenarios.commit.steps]]
+component = "TxDecisionMaker 写冲突"
+anchor = "§10.4"
+decision = "first-committer-wins 策略与等待 vs 失败的判定"
+[[scenarios.commit.steps]]
+component = "COMMIT 触发"
+anchor = "§5.5"
+decision = "Session.commit 的入口、PREPARED 状态的可选阶段"
+[[scenarios.commit.steps]]
+component = "CommitDecisionMaker 扫描 Undo Log"
+anchor = "§5.5"
+decision = "逐条记录的状态切换与可见性翻转的原子性保证"
+[[scenarios.commit.steps]]
+component = "RootReference CAS"
+anchor = "§10.5"
+decision = "版本号 +1 的提交点；并发读事务的快照保留窗口"
+[[scenarios.commit.steps]]
+component = "BackgroundWriter 后台落盘"
+anchor = "§9.5"
+decision = "autoCommitDelay 与 Chunk 写入触发条件"
+[[scenarios.commit.steps]]
+component = "Chunk Footer 写入与 Fletcher-32"
+anchor = "§9.3"
+decision = "Chunk 完整性的最后一道闸门"
+[[scenarios.commit.steps]]
+component = "File Header 同步点更新"
+anchor = "§9.6"
+decision = "双重备份的写入顺序与崩溃可恢复性"
+[[scenarios.commit.steps]]
+component = "Checkpoint 完成"
+anchor = "§9.5"
+decision = "事务对外可见性的最终确认"
+
+[scenarios.recover]
+title = "recover"
+[[scenarios.recover.steps]]
+component = "崩溃发生"
+anchor = "§9.7"
+decision = "触发条件：进程 SIGKILL / OS panic / 磁盘瞬断"
+[[scenarios.recover.steps]]
+component = "FileStore 重新打开"
+anchor = "§9.1"
+decision = "文件锁获取与文件版本检查"
+[[scenarios.recover.steps]]
+component = "File Header 双副本读取"
+anchor = "§9.6"
+decision = "哪一份是最新；如何处理两份都不完整的退化情形"
+[[scenarios.recover.steps]]
+component = "最新 Chunk 定位"
+anchor = "§9.3"
+decision = "Chunk Header 链遍历与版本号最大值的选取"
+[[scenarios.recover.steps]]
+component = "Chunk Footer 校验"
+anchor = "§9.3"
+decision = "Fletcher-32 失败时的回退：跳过最后一个 Chunk"
+[[scenarios.recover.steps]]
+component = "B-Tree 根重建"
+anchor = "§9.2"
+decision = "RootReference 还原与可见性快照重建"
+[[scenarios.recover.steps]]
+component = "Undo Log 扫描"
+anchor = "§9.7"
+decision = "识别 OPEN / PREPARED 状态的事务"
+[[scenarios.recover.steps]]
+component = "未完成事务回滚"
+anchor = "§5.6"
+decision = "RollbackDecisionMaker 逐条逆序恢复 oldValue"
+[[scenarios.recover.steps]]
+component = "PREPARED 事务的处理策略"
+anchor = "§5.5"
+decision = "是否回滚取决于事务协调器约定"
+[[scenarios.recover.steps]]
+component = "Free Space 重算"
+anchor = "§6.6"
+decision = "FreeSpaceBitSet 从 Chunk 链回放重建"
+[[scenarios.recover.steps]]
+component = "一致性检查"
+anchor = "§9.7"
+decision = "可选的全表扫描 vs 按需懒检查"
+[[scenarios.recover.steps]]
+component = "对外开放写入"
+anchor = "§9.1"
+decision = "恢复完成的标志：FileStore.openComplete"
+[[scenarios.recover.steps]]
+component = "异常分支：Chunk 校验失败"
+anchor = "§9.7"
+decision = "Recover 工具与 simulateCrash 的可重入路径"

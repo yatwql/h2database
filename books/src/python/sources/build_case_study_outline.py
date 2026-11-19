@@ -28,9 +28,11 @@ import sys as _sys
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
 import argparse
+import os
 import sys
+import tomllib
 
-from lib import _fsutil
+from lib import _config, _fsutil
 
 # Match the rest of the books tool chain: keep stdout pinned to UTF-8 so
 # Chinese narrative output renders correctly when redirected on Windows
@@ -41,53 +43,26 @@ _fsutil.pin_stdout_utf8()
 # narrative as `详见 §X.Y`, which is the cross-reference idiom enforced by
 # final_check.py. Decision points are short prose hooks the author then
 # expands with figures and source-code excerpts.
-SCENARIOS: dict[str, list[tuple[str, str, str]]] = {
-    'select': [
-        ('JDBC 入口', '§7.1', 'JdbcStatement 如何拿到 SessionLocal 并通过 prepareCommand 进入引擎层'),
-        ('Tokenizer 词法分析', '§3.4', '关键字识别 / 字符串字面量 / 标识符的边界处理'),
-        ('Parser 递归下降', '§7.2', 'parseSelect 的状态转换与表达式优先级处理'),
-        ('Prepared 编译缓存', '§7.4', 'CommandContainer 如何通过 schema 版本号判定重编译'),
-        ('Optimizer 选择执行计划', '§8.1', 'canStop 终止条件与 Hybrid 策略的入口'),
-        ('TableFilter 索引选择', '§8.4', 'IndexCondition 三类（EQUALITY/RANGE/SPATIAL）匹配规则'),
-        ('B-Tree 路径查找', '§6.1', 'Counted B-Tree 的二分定位与叶节点定位'),
-        ('Page / Chunk 加载', '§9.6', 'Page Pointer 解码与跨 Chunk 引用的命中路径'),
-        ('LIRS 缓存命中', '§6.5', '热/冷队列在点查负载下的命中模式'),
-        ('FileStore 物理读', '§9.1', '何时走 FileChannel.read，何时复用映射页'),
-        ('Value 比较与回填', '§3.10', 'ValueInteger 与 SQL Long 的类型协调'),
-        ('LocalResult 行打包', '§7.5', '单行结果集的零拷贝直返路径'),
-        ('JDBC 返回 ResultSet', '§7.1', 'JdbcResultSet 的迭代与 close 的资源释放'),
-    ],
-    'commit': [
-        ('Session.beginTransaction', '§7.1.5', '事务对象如何在 SessionLocal 上初始化并取得 transactionId'),
-        ('TransactionStore 注册', '§4.5', 'OPEN 状态的写入与 Undo Log 的 MVMap 占位'),
-        ('INSERT 写入', '§5.2', 'TransactionMap.put 在快照视图与底层 MVMap 之间的 CAS 协议'),
-        ('Undo Log 累积', '§5.5', '每条 (transactionId, key, oldValue) 三元组的写时序'),
-        ('UPDATE 路径', '§5.3', 'VersionedValue 的 committed/uncommitted 切换与冲突检测'),
-        ('TxDecisionMaker 写冲突', '§10.4', 'first-committer-wins 策略与等待 vs 失败的判定'),
-        ('COMMIT 触发', '§5.5', 'Session.commit 的入口、PREPARED 状态的可选阶段'),
-        ('CommitDecisionMaker 扫描 Undo Log', '§5.5', '逐条记录的状态切换与可见性翻转的原子性保证'),
-        ('RootReference CAS', '§10.5', '版本号 +1 的提交点；并发读事务的快照保留窗口'),
-        ('BackgroundWriter 后台落盘', '§9.5', 'autoCommitDelay 与 Chunk 写入触发条件'),
-        ('Chunk Footer 写入与 Fletcher-32', '§9.3', 'Chunk 完整性的最后一道闸门'),
-        ('File Header 同步点更新', '§9.6', '双重备份的写入顺序与崩溃可恢复性'),
-        ('Checkpoint 完成', '§9.5', '事务对外可见性的最终确认'),
-    ],
-    'recover': [
-        ('崩溃发生', '§9.7', '触发条件：进程 SIGKILL / OS panic / 磁盘瞬断'),
-        ('FileStore 重新打开', '§9.1', '文件锁获取与文件版本检查'),
-        ('File Header 双副本读取', '§9.6', '哪一份是最新；如何处理两份都不完整的退化情形'),
-        ('最新 Chunk 定位', '§9.3', 'Chunk Header 链遍历与版本号最大值的选取'),
-        ('Chunk Footer 校验', '§9.3', 'Fletcher-32 失败时的回退：跳过最后一个 Chunk'),
-        ('B-Tree 根重建', '§9.2', 'RootReference 还原与可见性快照重建'),
-        ('Undo Log 扫描', '§9.7', '识别 OPEN / PREPARED 状态的事务'),
-        ('未完成事务回滚', '§5.6', 'RollbackDecisionMaker 逐条逆序恢复 oldValue'),
-        ('PREPARED 事务的处理策略', '§5.5', '是否回滚取决于事务协调器约定'),
-        ('Free Space 重算', '§6.6', 'FreeSpaceBitSet 从 Chunk 链回放重建'),
-        ('一致性检查', '§9.7', '可选的全表扫描 vs 按需懒检查'),
-        ('对外开放写入', '§9.1', '恢复完成的标志：FileStore.openComplete'),
-        ('异常分支：Chunk 校验失败', '§9.7', 'Recover 工具与 simulateCrash 的可重入路径'),
-    ],
-}
+CASE_STUDY_CONFIG = os.path.join(_config.BOOK_ROOT, 'data', 'tmpl', 'case-studies.toml')
+
+
+def load_scenarios() -> dict[str, list[tuple[str, str, str]]]:
+    """Read the case-study pipelines from data/tmpl/case-studies.toml."""
+    try:
+        with open(CASE_STUDY_CONFIG, 'rb') as fh:
+            data = tomllib.load(fh)
+    except FileNotFoundError as exc:
+        raise SystemExit(f'error: missing {CASE_STUDY_CONFIG}') from exc
+    except tomllib.TOMLDecodeError as exc:
+        raise SystemExit(f'error: invalid TOML in {CASE_STUDY_CONFIG}: {exc}') from exc
+    out: dict[str, list[tuple[str, str, str]]] = {}
+    for name, scenario in (data.get('scenarios') or {}).items():
+        out[name] = [(step.get('component', ''), step.get('anchor', ''),
+                      step.get('decision', '')) for step in scenario.get('steps', [])]
+    return out
+
+
+SCENARIOS: dict[str, list[tuple[str, str, str]]] = load_scenarios()
 
 SCENARIO_HEADERS = {
     'select': {

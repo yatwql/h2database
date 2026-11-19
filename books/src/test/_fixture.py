@@ -39,6 +39,22 @@ files = [
 front_glob = "front/*.md"
 back_glob = "back/*.md"
 
+[chapters.titles]
+"ch1-test.md" = ["示例总览"]
+"ch2-test.md" = ["核心模块"]
+
+[chapters.numbering]
+"ch1-test.md" = [1]
+"ch2-test.md" = [2]
+
+[chapters.coverage]
+"ch1-test.md" = [1]
+"ch2-test.md" = [2]
+
+[chapters.packages]
+"ch1-test.md" = ["org.example"]
+"ch2-test.md" = ["org.example.core"]
+
 [thresholds]
 caption_min_chars = 6
 caption_max_chars = 40
@@ -200,6 +216,36 @@ STYLE_JSON = {
                    "checklist_items": 5},
 }
 
+LANGUAGE_JSON = {
+    "code": "zh",
+    "sections": {"guide": "本章导读", "summary": "本章小结",
+                 "exercises": "延伸思考", "further": "延展阅读"},
+    "exercise": {"hint_prefix": "提示", "review_prefix": "回顾"},
+    "terms": {"reference_line": "术语参考", "glossary_title": "术语表",
+              "glossary_link": "back/glossary.md"},
+    "style": {"sentence_endings": "。！？；", "fullwidth_punctuation": True},
+}
+
+CASE_STUDIES_TOML = """
+[scenarios.select]
+[[scenarios.select.steps]]
+component = "入口"
+anchor = "§1.1"
+decision = "从入口进入示例模块"
+
+[scenarios.commit]
+[[scenarios.commit.steps]]
+component = "写入"
+anchor = "§2.1"
+decision = "提交路径的选择"
+
+[scenarios.recover]
+[[scenarios.recover.steps]]
+component = "恢复"
+anchor = "§2.1"
+decision = "崩溃后的恢复点"
+"""
+
 CONFIG_JSON = {
     "thresholds": {
         "ascii_max_cols": 100,
@@ -278,6 +324,12 @@ def build_book(root: str, *, extra: dict[str, str] | None = None) -> str:
     for name, payload in (('base.json', BASE_JSON), ('style.json', STYLE_JSON)):
         with open(os.path.join(policy_dir, name), 'w', encoding='utf-8') as fh:
             json.dump(payload, fh, ensure_ascii=False, indent=2)
+    language_dir = os.path.join(root, 'data', 'language')
+    os.makedirs(language_dir, exist_ok=True)
+    with open(os.path.join(language_dir, 'zh.json'), 'w', encoding='utf-8') as fh:
+        json.dump(LANGUAGE_JSON, fh, ensure_ascii=False, indent=2)
+    with open(os.path.join(config_dir, 'case-studies.toml'), 'w', encoding='utf-8') as fh:
+        fh.write(CASE_STUDIES_TOML)
     for rel, text in {**FILES, **(extra or {})}.items():
         path = os.path.join(root, rel)
         os.makedirs(os.path.dirname(path), exist_ok=True)

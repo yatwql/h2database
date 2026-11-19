@@ -1,0 +1,23 @@
+{
+  "_note": "Language pack: wording the audits and the generator expect in the manuscript.",
+  "code": "zh",
+  "sections": {
+    "guide": "本章导读",
+    "summary": "本章小结",
+    "exercises": "延伸思考",
+    "further": "延展阅读"
+  },
+  "exercise": {
+    "hint_prefix": "提示",
+    "review_prefix": "回顾"
+  },
+  "terms": {
+    "reference_line": "术语参考",
+    "glossary_title": "术语表",
+    "glossary_link": "back/glossary.md"
+  },
+  "style": {
+    "sentence_endings": "。！？；",
+    "fullwidth_punctuation": true
+  }
+}
