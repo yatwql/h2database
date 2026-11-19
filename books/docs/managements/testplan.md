@@ -1,6 +1,6 @@
 # H2 Database 源码分析 — 质量标准与测试计划
 
-> 版本：v6.1
+> 版本：v6.5
 > 最后更新：2026-06-15
 
 ---
@@ -75,6 +75,8 @@ python books/src/python/final_check.py --gate-level p0  # 仅 p0
 | ASCII 图质量 | 图宽 ≤ `ascii_max_cols`（CJK 记 2 列）；无行尾空格/制表符；单图不混用框线与 ASCII 边框；已知项走基线 | `_audit_ascii.py`、`books/data/baselines/ascii-baseline.json` | P1 |
 | EPUB 结构 | mimetype 首条且未压缩、container/OPF 可解析、manifest 与 spine 全部可解析、nav 链接全部命中、体积 ≤ `epub_max_mb` | `verify_epub.py` | P1 |
 | PDF 交付 | outline 与 HTML 标题逐一对应、outline 层级跟随标题层级、印刷 TOC 链接按序且在页内、字体全部嵌入、体积 ≤ `pdf_max_mb` | `verify_pdf.py --require-toc-links` | P1 |
+| 文档一致性 | 文档中引用的路径、脚本、章节名、版本号与仓库实际一致 | `audit/check_doc_drift.py` | P0 |
+| 历史痕迹 | 文档与代码注释只描述当前状态，不含过程性记录 | `audit/check_doc_traces.py`、`audit/check_code_traces.py` | P0 |
 | 工具链测试 | 单元 + 集成测试全绿（109 例）：`make.py test` | `books/src/test/` | P0 |
 
 `final_check.py` 默认（`--gate-level p2`）必须达到全部检查通过。
@@ -134,7 +136,7 @@ python books/src/python/pdf_print_grade.py
 EPUB 是面向电子阅读器（Apple Books / Kindle / Calibre / Readium 等）的可选交付形态，**只在交付的最后阶段按需输出**，不进入日常流水线。要求：
 
 - EPUB 由 pandoc 从合并后的 `h2-source-code-analysis.md` 生成；运行前先调用 `rebuild_merged.py` 保证源最新
-- 输出路径：`books/h2-source-code-analysis.epub`（与日常 PDF / 印刷级 PDF 互相独立）
+- 输出路径：`books/dist/h2-source-code-analysis.epub`（与日常 PDF / 印刷级 PDF 互相独立）
 - 元数据：`<dc:title>` / `<dc:creator>` / `<dc:date>` / `<dc:language>=zh-CN` 由 cover.md 自动提取（标题 / 副标题 / 版本 / 作者 / 出版日期）
 - 每个 H1 章节在 EPUB 内部独立分卷（`--split-level=1`），便于阅读器分章导航
 - 目录深度 H1-H3（`--toc --toc-depth=3`），与 HTML 侧边栏 TOC 层级一致

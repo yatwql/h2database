@@ -29,14 +29,20 @@ python books/src/python/make.py doctor        # optional deps (pandoc/playwright
 | Quality gates and verification commands | `books/docs/managements/testplan.md` |
 | Writing and format conventions | `books/docs/managements/style-guide.md` |
 | Content organisation (paths, chapter order) | `books/data/tmpl/book.toml` |
-| Toolchain policy (thresholds, budgets, baselines) | `books/data/config/config.json` |
+| Toolchain policy (thresholds, budgets, baselines) | `books/data/config/base.json`, `books/data/config/style.json` |
 
 ## Hard Rules
 
-- Configuration lives only in `books/data/tmpl/book.toml` and
-  `books/data/config/config.json`; scripts read it through `_config`.
+- Configuration lives only in `books/data/tmpl/book.toml`,
+  `books/data/config/base.json` and `books/data/config/style.json`;
+  scripts read it through `_config`.
 - Manuscript sources live only in `books/data/manuscript/`.
 - Delivery artifacts live only in `books/dist/` (gitignored, regenerated).
 - Tooling lives only in `books/src/python/`; tests only in `books/src/test/`.
 - No temporary repair scripts, archives, or `__pycache__` in git; session
   artifacts go to `.claude/`.
+- No historical traces in docs or code comments (review rounds, batches, dated
+  plans, completed-work ledgers); version history lives in `changelog.md` only.
+  `make.py check` enforces this plus doc drift (paths, scripts, chapters,
+  versions) through `audit/check_doc_traces.py`, `audit/check_code_traces.py`
+  and `audit/check_doc_drift.py`.

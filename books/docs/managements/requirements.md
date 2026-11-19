@@ -1,6 +1,6 @@
 # H2 Database 源码分析 — 需求文档
 
-> 版本：v6.1
+> 版本：v6.5
 > 状态：已交付（v6.0 工业级里程碑 + v6.1 EPUB 输出形态）
 > 最后更新:2026-06-15
 
@@ -14,22 +14,22 @@
 
 | 产物 | 路径 | 说明 |
 | --- | --- | --- |
-| 源章节 | `books/ch*.md` | 10 个源文件覆盖 12 章 |
-| 附录 A 端到端案例研究 | `books/appendix-a-case-studies.md` | SELECT / COMMIT / 崩溃恢复三案例 |
-| 附录 B 源码版本变更说明 | `books/appendix-b-version-changes.md` | v2.4.240 → v2.4.249-SNAPSHOT 关键变更 |
-| 附录 C 术语表 | `books/back/glossary.md` | 113 条术语、章节索引、see-also |
-| 附录 D 概念索引 | `books/back/index.md` | 主条目 + 子条目 + see-also 三档层级 |
-| 附录 E 参考文献 | `books/back/references.md` | 官方文档、论文、技术资料分类清单 |
-| 前件 | `books/front/` | 前言、版权页、阅读指南 |
-| 合并 Markdown | `books/h2-source-code-analysis.md` | 标准可提交交付物，由源章节生成 |
-| HTML | `books/h2-source-code-analysis.html` | 按需生成，带侧边栏 TOC，git 忽略 |
-| PDF | `books/h2-source-code-analysis.pdf` | 按需生成，带大纲和可点击目录，git 忽略 |
-| 印刷级 PDF | `books/h2-source-code-analysis-print.pdf` | 按需生成（最终交付阶段），章首装饰页 + TOC 虚线对齐，git 忽略 |
-| EPUB | `books/h2-source-code-analysis.epub` | 按需生成（最终交付阶段），面向电子阅读器，git 忽略 |
+| 源章节 | `books/data/manuscript/ch*.md` | 10 个源文件覆盖 12 章 |
+| 附录 A 端到端案例研究 | `books/data/manuscript/appendix-a-case-studies.md` | SELECT / COMMIT / 崩溃恢复三案例 |
+| 附录 B 源码版本变更说明 | `books/data/manuscript/appendix-b-version-changes.md` | v2.4.240 → v2.4.249-SNAPSHOT 关键变更 |
+| 附录 C 术语表 | `books/data/manuscript/back/glossary.md` | 113 条术语、章节索引、see-also |
+| 附录 D 概念索引 | `books/data/manuscript/back/index.md` | 主条目 + 子条目 + see-also 三档层级 |
+| 附录 E 参考文献 | `books/data/manuscript/back/references.md` | 官方文档、论文、技术资料分类清单 |
+| 前件 | `books/data/manuscript/front/` | 前言、版权页、阅读指南 |
+| 合并 Markdown | `books/dist/h2-source-code-analysis.md` | 标准可提交交付物，由源章节生成 |
+| HTML | `books/dist/h2-source-code-analysis.html` | 按需生成，带侧边栏 TOC，git 忽略 |
+| PDF | `books/dist/h2-source-code-analysis.pdf` | 按需生成，带大纲和可点击目录，git 忽略 |
+| 印刷级 PDF | `books/dist/h2-source-code-analysis-print.pdf` | 按需生成（最终交付阶段），章首装饰页 + TOC 虚线对齐，git 忽略 |
+| EPUB | `books/dist/h2-source-code-analysis.epub` | 按需生成（最终交付阶段），面向电子阅读器，git 忽略 |
 | 工具脚本 | `books/src/python/` | 正式生成、审计和验证工具 |
-| 管理文档 | `books/docs/managements/` | 当前需求、计划、质量门禁、变更记录、审查问题、写作风格指南 |
+| 管理文档 | `books/docs/managements/` | 当前需求、计划、质量门禁、变更记录、写作风格指南 |
 
-当前统计数据以 `books/cover.md` 自动更新结果和 `books/src/python/final_check.py` 输出为准；本文件不重复维护数字。
+当前统计数据以 `books/data/manuscript/cover.md` 自动更新结果和 `books/src/python/audit/final_check.py` 输出为准；本文件不重复维护数字。
 
 ## 3. 内容范围
 
