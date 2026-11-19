@@ -156,6 +156,18 @@ def run_step(step: str, log_path: str, timeout: float = 1800.0,
     return {'step': step, 'code': proc.returncode, 'seconds': elapsed}
 
 
+def _record_perf(summary: dict) -> None:
+    """Feed the timing history so delivery-speed regressions are visible."""
+    try:
+        perf = importlib.import_module('audit.perf_baseline')
+    except ImportError:  # pragma: no cover - audit layer always present here
+        return
+    perf.record({'ts': datetime.datetime.now().isoformat(timespec='seconds'),
+                 'mode': summary.get('mode', ''),
+                 'seconds': summary.get('seconds', 0.0),
+                 'steps': summary.get('steps', [])})
+
+
 def report_paths(mode: str, stamp: str) -> tuple[str, str]:
     directory = os.path.join(BOOK_ROOT, 'logs')
     _fsutil.ensure_dir(directory)
@@ -207,6 +219,7 @@ def run(mode: str, *, archive: bool = True, as_json: bool = False,
         summary['failed_step'] = failed[0]['step']
     if archive:
         payload = json.dumps(summary, ensure_ascii=False, indent=2) + '\n'
+        _record_perf(summary)
         _fsutil.write_text(json_path, payload)
         _fsutil.write_text(os.path.join(BOOK_ROOT, 'logs', 'check-latest.json'), payload)
     LOG.info('check %s -> %s (%.2fs, %d steps)',

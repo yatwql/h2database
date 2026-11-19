@@ -64,6 +64,15 @@ books/scripts/release.sh manifest               # 按当前产物重写清单
 发布清单写到 `books/dist/release-<文档版本>.json`：三个版本、commit、产物字节数与
 SHA-256。`publish` 只写清单并提示 `git tag`，不代替你打标签。
 
+### 失败提取（CI 日志）
+
+```bash
+python books/src/python/audit/failure_extract.py books/logs/check-p0-*.log
+python books/src/python/audit/failure_extract.py --json < log.txt
+```
+
+把长日志收敛成"哪个用例、什么原因"的清单，`--summary` 只列用例名。
+
 ### Git 钩子
 
 ```bash
@@ -167,6 +176,7 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `typecheck.py` | pyright 静态检查（可选依赖，缺失时跳过） | ● |
 | `portability.py` | 移植性：`open()` 必须显式 encoding；`LC_ALL=C` + ASCII 输出下入口不得崩 | ● |
 | `test_redundancy.py` | 测试卫生：重复用例体 / 无断言 / 非 TestCase 的 test_* / 同名遮蔽 | ● |
+| `perf_baseline.py` | 交付速度：每步耗时对比历史中位数，超阈值提示；`--strict` 变成失败 | ● |
 | `scorecard.py` | 六维评分汇总（`eval-score.sh` 的实现） | ● |
 
 ## 9. 交付渲染 `src/python/render/`
