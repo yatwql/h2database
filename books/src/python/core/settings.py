@@ -7,6 +7,11 @@ reloads ``lib._config`` so the running session sees the new value.
 """
 from __future__ import annotations
 
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import importlib
 import json
 import os

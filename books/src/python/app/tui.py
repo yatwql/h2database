@@ -14,12 +14,12 @@ import os
 import sys
 import unicodedata
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from core import actions, menu, settings
 from lib import _config
 
 from app import keys
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 USE_COLOR = sys.stdout.isatty() and not os.environ.get('NO_COLOR')
 

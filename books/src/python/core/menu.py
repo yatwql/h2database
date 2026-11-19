@@ -8,6 +8,11 @@ what a finished run reports back. Channels hold no such rules themselves.
 from __future__ import annotations
 
 import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import os
 import time
 from dataclasses import dataclass
 
