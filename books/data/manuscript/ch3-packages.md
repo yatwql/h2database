@@ -22,7 +22,8 @@
 | `org.h2.index` | 23 | 4,093 | Various table index implementations, as well as cursors to navigate in an index. |
 | `org.h2.result` | 21 | 3,677 | Implementation of row and internal result sets. |
 | `org.h2.schema` | 11 | 3,213 | Schema implementation and objects that are stored in a schema (for example, sequences and constants). |
-| `org.h2.store` | 17 | 2,712 | Storage abstractions and helper classes. |
+
+其余 1 个包规模较小：`org.h2.store`。
 
 ## 3.2 核心类型
 
@@ -36,8 +37,6 @@
 | `TypeInfo` | 1,539 | 23 | （无类注释，按方法名归纳） |
 | `Transfer` | 1,368 | 31 | （无类注释，按方法名归纳） |
 | `DataType` | 828 | 25 | （无类注释，按方法名归纳） |
-| `ValueToObjectConverter` | 642 | 6 | （无类注释，按方法名归纳） |
-| `ValueToObjectConverter2` | 433 | 2 | （无类注释，按方法名归纳） |
 
 ### 3.2.2 `org.h2.command`
 
@@ -47,8 +46,6 @@
 | `Tokenizer` | 1,522 | 0 | （无类注释，按方法名归纳） |
 | `ParserBase` | 771 | 8 | （无类注释，按方法名归纳） |
 | `Token` | 758 | 5 | （无类注释，按方法名归纳） |
-| `CommandInterface` | 654 | 0 | （无类注释，按方法名归纳） |
-| `Prepared` | 503 | 33 | （无类注释，按方法名归纳） |
 
 ### 3.2.3 `org.h2.mvstore`
 
@@ -58,8 +55,6 @@
 | `MVStore` | 2,215 | 85 | （无类注释，按方法名归纳） |
 | `MVMap` | 2,181 | 102 | （无类注释，按方法名归纳） |
 | `Page` | 1,779 | 77 | （无类注释，按方法名归纳） |
-| `DataUtils` | 1,185 | 45 | （无类注释，按方法名归纳） |
-| `RandomAccessStore` | 851 | 10 | （无类注释，按方法名归纳） |
 
 ### 3.2.4 `org.h2.util`
 
@@ -69,8 +64,6 @@
 | `DateTimeUtils` | 1,171 | 42 | （无类注释，按方法名归纳） |
 | `DateTimeTemplate` | 859 | 5 | （无类注释，按方法名归纳） |
 | `IntervalUtils` | 857 | 12 | （无类注释，按方法名归纳） |
-| `Utils` | 832 | 34 | （无类注释，按方法名归纳） |
-| `JdbcUtils` | 785 | 17 | （无类注释，按方法名归纳） |
 
 ### 3.2.5 `org.h2.table`
 
@@ -80,8 +73,6 @@
 | `InformationSchemaTableLegacy` | 2,324 | 2 | （无类注释，按方法名归纳） |
 | `Table` | 1,446 | 98 | （无类注释，按方法名归纳） |
 | `TableFilter` | 1,310 | 66 | （无类注释，按方法名归纳） |
-| `Column` | 867 | 58 | （无类注释，按方法名归纳） |
-| `TableLink` | 718 | 35 | （无类注释，按方法名归纳） |
 
 ### 3.2.6 `org.h2.engine`
 
@@ -91,8 +82,6 @@
 | `SessionLocal` | 2,156 | 135 | （无类注释，按方法名归纳） |
 | `SessionRemote` | 1,068 | 53 | （无类注释，按方法名归纳） |
 | `Mode` | 776 | 5 | （无类注释，按方法名归纳） |
-| `ConnectionInfo` | 766 | 25 | （无类注释，按方法名归纳） |
-| `Constants` | 520 | 0 | （无类注释，按方法名归纳） |
 
 ### 3.2.7 `org.h2.tools`
 
@@ -102,8 +91,6 @@
 | `Csv` | 986 | 33 | （无类注释，按方法名归纳） |
 | `Recover` | 922 | 18 | （无类注释，按方法名归纳） |
 | `Server` | 823 | 19 | （无类注释，按方法名归纳） |
-| `DirectRecover` | 767 | 11 | （无类注释，按方法名归纳） |
-| `Shell` | 639 | 7 | （无类注释，按方法名归纳） |
 
 ### 3.2.8 `org.h2.expression`
 
@@ -113,8 +100,6 @@
 | `Expression` | 551 | 41 | （无类注释，按方法名归纳） |
 | `BinaryOperation` | 455 | 6 | （无类注释，按方法名归纳） |
 | `ExpressionVisitor` | 417 | 17 | （无类注释，按方法名归纳） |
-| `IntervalOperation` | 381 | 4 | （无类注释，按方法名归纳） |
-| `SimpleCase` | 289 | 12 | （无类注释，按方法名归纳） |
 
 ### 3.2.9 `org.h2.api`
 
@@ -124,8 +109,6 @@
 | `Interval` | 636 | 33 | （无类注释，按方法名归纳） |
 | `IntervalQualifier` | 353 | 13 | （无类注释，按方法名归纳） |
 | `H2Type` | 322 | 6 | （无类注释，按方法名归纳） |
-| `DatabaseEventListener` | 113 | 0 | （无类注释，按方法名归纳） |
-| `Trigger` | 105 | 0 | （无类注释，按方法名归纳） |
 
 ### 3.2.10 `org.h2.index`
 
@@ -135,8 +118,6 @@
 | `IndexCondition` | 675 | 24 | （无类注释，按方法名归纳） |
 | `IndexCursor` | 494 | 13 | （无类注释，按方法名归纳） |
 | `LinkedIndex` | 298 | 13 | （无类注释，按方法名归纳） |
-| `RegularQueryExpressionIndex` | 223 | 4 | （无类注释，按方法名归纳） |
-| `IndexType` | 222 | 16 | （无类注释，按方法名归纳） |
 
 ### 3.2.11 `org.h2.result`
 
@@ -146,8 +127,6 @@
 | `UpdatableRow` | 341 | 5 | （无类注释，按方法名归纳） |
 | `SortOrder` | 334 | 15 | （无类注释，按方法名归纳） |
 | `SimpleResult` | 303 | 31 | （无类注释，按方法名归纳） |
-| `ResultRemote` | 287 | 17 | （无类注释，按方法名归纳） |
-| `RowFactory` | 201 | 17 | （无类注释，按方法名归纳） |
 
 ### 3.2.12 `org.h2.schema`
 
@@ -157,8 +136,6 @@
 | `Sequence` | 586 | 25 | （无类注释，按方法名归纳） |
 | `FunctionAlias` | 562 | 22 | （无类注释，按方法名归纳） |
 | `TriggerObject` | 543 | 28 | （无类注释，按方法名归纳） |
-| `Domain` | 241 | 22 | （无类注释，按方法名归纳） |
-| `UserAggregate` | 120 | 9 | （无类注释，按方法名归纳） |
 
 ### 3.2.13 `org.h2.store`
 
@@ -168,8 +145,6 @@
 | `FileStore` | 513 | 22 | （无类注释，按方法名归纳） |
 | `Data` | 220 | 13 | （无类注释，按方法名归纳） |
 | `RecoverTester` | 176 | 3 | （无类注释，按方法名归纳） |
-| `FileStoreInputStream` | 155 | 5 | （无类注释，按方法名归纳） |
-| `DataReader` | 133 | 5 | （无类注释，按方法名归纳） |
 
 ## 3.3 关键 API 与源码坐标
 
@@ -206,13 +181,26 @@
 
 跨章衔接请对照第4章《包结构与模块职责》。
 
-## 3.5 本章小结
+## 3.5 术语对照
+
+本章出现的专业术语与书末术语表的对应关系：
+
+- **Aggregate**：详见[术语表](back/glossary.md)对应条目。
+- **Database**：详见[术语表](back/glossary.md)对应条目。
+- **Engine**：详见[术语表](back/glossary.md)对应条目。
+- **Expression**：详见[术语表](back/glossary.md)对应条目。
+- **H2**：详见[术语表](back/glossary.md)对应条目。
+- **Index**：详见[术语表](back/glossary.md)对应条目。
+- **MVStore**：详见[术语表](back/glossary.md)对应条目。
+- **Parser**：详见[术语表](back/glossary.md)对应条目。
+
+## 3.6 本章小结
 
 - 本章覆盖 13 个包、119,252 行。
 - 关键入口与源码坐标见 §3.3。
 - 职责优先取自注释，注释缺失处需结合调用点归纳。
 
-## 3.6 延伸思考
+## 3.7 延伸思考
 
 下列题目把"读到的结构"转化为可应用的判断力。
 
@@ -236,6 +224,6 @@
 > 提示：回到 §3.1 的表格，按规模排序挑选目标包。
 > 回顾：§3.1 模块版图
 
-## 3.7 延展阅读
+## 3.8 延展阅读
 
 - 详见第4章《包结构与模块职责》。

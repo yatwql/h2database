@@ -1,67 +1,25 @@
 # 管理文档索引
 
-本目录包含 H2 源码分析文档的项目管理文档，各文档职责如下：
+工具链与项目概况见仓库上层的 [`books/README.md`](../../README.md)；
+目录结构与归属规则见 [`folder.md`](folder.md)。
 
-| 文档 | 职责 | 权威内容 |
-|------|------|---------|
-| `requirements.md` | 当前需求、交付物、内容范围 | 需求摘要、非目标、版本历史引用 |
-| `plan.md` | 当前实施计划、维护策略、风险 | 已完成阶段、后续增强项、维护策略 |
-| `testplan.md` | 质量标准与验证流程 | 权威验证命令、P0/P1/P2 门禁分级、交付形态门禁、门禁演进史、拒绝标准 |
-| `changelog.md` | 版本变更记录 | 从 v1.0 至今的完整版本历史；含 v6.0 工业级里程碑总览 |
-| `review-findings.md` | 审查问题追踪 | 各轮审查发现的问题清单及修复状态；v6.0 各阶段问题清单（R7-1..R7-17、R8-1） |
-| `style-guide.md` | 写作风格指南 | 术语选用、句式风格、图注动宾、图簇桥接、延伸思考、端到端案例叙事等约定 |
-| `baseline-*.json` | 基线度量快照 | `balance_check.py --baseline` 写入，作为 v6.0 各阶段对照基准 |
-| `captions-baseline-*.json` | 图注质量基线快照 | `_audit_captions.py` 输出的图注度量基线 |
-| `archive/` | 已归档计划与历史审计 | 已完成阶段的旧版计划文档、历史审计快照 |
+| 文档 | 职责 |
+|------|------|
+| `requirements.md` | 当前需求、交付物、内容范围 |
+| `plan.md` | 实施计划、维护策略、风险与后续增强 |
+| `testplan.md` | 质量门禁与验证命令（验证的唯一权威） |
+| `changelog.md` | 版本变更记录 |
+| `review-findings.md` | 审查问题清单与修复状态 |
+| `style-guide.md` | 写作与格式规范 |
+| `folder.md` | 目录结构、文件归属、清理规则 |
+| `archive/` | 已归档的计划与历史审计快照 |
 
-## 核心原则
+## 维护原则
 
-- **同一事实只维护在一个权威位置**：各管理文档职责分离，避免重复维护。
-- **统计数据以 `cover.md` 自动更新结果和 `final_check.py` 输出为准**：不在多个管理文档中重复维护数字。
-- **验证流程以 `testplan.md` §1 为唯一权威来源**：`requirements.md` 和 `plan.md` 只保持引用关系。
-- **版本号保持一致**：所有管理文档版本号与 `cover.md` 对齐。
-
-## 目录结构
-
-```text
-books/
-├── management/                    ← 本目录
-│   ├── README.md                  — 本文件（管理文档索引）
-│   ├── requirements.md            — 需求文档
-│   ├── plan.md                    — 实施计划
-│   ├── testplan.md                — 质量标准与测试计划
-│   ├── changelog.md               — 变更记录
-│   ├── review-findings.md         — 审查问题追踪
-│   ├── style-guide.md             — 写作风格指南
-│   ├── baseline-v5.0.json         — v5.0 基线度量快照
-│   ├── captions-baseline-*.json   — 图注质量基线快照
-│   └── archive/                   — 已归档计划与历史审计
-├── plan/                          — 阶段性实施计划（版本路线 PRD/任务清单）
-├── front/                         — 书籍前件（前言、版权、阅读指南）
-├── ch*.md                         — 12 章源章节文件（10 个源文件）
-├── appendix-a-case-studies.md     — 附录 A：端到端案例研究
-├── appendix-b-version-changes.md  — 附录 B：源码版本变更说明
-├── back/glossary.md               — 附录 C：术语表
-├── back/index.md                  — 附录 D：概念索引
-├── back/references.md             — 附录 E：参考文献
-├── cover.md                       — 封面与统计数据
-├── h2-source-code-analysis.md     — 合并 Markdown 交付物
-└── tools/                         — 正式生成、审计和验证工具
-```
-
----
-
-## 文档权威与评审
-
-- `requirements.md`：只写当前范围与交付物。
-- `plan.md`：只写当前工作流、维护策略、风险与后续工作。
-- `testplan.md`：质量门禁与验证命令，是验证的唯一权威。
-- `changelog.md`：版本历史。
-- `review-findings.md`：评审问题与关闭状态。
-- `folder.md`：目录结构与归属规则。
-- `style-guide.md`：写作与格式规范。
-
-不要在多个文档里重复长命令块或历史问题细节，改为引用权威文件。
-
-正式评审按四个视角并行：架构师、文档工程师、程序员（源码引用）、图书编辑；
-问题记入 `review-findings.md`（CRITICAL/HIGH/MEDIUM/LOW），完成的改动记入 `changelog.md`。
+- **同一事实只有一个权威位置**：验证看 `testplan.md`，结构看 `folder.md`，
+  写作看 `style-guide.md`，其余文档只做引用。
+- **不重复统计数字**：以 `cover.md` 自动更新结果与 `final_check.py` 输出为准。
+- **版本号对齐**：管理文档版本与 `books/data/manuscript/cover.md` 一致。
+- **评审留痕**：正式评审按架构师／文档工程师／程序员（源码引用）／图书编辑
+  四视角并行，问题记入 `review-findings.md`（CRITICAL/HIGH/MEDIUM/LOW），
+  完成的改动记入 `changelog.md`。

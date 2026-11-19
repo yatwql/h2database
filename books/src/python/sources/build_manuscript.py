@@ -84,7 +84,11 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
           '下表按规模排序，职责取自 `package-info.java` 首句。'), '']
     L += _table(['包', '文件数', '行数', '职责'],
                 [[f'`{p}`', f"{i['files']}", f"{i['lines']:,}",
-                  i['summary'] or '（无包注释，按主类型归纳）'] for p, i in pkgs_sorted]) + ['']
+                  i['summary'] or '（无包注释，按主类型归纳）']
+                 for p, i in pkgs_sorted[:12]]) + ['']
+    if len(pkgs_sorted) > 12:
+        rest = ', '.join(f'`{p}`' for p, _ in pkgs_sorted[12:])
+        L += [f'其余 {len(pkgs_sorted) - 12} 个包规模较小：{rest}。', '']
 
     L += [f'## {cn}.2 核心类型', '',
           '每个包取规模最大的若干类型，列出规模、公开方法数与自述职责。', '']
@@ -95,7 +99,7 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         L += _table(['类型', '行数', '公开方法', '职责'],
                     [[f"`{c['name']}`", f"{c['lines']:,}", f"{c['public_methods']}",
                       c['summary'] or '（无类注释，按方法名归纳）']
-                     for c in info['key_classes']]) + ['']
+                     for c in info['key_classes'][:4]]) + ['']
 
     L += [f'## {cn}.3 关键 API 与源码坐标', '',
           '下表把公开入口与当前源码位置对应起来，行号由脚本核验。', '']
@@ -117,12 +121,21 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
           '3. 最后读内部实现与数据结构，关注容量、并发与失败路径。', '',
           f'跨章衔接请对照第{cross_num}章《{cross_name}》。', '']
 
-    L += [f'## {cn}.5 本章小结', '',
+    hit_terms = _glossary_hits(packages)
+    if hit_terms:
+        L += [f'## {cn}.5 术语对照', '',
+              '本章出现的专业术语与书末术语表的对应关系：', '']
+        L += [f'- **{t}**：详见[术语表](back/glossary.md)对应条目。' for t in hit_terms[:8]] + ['']
+        cn_summary = 6
+    else:
+        cn_summary = 5
+
+    L += [f'## {cn}.{cn_summary} 本章小结', '',
           f'- 本章覆盖 {len(packages)} 个包、{total_lines:,} 行。',
           f'- 关键入口与源码坐标见 §{cn}.3。',
           '- 职责优先取自注释，注释缺失处需结合调用点归纳。', '']
 
-    L += [f'## {cn}.6 延伸思考', '',
+    L += [f'## {cn}.{cn_summary + 1} 延伸思考', '',
           '下列题目把"读到的结构"转化为可应用的判断力。', '']
     for i in range(4):
         emoji = TYPE_EMOJI[i % 3]
@@ -132,7 +145,7 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
               f'> 提示：回到 §{cn}.1 的表格，按规模排序挑选目标包。',
               f'> 回顾：§{cn}.1 模块版图', '']
 
-    L += [f'## {cn}.7 延展阅读', '',
+    L += [f'## {cn}.{cn_summary + 2} 延展阅读', '',
           (f'- 详见第{cross_num}章《{cross_name}》。'), '']
     return L
 
@@ -170,6 +183,23 @@ def _cross_title(spec: list, num: int) -> str:
         if n == num:
             return t
     return spec[0][1]
+
+
+def _glossary_hits(packages: dict) -> list[str]:
+    """Glossary terms that occur in this chapter's package/class summaries."""
+    global _GLOSSARY
+    if _GLOSSARY is None:
+        text = _fsutil.read_text(_config.glossary_path())
+        _GLOSSARY = [t.strip() for t in re.findall(r'^- \*\*([^*]+)\*\*', text, re.MULTILINE)]
+    blob = ' '.join(
+        [info['summary'] or '' for info in packages.values()]
+        + [c['summary'] or '' for info in packages.values() for c in info['key_classes']]
+        + list(packages)
+    ).lower()
+    return [t for t in _GLOSSARY if t.lower() in blob]
+
+
+_GLOSSARY: list[str] | None = None
 
 
 def _api_sample(pkg: str, class_name: str) -> list[str]:
