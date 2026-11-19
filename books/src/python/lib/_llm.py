@@ -12,8 +12,9 @@ Secrets come from two places, resolved in this order:
   2. ``data/config/llm_key.json`` (gitignored, shape: ``{"keys": {provider: key}}``)
 
 Nothing secret is ever committed: ``llm_key.json`` is ignored by git and the
-``llm_policy`` gate fails if a key file is tracked. The ``mock`` provider
-answers deterministically so the whole pipeline runs offline.
+``llm_policy`` gate fails if a key file is tracked. The shipped config points
+at real providers; a ``kind: mock`` entry can be added for offline runs and is
+what the test fixtures use.
 
 Routing precedence: chapter > book > scenario > default_provider.
 """

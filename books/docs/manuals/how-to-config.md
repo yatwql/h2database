@@ -132,31 +132,45 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 `llm_provider.json` 定义 provider 与路由，`llm_settings.json` 定义生成参数：
 
 ```json
-{"providers": {"mock": {"kind": "mock"},
-               "openai": {"kind": "openai-compatible",
-                          "base_url": "https://api.openai.com/v1",
-                          "api_key_env": "OPENAI_API_KEY",
-                          "models": ["gpt-4o-mini"]}},
- "default_provider": "mock",
- "routing": {"scenario": {"summary": "openai"}, "book": {}, "chapter": {}}}
+{
+  "providers": {
+    "deepseek-main": {
+      "kind": "anthropic",
+      "base_url": "https://api.deepseek.com/anthropic",
+      "credentials_ref": "deepseek-main",
+      "api_key_env": "DEEPSEEK_MAIN_API_KEY",
+      "models": ["deepseek-v4-flash"]
+    }
+  },
+  "default_provider": "deepseek-main",
+  "routing": {"scenario": {"summary": "deepseek-main"}, "book": {}, "chapter": {}}
+}
 ```
 
-优先级：`chapter` > `book` > `scenario` > `default_provider`。密钥只读环境变量
-（`api_key_env` 指向的变量名），不写进仓库；`mock` 可离线跑通全链路。
+优先级：`chapter` > `book` > `scenario` > `default_provider`。
+
+`kind` 决定协议：`anthropic` 走 Messages 接口（`POST /v1/messages`、`x-api-key`
+鉴权），`openai-compatible` 走 `chat/completions`（`Authorization: Bearer`）。
+仓库默认只配置真实 provider：`deepseek-main`（默认）与 `opencode-go`（`review`
+场景）；`mock` 仍由代码支持，需要完全离线时临时加一个 `{"kind": "mock"}` 条目即可。
+
+密钥不写进仓库：环境变量（`api_key_env`）优先，其次 `data/config/llm_key.json`
+的 `providers.<credentials_ref>` 块（`api_key` / `model` / `endpoint`），该文件被
+`.gitignore` 忽略。
 
 **强度（thinking level）**：路由项可写成对象，按场景指定思考强度：
 
 ```json
 {"routing": {"scenario": {
-   "chapter-draft": {"provider": "openai", "thinking": "medium"},
-   "chapter-polish": {"provider": "openai", "thinking": "high"},
-   "summary": {"provider": "mock", "thinking": "low"}}},
+   "chapter-draft": {"provider": "deepseek-main", "thinking": "medium"},
+   "chapter-polish": {"provider": "deepseek-main", "thinking": "high"},
+   "review": {"provider": "opencode-go", "thinking": "high"}}},
  "thinking_levels": ["off", "low", "medium", "high"]}
 ```
 
 缺省强度来自 `llm_settings.json` 的 `defaults.thinking`（默认 `low`），也可在
 `thinking.scenario/book/chapter` 覆盖；越界值直接报错。强度会作为
-`reasoning_effort` 传给 openai-compatible provider，`mock` 会把它回显出来便于测试。
+`reasoning_effort` 传给 openai-compatible provider；`mock` 条目会把它回显出来便于测试。
 
 ## 6. 改完怎么验证
 

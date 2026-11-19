@@ -77,7 +77,7 @@ WARNING 以上，避免刷屏。
 ## LLM
 
 **Q：没有 API key 能跑吗？**
-能。默认 provider 是 `mock`，离线返回确定性文本；真实 provider 的密钥只从
+能。加一个 `{"kind": "mock"}` provider 并把它设为默认即可离线返回确定性文本；真实 provider 的密钥只从
 `api_key_env` 指定的环境变量读取，不落盘。
 
 **Q：怎么让某一章用不同 provider？**

@@ -34,7 +34,7 @@ python books/src/python/app/tui.py
 │ 源码 /path/to/src  (源码版本)                                 │
 │ 手稿 /path/to/books/data/manuscript                           │
 │ 产物 /path/to/books/dist                                      │
-│ 语言 java  日志 INFO  LLM mock                                 │
+│ 语言 java  日志 INFO  LLM deepseek-main                        │
 └──────────────────────────────────────────────────────────────┘
 
  内容
@@ -81,7 +81,7 @@ python books/src/python/app/tui.py
   4) dist           dist                     产物目录
   5) languages      java                     源码语言
   6) log.level      INFO                     日志级别
-  7) llm.provider   mock                     默认 LLM provider
+  7) llm.provider   deepseek-main            默认 LLM provider
 选择要修改的序号（回车取消）: 4
 dist 的新值（当前 dist）: out
 已更新 dist = out
