@@ -15,6 +15,6 @@ TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 if TEST_DIR not in sys.path:
     sys.path.insert(0, TEST_DIR)
 
-import _fixture  # noqa: E402  (path setup must come first)
+import _fixture
 
 _fixture.ensure_tools_path()
