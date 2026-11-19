@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Launch the books toolchain (Linux/macOS).
 #
-#   books/scripts/run.sh                 # TUI
-#   books/scripts/run.sh cli status      # CLI passthrough
-#   books/scripts/run.sh web --port 8080 # Web console
+#   books/scripts/launch.sh                 # TUI
+#   books/scripts/launch.sh cli status      # CLI passthrough
+#   books/scripts/launch.sh web --port 8080 # Web console
 #
 # Requires python3 on PATH. No business logic here: it only locates the
 # interpreter and forwards to books/src/python/app/*.py.
@@ -26,7 +26,7 @@ case "$channel" in
     exec "$PYTHON" "$APP_DIR/$channel.py" "$@"
     ;;
   *)
-    echo "usage: run.sh [cli|tui|web] [args...]" >&2
+    echo "usage: launch.sh [cli|tui|web] [args...]" >&2
     exit 2
     ;;
 esac

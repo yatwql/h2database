@@ -1,8 +1,8 @@
 # Launch the books toolchain (Windows PowerShell).
 #
-#   .\books\scripts\run.ps1                  # TUI
-#   .\books\scripts\run.ps1 cli status       # CLI passthrough
-#   .\books\scripts\run.ps1 web --port 8080  # Web console
+#   .\books\scripts\launch.ps1                  # TUI
+#   .\books\scripts\launch.ps1 cli status       # CLI passthrough
+#   .\books\scripts\launch.ps1 web --port 8080  # Web console
 #
 # Requires python on PATH. No business logic here: it only locates the
 # interpreter and forwards to books\src\python\app\*.py.

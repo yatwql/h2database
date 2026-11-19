@@ -53,7 +53,7 @@ python books/src/python/make.py check
 |----|------|--------|------|
 | A 多入口（已完成） | 同一工具链可从 CLI / TUI / Web 启动 | `app/cli.py`、`app/tui.py`、`app/web.py` | 全部经 `app/` 层，复用 `ingest`/`audit`/`render`，不复制业务逻辑 |
 | B LLM 配置（已完成） | 按场景/书籍/章节选择不同 provider | `data/config/llm_settings.json`、`data/config/llm_provider.json`、`lib/_llm.py` | 密钥只读环境变量；默认 mock，离线可跑；模型参数与选择逻辑外置 |
-| C 启动脚本（已完成） | Windows / Linux 一键启动 | `scripts/{run.sh,run.ps1}` | 脚本只做环境探测与入口转发，不含业务逻辑 |
+| C 启动脚本（已完成） | Windows / Linux 一键启动 | `scripts/{launch.sh,launch.ps1}` | 脚本只做环境探测与入口转发，不含业务逻辑 |
 
 ## 5. 风险与应对
 

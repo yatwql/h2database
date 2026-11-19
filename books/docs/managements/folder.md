@@ -38,6 +38,7 @@ books/
   src/
     python/                  # 工具链：lib/ ingest/ manuscript/ audit/ render/ app/ + make.py
     test/                    # unittest 测试套件（单元 + 集成 + 真实书稿回归）
+  logs/                      # 运行日志（按天回滚，gitignored）
   dist/                      # 交付产物（生成物，gitignored）
     h2-source-code-analysis.md
     h2-source-code-analysis.html

@@ -3,7 +3,17 @@
 > 本文件是工具链使用方式的唯一说明。`CLAUDE.md` 只保留指向本文的链接。
 > 目录结构与文件职责见 `books/docs/managements/folder.md`。
 
-## 1. 单入口：make.py
+## 1. 启动方式
+
+```bash
+books/scripts/launch.sh            # TUI 菜单（Linux/macOS）
+books/scripts/launch.sh cli status # CLI
+books/scripts/launch.sh web        # Web 控制台
+```
+Windows 用 `books\scripts\launch.ps1`（参数相同）。三个渠道共用 `app/actions.py`，
+也可直接 `python books/src/python/app/{cli,tui,web}.py`。
+
+## 2. 单入口：make.py
 
 日常一律走单入口，不要手工按顺序调用脚本：
 
@@ -34,7 +44,7 @@ python books/src/python/make.py build --timings
 python books/src/python/make.py deliver --skip generate_pdf
 ```
 
-## 2. 日常编辑流程
+## 3. 日常编辑流程
 
 1. 改 `books/data/manuscript/` 下的手稿。
 2. `make.py check` —— 任一 P0 门禁失败即停下修复。
@@ -47,7 +57,7 @@ python books/src/python/make.py deliver --skip generate_pdf
 - 基础配置：`data/config/base.json`（源码树、文件后缀、包前缀、基线、预算）
 - 书籍风格：`data/config/style.json`（文案、骨架、图注词表、写作阈值、生成模板）
 
-## 3. 单独调用某个门禁（调试用）
+## 4. 单独调用某个门禁（调试用）
 
 ```bash
 python books/src/python/audit/links.py          # 链接与锚点解析
@@ -83,7 +93,7 @@ python books/src/python/source_refs.py --suggest          # 看改名建议
 python books/src/python/source_refs.py --update-baseline  # 复核后记账
 ```
 
-## 4. PDF 与 EPUB（按需交付）
+## 5. PDF 与 EPUB（按需交付）
 
 ```bash
 python books/src/python/make.py deliver
@@ -107,7 +117,7 @@ python books/src/python/verify_epub.py         # EPUB 结构校验
 - `h2-source-code-analysis-print.pdf`
 - `h2-source-code-analysis.epub`
 
-## 5. 依赖
+## 6. 依赖
 
 | 依赖 | 用途 | 缺失时 |
 | --- | --- | --- |

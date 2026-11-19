@@ -62,3 +62,10 @@ app/        入口层：cli.py / tui.py / web.py + actions.py，只编排，不�
 - `make.py check` 是唯一入口；新增门禁必须同时登记 `testplan.md`，由
   `audit/gate_trace.py` 校验双向可追溯。
 - 门禁只读；任何会改仓库的动作都属于 `manuscript/` 或 `render/`，不进 `check`。
+
+## 9. 日志
+
+- 位置：`books/logs/books.log`，按天回滚（`books.log.YYYY-MM-DD`），默认保留 14 天。
+- 级别：`BOOK_LOG_LEVEL` 环境变量 > `data/config/base.json [logging].level` > INFO；DEBUG 记录每步参数、耗时与计数。
+- 出口：文件记录全部（INFO 起），控制台只输出 WARNING 及以上，避免刷屏。
+- 实现：`lib/_log.py`（DailyRotatingHandler 幂等初始化），入口（`make.py`、`app/actions.py`、`ingest/*`）只调用 `_log.get_logger(...)`。

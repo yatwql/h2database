@@ -36,6 +36,11 @@
 ## 5 分钟上手
 
 ```bash
+# 0) 也可以从启动脚本进入（Linux/macOS，Windows 用 launch.ps1）
+books/scripts/launch.sh          # TUI
+books/scripts/launch.sh cli status
+books/scripts/launch.sh web --port 8080
+
 # 1) 全部门禁（只读，不写产物）
 python books/src/python/make.py check
 
