@@ -39,6 +39,26 @@ def read_lines(path: str) -> list[str]:
     raise AssertionError('unreachable')  # pragma: no cover
 
 
+def read_text_raw(path: str) -> str:
+    """Read UTF-8 text; OSError propagates so callers keep their handlers."""
+    try:
+        with open(path, encoding='utf-8') as fh:
+            return fh.read()
+    except OSError as exc:
+        exc.add_note(f'while reading {path}')
+        raise
+
+
+def read_lines_raw(path: str) -> list[str]:
+    """Read lines; OSError propagates so callers keep their handlers."""
+    try:
+        with open(path, encoding='utf-8') as fh:
+            return fh.readlines()
+    except OSError as exc:
+        exc.add_note(f'while reading {path}')
+        raise
+
+
 def write_text(path: str, text: str) -> None:
     """Write UTF-8 text, or exit with a clean message."""
     try:

@@ -38,21 +38,7 @@ GLOSSARY_TITLE = LANG_TERMS.get('glossary_title', '术语表')
 GLOSSARY_LINK = LANG_TERMS.get('glossary_link', 'back/glossary.md')
 glossary_path = os.path.join(src_dir, GLOSSARY_LINK)
 
-def _read_lines(path: str) -> list[str]:
-    """Read a UTF-8 text file, exiting with a clean message on I/O failure."""
-    try:
-        with open(path, encoding='utf-8') as fh:
-            return fh.readlines()
-    except OSError as exc:
-        sys.exit(f'error: cannot read {path}: {exc}')
 
-def _read_text(path: str) -> str:
-    """Read a whole UTF-8 text file, exiting with a clean message on I/O failure."""
-    try:
-        with open(path, encoding='utf-8') as fh:
-            return fh.read()
-    except OSError as exc:
-        sys.exit(f'error: cannot read {path}: {exc}')
 
 def _write_text(path: str, text: str) -> None:
     """Write a UTF-8 text file, exiting with a clean message on I/O failure."""
@@ -77,7 +63,7 @@ def parse_glossary_terms(path: str) -> dict[str, list[int]]:
     term_pattern = re.compile(r'^- \*\*([^*]+)\*\*')
     ch_pattern = re.compile(r'第(\d+)章')
 
-    lines = _read_lines(path)
+    lines = _fsutil.read_lines(path)
 
     current_term: str | None = None
     current_chapters: list[int] = []
@@ -119,7 +105,7 @@ def parse_glossary_with_related(path: str) -> dict[str, dict]:
     # see-also links use [[Term]] markdown-flavored cross-refs in v6.0
     related_pattern = re.compile(r'\[\[([^\]]+)\]\]')
 
-    lines = _read_lines(path)
+    lines = _fsutil.read_lines(path)
 
     current: dict | None = None
     current_term: str | None = None
@@ -380,7 +366,7 @@ def report_missing(check_mode: bool = False) -> int:
     missing_count = 0
     for fpath in chapter_files:
         fname = os.path.basename(fpath)
-        lines = _read_lines(fpath)
+        lines = _fsutil.read_lines(fpath)
 
         for lineno, line in enumerate(lines, start=1):
             # Extract bold terms
@@ -433,7 +419,7 @@ def main(argv: list[str]) -> int:
     count = 0
 
     for fpath in chapter_files:
-        content = _read_text(fpath)
+        content = _fsutil.read_text(fpath)
 
         if '术语参考' in content:
             print(f"  Already annotated: {os.path.basename(fpath)}")

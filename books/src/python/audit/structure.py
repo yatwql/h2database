@@ -35,7 +35,7 @@ import re
 import subprocess
 import sys
 
-from lib import _config
+from lib import _config, _fsutil
 
 # ── Gate-level argument parsing ──────────────────────────────────────────
 _arg_parser = argparse.ArgumentParser(add_help=False)
@@ -50,23 +50,7 @@ GATE_LEVEL = _args.gate_level
 LEVEL_RANK = {'p0': 0, 'p1': 1, 'p2': 2}
 _active_rank = LEVEL_RANK[GATE_LEVEL]
 
-def _read_text(path: str) -> str:
-    """Read UTF-8 text; OSError propagates so callers keep their handlers."""
-    try:
-        with open(path, encoding='utf-8') as fh:
-            return fh.read()
-    except OSError as exc:
-        exc.add_note(f'while reading {path}')
-        raise
 
-def _read_lines(path: str) -> list[str]:
-    """Read lines; OSError propagates so callers keep their handlers."""
-    try:
-        with open(path, encoding='utf-8') as fh:
-            return fh.readlines()
-    except OSError as exc:
-        exc.add_note(f'while reading {path}')
-        raise
 
 def gate(section_level: str) -> bool:
     """Return True if the section's level is included by ``GATE_LEVEL``."""
@@ -76,7 +60,7 @@ print(f'[gate-level: {GATE_LEVEL}] running sections at or below {GATE_LEVEL}\n')
 
 def _count_lines(path: str) -> int:
     """Count lines in a UTF-8 text file."""
-    return len(_read_lines(path))
+    return len(_fsutil.read_lines_raw(path))
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 repo_root = os.path.normpath(os.path.join(script_dir, '..', '..', '..', '..'))
@@ -126,7 +110,7 @@ def section(level: str, name: str) -> None:
 section('p0', 'Figure Numbering')
 global_by_ch: dict = {}  # ch (int or 'A'/'B'/…) -> [(file, base_num, full_num)]
 for f in CHAPTERS:
-    content = _read_text(f)
+    content = _fsutil.read_text_raw(f)
     # Numeric chapters
     figs = re.findall(r'\*\*图 (\d+)-(\d+[a-z]*):', content)
     for ch, num in figs:
@@ -171,7 +155,7 @@ for ch in sorted(global_by_ch, key=lambda k: (isinstance(k, str), k)):
 # 2. Cross-references
 section('p0', 'Cross-References')
 for f in CHAPTERS:
-    content = _read_text(f)
+    content = _fsutil.read_text_raw(f)
     refs = re.findall(r'详见第(\d+)章', content)
     other_refs = re.findall(r'第(\d+)章[^详]', content)
     all_refs = {int(r) for r in refs + other_refs if int(r) > 0}
@@ -196,7 +180,7 @@ section('p0', 'Code Fence Balance')
 total_fences = 0
 all_balanced = True
 for f in CHAPTERS:
-    lines = _read_lines(f)
+    lines = _fsutil.read_lines_raw(f)
     fences = sum(1 for line in lines if line.strip().startswith('```'))
     if fences % 2 != 0:
         all_balanced = False
@@ -209,7 +193,7 @@ check(all_balanced, f'Total: {total_fences} fences across all files')
 # 4. Heading hierarchy
 section('p0', 'Heading Hierarchy')
 for f in CHAPTERS:
-    lines = _read_lines(f)
+    lines = _fsutil.read_lines_raw(f)
     headings = []
     for i, line in enumerate(lines):
         m = re.match(r'^(#{1,4})\s', line)
@@ -227,7 +211,7 @@ for f in CHAPTERS:
 section('p0', 'UTF-8 Encoding')
 for f in CHAPTERS + [os.path.join(dist_dir, 'h2-source-code-analysis.md'), os.path.join(dist_dir, 'h2-source-code-analysis.html')]:
     try:
-        _read_text(f)
+        _fsutil.read_text_raw(f)
         check(True, f'{f}: valid UTF-8')
     except UnicodeDecodeError:
         check(False, f'{f}: NOT valid UTF-8')
@@ -237,7 +221,7 @@ for f in CHAPTERS + [os.path.join(dist_dir, 'h2-source-code-analysis.md'), os.pa
 # 6. HTML TOC check
 section('p0', 'HTML TOC')
 try:
-    html = _read_text(os.path.join(dist_dir, 'h2-source-code-analysis.html'))
+    html = _fsutil.read_text_raw(os.path.join(dist_dir, 'h2-source-code-analysis.html'))
     sidebar_nav_start = html.find('<nav id="sidebar">')
     sidebar_nav_end = html.find('</nav>', sidebar_nav_start)
     content_start = html.find('<main')
@@ -268,7 +252,7 @@ except FileNotFoundError:
 # 8. CSS style checks (non-blocking, warning only)
 section('p0', 'CSS Style Checks')
 try:
-    gen_content = _read_text(os.path.join(script_dir, 'to_html.py'))
+    gen_content = _fsutil.read_text_raw(os.path.join(script_dir, 'to_html.py'))
     css_hints = {
         'h1 decorator': 'h1::before',
         'fig-caption style': 'fig-caption',
@@ -300,7 +284,7 @@ for s_name, s_path in [('glossary.py', glossary_script), ('index.py', index_scri
     if os.path.exists(s_path):
         # Verify it can at least import without error
         try:
-            ast.parse(_read_text(s_path), filename=s_path)
+            ast.parse(_fsutil.read_text_raw(s_path), filename=s_path)
             print(f'  OK: {s_name} — syntax valid')
         except SyntaxError as e:
             print(f'  FAIL: {s_name} — syntax error: {e}')
@@ -314,7 +298,7 @@ section('p1', 'Index Integrity')
 index_path = os.path.join(src_dir, 'back', 'index.md')
 index_ok = True
 if os.path.exists(index_path):
-    index_content = _read_text(index_path)
+    index_content = _fsutil.read_text_raw(index_path)
 
     # Count entries
     index_entries = [line.strip() for line in index_content.split('\n') if line.strip().startswith('- ')]
@@ -346,7 +330,7 @@ if os.path.exists(index_path):
     # Validate chapter references match real files
     chapter_files_map = {}
     for f in CHAPTERS:
-        content = _read_text(f)
+        content = _fsutil.read_text_raw(f)
         # Find ALL H1 chapter headings in the file (handles combined files)
         for cm in re.finditer(r'^# 第(\d+)章', content, re.MULTILINE):
             ch = int(cm.group(1))
@@ -475,7 +459,7 @@ section('p1', 'Glossary Content')
 glossary_path = os.path.join(src_dir, 'back', 'glossary.md')
 glossary_ok = True
 if os.path.exists(glossary_path):
-    glossary_lines = _read_lines(glossary_path)
+    glossary_lines = _fsutil.read_lines_raw(glossary_path)
 
     glossary_content = ''.join(glossary_lines)
     entry_term_re = re.compile(r'^- \*\*([^*]+)\*\*')

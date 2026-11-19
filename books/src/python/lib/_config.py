@@ -132,11 +132,6 @@ def language() -> dict:
     return data
 
 
-def language_section(key: str, default: str = '') -> str:
-    """A section heading name from the language pack (falls back to book.toml)."""
-    sections = language().get('sections') or {}
-    return str(sections.get(key) or REQUIRED_SECTIONS and default or default)
-
 
 def project(key: str, default: str = '') -> str:
     """Display copy for the renderers (title, author, running head, ...)."""
@@ -214,13 +209,6 @@ def index_path() -> str:
     return manuscript('back', 'index.md')
 
 
-def references_path() -> str:
-    return manuscript('back', 'references.md')
-
-
-def policy_value(section: str, key: str, default=None):
-    """Read a value from a policy section with a default."""
-    return (POLICY.get(section) or {}).get(key, default)
 
 
 def baseline_path(name: str) -> str:

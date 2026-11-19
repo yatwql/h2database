@@ -84,23 +84,7 @@ class Verification(NamedTuple):
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _read_text(path: str) -> str:
-    """Read UTF-8 text; OSError propagates so callers keep their handlers."""
-    try:
-        with open(path, encoding='utf-8') as fh:
-            return fh.read()
-    except OSError as exc:
-        exc.add_note(f'while reading {path}')
-        raise
 
-def _read_lines(path: str) -> list[str]:
-    """Read lines; OSError propagates so callers keep their handlers."""
-    try:
-        with open(path, encoding='utf-8') as fh:
-            return fh.readlines()
-    except OSError as exc:
-        exc.add_note(f'while reading {path}')
-        raise
 
 def get_h2_version() -> str:
     """Extract H2 version from pom.xml."""
@@ -269,7 +253,7 @@ def load_baseline(path: str | None = None) -> dict:
     if not os.path.isfile(target):
         return {'h2_version': '', 'accepted': []}
     try:
-        data = json.loads(_read_text(target))
+        data = json.loads(_fsutil.read_text_raw(target))
     except (OSError, json.JSONDecodeError) as exc:
         print(f'  [WARN] cannot read baseline {target}: {exc}', file=sys.stderr)
         return {'h2_version': '', 'accepted': []}
@@ -305,7 +289,7 @@ def suggest_renames(claim, class_index: dict) -> list[str]:
     if len(paths) != 1:
         return []
     try:
-        body = _read_text(paths[0])
+        body = _fsutil.read_text_raw(paths[0])
     except OSError:
         return []
     names = set(re.findall(r'\b(\w+)\s*\(', body))
