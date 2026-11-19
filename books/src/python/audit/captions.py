@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Figure caption audit (v5.5 / U14).
+Figure caption audit.
 
 Validates `**图 X-Y: Title**` lines against the verb-object structure spec
 in `books/docs/managements/style-guide.md` §14.

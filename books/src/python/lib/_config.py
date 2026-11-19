@@ -50,12 +50,11 @@ def _read_policy(path: str) -> dict:
 
 
 def _load_policy() -> dict:
-    """Merged view of base.json + style.json (or the legacy single file)."""
+    """Merged view of base.json + style.json (or a single combined file)."""
     base = _read_policy(BASE_POLICY_PATH)
     style = _read_policy(STYLE_POLICY_PATH)
     if not base and not style:
-        legacy = _read_policy(POLICY_PATH)
-        return legacy
+        return _read_policy(POLICY_PATH)
     merged: dict = {}
     for layer in (base, style):
         for key, value in layer.items():
@@ -106,7 +105,7 @@ POLICY = _load_policy()
 BASE_POLICY = _load_layer(BASE_POLICY_PATH)
 STYLE_POLICY = _load_layer(STYLE_POLICY_PATH)
 
-# Thresholds come from config.json; book.toml values (legacy/fixtures) still
+# Thresholds come from config.json; book.toml values (fixtures) still
 # win nothing — they are only used as a fallback when no policy file exists.
 THRESHOLDS: dict = dict(POLICY.get('thresholds') or _CFG.get('thresholds', {}))
 SECTIONS: dict = dict(_CFG.get('sections', {}))

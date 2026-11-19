@@ -8,7 +8,7 @@ Gate levels:
   merged-doc consistency, CSS style hooks). Must pass for any delivery.
 - ``p1`` — content-quality gates that block formal delivery (index
   integrity & hierarchy, glossary content, glossary builder availability).
-- ``p2`` — v6.0-era quality gates that started life as advisory checks
+- ``p2`` — advisory quality gates
   (figure caption verb-leading + length, figure cluster bridges, chapter
   exercises, writing-style audit). All currently passing; subject to
   re-rating after a gate review.
@@ -375,7 +375,7 @@ if os.path.exists(index_path):
     else:
         check(True, f'Index chapter refs valid (covers chapters {sorted(chapter_files_map.keys())})')
 
-    # v6.0: index hierarchy & cross-reference health (P2 advisory).
+    # Index hierarchy and cross-reference health (P2 advisory).
     # Run the dedicated audit tools and surface their pass/fail as separate
     # checks. We do NOT regress index_ok on advisory failure; only on hard
     # malformations (missing tools).
@@ -481,7 +481,7 @@ else:
     check(False, 'Exercise audit tool missing')
 
 # 12. Glossary content validation
-# v6.0 supports multi-line entries with the **章节**: ... line on a separate
+# Multi-line entries put the **章节**: ... line on a separate
 # row. Parse entries as blocks delimited by `- **Term**:` markers, so that the
 # chapter reference can live on a continuation line.
 section('p1', 'Glossary Content')
@@ -523,7 +523,7 @@ if os.path.exists(glossary_path):
           f'Glossary: {entry_count} entries (target: >= {glossary_min})')
 
     # Validate every entry block has at least one chapter reference somewhere
-    # within its body (handles both legacy single-line and v6.0 multi-line).
+    # within its body (handles both single-line and multi-line forms).
     no_ref_entries = [term for term, body in entry_blocks if not re.search(r'第(\d+)章', body)]
     if no_ref_entries:
         glossary_ok = False

@@ -1,58 +1,126 @@
 name: Book
 
+# Gate tiers (mirrored by scripts/verify.sh so local and CI agree):
+#   fast   — every push / PR: lint, unit suite, structural + contract gates
+#   full   — master and tags: every gate (adds prose/content/metrics gates)
+#   release — tags: full + build artifacts uploaded for the release
+
 on:
   push:
+    branches: [master]
+    tags: ['v*']
     paths: ['books/**', '.github/workflows/book.yml']
   pull_request:
+    branches: [master]
     paths: ['books/**', '.github/workflows/book.yml']
 
 permissions:
   contents: read
 
+concurrency:
+  group: book-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  book:
-    name: Book toolchain
+  lint:
+    name: Lint and types
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Install ruff
-        run: python -m pip install --upgrade pip ruff
-
-      - name: Lint toolchain
+          cache: pip
+          cache-dependency-path: books/requirements-dev.txt
+      - run: python -m pip install -r books/requirements-dev.txt
+      - name: ruff
         run: ruff check books/src/python books/src/test
+      - name: architecture, contract and schema gates
+        run: |
+          steps=architecture,script_contract,style_schema,llm_policy
+          steps="$steps,versions,file_length"
+          python books/src/python/make.py check --only "$steps"
 
-      - name: Unit tests
-        run: python books/src/python/make.py test
-
-      - name: Unit tests (fast tier)
+  fast:
+    name: Fast tier (unit suite)
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: books/requirements-dev.txt
+      - run: python -m pip install -r books/requirements-dev.txt
+      - name: unit suite
         run: python books/src/python/make.py test --timings
 
-      - name: Unit tests (full tier, master/tags)
-        if: github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/v')
-        run: python books/src/python/make.py test --full --timings
+  gates:
+    name: Full gate set
+    runs-on: ubuntu-latest
+    needs: lint
+    if: github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: books/requirements-dev.txt
+      - run: python -m pip install -r books/requirements-dev.txt
+      - name: every gate
+        run: python books/src/python/make.py check --keep-going --timings
 
-      - name: Quality gates
-        run: python books/src/python/make.py check --timings
-
-      - name: Build artifacts
-        run: python books/src/python/make.py build --timings
-
-      - name: Idempotency (second build must be byte-identical)
+  slow:
+    name: Slow tier (browser + pandoc)
+    runs-on: ubuntu-latest
+    needs: fast
+    if: github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: books/requirements-dev.txt
+      - run: python -m pip install -r books/requirements-dev.txt
+      - name: install chromium and pandoc
         run: |
-          python - <<'PY'
-          import hashlib, pathlib, subprocess, sys
-          target = pathlib.Path('books/dist/h2-source-code-analysis.html')
-          first = hashlib.sha256(target.read_bytes()).hexdigest()
-          subprocess.run([sys.executable, 'books/src/python/make.py', 'build'],
-                         check=True, capture_output=True)
-          second = hashlib.sha256(target.read_bytes()).hexdigest()
-          print('first ', first)
-          print('second', second)
-          sys.exit(0 if first == second else 1)
-          PY
+          python -m playwright install --with-deps chromium
+          sudo apt-get update && sudo apt-get install -y pandoc
+      - name: full suite
+        run: BOOK_SLOW=1 python books/src/python/make.py test --full --timings
+
+  deliver:
+    name: Build artifacts (release)
+    runs-on: ubuntu-latest
+    needs: [gates, slow]
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: books/requirements-dev.txt
+      - run: python -m pip install -r books/requirements-dev.txt
+      - name: install chromium and pandoc
+        run: |
+          python -m playwright install --with-deps chromium
+          sudo apt-get update && sudo apt-get install -y pandoc
+      - name: build book and artifacts
+        run: python books/src/python/make.py deliver --timings
+      - uses: actions/upload-artifact@v4
+        with:
+          name: book-${{ github.ref_name }}
+          path: |
+            books/dist/*.md
+            books/dist/*.html
+            books/dist/*.pdf
+            books/dist/*.epub
+          retention-days: 30

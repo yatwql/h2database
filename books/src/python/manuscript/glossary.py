@@ -37,7 +37,7 @@ chapter_files = sorted(glob.glob(os.path.join(src_dir, 'ch[0-9]*.md')))
 glossary_path = os.path.join(src_dir, 'back', 'glossary.md')
 
 def parse_glossary_v6() -> dict[str, dict]:
-    """Parse v6.0 multi-line glossary entries.
+    """Parse multi-line glossary entries.
 
     Returns {term: {chapters: [int], section_refs: [str], body: str}}.
     section_refs are raw strings like "第6章 §6.1" extracted from the **章节** line.
@@ -130,7 +130,7 @@ if '--coverage' in sys.argv:
         print('结果: 部分章节术语不足，请补充。')
     sys.exit(0)
 
-# ---- Validate mode (v6.0): verify chapter refs resolve in actual content ----
+# ---- Validate mode: verify chapter refs resolve in the actual content ----
 
 if '--validate' in sys.argv:
     entries = parse_glossary_v6()

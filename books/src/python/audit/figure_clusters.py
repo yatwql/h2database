@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Figure cluster detector (v5.5 / U16 helper).
+Figure cluster detector.
 
 Identifies "figure clusters" — groups of three or more figures whose captions
 appear within a 50-line window — so authors can decide whether to add a

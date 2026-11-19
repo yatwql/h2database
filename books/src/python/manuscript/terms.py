@@ -51,13 +51,13 @@ def _write_text(path: str, text: str) -> None:
 def parse_glossary_terms(path: str) -> dict[str, list[int]]:
     """Parse glossary.md and return a mapping of term names to chapter numbers.
 
-    Supports v6.0 multi-line entry format:
+    Supports the multi-line entry format:
         - **Term**: 释义第一行
           释义第二行
           **章节**：第N章 §X.Y
           **相关**：[[Other]]、[[Another]]
 
-    Falls back gracefully on legacy single-line entries.
+    Falls back gracefully on single-line entries.
     """
     terms: dict[str, list[int]] = {}
     term_pattern = re.compile(r'^- \*\*([^*]+)\*\*')
@@ -74,10 +74,10 @@ def parse_glossary_terms(path: str) -> dict[str, list[int]]:
             if current_term is not None:
                 terms[current_term] = current_chapters
             current_term = m.group(1).strip()
-            # Collect chapters from same line (legacy format)
+            # Collect chapters from the same line (single-line format)
             current_chapters = [int(c) for c in ch_pattern.findall(line)]
         elif current_term is not None:
-            # Continuation line for v6.0 format
+            # Continuation line of a multi-line entry
             for c in ch_pattern.findall(line):
                 ch = int(c)
                 if ch not in current_chapters:
@@ -102,7 +102,7 @@ def parse_glossary_with_related(path: str) -> dict[str, dict]:
     entries: dict[str, dict] = {}
     term_pattern = re.compile(r'^- \*\*([^*]+)\*\*')
     ch_pattern = re.compile(r'第(\d+)章')
-    # see-also links use [[Term]] markdown-flavored cross-refs in v6.0
+    # see-also links use [[Term]] markdown-flavored cross references
     related_pattern = re.compile(r'\[\[([^\]]+)\]\]')
 
     lines = _fsutil.read_lines(path)

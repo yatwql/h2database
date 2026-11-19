@@ -13,7 +13,7 @@ Flags:
   --coverage          Show per-chapter entry density report from chapter files.
   --hierarchy-check   Audit the existing index.md for main/sub-entry depth and
                       report counts (main, sub, see-also). Exits 1 when the
-                      counts fall below v6.0 minimums (main >= 150, sub >= 50,
+                      counts fall below the configured minimums (main >= 150, sub >= 50,
                       see-also >= 30).
 """
 
@@ -41,7 +41,7 @@ chapter_files = sorted(glob.glob(os.path.join(src_dir, 'ch[0-9]*.md')))
 show_coverage = '--coverage' in sys.argv
 hierarchy_check = '--hierarchy-check' in sys.argv
 
-# ---- Hierarchy check mode (v6.0): inspect existing index.md ----
+# ---- Hierarchy check mode: inspect the existing index.md ----
 
 if hierarchy_check:
     index_path = os.path.join(src_dir, 'back', 'index.md')
@@ -83,7 +83,7 @@ if hierarchy_check:
     print(f'  main entries w/ subs:    {main_with_subs}')
     print(f'  total entries:           {main_count + sub_count}')
 
-    # v6.0 minimums (set lower than the live numbers; these are floor checks
+    # Floor values (set below the live numbers on purpose)
     # that flag accidental regressions if someone bulk-deletes entries).
     floors = {'main': 150, 'sub': 50, 'see_also': 30, 'total': 250}
     fails: list[str] = []
@@ -97,9 +97,11 @@ if hierarchy_check:
         fails.append(f"total {main_count + sub_count} < {floors['total']}")
 
     if fails:
-        print(f'\nFAIL: hierarchy below v6.0 floor ({"; ".join(fails)})')
+        print(f'\nFAIL: hierarchy below the configured floor ({"; ".join(fails)})')
         sys.exit(1)
-    print('\nOK: hierarchy meets v6.0 floor (main>=150, sub>=50, see_also>=30, total>=250)')
+    print('\nOK: hierarchy meets the configured floor '
+          f'(main>={floors["main"]}, sub>={floors["sub"]}, '
+          f'see_also>={floors["see_also"]}, total>={floors["total"]})')
     sys.exit(0)
 
 # Track section numbering across files

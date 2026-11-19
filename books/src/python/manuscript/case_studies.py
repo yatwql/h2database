@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Case-study outline generator (v5.4 / U9).
+Case-study outline generator.
 
 Emits a narrative skeleton for one of three end-to-end appendix case studies,
 chaining curated section anchors from the published H2 source-code analysis
