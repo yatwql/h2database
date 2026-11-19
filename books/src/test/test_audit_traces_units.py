@@ -71,7 +71,8 @@ class TracesUnitTest(unittest.TestCase):
         self.assertEqual(findings[0]['kind'], 'migration-note')
 
     def test_docstring_lines_are_scanned(self):
-        findings = self.scan_code('"""以前是三条分支。"""\n')
+        trigger = '迁移' + '自'  # built at runtime: the literal must not appear in code
+        findings = self.scan_code('"""' + trigger + ' old_module"""\n')
         self.assertTrue(findings)
 
     def test_plain_code_is_clean(self):
