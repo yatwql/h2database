@@ -30,3 +30,4 @@ __pycache__/
 .claude/worktrees/
 .claude/scratch/
 books/logs/
+.venv/

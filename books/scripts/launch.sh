@@ -11,10 +11,14 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="$SCRIPT_DIR/../src/python/app"
+# Prefer the project virtualenv created by bootstrap.sh, then $PYTHON, then python3.
+if [ -z "${PYTHON:-}" ] && [ -x "$SCRIPT_DIR/../.venv/bin/python" ]; then
+  PYTHON="$SCRIPT_DIR/../.venv/bin/python"
+fi
 PYTHON="${PYTHON:-python3}"
 
 if ! command -v "$PYTHON" >/dev/null 2>&1; then
-  echo "error: $PYTHON not found (set PYTHON=/path/to/python3)" >&2
+  echo "error: $PYTHON not found (run books/scripts/bootstrap.sh or set PYTHON)" >&2
   exit 2
 fi
 

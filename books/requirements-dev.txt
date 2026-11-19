@@ -1,0 +1,5 @@
+# Development and CI extras.
+-r requirements.txt
+ruff>=0.6             # lint gate
+coverage>=7.4         # make.py cover
+pyright>=1.1.380      # audit/typecheck.py (optional; CI installs it)

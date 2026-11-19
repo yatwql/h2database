@@ -117,14 +117,20 @@ python books/src/python/verify_epub.py         # EPUB 结构校验
 - `h2-source-code-analysis-print.pdf`
 - `h2-source-code-analysis.epub`
 
-## 6. 依赖
+## 6. 依赖与虚拟环境
 
-| 依赖 | 用途 | 缺失时 |
-| --- | --- | --- |
-| Python 3.11+ | 全部脚本（需要标准库 `tomllib`） | 无法运行 |
-| `pypdf` | PDF 校验、TOC 链接 | PDF 校验跳过 |
-| `playwright` + chromium | PDF 渲染 | 只能校验已有 PDF |
-| `pandoc` | EPUB 生成 | `to_epub.py` 直接报错退出 |
-| `coverage` | `make.py cover` | 返回 2 并提示安装 |
+依赖清单从文档剥离，统一维护在清单文件里：
 
-`make.py doctor` 会逐项报告可用性。
+- `books/requirements.txt`：运行时可选依赖（`pypdf`、`playwright`、`defusedxml`）
+- `books/requirements-dev.txt`：开发/CI 依赖（`ruff`、`coverage`、`pyright`）
+- 外部工具：`pandoc`（EPUB）与 Chromium（`python -m playwright install chromium`）
+
+```bash
+books/scripts/bootstrap.sh          # 创建 books/.venv 并安装运行时依赖
+books/scripts/bootstrap.sh --dev    # 额外安装开发依赖
+books/scripts/bootstrap.sh --check  # 只查看虚拟环境状态
+books/scripts/launch.sh cli status  # 启动器自动优先使用 books/.venv
+```
+
+Windows 对应 `books\scripts\bootstrap.ps1` 与 `launch.ps1`（参数相同）。
+`make.py doctor` 逐项报告依赖可用性；核心分析链路只依赖标准库。

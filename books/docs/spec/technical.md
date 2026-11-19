@@ -69,3 +69,11 @@ app/        入口层：cli.py / tui.py / web.py + actions.py，只编排，不�
 - 级别：`BOOK_LOG_LEVEL` 环境变量 > `data/config/base.json [logging].level` > INFO；DEBUG 记录每步参数、耗时与计数。
 - 出口：文件记录全部（INFO 起），控制台只输出 WARNING 及以上，避免刷屏。
 - 实现：`lib/_log.py`（DailyRotatingHandler 幂等初始化），入口（`make.py`、`app/actions.py`、`ingest/*`）只调用 `_log.get_logger(...)`。
+
+## 10. 环境与依赖
+
+- 运行环境：`books/.venv`（由 `scripts/bootstrap.sh|ps1` 创建），启动脚本优先使用它。
+- 依赖清单：`requirements.txt`（运行时可选）与 `requirements-dev.txt`（开发/CI）；
+  文档与代码不再各自列依赖表。
+- 核心链路（ingest/audit 结构门禁）只依赖标准库；PDF/EPUB 相关脚本在缺少
+  `pypdf`/`playwright`/`pandoc` 时必须以清晰信息退出（码 2），不得抛裸 traceback。

@@ -39,7 +39,13 @@ for m in re.finditer(r'<h([1-4])\s+id="([^"]*)"[^>]*>(.*?)</h\1>', html_content,
 print(f'Parsed {len(headings)} headings from HTML')
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
+    try:
+        browser = p.chromium.launch(headless=True,
+                                    args=['--no-sandbox', '--disable-setuid-sandbox'])
+    except Exception as exc:  # noqa: BLE001 - report, do not dump a traceback
+        print(f'error: chromium unavailable ({exc}); '
+              'run: python -m playwright install chromium', file=_sys.stderr)
+        _sys.exit(2)
     page = browser.new_page()
     file_url = 'file:///' + html_path.replace('\\', '/')
     page.goto(file_url, wait_until='networkidle', timeout=60000)

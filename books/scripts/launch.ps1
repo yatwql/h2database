@@ -15,10 +15,13 @@ param(
 $ErrorActionPreference = 'Stop'
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $AppDir = Join-Path $ScriptDir '..\src\python\app'
-$Python = if ($env:PYTHON) { $env:PYTHON } else { 'python' }
+$VenvPython = Join-Path (Split-Path -Parent $ScriptDir) '.venv\Scripts\python.exe'
+$Python = if ($env:PYTHON) { $env:PYTHON }
+          elseif (Test-Path $VenvPython) { $VenvPython }
+          else { 'python' }
 
 if (-not (Get-Command $Python -ErrorAction SilentlyContinue)) {
-    Write-Error "python not found; set PYTHON to the interpreter path"
+    Write-Error "python not found; run books\scripts\bootstrap.ps1 or set PYTHON"
     exit 2
 }
 

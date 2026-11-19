@@ -1,0 +1,6 @@
+# Runtime extras for the books toolchain.
+# The pipeline core (ingest / audit / structure gates) runs on the standard
+# library only; these packages unlock PDF/EPUB handling.
+pypdf>=5.0            # PDF reading/writing: verify_pdf, pdf_toc_links, print_pdf, to_pdf
+playwright>=1.40      # Chromium rendering: to_pdf, print_pdf, pdf_from_html
+defusedxml>=0.7       # hardened XML parsing in verify_epub (optional, recommended)

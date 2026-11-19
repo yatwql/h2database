@@ -159,7 +159,8 @@ class TestEveryScriptRuns(ScriptTestBase):
         for script in ALL_SCRIPTS + AUDIT_SCRIPTS:
             with self.subTest(script=script):
                 code, out = self.run_script(script)
-                self.assertIn(code, (0, 1), f'{script} -> {code}\n{out}')
+                # 2 = the environment lacks an optional tool (chromium/pandoc)
+                self.assertIn(code, (0, 1, 2), f'{script} -> {code}\n{out}')
                 self.assertNotIn('Traceback', out, f'{script} raised:\n{out}')
 
 
