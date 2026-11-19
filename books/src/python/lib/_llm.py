@@ -16,8 +16,8 @@ from __future__ import annotations
 
 import json
 import os
-import urllib.error
-import urllib.request
+import http.client
+from urllib.parse import urlsplit
 
 from lib import _config
 
@@ -86,18 +86,27 @@ def _mock(prompt: str, spec: dict, params: dict) -> str:
 
 
 def _post_json(url: str, payload: dict, api_key: str, timeout: float) -> dict:
-    if not url.startswith('https://'):
+    """POST JSON to an https endpoint and return the decoded response."""
+    parts = urlsplit(url)
+    if parts.scheme != 'https':
         raise LLMError(f'provider endpoint must be https: {url}')
-    # scheme is validated above; only https endpoints are reachable
-    request = urllib.request.Request(
-        url, data=json.dumps(payload).encode('utf-8'),
-        headers={'Content-Type': 'application/json',
-                 'Authorization': f'Bearer {api_key}'}, method='POST')
+    body = json.dumps(payload).encode('utf-8')
+    headers = {'Content-Type': 'application/json',
+               'Authorization': f'Bearer {api_key}'}
+    connection = http.client.HTTPSConnection(parts.hostname or '', parts.port or 443,
+                                             timeout=timeout)
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            return json.loads(response.read().decode('utf-8'))
-    except urllib.error.URLError as exc:
+        connection.request('POST', parts.path or '/', body=body, headers=headers)
+        response = connection.getresponse()
+        raw = response.read()
+    except OSError as exc:
         raise LLMError(f'provider request failed: {exc}') from exc
+    finally:
+        connection.close()
+    try:
+        return json.loads(raw.decode('utf-8'))
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise LLMError(f'provider returned invalid JSON: {exc}') from exc
 
 
 def complete(prompt: str, scenario: str = 'chapter-draft',
