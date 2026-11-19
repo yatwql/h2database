@@ -3,10 +3,13 @@
 
 Two layers, both read here so no script hard-codes either:
 
-* ``books/data/tmpl/book.toml`` — content organisation: paths, chapter order,
-  required sections, book metadata.
-* ``books/data/config/config.json`` — toolchain policy: thresholds, caption
-  vocabulary, source-tree locations, baseline file locations.
+* ``books/data/tmpl/book.toml`` — content organisation: book identity, paths,
+  chapter order, per-file titles/numbering/coverage, package mapping.
+* ``books/data/config/base.json`` — infrastructure: source tree location,
+  file suffix / package prefix, state and baseline paths, toolchain budgets.
+* ``books/data/config/style.json`` — book style: display copy, section skeleton,
+  caption vocabulary and presets, diagram markers, writing thresholds,
+  generation caps and templates.
 """
 from __future__ import annotations
 
@@ -20,23 +23,53 @@ TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 BOOK_ROOT = os.environ.get('BOOK_ROOT') or os.path.dirname(
     os.path.dirname(os.path.dirname(TOOLS_DIR)))
 CONFIG_PATH = os.path.join(BOOK_ROOT, 'data', 'tmpl', 'book.toml')
-POLICY_PATH = os.environ.get('BOOK_POLICY') or os.path.join(
-    BOOK_ROOT, 'data', 'config', 'config.json')
+CONFIG_DIR = os.path.join(BOOK_ROOT, 'data', 'config')
+# Two policy layers: infrastructure (base.json) and book style (style.json).
+BASE_POLICY_PATH = os.path.join(CONFIG_DIR, 'base.json')
+STYLE_POLICY_PATH = os.path.join(CONFIG_DIR, 'style.json')
+# Legacy single-file policy, still honoured when the split files are absent.
+POLICY_PATH = os.environ.get('BOOK_POLICY') or os.path.join(CONFIG_DIR, 'config.json')
 
 
 class ConfigError(RuntimeError):
     """Raised when book.toml is missing or inconsistent."""
 
 
-def _load_policy() -> dict:
-    """Load toolchain policy; an absent file yields an empty policy."""
+def _read_policy(path: str) -> dict:
+    """Load one policy file; an absent file yields an empty mapping."""
     try:
-        with open(POLICY_PATH, encoding='utf-8') as fh:
-            return json.load(fh)
+        with open(path, encoding='utf-8') as fh:
+            data = json.load(fh)
     except FileNotFoundError:
         return {}
     except json.JSONDecodeError as exc:
-        raise ConfigError(f'invalid JSON in {POLICY_PATH}: {exc}') from exc
+        raise ConfigError(f'invalid JSON in {path}: {exc}') from exc
+    return data if isinstance(data, dict) else {}
+
+
+def _load_policy() -> dict:
+    """Merged view of base.json + style.json (or the legacy single file)."""
+    base = _read_policy(BASE_POLICY_PATH)
+    style = _read_policy(STYLE_POLICY_PATH)
+    if not base and not style:
+        legacy = _read_policy(POLICY_PATH)
+        return legacy
+    merged: dict = {}
+    for layer in (base, style):
+        for key, value in layer.items():
+            if isinstance(value, dict) and isinstance(merged.get(key), dict):
+                merged[key] = {**merged[key], **value}
+            else:
+                merged[key] = value
+    # toolchain budgets are exposed under [thresholds] for the callers
+    merged.setdefault('thresholds', {})
+    merged['thresholds'] = {**merged.get('toolchain', {}), **merged['thresholds']}
+    return merged
+
+
+def _load_layer(path: str) -> dict:
+    """Expose one policy layer (base or style) for targeted reads."""
+    return _read_policy(path)
 
 
 def _load() -> dict:
@@ -68,6 +101,8 @@ TITLE = _CFG.get('book', {}).get('title', '')
 VERSION = _CFG.get('book', {}).get('version', '')
 
 POLICY = _load_policy()
+BASE_POLICY = _load_layer(BASE_POLICY_PATH)
+STYLE_POLICY = _load_layer(STYLE_POLICY_PATH)
 
 # Thresholds come from config.json; book.toml values (legacy/fixtures) still
 # win nothing — they are only used as a fallback when no policy file exists.

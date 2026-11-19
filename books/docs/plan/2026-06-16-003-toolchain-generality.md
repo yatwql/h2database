@@ -16,6 +16,10 @@
 | `audit/balance_check.py` | 章节→章节号硬编码 | **已迁到 `[chapters.coverage]`** |
 | `audit/_audit_exercises.py` / `check_style.py` / `_annotate_terms.py` | 中文写作规则、术语提示语 | 待抽成 `[language.zh]` 语言包 |
 
+已完成的第 3 批（配置分三类）：`base.json` 与 `style.json` 从原 `config.json` 拆分，
+`_config` 合并为同一视图并保留对旧单文件的兼容；文档（`folder.md`、`README.md`、
+`how-to-use.md`）与测试 fixture 同步更新。
+
 已完成的第 1 批：
 
 - `[chapters.titles]` / `[chapters.numbering]` / `[chapters.coverage]` 三张表进 `book.toml`，
@@ -23,13 +27,14 @@
 - 生成文案（四段引言、深读要点）进 `config.json [generation.templates]`。
 - 度量与阈值进 `config.json [quality]`。
 
-## 2. 目标模型
+## 2. 目标模型（第 3 批已落地前三层）
 
 ```text
-book.toml           内容组织：书籍元信息、路径、章节、标题、编号、包映射
-config.json         工具链策略：阈值、预算、基线、生成参数、模板
-language/<code>.json 语言包：章节骨架名、图注动词、术语提示、标点规则
-project/<name>.toml  项目档案：源码树、语言、扩展名、包前缀、渲染文案
+data/tmpl/book.toml        数据组织：书籍元信息、路径、章节、标题、编号、包映射
+data/config/base.json      基础配置：源码树、文件后缀、包前缀、语言、状态/基线、工具链预算
+data/config/style.json     书籍风格：展示文案、章节骨架、图注词表、写作阈值、生成模板
+language/<code>.json       语言包（待建）：中文写作规则与提示语
+project/<name>.toml        项目档案（待建）：把上述 base/style 组合成一个命名档案
 ```
 
 脚本只依赖这四个入口；换项目时只改 `project/*.toml` + `language/*.json`。

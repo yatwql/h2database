@@ -163,6 +163,43 @@ INDEX_MD = """# 索引
 - MVStore —— §2.1
 """
 
+BASE_JSON = {
+    "sources": {"src_main": "../h2/src/main", "pom_root": "../h2/pom.xml",
+                "file_suffix": ".java", "package_prefix": "org.h2", "language": "java"},
+    "baselines": {
+        "ascii": "data/baselines/ascii-baseline.json",
+        "source_symbol": "data/baselines/source-symbol-baseline.json",
+    },
+    "toolchain": {"coverage_fail_under": 0, "pdf_max_mb": 12,
+                  "epub_max_mb": 10, "ascii_max_cols": 100,
+                  "max_style_warnings": 99},
+}
+
+STYLE_JSON = {
+    "captions": {
+        "leading_verbs": ["展示", "对比", "拆解", "标注", "追踪", "说明"],
+        "vague_trailing": ["过程", "示例", "架构", "图", "机制", "流程"],
+        "presets": {
+            "strict": {"min_chars": 8, "max_chars": 30, "fail_at": 0},
+            "normal": {"min_chars": 6, "max_chars": 35, "fail_at": 30},
+            "loose": {"min_chars": 4, "max_chars": 45, "fail_at": 80},
+        },
+    },
+    "diagrams": {"markers": ["┌", "└", "├", "│", "▼", "▲", "→"]},
+    "thresholds": {"exercises_min_per_chapter": 1, "exercises_min_total": 2,
+                   "index_main_min": 2, "index_sub_min": 1,
+                   "index_see_also_min": 1, "glossary_min_entries": 2,
+                   "chapters_min_cross_refs": 1},
+    "quality": {"max_duplicate_ratio": 100, "max_avg_sentence": 80,
+                "max_long_lines": 200, "min_coords_per_chapter": 0,
+                "min_chapter_lines": 1, "max_chapter_lines": 5000,
+                "max_table_rows": 200, "min_terms_per_chapter": 0,
+                "min_exercises_per_chapter": 0},
+    "generation": {"max_packages_per_table": 12, "max_classes_per_package": 4,
+                   "max_api_rows": 20, "exercises_per_chapter": 4,
+                   "checklist_items": 5},
+}
+
 CONFIG_JSON = {
     "thresholds": {
         "ascii_max_cols": 100,
@@ -238,8 +275,9 @@ def build_book(root: str, *, extra: dict[str, str] | None = None) -> str:
         fh.write(BOOK_TOML)
     policy_dir = os.path.join(root, 'data', 'config')
     os.makedirs(policy_dir, exist_ok=True)
-    with open(os.path.join(policy_dir, 'config.json'), 'w', encoding='utf-8') as fh:
-        json.dump(CONFIG_JSON, fh, ensure_ascii=False, indent=2)
+    for name, payload in (('base.json', BASE_JSON), ('style.json', STYLE_JSON)):
+        with open(os.path.join(policy_dir, name), 'w', encoding='utf-8') as fh:
+            json.dump(payload, fh, ensure_ascii=False, indent=2)
     for rel, text in {**FILES, **(extra or {})}.items():
         path = os.path.join(root, rel)
         os.makedirs(os.path.dirname(path), exist_ok=True)

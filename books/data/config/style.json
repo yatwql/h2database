@@ -1,18 +1,8 @@
 {
-  "_note": "Toolchain configuration for the books/ pipeline. Content organisation (chapter order, paths, required sections) lives in books/data/tmpl/book.toml; everything here is toolchain policy. Read via books/src/python/_config.py.",
-  "thresholds": {
-    "ascii_max_cols": 100,
-    "pdf_max_mb": 12,
-    "epub_max_mb": 10,
-    "max_style_warnings": 0,
-    "coverage_fail_under": 86,
-    "exercises_min_per_chapter": 3,
-    "exercises_min_total": 50,
-    "index_main_min": 150,
-    "index_sub_min": 50,
-    "index_see_also_min": 30,
-    "glossary_min_entries": 60,
-    "chapters_min_cross_refs": 1
+  "_note": "Book style: display copy, section skeleton, caption vocabulary, writing thresholds, generation templates.",
+  "project": {},
+  "sections": {
+    "per_chapter": []
   },
   "captions": {
     "leading_verbs": [
@@ -80,18 +70,6 @@
       "→"
     ]
   },
-  "sources": {
-    "src_main": "../h2/src/main",
-    "pom_root": "../h2/pom.xml",
-    "path_pattern": "^org/h2/[A-Za-z0-9_/]+\\.java$",
-    "file_suffix": ".java",
-    "package_prefix": "org.h2",
-    "language": "java"
-  },
-  "baselines": {
-    "ascii": "data/baselines/ascii-baseline.json",
-    "source_symbol": "data/baselines/source-symbol-baseline.json"
-  },
   "quality": {
     "max_duplicate_ratio": 17,
     "max_avg_sentence": 45,
@@ -121,5 +99,14 @@
         "入口信号：`{big}` 的公开方法 {methods} 个，读它等于读本章的主干。"
       ]
     }
+  },
+  "thresholds": {
+    "exercises_min_per_chapter": 3,
+    "exercises_min_total": 50,
+    "index_main_min": 150,
+    "index_sub_min": 50,
+    "index_see_also_min": 30,
+    "glossary_min_entries": 60,
+    "chapters_min_cross_refs": 1
   }
 }

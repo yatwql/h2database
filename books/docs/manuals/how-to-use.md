@@ -41,8 +41,11 @@ python books/src/python/make.py deliver --skip generate_pdf
 3. `make.py build` —— 重新生成 `books/dist/` 里的合并 Markdown 与 HTML。
 4. 交付前 `make.py deliver` —— 生成 PDF/EPUB 并自动校验。
 
-配置（路径、章节顺序、阈值、覆盖率棘轮）只在
-`books/data/tmpl/book.toml` 一处维护，脚本通过 `_config` 读取；**不要在脚本里硬编码目录或章节列表**。
+配置分三类，脚本统一通过 `_config` 读取，**不要硬编码**：
+
+- 数据组织：`data/tmpl/book.toml`（章节清单、标题、编号、覆盖归属、包映射）
+- 基础配置：`data/config/base.json`（源码树、文件后缀、包前缀、基线、预算）
+- 书籍风格：`data/config/style.json`（文案、骨架、图注词表、写作阈值、生成模板）
 
 ## 3. 单独调用某个门禁（调试用）
 

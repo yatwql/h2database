@@ -81,14 +81,16 @@ books/
 | 叙事 | 图注动宾、图簇桥接、长句与重复、ASCII 图宽度 | `audit/_audit_captions.py` 等 |
 | 交付 | PDF outline/字体嵌入、EPUB 容器与 nav | `render/verify_pdf.py`、`render/verify_epub.py` |
 
-门禁阈值、预算与基线路径集中在 `data/config/config.json`；章节顺序与包映射在
-`data/tmpl/book.toml`。脚本不硬编码任何路径或阈值。
+配置分三类：`data/tmpl/book.toml`（数据组织：章节、标题、编号、包映射）、
+`data/config/base.json`（基础：源码树、文件后缀、包前缀、基线、预算）、
+`data/config/style.json`（风格：文案、骨架、图注词表、写作阈值、生成模板）。
+脚本不硬编码任何路径、阈值或文案。
 
 ## 迁移到别的项目
 
 1. 改 `data/tmpl/book.toml`：`[paths]`、`[chapters].files`、`[chapters.packages]`。
-2. 改 `data/config/config.json`：`[sources].src_main`、阈值与预算。
-3. 重跑 stage 1 三步，再 `make.py check`。
+2. 改 `data/config/base.json`：`sources.src_main`、`file_suffix`、`package_prefix`。
+3. 按需调 `data/config/style.json`（风格/阈值），重跑 stage 1 三步，再 `make.py check`。
 
 ## 进一步阅读
 

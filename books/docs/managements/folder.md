@@ -11,7 +11,8 @@ books/
     tmpl/
       book.toml              # 内容组织：路径、章节顺序、必备段落、书籍元信息
     config/
-      config.json            # 工具链策略：阈值、图注词表、源码树位置、覆盖率棘轮
+      base.json              # 基础配置：源码树、文件后缀/包前缀、状态与基线路径、工具链预算
+      style.json             # 书籍风格：展示文案、章节骨架、图注词表、写作阈值、生成模板
     baselines/
       ascii-baseline.json    # ASCII 图已知问题基线（--update-baseline 生成）
       source-symbol-baseline.json  # 源码符号漂移基线
@@ -60,6 +61,14 @@ books/docs/managements/
   folder.md                  # 本文件：目录结构
   archive/                   # 历史文档
 ```
+
+## 2.1 配置分三类
+
+| 类别 | 文件 | 放什么 | 换项目是否要改 |
+|------|------|--------|---------------|
+| 数据组织 | `data/tmpl/book.toml` | 书名/版本、路径、章节清单、标题、编号、覆盖归属、包映射 | 是（每个项目不同） |
+| 基础配置 | `data/config/base.json` | 源码树位置、文件后缀、包前缀、语言、基线与状态路径、PDF/EPUB/ASCII/覆盖率预算 | 部分（指向新源码树） |
+| 书籍风格 | `data/config/style.json` | 展示文案、章节骨架、图注词表与预设、图示标记、写作阈值、生成能力与模板 | 通常否 |
 
 ## 3. 归属规则
 

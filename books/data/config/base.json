@@ -1,0 +1,26 @@
+{
+  "_note": "Infrastructure: where the source tree lives, where state/baselines go, toolchain budgets.",
+  "paths": {
+    "state": "data/state",
+    "baselines": "data/baselines"
+  },
+  "sources": {
+    "src_main": "../h2/src/main",
+    "pom_root": "../h2/pom.xml",
+    "path_pattern": "^org/h2/[A-Za-z0-9_/]+\\.java$",
+    "file_suffix": ".java",
+    "package_prefix": "org.h2",
+    "language": "java"
+  },
+  "baselines": {
+    "ascii": "data/baselines/ascii-baseline.json",
+    "source_symbol": "data/baselines/source-symbol-baseline.json"
+  },
+  "toolchain": {
+    "coverage_fail_under": 86,
+    "pdf_max_mb": 12,
+    "epub_max_mb": 10,
+    "ascii_max_cols": 100,
+    "max_style_warnings": 0
+  }
+}
