@@ -14,9 +14,9 @@ Routing precedence: chapter > book > scenario > default_provider.
 """
 from __future__ import annotations
 
+import http.client
 import json
 import os
-import http.client
 from urllib.parse import urlsplit
 
 from lib import _config
