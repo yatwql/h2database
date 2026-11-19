@@ -20,7 +20,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _fsutil, _log
+from lib import _config, _fsutil, _log, _mdutil
 
 OUTLINE = os.path.join(_config.BOOK_ROOT, 'data', 'state', 'outline.json')
 SOURCE_ROOT = _config.source_tree('src_main')
@@ -539,6 +539,22 @@ _INVENTORY: dict = {}
 LOG = _log.get_logger('ingest')
 
 
+def _space(text: str) -> str:
+    """Normalise CJK/Latin spacing in prose; tables and fences stay untouched."""
+    out = []
+    in_fence = False
+    for line in text.split('\n'):
+        if line.lstrip().startswith('```'):
+            in_fence = not in_fence
+            out.append(line)
+            continue
+        if in_fence or line.lstrip().startswith('#'):
+            out.append(line)
+            continue
+        out.append(_mdutil.space_cjk_latin(line))
+    return '\n'.join(out)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -569,7 +585,7 @@ def main(argv: list[str] | None = None) -> int:
             if args.dry_run:
                 print(f'--- appendix {ch["file"]} (+{len(block.splitlines())} lines)')
                 continue
-            _fsutil.write_text(path, existing.rstrip('\n') + '\n\n' + block)
+            _fsutil.write_text(path, existing.rstrip('\n') + '\n\n' + _space(block))
             written += 1
             print(f'  appended {ch["file"]} (+{len(block.splitlines())} lines)')
             continue
@@ -579,7 +595,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.dry_run:
             print(f'--- {ch["file"]} ({len(text.splitlines())} lines)')
             continue
-        _fsutil.write_text(_config.manuscript(ch['file']), text)
+        _fsutil.write_text(_config.manuscript(ch['file']), _space(text))
         written += 1
         print(f'  wrote {ch["file"]} ({len(text.splitlines())} lines)')
     print(f'chapters written: {written}')

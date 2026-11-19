@@ -1021,7 +1021,7 @@ A.2 的"提交全链路"推广为"crash + recovery 全链路"。
 - File Header 的 `fletcher` 字段：决定 Block 0 / Block 1 是否参与版本仲裁；
 - Chunk Footer 的 `fletcher` 字段：决定整个 chunk 的所有 page 是否被采纳；
 - metaMap 中的 `chunk.<id>` 条目：决定 chunk 是否被纳入 FreeSpaceBitSet 的 used 区间；
-- undo log map 名后缀（`.` 或 `-`）：决定事务在恢复期是 rollback 还是 commit-redo。
+- undo log map 名后缀（`.` 或 `-`）：决定事务在恢复期是 rollback 还是 commit-redo
 
 这些承诺位之间的语义优先级是从外向内的：File Header → Chunk Footer → metaMap chunk 条目 → undo log 名后缀。前一级失败会让后一级的所有信息被丢弃，这是 ACID 原子性"全有或全无"的物理体现（详见 §9.4.4）。
 
@@ -1356,7 +1356,7 @@ B-Tree 根重建后，`TransactionStore.open()` 被调用。它在 metaMap 中�
 - `committingTransactions` BitSet 为空集；
 - 没有任何 `Transaction` 对象处于 OPEN 状态；
 - FreeSpaceBitSet 把 block 0、1（双 header）以及 Chunk 1～3 的字节区间标记为 used，其余（包括 Chunk 4 占用的字节）标记为 free，可被下一个 chunk 覆写；
-- MVStore 状态机推进到 `STATE_OPEN`，对外开放写入。
+- MVStore 状态机推进到 `STATE_OPEN`，对外开放写入
 
 至此，恢复流水线的 8 个步骤全部走完。此时如果应用层立刻发起一个新事务 T5，它的 chunk id 会从最近一次成功 commit（Chunk 3）的下一位继续递增，而磁盘上残存的 Chunk 4 字节会在下一个检查点被新 chunk 覆盖（详见 §9.5 中检查点的覆盖语义）。
 

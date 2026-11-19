@@ -70,3 +70,40 @@ def split_fences(text: str) -> list[str]:
     if current:
         chunks.append('\n'.join(current))
     return chunks
+
+_CJK_RANGE = r'\u4e00-\u9fff'
+# zero-width assertions so back-to-back boundaries all get a space
+_CJK_LATIN = re.compile(f'(?<=[{_CJK_RANGE}])(?=[A-Za-z0-9])|(?<=[A-Za-z0-9])(?=[{_CJK_RANGE}])')
+# Chinese numbering and reference idioms stay tight: 第3章 / §6.2 / 图 6-12 / 附录 A
+_IDIOM = re.compile(r'第\d+[章节题条个张]|§\d+(?:\.\d+)*|图 [A-Z0-9]+-\d+|表 [A-Z0-9]+-\d+|附录 [A-Z]')
+
+
+def _space_plain(part: str) -> str:
+    """Insert CJK/Latin spaces in one non-code segment, protecting idioms."""
+    masks: list[str] = []
+
+    def mask(match: re.Match) -> str:
+        masks.append(match.group(0))
+        return f'\x00{len(masks) - 1}\x00'
+
+    part = _IDIOM.sub(mask, part)
+    part = _CJK_LATIN.sub(' ', part)
+    return re.sub(r'\x00(\d+)\x00', lambda m: masks[int(m.group(1))], part)
+
+
+def space_cjk_latin(text: str) -> str:
+    """Insert a space between CJK characters and Latin letters/digits.
+
+    Inline code spans (``...``) and links (``[label](target)``) are left
+    untouched, and Chinese numbering idioms (第3章 / §6.2 / 图 6-12) stay tight.
+    """
+    parts = re.split(r'(`[^`]*`)', text)
+    out = []
+    for index, part in enumerate(parts):
+        if index % 2 == 1:          # inside a code span
+            out.append(part)
+            continue
+        part = re.sub(r'\[([^\]]*)\]\(([^)]*)\)',
+                      lambda m: f'[{m.group(1)}]({m.group(2)})', part)
+        out.append(_space_plain(part))
+    return ''.join(out)

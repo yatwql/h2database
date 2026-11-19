@@ -35,6 +35,8 @@ LINK_RE = re.compile(r'\[([^\]]+)\]\([^)]*\)')
 CJK = r'\u4e00-\u9fff'
 CJK_LATIN_RE = re.compile(rf'[{CJK}][A-Za-z0-9]|[A-Za-z0-9][{CJK}]')
 LIST_ITEM_RE = re.compile(r'^\s*(?:[-*+]|\d+\.)\s+(.*)$')
+# Chinese typography keeps these tight: 第3章 / 图 6-12 / §6.2 / 附录 A
+CJK_IDIOM_RE = re.compile(r'第\d+[章节题条个张]|图 [A-Z0-9]+-\d+|表 [A-Z0-9]+-\d+|§\d+(\.\d+)*|附录 [A-Z]')
 
 
 def files() -> list[str]:
@@ -47,6 +49,7 @@ def check_file(path: str) -> list[dict]:
     name = os.path.basename(path)
     lines = _fsutil.read_lines(path)
     in_fence = False
+    list_blocks: list[list[bool]] = []
     list_endings: list[bool] = []
 
     def note(lineno: int, kind: str, detail: str) -> None:
@@ -82,16 +85,24 @@ def check_file(path: str) -> list[dict]:
             if len(hits) > 1:
                 note(i, 'TERM', f'mixed spellings: {hits}')
 
-        if RULES.get('cjk_latin_spacing') and CJK_LATIN_RE.search(stripped):
-            note(i, 'CJK_SPACE', 'missing space between CJK and Latin')
+        if RULES.get('cjk_latin_spacing'):
+            candidate = CJK_IDIOM_RE.sub('', stripped)
+            if CJK_LATIN_RE.search(candidate):
+                note(i, 'CJK_SPACE', 'missing space between CJK and Latin')
 
         item = LIST_ITEM_RE.match(stripped)
         if item:
             list_endings.append(item.group(1).rstrip().endswith('。'))
+        elif list_endings:
+            if len(set(list_endings)) > 1:
+                list_blocks.append(list_endings)
+            list_endings = []
 
-    if RULES.get('list_punctuation') == 'consistent' and len(set(list_endings)) > 1:
+    if list_endings and len(set(list_endings)) > 1:
+        list_blocks.append(list_endings)
+    if RULES.get('list_punctuation') == 'consistent' and list_blocks:
         findings.append({'file': name, 'line': 0, 'kind': 'LIST',
-                         'detail': 'list items mix ending punctuation'})
+                         'detail': f'{len(list_blocks)} list(s) mix ending punctuation'})
 
     limit = RULES.get('max_paragraph_chars')
     if limit:
