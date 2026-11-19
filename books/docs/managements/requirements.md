@@ -1,0 +1,70 @@
+# H2 Database 源码分析 — 需求文档
+
+> 版本：v6.1
+> 状态：已交付（v6.0 工业级里程碑 + v6.1 EPUB 输出形态）
+> 最后更新:2026-06-15
+
+---
+
+## 1. 项目目标
+
+对 H2 Database v2.x Java 源码进行系统分析，输出面向开发者的中文技术文档，帮助读者理解 H2 的架构分层、SQL 执行链路、存储引擎、事务、查询优化器、持久化和锁实现。
+
+## 2. 交付物
+
+| 产物 | 路径 | 说明 |
+|------|------|------|
+| 源章节 | `books/ch*.md` | 10 个源文件覆盖 12 章 |
+| 附录 A 端到端案例研究 | `books/appendix-a-case-studies.md` | SELECT / COMMIT / 崩溃恢复三案例 |
+| 附录 B 源码版本变更说明 | `books/appendix-b-version-changes.md` | v2.4.240 → v2.4.249-SNAPSHOT 关键变更 |
+| 附录 C 术语表 | `books/back/glossary.md` | 113 条术语、章节索引、see-also |
+| 附录 D 概念索引 | `books/back/index.md` | 主条目 + 子条目 + see-also 三档层级 |
+| 附录 E 参考文献 | `books/back/references.md` | 官方文档、论文、技术资料分类清单 |
+| 前件 | `books/front/` | 前言、版权页、阅读指南 |
+| 合并 Markdown | `books/h2-source-code-analysis.md` | 标准可提交交付物，由源章节生成 |
+| HTML | `books/h2-source-code-analysis.html` | 按需生成，带侧边栏 TOC，git 忽略 |
+| PDF | `books/h2-source-code-analysis.pdf` | 按需生成，带大纲和可点击目录，git 忽略 |
+| 印刷级 PDF | `books/h2-source-code-analysis-print.pdf` | 按需生成（最终交付阶段），章首装饰页 + TOC 虚线对齐，git 忽略 |
+| EPUB | `books/h2-source-code-analysis.epub` | 按需生成（最终交付阶段），面向电子阅读器，git 忽略 |
+| 工具脚本 | `books/src/python/` | 正式生成、审计和验证工具 |
+| 管理文档 | `books/docs/managements/` | 当前需求、计划、质量门禁、变更记录、审查问题、写作风格指南 |
+
+当前统计数据以 `books/cover.md` 自动更新结果和 `books/src/python/final_check.py` 输出为准；本文件不重复维护数字。
+
+## 3. 内容范围
+
+文档必须覆盖：
+
+- H2 定位、历史和整体架构。
+- JDBC/Server/Engine/Command/Expression/Table-Index/MVStore/FileSystem 等核心层次。
+- 主要 `org.h2.*` 包结构和关键类职责。
+- SELECT、INSERT、UPDATE、DELETE、COMMIT、ROLLBACK、COMPACT、CHUNK、READ 等核心流程。
+- B-Tree、Copy-on-Write、MVCC、Chunk、LIRS、FreeSpace、MVStore 平衡、Optimizer、R-Tree、Recursive Descent Parser 等核心算法。
+- SQL 执行、查询优化、持久化、恢复、锁和并发控制。
+- 源码阅读路线、调试入口和总结。
+- 端到端案例研究（附录 A）与跨小版本源码变更（附录 B）。
+
+## 4. 质量需求
+
+质量门禁以 `books/docs/managements/testplan.md` 为唯一权威来源。本文件只保留需求摘要：
+
+- 章节完整：12 章 + 5 附录齐全，H1 格式一致。
+- 图表完整：内容型小节至少 2 图，模板型小节至少 1 图。
+- 源码引用：关键论述包含文件名和行号，路径使用 `org/h2/...` 格式。
+- 格式一致：图注、代码围栏、跨章引用和标题层级符合约定。
+- 导航有效：HTML TOC、PDF Outline 和目录链接必须可验证。
+- 管理文档一致：版本号、统计、流程和职责不得相互冲突。
+
+## 5. 验证流程
+
+验证流程以 `books/docs/managements/testplan.md` 第1节为准。本章节只保持引用关系，不重复维护命令。
+
+## 6. 非目标
+
+- 不在 `docs/` 或 `.claude/` 中维护正式交付文档或工具脚本。
+- 不提交临时修复脚本、压缩包、`__pycache__` 或过程性 session 文件。
+- 不在多个管理文档中重复维护长版本历史、完整问题清单或大段验证脚本。
+
+## 7. 版本历史
+
+完整版本历史见 `books/docs/managements/changelog.md`。

@@ -1,0 +1,43 @@
+{
+  "_note": "Toolchain configuration for the books/ pipeline. Content organisation (chapter order, paths, required sections) lives in books/data/tmpl/book.toml; everything here is toolchain policy. Read via books/src/python/_config.py.",
+  "thresholds": {
+    "ascii_max_cols": 100,
+    "pdf_max_mb": 12,
+    "epub_max_mb": 10,
+    "max_style_warnings": 0,
+    "coverage_fail_under": 86,
+    "exercises_min_per_chapter": 3,
+    "exercises_min_total": 50,
+    "index_main_min": 150,
+    "index_sub_min": 50,
+    "index_see_also_min": 30,
+    "glossary_min_entries": 60,
+    "chapters_min_cross_refs": 1
+  },
+  "captions": {
+    "leading_verbs": [
+      "展示", "对比", "拆解", "演示", "标注", "概览", "追踪",
+      "描绘", "刻画", "归纳", "罗列", "列出", "勾勒", "呈现",
+      "串联", "说明", "揭示", "体现", "反映", "阐释", "解读",
+      "剖析", "梳理", "汇总", "汇集", "记录"
+    ],
+    "vague_trailing": ["过程", "示例", "架构", "图", "机制", "流程"],
+    "presets": {
+      "strict": {"min_chars": 8, "max_chars": 30, "fail_at": 0},
+      "normal": {"min_chars": 6, "max_chars": 35, "fail_at": 30},
+      "loose": {"min_chars": 4, "max_chars": 45, "fail_at": 80}
+    }
+  },
+  "diagrams": {
+    "markers": ["┌", "└", "├", "│", "▼", "▲", "→"]
+  },
+  "sources": {
+    "src_main": "../h2/src/main",
+    "pom_root": "../h2/pom.xml",
+    "path_pattern": "^org/h2/[A-Za-z0-9_/]+\\.java$"
+  },
+  "baselines": {
+    "ascii": "data/baselines/ascii-baseline.json",
+    "source_symbol": "data/baselines/source-symbol-baseline.json"
+  }
+}

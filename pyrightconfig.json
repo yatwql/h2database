@@ -1,0 +1,58 @@
+{
+  "include": [
+    "books/src/python",
+    "books/src/test"
+  ],
+  "executionEnvironments": [
+    {
+      "root": "books/src/python",
+      "extraPaths": [
+        "books/src/python/lib",
+        "books/src/python"
+      ]
+    },
+    {
+      "root": "books/src/python/lib",
+      "extraPaths": [
+        "books/src/python/lib",
+        "books/src/python"
+      ]
+    },
+    {
+      "root": "books/src/python/audit",
+      "extraPaths": [
+        "books/src/python/lib",
+        "books/src/python"
+      ]
+    },
+    {
+      "root": "books/src/python/manuscript",
+      "extraPaths": [
+        "books/src/python/lib",
+        "books/src/python"
+      ]
+    },
+    {
+      "root": "books/src/python/render",
+      "extraPaths": [
+        "books/src/python/lib",
+        "books/src/python"
+      ]
+    },
+    {
+      "root": "books/src/python/sources",
+      "extraPaths": [
+        "books/src/python/lib",
+        "books/src/python"
+      ]
+    },
+    {
+      "root": "books/src/test",
+      "extraPaths": [
+        "books/src/python/lib",
+        "books/src/python"
+      ]
+    }
+  ],
+  "pythonVersion": "3.11"
+}

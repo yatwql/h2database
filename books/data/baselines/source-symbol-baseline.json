@@ -1,0 +1,14 @@
+{
+  "h2_version": "2.5.259-SNAPSHOT",
+  "note": "Accepted symbol drift. Refresh after an upstream update.",
+  "accepted": [
+    "ch1-2-architecture.md::Database::connectSession",
+    "ch11-12-guide-summary.md::MVMap::writeOrDeleteRow",
+    "ch11-12-guide-summary.md::Parser::parseCommand",
+    "ch3-packages.md::TableFilter::findBestIndex",
+    "ch9-10-persistence-locking.md::DataUtils::readStoreHeader",
+    "ch9-10-persistence-locking.md::MVMap::rollbackTo",
+    "ch9-10-persistence-locking.md::MVMap::setNewRoot",
+    "ch9-10-persistence-locking.md::Session::checkDeadlock"
+  ]
+}

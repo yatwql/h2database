@@ -1,0 +1,811 @@
+#!/usr/bin/env python3
+"""Robust markdown to HTML converter - handles paired fences correctly."""
+
+import os as _os
+import sys as _sys
+
+# make the shared package importable when the script runs standalone
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+
+import re
+
+from lib import _config, _fsutil, _mdutil
+
+_fsutil.pin_stdout_utf8()
+
+docs_dir = _config.BOOK_ROOT
+src_dir = _config.MANUSCRIPT_DIR
+dist_dir = _config.DIST_DIR
+
+INPUT = _config.merged_md()
+OUTPUT = _config.merged_html()
+
+_fsutil.ensure_dir(OUTPUT)
+
+lines = _fsutil.read_lines(INPUT)
+
+# Find where main content starts (first # 第N章 heading)
+main_start = 0
+cover_text = ''
+for i, line in enumerate(lines):
+    if re.match(r'^# 第\d+章', line):
+        main_start = i
+        break
+    cover_text += line
+
+# Build TOC from main content only, tracking fence state
+toc_entries = []
+in_pre_toc = False
+pre_toc_lang = ''
+for i in range(main_start, len(lines)):
+    raw_line = lines[i]
+    stripped = raw_line.strip()
+    if stripped.startswith('```'):
+        if stripped.startswith('```mermaid'):
+            continue
+        lang = stripped[3:].strip()
+        if not in_pre_toc:
+            in_pre_toc = True
+            pre_toc_lang = lang
+        else:
+            in_pre_toc = False
+            pre_toc_lang = ''
+        continue
+    m = re.match(r'^(#{1,4})\s+(.+)$', raw_line.rstrip('\n'))
+    if m:
+        level = len(m.group(1))
+        title = m.group(2).strip()
+        anchor = title.lower()
+        anchor = re.sub(r'[^\w一-鿿㐀-䶿\s-]', '', anchor)
+        anchor = anchor.replace(' ', '-')
+        # Never modify in_pre_toc when encountering a heading — doing so
+        # corrupts fence state tracking for subsequent content. Only skip
+        # if inside a non-text code block.
+        if not (in_pre_toc and pre_toc_lang not in ('', 'text')):
+            toc_entries.append((level, title, anchor, i))
+        continue
+
+STYLE = r"""
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { min-height: 100vh; }
+body {
+    font-family: -apple-system, 'Microsoft YaHei', sans-serif;
+    line-height: 1.8; color: #333; background: #fafafa;
+    display: flex; flex-direction: column;
+}
+html { overflow-y: scroll; }
+
+/* ===== Cover Info Table ===== */
+.cover-info { background: rgba(79,195,247,0.08); border: 1px solid rgba(79,195,247,0.2); border-radius: 8px; margin: 1.5em auto; width: auto; min-width: 280px; max-width: 520px; }
+.cover-info th { background: transparent; color: #90caf9; font-weight: 600; text-align: center; border: none; padding: 6px 8px; font-size: 0.82em; letter-spacing: 1px; }
+.cover-info td { color: rgba(255,255,255,0.75); border: none; padding: 5px 12px; font-size: 0.88em; }
+.cover-info tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+.cover-info tr:hover { background: rgba(79,195,247,0.1); }
+
+/* ===== Cover Page ===== */
+#cover {
+    min-height: 100vh; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; text-align: center;
+    background-color: #0d1b2a;
+    background: linear-gradient(135deg, #0d1b2a 0%, #1b2838 40%, #1a3a5c 100%);
+    color: #fff; padding: 40px 20px; position: relative; overflow: hidden;
+    isolation: isolate; flex-shrink: 0;
+}
+#cover::before {
+    content: ''; position: absolute; top: -50%; left: -50%;
+    width: 200%; height: 200%; z-index: -1;
+    background: radial-gradient(ellipse at 30% 40%, rgba(79,195,247,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 60%, rgba(255,152,0,0.05) 0%, transparent 50%);
+    pointer-events: none;
+}
+#cover h1 {
+    color: #fff; font-size: 2.6em; font-weight: 700; border: none;
+    letter-spacing: 2px; margin: 0 0 0.3em; text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    position: relative; z-index: 1; flex-shrink: 0;
+}
+#cover h2 {
+    color: #90caf9; font-size: 1.3em; font-weight: 400; border: none;
+    letter-spacing: 4px; margin: 0 0 2em; position: relative; z-index: 1; flex-shrink: 0;
+}
+#cover .divider {
+    width: 80px; height: 3px; background: linear-gradient(90deg, #4fc3f7, #1565C0);
+    margin: 0 auto 2em; border-radius: 2px; position: relative;
+}
+#cover .meta {
+    color: rgba(255,255,255,0.6); font-size: 0.95em;
+    letter-spacing: 2px; margin-bottom: 1.5em; position: relative;
+}
+#cover .author {
+    color: rgba(255,255,255,0.85); font-size: 0.95em;
+    line-height: 1.8; margin-bottom: 2em; position: relative;
+}
+#cover .author p { margin: 0.2em 0; }
+#cover .author a { color: #90caf9; text-decoration: none; border-bottom: 1px dotted rgba(144,202,249,0.5); }
+#cover .author a:hover { color: #fff; border-bottom-color: #fff; }
+#cover .desc {
+    max-width: 600px; color: rgba(255,255,255,0.75);
+    font-size: 1em; line-height: 2; margin-bottom: 1.5em; position: relative;
+}
+#cover .tags {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    margin-bottom: 3em; position: relative;
+}
+#cover .tags span {
+    background: rgba(79,195,247,0.15); border: 1px solid rgba(79,195,247,0.25);
+    padding: 4px 14px; border-radius: 20px; font-size: 0.82em; color: #90caf9;
+}
+#cover .scroll-hint {
+    position: absolute; bottom: 30px; color: rgba(255,255,255,0.3);
+    font-size: 0.8em; letter-spacing: 2px; cursor: pointer;
+    animation: bounce 2s infinite;
+}
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
+}
+
+/* ===== Layout ===== */
+.page-wrap { display: flex; flex: 1; }
+
+#sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; width: 280px;
+    background: #1a1a2e; color: #ccc; overflow-y: auto;
+    padding: 20px 0; z-index: 100;
+    transition: opacity 0.25s ease, visibility 0.25s ease,
+                transform 0.3s ease;
+}
+/* Hide the sidebar while reader is on cover or TOC page so it doesn't
+   overlay the centered cover title and full-width table of contents.
+   The sidebar reappears once the main content (#page-wrap) scrolls into
+   view — handled by IntersectionObserver in the script below. */
+body.intro-mode #sidebar { opacity: 0; visibility: hidden; pointer-events: none; }
+body.intro-mode #toggle-sidebar { display: none; }
+body.intro-mode #toc-page > div { margin-left: 0 !important; }
+body.intro-mode #sidebar-expand { display: none; }
+
+/* Desktop collapse: the TOC header row (#sidebar-toggle) acts as the
+   collapse trigger. When collapsed, #sidebar slides off-screen to the
+   left and #content drops its left margin to widen the reading area;
+   the floating chevron #sidebar-expand at the top-left lets the reader
+   bring the sidebar back. State persists in localStorage. */
+#sidebar-expand {
+    position: fixed; top: 12px; left: 12px; z-index: 150;
+    width: 32px; height: 32px; padding: 0;
+    background: #1a1a2e; color: #ccc;
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 4px;
+    cursor: pointer; font-size: 16px; line-height: 30px;
+    display: none; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: background 0.15s, color 0.15s;
+}
+#sidebar-expand:hover { background: #4fc3f7; color: #fff; border-color: #4fc3f7; }
+body.sidebar-collapsed #sidebar { transform: translateX(-280px); }
+body.sidebar-collapsed #content { margin-left: 0; max-width: 1100px; }
+body.sidebar-collapsed #sidebar-expand { display: flex; }
+#sidebar::-webkit-scrollbar { width: 5px; }
+#sidebar::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+/* TOC header row doubles as the collapse toggle — much clearer
+   affordance than a tiny corner button. The chevron rotates 180° when
+   the sidebar is collapsed (it's now reachable only via #sidebar-expand,
+   but rotating in advance keeps the icon consistent across states). */
+#sidebar-toggle {
+    display: flex; align-items: center; gap: 8px;
+    width: calc(100% - 24px); margin: 0 12px 8px; padding: 6px 12px 12px;
+    background: transparent; border: none; border-bottom: 1px solid #333;
+    color: #eee; font-size: 14px; letter-spacing: 1px; text-transform: uppercase;
+    text-align: left; cursor: pointer; font-family: inherit;
+    transition: color 0.15s, background 0.15s;
+}
+#sidebar-toggle:hover { color: #4fc3f7; background: rgba(79,195,247,0.05); }
+#sidebar-toggle .chev {
+    display: inline-block; font-size: 18px; line-height: 1;
+    transition: transform 0.3s ease;
+}
+#sidebar-toggle .lbl { flex: 1; }
+body.sidebar-collapsed #sidebar-toggle .chev { transform: rotate(180deg); }
+#sidebar a {
+    display: block; color: #aaa; text-decoration: none;
+    padding: 4px 16px 4px 12px; font-size: 13px;
+    border-left: 3px solid transparent; transition: all 0.15s;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#sidebar a:hover, #sidebar a.active {
+    color: #fff; background: rgba(255,255,255,0.05);
+    border-left-color: #4fc3f7;
+}
+#sidebar .toc-h2 { padding-left: 24px; font-size: 12.5px; }
+#sidebar .toc-h3 { padding-left: 38px; font-size: 12px; color: #888; }
+#sidebar .toc-h4 { padding-left: 52px; font-size: 11.5px; color: #777; }
+#content {
+    margin-left: 280px; flex: 1; max-width: 960px;
+    padding: 40px 48px; background: #fff; min-height: 100vh;
+    scroll-padding-left: 290px; scroll-padding-top: 20px;
+    transition: margin-left 0.3s ease, max-width 0.3s ease;
+}
+#toggle-sidebar {
+    display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
+    background: #1a1a2e; color: #fff; border: none; border-radius: 4px;
+    padding: 8px 12px; cursor: pointer; font-size: 18px;
+}
+@media (max-width: 768px) {
+    #sidebar { left: -280px; transition: left 0.3s; }
+    #sidebar.open { left: 0; }
+    #content { margin-left: 0; padding: 48px 20px 20px; }
+    #toggle-sidebar { display: block; }
+    /* On mobile the hamburger toggle handles show/hide; suppress the
+       desktop expand chevron to avoid two competing affordances. The
+       sidebar header (#sidebar-toggle) stays visible since it's the
+       TOC title; we just neutralise its collapse behaviour on mobile. */
+    #sidebar-expand { display: none !important; }
+    #sidebar-toggle { cursor: default; }
+    #sidebar-toggle:hover { color: #eee; background: transparent; }
+    #sidebar-toggle .chev { display: none; }
+}
+h1, h2, h3, h4 { color: #1565C0; margin-top: 1.5em; margin-bottom: 0.5em; font-family: 'Microsoft YaHei', SimSun, -apple-system, sans-serif; scroll-margin-left: 290px; scroll-margin-top: 20px; }
+#content h1 { font-size: 1.8em; border-bottom: 2px solid #1565C0; padding-bottom: 8px; position: relative; padding-top: 0.3em; page-break-before: always; }
+#content h1::before {
+    content: ''; display: block; width: 60px; height: 4px;
+    background: linear-gradient(90deg, #1565C0, #4fc3f7);
+    border-radius: 3px; margin-bottom: 10px;
+}
+h2 { font-size: 1.4em; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; }
+h3 { font-size: 1.15em; }
+h4 { font-size: 1.05em; color: #333; }
+p { margin: 0.8em 0; text-align: justify; }
+code {
+    background: #f0f4f8; padding: 2px 6px; border-radius: 3px;
+    font-family: Consolas, 'Courier New', monospace; font-size: 0.9em;
+    color: #2d3748;
+}
+pre {
+    background: #f4f5f7; padding: 12px; border-radius: 6px;
+    overflow-x: auto; font-size: 12px; line-height: 1.0;
+    font-family: Consolas, 'DengXian', SimSun, monospace;
+    border: 1px solid #d0d5dd; border-left: 4px solid #1565C0;
+    margin: 1em 0; color: #1a1a2e;
+}
+pre code { background: none; padding: 0; color: inherit; display: block; }
+
+/* Code block: line numbers & copy button */
+.pre-wrap { display: flex; position: relative; }
+.line-nums {
+    text-align: right; user-select: none; color: #999;
+    border-right: 1px solid #ddd; margin-right: 8px;
+    min-width: 28px; font-size: 11px; line-height: 1.0;
+    background: #edeff2; padding: 12px 6px 12px 12px;
+    flex-shrink: 0; border-radius: 3px 0 0 3px; overflow: hidden;
+}
+.code-content { flex: 1; overflow-x: auto; padding: 12px 0; }
+.code-content code { padding: 0; }
+.copy-btn {
+    position: absolute; top: 4px; right: 4px; z-index: 10;
+    background: rgba(255,255,255,0.85); border: 1px solid #d0d5dd;
+    border-radius: 4px; padding: 2px 8px; font-size: 11px;
+    cursor: pointer; color: #555; opacity: 0; transition: opacity 0.2s;
+}
+.pre-wrap:hover .copy-btn { opacity: 1; }
+.copy-btn:hover { background: #e3f2fd; border-color: #1565C0; color: #1565C0; }
+
+/* Breadcrumb navigation */
+#breadcrumb {
+    font-size: 13px; color: #888; margin-bottom: 1em; padding: 6px 0;
+    border-bottom: 1px solid #eee; display: flex; flex-wrap: wrap; gap: 4px;
+}
+#breadcrumb .sep { color: #ccc; margin: 0 4px; }
+#breadcrumb a { color: #1565C0; text-decoration: none; }
+#breadcrumb a:hover { text-decoration: underline; }
+#breadcrumb .current { color: #555; font-weight: 500; }
+
+/* Chapter navigation */
+#chapter-nav {
+    margin-top: 3em; padding-top: 1.5em; border-top: 2px solid #e0e0e0;
+    display: flex; justify-content: space-between; gap: 20px;
+}
+#chapter-nav a {
+    display: inline-block; padding: 8px 16px; border: 1px solid #d0d5dd;
+    border-radius: 6px; color: #1565C0; text-decoration: none;
+    font-size: 14px; transition: all 0.2s; max-width: 45%;
+}
+#chapter-nav a:hover { background: #e3f2fd; border-color: #1565C0; }
+#chapter-nav .nav-label { font-size: 11px; color: #999; display: block; }
+#chapter-nav .nav-title { font-weight: 500; }
+
+table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+th { background: #1565C0; color: white; font-weight: 600; position: sticky; top: 0; }
+tr:nth-child(even) { background: #f9f9f9; }
+tr:hover { background: #eef4fb; }
+
+/* ===== Figure Captions ===== */
+strong.fig-caption {
+    display: block; margin: 0.5em 0 1em; padding: 6px 12px;
+    background: #f0f6ff; border-left: 3px solid #1565C0;
+    border-radius: 0 4px 4px 0; font-size: 0.92em; color: #1a3a5c;
+    line-height: 1.6;
+}
+
+blockquote {
+    border-left: 4px solid #1565C0; margin: 1em 0;
+    padding: 0.5em 1em; background: #f5f5f5; color: #555;
+}
+a { color: #1565C0; text-decoration: none; }
+a:hover { text-decoration: underline; }
+hr { border: none; border-top: 1px solid #ddd; margin: 2em 0; }
+ul, ol { margin: 0.5em 0; padding-left: 2em; }
+li { margin: 0.3em 0; }
+
+/* ===== TOC Page ===== */
+#toc-page { background: #fff; padding: 20px 0; }
+#toc-page a:hover { background: #f0f4f8 !important; text-decoration: none; }
+@media (min-width: 769px) {
+  #toc-page > div { margin-left: 280px !important; }
+}
+@media print {
+  #toc-page { page-break-after: always; }
+  #cover { page-break-after: always; }
+  #sidebar { display: none; }
+  #content { margin-left: 0; max-width: 100%; padding: 20px 36px; }
+  pre, table { page-break-inside: avoid; }
+  h1, h2, h3, h4 { page-break-after: avoid; }
+  pre { font-size: 10px; }
+  @page { margin: 15mm 10mm; }
+}
+"""
+
+def md_to_html(text):
+    # Inline link [label](url)
+    text = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2">\1</a>', text)
+    text = re.sub(r'`([^`]+)`', r'<code>\1</code>', text)
+    text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
+    text = re.sub(r'(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)', r'<em>\1</em>', text)
+    return text
+
+# Build TOC HTML (sidebar)
+# The TOC header is the click target for collapsing the sidebar — making
+# the whole row clickable instead of a tiny chevron at the corner is far
+# easier to discover. Chevron rotates 180° when collapsed (handled in CSS
+# via `body.sidebar-collapsed #sidebar-toggle .chev`).
+toc_html = (
+    '<button id="sidebar-toggle" type="button" '
+    'aria-label="收起或展开目录侧栏" title="点击收起/展开目录（快捷键 [）">'
+    '<span class="chev">‹</span><span class="lbl">TOC · 目录</span>'
+    '</button>\n'
+)
+for level, title, anchor, _ in toc_entries:
+    indent = f'toc-h{level}'
+    toc_html += f'<a class="{indent}" href="#{anchor}">{md_to_html(title)}</a>\n'
+
+# Build TOC page entries (h1-h4 full structure, matching sidebar TOC)
+toc_page_entries = [e for e in toc_entries if e[0] <= 4]
+
+# Build TOC page HTML (full-width, placed between cover and content)
+toc_page_html = '<section id="toc-page">\n'
+toc_page_html += '  <div style="max-width:720px;margin:0 auto;padding:40px 20px;">\n'
+toc_page_html += '    <h1 style="text-align:center;border:none;color:#1565C0;margin-bottom:30px;">目录</h1>\n'
+toc_page_html += '    <hr style="width:60px;margin:0 auto 30px;border-color:#1565C0;">\n'
+toc_page_html += '    <nav id="toc-page-nav">\n'
+for level, title, anchor, _ in toc_page_entries:
+    indent_px = 0 if level == 1 else (level - 1) * 20
+    font_size = 16 if level == 1 else (15 if level == 2 else (14 if level == 3 else 13))
+    font_weight = 'bold' if level <= 2 else 'normal'
+    color = '#1565C0' if level == 1 else ('#333' if level == 2 else ('#555' if level == 3 else '#777'))
+    margin_b = '10px' if level <= 2 else '6px'
+    toc_page_html += (
+        f'      <div style="margin-left:{indent_px}px;margin-bottom:{margin_b};'
+        f'font-size:{font_size}px;font-weight:{font_weight};color:{color};">\n'
+    )
+    toc_page_html += f'        <a href="#{anchor}" style="color:inherit;text-decoration:none;display:block;padding:2px 8px;border-radius:3px;">{md_to_html(title)}</a>\n'
+    toc_page_html += '      </div>\n'
+toc_page_html += '    </nav>\n'
+toc_page_html += '  </div>\n'
+toc_page_html += '</section>\n'
+
+# Build content HTML from main content only (skip cover)
+content_parts: list[str] = []
+in_pre = False
+pre_lang = ''
+auto_exited = False
+fence_lines_found = 0
+for line in lines[main_start:]:
+    stripped = line.rstrip('\n')
+    is_fence = stripped.startswith('```')
+
+    if is_fence:
+        fence_lines_found += 1
+        lang = stripped[3:].strip()
+        if not in_pre:
+            if auto_exited and not lang:
+                # Bare ``` after auto-exit: consume it (closes original fence)
+                auto_exited = False
+                continue
+            auto_exited = False  # ```text/```java starts fresh
+            in_pre = True
+            pre_lang = lang
+            content_parts.append('<pre><code>\n')
+        else:
+            in_pre = False
+            pre_lang = ''
+            content_parts.append('</code></pre>\n')
+        continue
+
+    if in_pre:
+        hm = re.match(r'^(#{1,4})\s+(.+)$', stripped)
+        if hm and pre_lang in ('', 'text'):
+            in_pre = False
+            auto_exited = True
+            content_parts.append('</code></pre>\n')
+        else:
+            escaped = stripped.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+            content_parts.append(escaped + '\n')
+            continue
+
+    m = re.match(r'^(#{1,4})\s+(.+)$', stripped)
+    if m:
+        level = len(m.group(1))
+        title = m.group(2).strip()
+        anchor = _mdutil.slugify(title)
+        content_parts.append(f'<h{level} id="{anchor}">{md_to_html(title)}</h{level}>\n')
+        continue
+
+    if stripped == '':
+        content_parts.append('\n')
+        continue
+    if stripped == '---':
+        content_parts.append('<hr>\n')
+        continue
+
+    # Figure caption: detect **图 X-Y: Title** pattern
+    if stripped.startswith('**图 ') and stripped.endswith('**'):
+        inner = stripped[2:-2]
+        content_parts.append(f'<strong class="fig-caption">{md_to_html(inner)}</strong>\n')
+    else:
+        content_parts.append(f'<p>{md_to_html(stripped)}</p>\n')
+
+if in_pre:
+    content_parts.append('</code></pre>\n')
+
+content_html = ''.join(content_parts)
+
+# Build cover HTML
+cover_title = 'H2 Database Source Code Analysis'
+cover_subtitle = 'H2 Database 源码全面分析与解读'
+cover_lines = cover_text.strip().split('\n')
+for cl in cover_lines:
+    cl = cl.strip()
+    if cl.startswith('# ') and not cl.startswith('# 第'):
+        cover_title = cl[2:].strip()
+    elif cl.startswith('## ') and '源代码' not in cl:
+        cover_subtitle = cl[3:].strip()
+
+# Extract meta content (the paragraph lines in the cover)
+cover_desc = ''
+cover_meta = ''
+cover_tags = []
+# v5.6: capture author block lines (one or two `**Name:** value` lines under
+# the version meta). They live above the description paragraph and must
+# render visibly on the title page so HTML readers see authorship just like
+# the printed cover. Both `cover.md` and `front/copyright.md` carry author
+# lines (intentional — copyright stays formal, cover stays the public face)
+# so deduplicate by stripping markdown emphasis + colon variants when
+# comparing.
+cover_author_lines: list[str] = []
+seen_author_keys: set[str] = set()
+for cl in cover_lines:
+    cl = cl.strip()
+    if cl.startswith('版本 '):
+        cover_meta = cl
+    elif cl.startswith('深入剖析'):
+        cover_desc = cl
+    elif cl.startswith('共 '):
+        cover_tags = [t.strip() for t in cl.split('·')]
+    elif cl.startswith(('**作者', '**联系邮箱')):
+        # Build a normalised dedup key. Two on-disk forms exist:
+        #   `**作者**: 其·龙` (colon outside bold, copyright style)
+        #   `**作者：其·龙**` (colon inside bold, cover style)
+        # Normalise both to "作者:其·龙" so they compare equal.
+        key = re.sub(r'\*+', '', cl)
+        key = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', key)  # [text](url) → text
+        key = key.replace('：', ':')
+        key = re.sub(r'\s*:\s*', ':', key)  # squeeze whitespace around colon
+        key = re.sub(r'\s+', ' ', key).strip().lower()
+        if key not in seen_author_keys:
+            seen_author_keys.add(key)
+            cover_author_lines.append(cl)
+
+cover_author_html = ''
+if cover_author_lines:
+    cover_author_html = '<div class="author">\n'
+    for line in cover_author_lines:
+        cover_author_html += f'    <p>{md_to_html(line)}</p>\n'
+    cover_author_html += '  </div>\n'
+
+cover_tag_html = ''
+if cover_tags:
+    cover_tag_html = '<div class="tags">\n'
+    for t in cover_tags:
+        cover_tag_html += f'    <span>{md_to_html(t)}</span>\n'
+    cover_tag_html += '  </div>\n'
+
+# Extract 源代码信息 table from cover
+cover_info_table = ''
+in_info_section = False
+for raw_line in cover_text.strip().split('\n'):
+    stripped = raw_line.strip()
+    if stripped == '## 源代码信息':
+        in_info_section = True
+        continue
+    if in_info_section:
+        if stripped.startswith('#') or stripped == '---':
+            break
+        if stripped.startswith('|') and stripped.endswith('|') and '---' not in stripped:
+                    cells = [c.strip() for c in stripped.split('|')[1:-1]]
+                    if cells:
+                        if not cover_info_table:
+                            cover_info_table = '<table class="cover-info">\n<thead><tr>'
+                            for c in cells:
+                                cover_info_table += f'<th>{md_to_html(c)}</th>'
+                            cover_info_table += '</tr></thead>\n<tbody>\n'
+                        else:
+                            cover_info_table += '<tr>'
+                            for c in cells:
+                                cover_info_table += f'<td>{md_to_html(c)}</td>'
+                            cover_info_table += '</tr>\n'
+if cover_info_table:
+    cover_info_table += '</tbody>\n</table>\n'
+
+HTML = f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>H2 Database Source Code Analysis</title>
+<style>{STYLE}</style>
+</head>
+<body>
+<section id="cover">
+  <h1>{cover_title}</h1>
+  <h2>{cover_subtitle}</h2>
+  <div class="divider"></div>
+  <div class="meta">{md_to_html(cover_meta)}</div>
+  {cover_author_html}
+  <div class="desc">{md_to_html(cover_desc)}</div>
+  {cover_info_table}
+  {cover_tag_html}
+  <div class="scroll-hint" onclick="document.getElementById('page-wrap').scrollIntoView({{behavior:'smooth'}})">▼ 向下浏览</div>
+</section>
+{toc_page_html}
+<div style="position:absolute;left:0;top:0;width:1px;height:1px;overflow:hidden;" aria-hidden="true">__CONTENT_START__</div>
+<div id="page-wrap" class="page-wrap">
+  <button id="toggle-sidebar" onclick="document.getElementById('sidebar').classList.toggle('open')">TOC</button>
+  <button id="sidebar-expand" type="button" aria-label="展开目录侧栏" title="展开目录侧栏（快捷键 [）">›</button>
+  <nav id="sidebar">
+  {toc_html}
+  </nav>
+  <main id="content">
+  {content_html}
+  </main>
+</div>
+<script>
+// Desktop sidebar collapse/expand: clicking the TOC header bar at the
+// top of the sidebar slides it off-screen to widen the reading area; a
+// floating chevron at top-left brings it back. The choice persists in
+// localStorage so the reader's preference survives page reloads.
+//
+// Implementation note: handlers are attached via document-level event
+// delegation (using closest() to find the trigger). This is robust to
+// late-injected DOM, IIFE ordering, and any framework that swaps button
+// nodes — direct addEventListener bindings can silently fall off when
+// the original button is replaced.
+(function() {{
+    const body = document.body;
+    const KEY = 'h2-doc-sidebar-collapsed';
+    if (localStorage.getItem(KEY) === '1') {{
+        body.classList.add('sidebar-collapsed');
+    }}
+    function setCollapsed(collapsed) {{
+        body.classList.toggle('sidebar-collapsed', collapsed);
+        try {{ localStorage.setItem(KEY, collapsed ? '1' : '0'); }} catch (e) {{ /* private mode */ }}
+    }}
+    document.addEventListener('click', (e) => {{
+        const t = e.target;
+        if (!t || !t.closest) return;
+        if (t.closest('#sidebar-toggle')) {{ e.preventDefault(); setCollapsed(true); return; }}
+        if (t.closest('#sidebar-expand')) {{ e.preventDefault(); setCollapsed(false); return; }}
+    }});
+    // Keyboard shortcut: '[' toggles the sidebar (ignored when typing in form fields).
+    document.addEventListener('keydown', (e) => {{
+        if (e.key !== '[' || e.ctrlKey || e.metaKey || e.altKey) return;
+        const tag = (e.target && e.target.tagName) || '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
+        setCollapsed(!body.classList.contains('sidebar-collapsed'));
+    }});
+}})();
+
+// Intro mode: hide the sidebar while the reader is on cover/TOC pages so
+// the fixed-left sidebar doesn't overlay centered cover content or the
+// full-width TOC. Sidebar reappears once main content enters the viewport.
+(function() {{
+    const body = document.body;
+    const pageWrap = document.getElementById('page-wrap');
+    if (!pageWrap) return;
+    body.classList.add('intro-mode');
+    const introObserver = new IntersectionObserver((entries) => {{
+        entries.forEach(entry => {{
+            // Once #page-wrap (the main content container) enters the
+            // viewport at all, leave intro mode and show the sidebar.
+            if (entry.isIntersecting) {{
+                body.classList.remove('intro-mode');
+            }} else if (entry.boundingClientRect.top > 0) {{
+                // #page-wrap has scrolled below the viewport again
+                // (reader scrolled back up to cover/TOC) — re-hide sidebar.
+                body.classList.add('intro-mode');
+            }}
+        }});
+    }}, {{ rootMargin: '0px 0px -20% 0px' }});
+    introObserver.observe(pageWrap);
+}})();
+
+// Scroll spy for sidebar
+(function() {{
+const observer = new IntersectionObserver((entries) => {{
+    entries.forEach(entry => {{
+        if (entry.isIntersecting) {{
+            document.querySelectorAll('#sidebar a').forEach(a => a.classList.remove('active'));
+            const id = entry.target.id;
+            const link = document.querySelector(`#sidebar a[href="#${{id}}"]`);
+            if (link) link.classList.add('active');
+        }}
+    }});
+}}, {{ rootMargin: '-20% 0px -70% 0px' }});
+document.querySelectorAll('h1[id],h2[id],h3[id],h4[id]').forEach(h => observer.observe(h));
+}})();
+
+// Code block: line numbers + copy button
+(function() {{
+document.querySelectorAll('pre').forEach(pre => {{
+    const code = pre.querySelector('code');
+    if (!code || !code.textContent.trim()) return;
+    const lines = code.innerHTML.split('\\n');
+    const count = lines.length;
+
+    // Create line numbers
+    const lineNum = document.createElement('div');
+    lineNum.className = 'line-nums';
+    let nums = '';
+    for (let i = 1; i <= count; i++) {{
+        nums += i + '\\n';
+    }}
+    lineNum.textContent = nums;
+
+    // Wrap code in code-content div
+    const codeContent = document.createElement('div');
+    codeContent.className = 'code-content';
+    code.parentNode.insertBefore(codeContent, code);
+    codeContent.appendChild(code);
+
+    // Wrap everything in pre-wrap
+    const wrap = document.createElement('div');
+    wrap.className = 'pre-wrap';
+    pre.insertBefore(wrap, pre.firstChild);
+    wrap.appendChild(lineNum);
+    wrap.appendChild(codeContent);
+
+    // Copy button
+    const btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.textContent = '复制';
+    btn.onclick = function() {{
+        const text = code.textContent;
+        if (navigator.clipboard) {{
+            navigator.clipboard.writeText(text).then(() => {{
+                btn.textContent = '已复制';
+                setTimeout(() => {{ btn.textContent = '复制'; }}, 2000);
+            }});
+        }} else {{
+            // Fallback for file:// protocol
+            const ta = document.createElement('textarea');
+            ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+            document.body.appendChild(ta); ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            btn.textContent = '已复制';
+            setTimeout(() => {{ btn.textContent = '复制'; }}, 2000);
+        }}
+    }};
+    wrap.appendChild(btn);
+}});
+}})();
+
+// Breadcrumb navigation
+(function() {{
+const content = document.getElementById('content');
+if (!content) return;
+const headings = content.querySelectorAll('h1[id],h2[id],h3[id]');
+if (headings.length === 0) return;
+
+const breadcrumb = document.createElement('div');
+breadcrumb.id = 'breadcrumb';
+
+function updateBreadcrumb() {{
+    let trail = [];
+    headings.forEach(h => {{
+        const rect = h.getBoundingClientRect();
+        if (rect.top <= 120) {{
+            const level = parseInt(h.tagName.substring(1));
+            trail = trail.filter(t => t.level < level);
+            trail.push({{ level: level, id: h.id, text: h.textContent.trim() }});
+        }}
+    }});
+    let html = '<a href="#content">首页</a>';
+    trail.forEach((item, i) => {{
+        html += '<span class="sep">›</span>';
+        if (i === trail.length - 1) {{
+            html += `<span class="current">${{item.text.replace(/^第\\d+章/, '')}}</span>`;
+        }} else {{
+            html += `<a href="#${{item.id}}">${{item.text.replace(/^第\\d+章/, '')}}</a>`;
+        }}
+    }});
+    breadcrumb.innerHTML = html;
+}}
+
+updateBreadcrumb();
+window.addEventListener('scroll', updateBreadcrumb);
+content.insertBefore(breadcrumb, content.firstChild);
+}})();
+
+// Chapter navigation (prev/next)
+(function() {{
+const chapters = [
+  {{ id: '第1章-总体架构', title: '总体架构与分层模块划分' }},
+  {{ id: '第2章-分层模块划分', title: '分层模块划分' }},
+  {{ id: '第3章-核心包结构', title: '核心包结构' }},
+  {{ id: '第4章-核心模块详解', title: '核心模块详解' }},
+  {{ id: '第5章-核心流程解读', title: '核心流程解读' }},
+  {{ id: '第6章-h2-数据库核心算法分析', title: 'H2 数据库核心算法分析' }},
+  {{ id: '第7章-sql-执行全流程', title: 'SQL 执行全流程' }},
+  {{ id: '第8章-查询优化器', title: '查询优化器' }},
+  {{ id: '第9章-持久化引擎深度解析', title: '持久化引擎深度解析' }},
+  {{ id: '第10章-锁实现与并发控制', title: '锁实现与并发控制' }},
+  {{ id: '第11章-核心源代码导读指引', title: '开发指南与调试' }},
+  {{ id: '第12章-总结', title: '总结与对比' }},
+];
+const nav = document.createElement('div');
+nav.id = 'chapter-nav';
+
+function updateNav() {{
+  let currentIdx = -1;
+  chapters.forEach((ch, i) => {{
+    const el = document.getElementById(ch.id);
+    if (el) {{
+      const rect = el.getBoundingClientRect();
+      if (rect.top <= window.innerHeight / 2) currentIdx = i;
+    }}
+  }});
+  let prevHtml = '', nextHtml = '';
+  if (currentIdx > 0) {{
+    prevHtml = `<a href="#${{chapters[currentIdx-1].id}}"><span class="nav-label">‹ 上一章</span><span class="nav-title">${{chapters[currentIdx-1].title}}</span></a>`;
+  }} else {{
+    prevHtml = `<span class="nav-disabled"><span class="nav-label">‹ 上一章</span></span>`;
+  }}
+  if (currentIdx >= 0 && currentIdx < chapters.length - 1) {{
+    nextHtml = `<a href="#${{chapters[currentIdx+1].id}}"><span class="nav-label">下一章 ›</span><span class="nav-title">${{chapters[currentIdx+1].title}}</span></a>`;
+  }} else {{
+    nextHtml = `<span class="nav-disabled"><span class="nav-label">下一章 ›</span></span>`;
+  }}
+  nav.innerHTML = prevHtml + nextHtml;
+}}
+
+updateNav();
+window.addEventListener('scroll', updateNav);
+content.appendChild(nav);
+}})();
+</script>
+</body>
+</html>"""
+
+_fsutil.write_text(OUTPUT, HTML)
+
+print(f"Generated: {OUTPUT}")
+print(f"TOC entries: {len(toc_entries)}")
+print(f"Fence lines: {fence_lines_found}")
+print(f"Unclosed pre at EOF: {in_pre}")

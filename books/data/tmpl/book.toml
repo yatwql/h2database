@@ -1,0 +1,41 @@
+# Single source of truth for the H2 source-code-analysis book.
+# Every tool under tools/ resolves paths, chapter order and quality
+# thresholds from this file — do not hard-code them in scripts.
+
+[book]
+title = "H2 数据库引擎源码剖析"
+version = "6.5"
+merged_name = "h2-source-code-analysis"
+
+[paths]
+# All paths are relative to the directory containing this file.
+manuscript = "data/manuscript"
+dist = "dist"
+docs = "docs"
+tools = "src/python"
+
+[chapters]
+# Reading order. cover.md is front matter for the merged document.
+files = [
+    "cover.md",
+    "ch1-2-architecture.md",
+    "ch3-packages.md",
+    "ch4-5-modules-processes.md",
+    "ch6-1-data-structures.md",
+    "ch6-2-storage-algorithms.md",
+    "ch6-3-query-algorithms.md",
+    "ch7-sql-execution.md",
+    "ch8-query-optimizer.md",
+    "ch9-10-persistence-locking.md",
+    "ch11-12-guide-summary.md",
+    "appendix-a-case-studies.md",
+    "appendix-b-version-changes.md",
+]
+front_glob = "front/*.md"
+back_glob = "back/*.md"
+
+
+[sections]
+# Headings every chapter body must contain (H2 level).
+per_chapter = ["本章导读", "本章小结", "延伸思考", "延展阅读"]
+

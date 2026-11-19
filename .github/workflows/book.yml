@@ -1,0 +1,58 @@
+name: Book
+
+on:
+  push:
+    paths: ['books/**', '.github/workflows/book.yml']
+  pull_request:
+    paths: ['books/**', '.github/workflows/book.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  book:
+    name: Book toolchain
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install ruff
+        run: python -m pip install --upgrade pip ruff
+
+      - name: Lint toolchain
+        run: ruff check books/src/python books/src/test
+
+      - name: Unit tests
+        run: python books/src/python/make.py test
+
+      - name: Unit tests (fast tier)
+        run: python books/src/python/make.py test --timings
+
+      - name: Unit tests (full tier, master/tags)
+        if: github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/v')
+        run: python books/src/python/make.py test --full --timings
+
+      - name: Quality gates
+        run: python books/src/python/make.py check --timings
+
+      - name: Build artifacts
+        run: python books/src/python/make.py build --timings
+
+      - name: Idempotency (second build must be byte-identical)
+        run: |
+          python - <<'PY'
+          import hashlib, pathlib, subprocess, sys
+          target = pathlib.Path('books/dist/h2-source-code-analysis.html')
+          first = hashlib.sha256(target.read_bytes()).hexdigest()
+          subprocess.run([sys.executable, 'books/src/python/make.py', 'build'],
+                         check=True, capture_output=True)
+          second = hashlib.sha256(target.read_bytes()).hexdigest()
+          print('first ', first)
+          print('second', second)
+          sys.exit(0 if first == second else 1)
+          PY
