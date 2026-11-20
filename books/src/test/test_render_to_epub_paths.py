@@ -41,6 +41,9 @@ class ToEpubPathsTest(unittest.TestCase):
         self.root = _fixture.build_book(self.tmp.name)
         self.bin_dir = os.path.join(self.tmp.name, 'bin')
         os.makedirs(self.bin_dir, exist_ok=True)
+        # an empty directory guarantees "no pandoc" regardless of the machine
+        self.empty_bin = os.path.join(self.tmp.name, 'empty-bin')
+        os.makedirs(self.empty_bin, exist_ok=True)
         pandoc = os.path.join(self.bin_dir, 'pandoc')
         with open(pandoc, 'w', encoding='utf-8') as fh:
             fh.write(FAKE_PANDOC)
@@ -49,7 +52,7 @@ class ToEpubPathsTest(unittest.TestCase):
     def run_epub(self, *, with_pandoc: bool):
         env = dict(os.environ)
         env['BOOK_ROOT'] = self.root
-        env['PATH'] = self.bin_dir if with_pandoc else '/usr/bin:/bin'
+        env['PATH'] = self.bin_dir if with_pandoc else self.empty_bin
         return subprocess.run([sys.executable, os.path.join(PY_ROOT, 'render', 'to_epub.py')],
                               capture_output=True, text=True, env=env, timeout=180, check=False)
 
