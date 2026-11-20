@@ -46,17 +46,24 @@ class VersionConsistencyTest(unittest.TestCase):
             code = self.mod.main(list(args))
         return code, buffer.getvalue()
 
-    def test_a_matching_header_passes(self):
-        version = self.mod._config.versions()['doc']
-        self.doc(f'> 版本：v{version}\n')
+    def test_a_software_version_header_passes(self):
+        self.doc(f'> 版本：v{self.mod._config.versions()["tool"]}\n')
         code, out = self.run_main()
         self.assertEqual(code, 0, out)
 
-    def test_a_mismatched_header_fails(self):
-        self.doc('> 版本：v0.0\n')
+    def test_a_version_other_than_the_software_one_fails(self):
+        # the book version (book.toml) also fails here: only the software version
+        # from lib/_version.py is allowed in a tool document
+        self.doc('> 版本：v9.9\n')
         code, out = self.run_main()
         self.assertEqual(code, 1)
-        self.assertIn('v0.0', out)
+        self.assertIn('software version', out)
+
+    def test_a_missing_header_fails(self):
+        self.doc('正文。\n')
+        code, out = self.run_main()
+        self.assertEqual(code, 1)
+        self.assertIn('版本', out)
 
     def test_a_stale_merged_manifest_fails(self):
         versions = self.mod._config.versions()

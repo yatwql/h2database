@@ -48,17 +48,21 @@ def inventory() -> dict:
         return {}
 
 
-def owner_map() -> dict[str, int]:
-    """Type name -> the chapter that owns its package."""
-    owners: dict[str, int] = {}
+def owner_map() -> dict[str, list[int]]:
+    """Type name -> the chapter numbers of the file that owns its package.
+
+    A file may contribute several H1 chapters (a merged pair), so one package can
+    be owned by more than one number; a signpost naming any of them counts.
+    """
+    owners: dict[str, list[int]] = {}
     numbering = _config.chapter_numbering()
     for chapter, packages in _config.chapter_packages().items():
-        chapter_no = (numbering.get(chapter) or [0])[0]
+        chapter_nos = numbering.get(chapter) or [0]
         inv = inventory().get('packages') or {}
         for package in packages:
             entry = inv.get(package) or {}
             for unit in entry.get('classes') or []:
-                owners.setdefault(unit['name'], chapter_no)
+                owners.setdefault(unit['name'], chapter_nos)
     return owners
 
 
@@ -66,7 +70,7 @@ def chapter_text(path: str) -> str:
     return _fsutil.read_text(path)
 
 
-def check_prerequisites(path: str, chapter_no: int, owners: dict[str, int]) -> list[dict]:
+def check_prerequisites(path: str, chapter_no: int, owners: dict[str, list[int]]) -> list[dict]:
     out = []
     text = chapter_text(path)
     lines = text.split('\n')
@@ -78,13 +82,13 @@ def check_prerequisites(path: str, chapter_no: int, owners: dict[str, int]) -> l
         if in_fence or line.lstrip().startswith('#'):
             continue
         spans = set(re.findall(r'`([A-Za-z_][A-Za-z0-9_.]*)`', line))
-        for name, owner in owners.items():
-            if owner <= chapter_no or len(name) < 4 or name not in spans:
+        for name, chapter_nos in owners.items():
+            if min(chapter_nos) <= chapter_no or len(name) < 4 or name not in spans:
                 continue
-            if re.search(rf'第\s*{owner}\s*章', line) or f'第{owner}章' in line:
+            if any(re.search(rf'第\s*{n}\s*章', line) for n in chapter_nos):
                 continue
             out.append({'file': os.path.basename(path), 'line': index, 'kind': 'PREREQ',
-                        'detail': f'{name} is owned by chapter {owner}, no signpost'})
+                        'detail': f'{name} is owned by chapter {chapter_nos[0]}, no signpost'})
             break
     return out
 
@@ -136,14 +140,14 @@ def check_excerpts(files: list[str]) -> list[dict]:
     return out
 
 
-def check_exercises(files: list[str], owners: dict[str, int],
+def check_exercises(files: list[str], owners: dict[str, list[int]],
                     numbering: dict[str, list[int]]) -> list[dict]:
     out = []
     for path in files:
         name = os.path.basename(path)
         chapter_no = (numbering.get(name) or [0])[0]
-        key_types = [t for t, owner in owners.items()
-                     if owner == chapter_no and len(t) >= 4]
+        key_types = [t for t, chapter_nos in owners.items()
+                     if chapter_no in chapter_nos and len(t) >= 4]
         text = chapter_text(path)
         block = text.split('延伸思考', 1)
         if len(block) < 2:

@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Detect drift between documentation and the repository's actual contents.
+"""Detect drift between documentation, configuration and the repository.
 
-Four kinds of drift are reported:
+Each fact is declared once and must point at something real:
 
   PATH     a back-ticked repository path mentioned in a document does not exist
   SCRIPT   a script listed in the docs is not present in the toolchain
-  VERSION  document versions disagree with book.toml
-  CHAPTER  the documented chapter list diverges from book.toml / manuscript
+  CHAPTER  a chapter file name mentioned in a document is not a manuscript file
+  CONFIG   a book.toml table names a chapter the chapter list does not carry
+  LEVEL    a gate level is declared outside the testplan tables that own it
+
+Version agreement is not checked here: `version_consistency` owns it.
 
 Exit 1 on any finding.
 
@@ -30,7 +33,15 @@ from lib import _config, _fsutil
 REPO_ROOT = os.path.normpath(os.path.join(_config.BOOK_ROOT, '..'))
 PATH_RE = re.compile(r'`((?:books|h2|\.github)/[A-Za-z0-9_./*-]+)`')
 SCRIPT_RE = re.compile(r'`([a-z_]+\.py)`')
-VERSION_RE = re.compile(r'v?(\d+\.\d+)')
+CHAPTER_RE = re.compile(r'(?<![\w/-])((?:ch\d[\w-]*|appendix-[\w-]+|cover)\.md)')
+LEVEL_RE = re.compile(r'^\**P[0-3]\**$')
+# files whose job is to record what changed may name files that no longer exist
+LEDGER_DOCS = ('changelog.md', 'review-findings.md')
+# testplan headings that own the gate-level axis; everywhere else the level is
+# repeated, and a repeated level drifts from the one that is checked
+LEVEL_SECTIONS = ('2.1', '2.2')
+CHAPTER_TABLES = ('packages', 'titles', 'numbering', 'coverage')
+MANAGEMENTS = os.path.join('docs', 'managements')
 
 
 def doc_files() -> list[str]:
@@ -78,7 +89,7 @@ def _exists(rel: str, repo_root: str | None = None) -> bool:
 
 
 DIMENSION_RE = re.compile(r'^>\s*维度：\**(.+?)\**\s*$', re.MULTILINE)
-MANAGEMENTS_REF_RE = re.compile(r'(?:\.\./managements/|managements/)\w+\.md')
+MANAGEMENTS_REF_RE = re.compile(r'(?:\.\./managements/|managements/)[\w-]+\.md')
 
 
 def check_manual_scope(manual_dir: str | None = None) -> list[dict]:
@@ -128,9 +139,13 @@ def check_paths(files: list[str], repo_root: str | None = None) -> list[dict]:
 
 def check_scripts(files: list[str], book_root: str | None = None) -> list[dict]:
     base = book_root or _config.BOOK_ROOT
-    available = {os.path.basename(p) for p in
-                 glob.glob(os.path.join(base, 'src', 'python', '**', '*.py'),
-                           recursive=True)}
+    # documented scripts live in the toolchain, and a contract may point at the
+    # test that enforces it, so both trees count as known names
+    available = set()
+    for tree in ('python', 'test'):
+        available |= {os.path.basename(p) for p in
+                      glob.glob(os.path.join(base, 'src', tree, '**', '*.py'),
+                                recursive=True)}
     out = []
     for path in files:
         for lineno, line in enumerate(_fsutil.read_lines(path), start=1):
@@ -142,33 +157,71 @@ def check_scripts(files: list[str], book_root: str | None = None) -> list[dict]:
     return out
 
 
-def check_versions(files: list[str]) -> list[dict]:
-    expected = _config.VERSION
-    out = []
-    for path in files:
-        for lineno, line in enumerate(_fsutil.read_lines(path), start=1):
-            # only the document header line carries the document version
-            if not re.match(r'^\s*>?\s*版本\s*[:：]', line):
-                continue
-            match = VERSION_RE.search(line)
-            if match and match.group(1) != expected:
-                out.append({'kind': 'VERSION', 'file': os.path.relpath(path, REPO_ROOT),
-                            'line': lineno,
-                            'detail': f'{match.group(1)} != {expected}'})
-    return out
-
-
 def check_chapters(files: list[str]) -> list[dict]:
     configured = set(_config.chapter_names())
     actual = {os.path.basename(p) for p in
               glob.glob(os.path.join(_config.MANUSCRIPT_DIR, '*.md'))}
     out = []
     for path in files:
+        if os.path.basename(path) in LEDGER_DOCS:
+            continue  # the changelog and the findings ledger cite old names on purpose
         for lineno, line in enumerate(_fsutil.read_lines(path), start=1):
-            for name in re.findall(r'`(ch\d[\w-]*\.md|appendix-[\w-]+\.md|cover\.md)`', line):
+            # a chapter name is wrong whether or not it is written in back-ticks:
+            # a directory tree in a document names files just like prose does
+            for name in CHAPTER_RE.findall(line):
                 if name not in configured or name not in actual:
                     out.append({'kind': 'CHAPTER', 'file': os.path.relpath(path, REPO_ROOT),
                                 'line': lineno, 'detail': name})
+    return out
+
+
+def check_config() -> list[dict]:
+    """Every chapter keyed in a book.toml table must be in the chapter list.
+
+    A table that names a file the reading order does not carry is a dead key: the
+    renderer never reaches it, so the mapping it expresses is a lie nobody sees.
+    """
+    files = set(_config.chapter_names())
+    config_rel = os.path.relpath(_config.CONFIG_PATH, REPO_ROOT)
+    out = []
+    for table in CHAPTER_TABLES:
+        for key in _config.chapter_table(table):
+            if key not in files:
+                out.append({'kind': 'CONFIG', 'file': config_rel,
+                            'line': 1,
+                            'detail': f'[chapters.{table}] names {key}, '
+                                      f'which [chapters] files does not carry'})
+    return out
+
+
+def check_levels(files: list[str]) -> list[dict]:
+    """A gate level is declared in one table only.
+
+    The level of a check has one owner: the testplan's own gate tables. A second
+    table that restates levels drifts from that one silently, because nothing
+    compares the two.
+    """
+    out = []
+    for path in files:
+        if os.path.basename(os.path.dirname(path)) != 'managements':
+            continue
+        owner = os.path.basename(path) == 'testplan.md'
+        heading = ''
+        for lineno, line in enumerate(_fsutil.read_lines(path), start=1):
+            if line.startswith('#'):
+                heading = line.lstrip('#').strip()
+                continue
+            if not line.lstrip().startswith('|'):
+                continue
+            cells = [cell.strip() for cell in line.strip().strip('|').split('|')]
+            if not any(LEVEL_RE.match(cell) for cell in cells):
+                continue
+            if owner and heading.startswith(LEVEL_SECTIONS):
+                continue
+            out.append({'kind': 'LEVEL', 'file': os.path.relpath(path, REPO_ROOT),
+                        'line': lineno,
+                        'detail': 'gate level belongs to testplan §2.1/§2.2: '
+                                  + line.strip()[:48]})
     return out
 
 
@@ -179,8 +232,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     files = doc_files()
-    findings = (check_paths(files) + check_scripts(files) + check_versions(files)
-                + check_chapters(files) + check_manual_scope())
+    findings = (check_paths(files) + check_scripts(files) + check_chapters(files)
+                + check_config() + check_levels(files) + check_manual_scope())
 
     if args.json:
         print(json.dumps({'count': len(findings), 'findings': findings},

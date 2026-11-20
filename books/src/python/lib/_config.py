@@ -208,6 +208,13 @@ def chapter_names(include_cover: bool = True) -> list[str]:
     return [os.path.basename(p) for p in chapter_files(include_cover)]
 
 
+def chapter_table(name: str) -> dict:
+    """One `[chapters.<name>]` table of book.toml (empty when absent)."""
+    chapters = _CFG.get('chapters') or {}
+    table = chapters.get(name) or {}
+    return table if isinstance(table, dict) else {}
+
+
 def _glob_matter(key: str) -> list[str]:
     pattern = _CFG.get('chapters', {}).get(key, '')
     if not pattern:

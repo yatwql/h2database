@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Doc drift: paths, script names, versions and chapter names must exist."""
+"""Doc drift: paths, script names, chapter names, config keys and levels."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ import os
 import tempfile
 import unittest
 from contextlib import redirect_stdout
+from unittest import mock
 
 import _fixture
 
@@ -28,6 +29,14 @@ class DocDriftTest(unittest.TestCase):
 
     def doc(self, text: str) -> str:
         path = os.path.join(self.tmp.name, 'doc.md')
+        with open(path, 'w', encoding='utf-8') as fh:
+            fh.write(text)
+        return path
+
+    def management_doc(self, text: str, name: str = 'testplan.md') -> str:
+        directory = os.path.join(self.tmp.name, 'docs', 'managements')
+        os.makedirs(directory, exist_ok=True)
+        path = os.path.join(directory, name)
         with open(path, 'w', encoding='utf-8') as fh:
             fh.write(text)
         return path
@@ -61,22 +70,6 @@ class DocDriftTest(unittest.TestCase):
         path = self.doc('运行 `make.py`。\n')
         self.assertEqual(self.drift.check_scripts([path], BOOK_ROOT), [])
 
-    # -- versions ---------------------------------------------------------
-    def test_mismatched_document_version_is_reported(self):
-        path = self.doc('> 版本：v0.0\n')
-        findings = self.drift.check_versions([path])
-        self.assertTrue(findings)
-        self.assertEqual(findings[0]['kind'], 'VERSION')
-
-    def test_matching_version_is_accepted(self):
-        version = self.drift._config.VERSION
-        path = self.doc(f'> 版本：v{version}\n')
-        self.assertEqual(self.drift.check_versions([path]), [])
-
-    def test_non_header_lines_are_ignored(self):
-        path = self.doc('版本号写在正文里不算标题 v0.0\n')
-        self.assertEqual(self.drift.check_versions([path]), [])
-
     # -- chapters ---------------------------------------------------------
     def test_unknown_chapter_reference_is_reported(self):
         path = self.doc('见 `ch99-missing.md`。\n')
@@ -87,6 +80,50 @@ class DocDriftTest(unittest.TestCase):
         self.drift._config.MANUSCRIPT_DIR = os.path.join(self.root, 'data', 'manuscript')
         path = self.doc('见 `ch99-missing.md`。\n')
         self.assertTrue(self.drift.check_chapters([path]))
+
+    def test_a_chapter_name_outside_back_ticks_is_reported(self):
+        # a directory tree names files the same way prose does
+        path = self.doc('```text\n  ch99-missing.md\n```\n')
+        findings = self.drift.check_chapters([path])
+        self.assertEqual([f['kind'] for f in findings], ['CHAPTER'])
+
+    # -- config -----------------------------------------------------------
+    def test_chapter_table_key_outside_the_chapter_list_is_reported(self):
+        with mock.patch.object(self.drift._config, 'chapter_names',
+                               return_value=['ch1-test.md']), \
+             mock.patch.object(self.drift._config, 'chapter_table',
+                               side_effect=lambda name: {'ch9-gone.md': [1]} if name == 'packages' else {}):
+            findings = self.drift.check_config()
+        self.assertEqual([f['kind'] for f in findings], ['CONFIG'])
+        self.assertIn('ch9-gone.md', findings[0]['detail'])
+
+    def test_chapter_tables_matching_the_chapter_list_pass(self):
+        with mock.patch.object(self.drift._config, 'chapter_names',
+                               return_value=['ch1-test.md']), \
+             mock.patch.object(self.drift._config, 'chapter_table',
+                               side_effect=lambda name: {'ch1-test.md': [1]}):
+            self.assertEqual(self.drift.check_config(), [])
+
+    # -- levels -----------------------------------------------------------
+    def test_level_inside_the_owning_table_passes(self):
+        path = self.management_doc('### 2.2 各检查项及其级别\n\n'
+                                   '| 类别 | 说明 | 级别 |\n| --- | --- | --- |\n'
+                                   '| 章节结构 | 齐全 | P0 |\n')
+        self.assertEqual(self.drift.check_levels([path]), [])
+
+    def test_level_table_outside_the_owning_sections_is_reported(self):
+        path = self.management_doc('### 2.2 各检查项及其级别\n\n'
+                                   '| 类别 | 级别 |\n| --- | --- |\n'
+                                   '| 章节结构 | P0 |\n\n'
+                                   '## 7. 门禁等级\n\n'
+                                   '| 级别 | 检查项 |\n| --- | --- |\n'
+                                   '| P0 | 章节结构。 |\n')
+        findings = self.drift.check_levels([path])
+        self.assertEqual([f['kind'] for f in findings], ['LEVEL'])
+
+    def test_another_document_never_declares_a_level(self):
+        path = self.management_doc('| P0 | 章节结构 |\n', name='plan.md')
+        self.assertEqual([f['kind'] for f in self.drift.check_levels([path])], ['LEVEL'])
 
     # -- CLI --------------------------------------------------------------
     def test_json_output_reports_the_count(self):

@@ -37,14 +37,14 @@ class DepthCase(unittest.TestCase):
 class TestPrerequisites(DepthCase):
     def test_forward_reference_needs_signpost(self):
         depth = self.module()
-        owners = {'WidgetEngine': 2}
+        owners = {'WidgetEngine': [2]}
         path = self.write('manuscript/ch1-test.md',
                           '# 第1章 测试\n\n调用 `WidgetEngine` 完成工作。\n')
         self.assertTrue(depth.check_prerequisites(path, 1, owners))
 
     def test_signposted_reference_is_fine(self):
         depth = self.module()
-        owners = {'WidgetEngine': 2}
+        owners = {'WidgetEngine': [2]}
         path = self.write('manuscript/ch1-test.md',
                           '# 第1章 测试\n\n调用 `WidgetEngine`（详见第2章《测试章节》）。\n')
         self.assertFalse(depth.check_prerequisites(path, 1, owners))
@@ -67,7 +67,7 @@ class TestGlossary(DepthCase):
 class TestExercises(DepthCase):
     def test_exercise_without_anchor_or_type_is_reported(self):
         depth = self.module()
-        owners = {'WidgetEngine': 1}
+        owners = {'WidgetEngine': [1]}
         body = ('# 第1章 测试\n\n## 1.9 延伸思考\n\n'
                 '**1. 🟢★ 说说你的看法**\n\n> 提示：随便谈谈\n')
         path = self.write('manuscript/ch1-test.md', body)
@@ -77,7 +77,7 @@ class TestExercises(DepthCase):
 
     def test_exercise_naming_a_type_passes(self):
         depth = self.module()
-        owners = {'WidgetEngine': 1}
+        owners = {'WidgetEngine': [1]}
         body = ('# 第1章 测试\n\n## 1.9 延伸思考\n\n'
                 '**1. 🟢★ WidgetEngine 如何调度任务**\n\n> 提示：看实现\n')
         path = self.write('manuscript/ch1-test.md', body)

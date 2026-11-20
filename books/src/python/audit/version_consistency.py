@@ -7,7 +7,9 @@
 
 Checks
   VERSION   tool/doc resolve and are non-empty; source resolves (warning if not)
-  DOC_HEAD  management documents declaring "> 版本：vX" match the doc version
+  DOC_HEAD  every management document declares the software version (and only
+            that one): the tool version lives in lib/_version.py, the book
+            version in book.toml
   NAME      the book title is the single source: the delivery-facing management
             documents are titled after it, and the display fields in the config
             carry it too
@@ -40,14 +42,19 @@ DOC_HEAD_RE = re.compile(r'^\s*>?\s*版本\s*[:：]\s*v?([\d.]+)', re.MULTILINE)
 MANIFEST_RE = re.compile(r'<!-- versions: tool=(\S+) source=(\S+) doc=(\S+) -->')
 
 
-def doc_headers() -> list[dict]:
-    """Management documents that declare a version header."""
+def management_docs() -> list[str]:
+    """The engineering documents that carry a version header."""
+    directory = os.path.join(_config.DOCS_DIR, 'managements')
+    return sorted(glob.glob(os.path.join(directory, '*.md')))
+
+
+def doc_versions() -> list[dict]:
+    """Management documents and the version each one declares."""
     findings = []
-    for path in glob.glob(os.path.join(_config.DOCS_DIR, '**', '*.md'), recursive=True):
+    for path in management_docs():
         match = DOC_HEAD_RE.search(_fsutil.read_text(path))
-        if match:
-            findings.append({'file': os.path.relpath(path, _config.BOOK_ROOT),
-                             'version': match.group(1)})
+        findings.append({'file': os.path.relpath(path, _config.BOOK_ROOT),
+                         'version': match.group(1) if match else None})
     return findings
 
 
@@ -219,10 +226,14 @@ def main(argv: list[str] | None = None) -> int:
     problems += cover_problems()
     problems += book_name_problems()
 
-    for header in doc_headers():
-        if header['version'] != versions['doc']:
-            problems.append(f"{header['file']}: header v{header['version']} != "
-                            f"doc version v{versions['doc']}")
+    for header in doc_versions():
+        if header['version'] is None:
+            problems.append(f"{header['file']}: no \"> 版本：vX\" header "
+                            f"(must carry the software version v{versions['tool']})")
+        elif header['version'] != versions['tool']:
+            problems.append(f"{header['file']}: header v{header['version']} is not the "
+                            f"software version v{versions['tool']} "
+                            f"(the book version belongs in book.toml)")
 
     manifest = merged_manifest()
     if manifest:
