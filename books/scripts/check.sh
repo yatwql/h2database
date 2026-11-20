@@ -2,6 +2,9 @@
 # Local gate runner, mirroring CI (.github/workflows/book.yml). Thin wrapper:
 # the orchestration lives in check_runner.py, so local and CI share one place.
 #
+#   scripts/check-docs.sh       docs  ~0.2s only documentation/manuscript changes
+#   scripts/check-code.sh       code  ~0.7s only toolchain source changes
+#   scripts/check-tests.sh      tests ~0.2s only test source changes
 #   scripts/check-quick.sh      quick ~2s  only what the working-tree diff can break
 #   scripts/check-fast.sh       P0  ~16s   lint + structural gates + unit suite
 #   scripts/check-full.sh       P1         every gate + unit suite

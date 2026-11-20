@@ -53,7 +53,7 @@ class RunnerModesTest(unittest.TestCase):
     def test_run_stops_at_the_first_failure_and_archives(self):
         calls = []
 
-        def fake_run_step(step, log_path, timeout=0, marker=''):
+        def fake_run_step(step, log_path, timeout=0, marker='', domains=None):
             calls.append(step)
             return {'step': step, 'code': 1 if step == 'fast-gates' else 0, 'seconds': 0.0}
 

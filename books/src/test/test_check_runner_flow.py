@@ -123,7 +123,7 @@ class MarkerSelectionTest(unittest.TestCase):
     def test_run_passes_the_tier_marker_to_the_steps(self):
         seen = []
 
-        def fake_step(step, log_path, timeout=0, marker=''):
+        def fake_step(step, log_path, timeout=0, marker='', domains=None):
             seen.append((step, marker))
             return {'step': step, 'code': 0, 'seconds': 0.0}
 
@@ -140,7 +140,7 @@ class MarkerSelectionTest(unittest.TestCase):
     def test_explicit_marker_overrides_the_tier_default(self):
         seen = []
 
-        def fake_step(step, log_path, timeout=0, marker=''):
+        def fake_step(step, log_path, timeout=0, marker='', domains=None):
             seen.append(marker)
             return {'step': step, 'code': 0, 'seconds': 0.0}
 

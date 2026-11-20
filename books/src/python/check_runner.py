@@ -4,6 +4,9 @@
 Modelled on investor-review's test-runner: the runner owns the orchestration,
 the shell wrappers only forward, and every run leaves a report behind.
 
+  python check_runner.py --mode docs        # documentation/ manuscript only
+  python check_runner.py --mode code        # toolchain source only
+  python check_runner.py --mode tests       # test sources only
   python check_runner.py --mode quick       # local edit: only what the diff can break
   python check_runner.py --mode p0          # commit gate  (ruff, fast gates, unit suite)
   python check_runner.py --mode p1          # merge gate   (every gate, unit suite)
@@ -46,6 +49,12 @@ FAST_GATES = ('architecture,script_contract,style_schema,llm_policy,'
               'versions,file_length,traces,portability')
 
 MODES = {
+    # Domain modes: a docs-only edit never pays for the code suite, a tests-only
+    # edit never pays for the manuscript gates. The tier still decides what counts
+    # as correct; these only decide what is worth running now.
+    'docs': ('documentation edit', ('lint-changed', 'gates-changed')),
+    'code': ('code edit', ('lint-changed', 'gates-changed', 'tests-changed')),
+    'tests': ('test edit', ('lint-changed', 'tests-changed')),
     'quick': ('local edit', ('lint-changed', 'fast-gates', 'gates-changed',
                              'tests-changed')),
     'p0': ('commit gate', ('lint', 'fast-gates', 'tests')),
@@ -56,12 +65,53 @@ MODES = {
 # Tests that spawn a runner process: correct at commit time, too slow to scope.
 SPAWNING_TESTS = ('test_check_runner_flow',)
 
-ALIASES = {'fast': 'p0', 'full': 'p1', 'release': 'p2', 'q': 'quick'}
+ALIASES = {'fast': 'p0', 'full': 'p1', 'release': 'p2', 'q': 'quick',
+           'd': 'docs', 'c': 'code', 't': 'tests'}
+
+# Which files belong to which domain. 'docs' also covers the manuscript, the
+# config and the templates: they are prose and policy, not programs.
+MODE_DOMAINS = {
+    'docs': ('docs',),
+    'code': ('code',),
+    'tests': ('tests',),
+}
 
 # A changed path selects the gates and tests that can actually be wrong. The
 # mapping is deliberately coarse: it narrows a run, it never narrows what counts
 # as correct (p0/p1 always run everything). Path prefixes come from the config so
 # a renamed directory cannot turn the mapping into a silent no-op.
+def domain_rows() -> tuple[tuple[str, str], ...]:
+    """(path fragment, domain) for the change classifier, config derived."""
+    def rel(path: str) -> str:
+        return os.path.relpath(path, REPO_ROOT).replace(os.sep, '/') + '/'
+
+    return (
+        (rel(os.path.join(BOOK_ROOT, 'src', 'test')), 'tests'),
+        (rel(os.path.join(BOOK_ROOT, 'src', 'python')), 'code'),
+        (rel(os.path.join(BOOK_ROOT, 'docs')), 'docs'),
+        (rel(_config.MANUSCRIPT_DIR), 'docs'),
+        (rel(_config.CONFIG_DIR), 'docs'),
+        (rel(os.path.join(_config.BOOK_ROOT, 'data', 'tmpl')), 'docs'),
+        (rel(os.path.join(_config.BOOK_ROOT, 'data', 'baselines')), 'docs'),
+        (rel(os.path.join(REPO_ROOT, '.github')), 'infra'),
+        (rel(os.path.join(BOOK_ROOT, 'scripts')), 'infra'),
+    )
+
+
+def domain_of(path: str) -> str:
+    for fragment, domain in domain_rows():
+        if path.startswith(fragment) or fragment.strip('/') in path:
+            return domain
+    return 'infra'
+
+
+def scoped_changes(domains: tuple[str, ...] | None = None) -> list[str]:
+    changed = changed_files()
+    if domains is None:
+        return changed
+    return [path for path in changed if domain_of(path) in domains]
+
+
 def gates_for_table() -> tuple[tuple[str, str], ...]:
     def rel(path: str) -> str:
         return os.path.relpath(path, REPO_ROOT).replace(os.sep, '/') + '/'
@@ -71,7 +121,7 @@ def gates_for_table() -> tuple[tuple[str, str], ...]:
          'structure,captions,content_volume,audit_exercises,content_depth,style_rules'),
         (rel(_config.CONFIG_DIR), 'style_schema,style_rules,content_volume'),
         (rel(os.path.join(_config.BOOK_ROOT, 'data', 'tmpl')), 'structure,versions'),
-        (rel(os.path.join(_config.BOOK_ROOT, 'docs')), 'doc_drift,traces,links'),
+        (rel(os.path.join(_config.BOOK_ROOT, 'docs')), 'doc_drift,traces,audit_links'),
         (rel(os.path.join(_config.BOOK_ROOT, 'data', 'baselines')), 'content_volume'),
     )
 
@@ -179,7 +229,8 @@ def tests_for_change(changed: list[str]) -> list[str]:
     return sorted(picked - set(SPAWNING_TESTS))
 
 
-def _command(step: str, marker: str = '') -> list[str] | None:
+def _command(step: str, marker: str = '',
+             domains: tuple[str, ...] | None = None) -> list[str] | None:
     """Shell command for one step (None means the step is skipped with a note)."""
     if step == 'lint':
         # The pinned ruff in books/.venv is the authority; a ruff from PATH may be
@@ -193,19 +244,19 @@ def _command(step: str, marker: str = '') -> list[str] | None:
             return ['uvx', 'ruff', 'check', SRC_REL, TEST_REL]
         return None
     if step == 'lint-changed':
-        files = [path for path in changed_files() if path.endswith('.py')]
+        files = [path for path in scoped_changes(domains) if path.endswith('.py')]
         if not files:
             return None
         if importlib.util.find_spec('ruff') is not None:
             return [PY, '-m', 'ruff', 'check', *files]
         return None
     if step == 'gates-changed':
-        gates = gates_for_change(changed_files())
+        gates = gates_for_change(scoped_changes(domains))
         if not gates:
             return None
         return [PY, os.path.join(PY_ROOT, 'make.py'), 'check', '--only', gates]
     if step == 'tests-changed':
-        modules = tests_for_change(changed_files())
+        modules = tests_for_change(scoped_changes(domains))
         if not modules:
             return None
         test_rel = os.path.relpath(os.path.join(BOOK_ROOT, 'src', 'test'), REPO_ROOT)
@@ -238,9 +289,9 @@ def resolve_mode(mode: str) -> str:
 
 
 def run_step(step: str, log_path: str, timeout: float = 1800.0,
-             marker: str = '') -> dict:
+             marker: str = '', domains: tuple[str, ...] | None = None) -> dict:
     """Run one step, tee its output into the report, and summarise the result."""
-    command = _command(step, marker)
+    command = _command(step, marker, domains)
     started = time.perf_counter()
     if command is None:
         return {'step': step, 'code': 0, 'seconds': 0.0, 'skipped': 'tool not available'}
@@ -321,8 +372,9 @@ def run(mode: str, *, archive: bool = True, as_json: bool = False,
     results = []
     started = time.perf_counter()
     active_marker = marker or MODE_MARKERS.get(key, '')
+    domains = MODE_DOMAINS.get(key)
     for step in steps:
-        result = run_step(step, log_path, timeout, active_marker)
+        result = run_step(step, log_path, timeout, active_marker, domains)
         results.append(result)
         if result['code'] != 0:
             break
