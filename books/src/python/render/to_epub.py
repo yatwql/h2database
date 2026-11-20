@@ -113,7 +113,10 @@ if os.path.exists(cover_md):
         subtitle = m.group(1).strip()
     m = re.search(r'版本 (v[\d.]+) · (\d{4}-\d{2}-\d{2})', cover_text)
     if m:
-        version = m.group(1)
+        # the cover only repeats the configured version; keep the configured one
+        cover_version = m.group(1)
+        if _config.VERSION and cover_version.lstrip('v') != _config.VERSION:
+            print(f'  warn: cover says {cover_version}, book.toml says v{_config.VERSION}')
         publish_date = m.group(2)
     m = re.search(r'\*\*作者：([^*]+?)\*\*', cover_text)
     if m:
@@ -124,6 +127,8 @@ if os.path.exists(cover_md):
 # than as a markdown YAML metadata block (the latter would require the
 # ``yaml_metadata_block`` extension which we *disable* on the markdown
 # reader, since the merged doc uses bare ``---`` as section separators).
+publisher = _config.project("publisher", _config.TITLE)
+description = _config.project("description", _config.TITLE)
 metadata_yaml = textwrap.dedent(f"""\
     title: "{title}"
     subtitle: "{subtitle}"
@@ -131,8 +136,8 @@ metadata_yaml = textwrap.dedent(f"""\
     date: "{publish_date}"
     rights: "© {publish_date.split('-')[0]} {author}"
     lang: zh-CN
-    publisher: _config.project("publisher", "books")
-    description: _config.project("description", "source analysis") + " — {version}"
+    publisher: "{publisher}"
+    description: "{description} — {version}"
     """)
 
 metadata_path = os.path.join(dist_dir, '_epub_metadata.yaml')
@@ -141,8 +146,7 @@ _fsutil.write_text(metadata_path, metadata_yaml)
 # ── Step 4: Build a small CSS sheet for typography ───────────────────────
 # Reading apps already render their own fonts, so we keep this minimal:
 # tighter ASCII art, sensible heading rhythm, code-block contrast.
-EPUB_CSS = """
-/* {_config.project("running_head", "book")} — EPUB stylesheet */
+EPUB_CSS = '/* ' + _config.project('running_head', _config.TITLE) + ' — EPUB stylesheet */' + """
 body { line-height: 1.55; font-family: "Source Han Serif", "Noto Serif CJK SC", serif; }
 h1 { font-size: 1.6em; margin-top: 1.2em; page-break-before: always; color: #1565C0; }
 h2 { font-size: 1.3em; margin-top: 1em; color: #1565C0; }

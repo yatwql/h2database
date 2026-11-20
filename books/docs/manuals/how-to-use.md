@@ -1,158 +1,92 @@
-# 脚本与门禁速查
+# 日常使用流程
 
-> 面向开发者的速查页。用户向文档请见：
-> [新建一本书](how-to-new-book.md) · [配置](how-to-config.md) · [CLI](how-to-use-cli.md) · [TUI](how-to-use-tui.md) ·
-> [Web](how-to-use-web.md) · [常见问题](faq.md) ·
-> [全部脚本清单](scripts-and-reference.md)
+> 软件：bookwright — 源码分析成书工具 v0.1
+> 维度：**任务流水线**——从动笔到交付，每一步做什么、做完怎么确认。
 
-## 0. 质量评分
+本文只回答"我现在要完成某件事，按什么顺序做"。命令的完整参数见
+[CLI 使用](how-to-use-cli.md)，入口清单见[脚本与命令参考](scripts-and-reference.md)。
 
-```bash
-python books/src/python/make.py report   # 六维评分：功能/稳定/交互/代码/文档风格/文档质量
-```
+## 1. 三种日常任务
 
-评分只是汇总视图（复用已有门禁与度量），不是新门禁；低于目标时按提示逐项整改。
+| 我要做的事 | 走哪几节 | 典型耗时 |
+| --- | --- | --- |
+| 改一段正文、修一处图注 | §2 | 一分钟内 |
+| 新增一章或一节 | §3 | 视篇幅 |
+| 出一版可交付的 PDF / EPUB | §4 | 数分钟 |
 
-## 1. 启动方式
+## 2. 改正文
 
-```bash
-books/scripts/launch.sh            # TUI 菜单（Linux/macOS）
-books/scripts/launch.sh cli status # CLI
-books/scripts/launch.sh web        # Web 控制台
-```
-Windows 用 `books\scripts\launch.ps1`（参数相同）。三个渠道共用 `core/actions.py`，
-也可直接 `python books/src/python/app/{cli,tui,web}.py`。
+1. 只改 `books/data/manuscript/` 下的手稿。这是唯一的内容源，产物全部由它派生。
+2. 跑一次按改动范围选的门禁：
 
-## 1.5 提交前跑一遍快速档
+   ```bash
+   books/scripts/check-docs.sh      # 只动了手稿/文档
+   ```
 
-```bash
-books/scripts/check-fast.sh      # fast：ruff + 结构门禁 + 单元套件（约 16 秒）
-books/scripts/check-full.sh      # 合入前：全部门禁
-books/scripts/check-release.sh   # 发布前：full + 慢档 + 产物
-```
+3. 看结论：出现文件与行号就按提示改；`✅ pass` 表示这一类问题已经没有了。
+4. 想立刻看到效果，重新构建一次：
 
-Windows 用同名 `.ps1`。度量类用 `eval-score.sh`（六维评分）与
-`test-eval-coverage.sh`（覆盖率棘轮）。分档说明见
-[`testplan.md §1.2`](../managements/testplan.md)。
+   ```bash
+   python books/src/python/make.py build
+   ```
 
-## 2. 单入口：make.py
+   打开 `books/dist/h2-source-code-analysis.html` 即可查看。
 
-日常一律走单入口，不要手工按顺序调用脚本：
+**做对的判据**：同一条门禁从失败变成通过，且没有引入新的失败项。
 
-```bash
-python books/src/python/make.py check      # 全部质量门禁（只读，不写产物）
-python books/src/python/make.py build      # cover 统计 + 合并 Markdown + HTML
-python books/src/python/make.py verify     # 与 check 相同（语义化别名）
-python books/src/python/make.py test       # 单元 + 集成测试（books/src/test）
-python books/src/python/make.py cover      # 覆盖率 + 棘轮阈值（book.toml 的 coverage_fail_under）
-python books/src/python/make.py deliver    # build + PDF + verify_pdf + EPUB
-python books/src/python/make.py doctor     # 可选依赖检查（pandoc / playwright / pypdf）
-```
+## 3. 新增一章或一节
 
-通用参数：
+1. 写手稿文件，放进 `books/data/manuscript/`。
+2. 在 `books/data/tmpl/book.toml` 的 `[chapters] files` 里登记顺序；章节清单决定了合并顺序。
+3. 章末补齐四段：本章导读、延伸思考、本章小结、延展阅读，顺序固定。延伸思考每章至少 3 题，每题要有提示行与带锚点的回顾行。
+4. 如果这一章负责新的源码包，在 `[chapters.packages]` 里登记归属，避免与别的章重复描述。
+5. 跑一遍：
 
-| 参数 | 作用 |
-| --- | --- |
-| `--only NAME[,NAME]` | 只跑指定步骤 |
-| `--skip NAME[,NAME]` | 跳过指定步骤 |
-| `--timings` | 打印每步耗时 |
-| `--keep-going` | 单步失败后继续跑完，最后汇总失败项 |
+   ```bash
+   books/scripts/check-docs.sh
+   python books/src/python/make.py build
+   ```
 
-典型用法：
+**做对的判据**：章节结构门禁通过；封面统计里的章数、图数、行数随之更新；合并稿末尾能看到新增内容。
 
-```bash
-python books/src/python/make.py check --only audit_links,audit_ascii
-python books/src/python/make.py build --timings
-python books/src/python/make.py deliver --skip to_pdf
-```
+## 4. 交付一版
 
-## 3. 日常编辑流程
+1. 先确认手稿是完整的：
 
-1. 改 `books/data/manuscript/` 下的手稿。
-2. `make.py check` —— 任一 P0 门禁失败即停下修复。
-3. `make.py build` —— 重新生成 `books/dist/` 里的合并 Markdown 与 HTML。
-4. 交付前 `make.py deliver` —— 生成 PDF/EPUB 并自动校验。
+   ```bash
+   python books/src/python/make.py check
+   ```
 
-配置分三类，脚本统一通过 `_config` 读取，**不要硬编码**：
+2. 生成并自动校验三种格式：
 
-- 数据组织：`data/tmpl/book.toml`（章节清单、标题、编号、覆盖归属、包映射）
-- 基础配置：`data/config/base.json`（源码树、文件后缀、包前缀、基线、预算）
-- 书籍风格：`data/config/style.json`（文案、骨架、图注词表、写作阈值、生成模板）
+   ```bash
+   python books/src/python/make.py deliver
+   ```
 
-## 4. 单独调用某个门禁（调试用）
+   顺序是固定的：渲染 PDF → 补印刷目录链接 → 校验 PDF → 生成 EPUB → 校验 EPUB。中间任一步失败会立刻停下。
+
+3. 到 `books/dist/` 取件：`h2-source-code-analysis.pdf`、`h2-source-code-analysis.epub`，以及可用于二次排版的 `h2-source-code-analysis.md` 与 `h2-source-code-analysis.html`。
+
+**做对的判据**：`deliver` 以 `OK` 结束；PDF 页数与体积在预算内；目录可点击且跳转落在正确章节。
+
+## 5. 提交之前
 
 ```bash
-python books/src/python/audit/links.py          # 链接与锚点解析
-python books/src/python/diagrams.py          # ASCII 图宽度/对齐（已知项走基线）
-python books/src/python/captions.py       # 图注动宾结构（--threshold strict|normal|loose）
-python books/src/python/figures.py        # 图号与引用一致性（--strict 才失败）
-python books/src/python/crossrefs.py      # 章节互引准确性
-python books/src/python/exercises.py      # 延伸思考题量与结构
-python books/src/python/figure_clusters.py# 图簇桥接叙事
-python books/src/python/index_xrefs.py    # 索引 see-also 可解析
-python books/src/python/smart.py          # 图表覆盖与 fig-refs（--fig-refs）
-python books/src/python/balance.py         # 章节均衡度量（--json / --baseline / --diff）
-python books/src/python/style.py           # 写作风格审计（advisory）
-python books/src/python/readability.py     # 可读性：长句、宽图、框线闭合
-python books/src/python/source_refs.py# 源码引用与 Class.method 断言
-python books/src/python/structure.py           # 汇总门禁（--gate-level p0|p1|p2）
+books/scripts/check-fast.sh      # 约 20 秒：格式、结构门禁、全量快档测试
 ```
 
-维护型脚本（按需运行，会改写内容）：
+这一步与提交钩子跑的是同一套内容；通过再提交，可以避免"提交被钩子打回"的往返。
 
-```bash
-python books/src/python/glossary.py        # 生成本术语表草稿（--check / --validate / --coverage）
-python books/src/python/index.py           # 生成索引草稿（--hierarchy-check）
-python books/src/python/terms.py       # 给各章补术语参考行（--check / --report-missing / --check-related）
-python books/src/python/cover.py           # 刷新 cover.md 的统计数字
-```
+## 6. 出问题时的顺序
 
-基线类脚本（把当前已知问题记账，避免每次升级都被卡）：
+1. 先看是**哪一步**失败：构建、检查、还是交付。
+2. 失败输出通常已经给出文件与行号；照它改比读日志更快。
+3. 需要完整输出时看 `books/logs/` 下的报告文件（含每步退出码与耗时）。
+4. 仍然不明就里，查[常见问题](faq.md)。
 
-```bash
-python books/src/python/diagrams.py --update-baseline
-python books/src/python/source_refs.py --suggest          # 看改名建议
-python books/src/python/source_refs.py --update-baseline  # 复核后记账
-```
+## 7. 不要做的事
 
-## 5. PDF 与 EPUB（按需交付）
-
-```bash
-python books/src/python/make.py deliver
-```
-
-拆开执行：
-
-```bash
-python books/src/python/to_pdf.py        # HTML → PDF（chromium）
-python books/src/python/verify_pdf.py          # 交付校验（--require-toc-links 走交付口径）
-python books/src/python/pdf_toc_links.py   # 给印刷 TOC 加可点击链接
-python books/src/python/print_pdf.py     # 印刷级 PDF（不覆盖标准 PDF）
-python books/src/python/to_epub.py       # EPUB（需要 pandoc）
-python books/src/python/verify_epub.py         # EPUB 结构校验
-```
-
-产物全部在 `books/dist/`，均为 gitignored：
-
-- `h2-source-code-analysis.html`
-- `h2-source-code-analysis.pdf`
-- `h2-source-code-analysis-print.pdf`
-- `h2-source-code-analysis.epub`
-
-## 6. 依赖与虚拟环境
-
-依赖清单从文档剥离，统一维护在清单文件里：
-
-- `books/requirements.txt`：运行时可选依赖（`pypdf`、`playwright`、`defusedxml`）
-- `books/requirements-dev.txt`：开发/CI 依赖（`ruff`、`coverage`、`pyright`）
-- 外部工具：`pandoc`（EPUB）与 Chromium（`python -m playwright install chromium`）
-
-```bash
-books/scripts/bootstrap.sh          # 创建 books/.venv 并安装运行时依赖
-books/scripts/bootstrap.sh --dev    # 额外安装开发依赖
-books/scripts/bootstrap.sh --check  # 只查看虚拟环境状态
-books/scripts/launch.sh cli status  # 启动器自动优先使用 books/.venv
-```
-
-Windows 对应 `books\scripts\bootstrap.ps1` 与 `launch.ps1`（参数相同）。
-`make.py doctor` 逐项报告依赖可用性；核心分析链路只依赖标准库。
+- 不要直接编辑 `books/dist/` 里的任何文件：那是产物，下次构建会被覆盖。
+- 不要手工按顺序调用多个审计脚本：入口已经把顺序与依赖固定下来了。
+- 不要把历史版本的稿子放回 `books/data/manuscript/`：用快照方式保留（见[配置指南](how-to-config.md)）。
+- 不要为了通过门禁而放宽阈值：先确认是文档该改，还是策略确实需要调整。

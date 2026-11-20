@@ -1,5 +1,6 @@
 # TUI 交互设计契约
 
+> 软件：bookwright — 源码分析成书工具 v0.1
 > 适用于 `app/tui.py` 与其键位层 `app/keys.py`。与 `../manuals/how-to-use-tui.md`
 > （面向使用者）互补：本文是**实现必须遵守的规则**，改交互先改这里。
 

@@ -77,6 +77,41 @@ def _exists(rel: str, repo_root: str | None = None) -> bool:
     return os.path.exists(os.path.join(root, rel))
 
 
+DIMENSION_RE = re.compile(r'^>\s*维度：\**(.+?)\**\s*$', re.MULTILINE)
+MANAGEMENTS_REF_RE = re.compile(r'(?:\.\./managements/|managements/)\w+\.md')
+
+
+def check_manual_scope(manual_dir: str | None = None) -> list[dict]:
+    """User documents state their dimension once, and do not quote the design.
+
+    A manual answers "how do I use this"; each one owns a single dimension so two
+    manuals cannot drift into covering the same ground, and none of them leans on
+    the requirements or the design documents to explain itself.
+    """
+    directory = manual_dir or os.path.join(_config.BOOK_ROOT, 'docs', 'manuals')
+    out: list[dict] = []
+    seen: dict[str, str] = {}
+    for path in sorted(glob.glob(os.path.join(directory, '*.md'))):
+        rel = os.path.relpath(path, REPO_ROOT)
+        text = _fsutil.read_text(path)
+        match = DIMENSION_RE.search(text)
+        if match is None:
+            out.append({'kind': 'SCOPE', 'file': rel, 'line': 1,
+                        'detail': 'manuals must declare "> 维度：" '})
+            continue
+        dimension = match.group(1).strip()
+        if dimension in seen:
+            out.append({'kind': 'SCOPE', 'file': rel, 'line': 1,
+                        'detail': f'dimension duplicates {seen[dimension]}'})
+        else:
+            seen[dimension] = rel
+        for lineno, line in enumerate(text.split('\n'), start=1):
+            for ref in MANAGEMENTS_REF_RE.finditer(line):
+                out.append({'kind': 'SCOPE', 'file': rel, 'line': lineno,
+                            'detail': f'user document refers to the design docs: {ref.group(0)}'})
+    return out
+
+
 def check_paths(files: list[str], repo_root: str | None = None) -> list[dict]:
     out = []
     for path in files:
@@ -144,7 +179,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     files = doc_files()
-    findings = check_paths(files) + check_scripts(files) + check_versions(files) + check_chapters(files)
+    findings = (check_paths(files) + check_scripts(files) + check_versions(files)
+                + check_chapters(files) + check_manual_scope())
 
     if args.json:
         print(json.dumps({'count': len(findings), 'findings': findings},

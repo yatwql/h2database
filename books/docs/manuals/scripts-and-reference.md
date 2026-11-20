@@ -1,8 +1,9 @@
 # 脚本与命令参考
 
+> 维度：**参考——全部可执行入口与参数的唯一清单**
+> 软件：bookwright — 源码分析成书工具 v0.1
 > 全部可执行入口的唯一清单。日常优先用 `books/scripts/` 下的封装脚本，不必直接
 > 和 Python 解释器打交道；需要细粒度控制时再用 `make.py` 或分层脚本。
-> 门禁的分档与验收口径见 [`../managements/testplan.md`](../managements/testplan.md)。
 
 ## 1. 命名约定
 
@@ -173,7 +174,7 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `traces.py` | 过程/历史痕迹：`--kind docs`（文档）、`--kind code`（代码注释）、`--kind all`（默认） | ● |
 | `doc_drift.py` | 文档提到的路径/脚本/章节是否仍存在 | ● |
 | `file_length.py` | 文件行数预算 | ● |
-| `gate_trace.py` | `testplan.md` 门禁表与 `make.py` 步骤双向可追溯 | ● |
+| `gate_trace.py` | 质量计划登记与 `make.py` 步骤双向可追溯 | ● |
 | `typecheck.py` | pyright 静态检查（可选依赖，缺失时跳过） | ● |
 | `portability.py` | 移植性：`open()` 必须显式 encoding；`LC_ALL=C` + ASCII 输出下入口不得崩 | ● |
 | `test_redundancy.py` | 测试卫生：重复用例体 / 无断言 / 非 TestCase 的 test_* / 同名遮蔽 | ● |

@@ -1,5 +1,6 @@
 # 写作风格指南
 
+> 软件：bookwright — 源码分析成书工具 v0.1
 > 与项目无关的通用质量要求见 [`analysis-doc-standard.md`](analysis-doc-standard.md)。
 
 > 轻量级风格参考，适用于 H2 源码分析文档的写作与修订。

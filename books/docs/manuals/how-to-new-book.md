@@ -1,5 +1,8 @@
 # 新建一本书（含翻译版）
 
+> 维度：**换项目——用同一套工具做另一本书或另一个语言版本**
+> 软件：bookwright — 源码分析成书工具 v0.1
+
 一条命令搭好骨架，再按四份文件的职责分别填内容。
 
 ```bash
@@ -8,8 +11,7 @@ books/scripts/bookctl new ../my-book-en --lang en --title "My Book"
 books/scripts/bookctl new ../copy --title "副本" --from-manuscript   # 连章节一起复制
 ```
 
-脚手架会生成下面这些文件，**它们职责不同、不能互相顶替**（权威定义见
-[`technical.md §13`](../managements/technical.md)）：
+脚手架会生成下面这些文件，**它们职责不同、不能互相顶替**：
 
 | 文件 | 回答的问题 | 内容 | 新建/翻译时怎么改 |
 | ------ | ----------- | ------ | ------------------ |

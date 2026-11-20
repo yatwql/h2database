@@ -57,6 +57,10 @@ for fname in source_files:
 cover_path = _config.manuscript('cover.md')
 cover = _fsutil.read_text(cover_path)
 
+# Update the version: book.toml is the single source, the cover only repeats it
+if _config.VERSION:
+    cover = re.sub(r'(版本\s+)v[\d.]+', rf'\g<1>v{_config.VERSION}', cover, count=1)
+
 # Update the book's last-update date (git date of the manuscript, else mtime)
 book_date = _config.book_updated()
 if book_date:

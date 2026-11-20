@@ -25,10 +25,14 @@ class VersionConsistencyTest(unittest.TestCase):
         self.mod = _fixture.load_module(self.root, 'version_consistency')
 
     def doc(self, text: str) -> None:
+        # every management document names the software; that is part of what the
+        # gate checks, so the fixture carries the line too
+        from lib._version import APP_NAME, APP_NAME_ZH
+
         path = os.path.join(self.root, 'docs', 'managements', 'sample.md')
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w', encoding='utf-8') as fh:
-            fh.write(text)
+            fh.write(f'> 软件：{APP_NAME} — {APP_NAME_ZH}\n{text}')
 
     def merged(self, manifest: str) -> None:
         path = os.path.join(self.root, 'dist', 'test-book.md')

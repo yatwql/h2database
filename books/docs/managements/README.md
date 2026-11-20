@@ -1,5 +1,7 @@
 # 管理文档索引
 
+> 软件：bookwright — 源码分析成书工具 v0.1
+
 工具链与项目概况见仓库上层的 [`books/README.md`](../../README.md)；
 目录结构与归属规则见 [`folder.md`](folder.md)。
 

@@ -1,5 +1,6 @@
 # 源码分析文档通用规范
 
+> 软件：bookwright — 源码分析成书工具 v0.1
 > 适用于"读源码 → 出文档"的任何项目，与具体语言、仓库、书名无关。
 > 项目相关约定（本项目的章节、术语、图注细则）见 `managements/style-guide.md`；
 > 目录与归属见 `managements/folder.md`。
