@@ -80,7 +80,10 @@ class MakeDriverTest(unittest.TestCase):
         self.assertEqual(buffer.getvalue(), '')
 
     def test_doctor_reports_missing_tools(self):
+        # doctor probes optional tools through find_spec and shutil.which, so both
+        # must be stubbed or the test result depends on the machine
         with mock.patch.object(self.make.importlib.util, 'find_spec', return_value=None), \
+                mock.patch.object(self.make.shutil, 'which', return_value=None), \
                 mock.patch.object(self.make.subprocess, 'run', return_value=completed(0)):
             buffer = io.StringIO()
             with redirect_stdout(buffer):
@@ -90,8 +93,8 @@ class MakeDriverTest(unittest.TestCase):
 
     def test_doctor_passes_when_everything_is_present(self):
         with mock.patch.object(self.make.importlib.util, 'find_spec', return_value=True), \
-                mock.patch.object(self.make.subprocess, 'run',
-                                  return_value=completed(0, out='/usr/bin/pandoc\n')), \
+                mock.patch.object(self.make.shutil, 'which',
+                                  return_value='/usr/bin/pandoc'), \
                 mock.patch.object(self.make._config, 'missing_files', return_value=[]), \
                 redirect_stdout(io.StringIO()):
             code = self.make.doctor()

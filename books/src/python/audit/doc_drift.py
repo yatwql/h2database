@@ -66,9 +66,11 @@ def _generated_prefixes() -> tuple[str, ...]:
 
 
 def _exists(rel: str, repo_root: str | None = None) -> bool:
-    # generated / runtime paths are absent from a fresh checkout
-    if rel.startswith(_generated_prefixes()):
-        return True
+    # generated / runtime paths are absent from a fresh checkout; a reference may
+    # name the directory itself (`books/.venv`) or something inside it
+    for prefix in _generated_prefixes():
+        if rel == prefix.rstrip('/') or rel.startswith(prefix):
+            return True
     root = _repo_root(repo_root)
     if '*' in rel:
         return bool(glob.glob(os.path.join(root, rel), recursive=True))
