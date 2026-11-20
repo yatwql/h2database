@@ -142,8 +142,7 @@ ingest_prose = false   # 默认关；开则走 chapter-draft / summary 场景
 
 事实、源码坐标、表格、练习、交叉索引**永远确定性**，开关只影响这两段叙述文字；
 provider 不可用时自动回退到确定性文本并在 stderr 打一行警告，不会中断 ingest。
-命令行另有 `--llm`（只影响本次运行），TUI 里是独立的 `[L]` 菜单项。
-
+命令行另有 `--llm`（只影响本次运行），TUI 里是菜单下方单独的 `l` 键（菜单项 `1)` 跑的是确定性路径）。
 
 `llm_provider.json` 定义 provider 与路由，`llm_settings.json` 定义生成参数：
 

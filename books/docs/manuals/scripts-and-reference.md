@@ -13,8 +13,9 @@
 | `src/python/<层>/` | 目录定类别、文件名写对象，不加动词前缀 | `audit/links.py`、`render/to_pdf.py` |
 | `src/python/lib/` | 内部模块用下划线前缀 | `lib/_config.py` |
 
-`books/scripts/` 的文件名由 `audit/check_architecture.py` 机检：只允许
-`bookctl`、`launch*`、`bootstrap*`、`check*`、`eval*` 五类前缀。
+`books/scripts/` 的文件名由 `audit/check_architecture.py` 机检：只允许下列前缀：
+`bookctl`、`launch`、`bootstrap`、`check`、`eval`、`new`、`test`、`release`、`install`
+（可用后缀区分对象，如 `check-fast.sh`、`test-eval-order.sh`）。
 
 ## 2. 日常封装脚本（`books/scripts/`）
 
@@ -97,7 +98,7 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `test` | 单元套件；`--full` 加慢档，`--timings` 出耗时 |
 | `cover` | 覆盖率 + 棘轮 |
 | `report` | 六维评分（`eval-score.sh` 的实现） |
-| `deliver` | `to_pdf` + `verify_pdf` + `to_epub` + `verify_epub` |
+| `deliver` | `to_pdf` + `pdf_toc_links` + `verify_pdf` + `to_epub` + `verify_epub` |
 | `doctor` | 可选依赖与环境自检 |
 
 参数：`--only NAME[,NAME]`、`--skip NAME[,NAME]`、`--timings`、`--keep-going`、
@@ -162,7 +163,6 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `exercises.py` | 延伸思考的数量、难度、提示、锚点 | ● |
 | `index_xrefs.py` | 索引条目、see-also 解析、层级 | ● |
 | `glossary.py`（manuscript） | 术语覆盖（见第 7 节） | – |
-| `prose_quality.py` | 句长、列表占比、坐标密度等文档风格评分 | ● |
 | `style.py` | 写作风格：句长、重复、表格规模 | ● |
 | `style_rules.py` | `style.json [style_rules]`：术语、空格、标题、列表标点 | ● |
 | `style_schema.py` | `style.json` 结构合法性（文档/配置分离） | ● |
@@ -181,7 +181,10 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `test_redundancy.py` | 测试卫生：重复用例体 / 无断言 / 非 TestCase 的 test_* / 同名遮蔽 | ● |
 | `perf_baseline.py` | 交付速度：每步耗时对比历史中位数，超阈值提示；`--strict` 变成失败 | ● |
 | `order_dependence.py` | 顺序依赖：正序/逆序两跑对比（P2 档自动执行，也可用 `test-eval-order.sh` 单独跑） | ● |
-| `scorecard.py` | 六维评分汇总（`eval-score.sh` 的实现） | ● |
+
+报告类不是门禁，不进 `make.py check`：`scorecard.py`（六维评分汇总）、
+`prose_quality.py`（文风度量）、`book_quality.py`（质量度量）、`review_packet.py`
+（失败集合）、`failure_extract.py`（从日志提取失败项）。
 
 ## 9. 交付渲染 `src/python/render/`
 

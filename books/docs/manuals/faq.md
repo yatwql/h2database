@@ -74,7 +74,7 @@ PDF 是旧稿。重新 `make.py build` 后再 `to_pdf`（或 `make.py deliver`�
 ## 日志
 
 **Q：日志在哪、怎么更详细？**
-`books/logs/books.log`，每天回滚、默认保留 14 天。要更详细：
+`books/logs/bookwright.log`，每天回滚、默认保留 14 天。要更详细：
 `BOOK_LOG_LEVEL=DEBUG`（或改 `base.json [logging].level`）。控制台只打印
 WARNING 以上，避免刷屏。
 

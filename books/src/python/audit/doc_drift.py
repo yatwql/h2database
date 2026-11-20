@@ -99,6 +99,95 @@ TREE_ROW_RE = re.compile(r'^\s{2,}([\w-]+\.md)\s+#')
 # the two ledgers number their entries and publish the next free number
 NEXT_RE = re.compile(r'\b(plan|rf)-next\s*=\s*(\d+)')
 ENTRY_RE = re.compile(r'\b(plan|rf)-(\d+)\b')
+# a document that spells out the delivery pipeline, or the script-name prefixes,
+# is quoting the orchestrator; both lists must be read from it, not retyped
+DELIVER_GROUP_RE = re.compile(r"'deliver':\s*\(([^)]*)\)")
+QUOTED_NAME_RE = re.compile(r"'([a-z_]+)'")
+INLINE_TOKEN_RE = re.compile(r'`([a-z_]+)`')
+ALLOWED_PREFIX_RE = re.compile(r'allowed\s*=\s*\(([^)]*)\)')
+PREFIX_CLAIM_RE = re.compile(r'只允许([^。]{0,200})')
+PREFIX_TOKEN_RE = re.compile(r'`([a-z][a-z-]*)\*?`')
+TOOLS_ROOT = os.path.join('src', 'python')
+
+
+def _book_source(*parts: str) -> str:
+    """Text of a toolchain file, or empty when the book has none (fixtures)."""
+    path = os.path.join(_config.BOOK_ROOT, TOOLS_ROOT, *parts)
+    if not os.path.isfile(path):
+        return ''
+    return _fsutil.read_text(path)
+
+
+def deliver_steps(make_py_text: str | None = None) -> list[str]:
+    """The `deliver` group as the orchestrator declares it."""
+    text = make_py_text if make_py_text is not None else _book_source('make.py')
+    match = DELIVER_GROUP_RE.search(text)
+    return QUOTED_NAME_RE.findall(match.group(1)) if match else []
+
+
+def script_prefixes(architecture_text: str | None = None) -> list[str]:
+    """The wrapper-name prefixes the architecture gate accepts."""
+    text = (architecture_text if architecture_text is not None
+            else _book_source('audit', 'check_architecture.py'))
+    match = ALLOWED_PREFIX_RE.search(text)
+    return QUOTED_NAME_RE.findall(match.group(1)) if match else []
+
+
+def check_deliver(files: list[str] | None = None,
+                  steps: list[str] | None = None) -> list[dict]:
+    """A document quoting the delivery pipeline names the same steps, in order.
+
+The orchestrator owns the order; a manual that repeats a shorter list promises
+a delivery run that never happens.
+    """
+    declared = steps if steps is not None else deliver_steps()
+    if not declared:
+        return []
+    wanted = set(declared)
+    out = []
+    for path in files if files is not None else doc_files():
+        if os.path.basename(path) in LEDGER_DOCS:
+            continue
+        for lineno, line in enumerate(_fsutil.read_lines(path), start=1):
+            quoted = [token for token in INLINE_TOKEN_RE.findall(line) if token in wanted]
+            if len(quoted) < 2 or quoted == declared:
+                continue
+            out.append({'kind': 'DELIVER', 'file': os.path.relpath(path, REPO_ROOT),
+                        'line': lineno,
+                        'detail': 'deliver pipeline quoted as '
+                                  + ' -> '.join(quoted)
+                                  + ' (orchestrator: ' + ' -> '.join(declared) + ')'})
+    return out
+
+
+def check_prefixes(files: list[str] | None = None,
+                   prefixes: list[str] | None = None) -> list[dict]:
+    """A document naming the allowed wrapper prefixes names all of them.
+
+check_architecture decides which prefixes `books/scripts/` accepts; a manual that
+lists a subset rejects a script the gate happily accepts.
+    """
+    declared = sorted(prefixes if prefixes is not None else script_prefixes())
+    if not declared:
+        return []
+    out = []
+    for path in files if files is not None else doc_files():
+        if os.path.basename(path) in LEDGER_DOCS:
+            continue
+        text = _fsutil.read_text(path)
+        for match in PREFIX_CLAIM_RE.finditer(text):
+            span = match.group(1)
+            if '前缀' not in span and 'scripts/' not in span:
+                continue
+            quoted = sorted(set(PREFIX_TOKEN_RE.findall(span)))
+            if len(quoted) < 2 or quoted == declared:
+                continue
+            out.append({'kind': 'PREFIX', 'file': os.path.relpath(path, REPO_ROOT),
+                        'line': text[:match.start()].count('\n') + 1,
+                        'detail': 'prefix list quoted as '
+                                  + ', '.join(quoted)
+                                  + ' (architecture gate: ' + ', '.join(declared) + ')'})
+    return out
 
 
 def management_files(managements_dir: str | None = None) -> list[str]:
@@ -328,7 +417,8 @@ def main(argv: list[str] | None = None) -> int:
     files = doc_files()
     findings = (check_paths(files) + check_scripts(files) + check_chapters(files)
                 + check_config() + check_levels(files) + check_manual_scope()
-                + check_managements() + check_numbering(files))
+                + check_managements() + check_numbering(files)
+                + check_deliver(files) + check_prefixes(files))
 
     if args.json:
         print(json.dumps({'count': len(findings), 'findings': findings},

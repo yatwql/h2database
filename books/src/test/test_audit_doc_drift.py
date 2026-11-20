@@ -169,6 +169,34 @@ class DocDriftTest(unittest.TestCase):
         other = self.doc('rf-7 已修。\n\n**编号源**：`rf-next = 8`\n')
         self.assertEqual(self.drift.check_numbering([path, other]), [])
 
+    # -- quoted pipelines and prefix lists ----------------------------
+    def test_a_shorter_delivery_pipeline_is_reported(self):
+        steps = ['to_pdf', 'pdf_toc_links', 'verify_pdf', 'to_epub', 'verify_epub']
+        path = self.doc('| `deliver` | `to_pdf` + `verify_pdf` + `verify_epub` |\n')
+        findings = self.drift.check_deliver([path], steps)
+        self.assertEqual([f['kind'] for f in findings], ['DELIVER'])
+        self.assertIn('pdf_toc_links', findings[0]['detail'])
+
+    def test_the_declared_delivery_pipeline_passes(self):
+        steps = ['to_pdf', 'verify_pdf', 'to_epub']
+        path = self.doc('| `deliver` | `to_pdf` + `verify_pdf` + `to_epub` |\n')
+        self.assertEqual(self.drift.check_deliver([path], steps), [])
+
+    def test_a_subset_prefix_list_is_reported(self):
+        path = self.doc('只允许 `check`、`eval` 两类前缀。\n')
+        findings = self.drift.check_prefixes([path], ['check', 'eval', 'new', 'release'])
+        self.assertEqual([f['kind'] for f in findings], ['PREFIX'])
+        self.assertIn('new', findings[0]['detail'])
+
+    def test_the_full_prefix_list_passes(self):
+        path = self.doc('只允许 `check`、`eval` 两类前缀。\n')
+        self.assertEqual(self.drift.check_prefixes([path], ['check', 'eval']), [])
+
+    def test_the_orchestrator_is_the_source_of_both_lists(self):
+        real = _fixture.load_module(BOOK_ROOT, 'doc_drift')
+        self.assertIn('to_pdf', real.deliver_steps())
+        self.assertIn('bookctl', real.script_prefixes())
+
     # -- CLI --------------------------------------------------------------
     def test_json_output_reports_the_count(self):
         buffer = io.StringIO()

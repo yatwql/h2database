@@ -46,6 +46,9 @@
 - `doc_drift.py` 再补三项：`INDEX`（管理目录与 `README.md` 索引表、`folder.md` 目录树
   双向对齐，重复登记也报）、`NUMBERING`（`plan-next`/`rf-next` 必须等于已用最大 +1）、
   路径检查扩到 `src/` 等书籍内路径（此前 `src/test/*.py` 这类引用漏检）。
+- `doc_drift.py` 兼校被引用的实现清单：`DELIVER`（文档里的 `deliver` 步骤序列必须等于
+  `make.py` 的编排组）、`PREFIX`（文档写的 `scripts/` 前缀白名单必须等于
+  `check_architecture` 的 allowlist）。
 - `file_length.py` 兼校「文件膨胀登记」：`review-findings.md` P4 表里的行数与实测不符即失败。
 - 新增 `requirement_trace.py`：`requirements.md` 的 FR/IR/NFR 与 testplan 新增的
   §2.4 需求判据对照表双向一致，每行点名的载体必须存在；`make.py check` 由 30 步变 31 步。

@@ -2,7 +2,7 @@
 
 > 软件：bookwright — 源码分析成书工具 v0.1
 > 版本：v0.1
-> **编号源**：`rf-next = 10`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-9，
+> **编号源**：`rf-next = 11`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-10，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -72,6 +72,7 @@
 | rf-7 | 手册示例可能混入真实章节名与真实路径，未逐份核对 | 已逐份核对 `docs/manuals/*.md`：示例统一为 `<主题>` / `<code>` 占位，无越界真实章节名；`doc_drift.py` 的 CHAPTER 检查兜住复发 |
 | rf-8 | 管理文档互查出多处冲突与冗余：索引里 `plan.md` 登记两行且描述不一；`folder.md` 缺 `quality-model.md`、`plan.md` 职责过时；`deliver` 链路、印刷版 PDF 地位、EPUB 是否进流水线三处口径不一；门禁级别出现 P3 与「参考」，越出 P0–P2，且级别声明位置写成只在 §2.2；延伸思考适用章数 14 与 12 并存；`print_pdf.py`/`to_epub.py` 漏写 `render/`；`DESIGN.md` 的「三个界面」含成书产物，与「三个渠道」（CLI/TUI/Web）同词不同义；启动器旧名 `bk` 残留在 README 与手册 | 逐条收归单一权威：交付链路与级别只写 `testplan.md`，界面分类只写 `DESIGN.md`，目录归属只写 `folder.md`；脚本路径按仓库实际补全；`bk` 全量改为 `bookctl`；`plan-7` 现状按仓库实际（已有 java/python/rust 适配器）改写 |
 | rf-9 | 互查靠人读：管理目录与索引用表、编号源标记、需求与判据的对应关系都没有机检面，互相矛盾的条目只能靠人工发现；`src/test/test_no_network.py` 被删后 testplan 仍把它列为载体 | `doc_drift.py` 补 `INDEX`/`NUMBERING` 并扩展路径面；`file_length.py` 兼校膨胀登记表；新增 `requirement_trace.py` 与 testplan §2.4 对照表；补回 `test_no_network.py` |
+| rf-10 | 用户文档互查出 6 处冲突：章末四段顺序错、`scripts/` 前缀白名单只写了五类（门禁允许九类）、`deliver` 步骤漏 `pdf_toc_links`、把报告类脚本当门禁且漏登 `book_quality.py`、日志文件名写成 `books.log`、TUI 里 `[L]` 菜单项不存在 | 六处按配置/代码实际改写；`doc_drift.py` 新增 `DELIVER` 与 `PREFIX` 两项检查，让文档里被引用的实现清单与 `make.py`/`check_architecture.py` 的声明机器对齐 |
 
 ### 归档
 
