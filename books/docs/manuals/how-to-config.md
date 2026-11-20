@@ -30,21 +30,21 @@ docs = "docs"
 tools = "src/python"
 
 [chapters]
-files = ["cover.md", "ch1-overview.md", "appendix-a-cases.md"]  # 阅读顺序
+files = ["cover.md", "ch1-<主题>.md", "appendix-a-<主题>.md"]  # 阅读顺序
 front_glob = "front/*.md"          # 前件
 back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 
 [chapters.titles]                  # 每个文件贡献的 H1 标题
-"ch1-overview.md" = ["总体架构"]
+"ch1-<主题>.md" = ["总体架构"]
 
 [chapters.numbering]               # H1 编号，跨文件唯一
-"ch1-overview.md" = [1]
+"ch1-<主题>.md" = [1]
 
 [chapters.coverage]                # 该文件覆盖书中的哪些章（可重复）
-"ch1-overview.md" = [1]
+"ch1-<主题>.md" = [1]
 
 [chapters.packages]                # 单主责：每个源码包只归一章
-"ch1-overview.md" = ["org.example", "org.example.core"]
+"ch1-<主题>.md" = ["org.example", "org.example.core"]
 ```
 
 要点：`numbering` 必须唯一（决定 H1 顺序），`coverage` 允许重复（用于均衡度量），
@@ -62,7 +62,7 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
     "package_prefix": "org.h2"
   },
   "baselines": {"ascii": "data/baselines/ascii-baseline.json"},
-  "toolchain": {"coverage_fail_under": 86, "pdf_max_mb": 12, "epub_max_mb": 10},
+  "toolchain": {"coverage_fail_under": 88, "pdf_max_mb": 12, "epub_max_mb": 10},
   "logging": {"level": "INFO", "dir": "logs", "retention_days": 14}
 }
 ```
@@ -205,7 +205,7 @@ python books/src/python/make.py doctor   # 依赖与环境
 
 - **工具版本**：`lib/_version.py`（或被 `base.json [sources].tool_version` 覆盖）。
 - **源码版本**：`base.json [sources].version` 优先，否则读源码清单（pom/pyproject/Cargo）。
-- **文档版本**：`book.toml [book].version`；管理文档头的 `> 版本：vX` 必须与之一致。
+- **书籍版本**：`book.toml [book].version`；封面版本回写自它。管理文档与用户文档写的是**软件版本**（`lib/_version.py`），两者不混用。
 
 `bookctl status` 会打印 `versions : tool … source … doc …`，合并稿首行写
 `<!-- versions: … -->` manifest，`make.py check` 里的 `versions` 门禁负责校验。

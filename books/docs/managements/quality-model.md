@@ -1,6 +1,7 @@
 # 文档质量模型
 
 > 软件：bookwright — 源码分析成书工具 v0.1
+> 版本：v0.1
 > 定位：**质量策略**——谁做判断、什么时候做、代价多少。判据清单与级别属于
 > `testplan.md`，实现与约束属于 `technical.md`；本文只回答"为什么这样分工"。
 
@@ -8,7 +9,7 @@
 
 | 层 | 载体 | 负责 | 不负责 |
 | --- | --- | --- | --- |
-| 风格文件 | `data/config/style.json`、`data/config/base.json`、`data/tmpl/book.toml`、`docs/managements/style-guide.md` | 阈值、词表、章节顺序、语言映射；唯一的政策事实来源 | 判断某段文字是否真的说清楚了 |
+| 风格文件 | `data/config/style.json`、`data/config/base.json`、`data/tmpl/book.toml`、`data/language/` | 阈值、词表、章节顺序、语言映射；唯一的政策事实来源（`style-guide.md` 只解释规则怎么读，不持有取值） | 判断某段文字是否真的说清楚了 |
 | 脚本门禁 | `src/python/audit/*`、`src/python/render/verify_*` | 一切可枚举、可复现、可基线的判定：体量与结构、编号与链接、术语一致性、图注形态、代码摘录与源码一致 | 语义正确性、叙述是否成立 |
 | LLM | `lib/_llm.py`（`app/` 与 ingest 散文场景） | 生成初稿、评审语义、给出改写建议；产出**建议**，不产出结论 | 任何门禁判定、任何数字、任何「通过/不通过」 |
 
@@ -29,7 +30,7 @@
 | 体积门禁 | 严格，逐章 95% 下限 | 严格；某章确实要缩，须评审后 `--update-baseline` | 仅提示（无存量可保护） |
 | 质量门禁 | 存量入基线，新增即红 | 基线只收“尚未改写”的章节，改完一章重设一章 | 全量按门禁判，无基线 |
 | LLM 的位置 | 只写变更涉及的章节、桥接句、图注改写 | 逐章重写，脚本校验措辞形态与锚点 | 切分章节、归纳主线、术语初选、写初稿 |
-| 完成判据 | 全部门禁绿 + 交付产物完整 | 每章重写后体积不低于原文、质量警告归零 | P0 结构门禁绿，然后固化首版基线转 A |
+| 完成判据 | 全部门禁绿 + 交付产物完整 | 每章重写后体积不低于原文、质量警告归零 | 结构门禁全绿，然后固化首版基线转 A |
 
 代码是否变更不由人判断：`data/state/source-inventory.json` 记录被分析源码的快照，
 `source_refs.py` 负责把书里的 `Class.method` 断言对到新源码上；上游升级后先跑它，
@@ -64,20 +65,16 @@
 基线只接住「已知且已评审的存量」，不接住结构缺项。章节数、章节体量、交付完整性
 一律不进基线——它们代表文档本体，缺失就是内容事故。
 
-## 5. 门禁与配置对应
+## 5. 判据、实现与配置的归属
 
-| 关注点 | 门禁 | 配置 |
-| --- | --- | --- |
-| 结构与层级 | `audit/structure.py` | `book.toml [chapters]` |
-| 内容体积与交付完整性 | `audit/content_volume.py` | `base.json [toolchain] content_floor_ratio / pdf_page_ratio / epub_size_ratio` |
-| 图注形态 | `audit/captions.py`、`data/baselines/captions-findings.json` | `style.json [captions]` |
-| 术语与排版规则 | `audit/style_rules.py` | `style.json [rules]` |
-| 写作风格 | `audit/style.py` | `style.json [style]` |
-| 内容深度与前向引用 | `audit/content_depth.py` | `base.json`、术语归属 |
-| 练习题 | `audit/exercises.py` | `style.json [exercises]` |
-| 符号与源码一致 | `audit/source_refs.py`、`data/baselines/source-symbol-baseline.json` | `base.json [baselines]` |
-| 文件与文档预算 | `audit/file_length.py` | `style.json [limits]` |
-| LLM 边界 | `audit/llm_policy.py` | `data/config/llm_settings.json` |
+本文只定策略，具体位置各有权威，不再复制清单：
+
+| 想知道 | 去哪看 |
+| --- | --- |
+| 某道门禁的判据、级别、验证命令 | 质量计划（`testplan.md`） |
+| 门禁的实现位置、依赖方向、可达性要求 | 技术设计（`technical.md`） |
+| 阈值、词表、预算取值的文件与键 | 技术设计 §3.2「阈值归属」 |
+| 已评审存量的清单与生成方式 | `data/baselines/`，路径映射在 `base.json [baselines]` |
 
 ## 6. 反模式
 

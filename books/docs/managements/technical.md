@@ -1,7 +1,7 @@
 # 技术设计
 
 > 软件：bookwright — 源码分析成书工具 v0.1
-> 版本：v6.5
+> 版本：v0.1
 
 本文件是工程的第二步：由需求文档推出**技术设计**——系统怎么划分、各部件承担什么、
 彼此如何依赖、哪些约束不可违反。它自成体系：读完即可理解实现结构，不需要参考其他
@@ -15,7 +15,7 @@
 
 | 需求 | 设计回应 |
 | --- | --- |
-| 12 章 + 5 附录、固定章末结构 | 章节清单由配置给出；章末四段由 `audit/exercises.py`、`audit/structure.py` 判定 |
+| 12 章节槽 + 2 附录文件、固定章末结构 | 章节清单由配置给出；章末四段由 `audit/exercises.py`、`audit/structure.py` 判定 |
 | 图号、图注、图簇桥接 | 编号与形态由脚本判定；措辞由人或模型改写，改完仍需过脚本 |
 | 源码坐标可核对 | 手稿中的 `Class.method` 断言对到源码树，漂移进基线 |
 | 三种输出格式 | `render/` 三条独立管线，各有自己的校验器 |
@@ -122,17 +122,19 @@ books/
 
 ## 3. 配置设计
 
-### 3.1 三层配置与合并规则
+### 3.1 四层配置与合并规则
 
 | 文件 | 管什么 | 谁读 |
 | --- | --- | --- |
 | `data/tmpl/book.toml` | 这本书的身份：标题、版本、路径、章节清单、包归属、必备段落 | `lib/_config.py` 直接解析 |
 | `data/config/base.json` | 基础设施策略：源码位置、路径映射、基线路径、工具链预算、日志 | 合并进 `POLICY` |
 | `data/config/style.json` | 写作与形态规则：阈值、词表、图注规则、篇幅预算、语言骨架 | 合并进 `POLICY` |
+| `data/language/zh.json` | 语言资源：章节骨架名、练习提示语、术语行 | `_config.language()` |
 
 合并顺序固定：`base.json` → `style.json`，同名字典逐键覆盖；`toolchain` 段的预算
 额外以 `thresholds` 别名暴露，供门禁统一读取。若两个 JSON 都不存在，退化为读取单个
-`config.json`（兼容形态）。解析失败一律抛 `ConfigError` 并指明文件，不允许静默降级。
+`data/config/config.json`（兼容形态）。解析失败一律抛 `ConfigError` 并指明文件，
+不允许静默降级。
 
 ### 3.2 阈值归属
 
@@ -159,7 +161,7 @@ books/
 | `_fsutil` | 读写原语：`read_text`、`read_lines`、`write_text`、`load_json`、`ensure_dir`、`pin_stdout_utf8` | 统一 UTF-8；失败即退出并说明动作 |
 | `_log` | 按天滚动的文件日志 + 控制台摘要 | 级别取 `BOOK_LOG_LEVEL` > 配置 > INFO |
 | `_mdutil` | Markdown 结构解析：标题、围栏、图注 | 围栏内的内容不参与结构判定 |
-| `_version` | 工具链语义化版本 | 与文档版本、被分析源码版本分离 |
+| `_version` | 工具链语义化版本（唯一定义处） | 与书籍版本（`book.toml`）、被分析源码版本三向分离 |
 | `_llm` | LLM 客户端：provider 路由、密钥只读环境变量 | 只有 `app` 与 ingest 散文场景可导入 |
 | `_baseline` | 已评审问题清单的读写与差集 | 键由调用方定义；新增即失败，消失即提示收缩 |
 
@@ -192,6 +194,8 @@ books/
 | `to_html.py` | 合并稿 → `dist/<book>.html` | 单一 HTML：侧边栏目录 + 印刷目录 + 锚点；CSS 内联 |
 | `to_pdf.py` | HTML → PDF | 无头浏览器渲染；随后用 pypdf 写入大纲 |
 | `pdf_toc_links.py` | PDF | 按目录条目与大纲的**位置对应关系**补链接注释，不靠标题文本匹配 |
+| `print_pdf.py` | HTML → 印刷级 PDF | 章首装饰页、点线目录、页眉页脚；独立工具，不进 `deliver` 组 |
+| `pdf_from_html.py` | 现成 HTML → PDF | 不重建 HTML 的旁路；独立工具，不进 `deliver` 组 |
 | `verify_pdf.py` | PDF + HTML | 校验页数、A4、旋转、字体嵌入、体积、大纲与标题一一对应、目录链接落点 |
 | `to_epub.py` | 合并稿 → EPUB | pandoc 生成，元数据经 `--metadata-file` 传入 |
 | `verify_epub.py` | EPUB | 校验 mimetype 首条未压缩、容器与 OPF 可解析、清单与阅读顺序、导航可达、体积 |
@@ -205,12 +209,12 @@ books/
 | 组 | 门禁 | 判据要点 |
 | --- | --- | --- |
 | 结构 | `structure.py` | 章节齐全、标题层级连续、图号唯一、围栏配对、合并稿行数一致、TOC 与标题一一对应 |
-| 体量 | `content_volume.py` | 逐章字节/行数下限、手稿总量、交付页数与体积下限 |
+| 体量 | `content_volume.py`、`balance.py` | 逐章字节/行数下限、手稿总量、交付页数与体积下限；章间体量分布 |
 | 引用 | `links.py`、`crossrefs.py`、`figures.py`、`index_xrefs.py` | 相对链接与锚点可解析、章间互引真实存在、图号引用可解析、索引条目指向真实章节 |
 | 事实 | `source_refs.py`、`content_depth.py` | 源码坐标可解析、代码摘录与源码一致、前向引用需点名主责章节 |
-| 形态 | `captions.py`、`figure_clusters.py`、`diagrams.py`、`style_rules.py`、`style.py`、`exercises.py` | 图注结构、图簇桥接、ASCII 图宽度与行尾、术语与排版规则、章末练习结构 |
-| 工程 | `check_architecture.py`、`script_contract.py`、`file_length.py`、`traces.py`、`doc_drift.py`、`version_consistency.py`、`llm_policy.py`、`portability.py`、`typecheck.py`、`test_redundancy.py`、`perf_baseline.py`、`gate_trace.py` | 依赖方向、入口契约、文件长度预算、过程痕迹、文档与仓库一致、三版本一致、LLM 边界、跨平台、类型、测试质量、性能基线、门禁登记 |
-| 复核 | `review_packet.py`、`scorecard.py` | 只输出失败集合与上下文；六维评分作为整改视图 |
+| 形态 | `captions.py`、`figure_clusters.py`、`diagrams.py`、`style_rules.py`、`style.py`、`exercises.py`、`smart.py`、`readability.py`、`style_schema.py` | 图注结构、图簇桥接、ASCII 图宽度与行尾、术语与排版规则、章末练习结构、图表覆盖密度、可读性、配置结构 |
+| 工程 | `check_architecture.py`、`script_contract.py`、`file_length.py`、`traces.py`、`doc_drift.py`、`version_consistency.py`、`llm_policy.py`、`portability.py`、`typecheck.py`、`test_redundancy.py`、`perf_baseline.py`、`gate_trace.py`、`order_dependence.py` | 依赖方向、入口契约、文件长度预算、过程痕迹、文档与仓库一致、三版本一致、LLM 边界、跨平台、类型、测试质量、性能基线、门禁登记、顺序依赖（慢档） |
+| 复核 | `review_packet.py`、`scorecard.py`、`prose_quality.py`、`failure_extract.py` | 只输出失败集合与上下文；六维评分与文风度量作为整改视图；失败日志收敛 |
 
 **基线机制**：可枚举的存量问题允许登记（`data/baselines/*.json`），登记项不判失败，
 但同类别的新问题必须失败；登记项消失时报告 `stale`，提示收缩。基线键按内容而非

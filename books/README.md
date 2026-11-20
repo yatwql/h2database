@@ -12,9 +12,9 @@
 | ------ | ------ |
 | 源码 → 手稿 | 抽取包/模块版图、核心类型、公开 API、依赖方向，按章节映射生成手稿 |
 | 手稿 → 文档 | 合并 Markdown、HTML（侧边栏 TOC）、PDF（大纲/页内目录）、EPUB |
-| 质量门禁 | 27 道：结构完整性、源码坐标可核验、链接锚点、图注、术语/索引、文风评分、交付校验 |
+| 质量门禁 | 全部门禁（清单见 [`scripts-and-reference.md`](docs/manuals/scripts-and-reference.md) §8）：结构完整性、源码坐标可核验、链接锚点、图注、术语/索引、文风评分、交付校验 |
 | 多入口 | CLI、TUI、Web 控制台共用同一套动作 |
-| 可配置 | 数据组织 / 基础 / 风格三层配置 + 语言包 + LLM provider 路由 |
+| 可配置 | 数据组织 / 基础 / 风格三层加语言包（共四层，见 `docs/managements/technical.md` §3.1）+ LLM provider 路由 |
 
 ## 快速开始
 
@@ -28,12 +28,12 @@ books/scripts/bookctl test          # 测试（--full 含 chromium/pandoc 档）
 books/scripts/bookctl doctor        # 依赖与环境
 
 books/scripts/launch.sh        # TUI 菜单
-books/scripts/launch.sh cli    # CLI（与 bk 等价，可带子命令）
+books/scripts/launch.sh cli    # CLI（与 bookctl 等价，可带子命令）
 books/scripts/launch.sh web    # Web 控制台
 ```
 
-`bk` 是薄封装：解析解释器（`books/.venv` → `$PYTHON` → `python3`）后转发到
-`app/cli.py`；`bookctl make <args>` 直接透传 `make.py`。Windows 用 `bk.ps1`。
+`bookctl` 是薄封装：解析解释器（`books/.venv` → `$PYTHON` → `python3`）后转发到
+`app/cli.py`；`bookctl make <args>` 直接透传 `make.py`。Windows 用 `bookctl.ps1`。
 
 不用启动脚本时：
 
@@ -87,7 +87,7 @@ books/
 
 | 文档 | 内容 |
 | ------ | ------ |
-| [analysis-doc-standard.md](docs/managements/analysis-doc-standard.md) | 源码分析文档的通用内容标准与验收清单 |
+| [analysis-doc-standard.md](docs/managements/analysis-doc-standard.md) | 内容标准（跨项目复用） |
 | [technical.md](docs/managements/technical.md) | 工具链架构约束；§13 是文件职责分类的权威定义（结构/表述/名词 vs 规则/基础/外部服务） |
 
 **管理文档（`docs/managements/`）**
@@ -100,5 +100,7 @@ books/
 | [testplan.md](docs/managements/testplan.md) | 质量门禁与验证命令（验证唯一权威） |
 | [changelog.md](docs/managements/changelog.md) | 版本历史 |
 | [style-guide.md](docs/managements/style-guide.md) | 写作与格式规范 |
-| [tui-interaction.md](docs/managements/tui-interaction.md) | TUI 交互契约（键位、反馈、确认、光标） |
+| [DESIGN.md](docs/managements/DESIGN.md) | 设计契约总纲（三界面共有规则） |
+| [DESIGN-TUI.md](docs/managements/DESIGN-TUI.md) | 终端交互契约 |
+| [DESIGN-WEB.md](docs/managements/DESIGN-WEB.md) | 网页控制台契约 |
 | [README.md](docs/managements/README.md) | 管理文档索引 |

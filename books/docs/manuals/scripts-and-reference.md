@@ -63,7 +63,7 @@ books/scripts/release.sh publish --title "6.5"  # 干净树才允许；P2 通过
 books/scripts/release.sh manifest               # 按当前产物重写清单
 ```
 
-发布清单写到 `books/dist/release-<文档版本>.json`：三个版本、commit、产物字节数与
+发布清单写到 `books/dist/release-<书籍版本>.json`：三个版本、commit、产物字节数与
 SHA-256。`publish` 只写清单并提示 `git tag`，不代替你打标签。
 
 ### 失败提取（CI 日志）
@@ -91,7 +91,7 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 
 | 命令 | 内容 |
 | --- | --- |
-| `check` | 27 道门禁（只读，不写产物） |
+| `check` | 全部门禁（只读，不写产物；清单见本文 §8，登记一致性由 `gate_trace.py` 校验） |
 | `build` | `cover.py` → `merge.py` → `to_html.py` |
 | `verify` | `check` 的语义别名 |
 | `test` | 单元套件；`--full` 加慢档，`--timings` 出耗时 |
@@ -158,6 +158,7 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `captions.py` | 图注动词开头、长度、含糊后缀（`--threshold`、`--fix`） | ● |
 | `figures.py` | 图号格式与正文引用（`--strict`） | ● |
 | `figure_clusters.py` | 图簇与桥接句 | ● |
+| `balance.py` | 章间体量分布（行数/图数/坐标数） | ● |
 | `exercises.py` | 延伸思考的数量、难度、提示、锚点 | ● |
 | `index_xrefs.py` | 索引条目、see-also 解析、层级 | ● |
 | `glossary.py`（manuscript） | 术语覆盖（见第 7 节） | – |

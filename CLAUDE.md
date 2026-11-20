@@ -25,7 +25,7 @@ python books/src/python/make.py doctor        # optional deps (pandoc/playwright
 | Topic | Authoritative file |
 |-------|--------------------|
 | Directory structure, file ownership | `books/docs/managements/folder.md` |
-| Launchers and virtualenv | `books/README.md` (快速开始), `books/scripts/{bk,launch,bootstrap}.*` |
+| Launchers and virtualenv | `books/README.md` (快速开始), `books/scripts/{bookctl,launch,bootstrap}.*` |
 | Script usage, gates, delivery steps | `books/docs/manuals/how-to-use.md` |
 | Quality gates and verification commands | `books/docs/managements/testplan.md` |
 | Writing and format conventions | `books/docs/managements/style-guide.md` |
@@ -35,8 +35,8 @@ python books/src/python/make.py doctor        # optional deps (pandoc/playwright
 ## Hard Rules
 
 - Configuration lives only in `books/data/tmpl/book.toml`,
-  `books/data/config/base.json` and `books/data/config/style.json`;
-  scripts read it through `_config`.
+  `books/data/config/base.json`, `books/data/config/style.json` and
+  `books/data/language/*.json`; scripts read it through `_config`.
 - Manuscript sources live only in `books/data/manuscript/`.
 - Delivery artifacts live only in `books/dist/` (gitignored, regenerated).
 - Tooling lives in `books/src/python/` (thin launchers may live in `books/scripts/`);

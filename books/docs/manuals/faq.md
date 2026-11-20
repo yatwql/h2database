@@ -11,7 +11,7 @@
 `make.py check` 不受影响。
 
 **Q：能不能不写 python 路径？**
-可以。用 `books/scripts/bookctl <动作>`（Windows：`bk.ps1`），它自动选择
+可以。用 `books/scripts/bookctl <动作>`（Windows：`bookctl.ps1`），它自动选择
 `books/.venv` 里的解释器；`bookctl make …` 透传 `make.py`。
 
 **Q：为什么启动器找不到 Python？**
@@ -58,7 +58,7 @@
 
 **Q：三个版本分别在哪改？**
 工具版本在 `lib/_version.py`（semver，改工具时 bump）；源码版本自动取
-`[sources].version` 或源码清单（pom/pyproject/Cargo），也可显式覆盖；文档版本在
+`[sources].version` 或源码清单（pom/pyproject/Cargo），也可显式覆盖；书籍版本在
 `book.toml [book].version`。三者由 `version_consistency.py` 校验，`bookctl status`
 与 TUI 顶部都会显示 `工具 / 源码 / 文档`。
 

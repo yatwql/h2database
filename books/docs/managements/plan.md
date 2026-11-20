@@ -1,66 +1,104 @@
 # 实施与维护计划
 
 > 软件：bookwright — 源码分析成书工具 v0.1
-> 版本：v6.5
+> 版本：v0.1
+> **编号源**：`plan-next = 8`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-7，
+> 递增保证唯一，归档不回收。编号与 `review-findings.md` 的 `rf-*` 是两套，互不占用）
 
-## 1. 当前状态
+---
 
-- 手稿由源码事实驱动生成：`ingest/digest.py` → `outline.py` → `chapters.py`。
-- 章节采用单主责包映射，非主责章节用跨章索引跳转。
-- 四层配置：`data/tmpl/book.toml`（数据组织）、`data/config/base.json`（基础）、
-  `data/config/style.json`（风格）、`data/language/zh.json`（语言包）。
-- 质量门禁：结构（`audit/structure.py`）、事实（`audit/source_refs.py`）、
-  图书质量（`audit/book_quality.py`）、文风（`audit/prose_quality.py`）、
-  交付（`render/verify_pdf.py`、`render/verify_epub.py`）。
-- 工具链设计说明见 `technical.md`（同目录）。
+## 概述
 
-## 2. 例行工作流
+在办 7 项：P1 2 项（**plan-1**、**plan-2**）、P2 2 项（**plan-3**、**plan-4**）、
+P3 2 项（**plan-5**、**plan-6**）、P4 1 项（**plan-7**）。单项的范围、验收与事实位
+只在本文维护；系统怎么搭见 `technical.md`，怎么验证见 `testplan.md`。
 
-```bash
-python books/src/python/make.py check      # 全部门禁（只读）
-python books/src/python/make.py build      # 统计 + 合并 Markdown + HTML
-python books/src/python/make.py test       # 单元与集成测试
-python books/src/python/make.py deliver    # 按需：PDF + EPUB + 校验
-```
+---
 
-源码更新后重生成手稿：
+## 当前迭代待办
 
-```bash
-python books/src/python/ingest/digest.py
-python books/src/python/ingest/outline.py
-python books/src/python/ingest/chapters.py
-python books/src/python/make.py check
-```
+> **P1** = 当前待办（立即执行） · **P2** = 下一阶段就绪（条件满足即开工） ·
+> **P3** = 预期实施，有空时安排 · **P4** = 先决门槛未过，暂缓。
+>
+> 分档表达时机，不改变编号；一项完成后从表中删除，摘要写进 `changelog.md` 对应版本段。
 
-## 3. 维护策略
+> **归档放弃项边界（禁止重提）**：不做通用静态站点生成器、不追求门禁的语义智能、
+> 不做多书合一构建、不替代版本控制（理由见 `technical.md` §10）。
 
-- **配置唯一**：路径、阈值、文案、模板只在配置文件中维护，脚本不硬编码。
-- **事实优先**：手稿中的源码坐标与 `Class.method(` 断言由脚本核验，上游升级后重生成。
-- **基线记账**：已知问题记录在 `data/baselines/`，阈值收紧前先清账。
-- **门禁前置**：`make.py check` 通过才允许构建交付物。
+### P1 — 当前待办（立即执行）
 
-## 4. 后续增强项
+入选标准：不做就让门禁或文档事实失去意义。
 
-| 项目 | 说明 | 优先级 |
-| --- | --- | --- |
-| 语言包扩展 | 支持英文与技术文档双语输出 | P2 |
-| 图示增强 | 关键流程由 ASCII 升级为结构化图 | P3 |
-| 增量生成 | 仅重渲染变更章节，缩短大书构建时间 | P3 |
-| 更多源码语言 | 从 Java 扩展到 Kotlin/Go 等（解析器可插拔） | P4 |
+#### `plan-1` 手稿派生状态重建
 
-## 6. 入口与配置能力
+**现状**：`data/state/` 由 ingest 生成，仓库里没有它；大纲与 `book.toml` 的章节归属
+目前无法逐条对照，只能靠门禁兜底。
+**动作**：依次跑 `ingest/digest.py` → `ingest/outline.py` → `ingest/chapters.py`，
+再比对 outline 的包归属与 `[chapters.packages]` 是否一致。
+**验收**：`data/state/source-inventory.json` 与 `data/state/outline.json` 存在；
+`make.py check` 全绿；`source_refs.py` 无新增漂移。
+**事实位**：派生事实以 `data/state/*.json` 为准；进度只在本条维护。
 
-| 项 | 目标 | 交付物 | 约束 |
-| ---- | ------ | -------- | ------ |
-| A 多入口 | 同一工具链可从 CLI / TUI / Web 启动 | `app/cli.py`、`app/tui.py`、`app/web.py` | 全部经 `app/` 层，复用 `ingest`/`audit`/`render`，不复制业务逻辑 |
-| B LLM 配置 | 按场景/书籍/章节选择不同 provider | `data/config/llm_settings.json`、`data/config/llm_provider.json`、`lib/_llm.py` | 密钥来自环境变量或 gitignored 的 `llm_key.json`；默认配置真实 provider，`kind: mock` 仍可临时启用；模型参数与选择逻辑外置 |
-| C 启动脚本 | Windows / Linux 一键启动 | `scripts/{launch.sh,launch.ps1}` | 脚本只做环境探测与入口转发，不含业务逻辑 |
+#### `plan-2` 基线收缩
 
-## 5. 风险与应对
+**现状**：`data/baselines/` 存已评审存量，修复过的条目会以 stale 报出，尚无定期收缩。
+**动作**：逐门禁跑一次，把 stale 项复核后 `--update-baseline` 收缩；新增条目须在评审
+中说明理由。
+**验收**：各门禁 stale = 0；条目只减不增（结构变更导致的重新键控须单独说明）。
+**事实位**：条目清单在 `data/baselines/*.json`；生命周期见 `quality-model.md` §4。
 
-| 风险 | 应对 |
-| --- | --- |
-| 源码升级导致坐标漂移 | 重跑 stage 1，`source_refs.py` 复核 |
-| 统计数字与手稿不一致 | `make.py build` 重新统计，`structure.py` 校验 |
-| 章节结构回归 | `book_quality.py` 与 `structure.py` 拦截 |
-| 交付物失效 | 交付前运行 PDF/EPUB 校验 |
+### P2 — 下一阶段就绪（条件满足即开工）
+
+入选标准：价值明确、成本可控，前置条件可判定。
+
+#### `plan-3` 覆盖率棘轮上调
+
+**现状**：`base.json [toolchain] coverage_fail_under` 是固定下限，靠人工抬高。
+**动作**：按季度把下限提到实测值附近，一次只抬一档，抬不动先补测试。
+**验收**：`make.py cover` 在新区间通过；无测试被删除或跳过。
+**事实位**：阈值在 `base.json`；判据见 `testplan.md` 的「覆盖率」行。
+
+#### `plan-4` 语言包扩展（第二语种）
+
+**现状**：`data/language/` 只有 `zh.json`，骨架名与练习提示语是中文单份。
+**动作**：新增语种文件与 `BOOK_LANGUAGE` 分支，章节骨架名走语言包；图号与章节数
+必须与中文版一致。
+**验收**：第二语种可构建；章节数与图号与中文版逐一对应；`structure.py` 绿。
+**事实位**：语言资源在 `data/language/`；读取入口见 `technical.md` §3.3。
+
+### P3 — 预期实施，有空时安排
+
+入选标准：收益明确，但需要等时机或积累。
+
+#### `plan-5` 增量生成（只重渲染变更章节）
+
+**现状**：`make.py build` 每次全量合并与渲染，大书构建时间随章数线性增长。
+**动作**：按章节 mtime 与内容哈希判断复用范围；合并稿仍整篇生成，只跳过未变章节的
+渲染中间态。
+**验收**：单章改动的构建时间下降，且产物哈希与全量构建逐字节一致。
+**事实位**：产物在 `dist/`；确定性要求见 `testplan.md`「构建幂等」行。
+
+#### `plan-6` 图示升级（ASCII → 结构化图）
+
+**现状**：关键流程用 ASCII 图表达，宽度受 `ascii_max_cols` 约束，复杂流程难画全。
+**动作**：先挑 2–3 张最复杂的流程图改为结构化图，验证渲染链与 PDF 字体嵌入后铺开。
+**验收**：换图后 `diagrams.py`、`figures.py`、`verify_pdf.py` 均绿；图号引用不变。
+**事实位**：图注与图号规则见 `style-guide.md` §14 与 `testplan.md` §3。
+
+### P4 — 先决门槛未过，暂缓
+
+入选标准：接入前有硬性先决条件，门槛未过不排期。
+
+#### `plan-7` 更多被分析语言（Kotlin / Go）
+
+**现状**：`ingest/languages/` 已有 java / python / rust 三个适配器；Kotlin 与 Go 没有适配器。
+**先决门槛**：先确认这几个适配器已经把接口定型（按语言解析符号、给包归属），
+再照同一接口补 Kotlin / Go。
+**动作**：新增适配器后，`source_refs.py`、`content_depth.py` 按语言取符号。
+**验收**：新语言能生成骨架并通过全部门禁；测试覆盖按语言解析的分支。
+**事实位**：适配器在 `ingest/languages/`；接口见 `technical.md` §4.2。
+
+## 归档
+
+本项目不按版本切分计划归档文件：计划项完成后写进 `changelog.md` 对应版本段，
+本文不留存已完成项，历史由 git 保留。
