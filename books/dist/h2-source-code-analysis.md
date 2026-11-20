@@ -300,9 +300,9 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 ---
 
 *本书为源码分析文档，非 H2 Database 官方文档。书中分析基于特定版本源码，可能与您使用的版本存在差异。当本书内容与官方文档冲突时，请以官方文档为准。*
-# H2 Database Source Code Analysis
+# H2 Database Engine Source Code Analysis
 
-## H2 Database 源码全面分析与解读
+## H2 数据库引擎源码剖析
 
 版本 v6.5 · 2026-11-20 · 40,097 行 · 12 章 + 5 附录
 

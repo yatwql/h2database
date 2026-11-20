@@ -86,7 +86,7 @@ python books/src/python/app/tui.py
 
 ```text
 可修改项：
-  1) title          H2 数据库引擎源码剖析     书名
+  1) title          <书名>                    来自 book.toml 的 [book].title
   2) version        6.5                      版本号
   3) manuscript     data/manuscript          手稿目录
   4) dist           dist                     产物目录

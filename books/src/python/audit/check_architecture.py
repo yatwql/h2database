@@ -52,7 +52,23 @@ WRITE_CALLS = ('write_text', 'open(')  # kept for the human-readable rule text
 WRITE_MODES = 'wax+'
 # Entry points that are deliberately not a make.py step (ad-hoc inspection
 # tools: they take their own arguments and never run as part of a pipeline).
-STANDALONE_ENTRY = frozenset({'render/print_pdf.py', 'render/pdf_from_html.py'})
+# Entry points that are deliberately not a make.py step, with the reason they
+# stand on their own: ad-hoc tools take their own arguments, a few are driven by
+# the runner or by another module instead of the step table.
+STANDALONE_ENTRY = frozenset({
+    'render/print_pdf.py',        # ad-hoc: render a different document
+    'render/pdf_from_html.py',    # ad-hoc: HTML -> PDF without the book pipeline
+    'audit/book_quality.py',      # metric consumed by the scorecard
+    'audit/prose_quality.py',     # metric consumed by the scorecard
+    'audit/failure_extract.py',   # diagnostic: pull failures out of a log
+    'audit/review_packet.py',     # produces the failure packet, decides nothing
+    'audit/order_dependence.py',  # slow tier, driven by check_runner --mode p2
+    'audit/scorecard.py',         # dispatched by `make.py report`
+    'manuscript/terms.py',        # annotates chapter lead-ins on demand
+    'manuscript/case_studies.py',  # builds the appendix A outline on demand
+    'manuscript/snapshot.py',     # imports and verifies read-only snapshots
+})
+WIRED_LAYERS = ('render', 'audit', 'ingest', 'manuscript')
 # Commands that dispatch to a dedicated function in make.py instead of walking a
 # step list, so their GROUPS entry is a routing label, not a step selection.
 COMMAND_GROUPS = frozenset({'test', 'cover', 'report'})
@@ -184,6 +200,56 @@ def check(path: str, root: str | None = None) -> list[str]:
     return problems
 
 
+SPAWN_CALLS = ('run', 'call', 'check_call', 'check_output', 'Popen', 'run_path')
+
+
+def referenced_modules() -> set[str]:
+    """Modules another file really drives: imported, or spawned as a program.
+
+    A mention in a message or a docstring is not a wiring; only an import or a
+    process spawn proves the file is reachable without a step-table entry.
+    """
+    root = os.path.join(_config.BOOK_ROOT, 'src', 'python')
+    mentioned: set[str] = set()
+    for path in glob.glob(os.path.join(root, '**', '*.py'), recursive=True):
+        if os.path.normpath(path) == os.path.normpath(MAKE_PY):
+            continue  # the step table declares wiring; it is not a driver
+        try:
+            tree = ast.parse(_fsutil.read_text(path))
+        except (OSError, SyntaxError):
+            continue
+        # a module that spawns processes may hold its command list in string
+        # constants, so every '.py' literal there counts as a wiring
+        spawns = any(
+            isinstance(node, (ast.Import, ast.ImportFrom))
+            and any(alias.name.split('.')[0] in ('subprocess', 'runpy')
+                    for alias in node.names)
+            for node in ast.walk(tree))
+        if spawns:
+            for literal in ast.walk(tree):
+                if isinstance(literal, ast.Constant) and isinstance(literal.value, str) \
+                        and literal.value.endswith('.py'):
+                    mentioned.add(os.path.basename(literal.value)[:-3])
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                for alias in node.names:
+                    mentioned.add(alias.name.split('.')[0])
+                if isinstance(node, ast.ImportFrom) and node.module:
+                    mentioned.add(node.module.split('.')[0])
+            elif isinstance(node, ast.Call):
+                func = node.func
+                name = getattr(func, 'id', None) or getattr(func, 'attr', None)
+                if name not in SPAWN_CALLS:
+                    continue
+                for arg in node.args:
+                    for literal in ast.walk(arg):
+                        if isinstance(literal, ast.Constant) \
+                                and isinstance(literal.value, str) \
+                                and literal.value.endswith('.py'):
+                            mentioned.add(os.path.basename(literal.value)[:-3])
+    return mentioned
+
+
 def declared_steps() -> tuple[dict[str, str], dict[str, tuple[str, ...]]]:
     """(step name -> script path, group -> member names) from make.py, by AST.
 
@@ -241,17 +307,20 @@ def check_wiring(steps: dict[str, str] | None = None,
     if not steps:
         return []
     wired = {os.path.normpath(script).replace(os.sep, '/') for script in steps.values()}
+    mentioned = referenced_modules()
     problems: list[str] = []
     for path in scripts():
         rel = os.path.relpath(path, PY_ROOT).replace(os.sep, '/')
         if rel in wired or rel in STANDALONE_ENTRY or rel.endswith('__init__.py'):
             continue
-        if rel.split('/')[0] != 'render':
+        if rel.split('/')[0] not in WIRED_LAYERS:
             continue
+        if os.path.basename(rel)[:-3] in mentioned:
+            continue  # driven by another module, not by the step table
         source = _fsutil.read_text(path)
         if "'__main__'" not in source and '"__main__"' not in source:
             continue
-        problems.append(f'{rel}: CLI entry point is not a make.py step '
+        problems.append(f'{rel}: CLI entry point is not reachable '
                         f'(add it to STEPS/GROUPS, or to STANDALONE_ENTRY)')
     for group, members in groups.items():
         if group in COMMAND_GROUPS:

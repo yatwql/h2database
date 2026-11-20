@@ -14,6 +14,8 @@ Checks
   SOFTWARE  the toolchain name is the single source: every management and user
             document names it, and no program spells it out by hand
   COVER     the cover's "版本 vX" line repeats the configured document version
+  BOOKNAME  the two names stay apart: the tool documents never name one book,
+            and the book never names the tool
   MANIFEST  the merged Markdown manifest line matches the current trio
 
 Usage:
@@ -28,6 +30,7 @@ import json
 import os
 import re
 import sys
+import zipfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -48,8 +51,10 @@ def doc_headers() -> list[dict]:
     return findings
 
 
-# Documents that speak for the book itself; their H1 must name it.
-TITLED_DOCS = ('requirements.md', 'technical.md', 'testplan.md')
+# Documents of the toolchain itself. They describe the tool, so they must not
+# hardcode one book's name: the book name is data (book.toml), and the same
+# documents have to serve the next book unchanged.
+TOOL_DOC_DIRS = ('docs',)
 # Config fields that are shown to a reader of the book and must carry the title.
 TITLE_FIELDS = ('display_title_zh', 'publisher', 'running_head')
 
@@ -90,23 +95,22 @@ def software_problems() -> list[str]:
 
 
 def title_problems() -> list[str]:
-    """Every reader-facing surface uses the book title from book.toml."""
+    """The tool's documents must stay book-agnostic; the config stays coherent."""
     title = _config.TITLE
     problems: list[str] = []
     if not title:
         return ['book.toml [book].title is empty']
-    docs_dir = os.path.join(_config.BOOK_ROOT, 'docs', 'managements')
-    if not os.path.isdir(docs_dir):
-        return problems
-    for name in TITLED_DOCS:
-        path = os.path.join(docs_dir, name)
-        if not os.path.isfile(path):
-            continue
-        lines = _fsutil.read_lines(path)
-        first = lines[0] if lines else ''
-        if not first.startswith(f'# {title}'):
-            problems.append(f'docs/managements/{name}: H1 must start with "# {title}" '
-                            f'(found {first[:40]!r})')
+    for directory in TOOL_DOC_DIRS:
+        root = os.path.join(_config.BOOK_ROOT, directory)
+        for path in glob.glob(os.path.join(root, '**', '*.md'), recursive=True):
+            if title in _fsutil.read_text(path):
+                rel = os.path.relpath(path, _config.BOOK_ROOT)
+                problems.append(f'{rel}: names one particular book; the tool documents '
+                                f'must stay book-agnostic')
+    readme = os.path.join(_config.BOOK_ROOT, 'README.md')
+    if os.path.isfile(readme) and title in _fsutil.read_text(readme):
+        problems.append('README.md: names one particular book; keep it in book.toml')
+    # the display fields are configuration for a book, so they must agree with it
     for field in TITLE_FIELDS:
         value = _config.project(field)
         if value and title not in value:
@@ -133,6 +137,57 @@ def cover_problems() -> list[str]:
     if match.group(1) != _config.VERSION:
         return [f'{label}: shows v{match.group(1)}, config says v{_config.VERSION}']
     return []
+
+
+def artifact_text(path: str) -> str | None:
+    """Readable text of a delivered artifact, or None when it cannot be read.
+
+    A PDF is only read on its first pages: the cover and the running head live
+    there, and reading the whole file would cost more than the check is worth.
+    """
+    if path.endswith('.html'):
+        return _fsutil.read_text(path)
+    if path.endswith('.pdf'):
+        try:
+            from pypdf import PdfReader
+
+            reader = PdfReader(path)
+        except Exception:  # noqa: BLE001 - unreadable PDF is verify_pdf's finding
+            return None
+        return ''.join((page.extract_text() or '') for page in reader.pages[:5])
+    try:
+        with zipfile.ZipFile(path) as archive:
+            return ''.join(archive.read(name).decode('utf-8', 'ignore')
+                           for name in archive.namelist()
+                           if name.endswith(('.opf', '.xhtml', '.html')))
+    except (OSError, zipfile.BadZipFile):
+        return None
+
+
+def book_name_problems() -> list[str]:
+    """The book may carry its own name anywhere; the tool's name stays out."""
+    from lib._version import APP_NAME, APP_NAME_ZH
+
+    problems: list[str] = []
+    cover = _config.manuscript('cover.md')
+    if os.path.isfile(cover):
+        text = _fsutil.read_text(cover)
+        label = os.path.relpath(cover, _config.BOOK_ROOT)
+        for name in (APP_NAME, APP_NAME_ZH):
+            if name in text:
+                problems.append(f'{label}: carries the software name {name!r}; '
+                                f'the book speaks for itself')
+    for path in (_config.merged_html(), _config.merged_epub(), _config.merged_pdf()):
+        if not os.path.isfile(path):
+            continue
+        text = artifact_text(path)
+        if text is None:
+            continue
+        label = os.path.relpath(path, _config.BOOK_ROOT)
+        for name in (APP_NAME, APP_NAME_ZH):
+            if name in text:
+                problems.append(f'{label}: carries the software name {name!r}')
+    return problems
 
 
 def merged_manifest() -> tuple[str, str, str] | None:
@@ -162,6 +217,7 @@ def main(argv: list[str] | None = None) -> int:
     problems += title_problems()
     problems += software_problems()
     problems += cover_problems()
+    problems += book_name_problems()
 
     for header in doc_headers():
         if header['version'] != versions['doc']:

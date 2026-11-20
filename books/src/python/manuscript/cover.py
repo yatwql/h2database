@@ -57,6 +57,14 @@ for fname in source_files:
 cover_path = _config.manuscript('cover.md')
 cover = _fsutil.read_text(cover_path)
 
+# Update the title lines: book.toml owns the book name, the cover only repeats it
+_title_en = _config.project('display_title_en', _config.TITLE)
+_title_zh = _config.project('display_title_zh', _config.TITLE)
+if _title_en:
+    cover = re.sub(r'^# .*$', f'# {_title_en}', cover, count=1, flags=re.MULTILINE)
+if _title_zh:
+    cover = re.sub(r'^## .*$', f'## {_title_zh}', cover, count=1, flags=re.MULTILINE)
+
 # Update the version: book.toml is the single source, the cover only repeats it
 if _config.VERSION:
     cover = re.sub(r'(版本\s+)v[\d.]+', rf'\g<1>v{_config.VERSION}', cover, count=1)
