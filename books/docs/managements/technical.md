@@ -132,9 +132,9 @@ books/
 | `data/language/zh.json` | 语言资源：章节骨架名、练习提示语、术语行 | `_config.language()` |
 
 合并顺序固定：`base.json` → `style.json`，同名字典逐键覆盖；`toolchain` 段的预算
-额外以 `thresholds` 别名暴露，供门禁统一读取。若两个 JSON 都不存在，退化为读取单个
-`data/config/config.json`（兼容形态）。解析失败一律抛 `ConfigError` 并指明文件，
-不允许静默降级。
+额外以 `thresholds` 别名暴露，供门禁统一读取。若两个 JSON 都不存在，退化为读取
+`data/config/` 下的单文件 `config.json`（兼容形态，仓库不带）。解析失败一律抛
+`ConfigError` 并指明文件，不允许静默降级。
 
 ### 3.2 阈值归属
 

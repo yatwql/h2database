@@ -123,6 +123,7 @@ STEPS: list[Step] = [
     ('architecture', 'audit/check_architecture.py', (), 'verify'),
     ('llm_policy', 'audit/llm_policy.py', (), 'verify'),
     ('gate_trace', 'audit/gate_trace.py', (), 'verify'),
+    ('requirement_trace', 'audit/requirement_trace.py', (), 'verify'),
     ('versions', 'audit/version_consistency.py', (), 'verify'),
     ('typecheck', 'audit/typecheck.py', (), 'verify'),
     ('portability', 'audit/portability.py', (), 'verify'),

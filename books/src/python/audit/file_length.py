@@ -6,7 +6,10 @@ Budgets (lines, from style.json -> [limits]):
   tests      books/src/test/**     default 1200, warn 900
   docs       books/**/*.md         default 1200, warn 900
 
-Exit 1 when a hard budget is exceeded.
+The growth ledger (review-findings.md) is checked too: a registered row must name
+an existing file with its measured length.
+
+Exit 1 when a hard budget is exceeded or the ledger disagrees with measurement.
 
 Usage:
   python file_length.py
@@ -18,6 +21,7 @@ import argparse
 import glob
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -31,6 +35,40 @@ DEFAULTS = {
     # narrative appendices legitimately grow beyond the doc budget
     'manuscript': {'limit': 2000, 'warn': 1500},
 }
+
+# the growth ledger in review-findings.md is a registration: every row names a file
+# and its measured length, so both fall out of date together unless compared
+LEDGER_REL = os.path.join('docs', 'managements', 'review-findings.md')
+LEDGER_ROW_RE = re.compile(r'^\|\s*`([^`]+)`\s+(\d+)\s*行\s*\|')
+
+
+def check_ledger(book_root: str | None = None) -> list[dict]:
+    """Registered growth table rows state the measured length of a real file.
+
+    The table records which files are close to their budget and how they would be
+    split. A stale number there is worse than no number: it is the input to the
+    next split decision.
+    """
+    root = book_root or _config.BOOK_ROOT
+    path = os.path.join(root, LEDGER_REL)
+    if not os.path.isfile(path):
+        return []
+    out: list[dict] = []
+    for lineno, line in enumerate(_fsutil.read_lines(path), start=1):
+        match = LEDGER_ROW_RE.match(line)
+        if match is None:
+            continue
+        name, stated = match.group(1), int(match.group(2))
+        target = os.path.join(root, name)
+        if not os.path.isfile(target):
+            out.append({'kind': 'LEDGER', 'file': LEDGER_REL, 'line': lineno,
+                        'detail': f'{name} is registered but does not exist'})
+            continue
+        actual = len(_fsutil.read_lines(target))
+        if actual != stated:
+            out.append({'kind': 'LEDGER', 'file': LEDGER_REL, 'line': lineno,
+                        'detail': f'{name} registered as {stated} lines, measured {actual}'})
+    return out
 
 
 def budgets() -> dict:
@@ -69,18 +107,23 @@ def main(argv: list[str] | None = None) -> int:
             warn.append({'file': os.path.relpath(path, os.path.join(_config.BOOK_ROOT, '..')),
                          'kind': kind, 'lines': lines, 'warn': limits[kind]['warn']})
 
+    ledger = check_ledger()
     if args.json:
-        print(json.dumps({'over': over, 'warn': warn}, ensure_ascii=False, indent=2))
-        return 0 if not over else 1
+        print(json.dumps({'over': over, 'warn': warn, 'ledger': ledger},
+                         ensure_ascii=False, indent=2))
+        return 0 if not over and not ledger else 1
 
     for item in warn:
         print(f"  warn  {item['file']}  {item['lines']} 行 > 提醒线 {item['warn']}")
-    if not over:
+    for item in ledger:
+        print(f"  ledger  {item['file']}:{item['line']}  {item['detail']}")
+    if not over and not ledger:
         print('✅ 文件长度预算通过')
         return 0
-    print(f'超出长度上限 {len(over)} 个文件：')
-    for item in over:
-        print(f"  over  {item['file']}  {item['lines']} 行 > {item['limit']}（{item['kind']}）")
+    if over:
+        print(f'超出长度上限 {len(over)} 个文件：')
+        for item in over:
+            print(f"  over  {item['file']}  {item['lines']} 行 > {item['limit']}（{item['kind']}）")
     return 1
 
 

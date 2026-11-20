@@ -31,7 +31,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lib import _config, _fsutil
 
 REPO_ROOT = os.path.normpath(os.path.join(_config.BOOK_ROOT, '..'))
-PATH_RE = re.compile(r'`((?:books|h2|\.github)/[A-Za-z0-9_./*-]+)`')
+PATH_RE = re.compile(r'`((?:books|h2|\.github|src|scripts|data|docs)/[A-Za-z0-9_./*-]+)`')
 SCRIPT_RE = re.compile(r'`([a-z_]+\.py)`')
 CHAPTER_RE = re.compile(r'(?<![\w/-])((?:ch\d[\w-]*|appendix-[\w-]+|cover)\.md)')
 LEVEL_RE = re.compile(r'^\**P[0-3]\**$')
@@ -82,7 +82,9 @@ def _exists(rel: str, repo_root: str | None = None) -> bool:
     for prefix in _generated_prefixes():
         if rel == prefix.rstrip('/') or rel.startswith(prefix):
             return True
-    root = _repo_root(repo_root)
+    # paths inside the tool's own book resolve from books/, the rest from the repo
+    book_relative = rel.split('/', 1)[0] in ('src', 'scripts', 'data', 'docs')
+    root = _config.BOOK_ROOT if book_relative else _repo_root(repo_root)
     if '*' in rel:
         return bool(glob.glob(os.path.join(root, rel), recursive=True))
     return os.path.exists(os.path.join(root, rel))
@@ -90,6 +92,98 @@ def _exists(rel: str, repo_root: str | None = None) -> bool:
 
 DIMENSION_RE = re.compile(r'^>\s*维度：\**(.+?)\**\s*$', re.MULTILINE)
 MANAGEMENTS_REF_RE = re.compile(r'(?:\.\./managements/|managements/)[\w-]+\.md')
+# a management document is registered either as an index-table row or as a line in
+# the directory tree that folder.md owns; both surfaces must name the same set
+INDEX_ROW_RE = re.compile(r'^\|\s*`([\w-]+\.md)`\s*\|')
+TREE_ROW_RE = re.compile(r'^\s{2,}([\w-]+\.md)\s+#')
+# the two ledgers number their entries and publish the next free number
+NEXT_RE = re.compile(r'\b(plan|rf)-next\s*=\s*(\d+)')
+ENTRY_RE = re.compile(r'\b(plan|rf)-(\d+)\b')
+
+
+def management_files(managements_dir: str | None = None) -> list[str]:
+    directory = managements_dir or os.path.join(_config.BOOK_ROOT, 'docs', 'managements')
+    return sorted(os.path.basename(p) for p in glob.glob(os.path.join(directory, '*.md')))
+
+
+def _registered(path: str, pattern: re.Pattern) -> tuple[list[str], list[dict]]:
+    """Registered names, plus a finding for every name registered twice."""
+    names: list[str] = []
+    out: list[dict] = []
+    for lineno, line in enumerate(_fsutil.read_lines(path), start=1):
+        match = pattern.match(line)
+        if match is None:
+            continue
+        name = match.group(1)
+        if name in names:
+            out.append({'kind': 'INDEX', 'file': os.path.relpath(path, REPO_ROOT),
+                        'line': lineno, 'detail': f'{name} registered twice'})
+            continue
+        names.append(name)
+    return names, out
+
+
+def _surface_findings(label: str, path: str, registered: list[str],
+                      actual: list[str], out: list[dict]) -> None:
+    rel = os.path.relpath(path, REPO_ROOT)
+    for name in registered:
+        if name not in actual:
+            out.append({'kind': 'INDEX', 'file': rel, 'line': 1,
+                        'detail': f'{label} names {name}, which does not exist'})
+    for name in actual:
+        if name not in registered:
+            out.append({'kind': 'INDEX', 'file': rel, 'line': 1,
+                        'detail': f'{label} does not register {name}'})
+
+
+def check_managements(directory: str | None = None) -> list[dict]:
+    """The management directory and its two registries name the same set.
+
+    Two surfaces claim to describe the same directory: the index table in
+    README.md and the tree in folder.md. Neither used to be compared with the
+    directory itself, so a document could exist unlisted, be listed twice, or
+    stay listed after it was gone.
+    """
+    base = directory or os.path.join(_config.BOOK_ROOT, 'docs', 'managements')
+    actual = management_files(base)
+    out: list[dict] = []
+    for label, filename in (('index', 'README.md'), ('tree', 'folder.md')):
+        path = os.path.join(base, filename)
+        if not os.path.isfile(path):
+            continue
+        pattern = INDEX_ROW_RE if label == 'index' else TREE_ROW_RE
+        registered, duplicate_rows = _registered(path, pattern)
+        out += duplicate_rows
+        _surface_findings(f'{filename} {label}', path, registered, actual, out)
+    return out
+
+
+def check_numbering(files: list[str] | None = None) -> list[dict]:
+    """The published next-entry number is really the next one.
+
+    A marker that falls behind hands out a number already used; one that runs
+    ahead leaves a gap the ledger cannot explain. Both are silent until a
+    reference collides.
+    """
+    docs = files or doc_files()
+    used: dict[str, int] = {'plan': 0, 'rf': 0}
+    markers: list[tuple[str, int, str, int]] = []
+    for path in docs:
+        for lineno, line in enumerate(_fsutil.read_lines(path), start=1):
+            for family, value in NEXT_RE.findall(line):
+                markers.append((family, int(value), path, lineno))
+                continue
+            for family, value in ENTRY_RE.findall(line):
+                used[family] = max(used[family], int(value))
+    out = []
+    for family, value, path, lineno in markers:
+        expected = used[family] + 1
+        if value != expected:
+            out.append({'kind': 'NUMBERING', 'file': os.path.relpath(path, REPO_ROOT),
+                        'line': lineno,
+                        'detail': f'{family}-next = {value}, expected {expected} '
+                                  f'(max used {used[family]})'})
+    return out
 
 
 def check_manual_scope(manual_dir: str | None = None) -> list[dict]:
@@ -233,7 +327,8 @@ def main(argv: list[str] | None = None) -> int:
 
     files = doc_files()
     findings = (check_paths(files) + check_scripts(files) + check_chapters(files)
-                + check_config() + check_levels(files) + check_manual_scope())
+                + check_config() + check_levels(files) + check_manual_scope()
+                + check_managements() + check_numbering(files))
 
     if args.json:
         print(json.dumps({'count': len(findings), 'findings': findings},

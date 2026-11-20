@@ -76,6 +76,7 @@ books/docs/managements/
   folder.md                  # 本文件：目录结构
   technical.md               # 工具链架构约束（可机检部分由 check_architecture 守卫）
   analysis-doc-standard.md   # 内容标准（跨项目复用）
+  style-guide.md             # 写作规则与检查机制（取值在 data/config/style.json）
   DESIGN.md                  # 设计契约总纲（三界面共有规则）
   DESIGN-TUI.md              # 终端交互契约
   DESIGN-WEB.md              # 网页控制台契约

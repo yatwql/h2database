@@ -102,6 +102,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 章节均衡 | 每章行数/图数/坐标分布 | `balance.py` | P2 |
 | 类型检查 | pyright 可用时检查工具链类型（缺失则跳过） | `typecheck.py` | P1 |
 | 门禁追溯 | make.py 的每个门禁都在 testplan 登记，反之亦然 | `gate_trace.py` | P0 |
+| 需求追溯 | `requirements.md` 的每条 FR/IR/NFR 在 §2.4 有且只有一条判据行，判据点名的载体在仓库里存在 | `requirement_trace.py` | P0 |
 | 内容体积 | 每个章节的字节数与行数不低于基线（floor 0.95）、手稿总量不缩水、交付 PDF 页数 ≥ 基线 90%、EPUB 体积 ≥ 基线 85%；新增文件允许，删除须同步 `book.toml` 并重设基线 | `content_volume.py`、`books/data/baselines/content-volume.json` | P0 |
 | 文件长度 | 源码 ≤900 行、测试 ≤1200 行、文档 ≤1200 行（手稿附录 ≤2000） | `file_length.py` | P0 |
 | 脚本契约 | 每个入口脚本有模块说明、可执行入口、必要时说明退出码与 `--json` | `script_contract.py` | P0 |
@@ -146,6 +147,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | `traces.py` | 文档与代码注释不得有过程痕迹（`--kind docs\|code\|all`） | 一个门禁两个范围，一个目的 |
 | `file_length.py` | 文件行数预算 | 只管规模 |
 | `gate_trace.py` | 门禁表与实现的双向可追溯 | 只管登记一致性 |
+| `requirement_trace.py` | 每条需求是否有判据载体 | 只管追溯，不评判据本身是否够强 |
 | `portability.py` | 移植性：文本 `open()` 均显式 encoding；ASCII locale 下入口可运行 | 只管环境适配，不评判内容 |
 | `test_redundancy.py` | 测试套件卫生：重复用例体、无断言用例、非 TestCase 内的 test_*、同名遮蔽 | 只管测试代码，不判业务 |
 | `perf_baseline.py` | 交付速度：各步骤耗时与历史中位数对比，超阈值提示（默认 advisory） | 只管速度退化，不判正确性 |
@@ -158,6 +160,55 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 报告类（不是门禁，不进 `make.py check`，因此不写入上表）：六维计分卡（`make.py
 report` / `eval-score.sh`）、`balance` 的计量输出（`--json`），以及计分卡使用的
 文档风格度量（prose_quality，句长/列表/坐标密度），它出分不拦截。
+
+### 2.4 需求判据对照
+
+`requirements.md` 声明“要什么”，本表声明“怎么判”。两者用编号对齐且一一对应：
+一条需求只有一行，一行只指向一条需求；载体可以是一个门禁、一个测试文件、一个
+工作流，也可以写 `人工复核`（无单文能证明）。`requirement_trace.py` 双向比对
+两边编号，并确认点名的载体在仓库里真实存在。
+
+| 需求 | 判据要点 | 判据载体 |
+| --- | --- | --- |
+| FR-01 | 12 章 H1 唯一、顺序稳定、层级连续 | `structure.py` |
+| FR-02 | 每小节图数达标，图号唯一且有图注 | `smart.py`、`figures.py` |
+| FR-03 | 源码引用写成 `org/h2/...` 且可解析 | `source_refs.py` |
+| FR-04 | 章间引用指向真实章节 | `crossrefs.py` |
+| FR-05 | 术语表覆盖高频术语并有章节指引 | `src/python/manuscript/glossary.py` |
+| FR-06 | 索引三档条目均指回真实章节 | `index_xrefs.py` |
+| FR-07 | 章末四段齐备且顺序固定 | `structure.py` |
+| FR-08 | 每章题量、难度、提示行、回顾锚点齐备 | `exercises.py` |
+| FR-09 | ASCII 图宽度、框线一致、无行尾空白 | `diagrams.py` |
+| FR-10 | 图注动宾起首、长度在区间、图簇有桥接句 | `captions.py`、`figure_clusters.py` |
+| FR-11 | 附录 A 三条端到端链路可追到源码坐标 | `src/python/manuscript/case_studies.py`、人工复核 |
+| FR-12 | 附录 B 说明相邻版本的影响 | 人工复核 |
+| FR-13 | HTML 侧边栏与印刷目录两级与标题一一对应 | `structure.py`、`links.py` |
+| FR-14 | PDF 为 A4、字体嵌入、大纲与目录可点击 | `verify_pdf.py` |
+| FR-15 | EPUB 容器、清单、阅读顺序、导航齐备 | `verify_epub.py` |
+| FR-16 | 封面统计与正文实际内容一致 | `cover.py`、`structure.py` |
+| FR-17 | 术语与排版统一，无新增违规 | `style_rules.py` |
+| FR-18 | 代码摘录与源码当前版本一致 | `content_depth.py`、`source_refs.py` |
+| IR-01 | 单一入口跑完一次完整检查 | `make.py` |
+| IR-02 | 按改动域分档，编辑期单次检查 ≤ 5 秒 | `src/python/check_runner.py`、`perf_baseline.py` |
+| IR-03 | 分档不改判据，提交/发布跑全集 | `src/python/check_runner.py` |
+| IR-04 | 失败给出文件与行号，退出码非 0 即失败 | `script_contract.py` |
+| IR-05 | 检查与构建离线完成 | `src/test/_netguard.py`、`src/test/test_no_network.py` |
+| IR-06 | 三入口共享同一份动作与状态 | `src/test/test_llm.py`、`src/test/test_app_web.py` |
+| IR-07 | 状态摘要一屏，含阶段与最近一次结果 | `src/test/test_app_tui_interaction.py` |
+| IR-08 | 耗时步骤打印阶段，失败不吞掉已有结果 | `src/python/check_runner.py`、`src/test/test_logging.py` |
+| IR-09 | 已接受问题可读，消失条目提示收缩 | `src/python/lib/_baseline.py` |
+| NFR-01 | 逐章体量与交付页数不低于基线 | `content_volume.py` |
+| NFR-02 | 连续两次构建的 HTML 逐字节一致 | `.github/workflows/book.yml` |
+| NFR-03 | 依赖版本固定，交付只用项目解释器 | `make.py`、`bootstrap.sh` |
+| NFR-04 | 存量入基线，新增同类问题失败 | `src/python/lib/_baseline.py` |
+| NFR-05 | 四档耗时在预算内 | `perf_baseline.py` |
+| NFR-06 | PDF ≤ 12 MB、EPUB ≤ 10 MB | `verify_pdf.py`、`verify_epub.py` |
+| NFR-07 | 历史稿只读，不入构建与扫描 | `src/python/manuscript/snapshot.py` |
+| NFR-08 | 阈值与路径全部读配置，不内联 | `check_architecture.py`、`style_schema.py` |
+| NFR-09 | 三平台一致：显式编码、无绝对路径 | `portability.py` |
+| NFR-10 | 检查与构建阶段零出站连接 | `src/test/test_no_network.py` |
+| NFR-11 | 源文件与文档长度受预算约束 | `file_length.py` |
+| NFR-12 | 文档与注释只描述当前状态 | `traces.py` |
 
 ## 3. 格式规范
 

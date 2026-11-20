@@ -125,6 +125,50 @@ class DocDriftTest(unittest.TestCase):
         path = self.management_doc('| P0 | 章节结构 |\n', name='plan.md')
         self.assertEqual([f['kind'] for f in self.drift.check_levels([path])], ['LEVEL'])
 
+    # -- management registries ---------------------------------------
+    def management_dir(self, **bodies: str) -> str:
+        directory = os.path.join(self.tmp.name, 'managements')
+        os.makedirs(directory, exist_ok=True)
+        for name, body in bodies.items():
+            path = os.path.join(directory, name.replace('_', '.') + '.md')
+            with open(path, 'w', encoding='utf-8') as fh:
+                fh.write(body)
+        return directory
+
+    def test_a_document_missing_from_both_registries_is_reported(self):
+        directory = self.management_dir(
+            README='| `README.md` | 索引 |\n',
+            folder='  README.md   # 索引\n',
+            changelog='# 变更日志\n')
+        details = [f['detail'] for f in self.drift.check_managements(directory)]
+        self.assertTrue(any('changelog.md' in d for d in details))
+
+    def test_a_row_registered_twice_is_reported(self):
+        directory = self.management_dir(
+            README='| `README.md` | 索引 |\n| `README.md` | 又一遍 |\n',
+            folder='  README.md   # 索引\n')
+        kinds = [f['kind'] for f in self.drift.check_managements(directory)]
+        self.assertIn('INDEX', kinds)
+
+    def test_a_registry_naming_a_missing_document_is_reported(self):
+        directory = self.management_dir(
+            README='| `README.md` | 索引 |\n| `gone.md` | 已删 |\n',
+            folder='  README.md   # 索引\n')
+        details = [f['detail'] for f in self.drift.check_managements(directory)]
+        self.assertTrue(any('gone.md' in d for d in details))
+
+    # -- numbering ----------------------------------------------------
+    def test_a_stale_next_number_is_reported(self):
+        path = self.doc('plan-5 已用。\n\n**编号源**：`plan-next = 5`\n')
+        findings = self.drift.check_numbering([path])
+        self.assertEqual([f['kind'] for f in findings], ['NUMBERING'])
+        self.assertIn('expected 6', findings[0]['detail'])
+
+    def test_a_matching_next_number_passes(self):
+        path = self.doc('plan-3 已用。\n\n**编号源**：`plan-next = 4`\n')
+        other = self.doc('rf-7 已修。\n\n**编号源**：`rf-next = 8`\n')
+        self.assertEqual(self.drift.check_numbering([path, other]), [])
+
     # -- CLI --------------------------------------------------------------
     def test_json_output_reports_the_count(self):
         buffer = io.StringIO()

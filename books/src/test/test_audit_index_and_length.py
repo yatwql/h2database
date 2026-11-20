@@ -66,6 +66,8 @@ class IndexXrefUnitTest(unittest.TestCase):
 
 class FileLengthUnitTest(unittest.TestCase):
     def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
         self.mod = _fixture.load_module(BOOK_ROOT, 'file_length')
 
     def test_budgets_cover_every_kind(self):
@@ -95,7 +97,38 @@ class FileLengthUnitTest(unittest.TestCase):
             code = self.mod.main(['--json'])
         payload = json.loads(buffer.getvalue())
         self.assertIn(code, (0, 1))
-        self.assertIsInstance(payload, (dict, list))
+        self.assertIn('ledger', payload)
+
+    # -- growth ledger ----------------------------------------------------
+    def ledger_book(self, body: str, files: dict[str, str]) -> str:
+        root = os.path.join(self.tmp.name, 'book')
+        for name, text in files.items():
+            path = os.path.join(root, name)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, 'w', encoding='utf-8') as fh:
+                fh.write(text)
+        ledger = os.path.join(root, 'docs', 'managements')
+        os.makedirs(ledger, exist_ok=True)
+        with open(os.path.join(ledger, 'review-findings.md'), 'w', encoding='utf-8') as fh:
+            fh.write(body)
+        return root
+
+    def test_a_registered_length_that_disagrees_is_reported(self):
+        root = self.ledger_book('| `src/python/a.py` 9 行 | 占比 1%，拆法 |\n',
+                                {'src/python/a.py': 'x = 1\n'})
+        findings = self.mod.check_ledger(root)
+        self.assertEqual([f['kind'] for f in findings], ['LEDGER'])
+        self.assertIn('measured 1', findings[0]['detail'])
+
+    def test_a_registered_file_that_is_gone_is_reported(self):
+        root = self.ledger_book('| `src/python/gone.py` 3 行 | 占比 1%，拆法 |\n', {})
+        details = [f['detail'] for f in self.mod.check_ledger(root)]
+        self.assertTrue(any('does not exist' in d for d in details))
+
+    def test_a_matching_row_passes(self):
+        root = self.ledger_book('| `src/python/b.py` 2 行 | 占比 1%，拆法 |\n',
+                                {'src/python/b.py': 'x = 1\ny = 2\n'})
+        self.assertEqual(self.mod.check_ledger(root), [])
 
 if __name__ == '__main__':
     unittest.main()
