@@ -8,7 +8,9 @@ from" notes. Version history belongs to `changelog.md` and nowhere else.
 Scope is chosen per run, so one gate answers "where do we look?":
 
   --kind docs   docs/**/*.md, books/README.md, CLAUDE.md (changelog.md exempt)
-  --kind code   every comment and docstring line under books/src/
+  --kind code   every comment line under books/src/, books/scripts/, .githooks/,
+                .github/ and the comment blocks of data/tmpl and data/config — a
+                repository narrates itself in shell hooks and YAML too
   --kind all    both scopes (default)
 
 Usage:
@@ -64,9 +66,27 @@ def doc_files() -> list[str]:
     return sorted({os.path.normpath(p) for p in files if os.path.isfile(p)})
 
 
+def code_patterns() -> tuple[str, ...]:
+    """Sources, configuration and launchers; paths come from the config."""
+    tmpl_dir = os.path.dirname(_config.CONFIG_PATH)
+    return (
+        os.path.join(_config.BOOK_ROOT, 'src', '**', '*.py'),
+        os.path.join(_config.BOOK_ROOT, 'scripts', '*.sh'),
+        os.path.join(_config.BOOK_ROOT, 'scripts', '*.ps1'),
+        os.path.join(tmpl_dir, '*.toml'),
+        os.path.join(_config.CONFIG_DIR, '*.json'),
+    )
+
+
 def code_files() -> list[str]:
-    root = os.path.join(_config.BOOK_ROOT, 'src')
-    return sorted(glob.glob(os.path.join(root, '**', '*.py'), recursive=True))
+    """Sources and configuration, plus the hooks and CI that govern them."""
+    files: list[str] = []
+    for pattern in code_patterns():
+        files += glob.glob(pattern, recursive=True)
+    repo_root = os.path.dirname(_config.BOOK_ROOT)
+    for pattern in ('.githooks/*', '.github/workflows/*'):
+        files += glob.glob(os.path.join(repo_root, pattern))
+    return sorted(set(files))
 
 
 def comment_lines(text: str) -> list[tuple[int, str]]:
@@ -74,7 +94,7 @@ def comment_lines(text: str) -> list[tuple[int, str]]:
     out: list[tuple[int, str]] = []
     for lineno, line in enumerate(text.split('\n'), start=1):
         stripped = line.strip()
-        if stripped.startswith(('#', '*')) or '"""' in line:
+        if stripped.startswith(('#', '*', '//', ';')) or '"""' in line:
             out.append((lineno, stripped))
     return out
 
@@ -91,9 +111,26 @@ def scan_docs() -> list[dict]:
     return findings
 
 
+def config_notes(path: str) -> list[tuple[int, str]]:
+    """Comment-equivalent lines of a JSON config: the `_note`/`_comment` values."""
+    notes: list[tuple[int, str]] = []
+    raw = _fsutil.read_lines(path)
+    for lineno, line in enumerate(raw, start=1):
+        stripped = line.strip()
+        if stripped.startswith(('"_note"', '"_comment"')):
+            notes.append((lineno, stripped))
+    return notes
+
+
 def scan_code() -> list[dict]:
     findings = []
     for path in code_files():
+        if path.endswith('.json'):
+            for lineno, line in config_notes(path):
+                for kind, pattern in CODE_TRACES:
+                    if re.search(pattern, line):
+                        findings.append(_finding(path, lineno, kind, line))
+            continue
         for lineno, line in comment_lines(_fsutil.read_text(path)):
             for kind, pattern in CODE_TRACES:
                 if re.search(pattern, line):
