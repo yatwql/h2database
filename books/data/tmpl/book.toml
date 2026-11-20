@@ -9,14 +9,14 @@ merged_name = "h2-source-code-analysis"
 
 [project]
 # Display copy used by the renderers (HTML title, EPUB metadata, PDF running head).
-display_title_en = "H2 Database Source Code Analysis"
-display_title_zh = "H2 Database 源码全面分析与解读"
+display_title_en = "H2 Database Engine Source Code Analysis"
+display_title_zh = "H2 数据库引擎源码剖析"
 author = "其·龙（Stallman Wang）"
 email = "stallman.wang@foxmail.com"
-publisher = "H2 Database 源码分析项目"
+publisher = "H2 数据库引擎源码剖析项目"
 description = "深入剖析 H2 Database v2.x 核心源码"
-running_head = "H2 Database 源码分析"
-breadcrumb_root = "H2 源码分析"
+running_head = "H2 数据库引擎源码剖析"
+breadcrumb_root = "H2 源码剖析"
 
 [paths]
 cover_image = ""       # optional: books/data/assets/cover.png

@@ -8,6 +8,9 @@
 Checks
   VERSION   tool/doc resolve and are non-empty; source resolves (warning if not)
   DOC_HEAD  management documents declaring "> 版本：vX" match the doc version
+  NAME      the book title is the single source: the delivery-facing management
+            documents are titled after it, and the display fields in the config
+            carry it too
   MANIFEST  the merged Markdown manifest line matches the current trio
 
 Usage:
@@ -42,6 +45,36 @@ def doc_headers() -> list[dict]:
     return findings
 
 
+# Documents that speak for the book itself; their H1 must name it.
+TITLED_DOCS = ('requirements.md', 'technical.md', 'testplan.md')
+# Config fields that are shown to a reader of the book and must carry the title.
+TITLE_FIELDS = ('display_title_zh', 'publisher', 'running_head')
+
+
+def title_problems() -> list[str]:
+    """Every reader-facing surface uses the book title from book.toml."""
+    title = _config.TITLE
+    problems: list[str] = []
+    if not title:
+        return ['book.toml [book].title is empty']
+    docs_dir = os.path.join(_config.BOOK_ROOT, 'docs', 'managements')
+    for name in TITLED_DOCS:
+        path = os.path.join(docs_dir, name)
+        if not os.path.isfile(path):
+            continue
+        lines = _fsutil.read_lines(path)
+        first = lines[0] if lines else ''
+        if not first.startswith(f'# {title}'):
+            problems.append(f'docs/managements/{name}: H1 must start with "# {title}" '
+                            f'(found {first[:40]!r})')
+    for field in TITLE_FIELDS:
+        value = _config.project(field)
+        if value and title not in value:
+            problems.append(f'book.toml [project].{field} = {value!r} does not carry '
+                            f'the book title {title!r}')
+    return problems
+
+
 def merged_manifest() -> tuple[str, str, str] | None:
     path = _config.merged_md()
     if not os.path.isfile(path):
@@ -65,6 +98,8 @@ def main(argv: list[str] | None = None) -> int:
             problems.append(f'{name} version is not set')
     if versions.get('source') in (None, '', 'unknown'):
         warnings.append('source version could not be determined (set [sources].version)')
+
+    problems += title_problems()
 
     for header in doc_headers():
         if header['version'] != versions['doc']:

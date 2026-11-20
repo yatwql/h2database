@@ -1,24 +1,68 @@
-# 工具链架构约束
+# H2 数据库引擎源码剖析 — 技术设计
 
-> 本文件是工具链的**架构约束**（可机检的部分由 `audit/check_architecture.py` 守卫）。
-> 目录职责见 `../managements/folder.md`；用法见 `../manuals/how-to-use.md`；
-> 内容标准见 `analysis-doc-standard.md`。
+> 版本：v6.5
 
-## 1. 分层、依赖与渠道纯净
+本文件是工程的第二步：由需求文档推出**技术设计**——系统怎么划分、各部件承担什么、
+彼此如何依赖、哪些约束不可违反。它自成体系：读完即可理解实现结构，不需要参考其他
+文档。它不描述使用者的操作步骤，也不引用任何面向用户的文档。
 
-### 1.1 层与职责
+编号约定：`C-xx` 架构约束，`D-xx` 关键设计决策。
+
+## 1. 从需求到设计
+
+需求只说要什么；每一条需求都要落到某个机制上，否则就是空话。主要映射如下：
+
+| 需求 | 设计回应 |
+| --- | --- |
+| 12 章 + 5 附录、固定章末结构 | 章节清单由配置给出；章末四段由 `audit/exercises.py`、`audit/structure.py` 判定 |
+| 图号、图注、图簇桥接 | 编号与形态由脚本判定；措辞由人或模型改写，改完仍需过脚本 |
+| 源码坐标可核对 | 手稿中的 `Class.method` 断言对到源码树，漂移进基线 |
+| 三种输出格式 | `render/` 三条独立管线，各有自己的校验器 |
+| 内容不得静默塌陷 | `audit/content_volume.py`：逐章体积与交付页数设下限 |
+| 可复现 | 渲染全链路确定性；构建幂等由 CI 比对哈希 |
+| 环境唯一 | 依赖全量 pin，入口拒绝非项目解释器 |
+| 分档检查 | `check_runner.py` 的模式表：按改动域选步骤，提交/发布档跑全集 |
+| 无过程痕迹 | `audit/traces.py` 扫描文档、注释、脚本、钩子与配置备注 |
+
+## 2. 总体架构
+
+### 2.1 系统边界与数据流
+
+```text
+   被分析的源码树 (可配置的外部输入)
+            │  ingest
+            ▼
+   data/state/*.json   ──►   data/manuscript/*.md   ◄── 人工撰写
+            │                       │
+            │                       │  render/merge
+            │                       ▼
+            │              dist/<book>.md ──► dist/<book>.html
+            │                       │              │
+            │                       │              ├─► to_pdf ─► pdf_toc_links ─► verify_pdf
+            │                       │              └─► to_epub ─► verify_epub
+            ▼                       ▼
+        audit/*（只读门禁）      data/baselines/*（已评审存量）
+```
+
+三条不变量决定了整张图：
+
+1. **手稿是唯一可编辑的内容源**。状态、基线、产物都由它派生，改动只能发生在手稿。
+2. **门禁只读**。任何门禁只读输入、只写自己的基线，绝不修改手稿或产物。
+3. **产物可再生**。`dist/` 随时可以删除重建；不可再生的只有手稿与基线。
+
+### 2.2 分层结构
 
 | 层 | 职责 | 可写 | 可导入 |
 | --- | --- | --- | --- |
-| `lib/` | 配置读取、文件读写原语、Markdown/HTML 工具。不决定写什么、写哪里 | 仅经调用方 | 无（只用标准库） |
-| `core/` | 领域层：`actions`（动作执行）、`settings`（可改配置）、`menu`（菜单模型与运行回报）、`scaffold`（新书脚手架） | 经 `actions` 触发 | `lib` |
-| `ingest/` | 源码 → 手稿：读源码树，写 `data/state` 与 `data/manuscript` | `data/state`、手稿 | `lib` |
-| `manuscript/` | 手稿维护：术语、索引、封面、案例 | 手稿、`data/state` | `lib` |
-| `audit/` | 质量门禁：只读，报告到 stdout（基线类脚本仅写 `data/baselines/`） | 基线除外不写 | `lib` |
-| `render/` | 交付渲染：写 `dist/` | `dist/` | `lib` |
-| `app/` | 渠道层：`cli` / `tui` / `web` / `keys`，只做渲染与按键分发 | 不写 | `lib`、`core`、`app` |
+| `lib/` | 配置读取、文件读写原语、日志、版本、LLM 客户端、基线存储 | 由调用方决定 | 仅标准库 |
+| `core/` | 领域动作：`actions`、可改配置 `settings`、菜单模型 `menu`、新书脚手架 `scaffold` | 经由 `actions` | `lib` |
+| `ingest/` | 源码 → 手稿：扫描源码树、切分章节、语言适配 | `data/state`、手稿 | `lib` |
+| `manuscript/` | 手稿维护：封面统计、术语、索引、案例、快照 | 手稿、`data/state`、`data/snapshots` | `lib` |
+| `audit/` | 质量门禁：判定、统计、报告、复核包、快照校验（基线除外不写文件） | `data/baselines` | `lib` |
+| `render/` | 交付渲染：合并、HTML、PDF、EPUB 及各自校验 | `dist/` | `lib` |
+| `app/` | 渠道：`cli`、`tui`、`web`、`keys` | 不写 | `lib`、`core`、`app` |
 
-### 1.2 依赖矩阵（唯一权威）
+### 2.3 依赖矩阵（唯一权威）
 
 | 从 \ 到 | lib | core | ingest | manuscript | audit | render | app |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -30,181 +74,232 @@
 | render | ✓ | ✗ | ✗ | ✗ | ✗ | – | ✗ |
 | app | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ |
 
-同层之间不得互相 import；唯一的上行边是 `app → core`。矩阵写在
-`audit/check_architecture.py` 的 `DEPENDENCY_MATRIX`，新增边必须先改矩阵。
+同层不互相导入；唯一的上行边是 `app → core`。矩阵的代码形态是
+`audit/check_architecture.py::DEPENDENCY_MATRIX`，新增边必须先改矩阵再改代码。
 
-### 1.3 渠道纯净
+### 2.4 目录与数据布局
 
-`app/` 只做四件事：渲染界面、读按键、调 `core.actions`、把 `core.menu` 的结论
-打印出来。因此渠道内**禁止**：
+```text
+books/
+  data/
+    tmpl/         book.toml（身份/路径/章节顺序/包归属）、案例与模板配置
+    config/       base.json（基础设施策略）、style.json（写作与形态规则）
+    language/     章节骨架名、练习提示语等语言资源
+    manuscript/   手稿：封面、前件、章节、附录、后件
+    state/        机器维护的派生状态：outline、source-inventory
+    baselines/    已评审问题清单与体积基线（可 diff）
+    snapshots/    只读历史快照：别的书的稿子，仅供比对
+    tmp/          一次性脚本与临时文件（不入库）
+  dist/           交付产物（可再生，不入库）
+  docs/           工程文档：需求、技术、规范、计划、质量
+  src/python/     工具链七个层
+  src/test/       测试：与工具链同构的分层测试
+  logs/           运行报告：门禁与检查的完整输出与摘要
+```
 
-- import `ingest/manuscript/audit/render`，也禁止直接驱动 `make.py`；
-- 出现 `subprocess`、`write_text`、写模式 `open`（写文件属于 `core` / engine）；
-- 持有业务规则：动作表、确认策略、菜单模型、默认光标、LLM 判定一律在
-  `core/menu.py`；可改配置项与校验在 `core/settings.py`；动作执行在
-  `core/actions.py`。
+## 3. 配置设计
 
-三个渠道共用 `core/actions.py`，所以 CLI / TUI / Web 的行为天然一致。
+### 3.1 三层配置与合并规则
 
-### 1.4 门禁只读与维护开关
-
-`audit/` 的脚本默认只读；唯一允许写入的是基线类脚本（`--update-baseline`
-等显式开关写 `data/baselines/`）。`make.py check` 永远不带这些开关。
-
-### 1.5 每条规则由谁机检
-
-| 规则 | 判据 | 机检 |
+| 文件 | 管什么 | 谁读 |
 | --- | --- | --- |
-| A1 依赖矩阵 | 只允许矩阵内的边 | `check_architecture.DEPENDENCY_MATRIX` |
-| A2 渠道纯净 | 渠道无引擎 import、无 `subprocess`/写文件 | `check_architecture`（`CHANNEL_*`） |
-| A3 领域不反向依赖 | `core` 不 import `app`（矩阵已覆盖，规则单独报错） | `check_architecture`（DIRECTION） |
-| A4 门禁只读 | `audit/` 无写调用（基线除外） | `check_architecture`（WRITE） |
-| A5 无硬编码路径 | 除 `lib` 外不得出现仓库路径字面量 | `check_architecture`（CONFIG） |
-| A6 命名 | 不与标准库同名、无 `check_*`/`_audit_*` 冗余前缀、入口不加下划线 | `check_architecture`（NAMING） |
-| A7 模块 docstring | 每个模块首行说明自身职责 | `check_architecture`（DOCSTRING） |
-| A8 报告脚本 `--json` | `audit/` 中带 argparse 的报告须支持 `--json` | `check_architecture`（EXIT） |
-| A9 配置/文档分离 | `style.json` 不含模板与展示文案 | `style_schema` |
-| A10 LLM 使用边界 | 只有 `core`/`ingest` 可调用 LLM | `llm_policy` |
-| A11 入口契约 | docstring + `main()`/守卫 + 退出码 + 库模块豁免 | `script_contract` |
-| A12 文件规模 | 源码/测试/文档/附录行数上限 | `file_length` |
+| `data/tmpl/book.toml` | 这本书的身份：标题、版本、路径、章节清单、包归属、必备段落 | `lib/_config.py` 直接解析 |
+| `data/config/base.json` | 基础设施策略：源码位置、路径映射、基线路径、工具链预算、日志 | 合并进 `POLICY` |
+| `data/config/style.json` | 写作与形态规则：阈值、词表、图注规则、篇幅预算、语言骨架 | 合并进 `POLICY` |
 
-规则与文档条目一一对应：新增规则要同时改本节、`check_architecture.py` 与
-`testplan.md`。
+合并顺序固定：`base.json` → `style.json`，同名字典逐键覆盖；`toolchain` 段的预算
+额外以 `thresholds` 别名暴露，供门禁统一读取。若两个 JSON 都不存在，退化为读取单个
+`config.json`（兼容形态）。解析失败一律抛 `ConfigError` 并指明文件，不允许静默降级。
 
-## 2. 配置与常量
+### 3.2 阈值归属
 
-- 路径、阈值、文案、词表、模板只来自 `_config`（`book.toml` + `base.json` +
-  `style.json` + `language/*.json`）。
-- 脚本内不得出现仓库路径字面量（`books/…`、`data/manuscript`）、阈值数字或书名文案。
-- 已知问题只记入 `data/baselines/`，不得散落在代码或文档注释里。
+阈值只允许出现在配置里，代码里不得内联。已知归属：
 
-## 3. 命名
+- 内容体量与交付下限：`base.json [toolchain]` 的 `content_floor_ratio`、`pdf_page_ratio`、`epub_size_ratio`、`pdf_max_mb`、`epub_max_mb`。
+- 写作规则：`style.json [content_depth]`（如 `glossary_min_uses`、`excerpt_lines`）、`[captions]`、`[style_rules]`、`[limits]`。
+- 章节骨架与必备段落：`book.toml [sections]`、`style.json [sections]`。
+- 覆盖率红线：`base.json [toolchain] coverage_fail_under`。
 
-- 目录定类别，文件名写对象：`audit/links.py` 而不是 `audit/audit_links.py`。
-- 下划线前缀只表示"内部模块"（`lib/_config.py`）；CLI 入口不加下划线。
-- 文件名不得与标准库模块同名（避免与标准库同名的模块遮蔽）。
-- 同一目录内不得混用 `check_*` / `*_check` / `_audit_*` 三套风格。
+### 3.3 语言与模板
 
-## 4. 入口契约
+`data/language/zh.json` 提供章节骨架名与练习提示语，`_config.language()` 负责读取；
+语种由 `BOOK_LANGUAGE` 环境变量或配置决定。模板（章节引言、深读要点）放在
+`data/tmpl/templates.toml`，占位符由渲染层填充，模板本身不含判定逻辑。
 
-- 每个入口脚本：模块 docstring + `main(argv)`（或在 `__main__` 下执行）。
-- 退出码语义：`0` 通过、`1` 门禁失败、`2` 使用/配置错误。
-- 报告类脚本必须支持 `--json`（供 `make.py` 与 CI 汇总）；`main()` 形态的脚本
-  一律遵守，脚本形态（import 即执行，如 `style.py`、`smart.py`）不强制。
-- `main(argv)` 必须接受可选 argv（`argv=None` 时用 `sys.argv[1:]`），便于内嵌调用。
+## 4. 分项设计
 
-## 5. 事实与内容
+### 4.1 `lib/` 基础层
 
-- 手稿中的源码引用必须可解析（`Class.java:行号`、`Class.method(`）。
-- 每个源码包只有一个主责章节（`book.toml [chapters.packages]`）。
-- 手稿不写过程性记录；版本历史只在 `changelog.md`。
+| 模块 | 职责 | 关键约定 |
+| --- | --- | --- |
+| `_config` | TOML/JSON 三层配置、路径解析、章节清单、语言与模板读取 | 派生 `MANUSCRIPT_DIR`、`DIST_DIR`、`thresholds`；`excluded_dirs()` 给出产物与快照目录 |
+| `_fsutil` | 读写原语：`read_text`、`read_lines`、`write_text`、`load_json`、`ensure_dir`、`pin_stdout_utf8` | 统一 UTF-8；失败即退出并说明动作 |
+| `_log` | 按天滚动的文件日志 + 控制台摘要 | 级别取 `BOOK_LOG_LEVEL` > 配置 > INFO |
+| `_mdutil` | Markdown 结构解析：标题、围栏、图注 | 围栏内的内容不参与结构判定 |
+| `_version` | 工具链语义化版本 | 与文档版本、被分析源码版本分离 |
+| `_llm` | LLM 客户端：provider 路由、密钥只读环境变量 | 只有 `app` 与 ingest 散文场景可导入 |
+| `_baseline` | 已评审问题清单的读写与差集 | 键由调用方定义；新增即失败，消失即提示收缩 |
 
-## 6. 规模与复杂度
+`lib` 只依赖标准库，保证任何一层都能在最小环境下运行。
 
-- 文件行数上限：源码 900、测试 1200、文档 1200、手稿附录 2000（含提醒线）。
-- 单函数以"一屏可读"为目标；超长逻辑拆成具名步骤。
+### 4.2 `ingest/` 输入层
 
-## 7. 测试
+把外部源码树变成可写作的手稿骨架与状态：
 
-- fixture 书覆盖 stage 1 与 stage 2；`test_generic_source` 用第二份源码树守住通用性。
-- 快慢分档：`make.py test` 默认快速档，`--full` 加 chromium/pandoc 档。
+1. 读取源码位置（`base.json [sources] src_main` 等），扫描包与文件，落 `data/state/source-inventory.json`。
+2. 按章节的包归属（`book.toml [chapters.packages]`）切分主题，落 `data/state/outline.json`。
+3. 语言适配器（`ingest/languages/`）提供按语言解析符号的能力，Java 之外的实现可插拔。
 
-## 8. 门禁
+该层只写 `data/state` 与手稿骨架，不参与质量判定：判定属于 `audit/`。
 
-- `make.py check` 是唯一入口；新增门禁必须同时登记 `testplan.md`，由
-  `audit/gate_trace.py` 校验双向可追溯。
-- 门禁只读；任何会改仓库的动作都属于 `manuscript/` 或 `render/`，不进 `check`。
-- 例外只允许“显式维护开关”：`--update-baseline` / `--fix` 之类写 `data/baselines/`
-  或手稿的动作，必须在文档写明且默认关闭，`check` 永远不带这些开关。
+### 4.3 `manuscript/` 手稿维护层
 
-## 9. 日志
+- `cover.py`：统计章节数、图数、行数并回写封面，是"统计数字唯一来源"。
+- `glossary.py`、`index.py`、`terms.py`：术语表、索引与术语标注的生成与校验。
+- `case_studies.py`：附录 A 的案例骨架，按 `data/tmpl/case-studies.toml` 展开。
+- `snapshot.py`：把历史稿导入只读快照（见第 7 节）。
 
-- 位置：`books/logs/books.log`，按天回滚（`books.log.YYYY-MM-DD`），默认保留 14 天。
-- 级别：`BOOK_LOG_LEVEL` 环境变量 > `data/config/base.json [logging].level` > INFO；DEBUG 记录每步参数、耗时与计数。
-- 出口：文件记录全部（INFO 起），控制台只输出 WARNING 及以上，避免刷屏。
-- 实现：`lib/_log.py`（DailyRotatingHandler 幂等初始化），入口（`make.py`、`core/actions.py`、`ingest/*`）只调用 `_log.get_logger(...)`。
+生成器只产出骨架与派生内容，正文语义由人负责。
 
-## 10. 环境与依赖
+### 4.4 `render/` 交付层
 
-**被分析的源码是外部输入**：本仓库不包含、也不依赖某一份具体源码树。`base.json
-[sources]` 指向它（`src_main` 可以是任意路径），`version` 固定本次分析的快照；
-两者都可以在换书/换版本时改配置，不需要改代码。源码树缺失时，读取它的门禁
-（源码坐标、章节生成）按"未配置"处理，其余门禁照常运行。
+| 步骤 | 输入 → 输出 | 设计要点 |
+| --- | --- | --- |
+| `merge.py` | 手稿 → `dist/<book>.md` | 顺序来自 `book.toml`；前件、后件按 glob 展开 |
+| `to_html.py` | 合并稿 → `dist/<book>.html` | 单一 HTML：侧边栏目录 + 印刷目录 + 锚点；CSS 内联 |
+| `to_pdf.py` | HTML → PDF | 无头浏览器渲染；随后用 pypdf 写入大纲 |
+| `pdf_toc_links.py` | PDF | 按目录条目与大纲的**位置对应关系**补链接注释，不靠标题文本匹配 |
+| `verify_pdf.py` | PDF + HTML | 校验页数、A4、旋转、字体嵌入、体积、大纲与标题一一对应、目录链接落点 |
+| `to_epub.py` | 合并稿 → EPUB | pandoc 生成，元数据经 `--metadata-file` 传入 |
+| `verify_epub.py` | EPUB | 校验 mimetype 首条未压缩、容器与 OPF 可解析、清单与阅读顺序、导航可达、体积 |
 
+渲染链的确定性由两点保证：输入只有手稿与配置；渲染器不引入随机与时间戳。
 
-- 运行环境：`books/.venv`（由 `scripts/bootstrap.sh|ps1` 创建），启动脚本优先使用它。
-- 依赖清单：`requirements.txt`（运行时可选）与 `requirements-dev.txt`（开发/CI）；
-  文档与代码不再各自列依赖表。
-- 核心链路（ingest/audit 结构门禁）只依赖标准库；PDF/EPUB 相关脚本在缺少
-  `pypdf`/`playwright`/`pandoc` 时必须以清晰信息退出（码 2），不得抛裸 traceback。
+### 4.5 `audit/` 门禁层
 
-## 11. LLM 使用边界（用在刀刃上）
+门禁按"判什么"分组，全部只读；每条的判据与级别由编排层统一登记。
 
-- **允许**：散文生成与评审（`chapter-draft`、`chapter-polish`、`summary`、`review`）。
-- **禁止**：任何事实与结构判断——章节结构、源码坐标、跨章引用、链接、重复度、
-  文风度量、图注、索引、术语、表格，全部保持确定性。
-- **执行**：`audit/llm_policy.py` 检查只有 `app/` 与 `ingest/` 可导入 `lib._llm`，
-  `audit/` 门禁一律不得调用；策略清单在 `llm_settings.json [policy]`。
-- **强度**：路由可按场景/书籍/章节指定 `thinking`（`off|low|medium|high`），
-  缺省 `low`；强度随请求传为 `reasoning_effort`。
+| 组 | 门禁 | 判据要点 |
+| --- | --- | --- |
+| 结构 | `structure.py` | 章节齐全、标题层级连续、图号唯一、围栏配对、合并稿行数一致、TOC 与标题一一对应 |
+| 体量 | `content_volume.py` | 逐章字节/行数下限、手稿总量、交付页数与体积下限 |
+| 引用 | `links.py`、`crossrefs.py`、`figures.py`、`index_xrefs.py` | 相对链接与锚点可解析、章间互引真实存在、图号引用可解析、索引条目指向真实章节 |
+| 事实 | `source_refs.py`、`content_depth.py` | 源码坐标可解析、代码摘录与源码一致、前向引用需点名主责章节 |
+| 形态 | `captions.py`、`figure_clusters.py`、`diagrams.py`、`style_rules.py`、`style.py`、`exercises.py` | 图注结构、图簇桥接、ASCII 图宽度与行尾、术语与排版规则、章末练习结构 |
+| 工程 | `check_architecture.py`、`script_contract.py`、`file_length.py`、`traces.py`、`doc_drift.py`、`version_consistency.py`、`llm_policy.py`、`portability.py`、`typecheck.py`、`test_redundancy.py`、`perf_baseline.py`、`gate_trace.py` | 依赖方向、入口契约、文件长度预算、过程痕迹、文档与仓库一致、三版本一致、LLM 边界、跨平台、类型、测试质量、性能基线、门禁登记 |
+| 复核 | `review_packet.py`、`scorecard.py` | 只输出失败集合与上下文；六维评分作为整改视图 |
 
-## 12. 三个版本
+**基线机制**：可枚举的存量问题允许登记（`data/baselines/*.json`），登记项不判失败，
+但同类别的新问题必须失败；登记项消失时报告 `stale`，提示收缩。基线键按内容而非
+行号生成，插入小节不会把旧账重算成新账。
 
-| 版本 | 来源 | 含义 | 谁改 |
-| ------ | ------ | ------ | ------ |
-| 工具版本 | `lib/_version.py`（或被 `[sources].tool_version` 覆盖） | 工具链自身 | 改工具的开发者，semver |
-| 源码版本 | `[sources].version`，否则读源码清单（pom.xml / pyproject.toml / Cargo.toml） | 被分析的那份源码 | 上游升级时自动变化 |
-| 文档版本 | `book.toml [book].version` | 这本书/这份手稿 | 内容迭代时 |
+**判定与生成分离**：门禁不做语义判断；语义判断交给人与模型，模型产出的修改必须再过
+门禁。`audit/llm_policy.py` 用导入关系在结构上锁定这条边界。
 
-约束：
+### 4.6 编排层
 
-- 合并 Markdown 首行写 manifest：`<!-- versions: tool=… source=… doc=… -->`；
-  该行与空白分隔不计入手稿行数（`structure.py` 已排除）。
-- 管理文档头 `> 版本：vX` 必须等于文档版本。
-- `audit/version_consistency.py` 校验三者可解析且一致；`make.py check` 必跑。
-- `app/cli.py status` 与 TUI 顶部同时显示三者：`工具 / 源码 / 文档`。
+`make.py` 是唯一入口，持有步骤表：
 
-## 13. 文件职责分类（权威定义）
+```text
+STEPS  = [(名称, 脚本, 额外参数, 分组)]       # 分组 ∈ build | verify | deliver
+GROUPS = {build, verify, deliver, check, test, cover, report}
+```
 
-工具链只通过 `lib/_config.py` 读配置，但"配置"与"文档"严格分开，且"文档"里
-还要再分**结构 / 表述 / 名词**。下表是唯一权威定义，其他文档只做引用。
+- `check` = `verify` 全集；`build` 只产物化；`deliver` 顺序固定：渲染 → 补链接 → 校验 → EPUB → 校验。
+- 命令行支持 `--only`、`--skip`、`--keep-going`、`--timings`；失败时打印该步骤输出的末 30 行。
+- 入口先校验解释器：不是项目虚拟环境即拒绝执行（`BOOK_ALLOW_SYSTEM_PYTHON=1` 可临时放行，交付流程不使用）。
 
-| 文件 | 回答的问题 | 内容 | 归类 | 读取方 | 改错的后果 |
-| ------ | ----------- | ------ | ------ | -------- | ----------- |
-| `data/tmpl/book.toml` | 这本书**是什么、怎么组织** | 书名/版本/产物名、`[project]` 展示文案、目录、章节清单与顺序、每条 H1 标题、H1 编号、覆盖归属、包→章节映射 | 文档·结构 | 规划期（outline）与全部阶段 | 章节/编号/索引/跨章引用错位，结构门禁直接拦 |
-| `data/tmpl/templates.toml` | 这本书**怎么表述** | 版图/类型/入口/路径四段引言 + 深读要点，含 `{num}{pkgs}{top}{dep}{share}` 占位符 | 文档·表述 | `ingest/chapters.py` 渲染章节时 | 措辞变化，不影响判定；占位符写错会被 `style_schema.py` 拒绝 |
-| `data/language/<code>.json` | 章节与练习的**名词与提示语** | 本章导读/小结/延伸思考/延展阅读的名字、`提示`/`回顾` 前缀、术语行与术语表链接 | 文档·名词 | 门禁匹配与生成器 | 门禁找不到段落，判为缺失 |
-| `data/config/style.json` | **判定规则与阈值** | 图注词表与预设、图示标记、质量/文风阈值、禁用语、必备段落名、篇幅预算、生成数量上限、`style_rules`（术语一致性/排版） | 配置·规则 | 全部门禁 | 阈值失效或误报；`style_schema.py` 先校验结构 |
-| `data/config/base.json` | **基础设施** | 源码树、语言与后缀、包前缀、状态/基线路径、日志、PDF/EPUB/ASCII/覆盖率预算 | 配置·基础 | 全部门禁与入口 | 找不到源码或产物路径 |
-| `data/config/llm_*.json` | **模型路由与参数** | provider、模型、场景/书籍/章节路由、thinking 强度、密钥环境变量名 | 配置·外部服务 | `lib/_llm.py` 与 `app/` | 调用越界或被 `llm_policy.py` 拦下 |
+`check_runner.py` 负责"什么时候跑什么"：
 
-记忆法：**结构看 `book.toml`，说法看 `templates.toml`，名词看语言包，判分看 `style.json`，
-找源码看 `base.json`，找模型看 `llm_*.json`。**
+| 模式 | 场景 | 步骤 |
+| --- | --- | --- |
+| `docs` | 只改文档/手稿/配置 | 改动文件 lint + 受影响门禁 |
+| `code` | 只改工具链源码 | 改动文件 lint + 受影响门禁 + 同名测试 |
+| `tests` | 只改测试 | 测试 lint + 改动测试 |
+| `quick` | 混合改动 | 上述并集 + 快档结构门禁；单步上限 300 秒 |
+| `p0` | 提交前 | lint + 快档门禁 + 全量快档测试 |
+| `p1` | 合并前 | lint + 全部门禁 + 测试 |
+| `p2` | 发布 | p1 + 慢档 + 顺序依赖 + 交付 |
 
-边界由两道门禁强制：
+领域与门禁的映射由配置推导，不用字面量；`p0` 及以上的档位始终跑全集，分档只节省
+本地的等待时间，不改变通过标准。
 
-- `audit/style_schema.py`：`style.json` 不得含 `generation.templates` 或 `project`；
-  `templates.toml` 只允许已知键、占位符合法。
-- `audit/check_architecture.py`：脚本不得硬编码仓库路径，一律经 `_config` 取。
+### 4.7 渠道层
 
-## 14. 内容深度（可机检的四项）
+三个渠道共用 `core/actions.py`（动作执行）、`core/menu.py`（菜单模型与回报）、
+`core/settings.py`（可改配置与校验）。渠道内禁止：导入下层业务层、驱动编排层、
+出现子进程或写文件调用、持有业务规则。由此 CLI、TUI、Web 的状态与结果天然一致。
 
-| 检查 | 判据 | 例外 |
-|------|------|------|
-| 前向引用（PREREQ） | 本章提到由**后续章节**拥有的类型时，行内必须点名该章（`第N章`），否则视为缺少指引 | 类型名须以行内代码形式出现，避免误判普通单词 |
-| 术语覆盖（GLOSSARY） | 正文出现次数 ≥ `glossary_min_uses` 的类型必须在术语表有条目 | `glossary_ignore` 列出通用名（File/Header/Undo…） |
-| 摘录新鲜度（EXCERPT） | 代码摘录首行标注 `File.java:LINE` 时，其后若干行必须与源码对应行一致 | 源码中找不到文件则单独报 MISSING |
-| 练习指向（EXERCISE） | 每道练习题要么点名本章关键类型，要么给出 `§X.Y` 锚点 | 无 |
+## 5. 架构约束
 
-判定配置在 `style.json [content_depth]`；门禁为 `audit/content_depth.py`，
-接入 `make.py check`。
+每条约束给出动机与强制方式；"强制"一栏写的是会让违规变红的机制。
 
-## 15. 产品标识
+| 编号 | 约束 | 动机 | 强制方式 |
+| --- | --- | --- | --- |
+| C-01 | 依赖只能沿矩阵方向；同层不互相导入 | 分层的唯一价值是替换与测试隔离 | `check_architecture` 的矩阵检查 |
+| C-02 | 门禁只读，仅可写自身基线 | 判定与修改混在一起时，事故无法定位 | `check_architecture` 的写操作检查 |
+| C-03 | 程序不得内联仓库路径与阈值 | 路径与策略是可配置项，写死即失去可移植性 | `check_architecture` 的字面量检查 + 配置读取审计 |
+| C-04 | 每个 CLI 入口必须是编排步骤或显式声明为独立工具 | 脚本写了没人调用等于没写 | `check_architecture::check_wiring` |
+| C-05 | 编排分组必须引用真实步骤，且校验排在生产者之后 | 顺序错则门禁验证的是旧产物 | `test_toolchain_contract` 的顺序契约 |
+| C-06 | 只有项目虚拟环境可执行交付 | 依赖漂移会让同一命令在不同机器上产生不同结果 | `make.enforce_venv`（入口拒绝） |
+| C-07 | 依据预算限制源文件与文档长度 | 单文件过长即失去可审阅性 | `file_length` |
+| C-08 | 模块名不得遮蔽标准库；入口不得以下划线开头 | 导入解析与调用可预期 | `check_architecture` 的命名检查 |
+| C-09 | 报告类脚本支持 `--json`，退出码语义固定 | 机器消费与人工阅读都需要稳定契约 | `script_contract`、`check_architecture` |
+| C-10 | 文档、注释、脚本、钩子、配置备注不得叙述项目过程 | 过程记录会陈旧并与事实冲突 | `traces`（docs/code 两个范围） |
+| C-11 | 文档引用的路径、脚本、版本必须与仓库一致 | 文档漂移比缺文档更有害 | `doc_drift`、`version_consistency` |
+| C-12 | 编排层每个步骤都要在质量清单登记，反向亦然 | 未登记的门禁等于不存在 | `gate_trace` |
 
-- 名称与版本只有一处定义：`lib/_version.py`（`APP_NAME` / `APP_TITLE` /
-  `TOOL_VERSION`，当前 `bookwright 0.1`），通过 `_config.app_name()` 与
-  `_config.app_title()` 暴露。
-- 显示面必须一致：CLI `status`、TUI 顶部横幅、Web 页面标题、日志根 logger 与
-  日志文件名（`logs/<name>.log`）都读同一来源。
-- 与“三版本”的关系：`TOOL_VERSION` 是工具版本，源码版本与文档版本分别由
-  `base.json`/源码清单与 `book.toml` 决定（见 §12）。
+## 6. 关键设计决策
+
+| 编号 | 决策 | 取舍 |
+| --- | --- | --- |
+| D-01 | 判定用脚本，生成用模型 | 脚本可复现、零成本；模型只做语义与措辞。门禁层禁止导入 LLM 客户端 |
+| D-02 | 基线而非静音 | 静音会让问题永久消失；基线让存量可见、新增必红、修复可收缩 |
+| D-03 | 单一入口 + 步骤表 | 20 多个脚本的调用顺序不该靠记忆；步骤表让顺序与分组成为数据 |
+| D-04 | 手稿是唯一可编辑源，产物可再生 | 产物入版本库只会制造冲突；所有派生物都能重建 |
+| D-05 | 历史稿以只读快照存在 | 比对需求真实存在，但历史稿不该进入构建或被门禁扫描 |
+| D-06 | 分档只优化等待，不改变标准 | 提交与发布始终全集，本地分档不得成为漏检通道 |
+
+## 7. 状态与持久化
+
+| 位置 | 内容 | 生命周期 |
+| --- | --- | --- |
+| `data/state/source-inventory.json` | 被分析源码的快照事实（文件、包、规模） | 每次 ingest 重建 |
+| `data/state/outline.json` | 章节与主题的派生大纲 | 每次 ingest 重建 |
+| `data/baselines/*.json` | 已评审问题清单：`accepted` 数组、生成方式、备注 | 只在评审后重设，收缩优先 |
+| `data/baselines/content-volume.json` | 逐章字节/行数、手稿总量、交付页数与体积 | 定稿或确认缩放后重设 |
+| `data/baselines/snapshot-<标签>.json` | 某个历史快照的体积事实 | 导入快照时生成 |
+| `data/snapshots/<日期>-<标签>/` | `manifest.json`（压缩包哈希、逐文件字节/行数/哈希）+ 只读正文 | 只读；`snapshot.py verify` 校验 |
+| `logs/check-<档位>-<时间戳>.{log,json}` | 每次检查的完整输出与摘要 | 保留最近若干次 |
+
+体积基线的严格度由 `base.json [toolchain] content_profile` 决定：`baseline` 严格、
+`rewrite` 严格但允许评审后重设、`cold-start` 仅提示（尚无存量可保护）。
+
+## 8. 扩展点
+
+| 目标 | 做法 |
+| --- | --- |
+| 新增门禁 | 在 `audit/` 写脚本（docstring、`main(argv)`、`--json`）→ 进 `STEPS` 的 `verify` 组 → 在质量清单登记一行 |
+| 新增章节 | 写手稿文件 → 加入 `book.toml [chapters] files` → 补包归属 → 章末四段齐全 |
+| 新增输出格式 | 在 `render/` 写生成器 + 独立校验器 → 进 `deliver` 组，校验排在生成之后 |
+| 新增语言 | 提供 `ingest/languages/<语言>.py` 适配器与 `data/language/<语种>.json` 资源 |
+| 新建一本同类书 | `core/scaffold.py` 生成目录骨架与配置，再把内容写进 `data/manuscript/` |
+| 接收历史稿 | `manuscript/snapshot.py import` 导入只读快照，再生成其体积基线 |
+
+## 9. 失败模式与诊断
+
+| 现象 | 设计上的定位路径 |
+| --- | --- |
+| 门禁失败 | 输出给出文件与行号，或给出可执行待办；完整输出落 `logs/` |
+| 交付失败 | 编排层打印失败步骤的输出末 30 行；报告文件包含每步退出码与耗时 |
+| 版本不一致 | `version_consistency` 列出工具、源码、文档三处版本与不一致项 |
+| 依赖漂移 | `make.py doctor` 报告解释器、pin 漂移与可选工具可用性 |
+| 测试顺序依赖 | `order_dependence.py` 以正序/逆序两轮比对，`--bisect` 收缩到最小污染前缀 |
+| 内容疑似缩水 | `content_volume` 直接指出文件与下限差额，并提示是否需要重设基线 |
+
+## 10. 非目标
+
+- 不做通用静态站点生成器：渲染只服务本书的结构与排版。
+- 不追求门禁的语义智能：无法枚举的判断留给人和模型，不写进门禁。
+- 不提供多书合一的构建：快照只用于比对，不参与合并。
+- 不替代版本控制：基线只记录"已评审的问题"，不记录历史正文。

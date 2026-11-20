@@ -1,4 +1,4 @@
-# H2 Database 源码分析 — 质量标准与测试计划
+# H2 数据库引擎源码剖析 — 质量标准与测试计划
 
 > 版本：v6.5
 
@@ -209,7 +209,7 @@ python books/src/python/verify_pdf.py
 - 印刷级 PDF 与日常 PDF 文件分离（`h2-source-code-analysis.pdf` 与 `h2-source-code-analysis-print.pdf`），互不覆盖
 - 每章 H1 在印刷级 PDF 上独占一页（chapter cover），含装饰性渐变条与底分隔线
 - 目录页每条 TOC 条目以"标题 ………… 页码"虚线对齐渲染
-- 页眉左侧含"H2 Database 源码分析"，右侧含版本标识；页脚居中含"第 N 页 / 共 M 页"
+- 页眉居中含配置给出的页眉标识（`book.toml [project].running_head`），页脚居中含"第 N 页 / 共 M 页"
 - 所有 H1-H4 在 PDF Outline 中可点击跳转
 - 印刷级 PDF 文件大小 ≤ 标准 PDF 1.5 倍
 
