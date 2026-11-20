@@ -72,9 +72,16 @@ def main(argv: list[str] | None = None) -> int:
                             f"doc version v{versions['doc']}")
 
     manifest = merged_manifest()
-    if manifest and manifest != (versions['tool'], versions['source'], versions['doc']):
-        problems.append(f'merged Markdown manifest {manifest} != '
-                        f"{tuple(versions.values())}")
+    if manifest:
+        # the analysed source is external input: when its version cannot be
+        # determined, compare only the components the book owns
+        expected = (versions['tool'], versions['source'], versions['doc'])
+        known = [index for index, value in enumerate(expected)
+                 if value and value != 'unknown']
+        mismatch = [index for index in known if manifest[index] != expected[index]]
+        if mismatch:
+            problems.append(f'merged Markdown manifest {manifest} != '
+                            f"{tuple(expected)}")
 
     if args.json:
         print(json.dumps({'versions': versions, 'problems': problems,

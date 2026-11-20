@@ -81,6 +81,15 @@ class VersionConsistencyTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn('warn', out)
 
+    def test_an_external_source_version_is_only_a_warning(self):
+        # the analysed source is an input, not part of this repository
+        with mock.patch.object(self.mod._config, 'versions',
+                               return_value={'tool': '1', 'source': 'unknown', 'doc': '1'}):
+            self.merged('<!-- versions: tool=1 source=unknown doc=1 -->')
+            code, out = self.run_main()
+        self.assertEqual(code, 0, out)
+        self.assertIn('source version', out)
+
     def test_json_output_reports_every_section(self):
         code, out = self.run_main('--json')
         payload = json.loads(out)

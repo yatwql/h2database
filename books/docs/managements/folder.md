@@ -84,6 +84,7 @@ books/docs/managements/
 - **手稿只在 `data/manuscript/`**：`dist/` 里的合并 Markdown 是生成物，不手改。
 - **产物只在 `dist/`**：`*.html`、`*.pdf`、`*.epub`、`*.log` 全部 gitignored，
   由 `make.py build` / `make.py deliver` 重新生成。
+- **被分析的源码是外部输入**：由 `base.json [sources]` 指向，仓库里不需要它。
 - **工具链只在 `src/python/`**：正式交付脚本；临时脚本不得入库。
 - **测试只在 `src/test/`**：`make.py test` 跑全部；`make.py cover` 带覆盖率棘轮。
 - **管理文档只在 `docs/managements/`**：需求、计划、测试、变更各一份，互不重复。

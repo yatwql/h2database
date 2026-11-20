@@ -18,7 +18,8 @@
       "java": ".java",
       "python": ".py",
       "rust": ".rs"
-    }
+    },
+    "version": "2.5.259-SNAPSHOT"
   },
   "baselines": {
     "ascii": "data/baselines/ascii-baseline.json",
