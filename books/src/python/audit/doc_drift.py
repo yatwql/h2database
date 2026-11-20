@@ -44,15 +44,30 @@ def _repo_root(explicit: str | None = None) -> str:
     return explicit or REPO_ROOT
 
 
-def _generated_prefix() -> str:
-    """Repository-relative prefix of the build output directory."""
-    dist = os.path.relpath(_config.DIST_DIR, os.path.dirname(_config.BOOK_ROOT))
-    return dist.replace(os.sep, '/').rstrip('/') + '/'
+def _generated_prefixes() -> tuple[str, ...]:
+    """Repository-relative prefixes of paths that exist only after setup/run.
+
+    Books are built (`dist/`), set up (`.venv/`) and produce logs
+    (`logs/`); none of those are in a fresh checkout, yet documentation may
+    legitimately point at them.
+    """
+    repo = os.path.dirname(_config.BOOK_ROOT)
+    logging_cfg = _config.POLICY.get('logging') or {}
+    candidates = (
+        _config.DIST_DIR,
+        os.path.join(_config.BOOK_ROOT, '.venv'),
+        os.path.join(_config.BOOK_ROOT, logging_cfg.get('dir', 'logs')),
+    )
+    prefixes = []
+    for path in candidates:
+        rel = os.path.relpath(path, repo).replace(os.sep, '/').rstrip('/')
+        prefixes.append(rel + '/')
+    return tuple(prefixes)
 
 
 def _exists(rel: str, repo_root: str | None = None) -> bool:
-    # build outputs are generated, so they are absent from a fresh checkout
-    if rel.startswith(_generated_prefix()):
+    # generated / runtime paths are absent from a fresh checkout
+    if rel.startswith(_generated_prefixes()):
         return True
     root = _repo_root(repo_root)
     if '*' in rel:
