@@ -2,10 +2,11 @@
 # Local gate runner, mirroring CI (.github/workflows/book.yml). Thin wrapper:
 # the orchestration lives in check_runner.py, so local and CI share one place.
 #
+#   scripts/check-quick.sh      quick ~2s  only what the working-tree diff can break
 #   scripts/check-fast.sh       P0  ~16s   lint + structural gates + unit suite
 #   scripts/check-full.sh       P1         every gate + unit suite
 #   scripts/check-release.sh    P2         P1 + slow suite + deliver
-#   scripts/check.sh p0|p1|p2   any tier directly (--json for machine output)
+#   scripts/check.sh q|p0|p1|p2 any tier directly (--json for machine output)
 set -euo pipefail
 TIER="${1:-p0}"
 shift || true
