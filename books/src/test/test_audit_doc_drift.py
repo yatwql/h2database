@@ -213,6 +213,26 @@ class DocDriftTest(unittest.TestCase):
         self.assertEqual([f['kind'] for f in self.drift.check_locus(directory)],
                          ['LOCUS'])
 
+    # -- portable content standard ------------------------------------
+    def test_a_standard_naming_a_script_is_reported(self):
+        path = self.doc('运行 `make.py` 判。\n')
+        self.assertEqual([f['kind'] for f in self.drift.check_standard(path)],
+                         ['STANDARD'])
+
+    def test_a_standard_naming_a_gate_table_is_reported(self):
+        path = self.doc('判据见 testplan.md。\n')
+        findings = self.drift.check_standard(path)
+        self.assertIn('testplan', findings[0]['detail'])
+
+    def test_a_standard_naming_a_config_file_is_reported(self):
+        path = self.doc('阈值在 `style.json` 里。\n')
+        self.assertEqual([f['kind'] for f in self.drift.check_standard(path)],
+                         ['STANDARD'])
+
+    def test_a_standard_pointing_at_its_writing_twin_passes(self):
+        path = self.doc('写法见 style-guide.md §12。\n')
+        self.assertEqual(self.drift.check_standard(path), [])
+
     # -- CLI --------------------------------------------------------------
     def test_json_output_reports_the_count(self):
         buffer = io.StringIO()

@@ -298,6 +298,36 @@ def check_numbering(files: list[str] | None = None) -> list[dict]:
     return out
 
 
+# the content standard travels between projects, so it may not name this project's
+# scripts, configuration files or gate tables; only its writing-style twin is fair
+STANDARD_DOC = 'analysis-doc-standard.md'
+STANDARD_ALLOWED_REF = 'style-guide'
+PROJECT_REF_RE = re.compile(r'`([\w-]+\.(?:py|toml|json|yml))`|\b([\w-]+)\.md\b')
+
+
+def check_standard(path: str | None = None) -> list[dict]:
+    """The content standard stays portable.
+
+    It claims to apply to any repository, so it may point at its writing-style twin
+    and nothing else: a script name, a config file or a gate table would tie it to
+    this toolchain and stop it from travelling.
+    """
+    target = path or os.path.join(_config.BOOK_ROOT, 'docs', 'managements', STANDARD_DOC)
+    if not os.path.isfile(target):
+        return []
+    out: list[dict] = []
+    for lineno, line in enumerate(_fsutil.read_lines(target), start=1):
+        for script, doc in PROJECT_REF_RE.findall(line):
+            if doc == STANDARD_ALLOWED_REF:
+                continue
+            detail = script or doc
+            out.append({'kind': 'STANDARD', 'file': os.path.relpath(target, REPO_ROOT),
+                        'line': lineno,
+                        'detail': f'content standard names {detail}; a portable standard '
+                                  f'may only point at {STANDARD_ALLOWED_REF}.md'})
+    return out
+
+
 def check_manual_scope(manual_dir: str | None = None) -> list[dict]:
     """User documents state their dimension once, and do not quote the design.
 
@@ -441,7 +471,8 @@ def main(argv: list[str] | None = None) -> int:
     findings = (check_paths(files) + check_scripts(files) + check_chapters(files)
                 + check_config() + check_levels(files) + check_manual_scope()
                 + check_managements() + check_numbering(files)
-                + check_deliver(files) + check_prefixes(files) + check_locus())
+                + check_deliver(files) + check_prefixes(files) + check_locus()
+                + check_standard())
 
     if args.json:
         print(json.dumps({'count': len(findings), 'findings': findings},
