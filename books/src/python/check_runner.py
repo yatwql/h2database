@@ -4,6 +4,7 @@
 Modelled on investor-review's test-runner: the runner owns the orchestration,
 the shell wrappers only forward, and every run leaves a report behind.
 
+  python check_runner.py --mode quick       # local edit: only what the diff can break
   python check_runner.py --mode p0          # commit gate  (ruff, fast gates, unit suite)
   python check_runner.py --mode p1          # merge gate   (every gate, unit suite)
   python check_runner.py --mode p2          # release gate (p1 + slow suite + deliver)
@@ -45,12 +46,34 @@ FAST_GATES = ('architecture,script_contract,style_schema,llm_policy,'
               'versions,file_length,traces,portability')
 
 MODES = {
+    'quick': ('local edit', ('lint-changed', 'fast-gates', 'gates-changed',
+                             'tests-changed')),
     'p0': ('commit gate', ('lint', 'fast-gates', 'tests')),
     'p1': ('merge gate', ('lint', 'fast-gates', 'gates', 'tests')),
     'p2': ('release gate', ('lint', 'fast-gates', 'gates', 'tests', 'slow', 'order',
                             'deliver')),
 }
-ALIASES = {'fast': 'p0', 'full': 'p1', 'release': 'p2'}
+# Tests that spawn a runner process: correct at commit time, too slow to scope.
+SPAWNING_TESTS = ('test_check_runner_flow',)
+
+ALIASES = {'fast': 'p0', 'full': 'p1', 'release': 'p2', 'q': 'quick'}
+
+# A changed path selects the gates and tests that can actually be wrong. The
+# mapping is deliberately coarse: it narrows a run, it never narrows what counts
+# as correct (p0/p1 always run everything). Path prefixes come from the config so
+# a renamed directory cannot turn the mapping into a silent no-op.
+def gates_for_table() -> tuple[tuple[str, str], ...]:
+    def rel(path: str) -> str:
+        return os.path.relpath(path, REPO_ROOT).replace(os.sep, '/') + '/'
+
+    return (
+        (rel(_config.MANUSCRIPT_DIR),
+         'structure,captions,content_volume,audit_exercises,content_depth,style_rules'),
+        (rel(_config.CONFIG_DIR), 'style_schema,style_rules,content_volume'),
+        (rel(os.path.join(_config.BOOK_ROOT, 'data', 'tmpl')), 'structure,versions'),
+        (rel(os.path.join(_config.BOOK_ROOT, 'docs')), 'doc_drift,traces,links'),
+        (rel(os.path.join(_config.BOOK_ROOT, 'data', 'baselines')), 'content_volume'),
+    )
 
 # Marker expression per tier, the same idea as investor-review's runner modes:
 # the tier decides *which* tests run, not which assertions count.
@@ -94,6 +117,68 @@ def tests_command(marker: str = '') -> list[str]:
     return [PY, os.path.join(PY_ROOT, 'make.py'), 'test']
 
 
+def changed_files() -> list[str]:
+    """Paths touched in the working tree, staged or not (repo-relative)."""
+    try:
+        diff = subprocess.run(['git', 'diff', '--name-only', 'HEAD'],
+                              cwd=REPO_ROOT, capture_output=True, text=True, check=False)
+        untracked = subprocess.run(
+            ['git', 'ls-files', '--others', '--exclude-standard'],
+            cwd=REPO_ROOT, capture_output=True, text=True, check=False)
+    except OSError:
+        return []
+    paths = set()
+    for block in (diff.stdout, untracked.stdout):
+        paths.update(line.strip() for line in block.splitlines() if line.strip())
+    return sorted(paths)
+
+
+def gates_for_change(changed: list[str]) -> str:
+    """The gates a set of changed paths can influence (comma separated)."""
+    wanted: list[str] = []
+    table = gates_for_table()
+    for path in changed:
+        if '/src/python/' in path:
+            wanted += [gate for gate in ('architecture', 'script_contract')
+                       if gate not in wanted]
+        for fragment, gates in table:
+            if fragment in path:
+                wanted += [gate for gate in gates.split(',') if gate not in wanted]
+    return ','.join(wanted)
+
+
+def tests_for_change(changed: list[str]) -> list[str]:
+    """Test modules that exercise the touched source modules (empty = none).
+
+    Modules that spawn the runner itself are excluded: they re-run whole tiers as
+    subprocesses, which turns a scoped run into a full one. p0/p1 still run them.
+    """
+    test_dir = os.path.join(BOOK_ROOT, 'src', 'test')
+    try:
+        available = {name[:-3] for name in os.listdir(test_dir)
+                     if name.startswith('test_') and name.endswith('.py')}
+    except OSError:
+        return []
+    picked: set[str] = set()
+    for path in changed:
+        if not path.endswith('.py'):
+            continue
+        if '/src/test/' in path:
+            picked.add(os.path.basename(path)[:-3])
+            continue
+        if '/src/python/' not in path:
+            continue
+        rel = path.split('/src/python/', 1)[1][:-3]
+        parts = rel.split('/')
+        stem = parts[-1]
+        prefixes = [f'test_{stem}', f'test_{parts[0]}_{stem}' if len(parts) > 1 else '']
+        for name in available:
+            if any(name == prefix or name.startswith(prefix + '_')
+                   for prefix in prefixes if prefix):
+                picked.add(name)
+    return sorted(picked - set(SPAWNING_TESTS))
+
+
 def _command(step: str, marker: str = '') -> list[str] | None:
     """Shell command for one step (None means the step is skipped with a note)."""
     if step == 'lint':
@@ -107,6 +192,27 @@ def _command(step: str, marker: str = '') -> list[str] | None:
         if shutil.which('uvx'):
             return ['uvx', 'ruff', 'check', SRC_REL, TEST_REL]
         return None
+    if step == 'lint-changed':
+        files = [path for path in changed_files() if path.endswith('.py')]
+        if not files:
+            return None
+        if importlib.util.find_spec('ruff') is not None:
+            return [PY, '-m', 'ruff', 'check', *files]
+        return None
+    if step == 'gates-changed':
+        gates = gates_for_change(changed_files())
+        if not gates:
+            return None
+        return [PY, os.path.join(PY_ROOT, 'make.py'), 'check', '--only', gates]
+    if step == 'tests-changed':
+        modules = tests_for_change(changed_files())
+        if not modules:
+            return None
+        test_rel = os.path.relpath(os.path.join(BOOK_ROOT, 'src', 'test'), REPO_ROOT)
+        # Same tier filter as p0: a scoped run must stay in the fast tier,
+        # otherwise it can pull in the slow suites that spawned this selection.
+        return [PY, '-m', 'pytest', '-q', '-m', 'tier_fast',
+                *(os.path.join(test_rel, f'{name}.py') for name in modules)]
     if step == 'fast-gates':
         return [PY, os.path.join(PY_ROOT, 'make.py'), 'check', '--only', FAST_GATES]
     if step == 'gates':
@@ -127,7 +233,7 @@ def resolve_mode(mode: str) -> str:
     """Accept p0/p1/p2 and their historical names (fast/full/release)."""
     key = ALIASES.get(mode, mode).lower()
     if key not in MODES:
-        raise SystemExit(f'error: unknown mode {mode!r}; expected p0|p1|p2')
+        raise SystemExit(f'error: unknown mode {mode!r}; expected quick|p0|p1|p2')
     return key
 
 
@@ -204,6 +310,8 @@ def run(mode: str, *, archive: bool = True, as_json: bool = False,
     """Run the steps of ``mode`` and return the summary (machine info included)."""
     key = resolve_mode(mode)
     label, all_steps = MODES[key]
+    if key == 'quick':
+        timeout = min(timeout, 300.0)
     steps = select_steps(all_steps, only, skip)
     stamp = datetime.datetime.now().strftime('%Y-%m-%d_%H%M%S')
     log_path, json_path = report_paths(key, stamp)

@@ -14,7 +14,6 @@ Three properties this suite pins, none of them visible to a per-script test:
 import os
 import sys
 import unittest
-from unittest import mock
 
 import _fixture
 
@@ -74,31 +73,35 @@ class DependencyPinningCase(unittest.TestCase):
 
 
 class InterpreterGuardCase(unittest.TestCase):
+    """The rule is pure: both paths are arguments, so no global state is patched.
+
+    A module-level patch here would leak into other suites that import make.py
+    through runpy, which is exactly the order dependence the audit hunts.
+    """
+
     def setUp(self):
         self.make = tool('make')
-        patcher = mock.patch.dict(os.environ, {}, clear=False)
-        patcher.start()
-        self.addCleanup(patcher.stop)
-        os.environ.pop('BOOK_ALLOW_SYSTEM_PYTHON', None)
+        self._saved = os.environ.pop('BOOK_ALLOW_SYSTEM_PYTHON', None)
+
+    def tearDown(self):
+        if self._saved is not None:
+            os.environ['BOOK_ALLOW_SYSTEM_PYTHON'] = self._saved
 
     def test_refuses_a_foreign_interpreter(self):
-        with mock.patch.object(self.make, 'venv_python', return_value='/opt/other/python'), \
-                self.assertRaises(SystemExit) as caught:
-            self.make.enforce_venv()
+        with self.assertRaises(SystemExit) as caught:
+            self.make.enforce_venv('/opt/other/python', sys.executable)
         self.assertEqual(caught.exception.code, 3)
 
     def test_accepts_the_project_interpreter(self):
-        with mock.patch.object(self.make, 'venv_python', return_value=sys.executable):
-            self.assertIsNone(self.make.enforce_venv())
+        self.assertIsNone(self.make.enforce_venv(__file__, __file__))
 
     def test_absent_venv_does_not_block(self):
-        with mock.patch.object(self.make, 'venv_python', return_value=None):
-            self.assertIsNone(self.make.enforce_venv())
+        self.assertIsNone(self.make.enforce_venv(None, sys.executable))
+        self.assertIsNone(self.make.interpreter_problem(None, '/usr/bin/python3'))
 
     def test_override_is_explicit(self):
         os.environ['BOOK_ALLOW_SYSTEM_PYTHON'] = '1'
-        with mock.patch.object(self.make, 'venv_python', return_value='/opt/other/python'):
-            self.assertIsNone(self.make.enforce_venv())
+        self.assertIsNone(self.make.interpreter_problem('/opt/other/python', sys.executable))
 
 
 class DeliveryOrderCase(unittest.TestCase):

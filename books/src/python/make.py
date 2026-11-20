@@ -45,7 +45,20 @@ def venv_python() -> str | None:
     return None
 
 
-def enforce_venv() -> None:
+def interpreter_problem(expected: str | None, executable: str) -> str | None:
+    """Why `executable` may not run the toolchain, or None when it may.
+
+    Pure: the caller supplies both paths, so the rule is testable without
+    patching module globals that other suites import.
+    """
+    if expected is None or os.environ.get('BOOK_ALLOW_SYSTEM_PYTHON') == '1':
+        return None
+    if os.path.realpath(executable) == os.path.realpath(expected):
+        return None
+    return f'interpreter {executable} is not the project virtualenv ({expected})'
+
+
+def enforce_venv(expected: str | None = None, executable: str | None = None) -> None:
     """Refuse to run the toolchain outside books/.venv.
 
     The pins in requirements.txt decide which browser build, pypdf behaviour and
@@ -53,14 +66,13 @@ def enforce_venv() -> None:
     (a browser revision mismatch surfaces only at render time), so the entry
     point checks before it does any work.
     """
-    expected = venv_python()
-    if expected is None or os.environ.get('BOOK_ALLOW_SYSTEM_PYTHON') == '1':
-        return
-    if os.path.realpath(sys.executable) == os.path.realpath(expected):
+    expected = venv_python() if expected is None else expected
+    executable = sys.executable if executable is None else executable
+    if interpreter_problem(expected, executable) is None:
         return
     print('error: the book toolchain runs on the project virtualenv only', file=sys.stderr)
     print(f'       expected: {expected}', file=sys.stderr)
-    print(f'       current : {sys.executable}', file=sys.stderr)
+    print(f'       current : {executable}', file=sys.stderr)
     print(f'       run     : {expected} {os.path.join(TOOLS_DIR, "make.py")} ...',
           file=sys.stderr)
     print('       override: BOOK_ALLOW_SYSTEM_PYTHON=1 (not for delivery)', file=sys.stderr)

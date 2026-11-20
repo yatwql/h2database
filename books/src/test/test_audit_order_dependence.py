@@ -6,6 +6,7 @@ import io
 import json
 import os
 import unittest
+from unittest import mock
 from contextlib import redirect_stdout
 
 import _fixture
@@ -53,6 +54,23 @@ class OrderComparisonTest(unittest.TestCase):
     def test_a_small_module_set_is_order_independent(self):
         report = self.mod.run_both(only='test_meta_taxonomy,test_audit_version_consistency')
         self.assertTrue(report['ok'], report)
+
+    def test_outcomes_are_keyed_by_test_id(self):
+        outcomes = self.mod.collect(only=['test_meta_taxonomy'])
+        self.assertTrue(all('(' not in name for name in outcomes),
+                        f'expected dotted ids, got {list(outcomes)[:2]}')
+        self.assertTrue(any(name.startswith('test_meta_taxonomy.') for name in outcomes))
+
+    def test_bisect_reports_a_target_that_passes_in_full_order(self):
+        result = self.mod.bisect('test_meta_taxonomy')
+        self.assertTrue(result['ok'])
+        self.assertEqual(result.get('prefix', []), [])
+
+    def test_bisect_refuses_a_target_that_only_fails_alone(self):
+        with mock.patch.object(self.mod, 'run_prefix', return_value='fail'):
+            result = self.mod.bisect('test_meta_taxonomy')
+        self.assertFalse(result['ok'])
+        self.assertIn('not order-dependent', result['reason'])
 
     def test_json_output_is_parseable(self):
         buffer = io.StringIO()
