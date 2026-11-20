@@ -2,7 +2,8 @@
   "_note": "Infrastructure: where the source tree lives, where state/baselines go, toolchain budgets.",
   "paths": {
     "state": "data/state",
-    "baselines": "data/baselines"
+    "baselines": "data/baselines",
+    "snapshots": "data/snapshots"
   },
   "sources": {
     "src_main": "../h2/src/main",
@@ -23,14 +24,22 @@
   },
   "baselines": {
     "ascii": "data/baselines/ascii-baseline.json",
-    "source_symbol": "data/baselines/source-symbol-baseline.json"
+    "source_symbol": "data/baselines/source-symbol-baseline.json",
+    "content_volume": "data/baselines/content-volume.json",
+    "captions": "data/baselines/captions-findings.json",
+    "content_depth": "data/baselines/content-depth-findings.json",
+    "style_rules": "data/baselines/style-rules-baseline.json"
   },
   "toolchain": {
     "coverage_fail_under": 88,
     "pdf_max_mb": 12,
     "epub_max_mb": 10,
     "ascii_max_cols": 100,
-    "max_style_warnings": 0
+    "max_style_warnings": 0,
+    "content_floor_ratio": 0.95,
+    "pdf_page_ratio": 0.9,
+    "epub_size_ratio": 0.85,
+    "content_profile": "baseline"
   },
   "logging": {
     "level": "INFO",

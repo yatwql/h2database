@@ -42,3 +42,4 @@ books/data/config/llm_key.json
 # coverage data is generated, never committed
 .coverage
 .coverage.*
+books/data/tmp/
