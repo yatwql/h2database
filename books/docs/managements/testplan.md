@@ -20,7 +20,7 @@ python books/src/python/make.py doctor     # 可选依赖检查（pandoc / playw
 最终交付 PDF / EPUB 时：
 
 ```bash
-python books/src/python/make.py deliver    # build + to_pdf + verify_pdf + to_epub
+python books/src/python/make.py deliver    # build + to_pdf + pdf_toc_links + verify_pdf + to_epub
 ```
 
 PDF 生成较慢；日常编辑只要求 `make.py check` + `make.py build` 通过。CI（`.github/workflows/book.yml`）自动执行 lint + 单元测试 + 门禁 + 构建 + 幂等性校验。
@@ -89,6 +89,7 @@ python books/src/python/structure.py --gate-level p0  # 仅 p0
 | 合并 Markdown | 合并结果按 book.toml 章节顺序拼接，front/back matter 齐备 | `render/merge.py` | P0 |
 | HTML 渲染 | HTML 含标题锚点、侧边栏 TOC、印刷 TOC；未闭合围栏不吞正文 | `render/to_html.py` | P0 |
 | PDF 渲染 | HTML → PDF 成功，页面数据可读 | `render/to_pdf.py` | P0 |
+| 印刷 TOC 链接注入 | 每个印刷 TOC 条目在对应页上加一条 link annotation，目标页按 outline 位置映射 | `render/pdf_toc_links.py` | P1 |
 | PDF 版式 | 页面为 A4（595×842±2）、无旋转 | `verify_pdf.py`（PAGE_SIZE / ROTATION） | P1 |
 | EPUB 元数据 | dc:title/creator/language/identifier 齐备；配置了封面则必须在 manifest | `verify_epub.py`（METADATA / COVER） | P1 |
 | PDF 交付校验 | outline 与标题一致、层级正确、TOC 链接可用、字体嵌入、体积达标 | `render/verify_pdf.py` | P1 |
@@ -104,13 +105,15 @@ python books/src/python/structure.py --gate-level p0  # 仅 p0
 | LLM 边界 | LLM 只用于散文生成/评审场景；门禁与事实链路不得调用 | `llm_policy.py` | P1 |
 | 发布评分 | 六维评分（功能/稳定/交互/代码/文档风格/文档质量）作为整改视图 | `make.py report` | 参考 |
 | 版本一致 | 工具/源码/文档三版本可解析，管理文档头与合并稿 manifest 一致 | `version_consistency.py` | P0 |
-| 架构约束 | 分层依赖方向、门禁只读、不硬编码路径、命名不遮蔽标准库 | `audit/check_architecture.py` | P0 |
+| 历史快照完整性 | 快照文件与 manifest 记录的哈希一致；快照不参与构建、不被门禁扫描 | `manuscript/snapshot.py verify` | P1 |
+| 架构约束 | 分层依赖方向、门禁只读、不硬编码路径、命名不遮蔽标准库、入口脚本均接入 make.py 步骤 | `audit/check_architecture.py` | P0 |
 | 图号引用 | 图号唯一、正文引用可解析 | `figures.py` | P1 |
 | 章节均衡 | 每章行数/图数/坐标分布 | `balance.py` | P2 |
 | EPUB 生成 | pandoc 可用时生成 EPUB | `to_epub.py` | P3 |
 | 类型检查 | pyright 可用时检查工具链类型（缺失则跳过） | `typecheck.py` | P1 |
 | 门禁追溯 | make.py 的每个门禁都在 testplan 登记，反之亦然 | `gate_trace.py` | P0 |
 | 配置结构 | `style.json` 只含已知顶层键、必备字段齐全、阈值区间合理（min<max、比例 0-100） | `style_schema.py` | P0 |
+| 内容体积 | 每个章节的字节数与行数不低于基线（floor 0.95）、手稿总量不缩水、交付 PDF 页数 ≥ 基线 90%、EPUB 体积 ≥ 基线 85%；新增文件允许，删除须同步 `book.toml` 并重设基线 | `audit/content_volume.py`、`books/data/baselines/content-volume.json` | P0 |
 | 文件长度 | 源码 ≤900 行、测试 ≤1200 行、文档 ≤1200 行（手稿附录 ≤2000） | `audit/file_length.py` | P0 |
 | 脚本契约 | 每个入口脚本有模块说明、可执行入口、必要时说明退出码 | `audit/script_contract.py` | P0 |
 | 文档一致性 | 文档中引用的路径、脚本、章节名、版本号与仓库实际一致 | `audit/doc_drift.py` | P0 |

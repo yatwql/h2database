@@ -20,6 +20,15 @@ books/
     baselines/                 # 机器维护的已知问题账本（非人写文档）
       ascii-baseline.json    # ASCII 图已知问题基线（--update-baseline 生成）
       source-symbol-baseline.json  # 源码符号漂移基线
+      content-volume.json    # 内容体积基线（每章字节/行数 + 交付页数）
+      captions-findings.json # 已评审的图注存量
+      content-depth-findings.json  # 已评审的深度存量
+      style-rules-baseline.json    # 已评审的风格存量
+      snapshot-<快照>.json   # 历史快照的体积基线（比对用）
+    snapshots/                 # 只读历史快照：别的书的稿子，仅供比对，不参与构建
+      <日期>-<标签>/
+        manifest.json        # 来源压缩包哈希、逐文件字节/行数/哈希
+        manuscript/          # 快照正文
     manuscript/              # 手稿（唯一可编辑的内容源）
       cover.md
       front/                 # 前件：序、版权、阅读指南
@@ -103,4 +112,8 @@ python books/src/python/make.py doctor     # 可选依赖（pandoc / playwright 
 ## 5. 不入库的临时产物
 
 临时修复脚本、压缩包、`__pycache__`、过程性产物一律不入库：正式脚本只进
-`src/python/`，仓库级会话产物只进 `.claude/`。
+`src/python/`，一次性脚本与会话产物只进 `data/tmp/`（已 gitignore）。
+
+历史手稿不进 `data/manuscript/`：用 `src/python/manuscript/snapshot.py` 导入到
+`data/snapshots/<日期>-<标签>/`，生成 manifest 后即可用
+`snapshot.py baseline` 出体积基线。快照只读，门禁不扫描它。
