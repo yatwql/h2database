@@ -1,6 +1,14 @@
 name: CI
 
-on: [push, pull_request]
+# Upstream H2's Java build (Maven via ./build.sh, JDK 11/17) — ~10 minutes.
+# The book toolchain lives in books/ and is covered by book.yml, so this workflow
+# only runs when the Java sources it actually builds change, or on demand.
+on:
+  push:
+    paths: ['h2/**', '.github/workflows/CI.yml']
+  pull_request:
+    paths: ['h2/**', '.github/workflows/CI.yml']
+  workflow_dispatch:
 
 permissions:
   contents: read #  to fetch code (actions/checkout)
