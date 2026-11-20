@@ -116,6 +116,14 @@
   **章节**：第1章 §1.1
   **相关**：[[Parser]]、[[Recursive Descent Parser]]
 
+- **Command**: SQL 命令对象。`Parser` 把 SQL 文本编译成 `Command` 的子类实例（`Select`、`Insert`、`Update`、`Delete` 等），由 `Command.executeUpdate()` 或 `Command.query()` 驱动执行；编译结果可被 `CommandContainer` 缓存复用。
+  **章节**：第3章 §3.4（Command 层）、第7章 §7.4（Command 执行框架）
+  **相关**：[[Parser]]、[[PreparedStatement]]、[[Expression]]
+
+- **Comparison**: 比较表达式。`Comparison.getValue()` 两侧求值后按比较类型（EQUAL/BIGGER 等）判定，类型不一致时经 `DataType.compareWithConversion()` 隐式转换；转换会阻碍索引匹配。
+  **章节**：第7章 §7.6（表达式求值）
+  **相关**：[[ExpressionColumn]]、[[WHERE]]
+
 ## D
 
 - **DDL**: Data Definition Language，数据定义语言。CREATE/ALTER/DROP 等改变 schema
@@ -148,6 +156,10 @@
   **章节**：第1章 §2.2、第3章 §3.2
   **相关**：[[JDBC]]、[[JdbcConnection]]、[[ConnectionInfo]]
 
+- **DELETE**: 删除语句执行路径。仅标记版本失效而不立即回收空间，回收推迟到 Chunk 压缩整理；回滚依赖版本可见性恢复。
+  **章节**：第5章 §5.4（DELETE 删除流程）、第6章 §6.6（空闲空间管理）
+  **相关**：[[MVCC]]、[[Chunk]]、[[Compaction]]
+
 ## E
 
 - **Engine**: 数据库引擎层入口。负责打开/关闭数据库实例、管理连接池与生命周期。
@@ -160,6 +172,10 @@
   关键设计选择。
   **章节**：第1章 §2.3、第4章 §4.2
   **相关**：[[Aggregate]]、[[IndexCondition]]、[[TableFilter]]
+
+- **ExpressionColumn**: 表达式列的包装节点。把列的读取与类型信息暴露成表达式接口，供 `mapColumns` 绑定与优化期常量折叠使用。
+  **章节**：第2章 §2.3（各层关键接口）
+  **相关**：[[Expression]]、[[Comparison]]
 
 ## F
 
@@ -251,6 +267,14 @@
   **章节**：第9章 §11.3
   **相关**：[[测试框架]]
 
+- **INSERT**: 插入语句执行路径。写入被实现为在 B-Tree 中新增键值对并产生新版本，需要写锁与事务提交；追加写模型下新页面落盘到当前 Chunk。
+  **章节**：第5章 §5.2（INSERT 写入流程）
+  **相关**：[[UPDATE]]、[[Chunk]]、[[MVCC]]
+
+- **Insert**: 插入操作对象。语句层由 `INSERT` 语句产生，存储层表现为在 B-Tree 中写入新键值并生成新版本。
+  **章节**：第5章 §5.2（INSERT 写入流程）
+  **相关**：[[INSERT]]、[[Tree]]
+
 ## J
 
 - **JDBC**: Java Database Connectivity。Java 数据库连接的标准 API。H2 的 JDBC 实现
@@ -267,6 +291,14 @@
 - **JSON**: H2 支持 JSON 数据类型与 SQL 标准 JSON 函数（JSON_OBJECT、JSON_ARRAY 等）。
   **章节**：第1章 §1.1
   **相关**：[[Value]]
+
+- **Java**: 本书分析对象的实现语言。H2 以纯 Java 编写且不引入第三方运行时依赖，这一约束决定了手写 Parser、自定义序列化与自实现网络栈等技术选择。
+  **章节**：第1章 §1.3（核心设计哲学）
+  **相关**：[[JVM]]、[[Append-Only]]
+
+- **JdbcStatement**: JDBC 语句入口实现。负责把 JDBC 调用翻译成 `Command`，并决定走缓存复用还是重新编译。
+  **章节**：第7章 §7.1（JDBC 层入口）
+  **相关**：[[PreparedStatement]]、[[Command]]
 
 ## L
 
@@ -388,12 +420,28 @@
   **章节**：第6章 §7.1、§7.4
   **相关**：[[CommandContainer]]、[[Parser]]
 
+- **PlanItem**: 单个表的访问路径候选。`TableFilter.getBestPlanItem()` 按掩码匹配 `IndexCondition` 与索引列，取 `Index.getCost()` 最低者为该表的访问方式。
+  **章节**：第8章 §8.4（索引选择机制）
+  **相关**：[[Plan]]、[[WHERE]]、[[Index]]
+
+- **Plan**: 执行计划。优化器为每个 `TableFilter` 选择访问路径并组合成计划树，`Plan.calculateCost()` 以复合乘法累计代价，无效计划记为无穷大代价。
+  **章节**：第8章 §8.3（代价模型）
+  **相关**：[[PlanItem]]、[[Index]]、[[Optimizer]]
+
+- **Phase**: MVStore 的写入阶段划分。一个阶段累积若干页面，结束时形成新的 Chunk 并原子可见，决定了检查点与恢复的边界。
+  **章节**：第9章 §9.5（检查点）、§9.7（恢复机制）
+  **相关**：[[Chunk]]、[[Checkpoint]]
+
 ## Q
 
 - **Query**: 查询基类。`Select`、`SelectUnion`、`CTE` 等查询类型的共同祖先。
   定义 `prepare()` → `optimize()` → `query()` 三阶段执行框架。
   **章节**：第6章 §7.5、第9章 §11.1
   **相关**：[[Select]]、[[Optimizer]]、[[LocalResult]]
+
+- **Queue**: 等待队列。表级锁以 FIFO 队列组织等待线程，配合死锁检测避免活锁与无限等待。
+  **章节**：第10章 §10.1（MVTable 表级锁）、§10.3（死锁检测算法）
+  **相关**：[[MVCC]]、[[Session]]
 
 ## R
 
@@ -498,6 +546,18 @@
   **章节**：第1章 §2.2
   **相关**：[[SessionRemote]]、[[TcpServer]]
 
+- **Session**: 会话对象。每个连接对应一个 `SessionLocal`，持有独立的事务状态与锁集合；全局生命周期由 `Database` 管理，会话状态彼此隔离。
+  **章节**：第4章 §4.2（SessionLocal — 会话管理）
+  **相关**：[[MVCC]]、[[Command]]
+
+- **SELECT**: 查询语句执行路径。编译期为 `Select.init()` 与 `Select.prepare()`，执行期通过 `TableFilter.next()` 迭代并由 `Expression.getValue()` 求值；读路径不加锁，依赖根引用版本切换。
+  **章节**：第5章 §5.1（SELECT 查询流程）、第7章 §7.4（Command 执行框架）
+  **相关**：[[Plan]]、[[MVCC]]、[[WHERE]]
+
+- **Server**: 服务端接入实现。通过 `Service` 接口统一管理 TCP、TLS 与 PG 线协议，复用同一条引擎执行路径。
+  **章节**：第2章 §2.1（八层架构详解）、第3章 §3.9（Server 层）
+  **相关**：[[Session]]、[[Command]]
+
 ## T
 
 - **Table**: 表对象基类。`MVTable`、`RegularTable`、`MetaTable` 等共同祖先。
@@ -538,6 +598,14 @@
   **章节**：第8章 §10.4
   **相关**：[[MVCC]]、[[VersionedValue]]、[[CommitDecisionMaker]]
 
+- **Tree**: B-Tree 索引结构。MVMap 以多路分支与平衡策略组织键值，页面在容量上限处分裂，根引用通过 CAS 原子切换，读操作永远看到某个自洽版本。
+  **章节**：第6章 §6.1（B-Tree 索引）、第9章 §9.2（B-Tree 与 Page 结构）
+  **相关**：[[COW / Copy-on-Write]]、[[RootReference]]、[[PlanItem]]
+
+- **TRUE**: 布尔字面量。作为可折叠常量参与优化期求值，短路求值据此提前结束条件判断。
+  **章节**：第7章 §7.6（表达式求值）
+  **相关**：[[Comparison]]、[[WHERE]]
+
 ## U
 
 - **Undo Log**: 撤销日志。事务回滚时恢复数据所需的旧值记录。MVStore 模式下
@@ -549,6 +617,10 @@
   物理位置，便于环境迁移。
   **章节**：第1章 §2.2
   **相关**：[[ConnectionInfo]]
+
+- **UPDATE**: 更新语句执行路径。H2 将更新实现为「删除旧版本 + 插入新版本」，因此 Undo Log 记录的是版本可见性回滚所需的信息，而非原值的覆盖副本。
+  **章节**：第5章 §5.3（UPDATE 更新流程）、第9章 §9.4（Undo Log 与崩溃安全）
+  **相关**：[[INSERT]]、[[Undo Log]]、[[MVCC]]
 
 ## V
 
@@ -589,6 +661,10 @@
   写入量与逻辑数据量的比值。MVStore 的 Compact 与 LIRS 缓存共同抑制写放大。
   **章节**：第9章 §12.1
   **相关**：[[COW / Copy-on-Write]]、[[Compact]]、[[Log-Structured Storage]]
+
+- **WHERE**: 过滤条件。条件被下推到 `TableFilter`，与索引列做掩码匹配以选取代价最低的访问路径；对索引列施加函数或隐式类型转换会使匹配失败并退化为全表扫描。
+  **章节**：第8章 §8.4（索引选择机制）、§8.5（TableFilter 与条件评估）
+  **相关**：[[SELECT]]、[[PlanItem]]、[[Index]]
 
 ## X
 
@@ -671,3 +747,9 @@
 
 - **DateTimeUtils**: 见对应章节
   **章节**：第9章
+
+## N
+
+- **NonLeaf**: B-Tree 的非叶页面。只存放键与子页引用，参与查找路径但不下沉数据；与 `Leaf` 页面共同构成索引树。
+  **章节**：第9章 §9.2（B-Tree 与 Page 结构）
+  **相关**：[[Tree]]、[[RootReference]]
