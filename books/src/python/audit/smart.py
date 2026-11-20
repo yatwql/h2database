@@ -65,17 +65,17 @@ def check_figure_refs():
             for j in range(start, end):
                 if j + 1 == ln:
                     continue
-                l = lines[j]
+                line = lines[j]
                 # Check various reference patterns
-                if '如图 ' + fid + ' 所示' in l:
+                if '如图 ' + fid + ' 所示' in line:
                     found = True
                     break
                 # Check "图 X-Y " (with any trailing context: space, 和, 与, 、, etc.)
-                if ('图 ' + fid + ' ') in l or ('图 ' + fid + '。') in l or ('图 ' + fid + '）') in l or ('图 ' + fid + '\n') in l:
+                if ('图 ' + fid + ' ') in line or ('图 ' + fid + '。') in line or ('图 ' + fid + '）') in line:
                     found = True
                     break
                 # Check combined refs: "图 X-Y 和 Z", "X-Y 与 Z" (fig ID after 和/与)
-                if (' 和 ' + fid + ' ') in l or (' 与 ' + fid + ' ') in l or ('、' + fid + ' ') in l:
+                if (' 和 ' + fid + ' ') in line or (' 与 ' + fid + ' ') in line or ('、' + fid + ' ') in line:
                     found = True
                     break
             if found:
@@ -102,16 +102,20 @@ def count_diagrams(text):
     in_block = False
     block_lines = 0
     count = 0
-    for l in lines:
-        has_marker = any(m in l for m in DIAGRAM_MARKERS)
+    for line in lines:
+        has_marker = any(m in line for m in DIAGRAM_MARKERS)
         if has_marker and not in_block:
-            in_block = True; block_lines = 1
+            in_block = True
+            block_lines = 1
         elif has_marker and in_block:
             block_lines += 1
         elif not has_marker and in_block:
-            if block_lines >= 3: count += 1
-            in_block = False; block_lines = 0
-    if in_block and block_lines >= 3: count += 1
+            if block_lines >= 3:
+                count += 1
+            in_block = False
+            block_lines = 0
+    if in_block and block_lines >= 3:
+        count += 1
     return count
 
 # --- Build exemption ranges for ## 附：(appendix) headings ---

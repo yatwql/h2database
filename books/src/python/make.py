@@ -35,6 +35,70 @@ BOOK_ROOT = _config.BOOK_ROOT
 PY = sys.executable
 LOG = _log.get_logger('make')
 
+
+def venv_python() -> str | None:
+    """Path to the project interpreter (books/.venv), None when absent."""
+    for rel in (('.venv', 'bin', 'python'), ('.venv', 'Scripts', 'python.exe')):
+        candidate = os.path.normpath(os.path.join(BOOK_ROOT, *rel))
+        if os.path.exists(candidate):
+            return candidate
+    return None
+
+
+def enforce_venv() -> None:
+    """Refuse to run the toolchain outside books/.venv.
+
+    The pins in requirements.txt decide which browser build, pypdf behaviour and
+    lint rules apply. Running under a system interpreter silently swaps all three
+    (a browser revision mismatch surfaces only at render time), so the entry
+    point checks before it does any work.
+    """
+    expected = venv_python()
+    if expected is None or os.environ.get('BOOK_ALLOW_SYSTEM_PYTHON') == '1':
+        return
+    if os.path.realpath(sys.executable) == os.path.realpath(expected):
+        return
+    print('error: the book toolchain runs on the project virtualenv only', file=sys.stderr)
+    print(f'       expected: {expected}', file=sys.stderr)
+    print(f'       current : {sys.executable}', file=sys.stderr)
+    print(f'       run     : {expected} {os.path.join(TOOLS_DIR, "make.py")} ...',
+          file=sys.stderr)
+    print('       override: BOOK_ALLOW_SYSTEM_PYTHON=1 (not for delivery)', file=sys.stderr)
+    raise SystemExit(3)
+
+
+def pinned_versions() -> dict[str, str]:
+    """name -> version from requirements.txt (the dependency single source)."""
+    pins: dict[str, str] = {}
+    path = os.path.join(BOOK_ROOT, 'requirements.txt')
+    try:
+        with open(path, encoding='utf-8') as handle:
+            lines = handle.read().splitlines()
+    except OSError:
+        return pins
+    for line in lines:
+        line = line.split('#', 1)[0].strip()
+        if '==' in line:
+            name, version = line.split('==', 1)
+            pins[name.strip().lower().replace('_', '-')] = version.strip()
+    return pins
+
+
+def pin_drift() -> list[str]:
+    """Installed distributions that disagree with requirements.txt."""
+    from importlib import metadata
+
+    drift: list[str] = []
+    for name, want in pinned_versions().items():
+        try:
+            have = metadata.version(name)
+        except metadata.PackageNotFoundError:
+            drift.append(f'{name} missing (want {want})')
+            continue
+        if have != want:
+            drift.append(f'{name} {have} (want {want})')
+    return drift
+
 # (name, script or None for builtin, extra args, group)
 Step = tuple[str, str | None, tuple[str, ...], str]
 
@@ -73,8 +137,10 @@ STEPS: list[Step] = [
     ('style_rules', 'audit/style_rules.py', (), 'verify'),
     ('content_depth', 'audit/content_depth.py', (), 'verify'),
     ('structure', 'audit/structure.py', (), 'verify'),
+    ('content_volume', 'audit/content_volume.py', (), 'verify'),
     # ---- deliver ----
     ('to_pdf', 'render/to_pdf.py', (), 'deliver'),
+    ('pdf_toc_links', 'render/pdf_toc_links.py', (), 'deliver'),
     ('verify_pdf', 'render/verify_pdf.py', ('--require-toc-links',), 'deliver'),
     ('to_epub', 'render/to_epub.py', (), 'deliver'),
     ('verify_epub', 'render/verify_epub.py', (), 'deliver'),
@@ -83,7 +149,7 @@ STEPS: list[Step] = [
 GROUPS = {
     'build': ('cover_stats', 'rebuild_merged', 'to_html'),
     'verify': tuple(n for n, _s, _a, g in STEPS if g == 'verify'),
-    'deliver': ('to_pdf', 'verify_pdf', 'to_epub', 'verify_epub'),
+    'deliver': ('to_pdf', 'pdf_toc_links', 'verify_pdf', 'to_epub', 'verify_epub'),
 }
 GROUPS['check'] = GROUPS['verify']
 GROUPS['test'] = ('unittest',)
@@ -139,6 +205,19 @@ def doctor() -> int:
     print('=== toolchain doctor ===')
     print(f'  python      : {sys.version.split()[0]}')
     problems = 0
+    expected = venv_python()
+    on_venv = expected is not None and \
+        os.path.realpath(sys.executable) == os.path.realpath(expected)
+    print(f'  interpreter : {sys.executable}')
+    if on_venv:
+        print('  venv        : ok')
+    else:
+        # Advisory only: `doctor` reports the environment, `enforce_venv` is what
+        # refuses to run. A diagnostic must not fail the fixture books in tests.
+        print(f'  venv        : DRIFT (expected the project virtualenv: {expected}'
+              ' — run scripts/bootstrap.sh)')
+    drift = pin_drift()
+    print(f'  pins        : {"ok" if not drift else "; ".join(drift)}')
     for module, users in OPTIONAL_TOOLS.items():
         found = importlib.util.find_spec(module) is not None
         if module == 'pandoc':
@@ -254,4 +333,5 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == '__main__':
+    enforce_venv()
     sys.exit(main(sys.argv[1:]))

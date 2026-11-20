@@ -86,6 +86,16 @@ def _load() -> dict:
 _CFG = _load()
 
 
+def excluded_dirs() -> tuple[str, ...]:
+    """Directories that hold artifacts or read-only history, never live content.
+
+    `dist/` is regenerated output; `data/snapshots/` is a frozen copy of another
+    book kept for comparison. Gates must judge the manuscript only.
+    """
+    snapshots = str(BASE_POLICY.get('paths', {}).get('snapshots', 'data/snapshots'))
+    return (os.path.join(BOOK_ROOT, 'dist'), os.path.join(BOOK_ROOT, snapshots))
+
+
 def _path(key: str) -> str:
     rel = _CFG.get('paths', {}).get(key)
     if not rel:

@@ -26,7 +26,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _fsutil
+from lib import _baseline, _config, _fsutil
 
 SETTINGS = dict(_config.STYLE_POLICY.get('content_depth') or {})
 MIN_USES = int(SETTINGS.get('glossary_min_uses', 3))
@@ -165,6 +165,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--json', action='store_true')
+    parser.add_argument('--update-baseline', action='store_true',
+                        help='accept the current findings as the reviewed backlog')
     args = parser.parse_args(argv)
 
     files = (sorted(glob.glob(os.path.join(_config.MANUSCRIPT_DIR, 'ch*.md')))
@@ -184,8 +186,21 @@ def main(argv: list[str] | None = None) -> int:
     for item in findings:
         by_kind[item['kind']] = by_kind.get(item['kind'], 0) + 1
 
+    # Key by detail, not by line: inserting a section shifts every line number
+    # below it and would resurrect a whole baseline as "new" findings.
+    keys = {f'{item["file"]}:{item["kind"]}:{item["detail"]}' for item in findings}
+    if args.update_baseline:
+        path = _baseline.save('content-depth', keys,
+                              'Reviewed depth backlog: forward references that predate the gate.')
+        print(f'内容深度基线已更新：{len(keys)} 项 → {os.path.relpath(path, _config.BOOK_ROOT)}')
+        return 0
+    new, stale = _baseline.split('content-depth', keys)
+    findings = [item for item in findings
+                if f'{item["file"]}:{item["kind"]}:{item["detail"]}' in new]
+
     if args.json:
         print(json.dumps({'count': len(findings), 'by_kind': by_kind,
+                          'new': len(new), 'stale': sorted(stale),
                           'findings': findings[:120]}, ensure_ascii=False, indent=2))
         return 0 if not findings else 1
 
@@ -194,6 +209,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     print(f'内容深度问题 {len(findings)} 处：' +
           '  '.join(f'{k}={v}' for k, v in sorted(by_kind.items())))
+    if stale:
+        print(f'  基线中有 {len(stale)} 项已不再出现（可用 --update-baseline 收缩）')
     for item in findings[:15]:
         print(f"  {item['file']}:{item['line']}  [{item['kind']}] {item['detail']}")
     return 1

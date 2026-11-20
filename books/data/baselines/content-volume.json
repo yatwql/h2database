@@ -1,0 +1,92 @@
+{
+  "manuscript": {
+    "files": {
+      "front/copyright.md": {
+        "bytes": 789,
+        "lines": 19
+      },
+      "front/how-to-read.md": {
+        "bytes": 10071,
+        "lines": 177
+      },
+      "front/preface.md": {
+        "bytes": 10112,
+        "lines": 104
+      },
+      "cover.md": {
+        "bytes": 1006,
+        "lines": 28
+      },
+      "ch1-2-architecture.md": {
+        "bytes": 168305,
+        "lines": 2157
+      },
+      "ch3-packages.md": {
+        "bytes": 144251,
+        "lines": 2262
+      },
+      "ch4-5-modules-processes.md": {
+        "bytes": 220495,
+        "lines": 3893
+      },
+      "ch6-1-data-structures.md": {
+        "bytes": 143758,
+        "lines": 2841
+      },
+      "ch6-2-storage-algorithms.md": {
+        "bytes": 227240,
+        "lines": 4618
+      },
+      "ch6-3-query-algorithms.md": {
+        "bytes": 179007,
+        "lines": 3503
+      },
+      "ch7-8-sql-optimizer.md": {
+        "bytes": 499403,
+        "lines": 8085
+      },
+      "ch9-10-persistence-locking.md": {
+        "bytes": 459869,
+        "lines": 6566
+      },
+      "ch11-12-guide-summary.md": {
+        "bytes": 178192,
+        "lines": 2389
+      },
+      "appendix-a-case-studies.md": {
+        "bytes": 105350,
+        "lines": 1478
+      },
+      "appendix-b-version-changes.md": {
+        "bytes": 8447,
+        "lines": 97
+      },
+      "back/glossary.md": {
+        "bytes": 32207,
+        "lines": 673
+      },
+      "back/index.md": {
+        "bytes": 18179,
+        "lines": 588
+      },
+      "back/references.md": {
+        "bytes": 3786,
+        "lines": 70
+      }
+    },
+    "total": {
+      "bytes": 2410467,
+      "lines": 39548
+    }
+  },
+  "delivered": {
+    "pdf_pages": 731,
+    "pdf_bytes": 10427390,
+    "epub_bytes": 620023
+  },
+  "thresholds": {
+    "floor_ratio": 0.95,
+    "page_ratio": 0.9,
+    "size_ratio": 0.85
+  }
+}

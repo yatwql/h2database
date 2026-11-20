@@ -11,6 +11,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import shutil
@@ -31,14 +32,19 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     binary = shutil.which('pyright')
-    if binary is None:
+    command = [binary] if binary else []
+    if not command and importlib.util.find_spec('pyright') is not None:
+        # The project venv installs pyright as a module, not always a console
+        # script; a silent skip would hide real type errors from the gate.
+        command = [sys.executable, '-m', 'pyright']
+    if not command:
         if args.json:
             print(json.dumps({'status': 'skip', 'reason': 'pyright not installed'}, indent=2))
         else:
             print('pyright 未安装，跳过类型检查（CI 会执行）')
         return 0
 
-    proc = subprocess.run([binary, '--outputjson'], capture_output=True, text=True,
+    proc = subprocess.run([*command, '--outputjson'], capture_output=True, text=True,
                           cwd=REPO_ROOT, check=False)
     try:
         payload = json.loads(proc.stdout or '{}')

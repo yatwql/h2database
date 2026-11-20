@@ -50,6 +50,13 @@ STDLIB_CLASH = {'types', 'html', 'json', 'logging', 'email', 'code', 'test', 'bi
 PATH_LITERALS = ('books/', 'data/manuscript', 'data/config', 'data/tmpl')
 WRITE_CALLS = ('write_text', 'open(')  # kept for the human-readable rule text
 WRITE_MODES = 'wax+'
+# Entry points that are deliberately not a make.py step (ad-hoc inspection
+# tools: they take their own arguments and never run as part of a pipeline).
+STANDALONE_ENTRY = frozenset({'render/print_pdf.py', 'render/pdf_from_html.py'})
+# Commands that dispatch to a dedicated function in make.py instead of walking a
+# step list, so their GROUPS entry is a routing label, not a step selection.
+COMMAND_GROUPS = frozenset({'test', 'cover', 'report'})
+MAKE_PY = os.path.join(PY_ROOT, 'make.py')
 
 
 def layer_of(path: str, root: str | None = None) -> str:
@@ -177,6 +184,84 @@ def check(path: str, root: str | None = None) -> list[str]:
     return problems
 
 
+def declared_steps() -> tuple[dict[str, str], dict[str, tuple[str, ...]]]:
+    """(step name -> script path, group -> member names) from make.py, by AST.
+
+    make.py imports the whole toolchain, so it is parsed rather than imported:
+    the gate has to stay importable from a bare checkout.
+    """
+    steps: dict[str, str] = {}
+    groups: dict[str, tuple[str, ...]] = {}
+    try:
+        tree = ast.parse(_fsutil.read_text(MAKE_PY))
+    except (OSError, SyntaxError):
+        return steps, groups
+    for node in tree.body:
+        target = None
+        value = None
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            target, value = node.target.id, node.value
+        elif isinstance(node, ast.Assign) and len(node.targets) == 1 \
+                and isinstance(node.targets[0], ast.Name):
+            target, value = node.targets[0].id, node.value
+        if value is None:
+            continue
+        if target == 'STEPS' and isinstance(value, ast.List):
+            for element in value.elts:
+                if not isinstance(element, ast.Tuple) or len(element.elts) < 2:
+                    continue
+                name, script = element.elts[0], element.elts[1]
+                if isinstance(name, ast.Constant) and isinstance(script, ast.Constant):
+                    steps[str(name.value)] = str(script.value)
+        elif target == 'GROUPS' and isinstance(value, ast.Dict):
+            for key, item in zip(value.keys, value.values, strict=False):
+                if not isinstance(key, ast.Constant) or not isinstance(item, ast.Tuple):
+                    continue
+                members = tuple(str(e.value) for e in item.elts if isinstance(e, ast.Constant))
+                groups[str(key.value)] = members
+    return steps, groups
+
+
+def check_wiring(steps: dict[str, str] | None = None,
+                 groups: dict[str, tuple[str, ...]] | None = None) -> list[str]:
+    """Every CLI entry point is reachable, and every group names real steps.
+
+    A script nobody calls still imports, still passes its own unit test and still
+    reports OK when run by hand — it just never runs where it matters. Reachability
+    is therefore a property of the wiring, not of the script.
+
+    ``steps``/``groups`` are injectable so the rule can be proven on a mutated
+    wiring instead of on the live make.py (a deletion in the real file would
+    otherwise be needed to exercise the failure path).
+    """
+    if steps is None or groups is None:
+        declared, declared_groups = declared_steps()
+        steps = declared if steps is None else steps
+        groups = declared_groups if groups is None else groups
+    if not steps:
+        return []
+    wired = {os.path.normpath(script).replace(os.sep, '/') for script in steps.values()}
+    problems: list[str] = []
+    for path in scripts():
+        rel = os.path.relpath(path, PY_ROOT).replace(os.sep, '/')
+        if rel in wired or rel in STANDALONE_ENTRY or rel.endswith('__init__.py'):
+            continue
+        if rel.split('/')[0] != 'render':
+            continue
+        source = _fsutil.read_text(path)
+        if "'__main__'" not in source and '"__main__"' not in source:
+            continue
+        problems.append(f'{rel}: CLI entry point is not a make.py step '
+                        f'(add it to STEPS/GROUPS, or to STANDALONE_ENTRY)')
+    for group, members in groups.items():
+        if group in COMMAND_GROUPS:
+            continue
+        for member in members:
+            if member not in steps:
+                problems.append(f'make.py: group "{group}" names unknown step "{member}"')
+    return problems
+
+
 def check_scripts(scripts_dir: str | None = None) -> list[str]:
     """Name convention for the top-level wrappers in books/scripts/.
 
@@ -216,6 +301,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     problems: list[str] = check_scripts()
+    problems += check_wiring()
     for path in scripts():
         try:
             problems += check(path)

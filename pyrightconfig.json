@@ -1,4 +1,6 @@
 {
+  "venvPath": ".",
+  "venv": "books/.venv",
   "include": [
     "books/src/python",
     "books/src/test"

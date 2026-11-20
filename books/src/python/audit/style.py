@@ -28,6 +28,7 @@ _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)
 import os
 import re
 from collections import defaultdict
+from typing import TypedDict
 
 from lib import _config, _fsutil
 
@@ -38,13 +39,30 @@ src_dir = _config.MANUSCRIPT_DIR
 dist_dir = _config.DIST_DIR
 chapter_files = _config.chapter_files(include_cover=False)
 
+class ChapterStats(TypedDict):
+    """Per-chapter counters; a TypedDict keeps the mixed int/list fields honest."""
+
+    warnings: list[tuple[int, str]]
+    infos: list[tuple[int, str]]
+    sentences: int
+    cn_chars: int
+    de_count: int
+    sentence_starts: list[str]
+    paragraph_count: int
+    long_sentences: list[tuple[int, int]]
+
+
+def _empty_stats() -> ChapterStats:
+    return {
+        'warnings': [], 'infos': [],
+        'sentences': 0, 'cn_chars': 0, 'de_count': 0,
+        'sentence_starts': [], 'paragraph_count': 0,
+        'long_sentences': [],
+    }
+
+
 # Collect statistics for chapter-level reporting
-chapter_stats = defaultdict(lambda: {
-    'warnings': [], 'infos': [],
-    'sentences': 0, 'cn_chars': 0, 'de_count': 0,
-    'sentence_starts': [], 'paragraph_count': 0,
-    'long_sentences': [],
-})
+chapter_stats: defaultdict[str, ChapterStats] = defaultdict(_empty_stats)
 
 def warn(fname, line, msg, level='WARN'):
     """Add a warning, defaulting to WARN level."""

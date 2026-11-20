@@ -45,7 +45,7 @@ from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from glob import glob
 
-from lib import _config, _fsutil
+from lib import _baseline, _config, _fsutil
 
 # Pin stdout to UTF-8 so Chinese terminal output renders correctly on Windows.
 _fsutil.pin_stdout_utf8()
@@ -208,10 +208,25 @@ def main(argv: list[str]) -> int:
                         help='compare against a previously saved JSON baseline')
     parser.add_argument('--target', metavar='GLOB',
                         help='restrict scan to files matching GLOB under books/')
+    parser.add_argument('--update-baseline', action='store_true',
+                        help='accept the current violations as the reviewed backlog')
     args = parser.parse_args(argv)
 
     threshold = THRESHOLDS[args.threshold]
     violations = scan(threshold, args.target)
+
+    keys = {f'{os.path.relpath(v.file, DOCS_DIR)}:{v.fig_id}' for v in violations}
+    if args.update_baseline:
+        path = _baseline.save('captions', keys,
+                              'Reviewed caption backlog: figures written before the verb rule.')
+        print(f'图注基线已更新：{len(keys)} 项 → {os.path.relpath(path, _config.BOOK_ROOT)}')
+        return 0
+    if not args.diff:
+        new, stale = _baseline.split('captions', keys)
+        violations = [v for v in violations
+                      if f'{os.path.relpath(v.file, DOCS_DIR)}:{v.fig_id}' in new]
+    else:
+        new, stale = set(), set()
 
     if args.json:
         payload = {
@@ -247,6 +262,8 @@ def main(argv: list[str]) -> int:
         return 0
 
     total = render_report(violations, threshold)
+    if stale:
+        print(f'  基线中有 {len(stale)} 项已不再出现（可用 --update-baseline 收缩）')
     return 0 if total <= threshold['fail_at'] else 1
 
 if __name__ == '__main__':

@@ -136,23 +136,26 @@ class AnthropicTransportTest(unittest.TestCase):
         calls = {}
 
         class Response:
-            def read(self_):
+            def read(self):
                 return body
 
         class Connection:
-            def __init__(self_, host, port, timeout=None):
+            def __init__(self, host, port, timeout=None):
+                self.host = host
+                self.port = port
+                self.timeout = timeout
                 calls['host'] = host
 
-            def request(self_, method, path, body=None, headers=None):
+            def request(self, method, path, body=None, headers=None):
                 calls['method'] = method
                 calls['path'] = path
                 calls['headers'] = dict(headers or {})
                 calls['payload'] = json.loads(body or b'{}')
 
-            def getresponse(self_):
+            def getresponse(self):
                 return Response()
 
-            def close(self_):
+            def close(self):
                 return None
 
         return Connection, calls

@@ -97,6 +97,11 @@ def tests_command(marker: str = '') -> list[str]:
 def _command(step: str, marker: str = '') -> list[str] | None:
     """Shell command for one step (None means the step is skipped with a note)."""
     if step == 'lint':
+        # The pinned ruff in books/.venv is the authority; a ruff from PATH may be
+        # a different version with different rules (same reason the toolchain runs
+        # on .venv only).
+        if importlib.util.find_spec('ruff') is not None:
+            return [PY, '-m', 'ruff', 'check', SRC_REL, TEST_REL]
         if shutil.which('ruff'):
             return ['ruff', 'check', SRC_REL, TEST_REL]
         if shutil.which('uvx'):

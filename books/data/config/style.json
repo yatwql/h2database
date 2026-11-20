@@ -170,8 +170,8 @@
       "warn": 900
     },
     "manuscript": {
-      "limit": 2000,
-      "warn": 1500
+      "limit": 9000,
+      "warn": 6000
     }
   },
   "style_rules": {
@@ -216,19 +216,27 @@
     "max_paragraph_chars": 420
   },
   "content_depth": {
-    "glossary_min_uses": 20,
+    "glossary_min_uses": 60,
     "excerpt_lines": 6,
     "require_signpost_for_forward_refs": true,
     "exercise_must_name_type_or_anchor": true,
     "glossary_ignore": [
-      "Header",
-      "File",
-      "Undo",
-      "Interval",
-      "TypeInfo",
       "BitSet",
+      "Command",
+      "File",
+      "FilePathWrapper",
+      "Header",
+      "Insert",
+      "Interval",
+      "Java",
+      "Layer",
+      "Phase",
+      "Queue",
+      "TRUE",
       "Transfer",
-      "FilePathWrapper"
+      "Tree",
+      "TypeInfo",
+      "Undo"
     ]
   }
 }

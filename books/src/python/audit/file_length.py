@@ -44,8 +44,9 @@ def targets() -> list[tuple[str, str]]:
     out += [(p, 'sources') for p in glob.glob(os.path.join(root, 'src', 'python', '**', '*.py'), recursive=True)]
     out += [(p, 'tests') for p in glob.glob(os.path.join(root, 'src', 'test', '**', '*.py'), recursive=True)]
     manuscript = os.path.join(root, 'data', 'manuscript')
+    skip = _config.excluded_dirs()
     docs = [p for p in glob.glob(os.path.join(root, '**', '*.md'), recursive=True)
-            if not p.startswith(manuscript) and os.sep + 'dist' + os.sep not in p]
+            if not p.startswith(manuscript) and not p.startswith(skip)]
     out += [(p, 'docs') for p in docs]
     out += [(p, 'manuscript') for p in glob.glob(os.path.join(manuscript, '**', '*.md'), recursive=True)]
     return sorted(set(out))

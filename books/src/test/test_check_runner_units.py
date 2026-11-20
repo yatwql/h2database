@@ -47,8 +47,15 @@ class RunnerUnitsTest(unittest.TestCase):
         self.assertIn('check-p0-2026-01-01_000000', log)
 
     def test_lint_step_is_skipped_when_no_linter_exists(self):
-        with mock.patch.object(self.runner.shutil, 'which', return_value=None):
+        with mock.patch.object(self.runner.shutil, 'which', return_value=None), \
+                mock.patch.object(self.runner.importlib.util, 'find_spec', return_value=None):
             self.assertIsNone(self.runner._command('lint'))
+
+    def test_lint_step_prefers_the_pinned_ruff(self):
+        """A ruff from PATH may be another version; the venv module wins."""
+        with mock.patch.object(self.runner.importlib.util, 'find_spec', return_value=object()):
+            command = self.runner._command('lint')
+        self.assertEqual(command[:3], [self.runner.PY, '-m', 'ruff'])
 
     def test_a_step_timeout_is_reported_as_code_124(self):
         log = os.path.join(self.tmp.name, 'timeout.log')
