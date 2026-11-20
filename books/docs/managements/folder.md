@@ -2,7 +2,8 @@
 
 > 软件：bookwright — 源码分析成书工具 v0.1
 > 版本：v0.1
-> 本文是 `books/` 下目录与文件职责的唯一说明。`CLAUDE.md` 只保留指向本文的链接，
+> 定位：**目录与文件归属的唯一说明**——哪里放什么、什么不入库；不重复命令清单（看
+> `testplan.md` §1）、不重复配置合并规则（看 `technical.md` §3.1）。`CLAUDE.md` 只保留指向本文的链接，
 > 结构与归属变更时只改这一份。
 
 ## 1. 顶层结构
@@ -77,19 +78,16 @@ books/docs/managements/
   technical.md               # 工具链架构约束（可机检部分由 check_architecture 守卫）
   analysis-doc-standard.md   # 内容标准（跨项目复用）
   style-guide.md             # 写作规则与检查机制（取值在 data/config/style.json）
-  DESIGN.md                  # 设计契约总纲（三界面共有规则）
+  DESIGN.md                  # 设计契约总纲（三处呈现面共有规则）
   DESIGN-TUI.md              # 终端交互契约
   DESIGN-WEB.md              # 网页控制台契约
 ```
 
 ## 2.1 配置分四层
 
-| 类别 | 文件 | 放什么 | 换项目是否要改 |
-| --- | --- | --- | --- |
-| 数据组织 | `data/tmpl/book.toml` | 书名/版本、路径、章节清单、标题、编号、覆盖归属、包映射 | 是（每个项目不同） |
-| 基础配置 | `data/config/base.json` | 源码树位置、文件后缀、包前缀、基线与状态路径、PDF/EPUB/ASCII/覆盖率预算 | 部分（指向新源码树） |
-| 书籍风格 | `data/config/style.json` | 展示文案、章节骨架、图注词表与预设、图示标记、写作阈值、生成能力与模板 | 通常否 |
-| 语言资源 | `data/language/zh.json` | 章节骨架名、练习提示语、术语行 | 否（加语种时新增一份） |
+四个文件各管一段，**合并顺序、读取入口与别名在 `technical.md` §3.1**，本文只记归属：
+`data/tmpl/book.toml`（数据组织）、`data/config/base.json`（基础配置）、
+`data/config/style.json`（书籍风格）、`data/language/zh.json`（语言资源）。
 
 ## 3. 归属规则
 

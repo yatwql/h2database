@@ -197,6 +197,22 @@ class DocDriftTest(unittest.TestCase):
         self.assertIn('to_pdf', real.deliver_steps())
         self.assertIn('bookctl', real.script_prefixes())
 
+    # -- locus ------------------------------------------------------------
+    def test_a_document_without_a_locus_line_is_reported(self):
+        directory = self.management_dir(README='# 索引\n', folder='# 目录\n')
+        kinds = [f['kind'] for f in self.drift.check_locus(directory)]
+        self.assertEqual(kinds, ['LOCUS', 'LOCUS'])
+
+    def test_a_locus_line_in_the_header_passes(self):
+        directory = self.management_dir(README='# 索引\n\n> 定位：登记职责\n')
+        self.assertEqual(self.drift.check_locus(directory), [])
+
+    def test_a_locus_line_far_down_the_file_does_not_count(self):
+        directory = self.management_dir(
+            README='# 索引\n' + '\n' * 20 + '> 定位：登记职责\n')
+        self.assertEqual([f['kind'] for f in self.drift.check_locus(directory)],
+                         ['LOCUS'])
+
     # -- CLI --------------------------------------------------------------
     def test_json_output_reports_the_count(self):
         buffer = io.StringIO()

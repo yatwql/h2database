@@ -4,8 +4,8 @@
 
 > 软件：bookwright — 源码分析成书工具 v0.1
 > 版本：v0.1
-> 本文件只保留当前开发版本段；已发布版本由 git 标签保留，问题条的编号与摘要见
-> [`review-findings.md`](review-findings.md)。
+> 定位：**版本变更记录，只留当前开发段**——写“变了什么”；问题编号与修复细节见
+> `review-findings.md`，设计理由见 `technical.md`。已发布版本由 git 标签保留。
 
 ---
 
@@ -49,6 +49,10 @@
 - `doc_drift.py` 兼校被引用的实现清单：`DELIVER`（文档里的 `deliver` 步骤序列必须等于
   `make.py` 的编排组）、`PREFIX`（文档写的 `scripts/` 前缀白名单必须等于
   `check_architecture` 的 allowlist）。
+- **管理文档角色归一**：14 份统一在头部写一行 `> 定位：负责什么 / 不负责什么 / 权威在哪`
+  （`doc_drift` 新增 `LOCUS` 检查）；问题台账改 H1–H3 + 登记档，与 `plan.md` 的时机档
+  P1–P4 分开命名；`folder.md` 只留归属，合并规则指向 `technical.md` §3.1；练习与跨章引用
+  细则只在 `style-guide.md`。（rf-11）
 - `file_length.py` 兼校「文件膨胀登记」：`review-findings.md` P4 表里的行数与实测不符即失败。
 - 新增 `requirement_trace.py`：`requirements.md` 的 FR/IR/NFR 与 testplan 新增的
   §2.4 需求判据对照表双向一致，每行点名的载体必须存在；`make.py check` 由 30 步变 31 步。

@@ -91,6 +91,10 @@ def _exists(rel: str, repo_root: str | None = None) -> bool:
 
 
 DIMENSION_RE = re.compile(r'^>\s*维度：\**(.+?)\**\s*$', re.MULTILINE)
+# every management document states its job in the header, so a reader knows what
+# the file owns and what it deliberately does not
+LOCUS_RE = re.compile(r'^>\s*定位：', re.MULTILINE)
+LOCUS_WINDOW = 15
 MANAGEMENTS_REF_RE = re.compile(r'(?:\.\./managements/|managements/)[\w-]+\.md')
 # a management document is registered either as an index-table row or as a line in
 # the directory tree that folder.md owns; both surfaces must name the same set
@@ -223,6 +227,25 @@ def _surface_findings(label: str, path: str, registered: list[str],
         if name not in registered:
             out.append({'kind': 'INDEX', 'file': rel, 'line': 1,
                         'detail': f'{label} does not register {name}'})
+
+
+def check_locus(directory: str | None = None) -> list[dict]:
+    """Each management document opens by stating what job it holds.
+
+    The role of a document is the one thing a reader cannot infer from its name:
+    two files can both be about quality and still own different things. Stating it
+    in the header keeps the index honest and makes the boundary reviewable.
+    """
+    base = directory or os.path.join(_config.BOOK_ROOT, 'docs', 'managements')
+    out: list[dict] = []
+    for name in management_files(base):
+        path = os.path.join(base, name)
+        head = '\n'.join(_fsutil.read_lines(path)[:LOCUS_WINDOW])
+        if LOCUS_RE.search(head) is None:
+            out.append({'kind': 'LOCUS', 'file': os.path.relpath(path, REPO_ROOT),
+                        'line': 1,
+                        'detail': 'header must state "> 定位：本文负责什么、不负责什么"'})
+    return out
 
 
 def check_managements(directory: str | None = None) -> list[dict]:
@@ -418,7 +441,7 @@ def main(argv: list[str] | None = None) -> int:
     findings = (check_paths(files) + check_scripts(files) + check_chapters(files)
                 + check_config() + check_levels(files) + check_manual_scope()
                 + check_managements() + check_numbering(files)
-                + check_deliver(files) + check_prefixes(files))
+                + check_deliver(files) + check_prefixes(files) + check_locus())
 
     if args.json:
         print(json.dumps({'count': len(findings), 'findings': findings},
