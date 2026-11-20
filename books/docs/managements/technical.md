@@ -98,6 +98,28 @@ books/
   logs/           运行报告：门禁与检查的完整输出与摘要
 ```
 
+### 2.5 两段式流水线
+
+```text
+源码树 --阶段1（事实抽取）--> 手稿 data/manuscript --> 阶段2（渲染与校验）--> dist/{md,html,pdf,epub}
+```
+
+| 阶段 | 环节 | 输入 → 输出 |
+| --- | --- | --- |
+| 1 | `ingest/digest.py` | 源码树 → `data/state/source-inventory.json` |
+| 1 | `ingest/outline.py` | 清单 + 章节映射 → `data/state/outline.json`（含覆盖矩阵与归属冲突） |
+| 1 | `ingest/chapters.py` | 大纲 + 模板 → `data/manuscript/*.md` |
+| 2 | `render/*` | 手稿 → 合并 Markdown / HTML / PDF / EPUB |
+| 全程 | `audit/*` | 质量判定与事实核验（只读） |
+
+阶段之间有硬边界：阶段 1 只产出结构与骨架，阶段 2 只消费手稿。因此重跑渲染不会
+触碰源码，重跑抽取也不会覆盖已写好的正文。
+
+### 2.6 章节与包：单主责
+
+`book.toml [chapters.packages]` 中每个源码包只归属一个章节。非主责章节通过跨章
+指向主责章节，不重复描述同一个包。归属冲突在大纲阶段就报出，不留到成书之后。
+
 ## 3. 配置设计
 
 ### 3.1 三层配置与合并规则
@@ -228,7 +250,8 @@ GROUPS = {build, verify, deliver, check, test, cover, report}
 ### 4.7 渠道层
 
 三个渠道共用 `core/actions.py`（动作执行）、`core/menu.py`（菜单模型与回报）、
-`core/settings.py`（可改配置与校验）。渠道内禁止：导入下层业务层、驱动编排层、
+`core/settings.py`（可改配置与校验）。终端交互的细节契约（键位、反馈、确认、光标）
+是本章的子设计，单独成文以便频繁修订。渠道内禁止：导入下层业务层、驱动编排层、
 出现子进程或写文件调用、持有业务规则。由此 CLI、TUI、Web 的状态与结果天然一致。
 
 ## 5. 架构约束

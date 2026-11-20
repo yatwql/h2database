@@ -1,10 +1,9 @@
 # 写作风格指南
 
 > 软件：bookwright — 源码分析成书工具 v0.1
-> 与项目无关的通用质量要求见 [`analysis-doc-standard.md`](analysis-doc-standard.md)。
-
-> 轻量级风格参考，适用于 H2 源码分析文档的写作与修订。
-> 版本：v6.5
+> 定位：**写作规则及其检查机制**——一条规则长什么样、由谁判定、阈值在哪里。
+> 具体取值（词表、长度阈值、骨架名）来自 `data/config/style.json`；与项目无关的
+> 通用要求见 [`analysis-doc-standard.md`](analysis-doc-standard.md)。
 
 ---
 
