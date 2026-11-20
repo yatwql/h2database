@@ -127,7 +127,7 @@ def run_step(step: Step) -> tuple[str, int, float]:
     elapsed = time.perf_counter() - started
     if proc.returncode != 0:
         LOG.warning('step %s failed rc=%s (%.2fs)', name, proc.returncode, elapsed)
-        tail = (proc.stdout or '').strip().splitlines()[-8:]
+        tail = (proc.stdout or '').strip().splitlines()[-30:]
         err = (proc.stderr or '').strip().splitlines()[-4:]
         print(f'  FAIL {name} (rc={proc.returncode})')
         for line in tail + err:
