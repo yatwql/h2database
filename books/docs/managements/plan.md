@@ -4,16 +4,16 @@
 > 版本：v0.1
 > 定位：在办事项的**时机档与逐项验收**——每项现状 / 动作 / 验收 / 事实位只在这里；
 > 不记设计细节（看 `technical.md`），也不存问题台账（看 `review-findings.md`）。
-> **编号源**：`plan-next = 10`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-9，
+> **编号源**：`plan-next = 11`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-10，
 > 递增保证唯一，归档不回收。编号与 `review-findings.md` 的 `rf-*` 是两套，互不占用）
 
 ---
 
 ## 概述
 
-在办 7 项：P1 2 项（**plan-1**、**plan-2**）、P2 3 项（**plan-3**、**plan-4**、**plan-9**）、
-P3 2 项（**plan-5**、**plan-6**）、P4 1 项（**plan-7**）。单项的范围、验收与事实位
-只在本文维护；系统怎么搭见 `technical.md`，怎么验证见 `testplan.md`。
+在办 5 项：P2 3 项（**plan-3**、**plan-4**、**plan-10**）、P3 2 项（**plan-5**、**plan-6**）。
+单项的范围、验收与事实位只在本文维护；系统怎么搭见 `technical.md`，怎么验证见
+`testplan.md`。
 
 ---
 
@@ -29,25 +29,7 @@ P3 2 项（**plan-5**、**plan-6**）、P4 1 项（**plan-7**）。单项的范�
 
 ### P1 — 当前待办（立即执行）
 
-入选标准：不做就让门禁或文档事实失去意义。
-
-#### `plan-1` 手稿派生状态重建
-
-**现状**：`data/state/` 由 ingest 生成，仓库里没有它；大纲与 `book.toml` 的章节归属
-目前无法逐条对照，只能靠门禁兜底。
-**动作**：依次跑 `ingest/digest.py` → `ingest/outline.py` → `ingest/chapters.py`，
-再比对 outline 的包归属与 `[chapters.packages]` 是否一致。
-**验收**：`data/state/source-inventory.json` 与 `data/state/outline.json` 存在；
-`make.py check` 全绿；`source_refs.py` 无新增漂移。
-**事实位**：派生事实以 `data/state/*.json` 为准；进度只在本条维护。
-
-#### `plan-2` 基线收缩
-
-**现状**：`data/baselines/` 存已评审存量，修复过的条目会以 stale 报出，尚无定期收缩。
-**动作**：逐门禁跑一次，把 stale 项复核后 `--update-baseline` 收缩；新增条目须在评审
-中说明理由。
-**验收**：各门禁 stale = 0；条目只减不增（结构变更导致的重新键控须单独说明）。
-**事实位**：条目清单在 `data/baselines/*.json`；生命周期见 `quality-model.md` §4。
+入选标准：不做就让门禁或文档事实失去意义。当前无待办项。
 
 ### P2 — 下一阶段就绪（条件满足即开工）
 
@@ -71,29 +53,22 @@ P3 2 项（**plan-5**、**plan-6**）、P4 1 项（**plan-7**）。单项的范�
 **验收**：第二语种可构建；章节数与图号与中文版逐一对应；`structure.py` 绿。
 **事实位**：语言资源在 `data/language/`；读取入口见 `technical.md` §3.3。
 
-#### `plan-9` 事实块刷新（`--refresh-facts`）
+#### `plan-10` 附录的符号断言纳入门禁
 
-**现状**：`chapters.py` 只在目标文件为空 / 内容相同 / `--force` 时写入。源码变了以后，
-含正文的章节只能整篇 `--force` 覆盖（丢正文），或者干脆不更新（事实过期）。而随源码变化的
-其实只是包表、类型表、坐标与依赖方向这些可枚举块。
+**现状**：`source_refs.py` 只扫章节文件（`chapter_names` 里以 `ch` 开头的那些），附录 A 的
+`Class.method(` 断言因此从未被检查；实测有 10 条断言在对应类里找不到方法
+（如 `CommandContainer.canReuse(`、`MVStore.openInternal(`、`MVStore.setLastChunk(`），
+其余 6 条是已登记漂移。同一批附录里的 `Class.java:line` 坐标也不在扫描面内。
 
-**动作**：渲染器给可重算的块加标记（`<!-- generated:<块名> -->` … `<!-- /generated -->`），
-新增 `--refresh-facts`：只替换既有文件里的标记块，块外一字不动；文件里没有标记块时退化为
-“跳过并提示”。`--force` 补两件事：覆盖前备份到 `data/tmp/generated-backup/<时间戳>/`，
-并在结果里打印被替换的行数（先看代价再执行）。
+**动作**：把附录文件（`appendix-*.md`）加进`extract_references` 与
+`extract_symbol_claims` 的扫描面；逐条核对 10 条断言——文档写错的改文档，改了名或不存在
+的方法写明理由后进 `source-symbol-baseline.json`。一次只动这一份附录，不顺手改正文。
 
-**三渠道一致**（同一份动作表，渠道只负责呈现）：
-- CLI：`bookctl analyze --refresh-facts`、`bookctl analyze --force`（透传到 `chapters.py`）
-- TUI：主菜单「源码 → 手稿」保持确定性路径；配置/内容屏新增「刷新事实块」一项，
-  结果行报 `刷新 N 章 / 跳过 M 章（无标记块）`
-- Web：`POST /api/run {"action":"analyze","refresh":true}`，响应文本与 CLI 相同
+**验收**：`source_refs.py` 扫描面覆盖全部章节与附录；10 条断言逐条有结论（改文档或入基线
+并在基线里写明理由）；`make.py check` 全绿；附录坐标无新增 missing。
 
-**验收**：① 源码变更后 `--refresh-facts` 只改标记块，正文段落逐字不变（用例断言 diff 范围）；
-② 无标记块的文件被跳过并说明原因；③ 三渠道调用同一 `core/actions.analyze(refresh=…)`，
-参数透传各有一例；④ `content_volume` 不因刷新而下降。
-
-**事实位**：标记约定在 `ingest/chapters.py`；动作参数在 `core/actions.py`；渠道入口见
-`technical.md` §4.7。
+**事实位**：扫描面在 `audit/source_refs.py` 的 `CHAPTER_FILES`；已登记漂移在
+`data/baselines/source-symbol-baseline.json`；判据见 `testplan.md` 的「事实」行。
 
 ### P3 — 预期实施，有空时安排
 
@@ -118,7 +93,7 @@ P3 2 项（**plan-5**、**plan-6**）、P4 1 项（**plan-7**）。单项的范�
 
 ### P4 — 先决门槛未过，暂缓
 
-入选标准：接入前有硬性先决条件，门槛未过不排期。
+入选标准：接入前有硬性先决条件，门槛未过不排期。当前无待办项。
 
 ## 归档
 

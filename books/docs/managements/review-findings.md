@@ -4,7 +4,7 @@
 > 版本：v0.1
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
-> **编号源**：`rf-next = 32`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-31，
+> **编号源**：`rf-next = 34`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-33，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -58,7 +58,7 @@
 | 文件 | 现状与拆分方向 |
 | --- | --- |
 | `src/python/render/to_html.py` 811 行 | 占比 90%，触线前拆：目录构建、正文渲染、样式段各自独立文件 |
-| `src/python/ingest/chapters.py` 685 行 | 占比 76%，按「骨架生成 / 模板填充 / 语言适配调用」三段拆 |
+| `src/python/ingest/chapters.py` 755 行 | 占比 84%，按「骨架生成 / 模板填充 / 语言适配调用」三段拆（事实块标记与刷新已拆到 `ingest/factblocks.py`） |
 | `src/python/audit/style.py` 641 行 | 占比 71%，句式规则按规则族拆（单调 / 重复 / 段落），共享解析上提 |
 
 ## 已解决问题
@@ -101,6 +101,8 @@
 | rf-29 | `make.py cover` 从不返回：它用 `unittest discover` 跑覆盖率，遇到带线程的 Web/TUI 夹具死锁，于是这道门禁长期既不给数字也不报错；顺带发现 `coverage_fail_under` 88 高于实测 85——门禁即使跑起来也是红的 | **修订**：`coverage()` 改用与门禁同源的 `pytest -m tier_fast` 并加 1800s 超时，阈值按实测调到 85，`plan-3` 保留抬到 88 的目标 |
 | rf-30 | `make.py` 的每个步骤都没有超时（`check_runner` 有 1800s，`make.py` 没有），一个死锁的门禁会让整条命令永久挂住——rf-29 就是这样被我误读成“白跑”的 | **修订**：`run_step` 加 `STEP_TIMEOUT_S = 1800`，超时按 124 记为步骤失败并打印步骤名 |
 | rf-31 | 测试隔离只护住了手稿：一个新写的快照用例把 `data/baselines/snapshot-june.json` 写进了仓库（`GUARDED_SUFFIXES` 当时只有 `data/manuscript`），基线/派生状态同样会被测试污染 | **修订**：守卫扩到 `data/manuscript`、`data/baselines`、`data/state`；该用例改为把 `BOOK_ROOT` 指向临时树；误落的 `snapshot-june.json` 已删除 |
+| rf-32 | 章名在代码里又写了一份：`source_refs.py::CHAPTER_FILES` 仍列 `ch7-sql-execution.md`/`ch8-query-optimizer.md`，两个文件不存在 → 每次跑两条 `WARN Chapter file not found`，合并后的 `ch7-8-sql-optimizer.md` 因此从未被坐标门禁检查；同一批旧章名还留在一份无任何引用的历史图注基线文件与 `exercises.py` 的用法示例里 | **修订**：`CHAPTER_FILES` 改为 `_config.chapter_names(include_cover=False)`（单份来源是 `book.toml`），合并章节重新进入检查面（95 条坐标全部有效）；删除无引用的历史基线文件；示例改占位名；新增用例钉住“列出的章必须存在且等于配置” |
+| rf-33 | 慢档在 CI 超时 30 分钟：`order_dependence.bisect()` 默认把整个套件当作前缀候选，`test_bisect_reports_a_target_that_passes_in_full_order` 实际重跑了一遍全包；而 `make.py` 用全局 1800s 步骤超时，把“重跑全包”掩盖成一个只能等的半小时；慢档其余 72 个用例实测共 0.49s | **修订**：`bisect()` 增加 `pool` 参数，用例改传两模块小池（单文件 1.57s）；CLI 同步增加 `--pool`；`make.py` 按步骤名取超时（`base.json [toolchain]` 的 `step_timeout_s` 900 / `test_timeout_s` 300），测试步骤加 `--durations=10` 把最慢用例写进报告；`CLAUDE.md` 补「目标时限内不跑未知耗时命令」的作业纪律 |
 
 ### 归档
 

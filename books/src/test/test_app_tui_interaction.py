@@ -116,6 +116,12 @@ class TuiInteractionTest(unittest.TestCase):
         self.press('4', '1')
         self.assertEqual(self.calls, ['check'])
 
+    def test_the_config_screen_offers_the_fact_refresh(self):
+        keys = [row[0] for row in self.tui.screen_rows('config')]
+        self.assertEqual(keys, ['1', '2', '3', '4', '5', '6', '0'])
+        self.press('5', '6')
+        self.assertEqual(self.calls, ['analyze-refresh'])
+
     def test_l_shortcut_runs_the_llm_ingest(self):
         for pressed in ('l', 'L'):
             with self.subTest(key=pressed):

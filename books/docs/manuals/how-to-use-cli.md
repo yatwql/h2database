@@ -11,6 +11,8 @@
 books/scripts/bookctl status              # 书籍 + 配置 + LLM 状态
 books/scripts/bookctl analyze             # 源码 → 手稿（确定性）
 books/scripts/bookctl analyze-llm         # 源码 → 手稿（导读/小结用 LLM 润色）
+books/scripts/bookctl analyze --refresh-facts   # 只刷新已标记的事实块，正文不动
+books/scripts/bookctl analyze --force     # 整篇重生成（覆盖前备份到 data/tmp/generated-backup/）
 books/scripts/bookctl build               # 手稿 → 合并 Markdown + HTML
 books/scripts/bookctl check               # 全部质量门禁
 books/scripts/bookctl test --full         # 含 chromium/pandoc 的完整测试

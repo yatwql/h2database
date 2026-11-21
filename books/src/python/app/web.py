@@ -88,7 +88,13 @@ class Handler(server.BaseHTTPRequestHandler):
                        'application/json; charset=utf-8')
             return
         action = str(payload.get('action', ''))
-        kwargs = {'prompt': str(payload.get('prompt', ''))} if action == 'llm-ask' else {}
+        if action == 'llm-ask':
+            kwargs = {'prompt': str(payload.get('prompt', ''))}
+        elif action in actions.ANALYZE_ACTIONS:
+            kwargs = {'refresh': bool(payload.get('refresh')),
+                      'force': bool(payload.get('force'))}
+        else:
+            kwargs = {}
         try:
             code, text = actions.run(action, **kwargs)
         except Exception as exc:  # noqa: BLE001 - the page relays failures, it does not raise

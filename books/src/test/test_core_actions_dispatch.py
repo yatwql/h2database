@@ -87,6 +87,34 @@ class ActionDispatchTest(unittest.TestCase):
             self.actions.analyze(force=True)
         self.assertEqual(calls[2], ('chapters.py', ('--force',)))
 
+    def test_analyze_passes_refresh_only_when_asked(self):
+        calls = []
+
+        def fake_run(script, *args):
+            calls.append((os.path.basename(script), args))
+            return 0, ''
+
+        with mock.patch.object(self.actions, '_run', side_effect=fake_run):
+            self.actions.analyze(refresh=True)
+        self.assertEqual(calls[2], ('chapters.py', ('--refresh-facts',)))
+
+    def test_dispatched_analyze_forwards_the_switches(self):
+        seen = {}
+
+        def fake_run(script, *args):
+            if script.endswith('chapters.py'):
+                seen['args'] = args
+            return 0, ''
+
+        with mock.patch.object(self.actions, '_run', side_effect=fake_run):
+            code, _text = self.actions.run('analyze', refresh=True)
+        self.assertEqual(code, 0)
+        self.assertEqual(seen['args'], ('--refresh-facts',))
+
+    def test_the_refresh_action_is_advertised_and_dispatched(self):
+        self.assertIn('analyze-refresh', self.actions.ACTIONS)
+        self.assertIn('analyze-refresh', self.actions.DISPATCH)
+
     def test_analyze_reports_a_shrunk_manuscript_as_a_failure(self):
         payload = '{"count": 2, "problems": ["ch1: bytes below floor"]}'
 

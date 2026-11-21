@@ -28,7 +28,19 @@ def main(argv: list[str] | None = None) -> int:
                         help='; '.join(f'{k}: {v}' for k, v in sorted(actions.ACTIONS.items())))
     parser.add_argument('prompt', nargs='*', help='prompt for llm-ask')
     parser.add_argument('--scenario', default='summary', help='LLM scenario for llm-ask')
+    parser.add_argument('--force', action='store_true',
+                        help='analyze: overwrite chapters that already carry prose '
+                             '(each previous file is backed up)')
+    parser.add_argument('--refresh-facts', action='store_true',
+                        help='analyze: replace only the marked fact blocks')
     args = parser.parse_args(argv)
+
+    if (args.force or args.refresh_facts) and args.action not in actions.ANALYZE_ACTIONS:
+        sys.stderr.write('error: --force / --refresh-facts 只能用于 analyze 类动作\n')
+        return 2
+    if args.force and args.refresh_facts:
+        sys.stderr.write('error: --force 与 --refresh-facts 不能同时使用\n')
+        return 2
 
     if args.action == 'settings':
         tail = list(args.prompt)
@@ -50,6 +62,8 @@ def main(argv: list[str] | None = None) -> int:
     kwargs = {}
     if args.action == 'llm-ask':
         kwargs = {'prompt': ' '.join(args.prompt), 'scenario': args.scenario}
+    elif args.action in actions.ANALYZE_ACTIONS:
+        kwargs = {'force': args.force, 'refresh': args.refresh_facts}
     code, text = actions.run(args.action, **kwargs)
     sys.stdout.write(text)
     return code

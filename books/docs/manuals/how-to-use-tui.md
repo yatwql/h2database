@@ -63,7 +63,7 @@ python books/src/python/app/tui.py
 主菜单   1 analyze  l analyze-llm  2 build  3 deliver  0 退出
          4 质量  5 配置与状态
 质量     1 check  2 test  0 返回
-配置     1 status  2 llm-ask  3 配置项  4 LLM provider 优先级  5 doctor  0 返回
+配置     1 status  2 llm-ask  3 配置项  4 LLM provider 优先级  5 doctor  6 刷新事实块  0 返回
 配置项   逐项列出可写键（书名、版本、手稿目录、产物目录、语言、日志级别、默认 provider）  0 返回
 优先级   按回退顺序列出 provider，选中后按 u 上移 / d 下移  0 返回
 ```

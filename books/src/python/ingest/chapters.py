@@ -17,9 +17,12 @@ import json
 import os
 import re
 import sys
+import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from factblocks import backup_existing, line_delta, refresh_blocks
+from factblocks import mark_block as _gen
 from lib import _config, _fsutil, _log, _mdutil
 
 OUTLINE = os.path.join(_config.BOOK_ROOT, 'data', 'state', 'outline.json')
@@ -173,14 +176,15 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
     L += [f'## {cn}.1 模块版图', '',
           tpl('map_intro', '本章覆盖 {pkgs} 个包、{lines} 行实现。',
               **facts_intro), '']
-    L += _table(['包', '文件数', '行数', '职责'],
-                [[f'`{p}`', f"{i['files']}", f"{i['lines']:,}",
-                  i['summary'] or '（无包注释，按主类型归纳）']
-                 for p, i in pkgs_sorted[:int(GEN.get('max_packages_per_table', 12))]]) + ['']
-    if len(pkgs_sorted) > int(GEN.get('max_packages_per_table', 12)):
-        keep = int(GEN.get('max_packages_per_table', 12))
+    keep = int(GEN.get('max_packages_per_table', 12))
+    map_lines = _table(['包', '文件数', '行数', '职责'],
+                       [[f'`{p}`', f"{i['files']}", f"{i['lines']:,}",
+                         i['summary'] or '（无包注释，按主类型归纳）']
+                        for p, i in pkgs_sorted[:keep]])
+    if len(pkgs_sorted) > keep:
         rest = ', '.join(f'`{p}`' for p, _ in pkgs_sorted[keep:])
-        L += [f'其余 {len(pkgs_sorted) - keep} 个包规模较小：{rest}。', '']
+        map_lines += [f'其余 {len(pkgs_sorted) - keep} 个包规模较小：{rest}。', '']
+    L += _gen('packages', map_lines)
 
     L += [f'## {cn}.2 核心类型', '',
           tpl('types_intro',
@@ -190,14 +194,13 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         if not info['key_classes']:
             continue
         L += [f'### {cn}.2.{idx} `{pkg}`', '']
-        L += _table(['类型', '行数', '公开方法', '职责'],
-                    [[f"`{c['name']}`", f"{c['lines']:,}", f"{c['public_methods']}",
-                      c['summary'] or '（无类注释，按方法名归纳）']
-                     for c in info['key_classes'][:int(GEN.get('max_classes_per_package', 4))]]) + ['']
+        L += _gen(f'types-{idx}', _table(
+            ['类型', '行数', '公开方法', '职责'],
+            [[f"`{c['name']}`", f"{c['lines']:,}", f"{c['public_methods']}",
+              c['summary'] or '（无类注释，按方法名归纳）']
+             for c in info['key_classes'][:int(GEN.get('max_classes_per_package', 4))]]))
 
-    L += [f'## {cn}.3 关键 API 与源码坐标', '',
-          tpl('api_intro',
-              '下表把公开入口与源码位置对应起来，共 {rows} 条坐标。', **facts), '']
+    L += [f'## {cn}.3 关键 API 与源码坐标', '']
     rows = []
     for _pkg, info in pkgs_sorted:
         for cls in info['key_classes'][:3]:
@@ -209,7 +212,10 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
                 lineno = api_lines.get(api)
                 rows.append([f"`{cls['name']}.{api}()`",
                              f'`{rel}:{lineno}`' if lineno else f'`{rel}`'])
-    L += _table(['入口', '源码坐标'], rows[:20] or [['`—`', '`org/h2/...`']]) + ['']
+    L += _gen('api', [
+        tpl('api_intro',
+            '下表把公开入口与源码位置对应起来，共 {rows} 条坐标。', **facts), '',
+        *_table(['入口', '源码坐标'], rows[:20] or [['`—`', '`org/h2/...`']])])
 
     type_rows = []
     for pkg, info in pkgs_sorted:
@@ -217,10 +223,11 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
             type_rows.append([f'`{cls["name"]}`', f'`{pkg}`',
                               f'{cls["lines"]:,}', f'{cls["public_methods"]}'])
     if type_rows:
-        L += [f'## {cn}.3.1 公共类型清单', '',
-              (f'本章抽样类型按包分组，共 {len(type_rows)} 行；'
-              '规模与公开方法数是阅读优先级的第一信号。'), '']
-        L += _table(['类型', '包', '行数', '公开方法'], type_rows) + ['']
+        L += [f'## {cn}.3.1 公共类型清单', '']
+        L += _gen('type-list', [
+            (f'本章抽样类型按包分组，共 {len(type_rows)} 行；'
+             '规模与公开方法数是阅读优先级的第一信号。'), '',
+            *_table(['类型', '包', '行数', '公开方法'], type_rows)])
 
     take = 8 if len(pkgs_sorted) <= 2 else 4
     guide = []
@@ -257,10 +264,11 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
                 if lineno:
                     coord_rows.append([f'`{cls["name"]}.{api}()`', f'`{rel}:{lineno}`'])
     if coord_rows:
-        L += [f'## {cn}.3.2 源码坐标明细', '',
-              (f'本章主责包中 {len(coord_rows)} 个公开入口的行号，'
-              '按类聚簇，可直接跳转阅读。'), '']
-        L += _table(['入口', '源码坐标'], coord_rows) + ['']
+        L += [f'## {cn}.3.2 源码坐标明细', '']
+        L += _gen('coords', [
+            (f'本章主责包中 {len(coord_rows)} 个公开入口的行号，'
+             '按类聚簇，可直接跳转阅读。'), '',
+            *_table(['入口', '源码坐标'], coord_rows)])
 
     L += [f'## {cn}.4 阅读路径', '',
           tpl('path_intro', '从 `{top}` 先读骨架类，再沿依赖下钻。', **facts), '',
@@ -282,10 +290,11 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         top = ', '.join(f'`{d}`' for d, _n in list(deps.items())[:4])
         dep_rows.append([f'`{pkg}`', top])
     if dep_rows:
-        L += [f'## {cn}.5 依赖方向', '',
-              ('下表按源码中的 `import` 统计给出包间依赖，规模即耦合强度；'
-              '重构时优先看右侧出现频次最高的包。'), '']
-        L += _table(['包', '依赖（前 4）'], dep_rows) + ['']
+        L += [f'## {cn}.5 依赖方向', '']
+        L += _gen('deps', [
+            ('下表按源码中的 `import` 统计给出包间依赖，规模即耦合强度；'
+             '重构时优先看右侧出现频次最高的包。'), '',
+            *_table(['包', '依赖（前 4）'], dep_rows)])
         cn_tradeoff = 6
     else:
         cn_tradeoff = 5
@@ -370,9 +379,10 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         for target, count in list((info.get('depends_on') or {}).items())[:3]:
             dep_detail.append([f'`{pkg}`', f'`{target}`', str(count)])
     if dep_detail:
-        L += [f'## {cn}.{cn_summary + 2}.1 依赖明细', '',
-              '按 `import` 出现次数排序，数值越大耦合越深，重构窗口越窄。', '']
-        L += _table(['来源包', '目标包', '次数'], dep_detail) + ['']
+        L += [f'## {cn}.{cn_summary + 2}.1 依赖明细', '']
+        L += _gen('dep-detail', [
+            '按 `import` 出现次数排序，数值越大耦合越深，重构窗口越窄。', '',
+            *_table(['来源包', '目标包', '次数'], dep_detail)])
 
     checklist_items = int(GEN.get('checklist_items', 5))
     L += [f'## {cn}.{cn_summary + 2}.2 阅读检查清单', '',
@@ -430,9 +440,10 @@ def knowledge_block(cn: int, pkgs_sorted: list[tuple[str, dict]]) -> list[str]:
                          cls['summary'] or '按方法名归纳'])
     if not rows:
         return []
-    out = [f'## {cn}.9 知识点清单', '',
-           '下表汇总本章必须记住的类型，按包分组；规模与公开方法数用于排阅读顺序。', '']
-    out += _table(['类型', '包', '行数', '公开方法', '职责'], rows) + ['']
+    out = [f'## {cn}.9 知识点清单', '']
+    out += _gen('knowledge', [
+        '下表汇总本章必须记住的类型，按包分组；规模与公开方法数用于排阅读顺序。', '',
+        *_table(['类型', '包', '行数', '公开方法', '职责'], rows)])
     return out
 
 
@@ -454,9 +465,10 @@ def cross_index_block(cn: int, packages: list[str], nxt: int) -> list[str]:
             rows.append([f'`{package}`', f'第{owner[0]}章《{owner[1]}》'])
     if not rows:
         return []
-    out = [f'## {cn}.{nxt} 跨章索引', '',
-           '本章引用但不展开的包，按下面这张表跳到主责章节阅读。', '']
-    out += _table(['包', '主责章节'], rows) + ['']
+    out = [f'## {cn}.{nxt} 跨章索引', '']
+    out += _gen('cross-index', [
+        '本章引用但不展开的包，按下面这张表跳到主责章节阅读。', '',
+        *_table(['包', '主责章节'], rows)])
     return out
 
 
@@ -616,17 +628,86 @@ def _space(text: str) -> str:
     return '\n'.join(out)
 
 
+def _append_appendix(ch: dict, dry_run: bool) -> str:
+    """Append the coordinate block to one appendix; returns its status."""
+    num = APPENDIX_SPEC[ch['file']][0]
+    path = _config.manuscript(ch['file'])
+    existing = _fsutil.read_text(path) if os.path.isfile(path) else ''
+    if f'## {num}.1 ' in existing:
+        return 'skip'
+    block = render_appendix(ch)
+    if dry_run:
+        print(f'--- appendix {ch["file"]} (+{len(block.splitlines())} lines)')
+        return 'written'
+    _fsutil.write_text(path, existing.rstrip('\n') + '\n\n' + _space(block))
+    print(f'  appended {ch["file"]} (+{len(block.splitlines())} lines)')
+    return 'written'
+
+
+def _refresh_chapter(ch: dict, text: str, dry_run: bool) -> str:
+    """Swap only the marked blocks; returns 'refresh' | 'unchanged' | 'skip'."""
+    path = _config.manuscript(ch['file'])
+    existing = _fsutil.read_text(path) if os.path.isfile(path) else ''
+    result = refresh_blocks(existing, text) if existing else None
+    if result is None:
+        reason = '文件不存在' if not existing else '无标记块'
+        print(f'  skipped {ch["file"]}（{reason}，先上 --force 生成带标记的骨架）')
+        return 'skip'
+    new_text, removed, added = result
+    if dry_run:
+        print(f'--- {ch["file"]}（事实块 -{removed}/+{added} 行）')
+        return 'refresh'
+    if new_text == existing:
+        print(f'  unchanged {ch["file"]}（事实块已是最新）')
+        return 'unchanged'
+    _fsutil.write_text(path, new_text)
+    print(f'  refreshed {ch["file"]}（事实块 -{removed}/+{added} 行）')
+    return 'refresh'
+
+
+def _emit_chapter(ch: dict, args, stamp: str) -> str:
+    """Write, refresh or skip one chapter; returns its status."""
+    text = _space(render_chapter(ch))
+    path = _config.manuscript(ch['file'])
+    if args.refresh_facts:
+        return _refresh_chapter(ch, text, args.dry_run)
+    if not rewrite_allowed(path, text, args.force):
+        print(f'  skipped {ch["file"]}（已有正文，--force 才覆盖）')
+        return 'skip'
+    if args.dry_run:
+        print(f'--- {ch["file"]} ({len(text.splitlines())} lines)')
+        return 'written'
+    old = _fsutil.read_text(path) if os.path.isfile(path) else ''
+    if args.force and old:
+        removed, added = line_delta(old, text)
+        backup = backup_existing(path, stamp)
+        where = f' → {os.path.relpath(backup, _config.BOOK_ROOT)}' if backup else ''
+        print(f'  覆盖 {ch["file"]}（-{removed}/+{added} 行，备份{where}）')
+    _fsutil.write_text(path, text)
+    print(f'  wrote {ch["file"]} ({len(text.splitlines())} lines)')
+    return 'written'
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--only', help='single chapter file name')
     parser.add_argument('--dry-run', action='store_true', help='print instead of writing')
     parser.add_argument('--force', action='store_true',
-                        help='overwrite chapter files that already carry written prose')
+                        help='overwrite chapter files that already carry written prose '
+                             '(the previous file is backed up first)')
+    parser.add_argument('--refresh-facts', action='store_true',
+                        help='replace only the marked generated blocks; '
+                             'files without markers are skipped and reported')
     parser.add_argument('--llm', action='store_true',
                         help='let the LLM draft the lead-in and summary prose '
                              '(facts, tables and coordinates stay deterministic)')
     args = parser.parse_args(argv)
+
+    if args.refresh_facts and args.force:
+        print('error: --refresh-facts 与 --force 是两条路径，不能同时使用',
+              file=sys.stderr)
+        return 2
 
     global _USE_LLM
     _USE_LLM = bool(args.llm
@@ -644,37 +725,26 @@ def main(argv: list[str] | None = None) -> int:
 
     written = 0
     skipped = 0
+    refreshed = 0
+    unmarked = 0
+    stamp = time.strftime('%Y-%m-%d_%H%M%S')
     for ch in outline['chapters']:
         if args.only and ch['file'] != args.only:
             continue
         if ch['file'] in APPENDIX_SPEC:
-            num = APPENDIX_SPEC[ch['file']][0]
-            path = _config.manuscript(ch['file'])
-            existing = _fsutil.read_text(path) if os.path.isfile(path) else ''
-            if f'## {num}.1 ' in existing:
-                continue
-            block = render_appendix(ch)
-            if args.dry_run:
-                print(f'--- appendix {ch["file"]} (+{len(block.splitlines())} lines)')
-                continue
-            _fsutil.write_text(path, existing.rstrip('\n') + '\n\n' + _space(block))
-            written += 1
-            print(f'  appended {ch["file"]} (+{len(block.splitlines())} lines)')
+            status = _append_appendix(ch, args.dry_run)
+            written += status == 'written'
             continue
         if ch['file'] not in CHAPTER_SPEC:
             continue
-        text = _space(render_chapter(ch))
-        path = _config.manuscript(ch['file'])
-        if not rewrite_allowed(path, text, args.force):
-            skipped += 1
-            print(f'  skipped {ch["file"]}（已有正文，--force 才覆盖）')
-            continue
-        if args.dry_run:
-            print(f'--- {ch["file"]} ({len(text.splitlines())} lines)')
-            continue
-        _fsutil.write_text(path, text)
-        written += 1
-        print(f'  wrote {ch["file"]} ({len(text.splitlines())} lines)')
+        status = _emit_chapter(ch, args, stamp)
+        written += status == 'written'
+        refreshed += status == 'refresh'
+        skipped += status == 'skip'
+        unmarked += status == 'skip' and args.refresh_facts
+    if args.refresh_facts:
+        print(f'刷新 {refreshed} 章 / 跳过 {unmarked} 章（无标记块）')
+        return 0
     print(f'chapters written: {written}')
     if skipped:
         print(f'chapters skipped: {skipped}（已有正文；确认要重生成时加 --force）')

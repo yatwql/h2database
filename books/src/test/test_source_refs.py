@@ -64,6 +64,13 @@ class SourceReferenceAuditTest(unittest.TestCase):
         self.assertEqual(refs, [])
         self.assertIn('not found', err.getvalue())
 
+    def test_the_checked_chapters_come_from_the_configuration(self):
+        self.assertEqual(self.module.CHAPTER_FILES,
+                         [name for name in self.module._config.chapter_names(False)
+                          if name.startswith('ch')])
+        for name in self.module.CHAPTER_FILES:
+            self.assertTrue(os.path.isfile(os.path.join(self.docs_dir, name)), name)
+
     def test_extract_symbol_claims_only_outside_fences(self):
         name = self.write_chapter('KVStore.bump() 与\n```java\nIgnored.call()\n```\n')
         claims = self.module.extract_symbol_claims([name], self.docs_dir)

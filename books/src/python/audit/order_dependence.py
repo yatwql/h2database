@@ -137,18 +137,28 @@ def run_prefix(modules: list[str], target: str) -> str | None:
     return None
 
 
-def bisect(target_module: str, max_steps: int = 20) -> dict:
+def _all_modules() -> list[str]:
+    """Every test module name in the suite directory, sorted."""
+    try:
+        return [name[:-3] for name in sorted(os.listdir(TEST_DIR))
+                if name.startswith('test_') and name.endswith('.py')]
+    except OSError as exc:
+        raise SystemExit(f'error: cannot list {TEST_DIR}: {exc}') from exc
+
+
+def bisect(target_module: str, max_steps: int = 20,
+           pool: list[str] | None = None) -> dict:
     """Shrink the modules that run before ``target_module`` to the polluting set.
 
     Preconditions: the target passes alone and fails when the whole suite runs
     before it. The result names the smallest prefix (to the bisection's
     resolution) that still makes the target fail.
+
+    ``pool`` bounds the modules considered as the prefix. The default is the
+    whole suite, which re-runs every slow module just to answer a question about
+    one test; a caller that only needs the mechanism passes its own small pool.
     """
-    try:
-        modules = [name[:-3] for name in sorted(os.listdir(TEST_DIR))
-                   if name.startswith('test_') and name.endswith('.py')]
-    except OSError as exc:
-        raise SystemExit(f'error: cannot list {TEST_DIR}: {exc}') from exc
+    modules = list(pool) if pool is not None else _all_modules()
     if target_module not in modules:
         modules.append(target_module)
     others = [name for name in modules if name != target_module]
@@ -214,13 +224,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument('--timeout', type=float, default=1800.0)
     parser.add_argument('--bisect', metavar='MODULE',
                         help='shrink the modules that make MODULE fail')
+    parser.add_argument('--pool', default='',
+                        help='comma-separated modules to consider as the prefix '
+                             '(default: the whole suite, which re-runs every slow module)')
     args = parser.parse_args(argv)
 
     if args.run:
         return _worker(args.run == 'reverse', args.only)
 
     if args.bisect:
-        result = bisect(args.bisect)
+        pool = [name.strip() for name in args.pool.split(',') if name.strip()] or None
+        result = bisect(args.bisect, pool=pool)
         if args.json:
             print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0 if result['ok'] else 2

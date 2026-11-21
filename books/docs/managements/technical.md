@@ -151,6 +151,7 @@ books/
 - 页面几何：`base.json [toolchain]` 的 `pdf_page_width`、`pdf_page_height`、`pdf_page_tolerance`（`verify_pdf.py` 按此判定 A4）。
 - 章节骨架与必备段落：`book.toml [sections]`、`style.json [sections]`。
 - 覆盖率红线：`base.json [toolchain] coverage_fail_under`。
+- 步骤超时：`base.json [toolchain]` 的 `step_timeout_s`（普通步骤）与 `test_timeout_s`（测试与覆盖率步骤）；`make.py` 按步骤名取值，超时按 124 记为步骤失败。取值是“谨注定能跑完”的上限而非预算，故与实测耗时保留十数倍余量。
 
 判据文档（`testplan.md`）只说“不低于配置下限”，不引用这里的键名：键名与取值属于本节，`doc_drift` 的 `THRESHOLD` 检查守着这条边界。
 
@@ -191,6 +192,16 @@ books/
 或显式传 `--force` 时写入，否则跳过并报出行数；阶段结束时由 `core/actions.analyze`
 调用 `audit/content_volume.py` 做一次基线比对，把"这次 ingest 有没有让稿子变薄"放进
 同一次运行的结果里，而不是留给之后的门禁。
+
+夹在这两条之间的第三种情形是**事实块**：包表、类型表、源码坐标与依赖方向随源码变化，
+却不属于正文。渲染器把它们写在 `<!-- generated:<块名> -->` … `<!-- /generated -->` 之间，
+`--refresh-facts` 只替换这些标记块，块外一字不动；文件里没有标记块时退化为“跳过并提示”。
+`--force` 覆盖前把旧文件备份到 `data/tmp/generated-backup/<时间戳>/`，并先打印 `-a/+b`
+行数，让“整篇重写”的代价在执行前可见。
+
+标记只属于渲染器产出的骨架：人手写的章节不插标记，`--refresh-facts` 对其跳过并报数，
+这是正确降级而非缺陷。手写章节的源码坐标多嵌在正文句子里（而非表格），本就不在块级
+刷新的射程内，维护方式仍是随上游升级逐处改（由 `source_refs.py` 判定）。
 
 ### 4.3 `manuscript/` 手稿维护层
 
@@ -269,7 +280,10 @@ GROUPS = {build, verify, deliver, check, test, cover, report}
 ### 4.7 渠道层
 
 三个渠道共用 `core/actions.py`（动作执行）、`core/menu.py`（菜单模型与回报）、
-`core/settings.py`（可改配置与校验）。终端交互的细节契约（键位、反馈、确认、光标）
+`core/settings.py`（可改配置与校验）。参数也只在一处定义：会改写手稿的 `analyze` 类动作
+接受 `refresh` / `force`，CLI 用 `--refresh-facts` / `--force`，TUI 用配置屏的
+「刷新事实块」项，Web 用 `{"action":"analyze","refresh":true}`，三者都落到
+`actions.run()` 的同一分支。终端交互的细节契约（键位、反馈、确认、光标）
 是本章的子设计，单独成文以便频繁修订。渠道内禁止：导入下层业务层、驱动编排层、
 出现子进程或写文件调用、持有业务规则。由此 CLI、TUI、Web 的状态与结果天然一致。
 

@@ -44,6 +44,7 @@ SCREENS: dict[str, list[tuple[str, str, str]]] = {
                ('3', OPEN_PREFIX + SETTINGS_SCREEN, '修改配置项（书名、目录、日志级别…）'),
                ('4', OPEN_PREFIX + PROVIDERS_SCREEN, 'LLM provider 优先级'),
                ('5', 'doctor', '依赖与环境'),
+               ('6', 'analyze-refresh', '刷新事实块（只改可重算的表，正文不动）'),
                (BACK_KEY, BACK_ACTION, '返回主菜单')],
 }
 

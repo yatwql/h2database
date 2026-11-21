@@ -44,7 +44,9 @@
     "content_floor_ratio": 0.95,
     "pdf_page_ratio": 0.9,
     "epub_size_ratio": 0.85,
-    "content_profile": "baseline"
+    "content_profile": "baseline",
+    "step_timeout_s": 900,
+    "test_timeout_s": 300
   },
   "logging": {
     "level": "INFO",

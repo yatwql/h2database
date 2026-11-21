@@ -56,7 +56,7 @@
 主菜单  1 analyze · l analyze-llm · 2 build · 3 deliver      ← 高频动作直接在第一级
         4 质量 · 5 配置与状态 · 0 退出
 质量    1 check · 2 test · 0 返回
-配置    1 status · 2 llm-ask · 3 配置项 · 4 LLM provider 优先级 · 5 doctor · 0 返回
+配置    1 status · 2 llm-ask · 3 配置项 · 4 LLM provider 优先级 · 5 doctor · 6 刷新事实块 · 0 返回
 配置项  逐项列出可写键 + 0 返回           （行来自 core.settings.list_settings）
 优先级  按回退顺序列出 provider + 0 返回  （行来自 core.settings.provider_order）
 ```

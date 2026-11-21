@@ -62,7 +62,9 @@ class OrderComparisonTest(unittest.TestCase):
         self.assertTrue(any(name.startswith('test_meta_taxonomy.') for name in outcomes))
 
     def test_bisect_reports_a_target_that_passes_in_full_order(self):
-        result = self.mod.bisect('test_meta_taxonomy')
+        result = self.mod.bisect(
+            'test_meta_taxonomy',
+            pool=['test_audit_version_consistency', 'test_meta_taxonomy'])
         self.assertTrue(result['ok'])
         self.assertEqual(result.get('prefix', []), [])
 

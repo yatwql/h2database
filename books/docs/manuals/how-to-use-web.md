@@ -19,7 +19,7 @@ books/scripts/launch.sh web --host 0.0.0.0  # 仅在你明确需要外部访问�
 | ------ | ------ | ------ |
 | GET | `/` | 单页控制台（按钮对应 action） |
 | GET | `/api/status` | `{"code":0,"output":"书籍/配置/LLM 状态"}` |
-| POST | `/api/run` | 请求 `{"action":"check"}`，可选 `{"prompt":"…"}` 用于 `llm-ask` |
+| POST | `/api/run` | 请求 `{"action":"check"}`；`llm-ask` 可带 `{"prompt":"…"}`，`analyze` 可带 `{"refresh":true}` / `{"force":true}` |
 
 ```bash
 curl -s localhost:8080/api/status | python -m json.tool

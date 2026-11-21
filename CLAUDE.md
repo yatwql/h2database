@@ -32,6 +32,21 @@ python books/src/python/make.py doctor        # optional deps (pandoc/playwright
 | Content organisation (paths, chapter order) | `books/data/tmpl/book.toml` |
 | Toolchain policy (thresholds, budgets, baselines) | `books/data/config/base.json`, `books/data/config/style.json` |
 
+## Working Rhythm
+
+Waiting is the main cost of a session, so bound it before it happens:
+
+- **Measure before running.** Get the order of magnitude first (`--collect-only`,
+  one file, a `--durations` subset); never start a whole-suite run whose cost is
+  unknown. The suite is ~20s, so a job that takes minutes means one test is stuck.
+- **Nothing over ~2 minutes runs in the foreground.** Launch it in the background,
+  say the expected time, then wait for the exit signal — no `sleep` polling.
+- **Never run two heavy jobs at once.** A step killed at its timeout leaves its
+  child alive; run `ps` first and kill the orphan before starting again, or both
+  jobs fight for CPU and everything looks twice as slow.
+- **Answer with the smallest command that decides the question.** A single file or
+  a single case beats the full suite; run the full suite once, at the end.
+
 ## Hard Rules
 
 - Configuration lives only in `books/data/tmpl/book.toml`,

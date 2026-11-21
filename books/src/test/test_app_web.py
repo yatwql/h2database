@@ -95,6 +95,16 @@ class WebConsoleTest(unittest.TestCase):
         payload = json.loads(raw)
         self.assertIn(payload['code'], (0, 1, 2))
 
+    def test_post_analyze_forwards_the_refresh_switch(self):
+        with mock.patch.object(self.web.actions, 'run',
+                               return_value=(0, '刷新 1 章 / 跳过 0 章（无标记块）')) as run:
+            _status, raw = self.post('/api/run',
+                                     json.dumps({'action': 'analyze',
+                                                 'refresh': True}).encode())
+        self.assertIn('刷新', json.loads(raw)['output'])
+        self.assertTrue(run.call_args.kwargs['refresh'])
+        self.assertFalse(run.call_args.kwargs['force'])
+
     def test_an_action_that_raises_answers_with_a_code(self):
         def boom(*_args, **_kwargs):
             raise RuntimeError('no provider')

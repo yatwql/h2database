@@ -18,7 +18,7 @@ style-guide §12 minimums:
 Usage:
   python exercises.py              # default: scan all ch*.md
   python exercises.py --json       # machine-readable summary
-  python exercises.py --target ch7-sql-execution.md   # single file
+  python exercises.py --target <chapter>.md   # single file
   python exercises.py --template   # emit a 3-question template
 
 Exit codes:

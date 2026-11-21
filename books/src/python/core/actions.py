@@ -27,6 +27,7 @@ ACTIONS = {
     'status': '显示书籍、配置与 LLM 状态',
     'analyze': '源码 → 手稿（digest → outline → chapters）',
     'analyze-llm': '源码 → 手稿（导读/小结用 LLM 润色，事实仍确定性）',
+    'analyze-refresh': '源码 → 手稿（只刷新已标记的事实块，正文不动）',
     'build': '手稿 → 合并 Markdown + HTML',
     'check': '运行全部质量门禁',
     'test': '运行测试套件',
@@ -105,13 +106,15 @@ def _llm_lines(before: dict | None = None) -> str:
         return f'LLM：用量记账不可用（{exc}）'
 
 
-def analyze(use_llm: bool = False, force: bool = False) -> tuple[int, str]:
+def analyze(use_llm: bool = False, force: bool = False,
+            refresh: bool = False) -> tuple[int, str]:
     """Run stage 1: digest the source tree, plan the outline, render chapters.
 
     With ``use_llm`` the chapter lead-in and summary paragraphs may be drafted by
     the configured provider; facts, coordinates, tables and exercises stay
     deterministic either way. ``force`` lets the renderer overwrite chapters that
-    already carry written prose; without it those files are skipped and reported.
+    already carry written prose (backing each one up first); ``refresh`` swaps
+    only the marked generated blocks and leaves every other word in place.
 
     The run ends with the volume comparison, so "did the manuscript survive this
     ingest" is answered in the same report instead of a later gate.
@@ -121,7 +124,8 @@ def analyze(use_llm: bool = False, force: bool = False) -> tuple[int, str]:
     for script in ('ingest/digest.py', 'ingest/outline.py', 'ingest/chapters.py'):
         extra = []
         if script.endswith('chapters.py'):
-            extra = (['--llm'] if use_llm else []) + (['--force'] if force else [])
+            extra = (['--llm'] if use_llm else [])
+            extra += ['--refresh-facts'] if refresh else (['--force'] if force else [])
         code, text = _run(script, *extra)
         out.append(text)
         if code != 0:
@@ -197,17 +201,28 @@ DISPATCH = {
     'settings': settings_table,
     'analyze': analyze,
     'analyze-llm': lambda: analyze(use_llm=True),
+    'analyze-refresh': lambda: analyze(refresh=True),
     'build': build,
     'check': check,
     'test': test,
     'deliver': deliver,
 }
 
+# Actions whose renderer step takes switches; forwarded to `analyze` as-is.
+ANALYZE_ACTIONS = frozenset({'analyze', 'analyze-llm', 'analyze-refresh'})
+
 
 def run(action: str, **kwargs) -> tuple[int, str]:
     """Execute one action by name (used by every channel)."""
     if action == 'llm-ask':
         return llm_ask(kwargs.get('prompt', ''), kwargs.get('scenario', 'summary'))
+    if action in ANALYZE_ACTIONS:
+        LOG.info('action %s start', action)
+        code, text = analyze(use_llm=action == 'analyze-llm' or bool(kwargs.get('use_llm')),
+                             refresh=action == 'analyze-refresh' or bool(kwargs.get('refresh')),
+                             force=bool(kwargs.get('force')))
+        LOG.info('action %s done rc=%s (%d chars)', action, code, len(text))
+        return code, text
     handler = DISPATCH.get(action)
     if handler is None:
         LOG.warning('unknown action %r', action)

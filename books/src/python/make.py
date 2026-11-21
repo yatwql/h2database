@@ -114,7 +114,24 @@ def pin_drift() -> list[str]:
 # (name, script or None for builtin, extra args, group)
 Step = tuple[str, str | None, tuple[str, ...], str]
 
-STEP_TIMEOUT_S = 1800
+# A step that hangs must fail fast enough for the operator to keep reading the
+# report: gates are seconds, the suite is tens of seconds, so a bound with a
+# wide margin still trips long before anyone gives up waiting. Both values are
+# overridable in base.json [toolchain].
+STEP_TIMEOUT_S = 900
+TEST_TIMEOUT_S = 300
+SLOW_STEPS = frozenset({'unittest', 'coverage'})
+
+
+def step_timeout(name: str) -> float:
+    """Wall-clock bound for one step, in seconds (config first, default second)."""
+    toolchain = _config.POLICY.get('toolchain') or {}
+    key = 'test_timeout_s' if name in SLOW_STEPS else 'step_timeout_s'
+    fallback = TEST_TIMEOUT_S if name in SLOW_STEPS else STEP_TIMEOUT_S
+    try:
+        return float(toolchain.get(key) or fallback)
+    except (TypeError, ValueError):
+        return float(fallback)
 
 STEPS: list[Step] = [
     # ---- build ----
@@ -204,7 +221,9 @@ def run_step(step: Step) -> tuple[str, int, float]:
         # which is how the slow tier burned 1800s in CI before failing.
         if importlib.util.find_spec('pytest'):
             marker = [] if os.environ.get('BOOK_SLOW') == '1' else ['-m', 'tier_fast']
-            cmd = [PY, '-m', 'pytest', '-q', *marker, tests_dir]
+            # --durations keeps the costliest tests in the report: the operator
+            # sees which one is slow instead of waiting for a wall clock to tell.
+            cmd = [PY, '-m', 'pytest', '-q', '--durations=10', *marker, tests_dir]
         else:
             cmd = [PY, '-m', 'unittest', 'discover', '-s', tests_dir, '-t', tests_dir]
     else:
@@ -212,13 +231,14 @@ def run_step(step: Step) -> tuple[str, int, float]:
     LOG.debug('run step %s: %s', name, ' '.join(cmd))
     # A gate that deadlocks must fail the run, not hang it: without a bound the
     # whole command waits forever and no step ever reports.
+    limit = step_timeout(name)
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, cwd=BOOK_ROOT,
-                              check=False, timeout=STEP_TIMEOUT_S)
+                              check=False, timeout=limit)
     except subprocess.TimeoutExpired:
         elapsed = time.perf_counter() - started
-        LOG.warning('step %s timed out after %ss', name, STEP_TIMEOUT_S)
-        print(f'  FAIL {name} (timeout after {STEP_TIMEOUT_S}s)')
+        LOG.warning('step %s timed out after %ss', name, limit)
+        print(f'  FAIL {name} (timeout after {limit:g}s)')
         return name, 124, elapsed
     elapsed = time.perf_counter() - started
     if proc.returncode != 0:

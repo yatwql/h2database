@@ -41,18 +41,12 @@ POM_PATH = _config.source_tree('pom_root')
 # on every run. Refresh with: python source_refs.py --update-baseline
 BASELINE_PATH = _config.baseline_path('source_symbol')
 
-CHAPTER_FILES = [
-    'ch1-2-architecture.md',
-    'ch3-packages.md',
-    'ch4-5-modules-processes.md',
-    'ch6-1-data-structures.md',
-    'ch6-2-storage-algorithms.md',
-    'ch6-3-query-algorithms.md',
-    'ch7-sql-execution.md',
-    'ch8-query-optimizer.md',
-    'ch9-10-persistence-locking.md',
-    'ch11-12-guide-summary.md',
-]
+# Chapter files come from book.toml, so a renamed or merged chapter can never
+# leave the gate silently checking a file that no longer exists. The `ch` filter
+# keeps the scope at chapters: appendices are narrative and carry their own
+# coordinates review.
+CHAPTER_FILES = [name for name in _config.chapter_names(include_cover=False)
+                 if name.startswith('ch')]
 
 # Pattern: ClassName.java:lineno (also captures start of range ClassName.java:start-end)
 REF_RE = re.compile(r'\b(\w+)(?:' + '|'.join(re.escape(x) for x in SUFFIXES) + r'):(\d+)')
