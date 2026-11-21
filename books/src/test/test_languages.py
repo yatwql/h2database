@@ -30,7 +30,8 @@ class TestRegistry(unittest.TestCase):
         self.root = _fixture.build_book(self.tmp.name)
 
     def test_known_languages(self):
-        self.assertEqual(sorted(languages.ANALYZERS), ['java', 'python', 'rust'])
+        self.assertEqual(sorted(languages.ANALYZERS),
+                         ['go', 'java', 'kotlin', 'python', 'rust'])
 
     def test_unknown_language_is_reported(self):
         with self.assertRaises(SystemExit):
@@ -38,7 +39,8 @@ class TestRegistry(unittest.TestCase):
 
     def test_detect_per_fixture(self):
         for name, expected in (('mini-java', 'java'), ('mini-python', 'python'),
-                               ('mini-rust', 'rust')):
+                               ('mini-rust', 'rust'), ('mini-kotlin', 'kotlin'),
+                               ('mini-go', 'go')):
             self.assertEqual(languages.detect(os.path.join(FIXTURES, name)), expected)
 
 class TestAnalyzers(unittest.TestCase):
@@ -76,6 +78,32 @@ class TestAnalyzers(unittest.TestCase):
         self.assertIn('Widget', names)
         widget = next(u for u in package['classes'] if u['name'] == 'Widget')
         self.assertIn('widget', widget['summary'].lower())
+
+    def test_kotlin_package_unit_and_api(self):
+        inventory = self.analyze('kotlin', 'mini-kotlin')
+        package = inventory['packages']['com.example']
+        widget = next(u for u in package['classes'] if u['name'] == 'Widget')
+        self.assertTrue(widget['public'])
+        self.assertIn('render', widget['api'])
+        self.assertIn('widget', widget['summary'].lower())
+
+    def test_kotlin_imports_become_dependencies(self):
+        inventory = self.analyze('kotlin', 'mini-kotlin')
+        package = inventory['packages']['com.example']
+        self.assertIn('kotlinx.coroutines', package['depends_on'])
+
+    def test_go_package_units_and_visibility(self):
+        inventory = self.analyze('go', 'mini-go')
+        package = next(iter(inventory['packages'].values()))
+        names = {u['name']: u for u in package['classes']}
+        self.assertIn('Widget', names)
+        self.assertTrue(names['Widget']['public'])
+        self.assertFalse(names['hidden']['public'])
+
+    def test_go_imports_become_dependencies(self):
+        inventory = self.analyze('go', 'mini-go')
+        package = next(iter(inventory['packages'].values()))
+        self.assertIn('fmt', package['depends_on'])
 
     def test_java_packages(self):
         inventory = self.analyze('java', 'mini-java')

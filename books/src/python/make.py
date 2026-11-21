@@ -114,6 +114,8 @@ def pin_drift() -> list[str]:
 # (name, script or None for builtin, extra args, group)
 Step = tuple[str, str | None, tuple[str, ...], str]
 
+STEP_TIMEOUT_S = 1800
+
 STEPS: list[Step] = [
     # ---- build ----
     ('cover_stats', 'manuscript/cover.py', (), 'build'),
@@ -202,7 +204,16 @@ def run_step(step: Step) -> tuple[str, int, float]:
     else:
         cmd = [PY, os.path.join(TOOLS_DIR, script), *extra]
     LOG.debug('run step %s: %s', name, ' '.join(cmd))
-    proc = subprocess.run(cmd, capture_output=True, text=True, cwd=BOOK_ROOT, check=False)
+    # A gate that deadlocks must fail the run, not hang it: without a bound the
+    # whole command waits forever and no step ever reports.
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, cwd=BOOK_ROOT,
+                              check=False, timeout=STEP_TIMEOUT_S)
+    except subprocess.TimeoutExpired:
+        elapsed = time.perf_counter() - started
+        LOG.warning('step %s timed out after %ss', name, STEP_TIMEOUT_S)
+        print(f'  FAIL {name} (timeout after {STEP_TIMEOUT_S}s)')
+        return name, 124, elapsed
     elapsed = time.perf_counter() - started
     if proc.returncode != 0:
         LOG.warning('step %s failed rc=%s (%.2fs)', name, proc.returncode, elapsed)

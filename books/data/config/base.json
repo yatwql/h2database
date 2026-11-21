@@ -18,7 +18,9 @@
     "suffixes": {
       "java": ".java",
       "python": ".py",
-      "rust": ".rs"
+      "rust": ".rs",
+      "kotlin": ".kt",
+      "go": ".go"
     },
     "version": "2.5.259-SNAPSHOT"
   },

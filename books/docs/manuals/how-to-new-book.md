@@ -38,7 +38,7 @@ books/scripts/new-book.sh ../copy --from-manuscript   # 连章节一起复制
 
 ## 脚手架之后
 
-1. 改 `data/config/base.json`：`sources.src_main` 指向新源码树，`languages` 选 `java|python|rust`。
+1. 改 `data/config/base.json`：`sources.src_main` 指向新源码树，`languages` 选 `java|python|rust|kotlin|go`。
 2. `bookctl analyze` 生成版图与章节；`bookctl check` 跑全部门禁。
 3. 手写正文仍是人最值钱的部分：`data/manuscript/ch*.md`。
 

@@ -182,7 +182,8 @@ books/
 
 1. 读取源码位置（`base.json [sources] src_main` 等），扫描包与文件，落 `data/state/source-inventory.json`。
 2. 按章节的包归属（`book.toml [chapters.packages]`）切分主题，落 `data/state/outline.json`。
-3. 语言适配器（`ingest/languages/`）提供按语言解析符号的能力，Java 之外的实现可插拔。
+3. 语言适配器（`ingest/languages/`）提供按语言解析符号的能力：现支持 java / python / rust /
+   kotlin / go，新增一门语言＝加一个模块 + 注册表一行，`detect()` 的后缀映射从注册表推导。
 
 该层只写 `data/state` 与手稿骨架，不参与质量判定：判定属于 `audit/`。
 
