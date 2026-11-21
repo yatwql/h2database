@@ -13,7 +13,7 @@
 | 基础配置 | `data/config/base.json` | 源码树、语言、文件后缀、包前缀、状态与基线路径、工具链预算、日志 |
 | 风格配置 | `data/config/style.json` | 展示文案、章节骨架、图注词表、写作与质量阈值、生成能力与模板 |
 | 语言包 | `data/language/<code>.json` | 章节骨架名、练习提示语、术语提示行 |
-| LLM | `data/config/llm_provider.json`、`llm_settings.json` | provider、路由与生成参数 |
+| LLM | `data/config/llm_provider.json`、`llm_settings.json`、`llm_pricing.json` | provider、路由、生成参数与单价 |
 
 ## 1. 数据组织（book.toml）
 
@@ -196,6 +196,26 @@ provider 不可用时自动回退到确定性文本并在 stderr 打一行警告
 缺省强度来自 `llm_settings.json` 的 `defaults.thinking`（默认 `low`），也可在
 `thinking.scenario/book/chapter` 覆盖；越界值直接报错。强度会作为
 `reasoning_effort` 传给 openai-compatible provider；`mock` 条目会把它回显出来便于测试。
+
+## 5.1 LLM 的计价、用量与上限
+
+每次 LLM 调用都会记账：token 与费用写在结果的最后一行，明细逐行追加到
+`books/logs/llm-usage.jsonl`（gitignored，可以按天/按场景统计）。
+
+单价放在 `data/config/llm_pricing.json`，按**百万 token** 计、用 provider 自己的货币：
+
+```json
+{"currency": "USD",
+ "models": {"deepseek-v4-flash": {"input_per_mtok": 0.28, "output_per_mtok": 0.42}}}
+```
+
+- 表里没有的模型照样能调用，只是费用显示 `未定价`——不猜价格。
+- 调用前的预估：`入 ~N token`（按 3.5 字符/token 估）+ `出 ≤max_tokens`，给出费用区间；
+  预估永远在真正请求之前打印，`llm-ask` 与「源码 → 手稿（LLM）」都有。
+- 上限：`llm_settings.json` 加 `"daily_cost_limit": 3.0`（0 或缺省 = 不设限）。今日累计
+  达到上限后，结果里会多一行 `⚠ 今日 LLM 花费 … 已达上限 …`；它是提醒，不阻断调用。
+- 想知道今天花了多少：`books/scripts/bookctl llm-ask ""` 的预估行末尾就带今日累计，
+  或直接看 `books/logs/llm-usage.jsonl` 里 `at` 以今天开头的行。
 
 ## 6. 改完怎么验证
 

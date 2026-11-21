@@ -1,5 +1,6 @@
 {
-  "_note": "Per-scenario generation settings; routing (which provider) lives in llm_provider.json.",
+  "_note": "Per-scenario generation settings; routing (which provider) lives in llm_provider.json. daily_cost_limit: daily spend ceiling in the pricing currency (0 disables the warning).",
+  "daily_cost_limit": 0,
   "defaults": {
     "temperature": 0.3,
     "max_tokens": 2048,

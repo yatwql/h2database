@@ -18,6 +18,9 @@ books/
     config/
       base.json              # 配置·基础：源码树、语言与后缀、包前缀、基线路径、预算、日志
       style.json             # 配置·规则：图注词表、质量/文风阈值、禁用语、必备段落、预算上限
+      llm_provider.json      # 配置·LLM：provider、路由与回退优先级
+      llm_settings.json      # 配置·LLM：生成参数与每日费用上限
+      llm_pricing.json       # 配置·LLM：各模型单价（未列出的模型费用记为未定价）
     language/
       zh.json                # 文档·名词：章节骨架名、练习提示语、术语行
     baselines/                 # 机器维护的已知问题账本（非人写文档）

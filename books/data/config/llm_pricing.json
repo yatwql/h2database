@@ -1,0 +1,14 @@
+{
+  "_note": "Model prices, per million tokens, in the provider's own currency. A model missing here is still called; its cost is reported as unpriced rather than guessed.",
+  "currency": "USD",
+  "models": {
+    "deepseek-v4-flash": {
+      "input_per_mtok": 0.28,
+      "output_per_mtok": 0.42
+    },
+    "deepseek-v4.1-flash": {
+      "input_per_mtok": 0.28,
+      "output_per_mtok": 0.42
+    }
+  }
+}

@@ -87,6 +87,24 @@ def _volume_line(payload: str) -> tuple[int, str]:
                f'确认是有意收缩后执行 {VOLUME_SCRIPT} --update-baseline')
 
 
+def _llm_lines(before: dict | None = None) -> str:
+    """What this run cost, and the ceiling warning when one is configured."""
+    try:
+        lines = []
+        if before is not None:
+            lines.append(_llm.summary_line(before))
+        else:
+            line = _llm.usage_line()
+            if line:
+                lines.append(line)
+        warning = _llm.budget_line()
+        if warning:
+            lines.append(warning)
+        return '\n'.join(line for line in lines if line)
+    except Exception as exc:  # noqa: BLE001 - reporting must not fail the run
+        return f'LLM：用量记账不可用（{exc}）'
+
+
 def analyze(use_llm: bool = False, force: bool = False) -> tuple[int, str]:
     """Run stage 1: digest the source tree, plan the outline, render chapters.
 
@@ -99,6 +117,7 @@ def analyze(use_llm: bool = False, force: bool = False) -> tuple[int, str]:
     ingest" is answered in the same report instead of a later gate.
     """
     out = []
+    llm_before = _llm.take_totals() if use_llm else None
     for script in ('ingest/digest.py', 'ingest/outline.py', 'ingest/chapters.py'):
         extra = []
         if script.endswith('chapters.py'):
@@ -110,6 +129,8 @@ def analyze(use_llm: bool = False, force: bool = False) -> tuple[int, str]:
     _code, report = _run(VOLUME_SCRIPT, '--json')
     volume_code, line = _volume_line(report)
     out.append(line)
+    if use_llm:
+        out.append(_llm_lines(llm_before))
     return volume_code, '\n'.join(out)
 
 
@@ -129,12 +150,32 @@ def deliver() -> tuple[int, str]:
     return _make('deliver')
 
 
+def estimate_line(prompt: str, scenario: str = 'summary') -> str:
+    """What one call is expected to cost, shown before the call is made."""
+    guess = _llm.estimate(prompt, scenario)
+    low, high = guess['cost_low'], guess['cost_high']
+    currency = guess['currency']
+    if low is None:
+        money = '未定价'
+    else:
+        money = f'≈ {low:.4f}-{high:.4f} {currency}'
+    spent = _llm.today_cost()
+    today = f'；今日已用 ≈ {spent:.4f} {currency}' if spent else ''
+    return (f"预计：{guess['model'] or '?'} 入 ~{guess['prompt_tokens']} token、"
+            f"出 ≤{guess['max_tokens']} token，{money}{today}")
+
+
 def llm_ask(prompt: str, scenario: str = 'summary') -> tuple[int, str]:
-    """Ask the configured provider (mock by default)."""
+    """Ask the configured provider (mock by default), and report what it cost."""
     try:
-        return 0, _llm.complete(prompt, scenario=scenario) + '\n'
+        head = estimate_line(prompt, scenario)
     except _llm.LLMError as exc:
-        return 2, f'error: {exc}\n'
+        head = f'预计：无法估价（{exc}）'
+    try:
+        text = _llm.complete(prompt, scenario=scenario)
+    except _llm.LLMError as exc:
+        return 2, f'{head}\nerror: {exc}\n'
+    return 0, f'{head}\n{text}\n{_llm_lines()}\n'
 
 
 def doctor() -> tuple[int, str]:

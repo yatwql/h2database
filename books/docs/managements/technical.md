@@ -132,6 +132,7 @@ books/
 | `data/config/base.json` | 基础设施策略：源码位置、路径映射、基线路径、工具链预算、日志 | 合并进 `POLICY` |
 | `data/config/style.json` | 写作与形态规则：阈值、词表、图注规则、篇幅预算、语言骨架 | 合并进 `POLICY` |
 | `data/language/zh.json` | 语言资源：章节骨架名、练习提示语、术语行 | `_config.language()` |
+| `data/config/llm_pricing.json` | 各模型单价（每百万 token，provider 货币）；缺表即“未定价” | `_llm.pricing()` |
 
 合并顺序固定：`base.json` → `style.json`，同名字典逐键覆盖；`toolchain` 段的预算
 额外以 `thresholds` 别名暴露，供门禁统一读取。若两个 JSON 都不存在，退化为读取

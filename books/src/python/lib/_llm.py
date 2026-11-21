@@ -26,7 +26,7 @@ import os
 import time
 from urllib.parse import urlsplit
 
-from lib import _config
+from lib import _config, _fsutil, _log
 
 CONFIG_DIR = os.path.join(_config.BOOK_ROOT, 'data', 'config')
 PROVIDER_PATH = os.path.join(CONFIG_DIR, 'llm_provider.json')
@@ -240,6 +240,10 @@ def _complete_anthropic(prompt: str, provider: str, spec: dict, params: dict,
         raise LLMError(f'unexpected provider response: {data!r}') from exc
     if not text:
         raise LLMError(f'provider returned no text: {data!r}')
+    usage = data.get('usage') or {}
+    _record(provider, payload['model'], str(params.get('scenario', '')),
+            int(usage.get('input_tokens') or estimate_tokens(prompt)),
+            int(usage.get('output_tokens') or estimate_tokens(text)))
     return text
 
 
@@ -271,9 +275,178 @@ def _attempt(prompt: str, provider: str, spec: dict, params: dict,
     data = _post_json(_endpoint_for(provider, spec) + '/chat/completions',
                       payload, api_key, float(params.get('timeout_s', 60)))
     try:
-        return data['choices'][0]['message']['content']
+        text = data['choices'][0]['message']['content']
     except (KeyError, IndexError, TypeError) as exc:
         raise LLMError(f'unexpected provider response: {data!r}') from exc
+    usage = data.get('usage') or {}
+    _record(provider, payload['model'], str(params.get('scenario', '')),
+            int(usage.get('prompt_tokens') or estimate_tokens(prompt)),
+            int(usage.get('completion_tokens') or estimate_tokens(text)))
+    return text
+
+
+LOG = _log.get_logger('llm')
+
+PRICING_PATH = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'llm_pricing.json')
+USAGE_LOG = os.path.join(_config.BOOK_ROOT, 'logs', 'llm-usage.jsonl')
+# ~3.5 characters per token is the usual rule of thumb for mixed Chinese/English
+CHARS_PER_TOKEN = 3.5
+
+_last_usage: dict = {}
+_totals: dict = {'calls': 0, 'prompt_tokens': 0, 'completion_tokens': 0, 'cost': 0.0}
+
+
+def pricing() -> dict:
+    """Model price table, or an empty table when the book ships none."""
+    if not os.path.isfile(PRICING_PATH):
+        return {}
+    try:
+        return _load(PRICING_PATH)
+    except LLMError:
+        return {}
+
+
+def price_of(model: str) -> dict:
+    """Price entry for one model, empty when unpriced."""
+    table = pricing()
+    return ((table.get('models') or {}).get(model) or {})
+
+
+def cost_of(model: str, prompt_tokens: int, completion_tokens: int) -> float | None:
+    """Cost of one call in the pricing file's currency; None when unpriced."""
+    entry = price_of(model)
+    if not entry:
+        return None
+    return (prompt_tokens * float(entry.get('input_per_mtok', 0))
+            + completion_tokens * float(entry.get('output_per_mtok', 0))) / 1_000_000
+
+
+def estimate_tokens(text: str) -> int:
+    """Rough prompt size, good enough to choose between "cents" and "dollars"."""
+    return max(1, int(len(text or '') / CHARS_PER_TOKEN))
+
+
+def estimate(prompt: str, scenario: str = 'chapter-draft') -> dict:
+    """Pre-run guess: prompt tokens now, completion up to the scenario budget."""
+    settings = resolve(scenario)
+    budget = int(settings['settings'].get('max_tokens', 2048))
+    prompt_tokens = estimate_tokens(prompt)
+    model = _model_for(resolve(scenario)['provider'],
+                       providers()['providers'][resolve(scenario)['provider']])
+    low = cost_of(model, prompt_tokens, budget // 2)
+    high = cost_of(model, prompt_tokens, budget)
+    return {'model': model, 'prompt_tokens': prompt_tokens, 'max_tokens': budget,
+            'cost_low': low, 'cost_high': high, 'currency': pricing().get('currency', 'USD')}
+
+
+def _money(value: float | None, currency: str = 'USD') -> str:
+    return '未定价' if value is None else f'{value:.4f} {currency}'
+
+
+def _record(provider: str, model: str, scenario: str, prompt_tokens: int,
+            completion_tokens: int) -> None:
+    """Remember one call: module totals, a one-line log row, and the last usage."""
+    cost = cost_of(model, prompt_tokens, completion_tokens)
+    currency = pricing().get('currency', 'USD')
+    global _last_usage
+    _last_usage = {'provider': provider, 'model': model, 'scenario': scenario,
+                   'prompt_tokens': prompt_tokens,
+                   'completion_tokens': completion_tokens,
+                   'cost': cost, 'currency': currency}
+    _totals['calls'] += 1
+    _totals['prompt_tokens'] += prompt_tokens
+    _totals['completion_tokens'] += completion_tokens
+    _totals['cost'] += cost or 0.0
+    try:
+        _fsutil.ensure_dir(os.path.dirname(USAGE_LOG))
+        with open(USAGE_LOG, 'a', encoding='utf-8') as fh:
+            fh.write(json.dumps({'at': _utcnow(), **_last_usage},
+                                ensure_ascii=False) + '\n')
+    except OSError as exc:  # pragma: no cover - a read-only log dir must not break a call
+        LOG.debug('cannot append %s: %s', USAGE_LOG, exc)
+
+
+def _utcnow() -> str:
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).isoformat(timespec='seconds')
+
+
+def last_usage() -> dict:
+    return dict(_last_usage)
+
+
+def usage_line() -> str:
+    """One line for the result area: what this call cost, and what today costs."""
+    if not _last_usage:
+        return ''
+    tokens = _last_usage['prompt_tokens'] + _last_usage['completion_tokens']
+    spent = _money(_last_usage['cost'], _last_usage['currency'])
+    return (f"LLM：{_last_usage['model'] or '?'} 本次 {tokens} token"
+            f"（入 {_last_usage['prompt_tokens']} / 出 {_last_usage['completion_tokens']}）"
+            f" ≈ {spent}；今日累计 ≈ {_money(today_cost(), _last_usage['currency'])}")
+
+
+def take_totals() -> dict:
+    """Snapshot the session totals, for diffing around a multi-call run."""
+    return dict(_totals)
+
+
+def since(marker: dict) -> dict:
+    """Calls, tokens and cost added since a ``take_totals()`` snapshot."""
+    return {key: _totals[key] - marker.get(key, 0) for key in _totals}
+
+
+def summary_line(marker: dict) -> str:
+    """One line summarising everything a multi-call run spent."""
+    delta = since(marker)
+    if not delta['calls']:
+        return 'LLM：本次未调用'
+    tokens = delta['prompt_tokens'] + delta['completion_tokens']
+    currency = pricing().get('currency', 'USD')
+    return (f"LLM：本次 {delta['calls']} 次调用，{tokens} token"
+            f"（入 {delta['prompt_tokens']} / 出 {delta['completion_tokens']}）"
+            f" ≈ {_money(delta['cost'], currency)}；今日累计 ≈ "
+            f"{_money(today_cost(), currency)}")
+
+
+def today_cost() -> float:
+    """Sum of today's recorded calls, read from the usage log (survives restarts)."""
+    if not os.path.isfile(USAGE_LOG):
+        return 0.0
+    today = _utcnow()[:10]
+    total = 0.0
+    try:
+        for line in _fsutil.read_lines(USAGE_LOG):
+            try:
+                row = json.loads(line)
+            except ValueError:
+                continue
+            if str(row.get('at', '')).startswith(today):
+                total += float(row.get('cost') or 0)
+    except OSError:
+        return 0.0
+    return total
+
+
+def daily_limit() -> float:
+    """Soft daily money ceiling from llm_settings.json (0 disables it)."""
+    try:
+        return float((settings().get('daily_cost_limit') or 0) or 0)
+    except LLMError:
+        return 0.0
+
+
+def budget_line() -> str:
+    """A warning line once today's spend reaches the configured ceiling."""
+    limit = daily_limit()
+    if not limit:
+        return ''
+    spent = today_cost()
+    if spent < limit:
+        return ''
+    currency = pricing().get('currency', 'USD')
+    return (f'⚠ 今日 LLM 花费 ≈ {_money(spent, currency)} 已达上限 '
+            f'{_money(limit, currency)}（llm_settings.json → daily_cost_limit）')
 
 
 def complete(prompt: str, scenario: str = 'chapter-draft',
@@ -286,6 +459,7 @@ def complete(prompt: str, scenario: str = 'chapter-draft',
     chain = [name for name in _ordered_providers(resolved['provider'])
              if name in table]
     last_error: Exception | None = None
+    params = {**params, 'scenario': scenario}
     for provider in chain:
         try:
             return _attempt(prompt, provider, table[provider], params, model)

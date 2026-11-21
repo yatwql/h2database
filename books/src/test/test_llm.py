@@ -6,6 +6,7 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 import _fixture
 
@@ -17,6 +18,69 @@ TOOLS_DIR = os.path.join(
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
 sys.path.insert(0, os.path.join(TOOLS_DIR, 'lib'))
+
+class PricingAndUsageTest(unittest.TestCase):
+    """Every call reports tokens and money, and the number is not a guess."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.llm = _fixture.load_module(self.root, '_llm')
+
+    def test_cost_follows_the_price_file(self):
+        with mock.patch.object(self.llm, 'pricing', lambda: {
+                'currency': 'USD',
+                'models': {'m': {'input_per_mtok': 1.0, 'output_per_mtok': 2.0}}}):
+            self.assertAlmostEqual(self.llm.cost_of('m', 1_000_000, 0), 1.0)
+            self.assertAlmostEqual(self.llm.cost_of('m', 0, 1_000_000), 2.0)
+
+    def test_an_unpriced_model_says_so_instead_of_guessing(self):
+        with mock.patch.object(self.llm, 'pricing', lambda: {'models': {}}):
+            self.assertIsNone(self.llm.cost_of('unknown', 10, 10))
+
+    def test_the_estimate_names_prompt_tokens_and_a_cost_range(self):
+        guess = self.llm.estimate('x' * 350, 'summary')
+        self.assertEqual(guess['prompt_tokens'], 100)
+        self.assertGreaterEqual(guess['max_tokens'], 1)
+        self.assertIn(guess['currency'], ('USD', 'CNY'))
+
+    def test_a_call_is_recorded_with_tokens_and_money(self):
+        log = os.path.join(self.root, 'logs', 'llm-usage.jsonl')
+        with mock.patch.object(self.llm, 'USAGE_LOG', log), \
+                mock.patch.object(self.llm, 'pricing', lambda: {
+                    'currency': 'USD',
+                    'models': {'m': {'input_per_mtok': 1.0, 'output_per_mtok': 2.0}}}):
+            self.llm._record('p', 'm', 'summary', 1_000_000, 1_000_000)
+            line = self.llm.usage_line()
+            today = self.llm.today_cost()
+        self.assertIn('本次 2000000 token', line)
+        self.assertIn('3.0000', line)
+        self.assertGreater(today, 0)
+
+    def test_a_multi_call_run_is_summarised_as_a_delta(self):
+        with mock.patch.object(self.llm, 'pricing', lambda: {
+                'currency': 'USD',
+                'models': {'m': {'input_per_mtok': 1.0, 'output_per_mtok': 1.0}}}), \
+                mock.patch.object(self.llm, 'USAGE_LOG',
+                                  os.path.join(self.tmp.name, 'usage.jsonl')):
+            marker = self.llm.take_totals()
+            self.llm._record('p', 'm', 'chapter-draft', 10, 10)
+            self.llm._record('p', 'm', 'chapter-draft', 10, 10)
+            delta = self.llm.since(marker)
+            line = self.llm.summary_line(marker)
+        self.assertEqual(delta['calls'], 2)
+        self.assertEqual(delta['prompt_tokens'], 20)
+        self.assertIn('2 次调用', line)
+
+    def test_the_ceiling_warning_appears_only_when_configured_and_reached(self):
+        with mock.patch.object(self.llm, 'today_cost', lambda: 5.0), \
+                mock.patch.object(self.llm, 'daily_limit', lambda: 0.0):
+            self.assertEqual(self.llm.budget_line(), '')
+        with mock.patch.object(self.llm, 'today_cost', lambda: 5.0), \
+                mock.patch.object(self.llm, 'daily_limit', lambda: 3.0):
+            self.assertIn('已达上限', self.llm.budget_line())
+
 
 class TestLLMRouting(unittest.TestCase):
     def setUp(self):

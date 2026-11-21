@@ -4,7 +4,7 @@
 > 版本：v0.1
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
-> **编号源**：`rf-next = 25`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-24，
+> **编号源**：`rf-next = 26`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-25，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -94,6 +94,7 @@
 | rf-22 | 体量基线没有单调性约束，也没有“比哪一份”的说法：每次转换后都能 `--update-baseline` 把下限重记成更薄的那份，多份历史稿各自有账本但没有显式选取入口 | **修订**：`--update-baseline` 默认拒绝降低任何条目或总量，收缩须 `--accept-shrink --reason`，理由与差额写进 `accepted_shrinks`；新增 `--baseline <文件>` 用于显式对照某份历史快照；`quality-model.md` §4 写清“只比一份、不做加权”的原则 |
 | rf-23 | 「评审通过的基线」只有口头含义：`--update-baseline` 对未提交的工作区、无人具名的调用一样照写，事后无法回答“这份基线是谁在哪一版上认的” | **修订**：记账要求 `data/manuscript` 无未提交改动、评审人具名（`--reviewed-by`，缺省取 `git user.name`），并在基线文件写入 `reviewed{by, at, commit, reason}`；`quality-model.md` §4 补三项条件与固定流程（check → commit → 记账） |
 | rf-24 | 历史版本无法直接成为基线：快照只有自己的体积账本，`--update-baseline` 只量当前手稿，要把 6 月那版定为下限只能手改 JSON（绕过了评审人、单调性与来源记录） | **修订**：`content_volume.py` 新增 `--from-snapshot <label>`，从 `snapshot-<label>.json` 取数写基线，并记下 `source.snapshot`；比当前基线薄时仍需 `--accept-shrink`；`quality-model.md` §4 给出「导入 → 记快照账本 → 提为基线」三步流程 |
+| rf-25 | LLM 调用没有任何用量与成本可见性：`_llm.complete` 丢掉响应里的 usage，跑完只知道“有文字回来”；也没有调用前预估与累计上限，`llm-ask` 一次问多少钱无从判断 | **修订**：单价表 `data/config/llm_pricing.json`（未列出即“未定价”），`_llm` 记录每次调用的 token/费用并追加 `logs/llm-usage.jsonl`，`llm-ask` 打印调用前区间预估与调用后“本次 + 今日累计”，`analyze --llm` 打印整轮汇总；`llm_settings.daily_cost_limit` 达到时加一行 ⚠ 提醒 |
 
 ### 归档
 
