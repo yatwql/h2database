@@ -33,7 +33,7 @@
     "style_rules": "data/baselines/style-rules-baseline.json"
   },
   "toolchain": {
-    "coverage_fail_under": 86,
+    "coverage_fail_under": 87,
     "pdf_max_mb": 12,
     "epub_max_mb": 10,
     "ascii_max_cols": 100,
