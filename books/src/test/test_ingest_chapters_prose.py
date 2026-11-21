@@ -115,5 +115,37 @@ class IngestSwitchConfigTest(unittest.TestCase):
         config = _fixture.load_module(self.root, '_config')
         self.assertTrue(config.llm_ingest_prose())
 
+class OverwriteGuardTest(unittest.TestCase):
+    """An ingest run never trades written prose for a fresh skeleton."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.chapters = _fixture.load_module(
+            os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR)), 'chapters')
+
+    def chapter(self, body: str) -> str:
+        path = os.path.join(self.tmp.name, 'ch1-test.md')
+        with open(path, 'w', encoding='utf-8') as fh:
+            fh.write(body)
+        return path
+
+    def test_written_prose_is_not_replaced_by_a_skeleton(self):
+        path = self.chapter('# 第1章 测试\n\n这里是人写好的正文。\n')
+        self.assertFalse(self.chapters.rewrite_allowed(path, '# 第1章 新骨架\n', False))
+
+    def test_force_is_what_overwrites(self):
+        path = self.chapter('# 第1章 旧骨架\n')
+        self.assertTrue(self.chapters.rewrite_allowed(path, '# 第1章 新骨架\n', True))
+
+    def test_identical_text_may_be_rewritten(self):
+        path = self.chapter('# 第1章 测试\n')
+        self.assertTrue(self.chapters.rewrite_allowed(path, '# 第1章 测试\n', False))
+
+    def test_a_missing_file_is_written(self):
+        self.assertTrue(self.chapters.rewrite_allowed(
+            os.path.join(self.tmp.name, 'absent.md'), 'x', False))
+
+
 if __name__ == '__main__':
     unittest.main()

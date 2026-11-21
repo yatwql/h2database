@@ -11,6 +11,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import json
 import os
 import subprocess
 import sys
@@ -70,21 +71,46 @@ def status() -> tuple[int, str]:
     return 0, '\n'.join(lines) + '\n'
 
 
-def analyze(use_llm: bool = False) -> tuple[int, str]:
+VOLUME_SCRIPT = 'audit/content_volume.py'
+
+
+def _volume_line(payload: str) -> tuple[int, str]:
+    """One-line verdict on the volume baseline, for the same report."""
+    try:
+        report = json.loads(payload)
+    except (TypeError, ValueError):
+        return 0, '内容体积：无基线可比（首版定稿后执行 --update-baseline 建立）'
+    count = int(report.get('count') or 0)
+    if not count:
+        return 0, '内容体积：与基线一致（0 项低于下限）'
+    return 1, (f'内容体积：{count} 项低于基线——先复核是否有章被覆盖或删减；'
+               f'确认是有意收缩后执行 {VOLUME_SCRIPT} --update-baseline')
+
+
+def analyze(use_llm: bool = False, force: bool = False) -> tuple[int, str]:
     """Run stage 1: digest the source tree, plan the outline, render chapters.
 
     With ``use_llm`` the chapter lead-in and summary paragraphs may be drafted by
     the configured provider; facts, coordinates, tables and exercises stay
-    deterministic either way.
+    deterministic either way. ``force`` lets the renderer overwrite chapters that
+    already carry written prose; without it those files are skipped and reported.
+
+    The run ends with the volume comparison, so "did the manuscript survive this
+    ingest" is answered in the same report instead of a later gate.
     """
     out = []
     for script in ('ingest/digest.py', 'ingest/outline.py', 'ingest/chapters.py'):
-        extra = ['--llm'] if use_llm and script.endswith('chapters.py') else []
+        extra = []
+        if script.endswith('chapters.py'):
+            extra = (['--llm'] if use_llm else []) + (['--force'] if force else [])
         code, text = _run(script, *extra)
         out.append(text)
         if code != 0:
             return code, '\n'.join(out)
-    return 0, '\n'.join(out)
+    _code, report = _run(VOLUME_SCRIPT, '--json')
+    volume_code, line = _volume_line(report)
+    out.append(line)
+    return volume_code, '\n'.join(out)
 
 
 def build() -> tuple[int, str]:

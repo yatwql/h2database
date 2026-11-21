@@ -460,6 +460,16 @@ def cross_index_block(cn: int, packages: list[str], nxt: int) -> list[str]:
     return out
 
 
+def rewrite_allowed(path: str, text: str, force: bool) -> bool:
+    """Whether a rendered skeleton may replace what is already on disk.
+
+    A skeleton is reproducible; written prose is not. So an existing file is only
+    rewritten when it already holds the same text, or when the caller forces it.
+    """
+    existing = _fsutil.read_text(path) if os.path.isfile(path) else ''
+    return force or not existing or existing == text
+
+
 def render_chapter(ch: dict) -> str:
     name = ch['file']
     spec = CHAPTER_SPEC.get(name)
@@ -611,6 +621,8 @@ def main(argv: list[str] | None = None) -> int:
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--only', help='single chapter file name')
     parser.add_argument('--dry-run', action='store_true', help='print instead of writing')
+    parser.add_argument('--force', action='store_true',
+                        help='overwrite chapter files that already carry written prose')
     parser.add_argument('--llm', action='store_true',
                         help='let the LLM draft the lead-in and summary prose '
                              '(facts, tables and coordinates stay deterministic)')
@@ -631,6 +643,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     written = 0
+    skipped = 0
     for ch in outline['chapters']:
         if args.only and ch['file'] != args.only:
             continue
@@ -650,14 +663,21 @@ def main(argv: list[str] | None = None) -> int:
             continue
         if ch['file'] not in CHAPTER_SPEC:
             continue
-        text = render_chapter(ch)
+        text = _space(render_chapter(ch))
+        path = _config.manuscript(ch['file'])
+        if not rewrite_allowed(path, text, args.force):
+            skipped += 1
+            print(f'  skipped {ch["file"]}（已有正文，--force 才覆盖）')
+            continue
         if args.dry_run:
             print(f'--- {ch["file"]} ({len(text.splitlines())} lines)')
             continue
-        _fsutil.write_text(_config.manuscript(ch['file']), _space(text))
+        _fsutil.write_text(path, text)
         written += 1
         print(f'  wrote {ch["file"]} ({len(text.splitlines())} lines)')
     print(f'chapters written: {written}')
+    if skipped:
+        print(f'chapters skipped: {skipped}（已有正文；确认要重生成时加 --force）')
     return 0
 
 

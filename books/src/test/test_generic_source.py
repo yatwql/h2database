@@ -61,7 +61,13 @@ class TestGenericSourceTree(unittest.TestCase):
         outline = json.loads(self.read('data', 'state', 'outline.json'))
         self.assertFalse(any(ch['missing_packages'] for ch in outline['chapters']))
 
+        # the fixture already ships a chapter file, so a plain run must leave it
+        # alone; regenerating is the explicit `--force` case
         code, out = self.run_script('chapters.py')
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('skipped', out)
+
+        code, out = self.run_script('chapters.py', '--force')
         self.assertEqual(code, 0, out[-400:])
         chapter = self.read('data', 'manuscript', 'ch1-test.md')
         self.assertIn('org.example', chapter)

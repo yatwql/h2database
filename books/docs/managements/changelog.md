@@ -96,6 +96,7 @@
 - `style-guide.md` §7 明确区分章首引导块（引用块四行）与章末必备段落（H2 小节，
   由 `book.toml [sections]` 给出）。
 
+- **ingest 不再吃掉正文**：`chapters.py` 只在目标文件为空、内容相同或 `--force` 时写入，否则跳过并报出行数；`actions.analyze` 在三阶段后跑一次 `content_volume.py`，把「内容体积：与基线一致 / N 项低于基线」写进同一份运行结果（后者判失败并给 `--update-baseline` 指引）。（rf-21）
 ### 交互
 
 - **TUI 改为两级菜单**：内容流水线（`analyze` / `analyze-llm` / `build` / `deliver`）留在主菜单，

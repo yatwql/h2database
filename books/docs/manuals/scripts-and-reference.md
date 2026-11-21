@@ -130,7 +130,7 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | --- | --- |
 | `ingest/digest.py` | 源码树 → `data/state/source-inventory.json`（`--json`） |
 | `ingest/outline.py` | 清单 → 章节大纲 `data/state/outline.json`（`--json`） |
-| `ingest/chapters.py` | 大纲 → 手稿；`--only FILE`、`--dry-run`、`--llm`（导读/小结交给 LLM） |
+| `ingest/chapters.py` | 大纲 → 手稿；`--only FILE`、`--dry-run`、`--llm`（导读/小结交给 LLM）、`--force`（覆盖已有正文；默认跳过） |
 | `ingest/languages/{java,python,rust}.py` | 语言分析器（库），由 digest 按 `[sources]` 选择 |
 
 ## 7. 手稿维护 `src/python/manuscript/`

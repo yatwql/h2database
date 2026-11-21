@@ -50,7 +50,7 @@ class ActionDispatchTest(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn('down', text)
 
-    def test_analyze_runs_three_stage_scripts(self):
+    def test_analyze_runs_three_stage_scripts_then_the_volume_check(self):
         calls = []
 
         def fake_run(script, *args):
@@ -60,9 +60,9 @@ class ActionDispatchTest(unittest.TestCase):
         with mock.patch.object(self.actions, '_run', side_effect=fake_run):
             code, text = self.actions.analyze()
         self.assertEqual(code, 0)
-        self.assertTrue(text.strip() == '')
         self.assertEqual([os.path.basename(c) for c in calls],
-                         ['digest.py', 'outline.py', 'chapters.py'])
+                         ['digest.py', 'outline.py', 'chapters.py', 'content_volume.py'])
+        self.assertIn('内容体积', text)
 
     def test_analyze_with_llm_passes_the_flag_only_to_chapters(self):
         calls = []
@@ -73,8 +73,42 @@ class ActionDispatchTest(unittest.TestCase):
 
         with mock.patch.object(self.actions, '_run', side_effect=fake_run):
             self.actions.analyze(use_llm=True)
-        self.assertEqual(calls[-1], ('chapters.py', ('--llm',)))
+        self.assertEqual(calls[2], ('chapters.py', ('--llm',)))
         self.assertEqual(calls[0], ('digest.py', ()))
+
+    def test_analyze_passes_force_only_when_asked(self):
+        calls = []
+
+        def fake_run(script, *args):
+            calls.append((os.path.basename(script), args))
+            return 0, ''
+
+        with mock.patch.object(self.actions, '_run', side_effect=fake_run):
+            self.actions.analyze(force=True)
+        self.assertEqual(calls[2], ('chapters.py', ('--force',)))
+
+    def test_analyze_reports_a_shrunk_manuscript_as_a_failure(self):
+        payload = '{"count": 2, "problems": ["ch1: bytes below floor"]}'
+
+        def fake_run(script, *args):
+            if script.endswith('content_volume.py'):
+                return 0, payload
+            return 0, ''
+
+        with mock.patch.object(self.actions, '_run', side_effect=fake_run):
+            code, text = self.actions.analyze()
+        self.assertEqual(code, 1)
+        self.assertIn('2 项低于基线', text)
+        self.assertIn('--update-baseline', text)
+
+    def test_analyze_without_a_baseline_stays_advisory(self):
+        def fake_run(script, *args):
+            return (0, 'no baseline yet' if script.endswith('content_volume.py') else '')
+
+        with mock.patch.object(self.actions, '_run', side_effect=fake_run):
+            code, text = self.actions.analyze()
+        self.assertEqual(code, 0)
+        self.assertIn('无基线', text)
 
     def test_a_failing_stage_stops_the_pipeline(self):
         def fake_run(script, *args):
