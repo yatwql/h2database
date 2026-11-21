@@ -124,34 +124,55 @@ def header() -> str:
     return '\n'.join(rows)
 
 
-def menu_text(cursor: int | None = None) -> str:
-    """Grouped menu; `cursor` highlights one row (↑/↓ moves it)."""
+def screen_rows(screen: str) -> list[tuple[str, str, str]]:
+    """(key, action, label) rows for any screen; dynamic screens build theirs."""
+    if screen == menu.SETTINGS_SCREEN:
+        rows = [(str(index), '@set:' + row['key'], f"{row['key']} = {row['value']}")
+                for index, row in enumerate(settings.list_settings(), start=1)]
+        return rows + [(menu.BACK_KEY, menu.BACK_ACTION, '返回上一级')]
+    if screen == menu.PROVIDERS_SCREEN:
+        rows = [(str(index), '@move:' + item['name'],
+                 f"{index}. {item['name']}  priority {item['priority']}")
+                for index, item in enumerate(settings.provider_order(), start=1)]
+        return rows + [(menu.BACK_KEY, menu.BACK_ACTION, '返回上一级')]
+    return menu.entries(screen)
+
+
+def menu_text(screen: str = 'main', cursor: int | None = None) -> str:
+    """One screen; `cursor` highlights a row (↑/↓ moves it)."""
     lines: list[str] = []
-    index = 0
-    for group, entries in menu.GROUPS.items():
-        lines.append(f" {_c('▍', PALETTE['group'])}{_c(group, PALETTE['group'])}")
-        for key, _action, label in entries:
-            marker = '❯' if cursor == index else ' '
-            label_style = PALETTE['cursor'] if cursor == index else PALETTE['value']
-            llm_row = menu.is_llm(_action)
-            badge = f" {_c('LLM', PALETTE['llm_badge'])}" if llm_row else ''
-            key_label = key.upper() if llm_row else key
-            key_colour = PALETTE['llm_key'] if llm_row else None
-            lines.append(f" {_c(marker, PALETTE['cursor_bar'])} "
-                         f"{_key(key_label, key_colour)}  "
-                         f"{_c(label, label_style)}{badge}")
-            index += 1
-        lines.append('')
-    lines.append(f"   {_key('c')} 配置  {_key('r')} 刷新  {_key('?')} 帮助")
-    lines.append(f"   {_key('q')} / {_key('0')} 退出  {_key('Ctrl+C')} 退出")
-    lines.append(f"   {_key('↑/↓')} 选择 · {_key('Enter')} 执行 · 数字键直达")
+    for index, (key, action, label) in enumerate(screen_rows(screen)):
+        marker = '❯' if cursor == index else ' '
+        label_style = PALETTE['cursor'] if cursor == index else PALETTE['value']
+        llm_row = menu.is_llm(action)
+        badge = f" {_c('LLM', PALETTE['llm_badge'])}" if llm_row else ''
+        key_label = key.upper() if llm_row else key
+        key_colour = PALETTE['llm_key'] if llm_row else None
+        lines.append(f" {_c(marker, PALETTE['cursor_bar'])} "
+                     f"{_key(key_label, key_colour)}  "
+                     f"{_c(label, label_style)}{badge}")
+    lines.append('')
+    if screen == 'main':
+        lines.append(f"   {_key('0')} 退出  {_key('q')} / {_key('Ctrl+C')} 退出")
+    else:
+        lines.append(f"   {_key('0')} 返回上一级  {_key('q')} / {_key('Ctrl+C')} 退出")
+    lines.append(f"   {_key('↑/↓')} 选择 · {_key('Enter')} 执行 · 数字键直达 · "
+                 f"{_key('?')} 帮助")
     return '\n'.join(lines)
 
 
+def screen_title(screen: str) -> str:
+    """Breadcrumb so the operator always knows which level they are on."""
+    trail = [screen]
+    while trail[0] != 'main':
+        trail.insert(0, menu.parent_of(trail[0]))
+    names = [menu.TITLES.get(name, name) for name in trail]
+    return _c(' › '.join(names), PALETTE['group'])
+
+
 def help_text() -> str:
-    return ('数字键执行动作；`c` 进入配置修改（书名、版本、产物目录、语言、'
-            '日志级别、LLM provider）；`r` 重新读取配置。\n'
-            '退出：`q`、`0` 或 `Ctrl+C`（三者都走同一条干净退出路径）。\n'
+    return ('两级菜单：主菜单选类目，类目里选动作。二级目录按 `0` 回到上一级，\n'
+            '主菜单按 `0` 或 `q` 退出。`c` 直接进配置项，`r` 重新读取配置。\n'
             '非交互场景用 `--once <动作>`，例如 `--once status`。')
 
 
@@ -201,6 +222,49 @@ def run_entry(action: str, label: str) -> str:
             f'{_c("详情见 " + menu.log_location() + "/", PALETTE["hint"])}')
 
 
+def edit_setting(key: str, reader=input) -> str:
+    """Ask for one new value and write it through the settings layer."""
+    rows = {row['key']: row for row in settings.list_settings()}
+    current = rows[key]['value'] if key in rows else ''
+    value = (reader(f"{key} 的新值（当前 {current or '(空)'}，回车取消）: ") or '').strip()
+    if not value:
+        return '未修改'
+    try:
+        stored = settings.set_value(key, value)
+    except (KeyError, ValueError) as exc:
+        return f'修改失败：{exc}'
+    return f'已更新 {key} = {stored}'
+
+
+def edit_provider(name: str, reader=input) -> str:
+    """Move one provider up or down in the fallback order."""
+    step = (reader(f'{name}：上移(u) / 下移(d) / 回车取消: ') or '').strip().lower()
+    delta = {'u': -1, 'up': -1, 'd': 1, 'down': 1}.get(step)
+    if delta is None:
+        return '未修改'
+    try:
+        order = settings.move_provider(name, delta)
+    except (KeyError, ValueError) as exc:
+        return f'修改失败：{exc}'
+    return f'优先级：{order}'
+
+
+def handle(action: str, label: str, screen: str) -> tuple[bool, str, str]:
+    """Apply one menu action: (quit now?, screen to show, status line)."""
+    if action == menu.QUIT_ACTION:
+        return True, screen, ''
+    if action == menu.BACK_ACTION:
+        return False, menu.parent_of(screen), ''
+    target = menu.opens_screen(action)
+    if target:
+        return False, target, ''
+    if action.startswith('@set:'):
+        return False, screen, edit_setting(action[len('@set:'):])
+    if action.startswith('@move:'):
+        return False, screen, edit_provider(action[len('@move:'):])
+    return False, screen, run_entry(action, label)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -215,15 +279,18 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.write(text)
         return code
 
-    shortcuts = menu.shortcut_map()
-    cursor = menu.default_cursor()
+    screen = 'main'
+    cursors = {name: menu.default_cursor(name) for name in menu.TITLES}
     status = ''
     while True:
-        screen = ['\n' + header(), '', menu_text(cursor)]
+        rows = screen_rows(screen)
+        cursor = cursors.get(screen, 0) % len(rows) if rows else 0
+        lines = ['\n' + header(), '', screen_title(screen),
+                 '', menu_text(screen, cursor)]
         if status:
-            screen += ['', status]
-        screen += ['', _c('❯ ', PALETTE['cursor_bar'])]
-        sys.stdout.write('\n'.join(screen))
+            lines += ['', status]
+        lines += ['', _c('❯ ', PALETTE['cursor_bar'])]
+        sys.stdout.write('\n'.join(lines))
         sys.stdout.flush()
         status = ''
         try:
@@ -232,17 +299,18 @@ def main(argv: list[str] | None = None) -> int:
             sys.stdout.write('\n')
             return 0
 
-        if pressed in ('q', '0', keys.KEY_ESC, keys.KEY_CTRL_C):
+        if pressed in ('q', keys.KEY_CTRL_C):
             return 0
+        if pressed in (menu.BACK_KEY, keys.KEY_ESC):
+            if screen == 'main':
+                return 0
+            screen = menu.parent_of(screen)
+            continue
         if pressed == keys.KEY_UP:
-            cursor = (cursor - 1) % len(menu.ENTRIES)
+            cursors[screen] = (cursor - 1) % len(rows)
             continue
         if pressed == keys.KEY_DOWN:
-            cursor = (cursor + 1) % len(menu.ENTRIES)
-            continue
-        if pressed == keys.KEY_ENTER:
-            action, label = menu.ENTRIES[cursor][1], menu.ENTRIES[cursor][2]
-            status = run_entry(action, label)
+            cursors[screen] = (cursor + 1) % len(rows)
             continue
         if pressed in ('?', 'h'):
             print(help_text())
@@ -252,14 +320,23 @@ def main(argv: list[str] | None = None) -> int:
             status = _c('配置已重新读取', PALETTE['value_ok'])
             continue
         if pressed == 'c':
-            status = configure()
+            screen = menu.SETTINGS_SCREEN
+            cursors[screen] = 0
             continue
-        if pressed in shortcuts:
-            cursor = menu.index_of(pressed)
-            action, label = shortcuts[pressed]
-            status = run_entry(action, label)
-            continue
-        status = _c(f'无效按键 {pressed!r}，按 ? 查看帮助', PALETTE['warn'])
+
+        if pressed == keys.KEY_ENTER and rows:
+            action, label = rows[cursor][1], rows[cursor][2]
+        else:
+            match = next((row for row in rows if row[0] == pressed.lower()), None)
+            if match is None:
+                status = _c(f'无效按键 {pressed!r}，按 ? 查看帮助', PALETTE['warn'])
+                continue
+            action, label = match[1], match[2]
+
+        quit_now, screen, status = handle(action, label, screen)
+        if quit_now:
+            sys.stdout.write('\n')
+            return 0
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

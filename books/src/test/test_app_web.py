@@ -11,6 +11,7 @@ import sys
 import tempfile
 import threading
 import unittest
+from unittest import mock
 from contextlib import redirect_stdout
 from http import server
 
@@ -93,6 +94,17 @@ class WebConsoleTest(unittest.TestCase):
                                              'prompt': '你好'}).encode())
         payload = json.loads(raw)
         self.assertIn(payload['code'], (0, 1, 2))
+
+    def test_an_action_that_raises_answers_with_a_code(self):
+        def boom(*_args, **_kwargs):
+            raise RuntimeError('no provider')
+
+        with mock.patch.object(self.web.actions, 'run', side_effect=boom):
+            status, raw = self.post('/api/run', json.dumps({'action': 'status'}).encode())
+        payload = json.loads(raw)
+        self.assertEqual(status, 200)
+        self.assertEqual(payload['code'], 1)
+        self.assertIn('no provider', payload['output'])
 
     def test_post_invalid_json_is_400(self):
         status, _payload = self.post('/api/run', b'{not json')

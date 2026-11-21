@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """Menu model and run reporting for the interactive channels.
 
-The terminal UI renders what this module decides: which entries exist, which of
-them spend LLM tokens, which need confirmation, where the cursor starts, and
-what a finished run reports back. Channels hold no such rules themselves.
+The terminal UI renders what this module decides: which screens exist, which
+entries they hold, which of them spend LLM tokens, which need confirmation,
+where the cursor starts, and what a finished run reports back. Channels hold no
+such rules themselves.
+
+Two levels, and one rule for both: `0` goes back. On the main screen "back"
+means leaving the program, which is what the main screen's own label says.
 """
 from __future__ import annotations
 
@@ -16,22 +20,49 @@ import os
 import time
 from dataclasses import dataclass
 
-# group -> [(key, action, label)]
-GROUPS: dict[str, list[tuple[str, str, str]]] = {
-    '内容': [('1', 'analyze', '源码 → 手稿'),
-             ('l', 'analyze-llm', '源码 → 手稿（LLM 润色导读/小结）'),
-             ('2', 'build', '手稿 → Markdown + HTML'),
-             ('3', 'deliver', 'PDF + EPUB（按需）')],
-    '质量': [('4', 'check', '全部质量门禁'),
-             ('5', 'test', '测试套件（快档）')],
-    '配置与状态': [('6', 'status', '书籍 / 配置 / LLM 状态'),
-                   ('7', 'llm-ask', '用配置的 provider 提问'),
-                   ('8', 'settings', '查看与修改配置'),
-                   ('9', 'doctor', '依赖与环境')],
+BACK_KEY = '0'
+BACK_ACTION = '@back'
+QUIT_ACTION = '@quit'
+OPEN_PREFIX = '@open:'
+SETTINGS_SCREEN = 'settings'
+PROVIDERS_SCREEN = 'providers'
+
+# screen -> [(key, action, label)]; `@open:<screen>` and `@back` are navigation
+SCREENS: dict[str, list[tuple[str, str, str]]] = {
+    'main': [('1', OPEN_PREFIX + 'content', '内容：源码 → 手稿 → 产物'),
+             ('2', OPEN_PREFIX + 'quality', '质量：门禁与测试'),
+             ('3', OPEN_PREFIX + 'config', '配置：状态、配置项与 LLM'),
+             (BACK_KEY, QUIT_ACTION, '退出')],
+    'content': [('1', 'analyze', '源码 → 手稿'),
+                ('l', 'analyze-llm', '源码 → 手稿（LLM 润色导读/小结）'),
+                ('2', 'build', '手稿 → Markdown + HTML'),
+                ('3', 'deliver', 'PDF + EPUB（按需）'),
+                (BACK_KEY, BACK_ACTION, '返回主菜单')],
+    'quality': [('1', 'check', '全部质量门禁'),
+                ('2', 'test', '测试套件（快档）'),
+                (BACK_KEY, BACK_ACTION, '返回主菜单')],
+    'config': [('1', 'status', '书籍 / 配置 / LLM 状态'),
+               ('2', 'llm-ask', '用配置的 provider 提问'),
+               ('3', OPEN_PREFIX + SETTINGS_SCREEN, '修改配置项（书名、目录、日志级别…）'),
+               ('4', OPEN_PREFIX + PROVIDERS_SCREEN, 'LLM provider 优先级'),
+               ('5', 'doctor', '依赖与环境'),
+               (BACK_KEY, BACK_ACTION, '返回主菜单')],
 }
 
-ENTRIES: list[tuple[str, str, str]] = [entry for entries in GROUPS.values()
-                                       for entry in entries]
+# screens whose rows come from live data instead of SCREENS
+DYNAMIC_SCREENS = (SETTINGS_SCREEN, PROVIDERS_SCREEN)
+
+PARENT: dict[str, str] = dict.fromkeys(('content', 'quality', 'config'), 'main')
+PARENT.update({SETTINGS_SCREEN: 'config', PROVIDERS_SCREEN: 'config'})
+
+TITLES: dict[str, str] = {
+    'main': '主菜单',
+    'content': '内容',
+    'quality': '质量',
+    'config': '配置与状态',
+    SETTINGS_SCREEN: '配置项',
+    PROVIDERS_SCREEN: 'LLM provider 优先级',
+}
 
 # Entries whose output depends on the provider.
 LLM_ACTIONS = frozenset({'analyze-llm', 'llm-ask'})
@@ -39,31 +70,51 @@ LLM_ACTIONS = frozenset({'analyze-llm', 'llm-ask'})
 # Actions that rewrite many artifacts and take minutes.
 CONFIRM_ACTIONS = frozenset({'deliver'})
 
-# Where the cursor starts: the everyday next step, not the ingest pipeline.
-DEFAULT_ENTRY_KEY = '2'
+# Where the cursor starts on each screen: the everyday next step, not ingest.
+DEFAULT_ENTRY_KEY = {'main': '1', 'content': '2', 'quality': '1', 'config': '1'}
 
 TAIL_LINES = 15
 
 
-def default_cursor() -> int:
-    """Index of the default entry (0 when the configured key is missing)."""
-    for index, entry in enumerate(ENTRIES):
-        if entry[0] == DEFAULT_ENTRY_KEY:
+def entries(screen: str = 'main') -> list[tuple[str, str, str]]:
+    """Rows of a static screen (dynamic screens are rendered from data)."""
+    return SCREENS.get(screen, [])
+
+
+def parent_of(screen: str) -> str:
+    """Screen that `0` returns to; the main screen has none."""
+    return PARENT.get(screen, 'main')
+
+
+def default_cursor(screen: str = 'main') -> int:
+    """Index of the screen's default entry (0 when the key is missing)."""
+    wanted = DEFAULT_ENTRY_KEY.get(screen)
+    for index, entry in enumerate(entries(screen)):
+        if entry[0] == wanted:
             return index
     return 0
 
 
-def shortcut_map() -> dict[str, tuple[str, str]]:
-    """key -> (action, label) for direct key dispatch."""
-    return {key: (action, label) for key, action, label in ENTRIES}
+def shortcut_map(screen: str = 'main') -> dict[str, tuple[str, str]]:
+    """key -> (action, label) for direct key dispatch on one screen."""
+    return {key: (action, label) for key, action, label in entries(screen)}
 
 
-def index_of(key: str) -> int:
-    """Row index for a shortcut key, or -1 when it is not a menu entry."""
-    for index, entry in enumerate(ENTRIES):
+def index_of(screen: str, key: str) -> int:
+    """Row index for a shortcut key on one screen, or -1 when absent."""
+    for index, entry in enumerate(entries(screen)):
         if entry[0] == key:
             return index
     return -1
+
+
+def is_navigation(action: str) -> bool:
+    return action in (BACK_ACTION, QUIT_ACTION) or action.startswith(OPEN_PREFIX)
+
+
+def opens_screen(action: str) -> str | None:
+    """Screen a navigation action leads to (None for back and quit)."""
+    return action[len(OPEN_PREFIX):] if action.startswith(OPEN_PREFIX) else None
 
 
 def needs_confirmation(action: str) -> bool:

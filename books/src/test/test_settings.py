@@ -89,11 +89,17 @@ class TestTuiSurface(SettingsCase):
         self.assertIn('手稿', text)
         self.assertIn('LLM', text)
 
-    def test_menu_groups(self):
+    def test_menu_categories(self):
         tui = _fixture.load_module(self.root, 'tui')
-        text = tui.menu_text()
-        for group in ('内容', '质量', '配置与状态'):
-            self.assertIn(group, text)
+        text = tui.menu_text('main')
+        for category in ('内容', '质量', '配置'):
+            self.assertIn(category, text)
+
+    def test_every_second_level_screen_offers_back(self):
+        tui = _fixture.load_module(self.root, 'tui')
+        for screen in ('content', 'quality', 'config'):
+            with self.subTest(screen=screen):
+                self.assertIn('返回主菜单', tui.menu_text(screen))
 
     def test_once_status_shows_the_book_identity(self):
         code, out = _fixture.run_inproc(self.root, 'tui.py', '--once', 'status')

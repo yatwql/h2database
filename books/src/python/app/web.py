@@ -89,7 +89,10 @@ class Handler(server.BaseHTTPRequestHandler):
             return
         action = str(payload.get('action', ''))
         kwargs = {'prompt': str(payload.get('prompt', ''))} if action == 'llm-ask' else {}
-        code, text = actions.run(action, **kwargs)
+        try:
+            code, text = actions.run(action, **kwargs)
+        except Exception as exc:  # noqa: BLE001 - the page relays failures, it does not raise
+            code, text = 1, f'{type(exc).__name__}: {exc}'
         self._send(200, json.dumps({'code': code, 'output': text}, ensure_ascii=False),
                    'application/json; charset=utf-8')
 

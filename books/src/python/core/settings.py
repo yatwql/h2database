@@ -161,6 +161,48 @@ def set_value(key: str, value: str) -> str:
     return ','.join(stored) if isinstance(stored, list) else str(stored)
 
 
+def _priority(spec: dict | None) -> int:
+    """Declared fallback priority, tolerating a malformed value."""
+    try:
+        return int((spec or {}).get('priority', 100))
+    except (TypeError, ValueError):
+        return 100
+
+
+def provider_order() -> list[dict]:
+    """Providers in fallback order, with the priority the router will read."""
+    payload = _read_json(LLM_PROVIDER_JSON)
+    providers = payload.get('providers') or {}
+    rows = [{'name': name, 'priority': _priority(spec)} for name, spec in providers.items()]
+    return sorted(rows, key=lambda row: (row['priority'], row['name']))
+
+
+def move_provider(name: str, delta: int) -> str:
+    """Move one provider up (-1) or down (+1) in the fallback order.
+
+    The order is persisted as explicit priorities, spaced so a later insert needs
+    no renumbering. It is the file the router reads, not a session-only view.
+    """
+    if delta not in (-1, 1):
+        raise ValueError('delta must be -1 or 1')
+    payload = _read_json(LLM_PROVIDER_JSON)
+    providers = payload.get('providers') or {}
+    if name not in providers:
+        raise KeyError(f'unknown provider {name!r}')
+    order = [row['name'] for row in provider_order()]
+    position = order.index(name)
+    target = max(0, min(len(order) - 1, position + delta))
+    if target == position:
+        return ', '.join(order)
+    order.insert(target, order.pop(position))
+    for index, provider in enumerate(order):
+        providers.setdefault(provider, {})['priority'] = (index + 1) * 10
+    payload['providers'] = providers
+    _write_json(LLM_PROVIDER_JSON, payload)
+    _reload()
+    return ', '.join(order)
+
+
 def _source_dir() -> str:
     """Configured source tree (empty when not configured)."""
     try:
