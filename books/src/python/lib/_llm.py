@@ -463,7 +463,7 @@ def summary_line(marker: dict) -> str:
     if not delta['calls']:
         return 'LLM：本次未调用'
     tokens = delta['prompt_tokens'] + delta['completion_tokens']
-    currency = pricing().get('currency', 'USD')
+    currency = display_currency()
     return (f"LLM：本次 {delta['calls']} 次调用，{tokens} token"
             f"（入 {delta['prompt_tokens']} / 出 {delta['completion_tokens']}）"
             f" ≈ {_money(delta['cost'], currency)}；今日累计 ≈ "
@@ -503,7 +503,7 @@ def budget_line() -> str:
     spent = today_cost()
     if spent < limit:
         return ''
-    currency = pricing().get('currency', 'USD')
+    currency = display_currency()
     return (f'⚠ 今日 LLM 花费 ≈ {_money(spent, currency)} 已达上限 '
             f'{_money(limit, currency)}（llm_settings.json → daily_cost_limit）')
 

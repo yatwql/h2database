@@ -42,6 +42,11 @@ class HeaderGlanceTest(SettingsCase):
         self.assertIn('llm_spend', summary)
         self.assertIn('volume_margin', summary)
 
+    def test_the_spend_line_uses_the_display_currency(self):
+        summary = self.settings().summary()
+        self.assertTrue(summary['llm_spend'].startswith('¥')
+                        or summary['llm_spend'] == '—', summary['llm_spend'])
+
     def test_a_book_without_a_baseline_says_dash(self):
         summary = self.settings().summary()
         self.assertEqual(summary['volume_margin'], '—')

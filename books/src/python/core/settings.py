@@ -257,13 +257,14 @@ def spend_summary() -> str:
     from lib import _llm
 
     try:
-        spent = _llm.today_cost()
-        limit = _llm.daily_limit()
-        currency = _llm.pricing().get('currency', 'USD')
+        spent = _llm.today_cost()          # already summed in the display currency
+        limit = _llm.daily_limit()         # configured in that same currency
+        currency = _llm.display_currency()
+        symbol = _llm.SYMBOLS.get(currency, '')
     except _llm.LLMError:
         return '—'      # a book without LLM config still gets a header
-    left = f'/{limit:.2f} {currency}' if limit else ''
-    return f'{spent:.2f} {currency}{left}'
+    left = f'/{symbol}{limit:.2f}' if limit else ''
+    return f'{symbol}{spent:.2f}{left}'
 
 
 def volume_summary() -> str:
