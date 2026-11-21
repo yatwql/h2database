@@ -11,7 +11,7 @@
 
 ## 概述
 
-在办 4 项：P2 3 项（**plan-3**、**plan-4**、**plan-10**）、P3 1 项（**plan-6**）。
+在办 3 项：P2 2 项（**plan-3**、**plan-4**）、P3 1 项（**plan-6**）。
 单项的范围、验收与事实位只在本文维护；系统怎么搭见 `technical.md`，怎么验证见
 `testplan.md`。
 
@@ -52,23 +52,6 @@
 必须与中文版一致。
 **验收**：第二语种可构建；章节数与图号与中文版逐一对应；`structure.py` 绿。
 **事实位**：语言资源在 `data/language/`；读取入口见 `technical.md` §3.3。
-
-#### `plan-10` 附录的符号断言纳入门禁
-
-**现状**：`source_refs.py` 只扫章节文件（`chapter_names` 里以 `ch` 开头的那些），附录 A 的
-`Class.method(` 断言因此从未被检查；实测有 10 条断言在对应类里找不到方法
-（如 `CommandContainer.canReuse(`、`MVStore.openInternal(`、`MVStore.setLastChunk(`），
-其余 6 条是已登记漂移。同一批附录里的 `Class.java:line` 坐标也不在扫描面内。
-
-**动作**：把附录文件（`appendix-*.md`）加进`extract_references` 与
-`extract_symbol_claims` 的扫描面；逐条核对 10 条断言——文档写错的改文档，改了名或不存在
-的方法写明理由后进 `source-symbol-baseline.json`。一次只动这一份附录，不顺手改正文。
-
-**验收**：`source_refs.py` 扫描面覆盖全部章节与附录；10 条断言逐条有结论（改文档或入基线
-并在基线里写明理由）；`make.py check` 全绿；附录坐标无新增 missing。
-
-**事实位**：扫描面在 `audit/source_refs.py` 的 `CHAPTER_FILES`；已登记漂移在
-`data/baselines/source-symbol-baseline.json`；判据见 `testplan.md` 的「事实」行。
 
 ### P3 — 预期实施，有空时安排
 

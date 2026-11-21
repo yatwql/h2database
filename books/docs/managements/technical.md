@@ -242,7 +242,7 @@ books/
 | 结构 | `structure.py` | 章节齐全、标题层级连续、图号唯一、围栏配对、合并稿行数一致、TOC 与标题一一对应 |
 | 体量 | `content_volume.py`、`balance.py` | 逐章字节/行数下限、手稿总量、交付页数与体积下限；章间体量分布 |
 | 引用 | `links.py`、`crossrefs.py`、`figures.py`、`index_xrefs.py` | 相对链接与锚点可解析、章间互引真实存在、图号引用可解析、索引条目指向真实章节 |
-| 事实 | `source_refs.py`、`content_depth.py` | 源码坐标可解析、代码摘录与源码一致、前向引用需点名主责章节 |
+| 事实 | `source_refs.py`、`content_depth.py` | 源码坐标可解析（扫描面含章节与附录）、代码摘录与源码一致、前向引用需点名主责章节 |
 | 形态 | `captions.py`、`figure_clusters.py`、`diagrams.py`、`style_rules.py`、`style.py`、`exercises.py`、`smart.py`、`readability.py`、`style_schema.py` | 图注结构、图簇桥接、ASCII 图宽度与行尾、术语与排版规则、章末练习结构、图表覆盖密度、可读性、配置结构 |
 | 工程 | `check_architecture.py`、`script_contract.py`、`file_length.py`、`traces.py`、`doc_drift.py`、`version_consistency.py`、`llm_policy.py`、`portability.py`、`typecheck.py`、`test_redundancy.py`、`perf_baseline.py`、`gate_trace.py`、`order_dependence.py` | 依赖方向、入口契约、文件长度预算、过程痕迹、文档与仓库一致、三版本一致、LLM 边界、跨平台、类型、测试质量、性能基线、门禁登记、顺序依赖（慢档） |
 | 复核 | `review_packet.py`、`scorecard.py`、`prose_quality.py`、`failure_extract.py` | 只输出失败集合与上下文；六维评分与文风度量作为整改视图；失败日志收敛 |

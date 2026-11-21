@@ -4,7 +4,7 @@
 > 版本：v0.1
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
-> **编号源**：`rf-next = 34`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-33，
+> **编号源**：`rf-next = 35`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-34，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -103,6 +103,7 @@
 | rf-31 | 测试隔离只护住了手稿：一个新写的快照用例把 `data/baselines/snapshot-june.json` 写进了仓库（`GUARDED_SUFFIXES` 当时只有 `data/manuscript`），基线/派生状态同样会被测试污染 | **修订**：守卫扩到 `data/manuscript`、`data/baselines`、`data/state`；该用例改为把 `BOOK_ROOT` 指向临时树；误落的 `snapshot-june.json` 已删除 |
 | rf-32 | 章名在代码里又写了一份：`source_refs.py::CHAPTER_FILES` 仍列 `ch7-sql-execution.md`/`ch8-query-optimizer.md`，两个文件不存在 → 每次跑两条 `WARN Chapter file not found`，合并后的 `ch7-8-sql-optimizer.md` 因此从未被坐标门禁检查；同一批旧章名还留在一份无任何引用的历史图注基线文件与 `exercises.py` 的用法示例里 | **修订**：`CHAPTER_FILES` 改为 `_config.chapter_names(include_cover=False)`（单份来源是 `book.toml`），合并章节重新进入检查面（95 条坐标全部有效）；删除无引用的历史基线文件；示例改占位名；新增用例钉住“列出的章必须存在且等于配置” |
 | rf-33 | 慢档在 CI 超时 30 分钟：`order_dependence.bisect()` 默认把整个套件当作前缀候选，`test_bisect_reports_a_target_that_passes_in_full_order` 实际重跑了一遍全包；而 `make.py` 用全局 1800s 步骤超时，把“重跑全包”掩盖成一个只能等的半小时；慢档其余 72 个用例实测共 0.49s | **修订**：`bisect()` 增加 `pool` 参数，用例改传两模块小池（单文件 1.57s）；CLI 同步增加 `--pool`；`make.py` 按步骤名取超时（`base.json [toolchain]` 的 `step_timeout_s` 900 / `test_timeout_s` 300），测试步骤加 `--durations=10` 把最慢用例写进报告；`CLAUDE.md` 补「不跑未知耗时命令、不等 CI」的作业纪律；步骤超时改为按进程组杀死（超时的 pytest 不再留下 chromium/pandoc 孤儿），CI 每个 job 补 `timeout-minutes` |
+| rf-34 | 附录不在坐标与符号断言的扫描面内：`source_refs.py` 只扫 `ch*` 章节，附录 A 里 10 条 `Class.method(` 断言从未被检查，其中 3 条写错了类（`CommandContainer.canReuse/executeQuery` 实际在 `Command`），7 条是旧版 MVStore 恢复流水线的术语（`openInternal`/`setLastChunk`/`openComplete`） | **修订**：扫描面改为 `book.toml` 的非封面文件（章节 + 附录），3 条改类名（实例与表格中引用一并改正），7 条旧术语登记进 `source-symbol-baseline.json`——附录 A.3 的恢复叙事仍按旧流水线行文（含 ASCII 图与 trace 日志），重写该案例时再对齐 `MVStore.open` / `FileStore.readStoreHeader`；`save_baseline` 顺带去重（同一 file::Class::method 只记一条） |
 
 ### 归档
 

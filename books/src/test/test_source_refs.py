@@ -64,12 +64,19 @@ class SourceReferenceAuditTest(unittest.TestCase):
         self.assertEqual(refs, [])
         self.assertIn('not found', err.getvalue())
 
-    def test_the_checked_chapters_come_from_the_configuration(self):
+    def test_the_checked_files_come_from_the_configuration(self):
         self.assertEqual(self.module.CHAPTER_FILES,
-                         [name for name in self.module._config.chapter_names(False)
-                          if name.startswith('ch')])
+                         self.module._config.chapter_names(include_cover=False))
         for name in self.module.CHAPTER_FILES:
             self.assertTrue(os.path.isfile(os.path.join(self.docs_dir, name)), name)
+
+    def test_appendices_are_scanned_like_chapters(self):
+        name = self.write_chapter('`KVStore.bump()` 与 `KVStore.java:12`\n',
+                                  'appendix-z-case.md')
+        claims = self.module.extract_symbol_claims([name], self.docs_dir)
+        refs = self.module.extract_references([name], self.docs_dir)
+        self.assertEqual([(c.class_name, c.method) for c in claims], [('KVStore', 'bump')])
+        self.assertEqual([(r.class_name, r.lineno) for r in refs], [('KVStore', 12)])
 
     def test_extract_symbol_claims_only_outside_fences(self):
         name = self.write_chapter('KVStore.bump() 与\n```java\nIgnored.call()\n```\n')

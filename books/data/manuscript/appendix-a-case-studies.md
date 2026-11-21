@@ -184,7 +184,7 @@ if (command == null || !command.canReuse()) {
 }
 ```
 
-`CommandContainer.canReuse()` 检查参数是否仍可绑定、Schema 是否未变更，
+`Command.canReuse()` 检查参数是否仍可绑定、Schema 是否未变更，
 两者皆通过则跳过整个 Parser 与 Optimizer 阶段，直接进入执行（详见 §7.4.4）。
 本案例首次执行走完整路径，第二次起直接在 `CommandContainer.query()` 处分叉。
 
@@ -397,7 +397,7 @@ while (topTableFilter.next()) {
 }
 ```
 
-`LocalResult` 经 `CommandContainer.executeQuery()` 上抛，被 `JdbcResultSet`
+`LocalResult` 经 `Command.executeQuery()` 上抛，被 `JdbcResultSet`
 重新包装为 JDBC 协议层对象。应用线程在 `rs.next()` 返回 `true` 后调用
 `rs.getInt("id")`，触发 `ValueInt.getInt()`——这是整个链路最后一次
 类型转换。会话锁在结果集闭合时释放（详见 §7.4.2、§4.2.4）。至此，
@@ -424,7 +424,7 @@ TableFilter 把过滤条件下推给索引，B-Tree 的 Page Pointer 把逻辑�
 > 提示：抓住 LIRS 的"Stack + Queue 双队列"如何区分一次性访问与重用访问，并结合扫描型负载的污染模式。
 > 回顾：§6.5.3、§6.5.5
 
-**3. 🟠★★★ 在 H2 测试目录下编写一段 JUnit 用例，对同一条 `SELECT * FROM users WHERE id = ?` 反复执行 1 万次并打印 `CommandContainer.canReuse()` 的命中次数；再在两次执行之间穿插一条 `ALTER TABLE users ADD COLUMN tag VARCHAR(8)`，观察缓存被作废的瞬间。**
+**3. 🟠★★★ 在 H2 测试目录下编写一段 JUnit 用例，对同一条 `SELECT * FROM users WHERE id = ?` 反复执行 1 万次并打印 `Command.canReuse()` 的命中次数；再在两次执行之间穿插一条 `ALTER TABLE users ADD COLUMN tag VARCHAR(8)`，观察缓存被作废的瞬间。**
 
 > 提示：参考 `org/h2/test/db/TestPreparedStatement.java` 的现有测试骨架；DDL 触发的缓存失效路径见正文相应说明。
 > 回顾：§7.3.6、§7.4.4

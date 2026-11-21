@@ -1,8 +1,11 @@
 {
-  "updated": "2026-11-20",
+  "updated": "2026-11-21",
   "source_version": "2.5.259-SNAPSHOT",
   "note": "Accepted symbol drift. Refresh after an upstream update.",
   "accepted": [
+    "appendix-a-case-studies.md::MVStore::openComplete",
+    "appendix-a-case-studies.md::MVStore::openInternal",
+    "appendix-a-case-studies.md::MVStore::setLastChunk",
     "ch1-2-architecture.md::Database::connectSession",
     "ch11-12-guide-summary.md::MVMap::writeOrDeleteRow",
     "ch11-12-guide-summary.md::Parser::parseCommand",

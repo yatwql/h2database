@@ -49,6 +49,7 @@
 - **计划表对齐事实**：`plan.md` 删去已记账完成的 plan-1 / plan-2，在办项回到 4 项（plan-3/4/5/6），不再列已归档的 plan-7。
 - **慢档不再无限等**：`order_dependence.bisect()` 增加 `pool`（默认仍是全包，但要重跑全包必须显式选择；用例与 CLI 均用小池），慢档实测从 30 分钟超时回到秒级；`make.py` 的超时改为按步骤取配置（`base.json [toolchain]` 的 `step_timeout_s` / `test_timeout_s`），测试步骤加 `--durations=10`，最慢用例直接出现在报告里；步骤超时改为按进程组杀死（超时的 pytest 不再留下 chromium/pandoc 孤儿）；CI 每个 job 加 `timeout-minutes`，远端也不会再挂半小时。（rf-33）
 - **正文渲染按章缓存**：`render/html_cache.py` 把正文按 H1 切片做成内容哈希键的缓存（键含渲染器源码哈希，改渲染器自动失效），`to_html.py --full` 可强制全量；目录/锚点/章编号在切片前已定稿，所以复用旧片不会改一个字节（实测全量与缓存的产物 sha256 相同）。单章改动只重渲染 1 片，`to_html` 步骤 169ms → 130ms。（plan-5）
+- **附录纳入坐标门禁**：`source_refs.py` 的扫描面改为 `book.toml` 的非封面文件，附录 A 的 44 条坐标（0 missing）与 10 条 `Class.method(` 断言从此受同一套规则管；其中 3 条写错类（`CommandContainer.canReuse/executeQuery` → `Command`）已在正文改正，7 条旧版 MVStore 恢复术语入基线（附录 A.3 仍按旧流水线行文，重写时再对齐）；`save_baseline` 改为去重。（plan-10 / rf-34）
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

@@ -41,12 +41,11 @@ POM_PATH = _config.source_tree('pom_root')
 # on every run. Refresh with: python source_refs.py --update-baseline
 BASELINE_PATH = _config.baseline_path('source_symbol')
 
-# Chapter files come from book.toml, so a renamed or merged chapter can never
-# leave the gate silently checking a file that no longer exists. The `ch` filter
-# keeps the scope at chapters: appendices are narrative and carry their own
-# coordinates review.
-CHAPTER_FILES = [name for name in _config.chapter_names(include_cover=False)
-                 if name.startswith('ch')]
+# Scanned files come from book.toml, so a renamed or merged chapter can never
+# leave the gate silently checking a file that no longer exists. Appendices are
+# prose too: their coordinates and `Class.method(` claims follow the same rules
+# instead of waiting for a proofreading pass.
+CHAPTER_FILES = _config.chapter_names(include_cover=False)
 
 # Pattern: ClassName.java:lineno (also captures start of range ClassName.java:start-end)
 REF_RE = re.compile(r'\b(\w+)(?:' + '|'.join(re.escape(x) for x in SUFFIXES) + r'):(\d+)')
@@ -307,7 +306,7 @@ def save_baseline(broken: list, source_version: str, path: str | None = None) ->
         'source_version': source_version,
         'note': 'Accepted symbol drift. Refresh after an upstream update.',
         'accepted': sorted(
-            (_claim_key(c.doc_file, c.class_name, c.method) for c, _rel in broken)
+            {_claim_key(c.doc_file, c.class_name, c.method) for c, _rel in broken}
         ),
     }
     _fsutil.ensure_dir(target)
