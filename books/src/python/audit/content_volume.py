@@ -185,6 +185,31 @@ def provenance() -> dict:
     }
 
 
+def from_snapshot(label: str) -> dict | None:
+    """Volume facts of an imported snapshot, in baseline shape.
+
+    A snapshot is the only way to promote an earlier edition to the floor: the
+    manuscript on disk is today's, so the numbers have to come from somewhere
+    else, and that somewhere must be a recorded import (manifest + label).
+    """
+    path = os.path.join(_config.BOOK_ROOT, 'data', 'baselines', f'snapshot-{label}.json')
+    if not os.path.isfile(path):
+        return None
+    payload = _fsutil.load_json(path)
+    files = {name: {'bytes': stats['bytes'], 'lines': stats['lines']}
+             for name, stats in (payload.get('files') or {}).items()}
+    total = {'bytes': sum(item['bytes'] for item in files.values()),
+             'lines': sum(item['lines'] for item in files.values())}
+    return {
+        'manuscript': {'files': files, 'total': total},
+        'delivered': {},
+        'thresholds': {'floor_ratio': FLOOR_RATIO,
+                       'page_ratio': PAGE_RATIO,
+                       'size_ratio': SIZE_RATIO},
+        'source': {'snapshot': label, 'files': len(files)},
+    }
+
+
 def shrunk(baseline: dict, current: dict) -> list[str]:
     """Metrics that would fall if ``current`` became the baseline.
 
@@ -246,6 +271,8 @@ def update_baseline(current: dict, accept_shrink: bool = False,
         'commit': info['commit'],
         'reason': reason or '(未填写理由)',
     }
+    if 'source' not in current:
+        current.pop('source', None)
     _fsutil.write_text(BASELINE_PATH,
                        json.dumps(current, ensure_ascii=False, indent=2) + '\n')
     total = current['manuscript']['total']
@@ -269,11 +296,20 @@ def main(argv: list[str] | None = None) -> int:
                         help='who reviewed it; defaults to git user.name')
     parser.add_argument('--baseline', default=None,
                         help='compare against this baseline file instead of the book one')
+    parser.add_argument('--from-snapshot', default='',
+                        help='with --update-baseline: record an imported snapshot as the floor')
     args = parser.parse_args(argv)
 
     current = snapshot()
     if args.update_baseline:
-        return update_baseline(current, args.accept_shrink, args.reason, args.reviewed_by)
+        payload = current
+        if args.from_snapshot:
+            payload = from_snapshot(args.from_snapshot)
+            if payload is None:
+                print(f'error: 没有 {args.from_snapshot} 的快照体积账本；'
+                      f'先 import 该快照并运行 snapshot.py baseline', file=sys.stderr)
+                return 2
+        return update_baseline(payload, args.accept_shrink, args.reason, args.reviewed_by)
 
     baseline = load_baseline(args.baseline)
     if PROFILE == 'cold-start' and baseline:

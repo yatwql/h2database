@@ -1,0 +1,93 @@
+{
+  "label": "june-2026",
+  "date": "2026-06-11",
+  "source_archive": "docs-stm.zip",
+  "archive_sha256": "018b7a32b9451f2c1ce21bf86849f6fb90ea91b7f8ec7f007beae6d2d069260e",
+  "files": {
+    "back/glossary.md": {
+      "bytes": 9746,
+      "lines": 137,
+      "sha256": "7207b063e04d13a845d7b01a96bddf0c15c1434236c546eb93ae743d9726fd14"
+    },
+    "back/index.md": {
+      "bytes": 4022,
+      "lines": 207,
+      "sha256": "20de5dd69347987d4ab09c7333d01c5d9fcf9553b3bb0cf7ccf4f1762bf019ac"
+    },
+    "back/references.md": {
+      "bytes": 3775,
+      "lines": 70,
+      "sha256": "f97f5ee5121186e32f9883585b35d4e324746416bce626287303a7f51601d3e7"
+    },
+    "ch1-2-architecture.md": {
+      "bytes": 168305,
+      "lines": 2157,
+      "sha256": "7b2e82b22c2e043dae6003237047f95c8f840a28905ce7694e06d8f71b78cace"
+    },
+    "ch11-12-guide-summary.md": {
+      "bytes": 178192,
+      "lines": 2389,
+      "sha256": "f30a44a985adb7b94d616603ab2622987997fa613f013b09b8c3596ec07c3ffa"
+    },
+    "ch3-packages.md": {
+      "bytes": 144251,
+      "lines": 2262,
+      "sha256": "084e9b3b52f7bb9cc2bcc68d3afa69880e93184b84b395c1c00bf8a0705f6bf8"
+    },
+    "ch4-5-modules-processes.md": {
+      "bytes": 220495,
+      "lines": 3893,
+      "sha256": "0c3ec98cd327159182de8d69fb21cc67e1725c5cd10a596eec7fefd4f567eccd"
+    },
+    "ch6-1-data-structures.md": {
+      "bytes": 143768,
+      "lines": 2841,
+      "sha256": "ac06f49339fa7ee4e44e00be805260009173e9d03c5d236b0edd1fb9ca8e826e"
+    },
+    "ch6-2-storage-algorithms.md": {
+      "bytes": 227264,
+      "lines": 4618,
+      "sha256": "82e89eb14443ca9c577bf6330c6049e43b0a9861d8ad9cdf591ab5e38ddf7444"
+    },
+    "ch6-3-query-algorithms.md": {
+      "bytes": 179041,
+      "lines": 3503,
+      "sha256": "89ff6dd680bb221e2b77fbe34841515c067b19db265d764d09a87498f3bd43e2"
+    },
+    "ch7-8-sql-optimizer.md": {
+      "bytes": 499415,
+      "lines": 8085,
+      "sha256": "5efc05edb4c0c6e9ea597e5cf720e72f63b7eac6d709b5312e2bb3661c4cbebd"
+    },
+    "ch9-10-persistence-locking.md": {
+      "bytes": 459869,
+      "lines": 6566,
+      "sha256": "4f93323eb1a0bc2e499243fd3bd06dc6238ec240146405aea58a10ba8019fdc0"
+    },
+    "cover.md": {
+      "bytes": 883,
+      "lines": 25,
+      "sha256": "33cbe75e771ffe0e50efca51809c4f9590e13776f1c74f0016281d2b480c8afb"
+    },
+    "front/copyright.md": {
+      "bytes": 667,
+      "lines": 16,
+      "sha256": "fab7d8cf1ffe3bea4cc7462a1ad29dc1e62cac521e3f5cbb5b31023915aafcc4"
+    },
+    "front/how-to-read.md": {
+      "bytes": 3895,
+      "lines": 80,
+      "sha256": "e143c027f5acbbd5c09b96c218c444f6953576f4f3ddad5bc41602a097946c0c"
+    },
+    "front/preface.md": {
+      "bytes": 3629,
+      "lines": 44,
+      "sha256": "8e4b73b02bf336e7cbdf5ce8d8de939b19d88a0759e1570d082b30cc8ca18bb3"
+    }
+  },
+  "totals": {
+    "files": 16,
+    "bytes": 2247217,
+    "lines": 36893
+  }
+}

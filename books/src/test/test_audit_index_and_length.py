@@ -228,6 +228,41 @@ class ContentVolumeBaselineTest(unittest.TestCase):
         self.assertEqual(recorded['reason'], '删掉重复章节')
         self.assertTrue(recorded['drops'])
 
+    def snapshot_ledger(self, label: str, lines: int) -> None:
+        directory = os.path.join(self.tmp.name, 'data', 'baselines')
+        os.makedirs(directory, exist_ok=True)
+        payload = {'snapshot': label,
+                   'files': {'ch1.md': {'bytes': lines * 10, 'lines': lines}},
+                   'totals': {'files': 1, 'bytes': lines * 10, 'lines': lines}}
+        with open(os.path.join(directory, f'snapshot-{label}.json'), 'w',
+                  encoding='utf-8') as fh:
+            json.dump(payload, fh)
+
+    def test_an_imported_snapshot_can_become_the_floor(self):
+        self.snapshot_ledger('june', 120)
+        with mock.patch.object(self.mod._config, 'BOOK_ROOT', self.tmp.name):
+            payload = self.mod.from_snapshot('june')
+        self.assertEqual(payload['manuscript']['total']['lines'], 120)
+        self.assertEqual(payload['source']['snapshot'], 'june')
+        self.assertEqual(payload['delivered'], {})
+
+    def test_a_snapshot_without_a_ledger_is_rejected(self):
+        with mock.patch.object(self.mod._config, 'BOOK_ROOT', self.tmp.name), \
+                mock.patch('sys.stdout', new=io.StringIO()), \
+                mock.patch('sys.stderr', new=io.StringIO()):
+            code = self.mod.main(['--update-baseline', '--from-snapshot', 'absent'])
+        self.assertEqual(code, 2)
+
+    def test_a_decided_snapshot_keeps_its_source_after_recording(self):
+        self.write(self.book(100))
+        self.snapshot_ledger('june', 90)
+        with mock.patch.object(self.mod._config, 'BOOK_ROOT', self.tmp.name), \
+                mock.patch.object(self.mod, 'snapshot', lambda: self.book(100)):
+            code = self.run_main('--update-baseline', '--from-snapshot', 'june',
+                                 '--accept-shrink', '--reason', '历史版本')
+        self.assertEqual(code, 0)
+        self.assertEqual(self.read()['source']['snapshot'], 'june')
+
     def test_a_growing_baseline_is_recorded_without_a_flag(self):
         self.write(self.book(100))
         with mock.patch.object(self.mod, 'snapshot', lambda: self.book(120)):

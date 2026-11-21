@@ -4,7 +4,7 @@
 > 版本：v0.1
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
-> **编号源**：`rf-next = 24`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-23，
+> **编号源**：`rf-next = 25`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-24，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -93,6 +93,7 @@
 | rf-21 | 「源码 → 手稿」既不比对基线、也不保护正文：`chapters.py` 无条件覆盖手稿（骨架覆盖已写正文，内容体积门禁要到下一次 `check` 才报），交互结束后用户拿不到“稿子有没有变薄”的答案 | **修订**：`chapters.py` 只在空文件/内容相同/`--force` 时写入，否则跳过并在结果里报出；`actions.analyze` 在三阶段后调用 `content_volume.py --json`，把一行比对结论并入同一份结果（低于基线时判失败并给出 `--update-baseline` 指引） |
 | rf-22 | 体量基线没有单调性约束，也没有“比哪一份”的说法：每次转换后都能 `--update-baseline` 把下限重记成更薄的那份，多份历史稿各自有账本但没有显式选取入口 | **修订**：`--update-baseline` 默认拒绝降低任何条目或总量，收缩须 `--accept-shrink --reason`，理由与差额写进 `accepted_shrinks`；新增 `--baseline <文件>` 用于显式对照某份历史快照；`quality-model.md` §4 写清“只比一份、不做加权”的原则 |
 | rf-23 | 「评审通过的基线」只有口头含义：`--update-baseline` 对未提交的工作区、无人具名的调用一样照写，事后无法回答“这份基线是谁在哪一版上认的” | **修订**：记账要求 `data/manuscript` 无未提交改动、评审人具名（`--reviewed-by`，缺省取 `git user.name`），并在基线文件写入 `reviewed{by, at, commit, reason}`；`quality-model.md` §4 补三项条件与固定流程（check → commit → 记账） |
+| rf-24 | 历史版本无法直接成为基线：快照只有自己的体积账本，`--update-baseline` 只量当前手稿，要把 6 月那版定为下限只能手改 JSON（绕过了评审人、单调性与来源记录） | **修订**：`content_volume.py` 新增 `--from-snapshot <label>`，从 `snapshot-<label>.json` 取数写基线，并记下 `source.snapshot`；比当前基线薄时仍需 `--accept-shrink`；`quality-model.md` §4 给出「导入 → 记快照账本 → 提为基线」三步流程 |
 
 ### 归档
 

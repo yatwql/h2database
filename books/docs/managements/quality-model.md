@@ -87,6 +87,21 @@ python books/src/python/audit/content_volume.py --update-baseline \
     --reviewed-by "阿龙" --reason "第 6 章补写完成，定稿"   # 3. 记账并留名
 ```
 
+**把某一版历史稿提为基线**（例如认定 6 月那版更好）：历史稿是只读快照，不能直接量，
+所以先导入、再记体积账本、最后提为基线，三步都有记录：
+
+```bash
+python books/src/python/manuscript/snapshot.py import ../docs-stm.zip june-2026 --date 2026-06-11
+python books/src/python/manuscript/snapshot.py baseline 2026-06-11-june-2026
+python books/src/python/audit/content_volume.py --update-baseline \
+    --from-snapshot 2026-06-11-june-2026 --reviewed-by "阿龙" \
+    --reason "该版结构与文风已定稿，作为下限" [--accept-shrink]
+```
+
+若该版比当前基线**薄**（换基线等于降低下限），必须显式 `--accept-shrink`，理由与逐项差额
+一起入账——这是唯一允许降低基线的入口，一眼能查。提为基线后 `source.snapshot` 记下它来自
+哪份快照，`reviewed` 记下谁在哪一提交上做的决定。
+
 **比哪一份？只比一份。** 一次只有一条下限：当前 `content-volume.json` 里记的那份，
 即最近一次经评审接受的稿子。不做加权、不做「组合概率」——基线是评审结论，不是统计量；
 一旦变成平均值，就无法回答「这次转换有没有让稿子变薄」。
