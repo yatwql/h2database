@@ -4,11 +4,22 @@
   "models": {
     "deepseek-v4-flash": {
       "input_per_mtok": 0.28,
-      "output_per_mtok": 0.42
+      "output_per_mtok": 0.42,
+      "currency": "USD"
     },
     "deepseek-v4.1-flash": {
       "input_per_mtok": 0.28,
-      "output_per_mtok": 0.42
+      "output_per_mtok": 0.42,
+      "currency": "USD"
     }
-  }
+  },
+  "display_currency": "CNY",
+  "fx": {
+    "CNY": 1.0,
+    "USD": 7.1,
+    "EUR": 7.7
+  },
+  "_fx_note": "fx maps a currency to CNY; it is a hand-maintained anchor, not a live feed. Costs are computed in the model currency and converted for display only.",
+  "_source": "Prices are per million tokens in each model's own currency, typed from the vendor pricing pages (platform.deepseek.com, openai.com/api/pricing, anthropic.com/pricing). A live refresh was attempted and returned only a fragment of the DeepSeek page, so the numbers below were NOT updated in that run — verify against the vendor page before quoting a figure.",
+  "_fetched": "2026-11-21"
 }

@@ -58,6 +58,21 @@ class PricingAndUsageTest(unittest.TestCase):
         self.assertIn('3.0000', line)
         self.assertGreater(today, 0)
 
+    def test_costs_display_in_cny_by_default(self):
+        table = {'display_currency': 'CNY', 'fx': {'CNY': 1.0, 'USD': 7.1},
+                 'currency': 'USD',
+                 'models': {'m': {'input_per_mtok': 1.0, 'output_per_mtok': 1.0}}}
+        with mock.patch.object(self.llm, 'pricing', lambda: table):
+            self.assertEqual(self.llm.display_currency(), 'CNY')
+            self.assertAlmostEqual(self.llm.convert(1.0, 'USD'), 7.1)
+            self.assertEqual(self.llm._money(1.0, 'USD'), '¥7.1000')
+
+    def test_an_unknown_rate_keeps_the_model_currency(self):
+        table = {'display_currency': 'CNY', 'fx': {'CNY': 1.0}, 'currency': 'USD',
+                 'models': {'m': {'input_per_mtok': 1.0}}}
+        with mock.patch.object(self.llm, 'pricing', lambda: table):
+            self.assertEqual(self.llm._money(2.5, 'USD'), '2.5000 USD')
+
     def test_a_multi_call_run_is_summarised_as_a_delta(self):
         with mock.patch.object(self.llm, 'pricing', lambda: {
                 'currency': 'USD',

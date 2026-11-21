@@ -360,11 +360,48 @@ def estimate(prompt: str, scenario: str = 'chapter-draft') -> dict:
     low = cost_of(model, prompt_tokens, budget // 2)
     high = cost_of(model, prompt_tokens, budget)
     return {'model': model, 'prompt_tokens': prompt_tokens, 'max_tokens': budget,
-            'cost_low': low, 'cost_high': high, 'currency': pricing().get('currency', 'USD')}
+            'cost_low': convert(low, pricing().get('currency', 'USD')) if low is not None else None,
+            'cost_high': convert(high, pricing().get('currency', 'USD')) if high is not None else None,
+            'currency': display_currency()}
 
 
-def _money(value: float | None, currency: str = 'USD') -> str:
-    return '未定价' if value is None else f'{value:.4f} {currency}'
+SYMBOLS = {'CNY': '¥', 'USD': '$', 'EUR': '€'}
+
+
+def display_currency() -> str:
+    """Currency the reports are shown in (default CNY)."""
+    return str(pricing().get('display_currency') or 'CNY')
+
+
+def fx_rates() -> dict:
+    """Currency -> CNY anchor. A missing rate means "no conversion known"."""
+    rates = dict(pricing().get('fx') or {})
+    rates.setdefault('CNY', 1.0)
+    return rates
+
+
+def convert(value: float, source: str, target: str | None = None) -> float | None:
+    """Convert between currencies through the CNY anchor; None when unknown."""
+    target = target or display_currency()
+    if source == target:
+        return value
+    rates = fx_rates()
+    if source not in rates or target not in rates:
+        return None
+    return value * rates[source] / rates[target]
+
+
+def _money(value: float | None, currency: str | None = None) -> str:
+    """Format an amount in the display currency, naming the model's own one too."""
+    if value is None:
+        return '未定价'
+    source = currency or display_currency()
+    shown = display_currency()
+    converted = convert(value, source, shown)
+    if converted is None:
+        return f'{value:.4f} {source}'
+    symbol = SYMBOLS.get(shown, '')
+    return f'{symbol}{converted:.4f}' + ('' if symbol else f' {shown}')
 
 
 def _record(provider: str, model: str, scenario: str, prompt_tokens: int,
@@ -372,15 +409,18 @@ def _record(provider: str, model: str, scenario: str, prompt_tokens: int,
     """Remember one call: module totals, a one-line log row, and the last usage."""
     cost = cost_of(model, prompt_tokens, completion_tokens)
     currency = pricing().get('currency', 'USD')
+    shown_currency = display_currency()
+    cost_display = convert(cost, currency) if cost is not None else None
     global _last_usage
     _last_usage = {'provider': provider, 'model': model, 'scenario': scenario,
                    'prompt_tokens': prompt_tokens,
                    'completion_tokens': completion_tokens,
-                   'cost': cost, 'currency': currency}
+                   'cost': cost, 'currency': currency,
+                   'cost_display': cost_display, 'display_currency': shown_currency}
     _totals['calls'] += 1
     _totals['prompt_tokens'] += prompt_tokens
     _totals['completion_tokens'] += completion_tokens
-    _totals['cost'] += cost or 0.0
+    _totals['cost'] += cost_display or 0.0
     try:
         log = usage_log()
         _fsutil.ensure_dir(os.path.dirname(log))
@@ -444,7 +484,7 @@ def today_cost() -> float:
             except ValueError:
                 continue
             if str(row.get('at', '')).startswith(today):
-                total += _safe_float(row.get('cost'))
+                total += _safe_float(row.get('cost_display') or row.get('cost'))
     except OSError:
         return 0.0
     return total
