@@ -263,10 +263,20 @@ def coverage() -> int:
         return 2
     threshold = _config.THRESHOLDS.get('coverage_fail_under', 0)
     tests = os.path.normpath(os.path.join(TOOLS_DIR, '..', 'test'))
-    run = subprocess.run(
-        [PY, '-m', 'coverage', 'run', '--source=books/src/python',
-         '-m', 'unittest', 'discover', '-s', tests, '-t', tests],
-        cwd=os.path.dirname(BOOK_ROOT), capture_output=True, text=True, check=False)
+    # pytest runs the same suite the gates run (it finishes); unittest discover
+    # under coverage deadlocks on the threaded fixtures, which is how this gate
+    # sat silent instead of reporting a number.
+    inner = (['-m', 'pytest', '-q', '-m', 'tier_fast', tests]
+             if importlib.util.find_spec('pytest') else
+             ['-m', 'unittest', 'discover', '-s', tests, '-t', tests])
+    try:
+        run = subprocess.run(
+            [PY, '-m', 'coverage', 'run', '--source=books/src/python', *inner],
+            cwd=os.path.dirname(BOOK_ROOT), capture_output=True, text=True,
+            check=False, timeout=1800)
+    except subprocess.TimeoutExpired:
+        print('coverage run timed out after 1800s')
+        return 2
     if run.returncode != 0:
         print(run.stdout[-2000:])
         print(run.stderr[-1000:])

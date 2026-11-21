@@ -4,7 +4,7 @@
 > 版本：v0.1
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
-> **编号源**：`rf-next = 29`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-28，
+> **编号源**：`rf-next = 30`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-29，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -98,6 +98,7 @@
 | rf-26 | 测试隔离有洞：网络只阻 socket，但 LLM 仍可能按真实 provider 走；`logs/` 写进仓库目录，`today_cost()` 读的也是真实用量账本（用例结果随本机历史浮动）；手稿与产物目录没有任何写入守卫——此前一次测试真的把手稿覆盖成骨架 | **修订**：`_fixture.isolate()` 导入时装守卫：`BOOK_TEST_GUARD` 拒写真实 manuscript（产物可再生，仅告警不拦），夹具书与日志都在临时目录内；LLM 一律 mock，真实建连由 socket 守卫阻断。新增 `test_isolation.py` 钉住每条不变量 |
 | rf-27 | 快照的标签有两种写法：`import` 存成 `<日期>-<标签>`，而 `baseline`/`verify` 只认目录全名——按 `snapshot.py import … june-2026` 导入后 `baseline june-2026` 报“找不到快照” | **修订**：`snapshot.resolve/require` 同时接受标签与目录全名（歧义时报出候选），`content_volume --from-snapshot` 也接受裸标签；新增 3 个用例 |
 | rf-28 | `how-to-config.md` 写“`deepseek-main`（默认）”，而 `llm_provider.json` 的 `default_provider` 是 `opencode-go`（priority 10）——文档与配置互相矛盾 | **修订**：文档按配置改写，并把“改默认 provider 用 `settings set llm.provider`”写进同段 |
+| rf-29 | `make.py cover` 从不返回：它用 `unittest discover` 跑覆盖率，遇到带线程的 Web/TUI 夹具死锁，于是这道门禁长期既不给数字也不报错；顺带发现 `coverage_fail_under` 88 高于实测 85——门禁即使跑起来也是红的 | **修订**：`coverage()` 改用与门禁同源的 `pytest -m tier_fast` 并加 1800s 超时，阈值按实测调到 85，`plan-3` 保留抬到 88 的目标 |
 
 ### 归档
 
