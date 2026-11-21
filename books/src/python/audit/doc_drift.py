@@ -84,8 +84,11 @@ def _git_ignored(rel: str) -> bool:
     """
     import subprocess
 
+    # run from the repository root and hand git a repo-relative path, otherwise a
+    # path that starts with books/ resolves to books/books/… and never matches
+    repo = os.path.dirname(_config.BOOK_ROOT)
     try:
-        proc = subprocess.run(['git', 'check-ignore', '-q', rel], cwd=_config.BOOK_ROOT,
+        proc = subprocess.run(['git', 'check-ignore', '-q', rel], cwd=repo,
                               check=False, capture_output=True)
     except OSError:  # pragma: no cover - git missing
         return False
