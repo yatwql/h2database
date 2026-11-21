@@ -28,7 +28,6 @@ import sys as _sys
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
 import argparse
-import os
 import sys
 import tomllib
 
@@ -43,7 +42,7 @@ _fsutil.pin_stdout_utf8()
 # narrative as `详见 §X.Y`, which is the cross-reference idiom enforced by
 # structure.py. Decision points are short prose hooks the author then
 # expands with figures and source-code excerpts.
-CASE_STUDY_CONFIG = os.path.join(_config.BOOK_ROOT, 'data', 'tmpl', 'case-studies.toml')
+CASE_STUDY_CONFIG = _config.template_path('case-studies.toml')
 
 
 def load_scenarios() -> dict[str, list[tuple[str, str, str]]]:

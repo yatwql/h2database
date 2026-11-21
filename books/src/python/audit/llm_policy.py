@@ -37,7 +37,7 @@ IMPORT_RE = re.compile(r'^\s*(?:from\s+lib\s+import\s+[^\n]*\b_llm\b|import\s+li
 def policy() -> dict:
     try:
         return json.loads(_fsutil.read_text(
-            os.path.join(_config.BOOK_ROOT, 'data', 'config', 'llm_settings.json'))
+            _config.config_path('llm_settings.json'))
         ).get('policy') or {}
     except (OSError, json.JSONDecodeError):
         return {}
@@ -60,7 +60,7 @@ def secret_files() -> list[str]:
         if rel and rel.endswith(SECRET_NAME):
             problems.append(f'{rel}: a key file is tracked by git (remove it, rotate the key)')
 
-    example = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'llm_key.example.json')
+    example = _config.config_path('llm_key.example.json')
     if os.path.exists(example):
         try:
             data = json.loads(_fsutil.read_text(example))

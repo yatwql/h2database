@@ -15,7 +15,7 @@ import os
 
 from . import _config, _fsutil
 
-BASELINE_DIR = os.path.join(_config.BOOK_ROOT, 'data', 'baselines')
+BASELINE_DIR = _config.baseline_dir()
 
 
 def path_for(name: str) -> str:

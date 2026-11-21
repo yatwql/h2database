@@ -21,8 +21,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from lib import _config, _fsutil
 
-INVENTORY = os.path.join(_config.BOOK_ROOT, 'data', 'state', 'source-inventory.json')
-OUTLINE = os.path.join(_config.BOOK_ROOT, 'data', 'state', 'outline.json')
+INVENTORY = _config.state_path('source-inventory.json')
+OUTLINE = _config.state_path('outline.json')
 
 
 def ownership_conflicts(mapping: dict[str, list[str]]) -> dict[str, list[str]]:

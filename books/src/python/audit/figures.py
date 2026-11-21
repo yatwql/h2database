@@ -23,10 +23,10 @@ import os
 import re
 import sys
 
-from lib import _config, _fsutil
+from lib import _config, _fsutil, _mdutil
 
-FIG_RE = re.compile(r'\*\*图 (\d+-\d+):')
-CITATION_RE = re.compile(r'如图 (\d+-\d+) 所示')
+FIG_RE = re.compile(rf'\*\*{_mdutil.FIGURE_LABEL} ({_mdutil.FIGURE_ID}):')
+CITATION_RE = re.compile(rf'如图 ({_mdutil.FIGURE_ID}) 所示')
 
 def chapter_files() -> list[str]:
     pattern = os.path.join(_config.MANUSCRIPT_DIR, 'ch[0-9]*.md')

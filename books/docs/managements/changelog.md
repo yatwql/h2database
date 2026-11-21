@@ -51,6 +51,11 @@
 - **正文渲染按章缓存**：`render/html_cache.py` 把正文按 H1 切片做成内容哈希键的缓存（键含渲染器源码哈希，改渲染器自动失效），`to_html.py --full` 可强制全量；目录/锚点/章编号在切片前已定稿，所以复用旧片不会改一个字节（实测全量与缓存的产物 sha256 相同）。单章改动只重渲染 1 片，`to_html` 步骤 169ms → 130ms。（plan-5）
 - **附录纳入坐标门禁**：`source_refs.py` 的扫描面改为 `book.toml` 的非封面文件，附录 A 的 44 条坐标（0 missing）与 10 条 `Class.method(` 断言从此受同一套规则管；其中 3 条写错类（`CommandContainer.canReuse/executeQuery` → `Command`）已在正文改正，7 条旧版 MVStore 恢复术语入基线（附录 A.3 仍按旧流水线行文，重写时再对齐）；`save_baseline` 改为去重。（plan-10 / rf-34）
 - **覆盖率 +1 档**：新增 `test_check_runner_branches.py`（步骤命令表、变更域分类、运行摘要与超时）与 `test_audit_structure_levels.py`（门禁分档、图号乱序、缺合并稿、非法 UTF-8），`check_runner.py` 69% → **97%**、`structure.py` 82% → 84%，总量 86% → **87%**，`coverage_fail_under` 同步抬到 87；剩下的到 88 需 PDF 夹具（`verify_pdf.py` / `pdf_toc_links.py`）。（plan-3）
+- **图注形状与章节范围各只有一份**：图注 `**图 X-Y: 标题**` 的形状原来在 6 个 audit 模块里各自
+  为正则（`structure`/`figures`/`captions`/`figure_clusters`/`smart`/`readability`），边界已互不一致；
+  现统一到 `lib/_mdutil.py` 的 `FIGURE_LABEL`/`FIGURE_ID`/`CHAPTER_FIGURE`/`APPENDIX_FIGURE` 与
+  `figure_caption()`/`figure_ids()`，消费者只引用形状。`structure.py` 的章节范围不再写死 1–12，
+  改为从 `book.toml [chapters.coverage]` 推导（无该表时退回阅读顺序）。（rf-35）
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

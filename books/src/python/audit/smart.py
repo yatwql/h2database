@@ -16,7 +16,7 @@ import os
 import re
 import sys
 
-from lib import _config, _fsutil
+from lib import _config, _fsutil, _mdutil
 
 _fsutil.pin_stdout_utf8()
 
@@ -33,7 +33,7 @@ DIAGRAM_MARKERS = ['┌', '└', '├', '│', '▼', '▲', '→']
 def check_figure_refs():
     """Scan all figures, count references, report coverage per file."""
     # Accepts both numeric (7-3) and appendix-style (A-1) figure IDs.
-    CAPTION_RE = re.compile(r'^\*\*图 ([A-Z0-9]+-\d+[a-z]*):(.+?)\*\*$')
+    CAPTION_RE = _mdutil.FIGURE_CAPTION_RE
     total_figs = 0
     total_refd = 0
 
@@ -67,7 +67,7 @@ def check_figure_refs():
                     continue
                 line = lines[j]
                 # Check various reference patterns
-                if '如图 ' + fid + ' 所示' in line:
+                if f'如图 {fid} 所示' in line:
                     found = True
                     break
                 # Check "图 X-Y " (with any trailing context: space, 和, 与, 、, etc.)

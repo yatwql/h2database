@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lib import _config, _fsutil
 
 RULES = (_config.STYLE_POLICY.get('style_rules') or {})
-BASELINE_PATH = os.path.join(_config.BOOK_ROOT, 'data', 'baselines',
+BASELINE_PATH = os.path.join(_config.baseline_dir(),
                              'style-rules-baseline.json')
 FENCE_RE = re.compile(r'^\s*```')
 HEADING_RE = re.compile(r'^(#{1,6})\s+(.+?)\s*$')

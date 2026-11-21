@@ -285,6 +285,9 @@ def audit_file(path: str) -> dict:
         file_report['slots'].append(report)
     return file_report
 
+PER_CHAPTER_FLOOR = int(_config.THRESHOLDS.get('exercises_min_per_chapter', 3))
+
+
 def render_report(reports: list[dict], total_floor: int) -> int:
     issues_total = 0
     exercises_total = 0
@@ -292,7 +295,8 @@ def render_report(reports: list[dict], total_floor: int) -> int:
     chapters_pass = 0
 
     print('=' * 72)
-    print(f'章末延伸思考审计 (style-guide §12)  阈值：每章 ≥ 3 题，全书 ≥ {total_floor} 题')
+    print(f'章末延伸思考审计 (style-guide §12)  阈值：每章 ≥ {PER_CHAPTER_FLOOR} 题，'
+          f'全书 ≥ {total_floor} 题')
     print('=' * 72)
 
     for fr in reports:
@@ -304,7 +308,7 @@ def render_report(reports: list[dict], total_floor: int) -> int:
             hint = '✓' if s['all_have_hint'] else '✗'
             review = '✓' if s['all_have_review'] else '✗'
             anch = '✓' if s['all_anchors_present'] else '✗'
-            ok = (cnt >= 3 and s['placement_ok']
+            ok = (cnt >= PER_CHAPTER_FLOOR and s['placement_ok']
                   and s['all_have_hint'] and s['all_have_review']
                   and s['all_anchors_present'])
             tag = '✅ PASS' if ok else '❌ FAIL'
@@ -385,7 +389,7 @@ def main(argv: list[str]) -> int:
         chapters_total = sum(len(r['slots']) for r in reports)
         chapters_pass = sum(
             1 for r in reports for s in r['slots']
-            if s['exercise_count'] >= 3 and s['placement_ok']
+            if s['exercise_count'] >= PER_CHAPTER_FLOOR and s['placement_ok']
             and s['all_have_hint'] and s['all_have_review']
             and s['all_anchors_present']
         )

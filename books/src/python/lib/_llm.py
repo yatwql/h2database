@@ -28,7 +28,7 @@ from urllib.parse import urlsplit
 
 from lib import _config, _fsutil, _log
 
-CONFIG_DIR = os.path.join(_config.BOOK_ROOT, 'data', 'config')
+CONFIG_DIR = _config.CONFIG_DIR
 PROVIDER_PATH = os.path.join(CONFIG_DIR, 'llm_provider.json')
 SETTINGS_PATH = os.path.join(CONFIG_DIR, 'llm_settings.json')
 
@@ -290,7 +290,7 @@ LOG = _log.get_logger('llm')
 
 def pricing_path() -> str:
     """Resolved per call: the book root can change (fixtures, multi-book)."""
-    return os.path.join(_config.BOOK_ROOT, 'data', 'config', 'llm_pricing.json')
+    return _config.config_path('llm_pricing.json')
 
 
 def usage_log() -> str:

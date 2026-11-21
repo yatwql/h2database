@@ -23,8 +23,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from lib import _config, _fsutil
 
-STYLE_PATH = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'style.json')
-TEMPLATES_PATH = os.path.join(_config.BOOK_ROOT, 'data', 'tmpl', 'templates.toml')
+STYLE_PATH = _config.config_path('style.json')
+TEMPLATES_PATH = _config.template_path('templates.toml')
 KNOWN_TEMPLATES = {'map_intro', 'types_intro', 'api_intro', 'path_intro', 'deep_dive'}
 KNOWN_TOP = {'_note', '_schema', 'sections', 'captions', 'diagrams', 'clusters',
              'quality', 'prose', 'style_rules', 'content_depth', 'generation',

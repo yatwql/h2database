@@ -105,7 +105,6 @@
     "checklist_items": 5
   },
   "thresholds": {
-    "exercises_min_per_chapter": 3,
     "exercises_min_total": 50,
     "index_total_min": 120,
     "index_per_chapter_min": 5,
@@ -113,7 +112,7 @@
     "index_sub_min": 50,
     "index_see_also_min": 30,
     "glossary_min_entries": 60,
-    "chapters_min_cross_refs": 1
+    "exercises_min_per_chapter": 3
   },
   "prose": {
     "avg_sentence_good": 28,
@@ -139,10 +138,6 @@
       "上面说到",
       "众所周知"
     ],
-    "preferred_terms": {
-      "页 page": "page",
-      "快照 snapshot": "snapshot"
-    },
     "tone": "technical-reference",
     "audience": "experienced engineers reading source code",
     "sections": {
@@ -151,11 +146,9 @@
         "avg_sentence_bad": 45
       },
       "caption": {
-        "max_chars": 30,
-        "require_verb": true
+        "max_chars": 30
       },
       "exercise": {
-        "max_sentence_chars": 60,
         "min_items": 4
       }
     }
@@ -201,10 +194,6 @@
         "LSM-Tree"
       ]
     ],
-    "preferred_terms": {
-      "页面": "page",
-      "页面分裂": "page split"
-    },
     "banned_link_text": [
       "点击这里",
       "这里",
@@ -226,8 +215,6 @@
   "content_depth": {
     "glossary_min_uses": 60,
     "excerpt_lines": 6,
-    "require_signpost_for_forward_refs": true,
-    "exercise_must_name_type_or_anchor": true,
     "glossary_ignore": [
       "BitSet",
       "Command",

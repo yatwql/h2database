@@ -97,7 +97,7 @@ def _preferred_paths() -> dict:
     Duplicate stems (e.g. DataType in two packages) resolve to the file the
     manuscript actually cites, instead of the first match on disk.
     """
-    path = os.path.join(_config.BOOK_ROOT, 'data', 'state', 'source-inventory.json')
+    path = _config.state_path('source-inventory.json')
     if not os.path.isfile(path):
         return {}
     try:

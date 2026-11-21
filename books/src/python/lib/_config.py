@@ -103,6 +103,45 @@ def _path(key: str) -> str:
     return os.path.join(BOOK_ROOT, rel)
 
 
+def tmp_dir() -> str:
+    """Scratch directory under the book root (gitignored, regenerated)."""
+    rel = _CFG.get('paths', {}).get('tmp') or 'data/tmp'
+    return os.path.join(BOOK_ROOT, rel)
+
+
+def state_dir() -> str:
+    """Directory for the derived state ingest rebuilds on every run."""
+    rel = _CFG.get('paths', {}).get('state') or 'data/state'
+    return os.path.join(BOOK_ROOT, rel)
+
+
+def state_path(name: str) -> str:
+    """One file inside the derived-state directory."""
+    return os.path.join(state_dir(), name)
+
+
+def config_path(name: str) -> str:
+    """One policy file inside the configuration directory."""
+    return os.path.join(CONFIG_DIR, name)
+
+
+def template_dir() -> str:
+    """Directory holding the book's templates and case-study pipeline."""
+    rel = _CFG.get('paths', {}).get('templates') or 'data/tmpl'
+    return os.path.join(BOOK_ROOT, rel)
+
+
+def template_path(name: str) -> str:
+    """One file inside the template directory."""
+    return os.path.join(template_dir(), name)
+
+
+def baseline_dir() -> str:
+    """Directory holding the reviewed-issue baselines."""
+    rel = _CFG.get('paths', {}).get('baselines') or 'data/baselines'
+    return os.path.join(BOOK_ROOT, rel)
+
+
 MANUSCRIPT_DIR = _path('manuscript')
 DIST_DIR = _path('dist')
 DOCS_DIR = _path('docs')

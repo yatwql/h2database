@@ -35,7 +35,7 @@ import re
 import subprocess
 import sys
 
-from lib import _config, _fsutil
+from lib import _config, _fsutil, _mdutil
 
 # ── Gate-level argument parsing ──────────────────────────────────────────
 _arg_parser = argparse.ArgumentParser(add_help=False)
@@ -50,6 +50,29 @@ GATE_LEVEL = _args.gate_level
 LEVEL_RANK = {'p0': 0, 'p1': 1, 'p2': 2}
 _active_rank = LEVEL_RANK[GATE_LEVEL]
 
+
+
+def chapter_numbers() -> list[int]:
+    """Chapter numbers the book declares coverage for (book.toml).
+
+    Reading order (`numbering`) and content coverage (`coverage`) are two
+    different lists: the per-chapter index and glossary checks follow coverage,
+    because that is the set the book claims to fill in. Both are config, so no
+    range lives in the code.
+    """
+    numbers: set[int] = set()
+    for name, declared in _config.chapter_coverage().items():
+        if not name.startswith('ch'):
+            continue
+        numbers.update(int(number) for number in declared)
+    if numbers:
+        return sorted(numbers)
+    # A book that declares no coverage table still has chapters: follow the
+    # reading order rather than an empty set.
+    for name, declared in _config.chapter_numbering().items():
+        if name.startswith('ch'):
+            numbers.update(int(number) for number in declared)
+    return sorted(numbers)
 
 
 def gate(section_level: str) -> bool:
@@ -140,7 +163,7 @@ global_by_ch: dict = {}  # ch (int or 'A'/'B'/…) -> [(file, base_num, full_num
 for f in CHAPTERS:
     content = safe_read(f)
     # Numeric chapters
-    figs = re.findall(r'\*\*图 (\d+)-(\d+[a-z]*):', content)
+    figs = re.findall(rf'\*\*{_mdutil.FIGURE_LABEL} {_mdutil.CHAPTER_FIGURE}:', content)
     for ch, num in figs:
         digits = re.search(r'\d+', num)
         if digits is None:  # pragma: no cover - regex guarantees digits
@@ -148,7 +171,7 @@ for f in CHAPTERS:
         base_num = int(digits.group())
         global_by_ch.setdefault(int(ch), []).append((f, base_num, num))
     # Appendix letters (A, B, …)
-    appendix_figs = re.findall(r'\*\*图 ([A-Z])-(\d+[a-z]*):', content)
+    appendix_figs = re.findall(rf'\*\*{_mdutil.FIGURE_LABEL} {_mdutil.APPENDIX_FIGURE}:', content)
     for letter, num in appendix_figs:
         digits = re.search(r'\d+', num)
         if digits is None:  # pragma: no cover - regex guarantees digits
@@ -360,14 +383,14 @@ if os.path.exists(index_path):
     check(entry_count >= total_min, f'Index: {entry_count} entries (target: >= {total_min})')
 
     # Count per-chapter entries
-    per_chapter = dict.fromkeys(range(1, 13), 0)
+    per_chapter = dict.fromkeys(chapter_numbers(), 0)
     for entry in index_entries:
         refs = re.findall(r'§(\d+)\.', entry)
         refs += re.findall(r'第(\d+)章', entry)
         for ref in set(refs):
             ch = int(ref)
             if 1 <= ch <= 12:
-                per_chapter[ch] += 1
+                per_chapter[ch] = per_chapter.get(ch, 0) + 1
 
     # Check every chapter has enough entries
     low_chapters = []
@@ -567,7 +590,8 @@ if os.path.exists(glossary_path):
 
     # Validate chapter numbers (must be 1-12)
     all_refs = re.findall(r'第(\d+)章', glossary_content)
-    invalid_refs = sorted({int(ch) for ch in all_refs if int(ch) not in range(1, 13)})
+    declared = set(chapter_numbers())
+    invalid_refs = sorted({int(ch) for ch in all_refs if int(ch) not in declared})
     if invalid_refs:
         glossary_ok = False
         check(False, f'Glossary references invalid chapters: {invalid_refs}')

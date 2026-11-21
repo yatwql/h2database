@@ -25,7 +25,7 @@ from factblocks import backup_existing, line_delta, refresh_blocks
 from factblocks import mark_block as _gen
 from lib import _config, _fsutil, _log, _mdutil
 
-OUTLINE = os.path.join(_config.BOOK_ROOT, 'data', 'state', 'outline.json')
+OUTLINE = _config.state_path('outline.json')
 SOURCE_ROOT = _config.source_tree('src_main')
 
 def _spec_table() -> dict[str, list[tuple[int, str]]]:
@@ -717,7 +717,7 @@ def main(argv: list[str] | None = None) -> int:
     global _INVENTORY
     try:
         _INVENTORY = json.loads(_fsutil.read_text(
-            os.path.join(_config.BOOK_ROOT, 'data', 'state', 'source-inventory.json')))
+            _config.state_path('source-inventory.json')))
         outline = json.loads(_fsutil.read_text(OUTLINE))
     except json.JSONDecodeError as exc:
         print(f'error: state files are not valid JSON: {exc}', file=sys.stderr)

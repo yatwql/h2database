@@ -20,7 +20,7 @@ import sys
 
 from lib import _config, _fsutil, _volume
 
-BOOK_TOML = os.path.join(_config.BOOK_ROOT, 'data', 'tmpl', 'book.toml')
+BOOK_TOML = _config.CONFIG_PATH
 BASE_JSON = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'base.json')
 LLM_PROVIDER_JSON = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'llm_provider.json')
 LLM_SETTINGS_JSON = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'llm_settings.json')

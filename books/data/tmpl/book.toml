@@ -25,6 +25,10 @@ manuscript = "data/manuscript"
 dist = "dist"
 docs = "docs"
 tools = "src/python"
+tmp = "data/tmp"
+state = "data/state"
+templates = "data/tmpl"
+baselines = "data/baselines"
 
 [chapters]
 # Reading order. cover.md is front matter for the merged document.

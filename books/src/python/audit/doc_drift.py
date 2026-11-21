@@ -50,6 +50,26 @@ PLAN_NUMBERED_RE = re.compile(r'(?:^|[-_])(?:plan|rf)[-_]?\d+')
 PLAN_ALLOWED_FILES = ('design.md', 'plan.md', 'README.md')
 
 
+def _plan_topic_findings(topic: str, name: str) -> list[tuple[str, str]]:
+    """(path, detail) for one topic directory under docs/plan."""
+    out: list[tuple[str, str]] = []
+    try:
+        files = sorted(os.listdir(topic))
+    except OSError as exc:
+        return [(topic, f'{name}: cannot read ({exc})')]
+    if 'plan.md' not in files:
+        out.append((topic, f'{name}: 缺少 plan.md（实施计划）'))
+    for entry in files:
+        stem = entry[:-3] if entry.endswith('.md') else entry
+        if PLAN_NUMBERED_RE.search(stem) or not PLAN_SLUG_RE.match(stem):
+            out.append((os.path.join(topic, entry),
+                        f'{name}/{entry}: 文件名用小写连字符的语义名，不用编号'))
+        elif entry.endswith('.md') and entry not in PLAN_ALLOWED_FILES:
+            out.append((os.path.join(topic, entry),
+                        f'{name}/{entry}: 只允许 design.md / plan.md / README.md'))
+    return out
+
+
 def check_plan_tree(book_root: str | None = None) -> list[dict]:
     """Iteration designs live under docs/plan/<topic>/ with semantic names.
 
@@ -63,41 +83,22 @@ def check_plan_tree(book_root: str | None = None) -> list[dict]:
     root = os.path.join(book_root or _config.BOOK_ROOT, *PLAN_ROOT)
     if not os.path.isdir(root):
         return []
-    out: list[dict] = []
-
-    def add(path: str, detail: str) -> None:
-        out.append({'kind': 'PLANNAME', 'file': os.path.relpath(path, REPO_ROOT),
-                    'line': 1, 'detail': detail})
-
+    pairs: list[tuple[str, str]] = []
     try:
         entries = sorted(os.listdir(root))
     except OSError as exc:
-        add(root, f'cannot read ({exc})')
-        return out
+        pairs.append((root, f'cannot read ({exc})'))
+        entries = []
     for name in entries:
         topic = os.path.join(root, name)
         if not os.path.isdir(topic):
-            add(topic, f'{name}: plan 根下只放主题目录，不放散文件')
-            continue
-        if not PLAN_SLUG_RE.match(name) or PLAN_NUMBERED_RE.search(name):
-            add(topic, f'{name}: 主题目录名用小写连字符的语义名，不用编号')
-            continue
-        try:
-            files = sorted(os.listdir(topic))
-        except OSError as exc:
-            add(topic, f'{name}: cannot read ({exc})')
-            continue
-        if 'plan.md' not in files:
-            add(topic, f'{name}: 缺少 plan.md（实施计划）')
-        for entry in files:
-            stem = entry[:-3] if entry.endswith('.md') else entry
-            if PLAN_NUMBERED_RE.search(stem) or not PLAN_SLUG_RE.match(stem):
-                add(os.path.join(topic, entry),
-                    f'{name}/{entry}: 文件名用小写连字符的语义名，不用编号')
-            elif entry.endswith('.md') and entry not in PLAN_ALLOWED_FILES:
-                add(os.path.join(topic, entry),
-                    f'{name}/{entry}: 只允许 design.md / plan.md / README.md')
-    return out
+            pairs.append((topic, f'{name}: plan 根下只放主题目录，不放散文件'))
+        elif not PLAN_SLUG_RE.match(name) or PLAN_NUMBERED_RE.search(name):
+            pairs.append((topic, f'{name}: 主题目录名用小写连字符的语义名，不用编号'))
+        else:
+            pairs.extend(_plan_topic_findings(topic, name))
+    return [{'kind': 'PLANNAME', 'file': os.path.relpath(path, REPO_ROOT),
+             'line': 1, 'detail': detail} for path, detail in pairs]
 
 
 def doc_files() -> list[str]:
@@ -425,7 +426,7 @@ def config_keys() -> set[str]:
                 walk(item)
 
     for name in ('base.json', 'style.json'):
-        path = os.path.join(_config.BOOK_ROOT, 'data', 'config', name)
+        path = _config.config_path(name)
         if os.path.isfile(path):
             walk(_fsutil.load_json(path))
     return names

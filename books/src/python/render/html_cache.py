@@ -22,14 +22,14 @@ import re
 
 from lib import _config, _fsutil
 
-CACHE_DIR = ('data', 'tmp', 'html-cache')
+CACHE_SUBDIR = 'html-cache'
 HEADING = re.compile(r'^#\s+\S')
 FENCE = '```'
 
 
 def cache_root() -> str:
-    """Directory holding cached fragments (under the gitignored data/tmp)."""
-    return os.path.join(_config.BOOK_ROOT, *CACHE_DIR)
+    """Directory holding cached fragments, under the book's scratch directory."""
+    return os.path.join(_config.tmp_dir(), CACHE_SUBDIR)
 
 
 def fingerprint(*functions) -> str:

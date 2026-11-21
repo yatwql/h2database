@@ -30,7 +30,7 @@ GENERATED_OPEN = '<!-- generated:{} -->'
 GENERATED_CLOSE = '<!-- /generated -->'
 GENERATED_OPEN_RE = re.compile(r'^<!--\s*generated:([\w.:-]+)\s*-->$')
 GENERATED_CLOSE_RE = re.compile(r'^<!--\s*/generated\s*-->$')
-BACKUP_DIR = ('data', 'tmp', 'generated-backup')
+BACKUP_SUBDIR = 'generated-backup'
 
 
 def mark_block(name: str, lines: list[str]) -> list[str]:
@@ -112,7 +112,7 @@ def backup_existing(path: str, stamp: str) -> str | None:
     """Copy a chapter aside before --force overwrites it; None when it is new."""
     if not os.path.isfile(path):
         return None
-    folder = os.path.join(_config.BOOK_ROOT, *BACKUP_DIR, stamp)
+    folder = os.path.join(_config.tmp_dir(), BACKUP_SUBDIR, stamp)
     try:
         os.makedirs(folder, exist_ok=True)
         target = os.path.join(folder, os.path.basename(path))

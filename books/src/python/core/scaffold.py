@@ -114,7 +114,7 @@ LANG_REL = _rel(_config.LANGUAGE_DIR)
 
 def _base_config() -> dict:
     """Infrastructure config for the new book (paths, logging, budgets)."""
-    source = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'base.json')
+    source = _config.config_path('base.json')
     try:
         current = json.loads(_fsutil.read_text(source))
     except json.JSONDecodeError as exc:
@@ -149,7 +149,7 @@ def style_for(lang: str) -> dict:
     terminology, banned link text, phrase lists, per-book limits and the prose
     anchors for the target script family.
     """
-    source = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'style.json')
+    source = _config.config_path('style.json')
     try:
         style = json.loads(_fsutil.read_text(source))
     except json.JSONDecodeError as exc:
@@ -194,7 +194,7 @@ def scaffold(target: str, title: str, lang: str, copy_manuscript: bool) -> list[
     write(f'{TMPL_REL}/book.toml', BOOK_TOML_TEMPLATE.format(title=title, slug=slug,
                                                  manuscript=MANUSCRIPT_REL))
     write(f'{TMPL_REL}/templates.toml', _fsutil.read_text(
-        os.path.join(_config.BOOK_ROOT, 'data', 'tmpl', 'templates.toml')))
+        _config.template_path('templates.toml')))
     write(f'{LANG_REL}/{lang}.json',
           json.dumps(_language_pack(lang), ensure_ascii=False, indent=2) + '\n')
     write(f'{CONFIG_REL}/base.json', json.dumps(_base_config(), ensure_ascii=False, indent=2) + '\n')

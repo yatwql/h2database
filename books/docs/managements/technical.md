@@ -150,6 +150,10 @@ books/
 - 图表与图簇：`style.json [quality]` 的 `min_figures_per_section`、`min_figure_coverage_pct`，`[clusters]` 的 `min_figures`、`window_lines`——`smart.py`、`figure_clusters.py`、`structure.py` 共用这一处，不再各自内联。
 - 页面几何：`base.json [toolchain]` 的 `pdf_page_width`、`pdf_page_height`、`pdf_page_tolerance`（`verify_pdf.py` 按此判定 A4）。
 - 章节骨架与必备段落：`book.toml [sections]`、`style.json [sections]`。
+- 临时目录：`book.toml [paths] tmp`（缺省 `data/tmp`，读 `_config.tmp_dir()`）；
+  HTML 片段缓存与 `--force` 备份都在它下面，已 gitignore。
+- 派生状态：`book.toml [paths] state`（缺省 `data/state`，读 `_config.state_dir()` /
+  `state_path(name)`）；ingest 每次重建，不入库。
 - 覆盖率红线：`base.json [toolchain] coverage_fail_under`。
 - 步骤超时：`base.json [toolchain]` 的 `step_timeout_s`（普通步骤）与 `test_timeout_s`（测试与覆盖率步骤）；`make.py` 按步骤名取值，超时按 124 记为步骤失败。取值是“谨注定能跑完”的上限而非预算，故与实测耗时保留十数倍余量。
 
@@ -246,6 +250,10 @@ books/
 | 形态 | `captions.py`、`figure_clusters.py`、`diagrams.py`、`style_rules.py`、`style.py`、`exercises.py`、`smart.py`、`readability.py`、`style_schema.py` | 图注结构、图簇桥接、ASCII 图宽度与行尾、术语与排版规则、章末练习结构、图表覆盖密度、可读性、配置结构 |
 | 工程 | `check_architecture.py`、`script_contract.py`、`file_length.py`、`traces.py`、`doc_drift.py`、`version_consistency.py`、`llm_policy.py`、`portability.py`、`typecheck.py`、`test_redundancy.py`、`perf_baseline.py`、`gate_trace.py`、`order_dependence.py` | 依赖方向、入口契约、文件长度预算、过程痕迹、文档与仓库一致、三版本一致、LLM 边界、跨平台、类型、测试质量、性能基线、门禁登记、顺序依赖（慢档） |
 | 复核 | `review_packet.py`、`scorecard.py`、`prose_quality.py`、`failure_extract.py` | 只输出失败集合与上下文；六维评分与文风度量作为整改视图；失败日志收敛 |
+
+图注与图号的形状只定义一次：`lib/_mdutil.py` 的 `FIGURE_*` 形状与
+`figure_caption()` 助手，六个 audit 模块只引用不重写；章节范围由
+`book.toml [chapters.coverage]` 推导。
 
 **基线机制**：可枚举的存量问题允许登记（`data/baselines/*.json`），登记项不判失败，
 但同类别的新问题必须失败；登记项消失时报告 `stale`，提示收缩。基线键按内容而非

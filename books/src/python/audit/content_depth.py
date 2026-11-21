@@ -39,7 +39,7 @@ ANCHOR_RE = re.compile(r'§\d+(?:\.\d+)*')
 
 
 def inventory() -> dict:
-    path = os.path.join(_config.BOOK_ROOT, 'data', 'state', 'source-inventory.json')
+    path = _config.state_path('source-inventory.json')
     if not os.path.isfile(path):
         return {}
     try:

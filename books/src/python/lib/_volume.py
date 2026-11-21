@@ -13,11 +13,11 @@ import os
 
 from lib import _config, _fsutil
 
-BASELINE_REL = os.path.join('data', 'baselines', 'content-volume.json')
+BASELINE_NAME = 'content-volume.json'
 
 
 def baseline_path() -> str:
-    return os.path.join(_config.BOOK_ROOT, BASELINE_REL)
+    return os.path.join(_config.baseline_dir(), BASELINE_NAME)
 
 
 def manuscript_files() -> list[str]:

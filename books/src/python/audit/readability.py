@@ -18,7 +18,7 @@ import re
 import sys
 from pathlib import Path
 
-from lib import _config
+from lib import _config, _mdutil
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[3]
@@ -27,8 +27,8 @@ MS_DIR = Path(_config.MANUSCRIPT_DIR)
 DIST_DIR = Path(_config.DIST_DIR)
 
 DOCS = [Path(p) for p in _config.chapter_files(include_cover=False)]
-CAPTION_RE = re.compile(r'^\*\*图 \d+-\d+:')
-CAPTION_FULL_RE = re.compile(r'^\*\*图 (\d+-\d+):(.+?)\*\*$')
+CAPTION_RE = _mdutil.FIGURE_PREFIX_RE
+CAPTION_FULL_RE = _mdutil.FIGURE_CAPTION_RE
 DIAGRAM_MARKERS = set('┌┐└┘├┤│┬┴┼')
 # Box-drawing corner pairs for closure checking
 OPENING_CORNERS = {'┌': '┐', '└': '┘', '├': '┤', '┬': '┴'}

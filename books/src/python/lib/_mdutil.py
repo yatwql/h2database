@@ -18,6 +18,30 @@ LINK_RE = re.compile(r'!?\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)')
 
 EXTERNAL_SCHEMES = ('http://', 'https://', 'mailto:', 'tel:', 'data:', 'ftp://')
 
+# Figure captions are written `**图 X-Y: 标题**`. The shape lives here so the six
+# audits that read captions cannot drift apart: structure (numbering), figures
+# (counts), captions (wording), figure_clusters (bridges), smart (coverage),
+# readability (metrics) all build from these names.
+FIGURE_LABEL = '图'
+FIGURE_ID = r'[A-Z0-9]+-\d+[a-z]*'
+CHAPTER_FIGURE = r'(\d+)-(\d+[a-z]*)'
+APPENDIX_FIGURE = r'([A-Z])-(\d+[a-z]*)'
+FIGURE_CAPTION_RE = re.compile(rf'^\*\*{FIGURE_LABEL} ({FIGURE_ID}):\s*(.+?)\*\*\s*$')
+FIGURE_PREFIX_RE = re.compile(rf'^\*\*{FIGURE_LABEL} {FIGURE_ID}:')
+
+
+def figure_caption(line: str) -> tuple[str, str] | None:
+    """(figure id, title) for a caption line, or None when it is not one."""
+    match = FIGURE_CAPTION_RE.match(line.strip())
+    return (match.group(1), match.group(2).strip()) if match else None
+
+
+def figure_ids(text: str) -> list[str]:
+    """Every figure id mentioned as a caption in ``text``, in order."""
+    return [m.group(1) for line in text.split('\n')
+            for m in [FIGURE_CAPTION_RE.match(line.strip())] if m]
+
+
 
 def slugify(title: str) -> str:
     """GitHub-style heading anchor, matching what to_html emits."""

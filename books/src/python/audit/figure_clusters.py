@@ -30,11 +30,10 @@ _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)
 import argparse
 import json
 import os
-import re
 import sys
 from glob import glob
 
-from lib import _config, _fsutil
+from lib import _config, _fsutil, _mdutil
 
 _fsutil.pin_stdout_utf8()
 
@@ -42,7 +41,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DOCS_DIR = _config.BOOK_ROOT
 MS_DIR = _config.MANUSCRIPT_DIR
 
-FIG_RE = re.compile(r'^\*\*图 ([A-Z0-9]+-\d+[a-z]*):\s*(.+?)\*\*\s*$')
+FIG_RE = _mdutil.FIGURE_CAPTION_RE
 
 # Heuristic patterns that indicate the author has already written a cluster
 # bridge sentence. Conservative — false negatives are OK (script just suggests

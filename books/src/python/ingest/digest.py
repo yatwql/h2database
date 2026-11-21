@@ -69,7 +69,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     root = args.root or _config.source_tree('src_main')
-    out = args.out or os.path.join(_config.BOOK_ROOT, 'data', 'state', 'source-inventory.json')
+    out = args.out or _config.state_path('source-inventory.json')
     inventory = digest(root, args.language)
 
     if args.json:

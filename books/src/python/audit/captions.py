@@ -39,13 +39,12 @@ _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)
 import argparse
 import json
 import os
-import re
 import sys
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from glob import glob
 
-from lib import _baseline, _config, _fsutil
+from lib import _baseline, _config, _fsutil, _mdutil
 
 # Pin stdout to UTF-8 so Chinese terminal output renders correctly on Windows.
 _fsutil.pin_stdout_utf8()
@@ -67,7 +66,7 @@ VAGUE_TRAILING = tuple(_config.CAPTIONS.get('vague_trailing', ()))
 
 # A single-character marker the figure caption regex uses; kept as a constant
 # so it isn't accidentally inlined and divergent.
-FIG_RE = re.compile(r'^\*\*图 ([A-Z0-9]+-\d+[a-z]*):\s*(.+?)\*\*\s*$')
+FIG_RE = _mdutil.FIGURE_CAPTION_RE
 
 # Presets (min_chars / max_chars / fail_at) come from policy with safe defaults.
 THRESHOLDS = _config.CAPTIONS.get('presets') or {
