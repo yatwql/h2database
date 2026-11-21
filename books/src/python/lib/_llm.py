@@ -120,7 +120,7 @@ def _respect_pacing(provider: str, spec: dict) -> None:
     applied before the request instead of hammering the endpoint.
     """
     pacing = spec.get('pacing') or {}
-    interval = float(pacing.get('min_interval') or 0)
+    interval = _safe_float(pacing.get('min_interval'))
     if interval <= 0:
         return
     previous = _LAST_CALL.get(provider)
@@ -231,7 +231,8 @@ def _complete_anthropic(prompt: str, provider: str, spec: dict, params: dict,
                'x-api-key': api_key,
                'anthropic-version': spec.get('anthropic_version', '2023-06-01')}
     data = _post_json(_endpoint_for(provider, spec) + '/v1/messages', payload,
-                      api_key, float(params.get('timeout_s', 60)), headers=headers)
+                      api_key, _safe_float(params.get('timeout_s'), 60.0) or 60.0,
+                      headers=headers)
     try:
         blocks = data['content']
         text = ''.join(part.get('text', '') for part in blocks
@@ -273,7 +274,7 @@ def _attempt(prompt: str, provider: str, spec: dict, params: dict,
         'reasoning_effort': params.get('thinking', 'low'),
     }
     data = _post_json(_endpoint_for(provider, spec) + '/chat/completions',
-                      payload, api_key, float(params.get('timeout_s', 60)))
+                      payload, api_key, _safe_float(params.get('timeout_s'), 60.0) or 60.0)
     try:
         text = data['choices'][0]['message']['content']
     except (KeyError, IndexError, TypeError) as exc:
@@ -443,7 +444,7 @@ def today_cost() -> float:
             except ValueError:
                 continue
             if str(row.get('at', '')).startswith(today):
-                total += float(row.get('cost') or 0)
+                total += _safe_float(row.get('cost'))
     except OSError:
         return 0.0
     return total
