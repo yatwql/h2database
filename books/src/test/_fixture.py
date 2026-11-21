@@ -362,7 +362,8 @@ def refresh_config(root: str) -> None:
     os.environ['BOOK_ROOT'] = root
     for key in ('_config', 'lib._config', 'lib._log', '_log',
                 'app', 'app.cli', 'app.tui', 'app.web', 'app.keys',
-                'core', 'core.actions', 'core.settings'):
+                'core', 'core.actions', 'core.settings',
+                'html_cache', 'factblocks'):
         sys.modules.pop(key, None)
     lib = sys.modules.get('lib')
     if lib is not None:

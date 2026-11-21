@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import re
 
-from lib import _fsutil
+from lib import _config, _fsutil
 
 GENERATED_OPEN = '<!-- generated:{} -->'
 GENERATED_CLOSE = '<!-- /generated -->'
@@ -112,7 +112,6 @@ def backup_existing(path: str, stamp: str) -> str | None:
     """Copy a chapter aside before --force overwrites it; None when it is new."""
     if not os.path.isfile(path):
         return None
-    from lib import _config  # resolved per call: the book root is runtime state
     folder = os.path.join(_config.BOOK_ROOT, *BACKUP_DIR, stamp)
     try:
         os.makedirs(folder, exist_ok=True)

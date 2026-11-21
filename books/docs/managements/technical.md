@@ -217,7 +217,7 @@ books/
 | 步骤 | 输入 → 输出 | 设计要点 |
 | --- | --- | --- |
 | `merge.py` | 手稿 → `dist/<book>.md` | 顺序来自 `book.toml`；前件、后件按 glob 展开 |
-| `to_html.py` | 合并稿 → `dist/<book>.html` | 单一 HTML：侧边栏目录 + 印刷目录 + 锚点；CSS 内联 |
+| `to_html.py` | 合并稿 → `dist/<book>.html` | 单一 HTML：侧边栏目录 + 印刷目录 + 锚点；CSS 内联；正文按章缓存 |
 | `to_pdf.py` | HTML → PDF | 无头浏览器渲染；随后用 pypdf 写入大纲 |
 | `pdf_toc_links.py` | PDF | 按目录条目与大纲的**位置对应关系**补链接注释，不靠标题文本匹配 |
 | `print_pdf.py` | HTML → 印刷级 PDF | 章首装饰页、点线目录、页眉页脚；独立工具，不进 `deliver` 组 |
@@ -227,6 +227,11 @@ books/
 | `verify_epub.py` | EPUB | 校验 mimetype 首条未压缩、容器与 OPF 可解析、清单与阅读顺序、导航可达、体积 |
 
 渲染链的确定性由两点保证：输入只有手稿与配置；渲染器不引入随机与时间戳。
+
+正文渲染按 H1 章节切片缓存（`render/html_cache.py`）：目录、锚点与章编号在切片前已定稿，
+一片只依赖自己的 markdown 与渲染器源码，所以复用旧片不会改一个字节（缓存键就是内容哈希，
+`--full` 可强制全量）。缓存落在 `data/tmp/html-cache/`（已 gitignore），被删或损坏只是
+重新渲染，不会影响产物。合并步不缓存——它只是纯拼接。
 
 ### 4.5 `audit/` 门禁层
 

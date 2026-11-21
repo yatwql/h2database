@@ -9,6 +9,7 @@ _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)
 
 import re
 
+import html_cache
 from lib import _config, _fsutil, _mdutil
 
 _fsutil.pin_stdout_utf8()
@@ -400,69 +401,98 @@ toc_page_html += '    </nav>\n'
 toc_page_html += '  </div>\n'
 toc_page_html += '</section>\n'
 
-# Build content HTML from main content only (skip cover)
-content_parts: list[str] = []
-in_pre = False
-pre_lang = ''
-auto_exited = False
-fence_lines_found = 0
-for line in lines[main_start:]:
-    stripped = line.rstrip('\n')
-    is_fence = stripped.startswith('```')
+def render_body(body_lines):
+    """Render body markdown to HTML; returns (html, fence count, unclosed-pre)."""
+    content_parts: list[str] = []
+    in_pre = False
+    pre_lang = ''
+    auto_exited = False
+    fence_lines_found = 0
+    for line in body_lines:
+        stripped = line.rstrip('\n')
+        is_fence = stripped.startswith('```')
 
-    if is_fence:
-        fence_lines_found += 1
-        lang = stripped[3:].strip()
-        if not in_pre:
-            if auto_exited and not lang:
-                # Bare ``` after auto-exit: consume it (closes original fence)
-                auto_exited = False
-                continue
-            auto_exited = False  # ```text/```java starts fresh
-            in_pre = True
-            pre_lang = lang
-            content_parts.append('<pre><code>\n')
-        else:
-            in_pre = False
-            pre_lang = ''
-            content_parts.append('</code></pre>\n')
-        continue
-
-    if in_pre:
-        hm = re.match(r'^(#{1,4})\s+(.+)$', stripped)
-        if hm and pre_lang in ('', 'text'):
-            in_pre = False
-            auto_exited = True
-            content_parts.append('</code></pre>\n')
-        else:
-            escaped = stripped.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-            content_parts.append(escaped + '\n')
+        if is_fence:
+            fence_lines_found += 1
+            lang = stripped[3:].strip()
+            if not in_pre:
+                if auto_exited and not lang:
+                    # Bare ``` after auto-exit: consume it (closes original fence)
+                    auto_exited = False
+                    continue
+                auto_exited = False  # ```text/```java starts fresh
+                in_pre = True
+                pre_lang = lang
+                content_parts.append('<pre><code>\n')
+            else:
+                in_pre = False
+                pre_lang = ''
+                content_parts.append('</code></pre>\n')
             continue
 
-    m = re.match(r'^(#{1,4})\s+(.+)$', stripped)
-    if m:
-        level = len(m.group(1))
-        title = m.group(2).strip()
-        anchor = _mdutil.slugify(title)
-        content_parts.append(f'<h{level} id="{anchor}">{md_to_html(title)}</h{level}>\n')
-        continue
+        if in_pre:
+            hm = re.match(r'^(#{1,4})\s+(.+)$', stripped)
+            if hm and pre_lang in ('', 'text'):
+                in_pre = False
+                auto_exited = True
+                content_parts.append('</code></pre>\n')
+            else:
+                escaped = stripped.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                content_parts.append(escaped + '\n')
+                continue
 
-    if stripped == '':
-        content_parts.append('\n')
-        continue
-    if stripped == '---':
-        content_parts.append('<hr>\n')
-        continue
+        m = re.match(r'^(#{1,4})\s+(.+)$', stripped)
+        if m:
+            level = len(m.group(1))
+            title = m.group(2).strip()
+            anchor = _mdutil.slugify(title)
+            content_parts.append(f'<h{level} id="{anchor}">{md_to_html(title)}</h{level}>\n')
+            continue
 
-    # Figure caption: detect **图 X-Y: Title** pattern
-    if stripped.startswith('**图 ') and stripped.endswith('**'):
-        inner = stripped[2:-2]
-        content_parts.append(f'<strong class="fig-caption">{md_to_html(inner)}</strong>\n')
+        if stripped == '':
+            content_parts.append('\n')
+            continue
+        if stripped == '---':
+            content_parts.append('<hr>\n')
+            continue
+
+        # Figure caption: detect **图 X-Y: Title** pattern
+        if stripped.startswith('**图 ') and stripped.endswith('**'):
+            inner = stripped[2:-2]
+            content_parts.append(f'<strong class="fig-caption">{md_to_html(inner)}</strong>\n')
+        else:
+            content_parts.append(f'<p>{md_to_html(stripped)}</p>\n')
+
+    if in_pre:
+        content_parts.append('</code></pre>\n')
+    return ''.join(content_parts), fence_lines_found, in_pre
+
+
+# Fragments are cached per H1 chapter: the TOC, the anchors and the numbering are
+# already final here, so a fragment depends only on its own markdown and on the
+# renderer's source. `--full` ignores the cache and re-renders every chapter.
+FULL_REBUILD = '--full' in _sys.argv[1:]
+renderer_fingerprint = html_cache.fingerprint(md_to_html, render_body)
+content_parts: list[str] = []
+fence_lines_found = 0
+in_pre = False
+reused = rendered = 0
+chunk_keys: set[str] = set()
+for chunk in html_cache.chunk_lines(lines[main_start:]):
+    key = html_cache.key_for(chunk, renderer_fingerprint)
+    chunk_keys.add(key)
+    entry = None if FULL_REBUILD else html_cache.load(key)
+    if entry is None:
+        html, fences, unclosed = render_body(chunk)
+        entry = {'html': html, 'fences': fences, 'unclosed': unclosed}
+        html_cache.store(key, entry)
+        rendered += 1
     else:
-        content_parts.append(f'<p>{md_to_html(stripped)}</p>\n')
-
-if in_pre:
-    content_parts.append('</code></pre>\n')
+        reused += 1
+    content_parts.append(entry['html'])
+    fence_lines_found += int(entry.get('fences') or 0)
+    in_pre = bool(entry.get('unclosed'))
+html_cache.prune(chunk_keys)
 
 content_html = ''.join(content_parts)
 
@@ -809,3 +839,4 @@ print(f"Generated: {OUTPUT}")
 print(f"TOC entries: {len(toc_entries)}")
 print(f"Fence lines: {fence_lines_found}")
 print(f"Unclosed pre at EOF: {in_pre}")
+print(f"Chapter fragments: {reused} reused / {rendered} rendered")
