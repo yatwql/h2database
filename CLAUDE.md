@@ -46,6 +46,9 @@ Waiting is the main cost of a session, so bound it before it happens:
   jobs fight for CPU and everything looks twice as slow.
 - **Answer with the smallest command that decides the question.** A single file or
   a single case beats the full suite; run the full suite once, at the end.
+- **CI is a separate task.** Push and go back to the work at hand: the local gates
+  are the verification. Do not poll `gh run` or wait for a workflow unless the user
+  asks about CI specifically, and never hold a task open on a remote job.
 
 ## Hard Rules
 

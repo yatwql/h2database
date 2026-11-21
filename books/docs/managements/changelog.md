@@ -47,7 +47,7 @@
 - **事实块可原地刷新**：`chapters.py` 给包表、类型表、坐标与依赖方向这类可重算的块加 `<!-- generated:<块名> -->` … `<!-- /generated -->` 标记，新增 `--refresh-facts` 只替换标记块（块外一字不动，无标记块的文件跳过并说明原因）；`--force` 覆盖前先把旧文件备份到 `data/tmp/generated-backup/<时间戳>/` 并打印 `-a/+b` 行数。`actions.analyze` 增加 `refresh` 参数透传，CLI（`--refresh-facts` / `--force`）、TUI（配置屏 `6 刷新事实块`）、Web（`{"action":"analyze","refresh":true}`）走同一条路径。（plan-9）
 - **坐标门禁重新盖住合并章节**：`source_refs.py::CHAPTER_FILES` 不再手写章名，改为读 `book.toml`——此前它还列着已合并掉的 `ch7-sql-execution.md` / `ch8-query-optimizer.md`，每次跑报两条 missing 警告，而 `ch7-8-sql-optimizer.md` 从未被检查；同时删掉一份无任何引用的历史图注基线（其内部键全是旧章名）。（rf-32）
 - **计划表对齐事实**：`plan.md` 删去已记账完成的 plan-1 / plan-2，在办项回到 4 项（plan-3/4/5/6），不再列已归档的 plan-7。
-- **慢档不再无限等**：`order_dependence.bisect()` 增加 `pool`（默认仍是全包，但要重跑全包必须显式选择；用例与 CLI 均用小池），慢档实测从 30 分钟超时回到秒级；`make.py` 的超时改为按步骤取配置（`base.json [toolchain]` 的 `step_timeout_s` / `test_timeout_s`），测试步骤加 `--durations=10`，最慢用例直接出现在报告里。（rf-33）
+- **慢档不再无限等**：`order_dependence.bisect()` 增加 `pool`（默认仍是全包，但要重跑全包必须显式选择；用例与 CLI 均用小池），慢档实测从 30 分钟超时回到秒级；`make.py` 的超时改为按步骤取配置（`base.json [toolchain]` 的 `step_timeout_s` / `test_timeout_s`），测试步骤加 `--durations=10`，最慢用例直接出现在报告里；步骤超时改为按进程组杀死（超时的 pytest 不再留下 chromium/pandoc 孤儿）；CI 每个 job 加 `timeout-minutes`，远端也不会再挂半小时。（rf-33）
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

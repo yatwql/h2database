@@ -22,6 +22,7 @@ import argparse
 import importlib.util
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -133,6 +134,27 @@ def step_timeout(name: str) -> float:
     except (TypeError, ValueError):
         return float(fallback)
 
+
+def _step_process(cmd: list[str], limit: float) -> subprocess.CompletedProcess:
+    """Run one step in its own process group; raise TimeoutExpired when over.
+
+    The group matters: a timed-out pytest leaves chromium and pandoc behind, and
+    an orphan keeps burning CPU while the next run is judged slow for a reason
+    nobody can see. Killing the group takes the grandchildren with it.
+    """
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            text=True, cwd=BOOK_ROOT, start_new_session=True)
+    try:
+        stdout, stderr = proc.communicate(timeout=limit)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+        except OSError:
+            proc.kill()
+        proc.communicate()
+        raise
+    return subprocess.CompletedProcess(cmd, proc.returncode, stdout, stderr)
+
 STEPS: list[Step] = [
     # ---- build ----
     ('cover_stats', 'manuscript/cover.py', (), 'build'),
@@ -233,8 +255,7 @@ def run_step(step: Step) -> tuple[str, int, float]:
     # whole command waits forever and no step ever reports.
     limit = step_timeout(name)
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, cwd=BOOK_ROOT,
-                              check=False, timeout=limit)
+        proc = _step_process(cmd, limit)
     except subprocess.TimeoutExpired:
         elapsed = time.perf_counter() - started
         LOG.warning('step %s timed out after %ss', name, limit)

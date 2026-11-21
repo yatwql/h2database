@@ -62,7 +62,7 @@ class MakeDriverTest(unittest.TestCase):
     def test_run_step_reports_failures(self):
         step = ('demo', 'render/to_html.py', (), 'build')
         failure = completed(1, out='boom\n', err='err\n')
-        with mock.patch.object(self.make.subprocess, 'run', return_value=failure):
+        with mock.patch.object(self.make, '_step_process', return_value=failure):
             buffer = io.StringIO()
             with redirect_stdout(buffer):
                 name, code, elapsed = self.make.run_step(step)
@@ -72,7 +72,7 @@ class MakeDriverTest(unittest.TestCase):
 
     def test_run_step_success_prints_nothing(self):
         step = ('demo', 'render/to_html.py', (), 'build')
-        with mock.patch.object(self.make.subprocess, 'run', return_value=completed(0)):
+        with mock.patch.object(self.make, '_step_process', return_value=completed(0)):
             buffer = io.StringIO()
             with redirect_stdout(buffer):
                 _name, code, _elapsed = self.make.run_step(step)
@@ -84,7 +84,7 @@ class MakeDriverTest(unittest.TestCase):
         # must be stubbed or the test result depends on the machine
         with mock.patch.object(self.make.importlib.util, 'find_spec', return_value=None), \
                 mock.patch.object(self.make.shutil, 'which', return_value=None), \
-                mock.patch.object(self.make.subprocess, 'run', return_value=completed(0)):
+                mock.patch.object(self.make, '_step_process', return_value=completed(0)):
             buffer = io.StringIO()
             with redirect_stdout(buffer):
                 code = self.make.doctor()
@@ -125,20 +125,20 @@ class MakeDriverTest(unittest.TestCase):
         self.assertIn('scorecard.py', ' '.join(run.call_args[0][0]))
 
     def test_main_runs_steps_and_stops_on_failure(self):
-        with mock.patch.object(self.make.subprocess, 'run', return_value=completed(1)), \
+        with mock.patch.object(self.make, '_step_process', return_value=completed(1)), \
                 redirect_stdout(io.StringIO()):
             code = self.make.main(['build', '--only', 'to_html'])
         self.assertEqual(code, 1)
 
     def test_main_keep_going_counts_every_failure(self):
-        with mock.patch.object(self.make.subprocess, 'run', return_value=completed(1)), \
+        with mock.patch.object(self.make, '_step_process', return_value=completed(1)), \
                 redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
             code = self.make.main(['build', '--only', 'to_html,to_pdf',
                                    '--keep-going', '--timings'])
         self.assertEqual(code, 1)
 
     def test_main_full_flips_the_slow_flag(self):
-        with mock.patch.object(self.make.subprocess, 'run', return_value=completed(0)), \
+        with mock.patch.object(self.make, '_step_process', return_value=completed(0)), \
                 mock.patch.dict(os.environ, {}, clear=False):
             with redirect_stdout(io.StringIO()):
                 self.make.main(['test', '--full'])
