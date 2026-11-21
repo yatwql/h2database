@@ -47,11 +47,15 @@
 
 #### `plan-4` 语言包扩展（第二语种）
 
-**现状**：`data/language/` 只有 `zh.json`，骨架名与练习提示语是中文单份。
-**动作**：新增语种文件与 `BOOK_LANGUAGE` 分支，章节骨架名走语言包；图号与章节数
-必须与中文版一致。
-**验收**：第二语种可构建；章节数与图号与中文版逐一对应；`structure.py` 绿。
-**事实位**：语言资源在 `data/language/`；读取入口见 `technical.md` §3.3。
+**现状**：`data/language/` 只有 `zh.json`，骨架名与练习提示语是中文单份；
+图注前缀、跳章引用句式、必备段落名仍写在判据脚本里。
+**动作**：按 `docs/plan/language-pack/plan.md` 分阶段推进（判据取值改造 → schema 冻结 →
+第二语种包与骨架 → 双语等价性判据 → 产物与交付）；先把取词从脚本挪进语言包且中文版行为
+零变化，再上第二语种。
+**验收**：第二语种可构建；章节数与图号与中文版逐一对应；`structure.py` 绿；判据脚本里
+不再有语种字面量，缺字段回退可见且有断言。
+**事实位**：设计与计划在 `docs/plan/language-pack/design.md` 与 `docs/plan/language-pack/plan.md`；
+语言资源在 `data/language/`；读取入口见 `technical.md` §3.3。
 
 ### P3 — 预期实施，有空时安排
 
