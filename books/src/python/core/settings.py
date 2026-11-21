@@ -267,11 +267,17 @@ def spend_summary() -> str:
 
 
 def volume_summary() -> str:
-    """How much room the manuscript has above its volume floor."""
+    """Lines above the reviewed floor, as a margin plus the two line counts.
+
+    The header says "体积" in the design contract, but the number it shows is the
+    line count the volume gate actually compares, so the text names lines and
+    prints both sides of the comparison.
+    """
     room = _volume.headroom()
     if room is None:
         return '—'
-    return f'{room["margin_pct"]:+.0f}%'
+    return (f'{room["margin_pct"]:+.0f}%'
+            f'（{room["lines"]:,} / 下限 {room["floor"]:,} 行）')
 
 
 def summary() -> dict:

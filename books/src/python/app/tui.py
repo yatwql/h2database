@@ -78,7 +78,7 @@ def header() -> str:
             info['languages'], _c('日志', PALETTE['label']), info['log_level'],
             _c('LLM', PALETTE['label']), info['llm_provider'])),
         ('用量', f"{_c('LLM 今日', PALETTE['label'])} {info['llm_spend']}   "
-                 f"{_c('体积余量', PALETTE['label'])} {info['volume_margin']}"),
+                 f"{_c('行数余量', PALETTE['label'])} {info['volume_margin']}"),
     ]
     label_width = max(_width(label) for label, _value in facts) + 1
 
