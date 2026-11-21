@@ -14,6 +14,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 
 import _netguard
 
@@ -24,6 +25,27 @@ TOOLS_DIR = os.path.join(
 )
 
 BOOK_ROOT = os.path.dirname(TOOLS_DIR)
+
+
+def isolate() -> None:
+    """Keep the suite out of the checked-out book, the network and the ledger.
+
+    Three guards, all installed at import so unittest and pytest behave alike:
+    writes under the real manuscript/artifacts raise, logs go to a temp dir, and
+    a non-mock LLM provider refuses to run at all.
+    """
+    global _ISOLATION_DIR
+    if _ISOLATION_DIR is not None:
+        return
+    _ISOLATION_DIR = tempfile.mkdtemp(prefix='book-isolation-')
+    os.environ['BOOK_TEST_GUARD'] = os.path.dirname(BOOK_ROOT)
+    os.environ['BOOK_LLM_OFFLINE'] = '1'
+    # fixture books already log into their own root; the ledger of an LLM run
+    # only ever lands there too, so no repo log is touched by a fixture test.
+
+
+_ISOLATION_DIR: str | None = None
+isolate()
 
 _LAYERS = ('lib', 'audit', 'manuscript', 'render', 'ingest')
 

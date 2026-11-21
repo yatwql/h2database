@@ -106,7 +106,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 文件长度 | 源码/测试/文档/手稿四档行数均不超过各自预算；四档预算须在配置里显式声明（不靠默认值）；手稿正文与附录同档 | `file_length.py` | P0 |
 | 脚本契约 | 每个入口脚本有模块说明、可执行入口、必要时说明退出码与 `--json` | `script_contract.py` | P0 |
 | 文档一致性 | 文档与配置的引用对象存在（路径、脚本、章节名、管理目录与索引/目录树、编号源）；同一事实只声明一次（章节键、门禁级别）；管理文档头部必须有一行 `> 定位：`；跨项目的内容标准只能指向 `style-guide.md`；引用的交付链路与脚本名前缀清单等于 `make.py` / `check_architecture.py` 里的声明 | `doc_drift.py` | P0 |
-| 网络隔离 | 测试全程零出站连接：`_netguard` 在 `_fixture` 导入时接管 socket，只允许回环；LLM 一律 mock，Playwright 用假引擎 | `src/test/_netguard.py`、`src/test/test_no_network.py` | P0 |
+| 测试隔离 | 全程零出站：`_netguard` 只允许回环，任何真实建连（含 LLM provider）立即失败；写入真实 `data/manuscript` 被守卫拒绝（`BOOK_TEST_GUARD`）；夹具书自建在临时目录，日志与用量账本只落在其中；LLM 用例一律 mock，Playwright 用假引擎 | `src/test/_netguard.py`、`src/test/test_no_network.py`、`src/test/test_isolation.py` | P0 |
 | 覆盖率 | 分支覆盖率不低于配置的红线 | `make.py cover` | P1 |
 | 历史痕迹 | 文档、代码注释、脚本/钩子/CI 注释与配置 `_note` 只描述当前状态 | `traces.py` | P0 |
 | 多入口一致 | CLI/TUI/Web 三个渠道共用 `core/actions.py`，`status` 与 `llm-ask` 均可运行 | `src/test/test_llm.py` | P1 |
