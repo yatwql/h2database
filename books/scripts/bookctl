@@ -7,7 +7,7 @@
 #   books/scripts/bookctl check             # every quality gate
 #   books/scripts/bookctl test [--full]     # test suite
 #   books/scripts/bookctl deliver           # PDF + EPUB on demand
-#   books/scripts/bookctl llm "问题"         # ask the configured provider
+#   books/scripts/bookctl llm-ask "问题"     # ask the configured provider
 #   books/scripts/bookctl make <args...>    # raw make.py passthrough
 #   books/scripts/bookctl doctor            # dependency / environment report
 #

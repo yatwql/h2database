@@ -4,7 +4,7 @@
 > 版本：v0.1
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
-> **编号源**：`rf-next = 17`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-16，
+> **编号源**：`rf-next = 18`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-17，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -86,6 +86,7 @@
 | rf-14 | 修 rf-13 时把配置键名写进了判据：`testplan` §2.2 用 `[thresholds].index_total_min` 等替代数值，等于把实现细节搬进“通过标准”——判据应说性质，键名与取值归 `technical.md` §3.2 | **修订**：判据行改写成“不低于配置下限”这类性质表述；键名集中写进 `technical.md` §3.2 的阈值归属；`doc_drift` 新增 `THRESHOLD` 检查，判据表里出现配置键名即失败 |
 | rf-15 | `testplan` 里混入不属于判据的内容：§4 写了渲染实现参数（`--split-level`、CSS 配色）与无门禁的版式阈值（1.5 倍、2-5 MB）；§2.2 用「9 项 CSS 标记」当判据、另有一条「脚本语法有效」的弱判据；§5 与 §2.2 逐条重复；§6 是流程策略 | **修订**：§4 收缩为按需验收项 + 按需命令，实现与版式指向 `technical.md` §4.4 / `style-guide.md` §6，两个硬编码数字删除；§2.2 改为「样式与锚点钩子齐备」并删弱判据；§5 改为「以 §2.2 为准」；§6 指向 `quality-model` §4 与手册 |
 | rf-16 | 代码/配置遗留的硬编码：`smart.py` 内联「2 图」「95%」、`figure_clusters.py` 默认窗口 50 而 `structure.py` 传 40（两道门禁实际在查不同窗口，文档写 40）；`verify_pdf.py` 内联 A4 595×842±2；`_config` 与三个渲染脚本的 docstring 写死第一本书的名字 | **修订**：图簇与图表阈值进 `style.json [clusters]`/`[quality]`，A4 几何进 `base.json [toolchain]`，`structure.py` 与门禁共用同一取值；书名改由 `book.toml` 提供（兜底 `book`）；`check_architecture` 新增书名字面量检查 |
+| rf-17 | 文档与代码对照时发现 `scripts/bookctl` 的帮助注释写 `bookctl llm`，而 CLI 只接受 `llm-ask`——手册写的是对的，包装脚本的头注释是唯一错处，属“没人重跑过”的注释漂移 | **修订**：注释改为 `llm-ask`；`script_contract.py` 新增 `check_dispatcher_help`，把包装脚本帮助里点名的动作与 `core/actions.py` 的 ACTIONS 表对齐，写错即失败（含 3 个用例） |
 
 ### 归档
 

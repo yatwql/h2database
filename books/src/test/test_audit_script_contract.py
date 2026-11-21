@@ -74,5 +74,38 @@ class ScriptContractTest(unittest.TestCase):
         self.assertIn(code, (0, 1))
         self.assertIn('problems', payload)
 
+class DispatcherHelpTest(unittest.TestCase):
+    """The wrapper's help comment names real actions."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.contract = _fixture.load_module(BOOK_ROOT, 'script_contract')
+
+    def wrapper(self, body: str) -> str:
+        path = os.path.join(self.tmp.name, 'bookctl')
+        with open(path, 'w', encoding='utf-8') as fh:
+            fh.write(body)
+        return path
+
+    def test_an_action_the_cli_does_not_accept_is_reported(self):
+        path = self.wrapper('#   books/scripts/bookctl llm "q"\n')
+        with mock.patch.object(self.contract, 'DISPATCHER', path):
+            problems = self.contract.check_dispatcher_help()
+        self.assertEqual(len(problems), 1)
+        self.assertIn('llm', problems[0])
+
+    def test_a_real_action_passes(self):
+        path = self.wrapper('#   books/scripts/bookctl llm-ask "q"\n')
+        with mock.patch.object(self.contract, 'DISPATCHER', path):
+            self.assertEqual(self.contract.check_dispatcher_help(), [])
+
+    def test_wrapper_verbs_are_accepted(self):
+        path = self.wrapper('#   books/scripts/bookctl make check\n'
+                            '#   books/scripts/bookctl new ../x\n')
+        with mock.patch.object(self.contract, 'DISPATCHER', path):
+            self.assertEqual(self.contract.check_dispatcher_help(), [])
+
+
 if __name__ == '__main__':
     unittest.main()

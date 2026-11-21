@@ -20,6 +20,7 @@ import ast
 import glob
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -41,6 +42,34 @@ def scripts() -> list[str]:
     return sorted(p for p in found
                   if not any(marker in p for marker in library)
                   and not p.endswith('__init__.py'))
+
+
+DISPATCHER = os.path.join(_config.BOOK_ROOT, 'scripts', 'bookctl')
+ACTIONS_PATH = os.path.join(_config.BOOK_ROOT, 'src', 'python', 'core', 'actions.py')
+# the wrapper feeds the action through to the CLI, plus a few verbs of its own
+WRAPPER_VERBS = {'new', 'make', 'doctor', 'help'}
+DISPATCH_RE = re.compile(r'bookctl\s+([a-z][a-z-]*)')
+ACTION_RE = re.compile(r"^\s{4}'([a-z][a-z-]*)':", re.MULTILINE)
+
+
+def check_dispatcher_help() -> list[str]:
+    """The dispatcher's help names actions the CLI actually accepts.
+
+    A wrapper comment is documentation nobody re-runs: it drifts as soon as an
+    action is renamed, and the user discovers it by typing the command.
+    """
+    if not os.path.isfile(DISPATCHER) or not os.path.isfile(ACTIONS_PATH):
+        return []
+    known = set(ACTION_RE.findall(_fsutil.read_text(ACTIONS_PATH))) | WRAPPER_VERBS
+    problems: list[str] = []
+    for lineno, line in enumerate(_fsutil.read_lines(DISPATCHER), start=1):
+        if not line.lstrip().startswith('#'):
+            continue
+        for action in DISPATCH_RE.findall(line):
+            if action not in known:
+                problems.append(f'scripts/bookctl:{lineno}: help names {action!r}, '
+                                f'which the CLI does not accept')
+    return problems
 
 
 def check(path: str) -> list[str]:
@@ -72,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument('--json', action='store_true')
     args = parser.parse_args(argv)
 
-    problems: list[str] = []
+    problems: list[str] = check_dispatcher_help()
     for path in scripts():
         try:
             problems += check(path)
