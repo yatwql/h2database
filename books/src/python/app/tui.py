@@ -288,10 +288,11 @@ def main(argv: list[str] | None = None) -> int:
         lines = ['\n' + header(), '', screen_title(screen),
                  '', menu_text(screen, cursor)]
         if status:
-            lines += ['', status]
-        lines += ['', _c('❯ ', PALETTE['cursor_bar'])]
+            lines += ['', status,
+                      _c(' 按任意键继续 · 0 收起结果回到菜单', PALETTE['hint'])]
         sys.stdout.write('\n'.join(lines))
         sys.stdout.flush()
+        shown_result = bool(status)   # a finished run is on screen right now
         status = ''
         try:
             pressed = keys.normalize(keys.read_key())
@@ -302,6 +303,10 @@ def main(argv: list[str] | None = None) -> int:
         if pressed in ('q', keys.KEY_CTRL_C):
             return 0
         if pressed in (menu.BACK_KEY, keys.KEY_ESC):
+            # A finished run leaves its result on screen: the first `0` puts the
+            # menu back, and only the next one leaves the level (or the program).
+            if shown_result:
+                continue
             if screen == 'main':
                 return 0
             screen = menu.parent_of(screen)

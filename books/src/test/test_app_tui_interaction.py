@@ -81,6 +81,18 @@ class TuiInteractionTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(self.calls, [])
 
+    def test_zero_collapses_a_finished_result_instead_of_quitting(self):
+        code, out = self.press('2', '0', '2', 'q')
+        self.assertEqual(code, 0)
+        # the action ran twice: `0` returned to the menu, it did not exit
+        self.assertEqual(self.calls, ['build', 'build'])
+        self.assertIn('按任意键继续', out)
+
+    def test_the_result_frame_does_not_show_an_input_prompt(self):
+        _code, out = self.press('2', 'q')
+        tail = [line for line in out.splitlines() if line.strip()][-3:]
+        self.assertFalse(any(line.strip() == '❯' for line in tail), tail)
+
     def test_escape_at_a_sub_level_goes_back_and_at_main_quits(self):
         code, out = self.press('5', self.keys.KEY_ESC, 'q')
         self.assertEqual(code, 0)
