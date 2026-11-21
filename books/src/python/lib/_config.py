@@ -107,7 +107,7 @@ MANUSCRIPT_DIR = _path('manuscript')
 DIST_DIR = _path('dist')
 DOCS_DIR = _path('docs')
 
-MERGED_NAME = _CFG.get('book', {}).get('merged_name', 'h2-source-code-analysis')
+MERGED_NAME = _CFG.get('book', {}).get('merged_name', 'book')
 TITLE = _CFG.get('book', {}).get('title', '')
 VERSION = _CFG.get('book', {}).get('version', '')
 

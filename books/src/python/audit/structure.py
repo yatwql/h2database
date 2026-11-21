@@ -469,8 +469,9 @@ if os.path.exists(cluster_tool):
         # Walk the JSON form so we can decide based on `unbridged` count
         # rather than relying on the script's own exit code (which currently
         # always returns 0 — the cluster audit is informational by design).
+        window = int((_config.STYLE_POLICY.get('clusters') or {}).get('window_lines', 40))
         res = subprocess.run(
-            [sys.executable, cluster_tool, '--window', '40', '--json'],
+            [sys.executable, cluster_tool, '--window', str(window), '--json'],
             capture_output=True, text=True, encoding='utf-8',
         check=False
         )

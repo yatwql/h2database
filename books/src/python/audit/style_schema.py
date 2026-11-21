@@ -26,14 +26,15 @@ from lib import _config, _fsutil
 STYLE_PATH = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'style.json')
 TEMPLATES_PATH = os.path.join(_config.BOOK_ROOT, 'data', 'tmpl', 'templates.toml')
 KNOWN_TEMPLATES = {'map_intro', 'types_intro', 'api_intro', 'path_intro', 'deep_dive'}
-KNOWN_TOP = {'_note', '_schema', 'sections', 'captions', 'diagrams',
+KNOWN_TOP = {'_note', '_schema', 'sections', 'captions', 'diagrams', 'clusters',
              'quality', 'prose', 'style_rules', 'content_depth', 'generation',
              'limits', 'thresholds'}
 REQUIRED = {
     'sections': ('per_chapter',),
     'captions': ('leading_verbs', 'vague_trailing', 'presets'),
+    'clusters': ('min_figures', 'window_lines'),
     'quality': ('min_coords_per_chapter', 'min_chapter_lines', 'max_chapter_lines',
-                'max_table_rows', 'max_duplicate_ratio'),
+                'max_table_rows', 'max_duplicate_ratio', 'min_figures_per_section'),
     'prose': ('avg_sentence_good', 'avg_sentence_bad', 'min_composite'),
     'generation': ('exercises_per_chapter', 'checklist_items'),
     'limits': ('sources', 'tests', 'docs'),

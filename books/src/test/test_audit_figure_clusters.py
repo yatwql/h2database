@@ -6,10 +6,13 @@ end-to-end tests exercise only indirectly.
 """
 
 import importlib.util
+import io
+import json
 import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 import _fixture
 
@@ -64,6 +67,18 @@ class TestFigureClusterHelpers(FixtureCase):
         found = clusters.find_clusters(path, min_figs=3, window=40)
         self.assertEqual(len(found), 1)
         self.assertFalse(found[0]['bridged'])
+
+    def test_window_default_comes_from_the_config(self):
+        clusters = self.module('figure_clusters')
+        patched = dict(clusters._config.STYLE_POLICY)
+        patched['clusters'] = {'min_figures': 2, 'window_lines': 12}
+        with mock.patch.object(clusters._config, 'STYLE_POLICY', patched), \
+             mock.patch.object(clusters, 'MS_DIR', os.path.join(self.root, 'data', 'manuscript')), \
+             mock.patch('sys.stdout', new=io.StringIO()) as out:
+            clusters.main(['--json'])
+        payload = json.loads(out.getvalue())
+        self.assertEqual(payload['window_lines'], 12)
+        self.assertEqual(payload['min_figs'], 2)
 
     def test_no_cluster_below_threshold(self):
         clusters = self.module('figure_clusters')

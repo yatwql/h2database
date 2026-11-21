@@ -6,6 +6,7 @@ from __future__ import annotations
 import os
 import tempfile
 import unittest
+from unittest import mock
 
 import _fixture
 
@@ -34,6 +35,19 @@ class ArchitectureRulesTest(unittest.TestCase):
     def assert_rule(self, rel: str, body: str, needle: str) -> None:
         found = self.problems(rel, body)
         self.assertTrue(any(needle in p for p in found), f'{needle!r} not in {found}')
+
+    # -- book identity ----------------------------------------------------
+    def test_book_identity_literal_is_reported(self):
+        path = self.write('render/x.py', '"""d"""\nMERGED = "h2-source-code-analysis.md"\n')
+        with mock.patch.object(self.mod, 'scripts', return_value=[path]):
+            problems = self.mod.check_book_identity()
+        self.assertEqual(len(problems), 1)
+        self.assertIn('book identity', problems[0])
+
+    def test_a_generic_name_passes(self):
+        path = self.write('render/y.py', '"""d"""\nMERGED = _config.MERGED_NAME\n')
+        with mock.patch.object(self.mod, 'scripts', return_value=[path]):
+            self.assertEqual(self.mod.check_book_identity(), [])
 
     # -- dependency matrix ------------------------------------------------
     def test_lib_may_not_import_an_engine(self):

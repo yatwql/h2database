@@ -8,10 +8,10 @@ delivery stage, never as part of the daily MD/HTML pipeline.
 
 Pandoc is the conversion engine. It already handles markdown -> EPUB 3
 with proper TOC, ASCII-fence preservation, and chapter splitting; we
-just hand it the merged ``h2-source-code-analysis.md`` plus a metadata
+just hand it the merged Markdown plus a metadata
 block and a small CSS sheet for typography.
 
-Output: ``books/h2-source-code-analysis.epub``
+Output: ``books/<merged_name>.epub``
 
 Usage:
     python books/tools/to_epub.py

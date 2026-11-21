@@ -19,7 +19,7 @@ Requirements:
 Usage:
     python books/tools/to_pdf.py
 
-Output: books/h2-source-code-analysis.pdf
+Output: books/<merged_name>.pdf
 """
 
 import os as _os

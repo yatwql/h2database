@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rebuild h2-source-code-analysis.md from chapter files."""
+"""Rebuild the merged Markdown from chapter files."""
 
 import os as _os
 import sys as _sys

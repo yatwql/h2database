@@ -218,8 +218,12 @@ def verify(pdf_path: str, html_path: str, require_toc_links: bool = False) -> Re
 
     sizes = {(round(float(page.mediabox.width), 1), round(float(page.mediabox.height), 1))
              for page in reader.pages}
-    a4 = all(abs(w - 595) <= 2 and abs(h - 842) <= 2 for w, h in sizes)
-    report.add('PAGE_SIZE', a4, f'{sorted(sizes)[:2]} (expect A4 595x842)')
+    width = float(_config.THRESHOLDS.get('pdf_page_width', 595))
+    height = float(_config.THRESHOLDS.get('pdf_page_height', 842))
+    tol = float(_config.THRESHOLDS.get('pdf_page_tolerance', 2))
+    a4 = all(abs(w - width) <= tol and abs(h - height) <= tol for w, h in sizes)
+    report.add('PAGE_SIZE', a4,
+               f'{sorted(sizes)[:2]} (expect {width:.0f}x{height:.0f})')
     rotations = {int(page.get('/Rotate') or 0) for page in reader.pages}
     report.add('ROTATION', rotations <= {0}, f'rotations={sorted(rotations)}')
 

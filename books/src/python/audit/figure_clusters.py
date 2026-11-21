@@ -148,10 +148,11 @@ def find_clusters(path: str, min_figs: int, window: int) -> list[dict]:
 
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--min', type=int, default=3,
-                        help='minimum figure count to qualify as cluster (default 3)')
-    parser.add_argument('--window', type=int, default=50,
-                        help='max line distance between consecutive figures (default 50)')
+    clusters = _config.STYLE_POLICY.get('clusters') or {}
+    parser.add_argument('--min', type=int, default=int(clusters.get('min_figures', 3)),
+                        help='minimum figure count to qualify as cluster (default from [clusters])')
+    parser.add_argument('--window', type=int, default=int(clusters.get('window_lines', 40)),
+                        help='max line distance between consecutive figures (default from [clusters])')
     parser.add_argument('--json', action='store_true')
     parser.add_argument('--has-bridge', action='store_true',
                         help='only print clusters that already have a bridge')

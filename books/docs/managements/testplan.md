@@ -70,7 +70,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | --- | --- | --- | --- |
 | 章节结构 | 12 章节槽 + 2 附录文件齐全，H1/H2/H3/H4 层级连续；配置的必备段落齐备 | `structure.py`（heading hierarchy / required sections） | P0 |
 | 图号与图引用 | 每章图号唯一且完整；正文图号引用可解析；允许历史补号导致非严格位置顺序 | `structure.py`（figure numbering）、`figures.py` | P0 |
-| 图表覆盖 | 内容型 `###` 小节 ≥ 2 图；模板型小节 ≥ 1 图 | `smart.py` | P0 |
+| 图表覆盖 | 内容型 `###` 小节的图数达下限，模板型小节达下限（下限取配置） | `smart.py` | P0 |
 | 代码围栏与合并稿 | 所有围栏成对；源文件总行数与合并稿一致；合并顺序与前后件齐备 | `structure.py`（code fence balance）、`render/merge.py` | P0 |
 | 跨章引用 | 章节互引 ≥ 1，且 `详见第X章《…》` 与真实 H1 一致 | `structure.py`（cross-references）、`crossrefs.py` | P0 |
 | HTML 目录与渲染钩子 | TOC 与内容标题 1:1、零断链；标题锚点与侧边栏/印刷目录齐备；样式与锚点钩子齐备（清单见 `technical.md` §4.4） | `structure.py`（HTML TOC / style hooks）、`render/to_html.py` | P0 |
@@ -81,13 +81,13 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 索引完整性 | 索引条目总数、每章条数、主条目/子条目/see-also 各自有下限（取值见配置）；条目与 see-also 全部可解析；子条目章节 ∈ 1-12 | `structure.py`、`index_xrefs.py` | P1 |
 | 术语完整性 | 术语条数达下限（取值见配置）；每条有对应章节引用；引用章节号 ∈ 1-12 | `structure.py`（glossary content） | P1 |
 | 图注动宾结构 | 全书图注以批准动词起首；长度 ∈ [8, 30] 字；无模糊后缀；strict 阈值下违规 = 0 | `captions.py --threshold strict` | P2 |
-| 图簇桥接 | 3+ 张图在 ≤ 40 行内连续出现的"图簇"，前置一句桥接叙事点名所有图 | `figure_clusters.py`（`--window 40 --needs-bridge`，应输出空清单） | P2 |
+| 图簇桥接 | 连续出现的多张图构成"图簇"时，前置一句桥接叙事点名所有图（张数与行距取配置） | `figure_clusters.py`（`--needs-bridge` 应输出空清单）、`structure.py`（图簇小节） | P2 |
 | 延伸思考 | 12 章全部含 `## N.X 延伸思考`；每章与全书的题量达下限（取值见配置）；每题含难度/题型 emoji + 提示行 + 含锚点的回顾行 | `structure.py`、`exercises.py` | P2 |
 | 写作风格 | 每章 WARN 计数为 0 | `style.py` | P2 |
 | 版本一致 | 工具/源码/书籍三版本可解析且各有唯一事实位；管理文档头齐全且取软件版本；封面版本回写自 `book.toml`；合并稿 manifest 与三者一致 | `version_consistency.py`、`manuscript/cover.py` | P0 |
 | 源码坐标 | `Class.java:行号` 可解析、行号在文件长度内、方法存在、摘录与源码一致；已知漂移进基线，仅"新增漂移"阻塞 | `source_refs.py`、`content_depth.py`、`books/data/baselines/source-symbol-baseline.json` | P1 |
 | PDF 渲染与 TOC 链接注入 | HTML → PDF 成功、页面数据可读；每个印刷 TOC 条目在对应页上加一条 link annotation，目标页按 outline 位置映射 | `render/to_pdf.py`、`render/pdf_toc_links.py` | P1 |
-| PDF 交付 | PDF 重新生成自当前 HTML；A4（595×842±2）、无旋转；字体全部嵌入；outline 与 HTML 标题逐一对应；印刷 TOC 链接按序且在页内；体积不超过配置的 PDF 预算 | `render/verify_pdf.py`（`--require-toc-links`） | P1 |
+| PDF 交付 | PDF 重新生成自当前 HTML；页面为 A4（尺寸与容差取配置）、无旋转；字体全部嵌入；outline 与 HTML 标题逐一对应；印刷 TOC 链接按序且在页内；体积不超过配置的 PDF 预算 | `render/verify_pdf.py`（`--require-toc-links`） | P1 |
 | EPUB 结构 | mimetype 首条且未压缩；container/OPF/manifest/spine/nav 全部可解析、导航链接全部命中；元数据齐备；体积不超过配置的 EPUB 预算 | `render/verify_epub.py` | P1 |
 | EPUB 生成 | pandoc 可用时生成 EPUB（在 `deliver` 组内，生成后由 `verify_epub.py` 校验） | `render/to_epub.py` | P1 |
 | 可读性 | 长句、宽 ASCII 图、框线闭合、图注质量 | `readability.py` | P1 |

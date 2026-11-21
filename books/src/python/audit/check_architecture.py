@@ -22,6 +22,7 @@ import ast
 import glob
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -78,6 +79,26 @@ MAKE_PY = os.path.join(PY_ROOT, 'make.py')
 def layer_of(path: str, root: str | None = None) -> str:
     rel = os.path.relpath(path, root or PY_ROOT).replace(os.sep, '/')
     return rel.split('/')[0] if '/' in rel else ''
+
+
+BOOK_IDENTITY_RE = re.compile(r'h2-source-code-analysis|H2 \u6570\u636e\u5e93\u5f15\u64ce')
+
+
+def check_book_identity() -> list[str]:
+    """The toolchain never names its first book.
+
+    A book's identity lives in book.toml; a literal in the code turns a reusable
+    toolchain into a one-off assembler and survives every rename the config makes.
+    """
+    problems: list[str] = []
+    for path in scripts():
+        if os.path.basename(path) == os.path.basename(__file__):
+            continue  # this rule owns the pattern it searches for
+        for lineno, line in enumerate(_fsutil.read_lines(path), start=1):
+            if BOOK_IDENTITY_RE.search(line):
+                problems.append(f'{os.path.relpath(path, PY_ROOT)}:{lineno}: book identity '
+                                f'literal; read it from book.toml')
+    return problems
 
 
 def scripts() -> list[str]:
@@ -371,6 +392,7 @@ def main(argv: list[str] | None = None) -> int:
 
     problems: list[str] = check_scripts()
     problems += check_wiring()
+    problems += check_book_identity()
     for path in scripts():
         try:
             problems += check(path)

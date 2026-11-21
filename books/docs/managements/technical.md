@@ -146,6 +146,8 @@ books/
 - 质量下限：`style.json [thresholds]`（练习题量、索引总数与每章条数、索引主/子/see-also 条数、术语条数、每章跨章引用数）——这些值以前硬编码在 `structure.py`，现均从此处读取。
 - 写作规则：`style.json [content_depth]`（如 `glossary_min_uses`、`excerpt_lines`）、`[captions]`、`[style_rules]`、`[limits]`。
 - 篇幅预算：`style.json [limits]` 的 `sources`/`tests`/`docs`/`manuscript` 四档；`file_length` 要求四档都显式声明，不靠默认值。
+- 图表与图簇：`style.json [quality]` 的 `min_figures_per_section`、`min_figure_coverage_pct`，`[clusters]` 的 `min_figures`、`window_lines`——`smart.py`、`figure_clusters.py`、`structure.py` 共用这一处，不再各自内联。
+- 页面几何：`base.json [toolchain]` 的 `pdf_page_width`、`pdf_page_height`、`pdf_page_tolerance`（`verify_pdf.py` 按此判定 A4）。
 - 章节骨架与必备段落：`book.toml [sections]`、`style.json [sections]`。
 - 覆盖率红线：`base.json [toolchain] coverage_fail_under`。
 

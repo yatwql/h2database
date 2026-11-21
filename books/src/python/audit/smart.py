@@ -92,9 +92,11 @@ def check_figure_refs():
             print(f"    UNREF L{ln}: 图{fid}: {cap_short}")
 
     overall_pct = total_refd / total_figs * 100 if total_figs else 0
+    target_pct = COVERAGE_TARGET_PCT
     print(f"\n  {'='*50}")
     print(f"  TOTAL: {total_figs} figures, {total_refd} referenced ({overall_pct:.1f}%)")
-    print(f"  COVERAGE: {'PASS (>= 95%)' if overall_pct >= 95 else 'NEEDS IMPROVEMENT (< 95%)'}")
+    verdict = 'PASS' if overall_pct >= target_pct else 'NEEDS IMPROVEMENT'
+    print(f"  COVERAGE: {verdict} (target >= {target_pct}%)")
 
 # --- Diagram counting ---
 def count_diagrams(text):
@@ -147,6 +149,10 @@ def build_exempt_ranges(headings, lines):
     return exempt
 
 # --- Main ---
+_QUALITY = _config.STYLE_POLICY.get('quality') or {}
+MIN_FIGURES = int(_QUALITY.get('min_figures_per_section', 2))
+COVERAGE_TARGET_PCT = int(_QUALITY.get('min_figure_coverage_pct', 95))
+
 if __name__ == '__main__':
     if '--fig-refs' in sys.argv:
         check_figure_refs()
@@ -198,7 +204,7 @@ if __name__ == '__main__':
 
             if child_sections:
                 total_diagrams = 0
-                for cs, ce, ct in child_sections:
+                for cs, ce, _ct in child_sections:
                     child_text = ''.join(lines[cs:ce])
                     total_diagrams += count_diagrams(child_text)
                 has_children = True
@@ -211,11 +217,11 @@ if __name__ == '__main__':
             code_blocks = ''.join(lines[line_num:end]).count('```') // 2
             java_refs = ''.join(lines[line_num:end]).count('.java:')
 
-            if total_diagrams < 2:
+            if total_diagrams < MIN_FIGURES:
                 all_gaps.append((short, title[:70], section_len, total_diagrams, code_blocks, java_refs, has_children))
 
     print(f"\n{'='*70}")
-    print("Sections needing >=2 diagrams (aggregated from #### children)")
+    print(f"Sections needing >={MIN_FIGURES} diagrams (aggregated from #### children)")
     print(f"{'='*70}")
     by_file = {}
     for short, title, sl, dd, cb, jr, hc in all_gaps:
@@ -229,7 +235,7 @@ if __name__ == '__main__':
         if not real_gaps:
             continue
         print(f"\n  {fname} ({len(real_gaps)} sections):")
-        for title, sl, dd, cb, jr, hc in real_gaps:
+        for title, sl, dd, cb, _jr, hc in real_gaps:
             tag = " [has #### children]" if hc else ""
             needed = 2 - dd
             flag = f" <<< +{needed} diagram{'s' if needed>1 else ''}" if needed > 0 else ""
