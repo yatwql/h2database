@@ -42,6 +42,8 @@
 - **派生状态与基线核对**：重跑 `digest/outline` 重建 `data/state`（58 包 / 843 文件），outline 的包归属与 `book.toml [chapters.packages]` 逐章比对 0 处不一致；五道基线门禁 stale 均为 0，无需收缩。（plan-1、plan-2）
 - **新增 Kotlin / Go 语言适配器**：`ingest/languages/kotlin.py`（`package` 行、类型与 `fun`、`import` 依赖）、`go.py`（每目录一包、导出即大写、`import` 块解析），注册进 `ANALYZERS`，`detect()` 改为从注册表推导后缀（不再维护第二份映射）；新增迷你夹具与 5 个用例。（plan-7）
 - `make.py` 的每个步骤加 1800s 超时，超时按 124 记为步骤失败（rf-30）。
+- **覆盖率 +1 档**：新增 `test_manuscript_snapshot_flow.py`（导入/校验/账本/列表全流程），实测 85% → 86%，`coverage_fail_under` 同步抬到 86；下一步目标 88，缺口集中在 `check_runner.py` 与 `structure.py`。（plan-3）
+- **隔离守卫扩到基线**：`BOOK_TEST_GUARD` 现在同时拒绝写 `data/baselines` 与 `data/state`（一个新用例曾把快照账本写进仓库）。（rf-31）
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
