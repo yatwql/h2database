@@ -308,7 +308,7 @@ GROUPS = {build, verify, deliver, check, test, cover, report}
 | `data/state/source-inventory.json` | 被分析源码的快照事实（文件、包、规模） | 每次 ingest 重建 |
 | `data/state/outline.json` | 章节与主题的派生大纲 | 每次 ingest 重建 |
 | `data/baselines/*.json` | 已评审问题清单：`accepted` 数组、生成方式、备注 | 只在评审后重设，收缩优先 |
-| `data/baselines/content-volume.json` | 逐章字节/行数、手稿总量、交付页数与体积 | 定稿或确认缩放后重设 |
+| `data/baselines/content-volume.json` | 逐章字节/行数、手稿总量、交付页数与体积；`accepted_shrinks` 记下每次经批准的收缩与理由 | 定稿或确认缩放后重设，且不得静默降低下限 |
 | `data/baselines/snapshot-<标签>.json` | 某个历史快照的体积事实 | 导入快照时生成 |
 | `data/snapshots/<日期>-<标签>/` | `manifest.json`（压缩包哈希、逐文件字节/行数/哈希）+ 只读正文 | 只读；`snapshot.py verify` 校验 |
 | `logs/check-<档位>-<时间戳>.{log,json}` | 每次检查的完整输出与摘要 | 保留最近若干次 |

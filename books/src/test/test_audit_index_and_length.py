@@ -140,5 +140,70 @@ class FileLengthUnitTest(unittest.TestCase):
         self.assertTrue(any('manuscript' in d for d in details))
         self.assertFalse(any('sources' in d for d in details))
 
+
+class ContentVolumeBaselineTest(unittest.TestCase):
+    """The reviewed floor only moves up unless a shrink is accepted by hand."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.mod = _fixture.load_module(BOOK_ROOT, 'content_volume')
+        self.path = os.path.join(self.tmp.name, 'content-volume.json')
+
+    def book(self, lines: int, files: dict | None = None) -> dict:
+        payload = files if files is not None else {
+            'ch1.md': {'bytes': lines * 10, 'lines': lines}}
+        return {'manuscript': {'files': payload,
+                               'total': {'bytes': lines * 10, 'lines': lines}},
+                'delivered': {}}
+
+    def write(self, payload: dict) -> None:
+        with open(self.path, 'w', encoding='utf-8') as fh:
+            json.dump(payload, fh)
+
+    def read(self) -> dict:
+        with open(self.path, encoding='utf-8') as fh:
+            return json.load(fh)
+
+    def run_main(self, *args: str) -> int:
+        with mock.patch.object(self.mod, 'BASELINE_PATH', self.path), \
+                mock.patch('sys.stdout', new=io.StringIO()), \
+                mock.patch('sys.stderr', new=io.StringIO()):
+            return self.mod.main(list(args))
+
+    def test_a_smaller_manuscript_counts_as_a_shrink(self):
+        drops = self.mod.shrunk(self.book(100), self.book(90))
+        self.assertTrue(any('ch1.md' in item for item in drops))
+        self.assertTrue(any('total' in item for item in drops))
+
+    def test_an_equal_or_larger_manuscript_does_not(self):
+        self.assertEqual(self.mod.shrunk(self.book(100), self.book(100)), [])
+        self.assertEqual(self.mod.shrunk(self.book(100), self.book(120)), [])
+
+    def test_a_missing_chapter_counts_as_a_shrink(self):
+        drops = self.mod.shrunk(self.book(100), self.book(0, files={}))
+        self.assertTrue(any('gone' in item for item in drops))
+
+    def test_updating_the_baseline_refuses_to_lower_it(self):
+        self.write(self.book(100))
+        with mock.patch.object(self.mod, 'snapshot', lambda: self.book(90)):
+            self.assertEqual(self.run_main('--update-baseline'), 1)
+
+    def test_accepting_the_shrink_records_the_reason(self):
+        self.write(self.book(100))
+        with mock.patch.object(self.mod, 'snapshot', lambda: self.book(90)):
+            self.assertEqual(self.run_main('--update-baseline', '--accept-shrink',
+                                           '--reason', '删掉重复章节'), 0)
+        recorded = self.read()['accepted_shrinks'][0]
+        self.assertEqual(recorded['reason'], '删掉重复章节')
+        self.assertTrue(recorded['drops'])
+
+    def test_a_growing_baseline_is_recorded_without_a_flag(self):
+        self.write(self.book(100))
+        with mock.patch.object(self.mod, 'snapshot', lambda: self.book(120)):
+            self.assertEqual(self.run_main('--update-baseline'), 0)
+        self.assertNotIn('accepted_shrinks', self.read())
+
+
 if __name__ == '__main__':
     unittest.main()

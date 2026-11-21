@@ -107,8 +107,9 @@ def delivered_snapshot() -> dict[str, int]:
     return out
 
 
-def load_baseline() -> dict:
-    if not os.path.exists(BASELINE_PATH):
+def load_baseline(path: str | None = None) -> dict:
+    target = path or BASELINE_PATH
+    if not os.path.exists(target):
         return {}
     raw = _fsutil.read_text(BASELINE_PATH)
     try:
@@ -155,24 +156,73 @@ def compare(baseline: dict, current: dict) -> list[str]:
     return problems
 
 
+def shrunk(baseline: dict, current: dict) -> list[str]:
+    """Metrics that would fall if ``current`` became the baseline.
+
+    Nothing else guards this: re-recording after every conversion would otherwise
+    ratchet the floor down one conversion at a time, and the June draft that was
+    actually good could be replaced by a thin fresh render without a trace.
+    """
+    drops: list[str] = []
+    base_files = baseline.get('manuscript', {}).get('files', {})
+    now_files = current['manuscript']['files']
+    for name, stats in base_files.items():
+        if name not in now_files:
+            drops.append(f'{name}: gone (was {stats["lines"]} lines)')
+            continue
+        for key in ('bytes', 'lines'):
+            if now_files[name][key] < stats[key]:
+                drops.append(f'{name}: {key} {stats[key]} -> {now_files[name][key]}')
+    base_total = baseline.get('manuscript', {}).get('total', {})
+    for key in ('bytes', 'lines'):
+        if key in base_total and current['manuscript']['total'][key] < base_total[key]:
+            drops.append(f'total: {key} {base_total[key]} -> '
+                         f'{current["manuscript"]["total"][key]}')
+    return drops
+
+
+def update_baseline(current: dict, accept_shrink: bool = False,
+                    reason: str = '') -> int:
+    """Record ``current`` as the reviewed floor, refusing to lower it silently."""
+    previous = load_baseline()
+    drops = shrunk(previous, current) if previous else []
+    if drops and not accept_shrink:
+        print(f'拒绝降低基线：{len(drops)} 项低于当前基线', file=sys.stderr)
+        for item in drops[:10]:
+            print(f'  - {item}', file=sys.stderr)
+        print('   确认是有意收缩后加 --accept-shrink --reason "<理由>"；'
+              '要保留原来的下限，就修回内容再重记。', file=sys.stderr)
+        return 1
+    if drops:
+        current.setdefault('accepted_shrinks', []).append(
+            {'reason': reason or '(未填写理由)', 'drops': drops})
+    _fsutil.write_text(BASELINE_PATH,
+                       json.dumps(current, ensure_ascii=False, indent=2) + '\n')
+    total = current['manuscript']['total']
+    print(f'content-volume baseline updated: {len(current["manuscript"]["files"])} files, '
+          f'{total["bytes"]} bytes, {total["lines"]} lines'
+          + (f'（接受 {len(drops)} 项收缩）' if drops else ''))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--json', action='store_true')
     parser.add_argument('--update-baseline', action='store_true',
                         help='record the current volume as the reviewed baseline')
+    parser.add_argument('--accept-shrink', action='store_true',
+                        help='allow --update-baseline to lower the floor, recording why')
+    parser.add_argument('--reason', default='', help='why a shrink was accepted')
+    parser.add_argument('--baseline', default=None,
+                        help='compare against this baseline file instead of the book one')
     args = parser.parse_args(argv)
 
     current = snapshot()
     if args.update_baseline:
-        _fsutil.write_text(BASELINE_PATH,
-                           json.dumps(current, ensure_ascii=False, indent=2) + '\n')
-        total = current['manuscript']['total']
-        print(f'content-volume baseline updated: {len(current["manuscript"]["files"])} files, '
-              f'{total["bytes"]} bytes, {total["lines"]} lines')
-        return 0
+        return update_baseline(current, args.accept_shrink, args.reason)
 
-    baseline = load_baseline()
+    baseline = load_baseline(args.baseline)
     if PROFILE == 'cold-start' and baseline:
         print(f'内容体积：cold-start 档，基线仅供参考（profile={PROFILE}）')
         baseline = {}
