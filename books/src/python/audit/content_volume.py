@@ -271,8 +271,6 @@ def update_baseline(current: dict, accept_shrink: bool = False,
         'commit': info['commit'],
         'reason': reason or '(未填写理由)',
     }
-    if 'source' not in current:
-        current.pop('source', None)
     _fsutil.write_text(BASELINE_PATH,
                        json.dumps(current, ensure_ascii=False, indent=2) + '\n')
     total = current['manuscript']['total']

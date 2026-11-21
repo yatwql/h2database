@@ -47,7 +47,7 @@ class PricingAndUsageTest(unittest.TestCase):
 
     def test_a_call_is_recorded_with_tokens_and_money(self):
         log = os.path.join(self.root, 'logs', 'llm-usage.jsonl')
-        with mock.patch.object(self.llm, 'USAGE_LOG', log), \
+        with mock.patch.object(self.llm, 'usage_log', lambda: log), \
                 mock.patch.object(self.llm, 'pricing', lambda: {
                     'currency': 'USD',
                     'models': {'m': {'input_per_mtok': 1.0, 'output_per_mtok': 2.0}}}):
@@ -62,8 +62,8 @@ class PricingAndUsageTest(unittest.TestCase):
         with mock.patch.object(self.llm, 'pricing', lambda: {
                 'currency': 'USD',
                 'models': {'m': {'input_per_mtok': 1.0, 'output_per_mtok': 1.0}}}), \
-                mock.patch.object(self.llm, 'USAGE_LOG',
-                                  os.path.join(self.tmp.name, 'usage.jsonl')):
+                mock.patch.object(self.llm, 'usage_log',
+                                  lambda: os.path.join(self.tmp.name, 'usage.jsonl')):
             marker = self.llm.take_totals()
             self.llm._record('p', 'm', 'chapter-draft', 10, 10)
             self.llm._record('p', 'm', 'chapter-draft', 10, 10)

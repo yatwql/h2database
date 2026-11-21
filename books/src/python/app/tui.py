@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Terminal UI: grouped actions, live configuration and a compact dashboard.
+"""Terminal UI: two menu levels, live configuration and a compact dashboard.
 
   python app/tui.py                # interactive
   python app/tui.py --once status  # one action, then exit (scriptable)
 
-Keys: number = run action, c = configure, r = refresh, ? = help, q = quit.
+Keys: number = run action, 0/Esc = back (quit on the main screen), c = settings,
+r = reload config, ? = help, q = quit. The screen tree lives in core.menu.
 Colour is used only on a real terminal and can be disabled with NO_COLOR=1.
 """
 from __future__ import annotations

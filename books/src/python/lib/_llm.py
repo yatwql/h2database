@@ -242,8 +242,8 @@ def _complete_anthropic(prompt: str, provider: str, spec: dict, params: dict,
         raise LLMError(f'provider returned no text: {data!r}')
     usage = data.get('usage') or {}
     _record(provider, payload['model'], str(params.get('scenario', '')),
-            int(usage.get('input_tokens') or estimate_tokens(prompt)),
-            int(usage.get('output_tokens') or estimate_tokens(text)))
+            _safe_int(usage.get('input_tokens'), estimate_tokens(prompt)),
+            _safe_int(usage.get('output_tokens'), estimate_tokens(text)))
     return text
 
 
@@ -280,15 +280,20 @@ def _attempt(prompt: str, provider: str, spec: dict, params: dict,
         raise LLMError(f'unexpected provider response: {data!r}') from exc
     usage = data.get('usage') or {}
     _record(provider, payload['model'], str(params.get('scenario', '')),
-            int(usage.get('prompt_tokens') or estimate_tokens(prompt)),
-            int(usage.get('completion_tokens') or estimate_tokens(text)))
+            _safe_int(usage.get('prompt_tokens'), estimate_tokens(prompt)),
+            _safe_int(usage.get('completion_tokens'), estimate_tokens(text)))
     return text
 
 
 LOG = _log.get_logger('llm')
 
-PRICING_PATH = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'llm_pricing.json')
-USAGE_LOG = os.path.join(_config.BOOK_ROOT, 'logs', 'llm-usage.jsonl')
+def pricing_path() -> str:
+    """Resolved per call: the book root can change (fixtures, multi-book)."""
+    return os.path.join(_config.BOOK_ROOT, 'data', 'config', 'llm_pricing.json')
+
+
+def usage_log() -> str:
+    return os.path.join(_config.BOOK_ROOT, 'logs', 'llm-usage.jsonl')
 # ~3.5 characters per token is the usual rule of thumb for mixed Chinese/English
 CHARS_PER_TOKEN = 3.5
 
@@ -298,10 +303,11 @@ _totals: dict = {'calls': 0, 'prompt_tokens': 0, 'completion_tokens': 0, 'cost':
 
 def pricing() -> dict:
     """Model price table, or an empty table when the book ships none."""
-    if not os.path.isfile(PRICING_PATH):
+    path = pricing_path()
+    if not os.path.isfile(path):
         return {}
     try:
-        return _load(PRICING_PATH)
+        return _load(path)
     except LLMError:
         return {}
 
@@ -317,8 +323,25 @@ def cost_of(model: str, prompt_tokens: int, completion_tokens: int) -> float | N
     entry = price_of(model)
     if not entry:
         return None
-    return (prompt_tokens * float(entry.get('input_per_mtok', 0))
-            + completion_tokens * float(entry.get('output_per_mtok', 0))) / 1_000_000
+    return (prompt_tokens * _safe_float(entry.get('input_per_mtok'))
+            + completion_tokens * _safe_float(entry.get('output_per_mtok'))) / 1_000_000
+
+
+def _safe_float(value, default: float = 0.0) -> float:
+    """Same contract as ``_safe_int`` for prices and ceilings."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _safe_int(value, default: int = 0) -> int:
+    """Provider-reported numbers are untrusted: a malformed usage block must not
+    turn a successful call into a crash."""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
 
 
 def estimate_tokens(text: str) -> int:
@@ -328,11 +351,11 @@ def estimate_tokens(text: str) -> int:
 
 def estimate(prompt: str, scenario: str = 'chapter-draft') -> dict:
     """Pre-run guess: prompt tokens now, completion up to the scenario budget."""
-    settings = resolve(scenario)
-    budget = int(settings['settings'].get('max_tokens', 2048))
+    resolved = resolve(scenario)
+    budget = _safe_int(resolved['settings'].get('max_tokens'), 2048) or 2048
     prompt_tokens = estimate_tokens(prompt)
-    model = _model_for(resolve(scenario)['provider'],
-                       providers()['providers'][resolve(scenario)['provider']])
+    model = _model_for(resolved['provider'],
+                       providers()['providers'][resolved['provider']])
     low = cost_of(model, prompt_tokens, budget // 2)
     high = cost_of(model, prompt_tokens, budget)
     return {'model': model, 'prompt_tokens': prompt_tokens, 'max_tokens': budget,
@@ -358,21 +381,18 @@ def _record(provider: str, model: str, scenario: str, prompt_tokens: int,
     _totals['completion_tokens'] += completion_tokens
     _totals['cost'] += cost or 0.0
     try:
-        _fsutil.ensure_dir(os.path.dirname(USAGE_LOG))
-        with open(USAGE_LOG, 'a', encoding='utf-8') as fh:
+        log = usage_log()
+        _fsutil.ensure_dir(os.path.dirname(log))
+        with open(log, 'a', encoding='utf-8') as fh:
             fh.write(json.dumps({'at': _utcnow(), **_last_usage},
                                 ensure_ascii=False) + '\n')
     except OSError as exc:  # pragma: no cover - a read-only log dir must not break a call
-        LOG.debug('cannot append %s: %s', USAGE_LOG, exc)
+        LOG.debug('cannot record usage: %s', exc)
 
 
 def _utcnow() -> str:
     from datetime import datetime, timezone
     return datetime.now(timezone.utc).isoformat(timespec='seconds')
-
-
-def last_usage() -> dict:
-    return dict(_last_usage)
 
 
 def usage_line() -> str:
@@ -411,12 +431,13 @@ def summary_line(marker: dict) -> str:
 
 def today_cost() -> float:
     """Sum of today's recorded calls, read from the usage log (survives restarts)."""
-    if not os.path.isfile(USAGE_LOG):
+    path = usage_log()
+    if not os.path.isfile(path):
         return 0.0
     today = _utcnow()[:10]
     total = 0.0
     try:
-        for line in _fsutil.read_lines(USAGE_LOG):
+        for line in _fsutil.read_lines(path):
             try:
                 row = json.loads(line)
             except ValueError:
@@ -430,10 +451,7 @@ def today_cost() -> float:
 
 def daily_limit() -> float:
     """Soft daily money ceiling from llm_settings.json (0 disables it)."""
-    try:
-        return float((settings().get('daily_cost_limit') or 0) or 0)
-    except LLMError:
-        return 0.0
+    return _safe_float(settings().get('daily_cost_limit'))
 
 
 def budget_line() -> str:

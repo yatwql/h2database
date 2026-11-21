@@ -101,7 +101,7 @@ def _llm_lines(before: dict | None = None) -> str:
         if warning:
             lines.append(warning)
         return '\n'.join(line for line in lines if line)
-    except Exception as exc:  # noqa: BLE001 - reporting must not fail the run
+    except (_llm.LLMError, OSError) as exc:
         return f'LLM：用量记账不可用（{exc}）'
 
 

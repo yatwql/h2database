@@ -92,21 +92,12 @@ def default_cursor(screen: str = 'main') -> int:
     return 0
 
 
-def shortcut_map(screen: str = 'main') -> dict[str, tuple[str, str]]:
-    """key -> (action, label) for direct key dispatch on one screen."""
-    return {key: (action, label) for key, action, label in entries(screen)}
-
-
 def index_of(screen: str, key: str) -> int:
     """Row index for a shortcut key on one screen, or -1 when absent."""
     for index, entry in enumerate(entries(screen)):
         if entry[0] == key:
             return index
     return -1
-
-
-def is_navigation(action: str) -> bool:
-    return action in (BACK_ACTION, QUIT_ACTION) or action.startswith(OPEN_PREFIX)
 
 
 def opens_screen(action: str) -> str | None:
