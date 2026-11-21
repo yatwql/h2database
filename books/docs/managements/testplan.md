@@ -78,12 +78,12 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 链接与锚点 | 所有相对链接指向存在的文件；`#anchor` 命中真实标题；代码围栏内不检查 | `links.py` | P0 |
 | 配置结构 | `book.toml` 各章节键都在阅读顺序里、列出的章节都存在且无重复；`style.json` 只含已知顶层键、阈值区间合理 | `doc_drift.py`（CONFIG）、`style_schema.py`、`test_config` 用例 | P0 |
 | 构建幂等 | 连续两次 `make.py build` 的 HTML 哈希一致 | `.github/workflows/book.yml` | P0 |
-| 索引完整性 | 索引 ≥ 120 条；每章 ≥ 5 条；主条目 ≥ 150、子条目 ≥ 50、see-also ≥ 30 且全部解析、子条目章节 ∈ 1-12 | `structure.py`、`index_xrefs.py` | P1 |
-| 术语完整性 | 术语 ≥ 60 条；每条有对应章节引用；引用章节号 ∈ 1-12 | `structure.py`（glossary content） | P1 |
+| 索引完整性 | 索引条数、每章条数、主条目/子条目/see-also 均不低于下限且全部解析；子条目章节 ∈ 1-12。下限取 `style.json [thresholds]` 的 `index_total_min`、`index_per_chapter_min`、`index_main_min`、`index_sub_min`、`index_see_also_min` | `structure.py`、`index_xrefs.py` | P1 |
+| 术语完整性 | 术语条数不低于 `style.json [thresholds].glossary_min_entries`；每条有对应章节引用；引用章节号 ∈ 1-12 | `structure.py`（glossary content） | P1 |
 | 工具脚本可用性 | 术语表与索引生成脚本语法有效 | `structure.py`（builder checks） | P1 |
 | 图注动宾结构 | 全书图注以批准动词起首；长度 ∈ [8, 30] 字；无模糊后缀；strict 阈值下违规 = 0 | `captions.py --threshold strict` | P2 |
 | 图簇桥接 | 3+ 张图在 ≤ 40 行内连续出现的"图簇"，前置一句桥接叙事点名所有图 | `figure_clusters.py`（`--window 40 --needs-bridge`，应输出空清单） | P2 |
-| 延伸思考 | 12 章全部含 `## N.X 延伸思考`；每章 ≥ 3 题；每题含难度/题型 emoji + 提示行 + 含锚点的回顾行；全书 ≥ 50 题 | `structure.py`、`exercises.py` | P2 |
+| 延伸思考 | 12 章全部含 `## N.X 延伸思考`；题量不低于 `style.json [thresholds]` 的 `exercises_min_per_chapter` / `exercises_min_total`；每题含难度/题型 emoji + 提示行 + 含锚点的回顾行 | `structure.py`、`exercises.py` | P2 |
 | 写作风格 | 每章 WARN 计数为 0 | `style.py` | P2 |
 | 版本一致 | 工具/源码/书籍三版本可解析且各有唯一事实位；管理文档头齐全且取软件版本；封面版本回写自 `book.toml`；合并稿 manifest 与三者一致 | `version_consistency.py`、`manuscript/cover.py` | P0 |
 | 源码坐标 | `Class.java:行号` 可解析、行号在文件长度内、方法存在、摘录与源码一致；已知漂移进基线，仅"新增漂移"阻塞 | `source_refs.py`、`content_depth.py`、`books/data/baselines/source-symbol-baseline.json` | P1 |
@@ -104,7 +104,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 门禁追溯 | make.py 的每个门禁都在 testplan 登记，反之亦然 | `gate_trace.py` | P0 |
 | 需求追溯 | `requirements.md` 的每条 FR/IR/NFR 在 §2.4 有且只有一条判据行，判据点名的载体在仓库里存在 | `requirement_trace.py` | P0 |
 | 内容体积 | 每个章节的字节数与行数不低于基线（floor 0.95）、手稿总量不缩水、交付 PDF 页数 ≥ 基线 90%、EPUB 体积 ≥ 基线 85%；新增文件允许，删除须同步 `book.toml` 并重设基线 | `content_volume.py`、`books/data/baselines/content-volume.json` | P0 |
-| 文件长度 | 源码 ≤900 行、测试 ≤1200 行、文档 ≤1200 行（手稿附录 ≤2000） | `file_length.py` | P0 |
+| 文件长度 | 各档行数不超过 `style.json [limits]` 的 `sources`/`tests`/`docs`/`manuscript`；四档均须在配置里显式声明（不靠默认值）；手稿正文与附录共用 `manuscript` 档 | `file_length.py` | P0 |
 | 脚本契约 | 每个入口脚本有模块说明、可执行入口、必要时说明退出码与 `--json` | `script_contract.py` | P0 |
 | 文档一致性 | 文档与配置的引用对象存在（路径、脚本、章节名、管理目录与索引/目录树、编号源）；同一事实只声明一次（章节键、门禁级别）；管理文档头部必须有一行 `> 定位：`；跨项目的内容标准只能指向 `style-guide.md`；引用的交付链路与脚本名前缀清单等于 `make.py` / `check_architecture.py` 里的声明 | `doc_drift.py` | P0 |
 | 网络隔离 | 测试全程零出站连接：`_netguard` 在 `_fixture` 导入时接管 socket，只允许回环；LLM 一律 mock，Playwright 用假引擎 | `src/test/_netguard.py`、`src/test/test_no_network.py` | P0 |
@@ -201,7 +201,7 @@ report` / `eval-score.sh`）、`balance` 的计量输出（`--json`），以及�
 | NFR-02 | 连续两次构建的 HTML 逐字节一致 | `.github/workflows/book.yml` |
 | NFR-03 | 依赖版本固定，交付只用项目解释器 | `make.py`、`bootstrap.sh` |
 | NFR-04 | 存量入基线，新增同类问题失败 | `src/python/lib/_baseline.py` |
-| NFR-05 | 四档耗时在预算内 | `perf_baseline.py` |
+| NFR-05 | 四档耗时在预算内（性能门禁为 advisory：对比历史中位数给提示，硬预算由 CI 墙钟记录） | `perf_baseline.py` |
 | NFR-06 | PDF ≤ 12 MB、EPUB ≤ 10 MB | `verify_pdf.py`、`verify_epub.py` |
 | NFR-07 | 历史稿只读，不入构建与扫描 | `src/python/manuscript/snapshot.py` |
 | NFR-08 | 阈值与路径全部读配置，不内联 | `check_architecture.py`、`style_schema.py` |

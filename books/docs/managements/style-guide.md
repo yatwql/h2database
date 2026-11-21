@@ -72,8 +72,11 @@
 
 ### 3.1 段落长度
 
-- 正文段落：6-10 行为宜，不超过 15 行
+- 正文段落：80-420 字符（约 6-10 行）为宜，超过 `style_rules.max_paragraph_chars`（420）即超长
 - 每个段落聚焦一个论点，段落第一句为主题句
+
+口径说明：门禁按**字符**计（`style_rules.max_paragraph_chars`、`prose.paragraph_good_min/max`），
+不按显示行数——行数随排版宽度变，字符数不会。
 
 ### 3.2 列举结构
 

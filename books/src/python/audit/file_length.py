@@ -76,6 +76,18 @@ def budgets() -> dict:
     return {kind: {**values, **limits.get(kind, {})} for kind, values in DEFAULTS.items()}
 
 
+def check_declared_budgets() -> list[dict]:
+    """Every budget kind declares its limit in the config, not only in a default.
+
+    A default nobody restated is a threshold living in code, which is what the
+    configuration rule forbids; it also leaves the documented numbers with nothing
+    to point a reader at.
+    """
+    limits = _config.STYLE_POLICY.get('limits') or {}
+    return [{'kind': 'BUDGET', 'detail': f'{kind} budget has no [limits] entry'}
+            for kind in DEFAULTS if kind not in limits]
+
+
 def targets() -> list[tuple[str, str]]:
     root = _config.BOOK_ROOT
     out: list[tuple[str, str]] = []
@@ -108,16 +120,20 @@ def main(argv: list[str] | None = None) -> int:
                          'kind': kind, 'lines': lines, 'warn': limits[kind]['warn']})
 
     ledger = check_ledger()
+    undeclared = check_declared_budgets()
     if args.json:
-        print(json.dumps({'over': over, 'warn': warn, 'ledger': ledger},
+        print(json.dumps({'over': over, 'warn': warn, 'ledger': ledger,
+                          'undeclared': undeclared},
                          ensure_ascii=False, indent=2))
-        return 0 if not over and not ledger else 1
+        return 0 if not over and not ledger and not undeclared else 1
 
     for item in warn:
         print(f"  warn  {item['file']}  {item['lines']} 行 > 提醒线 {item['warn']}")
     for item in ledger:
         print(f"  ledger  {item['file']}:{item['line']}  {item['detail']}")
-    if not over and not ledger:
+    for item in undeclared:
+        print(f"  budget  {item['detail']}")
+    if not over and not ledger and not undeclared:
         print('✅ 文件长度预算通过')
         return 0
     if over:

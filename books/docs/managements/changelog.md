@@ -57,6 +57,11 @@
   阶梯、事实、图示、术语、练习、四项人工自查），写法一律指向 `style-guide.md`；
   判据、级别与门禁改由项目单向登记，标准不再引用任何项目的门禁表、脚本或配置（rf-12）。
 - `file_length.py` 兼校「文件膨胀登记」：`review-findings.md` P4 表里的行数与实测不符即失败。
+  四档预算还必须在 `style.json [limits]` 里显式声明（`BUDGET`），不再隐式靠默认值。
+- 阈值回配置：`index_total_min`、`index_per_chapter_min` 进 `style.json [thresholds]`，
+  `structure.py` 改读配置；`testplan` 与 `review-findings` 的阈值列不再抄数值，改指配置键
+  （此前「手稿附录 ≤2000」与配置的 9000 相矛盾）；段落规则统一为字符口径（≤420 字符）；
+  NFR-05 标注性能门禁为 advisory。（rf-13）
 - 新增 `requirement_trace.py`：`requirements.md` 的 FR/IR/NFR 与 testplan 新增的
   §2.4 需求判据对照表双向一致，每行点名的载体必须存在；`make.py check` 由 30 步变 31 步。
 - 补回 `src/test/test_no_network.py`：testplan 一直把它列为网络隔离的载体，文件已不存在。

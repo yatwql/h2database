@@ -101,6 +101,8 @@
   "thresholds": {
     "exercises_min_per_chapter": 3,
     "exercises_min_total": 50,
+    "index_total_min": 120,
+    "index_per_chapter_min": 5,
     "index_main_min": 150,
     "index_sub_min": 50,
     "index_see_also_min": 30,

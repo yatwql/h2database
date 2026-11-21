@@ -130,5 +130,15 @@ class FileLengthUnitTest(unittest.TestCase):
                                 {'src/python/b.py': 'x = 1\ny = 2\n'})
         self.assertEqual(self.mod.check_ledger(root), [])
 
+    # -- declared budgets ------------------------------------------------
+    def test_every_budget_kind_is_declared_in_the_config(self):
+        self.assertEqual(self.mod.check_declared_budgets(), [])
+
+    def test_a_kind_missing_from_the_config_is_reported(self):
+        with mock.patch.dict(self.mod._config.STYLE_POLICY, {'limits': {'sources': {}}}):
+            details = [f['detail'] for f in self.mod.check_declared_budgets()]
+        self.assertTrue(any('manuscript' in d for d in details))
+        self.assertFalse(any('sources' in d for d in details))
+
 if __name__ == '__main__':
     unittest.main()

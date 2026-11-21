@@ -355,7 +355,9 @@ if os.path.exists(index_path):
     # Count entries
     index_entries = [line.strip() for line in index_content.split('\n') if line.strip().startswith('- ')]
     entry_count = len(index_entries)
-    check(entry_count >= 120, f'Index: {entry_count} entries (target: >= 120)')
+    total_min = int(_config.THRESHOLDS.get('index_total_min', 120))
+    per_chapter_min = int(_config.THRESHOLDS.get('index_per_chapter_min', 5))
+    check(entry_count >= total_min, f'Index: {entry_count} entries (target: >= {total_min})')
 
     # Count per-chapter entries
     per_chapter = dict.fromkeys(range(1, 13), 0)
@@ -367,17 +369,18 @@ if os.path.exists(index_path):
             if 1 <= ch <= 12:
                 per_chapter[ch] += 1
 
-    # Check every chapter has >= 5 entries
+    # Check every chapter has enough entries
     low_chapters = []
     for ch, count in sorted(per_chapter.items()):
-        if count < 5:
+        if count < per_chapter_min:
             low_chapters.append(f'ch{ch}({count})')
             index_ok = False
 
     if low_chapters:
-        check(False, f'Index chapters below threshold: {", ".join(low_chapters)} (need >= 5)')
+        check(False, f'Index chapters below threshold: {", ".join(low_chapters)} '
+                     f'(need >= {per_chapter_min})')
     else:
-        check(True, 'All chapters have >= 5 index entries')
+        check(True, f'All chapters have >= {per_chapter_min} index entries')
 
     # Validate chapter references match real files
     chapter_files_map = {}
