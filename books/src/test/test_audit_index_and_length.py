@@ -165,11 +165,41 @@ class ContentVolumeBaselineTest(unittest.TestCase):
         with open(self.path, encoding='utf-8') as fh:
             return json.load(fh)
 
-    def run_main(self, *args: str) -> int:
+    def clean(self, **overrides) -> dict:
+        info = {'commit': 'abc1234', 'committed_at': '2026-06-30T10:00:00+08:00',
+                'author': 'reviewer', 'dirty': ''}
+        info.update(overrides)
+        return info
+
+    def run_main(self, *args: str, info: dict | None = None) -> int:
         with mock.patch.object(self.mod, 'BASELINE_PATH', self.path), \
+                mock.patch.object(self.mod, 'provenance', lambda: info or self.clean()), \
                 mock.patch('sys.stdout', new=io.StringIO()), \
                 mock.patch('sys.stderr', new=io.StringIO()):
             return self.mod.main(list(args))
+
+    def test_uncommitted_manuscript_is_refused(self):
+        self.write(self.book(100))
+        with mock.patch.object(self.mod, 'snapshot', lambda: self.book(120)):
+            code = self.run_main('--update-baseline',
+                                 info=self.clean(dirty=' M data/manuscript/ch1.md'))
+        self.assertEqual(code, 1)
+
+    def test_nobody_named_means_no_baseline(self):
+        self.write(self.book(100))
+        with mock.patch.object(self.mod, 'snapshot', lambda: self.book(120)):
+            code = self.run_main('--update-baseline', info=self.clean(author=''))
+        self.assertEqual(code, 1)
+
+    def test_the_recorded_baseline_names_its_review(self):
+        self.write(self.book(100))
+        with mock.patch.object(self.mod, 'snapshot', lambda: self.book(120)):
+            self.assertEqual(self.run_main('--update-baseline', '--reviewed-by', '阿龙',
+                                           '--reason', '定稿评审'), 0)
+        reviewed = self.read()['reviewed']
+        self.assertEqual(reviewed['by'], '阿龙')
+        self.assertEqual(reviewed['commit'], 'abc1234')
+        self.assertEqual(reviewed['reason'], '定稿评审')
 
     def test_a_smaller_manuscript_counts_as_a_shrink(self):
         drops = self.mod.shrunk(self.book(100), self.book(90))

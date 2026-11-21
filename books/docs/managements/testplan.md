@@ -102,7 +102,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 类型检查 | pyright 可用时检查工具链类型（缺失则跳过） | `typecheck.py` | P1 |
 | 门禁追溯 | make.py 的每个门禁都在 testplan 登记，反之亦然 | `gate_trace.py` | P0 |
 | 需求追溯 | `requirements.md` 的每条 FR/IR/NFR 在 §2.4 有且只有一条判据行，判据点名的载体在仓库里存在 | `requirement_trace.py` | P0 |
-| 内容体积 | 每个章节的字节数与行数不低于基线比例、手稿总量不缩水、交付页数与 EPUB 体积不低于基线比例（比例取值见配置）；新增文件允许，删除须同步 `book.toml` 并重设基线；重设基线不得降低下限，收缩须显式接受并记理由 | `content_volume.py`、`books/data/baselines/content-volume.json` | P0 |
+| 内容体积 | 每个章节的字节数与行数不低于基线比例、手稿总量不缩水、交付页数与 EPUB 体积不低于基线比例（比例取值见配置）；新增文件允许，删除须同步 `book.toml` 并重设基线；重设基线须稿子已提交、评审人具名、不得降低下限，收缩须显式接受并记理由 | `content_volume.py`、`books/data/baselines/content-volume.json` | P0 |
 | 文件长度 | 源码/测试/文档/手稿四档行数均不超过各自预算；四档预算须在配置里显式声明（不靠默认值）；手稿正文与附录同档 | `file_length.py` | P0 |
 | 脚本契约 | 每个入口脚本有模块说明、可执行入口、必要时说明退出码与 `--json` | `script_contract.py` | P0 |
 | 文档一致性 | 文档与配置的引用对象存在（路径、脚本、章节名、管理目录与索引/目录树、编号源）；同一事实只声明一次（章节键、门禁级别）；管理文档头部必须有一行 `> 定位：`；跨项目的内容标准只能指向 `style-guide.md`；引用的交付链路与脚本名前缀清单等于 `make.py` / `check_architecture.py` 里的声明 | `doc_drift.py` | P0 |

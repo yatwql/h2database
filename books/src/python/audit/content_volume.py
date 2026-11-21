@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -156,6 +157,34 @@ def compare(baseline: dict, current: dict) -> list[str]:
     return problems
 
 
+def _git(*args: str) -> str:
+    """Run a read-only git command in the book's repository ('' on failure)."""
+    try:
+        proc = subprocess.run(['git', *args], cwd=_config.BOOK_ROOT, check=False,
+                              capture_output=True, text=True, encoding='utf-8')
+    except OSError:
+        return ''
+    return proc.stdout.strip() if proc.returncode == 0 else ''
+
+
+def provenance() -> dict:
+    """What the reviewed baseline is being recorded against.
+
+    A baseline is a claim about one specific manuscript. If that manuscript only
+    exists in a working tree, the claim cannot be checked later, so the fields
+    here are what makes "reviewed" auditable: commit, author, time, and whether
+    the manuscript files were dirty at the moment of recording.
+    """
+    manuscript_rel = os.path.relpath(_config.MANUSCRIPT_DIR, _config.BOOK_ROOT)
+    dirty = _git('status', '--porcelain', '--', manuscript_rel)
+    return {
+        'commit': _git('rev-parse', '--short', 'HEAD'),
+        'committed_at': _git('log', '-1', '--format=%cI'),
+        'author': _git('config', 'user.name'),
+        'dirty': dirty,
+    }
+
+
 def shrunk(baseline: dict, current: dict) -> list[str]:
     """Metrics that would fall if ``current`` became the baseline.
 
@@ -182,8 +211,23 @@ def shrunk(baseline: dict, current: dict) -> list[str]:
 
 
 def update_baseline(current: dict, accept_shrink: bool = False,
-                    reason: str = '') -> int:
-    """Record ``current`` as the reviewed floor, refusing to lower it silently."""
+                    reason: str = '', reviewed_by: str = '') -> int:
+    """Record ``current`` as the reviewed floor, and say who reviewed what.
+
+    Three things must hold before a manuscript becomes the baseline: it is a
+    commit (not a working tree), it does not lower the previous floor, and a
+    reviewer is named. Anything else is a snapshot, not a judgement.
+    """
+    info = provenance()
+    if info['dirty']:
+        print('拒绝记账：data/manuscript 有未提交的改动。先提交手稿，再记基线——'
+              '基线必须指向一个可回溯的提交。', file=sys.stderr)
+        return 1
+    reviewer = reviewed_by or info['author']
+    if not reviewer:
+        print('拒绝记账：没有评审人。用 --reviewed-by "<名字>" 指定，或配置 git user.name。',
+              file=sys.stderr)
+        return 1
     previous = load_baseline()
     drops = shrunk(previous, current) if previous else []
     if drops and not accept_shrink:
@@ -196,6 +240,12 @@ def update_baseline(current: dict, accept_shrink: bool = False,
     if drops:
         current.setdefault('accepted_shrinks', []).append(
             {'reason': reason or '(未填写理由)', 'drops': drops})
+    current['reviewed'] = {
+        'by': reviewer,
+        'at': info['committed_at'],
+        'commit': info['commit'],
+        'reason': reason or '(未填写理由)',
+    }
     _fsutil.write_text(BASELINE_PATH,
                        json.dumps(current, ensure_ascii=False, indent=2) + '\n')
     total = current['manuscript']['total']
@@ -213,14 +263,17 @@ def main(argv: list[str] | None = None) -> int:
                         help='record the current volume as the reviewed baseline')
     parser.add_argument('--accept-shrink', action='store_true',
                         help='allow --update-baseline to lower the floor, recording why')
-    parser.add_argument('--reason', default='', help='why a shrink was accepted')
+    parser.add_argument('--reason', default='',
+                        help='why this manuscript is the reviewed floor (or why a shrink was accepted)')
+    parser.add_argument('--reviewed-by', default='',
+                        help='who reviewed it; defaults to git user.name')
     parser.add_argument('--baseline', default=None,
                         help='compare against this baseline file instead of the book one')
     args = parser.parse_args(argv)
 
     current = snapshot()
     if args.update_baseline:
-        return update_baseline(current, args.accept_shrink, args.reason)
+        return update_baseline(current, args.accept_shrink, args.reason, args.reviewed_by)
 
     baseline = load_baseline(args.baseline)
     if PROFILE == 'cold-start' and baseline:
