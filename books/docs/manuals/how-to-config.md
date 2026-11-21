@@ -68,6 +68,8 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 ```
 
 多语言时 `languages` 写多个，inventory 的包键会加语言前缀（`java:org.h2`、`python:pkg`）。
+`toolchain` 段里另有页面几何（`pdf_page_width`/`pdf_page_height`/`pdf_page_tolerance`），
+`verify_pdf.py` 按它判定 A4；换纸张尺寸改这里，不改代码。
 
 ## 3. 风格配置（style.json）
 
@@ -94,12 +96,14 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 | `sections` | `per_chapter`、`optional` | 必备段落（结构门禁按此检查）与允许的可选段落 |
 | `captions` | `leading_verbs`、`vague_trailing`、`presets.{strict,normal,loose}` | 图注动宾词表与阈值预设（min_chars < max_chars、fail_at ≥ 0） |
 | `diagrams` | `markers` | ASCII 图的框线/箭头字符集 |
-| `quality` | 章节行数、表格行数、重复度、坐标密度、术语与练习下限 | 图书质量门禁阈值 |
+| `clusters` | `min_figures`、`window_lines` | 图簇的张数下限与行距（`figure_clusters.py`、`structure.py` 共用） |
+| `quality` | 章节行数、表格行数、重复度、坐标密度、术语与练习下限、`min_figures_per_section`、`min_figure_coverage_pct` | 图书质量门禁阈值 |
 | `prose` | 句长/段落/列表/重复度的好与坏锚点、`min_composite`、`forbid_phrases` | 文风评分与禁用语 |
 | `generation` | 表格容量、练习数、清单条数 | 生成器的数值上限（文案见 `templates.toml`） |
 | `style_rules` | `terminology`（同义词组，检测混用）、`banned_link_text`、`heading`（尾标点/裸标签）、`cjk_latin_spacing`、`list_punctuation`、`max_paragraph_chars` | 术语一致性与排版规则（`style_rules.py`） |
 | `content_depth` | `glossary_min_uses`（高频类型须入术语表）、`glossary_ignore`（通用名白名单）、`excerpt_lines`（代码摘录比对行数） | 内容深度规则（`content_depth.py`） |
-| `limits` | `sources/tests/docs/manuscript` 的 `limit`/`warn` | 文件长度预算 |
+| `limits` | `sources/tests/docs/manuscript` 的 `limit`/`warn` | 文件长度预算（四档都要显式声明） |
+| `thresholds` | 练习、索引（总数与每章、主/子/see-also）、术语、每章跨章引用下限 | 内容完整性的下限；判据只写“不低于配置下限”，键名与取值归 `technical.md` §3.2 |
 
 改完运行 `python books/src/python/make.py check`：`style_schema.py` 会先校验结构
 （未知键、缺字段、区间不合理都会失败），再由各门禁按新阈值执行。

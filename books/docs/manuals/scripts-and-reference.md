@@ -158,7 +158,7 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `smart.py` | 图表覆盖与子章节密度 | ● |
 | `captions.py` | 图注动词开头、长度、含糊后缀（`--threshold`、`--fix`） | ● |
 | `figures.py` | 图号格式与正文引用（`--strict`） | ● |
-| `figure_clusters.py` | 图簇与桥接句 | ● |
+| `figure_clusters.py` | 图簇与桥接句（`--min`/`--window` 默认取 `style.json [clusters]`） | ● |
 | `balance.py` | 章间体量分布（行数/图数/坐标数） | ● |
 | `exercises.py` | 延伸思考的数量、难度、提示、锚点 | ● |
 | `index_xrefs.py` | 索引条目、see-also 解析、层级 | ● |
