@@ -26,6 +26,7 @@ manuscript to protect yet.
 from __future__ import annotations
 
 import argparse
+import glob
 import json
 import os
 import subprocess
@@ -192,9 +193,14 @@ def from_snapshot(label: str) -> dict | None:
     manuscript on disk is today's, so the numbers have to come from somewhere
     else, and that somewhere must be a recorded import (manifest + label).
     """
-    path = os.path.join(_config.BOOK_ROOT, 'data', 'baselines', f'snapshot-{label}.json')
+    folder = os.path.join(_config.BOOK_ROOT, 'data', 'baselines')
+    path = os.path.join(folder, f'snapshot-{label}.json')
     if not os.path.isfile(path):
-        return None
+        # the ledger is named after the dated snapshot dir; a bare label is fine
+        matches = sorted(glob.glob(os.path.join(folder, f'snapshot-*{label}.json')))
+        if len(matches) != 1:
+            return None
+        path = matches[0]
     payload = _fsutil.load_json(path)
     files = {name: {'bytes': stats['bytes'], 'lines': stats['lines']}
              for name, stats in (payload.get('files') or {}).items()}

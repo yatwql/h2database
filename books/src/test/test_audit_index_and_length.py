@@ -141,6 +141,30 @@ class FileLengthUnitTest(unittest.TestCase):
         self.assertFalse(any('sources' in d for d in details))
 
 
+class SnapshotLabelTest(unittest.TestCase):
+    """A snapshot answers to its bare label as well as its dated directory."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.mod = _fixture.load_module(BOOK_ROOT, 'snapshot')
+        self.snapshots = os.path.join(self.tmp.name, 'snapshots')
+        os.makedirs(os.path.join(self.snapshots, '2026-06-11-june-2026', 'manuscript'))
+        self.patch = mock.patch.object(self.mod, 'SNAPSHOT_ROOT', self.snapshots)
+        self.patch.start()
+        self.addCleanup(self.patch.stop)
+
+    def test_the_bare_label_resolves_to_the_dated_directory(self):
+        self.assertTrue(self.mod.resolve('june-2026').endswith('2026-06-11-june-2026'))
+
+    def test_the_dated_name_still_resolves(self):
+        self.assertTrue(self.mod.resolve('2026-06-11-june-2026'))
+
+    def test_an_unknown_label_is_reported_with_the_known_ones(self):
+        path, code = self.mod.require('missing')
+        self.assertEqual((path, code), ('', 2))
+
+
 class ContentVolumeBaselineTest(unittest.TestCase):
     """The reviewed floor only moves up unless a shrink is accepted by hand."""
 

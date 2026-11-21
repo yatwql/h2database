@@ -22,6 +22,7 @@ Exit codes: 0 ok, 1 verification failure, 2 bad usage or missing input.
 from __future__ import annotations
 
 import argparse
+import glob
 import hashlib
 import json
 import os
@@ -158,6 +159,32 @@ def list_snapshots() -> int:
     return 0
 
 
+def resolve(label: str) -> str | None:
+    """Directory of a snapshot by label or by label suffix.
+
+    ``import`` stores ``<date>-<label>``, so the same snapshot answers to both
+    "june-2026" and "2026-06-11-june-2026"; requiring one spelling in the CLI and
+    the other in the human's head is how a working snapshot looks missing.
+    """
+    direct = os.path.join(SNAPSHOT_ROOT, label)
+    if os.path.isdir(direct):
+        return direct
+    matches = sorted(p for p in glob.glob(os.path.join(SNAPSHOT_ROOT, f'*{label}'))
+                     if os.path.isdir(p))
+    return matches[0] if len(matches) == 1 else None
+
+
+def require(label: str) -> tuple[str, int]:
+    """(path, exit code) for a snapshot; non-zero when the label is ambiguous."""
+    path = resolve(label)
+    if path is not None:
+        return path, 0
+    known = ', '.join(sorted(os.path.basename(p) for p in
+                             glob.glob(os.path.join(SNAPSHOT_ROOT, '*')))) or '(none)'
+    print(f'error: no snapshot matches {label!r}; known: {known}', file=sys.stderr)
+    return '', 2
+
+
 def verify(label: str) -> int:
     target = os.path.join(SNAPSHOT_ROOT, label)
     manifest_path = os.path.join(target, 'manifest.json')
@@ -185,7 +212,10 @@ def verify(label: str) -> int:
 
 def baseline(label: str) -> int:
     """Volume baseline for the snapshot, for comparing an old draft to the current one."""
-    target = os.path.join(SNAPSHOT_ROOT, label, 'manuscript')
+    root, code = require(label)
+    if code:
+        return code
+    target = os.path.join(root, 'manuscript')
     if not os.path.isdir(target):
         print(f'error: no snapshot manuscript at {target}', file=sys.stderr)
         return 2

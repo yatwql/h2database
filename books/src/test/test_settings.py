@@ -37,7 +37,8 @@ class TestSettings(SettingsCase):
     def test_list_covers_known_keys(self):
         rows = {row['key'] for row in self.settings().list_settings()}
         self.assertEqual(rows, {'title', 'version', 'manuscript', 'dist',
-                                'languages', 'log.level', 'llm.provider'})
+                                'languages', 'log.level', 'llm.provider',
+                                'llm.daily_cost_limit', 'llm.ingest_prose'})
 
     def test_set_title_persists_to_toml(self):
         settings = self.settings()
@@ -54,6 +55,26 @@ class TestSettings(SettingsCase):
         self.assertEqual(settings.set_value('languages', 'java, python'), 'java,python')
         payload = json.loads(self.read('data/config/base.json'))
         self.assertEqual(payload['sources']['languages'], ['java', 'python'])
+
+    def test_set_ingest_prose_writes_a_toml_boolean(self):
+        settings = self.settings()
+        self.assertEqual(settings.set_value('llm.ingest_prose', 'true'), 'true')
+        with open(os.path.join(self.root, 'data', 'tmpl', 'book.toml'),
+                  encoding='utf-8') as fh:
+            body = fh.read()
+        self.assertIn('ingest_prose = true', body)
+        self.assertEqual(settings.get('llm.ingest_prose'), 'true')
+
+    def test_a_bad_boolean_is_refused(self):
+        with self.assertRaises(ValueError):
+            self.settings().set_value('llm.ingest_prose', 'maybe')
+
+    def test_the_daily_cost_limit_is_writable_and_non_negative(self):
+        settings = self.settings()
+        self.assertEqual(settings.set_value('llm.daily_cost_limit', '3'), '3.0')
+        self.assertEqual(settings.get('llm.daily_cost_limit'), '3.0')
+        with self.assertRaises(ValueError):
+            settings.set_value('llm.daily_cost_limit', '-1')
 
     def test_set_log_level_validates(self):
         settings = self.settings()

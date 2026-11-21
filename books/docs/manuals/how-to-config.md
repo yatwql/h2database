@@ -103,6 +103,7 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 | `style_rules` | `terminology`（同义词组，检测混用）、`banned_link_text`、`heading`（尾标点/裸标签）、`cjk_latin_spacing`、`list_punctuation`、`max_paragraph_chars` | 术语一致性与排版规则（`style_rules.py`） |
 | `content_depth` | `glossary_min_uses`（高频类型须入术语表）、`glossary_ignore`（通用名白名单）、`excerpt_lines`（代码摘录比对行数） | 内容深度规则（`content_depth.py`） |
 | `limits` | `sources/tests/docs/manuscript` 的 `limit`/`warn` | 文件长度预算（四档都要显式声明） |
+| 可写配置项 | `bookctl settings` / TUI「配置项」逐项列出：书名、版本、手稿/产物目录、语言、日志级别、默认 provider、`llm.daily_cost_limit`、`llm.ingest_prose` | 改完立即写回并重载 |
 | `thresholds` | 练习、索引（总数与每章、主/子/see-also）、术语、每章跨章引用下限 | 内容完整性的下限；判据只写“不低于配置下限”，键名与取值归 `technical.md` §3.2 |
 
 改完运行 `python books/src/python/make.py check`：`style_schema.py` 会先校验结构
@@ -170,7 +171,7 @@ provider 不可用时自动回退到确定性文本并在 stderr 打一行警告
 
 `kind` 决定协议：`anthropic` 走 Messages 接口（`POST /v1/messages`、`x-api-key`
 鉴权），`openai-compatible` 走 `chat/completions`（`Authorization: Bearer`）。
-仓库默认只配置真实 provider：`deepseek-main`（默认）与 `opencode-go`（`review`
+仓库默认只配置真实 provider：`opencode-go`（`default_provider`）与 `deepseek-main`（`review`
 场景）；`mock` 仍由代码支持，需要完全离线时临时加一个 `{"kind": "mock"}` 条目即可。
 
 密钥不写进仓库：环境变量（`api_key_env`）优先，其次 `data/config/llm_key.json`

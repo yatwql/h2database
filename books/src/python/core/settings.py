@@ -23,6 +23,7 @@ from lib import _config, _fsutil
 BOOK_TOML = os.path.join(_config.BOOK_ROOT, 'data', 'tmpl', 'book.toml')
 BASE_JSON = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'base.json')
 LLM_PROVIDER_JSON = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'llm_provider.json')
+LLM_SETTINGS_JSON = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'llm_settings.json')
 
 LEVELS = ('DEBUG', 'INFO', 'WARNING', 'ERROR')
 
@@ -35,6 +36,10 @@ SPEC: dict[str, tuple[str, str, str, str, str]] = {
     'languages': (BASE_JSON, 'sources', 'languages', 'list', '源码语言'),
     'log.level': (BASE_JSON, 'logging', 'level', 'level', '日志级别'),
     'llm.provider': (LLM_PROVIDER_JSON, '', 'default_provider', 'str', '默认 LLM provider'),
+    'llm.daily_cost_limit': (LLM_SETTINGS_JSON, '', 'daily_cost_limit', 'number',
+                             'LLM 每日费用上限（0 = 不限，达到即提醒）'),
+    'llm.ingest_prose': (BOOK_TOML, 'llm', 'ingest_prose', 'bool',
+                         'ingest 的导读/小结是否用 LLM 起草'),
 }
 
 
@@ -90,6 +95,25 @@ def _write_toml_value(path: str, section: str, field: str, value: str) -> None:
     _fsutil.write_text(path, '\n'.join(lines))
 
 
+def _write_toml_literal(path: str, section: str, field: str, literal: str) -> None:
+    """Replace ``[section].field`` with a bare TOML literal (true/false/number)."""
+    text = _fsutil.read_text(path)
+    lines = text.split('\n')
+    current = ''
+    for index, line in enumerate(lines):
+        header = re.match(r'^\s*\[([^\]]+)\]\s*$', line)
+        if header:
+            current = header.group(1).strip()
+            continue
+        if current == section and re.match(rf'^\s*{re.escape(field)}\s*=', line):
+            lines[index] = f'{field} = {literal}'
+            _fsutil.write_text(path, '\n'.join(lines))
+            return
+    # a book that predates the key gets it added, rather than a dead end
+    body = '\n'.join(lines).rstrip('\n')
+    _fsutil.write_text(path, f'{body}\n\n[{section}]\n{field} = {literal}\n')
+
+
 def _read_json(path: str) -> dict:
     try:
         return json.loads(_fsutil.read_text(path))
@@ -129,6 +153,19 @@ def get(key: str) -> str:
 
 def _validate(key: str, value: str) -> object:
     kind = SPEC[key][3]
+    if kind == 'bool':
+        text = value.strip().lower()
+        if text not in ('true', 'false', 'yes', 'no', '1', '0', 'on', 'off'):
+            raise ValueError(f'{key} must be a boolean (true/false)')
+        return text in ('true', 'yes', '1', 'on')
+    if kind == 'number':
+        try:
+            number = float(value)
+        except ValueError as exc:
+            raise ValueError(f'{key} must be a number') from exc
+        if number < 0:
+            raise ValueError(f'{key} must not be negative')
+        return number
     if kind == 'level':
         upper = value.strip().upper()
         if upper not in LEVELS:
@@ -149,7 +186,11 @@ def set_value(key: str, value: str) -> str:
     if key not in SPEC:
         raise KeyError(key)
     stored = _validate(key, value)
-    path, section, field, _kind, _description = SPEC[key]
+    path, section, field, kind, _description = SPEC[key]
+    if kind == 'bool':
+        _write_toml_literal(path, section, field, 'true' if stored else 'false')
+        _reload()
+        return 'true' if stored else 'false'
     if path.endswith('.json'):
         payload = _read_json(path)
         target = payload.setdefault(section, {}) if section else payload
