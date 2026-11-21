@@ -211,7 +211,8 @@ report` / `eval-score.sh`）、`balance` 的计量输出（`--json`），以及�
 
 ## 3. 格式规范
 
-- 图注格式：`**图 X-Y: Title**`，独立成行，不放入代码围栏。
+- 图注：体例与图号规则归 `style-guide.md` §14，本文不复述；门禁按该体例判定
+  （`structure.py` 判图号唯一连续，`captions.py` 判图注词表与长度）。
 - ASCII 图围栏：使用 ` ```text `。
 - Java 代码围栏：使用 ` ```java `；SQL 使用 ` ```sql `。
 - 源码路径：使用 `org/h2/...`，不使用 `h2/src/main/...` 前缀。

@@ -60,9 +60,13 @@
 #### `plan-6` 图示升级（ASCII → 结构化图）
 
 **现状**：关键流程用 ASCII 图表达，宽度受 `ascii_max_cols` 约束，复杂流程难画全。
-**动作**：先挑 2–3 张最复杂的流程图改为结构化图，验证渲染链与 PDF 字体嵌入后铺开。
-**验收**：换图后 `diagrams.py`、`figures.py`、`verify_pdf.py` 均绿；图号引用不变。
-**事实位**：图注与图号规则见 `style-guide.md` §14 与 `testplan.md` §3。
+**动作**：按 `docs/plan/diagram-upgrade/plan.md` 分阶段推进（门禁判据先行 → HTML → PDF → EPUB → 试点），
+先挑 2 张最拥挤的流程图改为 SVG，验证三个出口与既有门禁后再决定是否铺开。
+**验收**：换图后 `diagrams.py`、`figures.py`、`verify_pdf.py`、`verify_epub.py` 均绿且
+每条新判据都有能红的用例；图号引用不变；`make.py check` 与 `deliver` 全绿。
+**事实位**：设计与计划在 `docs/plan/diagram-upgrade/design.md` 与 `docs/plan/diagram-upgrade/plan.md`；
+图注体例与图号规则在 `style-guide.md` §14，图号唯一与连续由 `audit/structure.py` 判定、
+图注词表与长度由 `audit/captions.py` 判定。
 
 ### P4 — 先决门槛未过，暂缓
 

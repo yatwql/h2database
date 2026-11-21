@@ -64,6 +64,7 @@ books/
   docs/
     managements/             # 全部管理与规范文档（见 §2）
     manuals/                 # 使用手册（scripts-and-reference.md：全部脚本清单）
+    plan/                    # 单项迭代的设计与计划（<主题>/design.md 与 <主题>/plan.md，见 §2）
 ```
 
 ## 2. 管理文档
@@ -107,6 +108,14 @@ books/docs/managements/
 - **工具链只在 `src/python/`**：正式交付脚本；临时脚本不得入库。
 - **测试只在 `src/test/`**：`make.py test` 跑全部；`make.py cover` 带覆盖率棘轮。
 - **管理文档只在 `docs/managements/`**：需求、计划、测试、变更各一份，互不重复。
+- **单项迭代的设计与计划只在 `docs/plan/<主题>/`**：一个主题一个目录，里面放
+  `design.md`（迭代设计）与 `plan.md`（实施计划），可附 `README.md`。目录名与文件名
+  一律用小写连字符的语义名（如 `diagram-upgrade/`），**不得把 `plan-N`、`rf-N` 等编号
+  写进目录名或文件名**——编号属于 `docs/managements/plan.md` 的计划项与
+  `review-findings.md` 的问题项，是追踪键，不是文件名。两条入口都适用：`plan.md` 新开
+  一项需要详设时放这里，`review-findings.md` 里某项需要专文时也放这里。
+  `doc_drift.py` 的 `PLANNAME` 检查搂住这条规则（目录必须含 `plan.md`、只允许
+  `design.md`/`plan.md`/`README.md`、不得含编号）。
 
 ## 4. 常用入口
 
