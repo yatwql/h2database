@@ -4,7 +4,7 @@
 > 版本：v0.1
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
-> **编号源**：`rf-next = 19`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-18，
+> **编号源**：`rf-next = 20`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-19，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -88,6 +88,7 @@
 | rf-16 | 代码/配置遗留的硬编码：`smart.py` 内联「2 图」「95%」、`figure_clusters.py` 默认窗口 50 而 `structure.py` 传 40（两道门禁实际在查不同窗口，文档写 40）；`verify_pdf.py` 内联 A4 595×842±2；`_config` 与三个渲染脚本的 docstring 写死第一本书的名字 | **修订**：图簇与图表阈值进 `style.json [clusters]`/`[quality]`，A4 几何进 `base.json [toolchain]`，`structure.py` 与门禁共用同一取值；书名改由 `book.toml` 提供（兜底 `book`）；`check_architecture` 新增书名字面量检查 |
 | rf-17 | 文档与代码对照时发现 `scripts/bookctl` 的帮助注释写 `bookctl llm`，而 CLI 只接受 `llm-ask`——手册写的是对的，包装脚本的头注释是唯一错处，属“没人重跑过”的注释漂移 | **修订**：注释改为 `llm-ask`；`script_contract.py` 新增 `check_dispatcher_help`，把包装脚本帮助里点名的动作与 `core/actions.py` 的 ACTIONS 表对齐，写错即失败（含 3 个用例） |
 | rf-18 | TUI 只有一层平铺菜单（九个按键全在主界面），配置只能在命令行上改，`0` 与 `q` 一样直接退出，LLM provider 的回退顺序只能手改 JSON；另发现 Web 控制台在动作抛异常时直接断开连接（顺序依赖用例即因此红） | **修订**：菜单改为主菜单 / 类目两级（`core/menu.py::SCREENS`），二级目录一律 `0` 返回、主菜单 `0` 退出，新增「配置项」与「LLM provider 优先级」两屏（`settings.provider_order` / `move_provider` 写回 `priority`）；Web 的 `do_POST` 捕获异常并以 `code: 1` 回报，不再断连接 |
+| rf-19 | rf-18 的分级把高频的内容流水线也收进了二级：每天要按的 `analyze`/`build`/`deliver` 变成两步 | **修订**：主菜单直接放 `1 analyze`/`l analyze-llm`/`2 build`/`3 deliver`，只把质量与配置留作二级（`4`/`5`）；默认光标回到 `2 build`；DESIGN-TUI §3.1 写明唯一分级标准——每天按的放第一级，偶尔打开的分组才进二级 |
 
 ### 归档
 

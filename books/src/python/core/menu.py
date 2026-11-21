@@ -29,15 +29,13 @@ PROVIDERS_SCREEN = 'providers'
 
 # screen -> [(key, action, label)]; `@open:<screen>` and `@back` are navigation
 SCREENS: dict[str, list[tuple[str, str, str]]] = {
-    'main': [('1', OPEN_PREFIX + 'content', '内容：源码 → 手稿 → 产物'),
-             ('2', OPEN_PREFIX + 'quality', '质量：门禁与测试'),
-             ('3', OPEN_PREFIX + 'config', '配置：状态、配置项与 LLM'),
+    'main': [('1', 'analyze', '源码 → 手稿'),
+             ('l', 'analyze-llm', '源码 → 手稿（LLM 润色导读/小结）'),
+             ('2', 'build', '手稿 → Markdown + HTML'),
+             ('3', 'deliver', 'PDF + EPUB（按需）'),
+             ('4', OPEN_PREFIX + 'quality', '质量：门禁与测试'),
+             ('5', OPEN_PREFIX + 'config', '配置：状态、配置项与 LLM'),
              (BACK_KEY, QUIT_ACTION, '退出')],
-    'content': [('1', 'analyze', '源码 → 手稿'),
-                ('l', 'analyze-llm', '源码 → 手稿（LLM 润色导读/小结）'),
-                ('2', 'build', '手稿 → Markdown + HTML'),
-                ('3', 'deliver', 'PDF + EPUB（按需）'),
-                (BACK_KEY, BACK_ACTION, '返回主菜单')],
     'quality': [('1', 'check', '全部质量门禁'),
                 ('2', 'test', '测试套件（快档）'),
                 (BACK_KEY, BACK_ACTION, '返回主菜单')],
@@ -52,12 +50,11 @@ SCREENS: dict[str, list[tuple[str, str, str]]] = {
 # screens whose rows come from live data instead of SCREENS
 DYNAMIC_SCREENS = (SETTINGS_SCREEN, PROVIDERS_SCREEN)
 
-PARENT: dict[str, str] = dict.fromkeys(('content', 'quality', 'config'), 'main')
+PARENT: dict[str, str] = dict.fromkeys(('quality', 'config'), 'main')
 PARENT.update({SETTINGS_SCREEN: 'config', PROVIDERS_SCREEN: 'config'})
 
 TITLES: dict[str, str] = {
     'main': '主菜单',
-    'content': '内容',
     'quality': '质量',
     'config': '配置与状态',
     SETTINGS_SCREEN: '配置项',
@@ -71,7 +68,7 @@ LLM_ACTIONS = frozenset({'analyze-llm', 'llm-ask'})
 CONFIRM_ACTIONS = frozenset({'deliver'})
 
 # Where the cursor starts on each screen: the everyday next step, not ingest.
-DEFAULT_ENTRY_KEY = {'main': '1', 'content': '2', 'quality': '1', 'config': '1'}
+DEFAULT_ENTRY_KEY = {'main': '2', 'quality': '1', 'config': '1'}
 
 TAIL_LINES = 15
 

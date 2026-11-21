@@ -48,25 +48,30 @@ class TuiInteractionTest(unittest.TestCase):
         return code, buffer.getvalue()
 
     # -- two-level structure ---------------------------------------------
-    def test_the_main_screen_offers_three_categories_and_exit(self):
+    def test_the_main_screen_carries_the_frequent_actions(self):
         keys = [row[0] for row in self.tui.screen_rows('main')]
-        self.assertEqual(keys, ['1', '2', '3', '0'])
+        self.assertEqual(keys, ['1', 'l', '2', '3', '4', '5', '0'])
 
-    def test_enter_on_the_main_screen_opens_a_category_without_running(self):
+    def test_the_main_screen_runs_actions_without_a_category(self):
+        actions = [row[1] for row in self.tui.screen_rows('main')]
+        self.assertIn('build', actions)
+        self.assertIn('deliver', actions)
+
+    def test_enter_on_the_main_screen_runs_the_everyday_action(self):
         code, out = self.press(self.keys.KEY_ENTER, 'q')
         self.assertEqual(code, 0)
-        self.assertEqual(self.calls, [])
-        self.assertIn('内容', out)
+        self.assertEqual(self.calls, ['build'])
+        self.assertIn('主菜单', out)
 
     def test_a_category_screen_carries_a_back_row(self):
-        for screen in ('content', 'quality', 'config'):
+        for screen in ('quality', 'config'):
             with self.subTest(screen=screen):
                 keys = [row[0] for row in self.tui.screen_rows(screen)]
                 self.assertEqual(keys[-1], '0')
                 self.assertEqual(self.tui.screen_rows(screen)[-1][1], self.menu.BACK_ACTION)
 
     def test_zero_returns_to_the_previous_level_without_quitting(self):
-        code, out = self.press('1', '0', 'q')
+        code, out = self.press('4', '0', 'q')
         self.assertEqual(code, 0)
         self.assertEqual(self.calls, [])
         self.assertIn('主菜单', out)
@@ -77,37 +82,37 @@ class TuiInteractionTest(unittest.TestCase):
         self.assertEqual(self.calls, [])
 
     def test_escape_at_a_sub_level_goes_back_and_at_main_quits(self):
-        code, out = self.press('2', self.keys.KEY_ESC, 'q')
+        code, out = self.press('5', self.keys.KEY_ESC, 'q')
         self.assertEqual(code, 0)
         self.assertIn('主菜单', out)
 
     def test_q_quits_from_a_sub_level(self):
-        code, _out = self.press('1', 'q')
+        code, _out = self.press('4', 'q')
         self.assertEqual(code, 0)
 
     def test_the_cursor_starts_on_the_everyday_action(self):
-        self.assertEqual(self.menu.default_cursor('content'),
-                         self.menu.index_of('content', '2'))
+        self.assertEqual(self.menu.default_cursor('main'),
+                         self.menu.index_of('main', '2'))
 
-    def test_enter_in_a_category_runs_its_default_entry(self):
-        code, out = self.press('1', self.keys.KEY_ENTER, 'q')
+    def test_enter_inside_a_category_runs_its_default_entry(self):
+        code, out = self.press('4', self.keys.KEY_ENTER, 'q')
         self.assertEqual(code, 0)
-        self.assertEqual(self.calls, ['build'])
-        self.assertIn('正在执行 手稿 → Markdown + HTML', out)
+        self.assertEqual(self.calls, ['check'])
+        self.assertIn('正在执行 全部质量门禁', out)
 
     def test_digit_key_runs_immediately_without_enter(self):
-        self.press('2', '1')
+        self.press('4', '1')
         self.assertEqual(self.calls, ['check'])
 
     def test_l_shortcut_runs_the_llm_ingest(self):
         for pressed in ('l', 'L'):
             with self.subTest(key=pressed):
                 self.calls.clear()
-                self.press('1', pressed)
+                self.press(pressed)
                 self.assertEqual(self.calls, ['analyze-llm'])
 
     def test_arrows_move_within_a_screen_and_wrap(self):
-        self.press('1', self.keys.KEY_UP, self.keys.KEY_ENTER)
+        self.press(self.keys.KEY_UP, self.keys.KEY_ENTER)
         self.assertEqual(self.calls, ['analyze-llm'])
 
     # -- settings and provider priority -----------------------------------
@@ -152,14 +157,14 @@ class TuiInteractionTest(unittest.TestCase):
 
     # -- reporting --------------------------------------------------------
     def test_each_run_reports_timing_exit_code_and_output_tail(self):
-        _code, out = self.press('2', '1')
+        _code, out = self.press('4', '1')
         self.assertIn('输出-check-第二行', out)
         self.assertIn('退出码 0', out)
         self.assertIn('用时', out)
         self.assertIn('✓ 完成', out)
 
     def test_llm_entries_carry_a_badge_in_the_menu(self):
-        text = self.tui.menu_text('content')
+        text = self.tui.menu_text('main')
         llm_rows = [line for line in text.splitlines() if 'LLM' in line]
         self.assertTrue(llm_rows)
 
@@ -174,13 +179,13 @@ class TuiInteractionTest(unittest.TestCase):
         self.assertIn('无效按键', out)
 
     def test_deliver_asks_before_rebuilding(self):
-        self.press('1', '3', answers=['n'])
+        self.press('3', answers=['n'])
         self.assertEqual(self.calls, [])
-        _code, out = self.press('1', '3', answers=['n'])
+        _code, out = self.press('3', answers=['n'])
         self.assertIn('已取消', out)
 
     def test_deliver_runs_when_confirmed(self):
-        self.press('1', '3', answers=['y'])
+        self.press('3', answers=['y'])
         self.assertEqual(self.calls, ['deliver'])
 
 if __name__ == '__main__':
