@@ -314,9 +314,18 @@ def pricing() -> dict:
 
 
 def price_of(model: str) -> dict:
-    """Price entry for one model, empty when unpriced."""
-    table = pricing()
-    return ((table.get('models') or {}).get(model) or {})
+    """Price entry for one model, empty when unpriced.
+
+    Exact names win; a key ending in ``-`` is a prefix rule for dated variants
+    (``claude-sonnet-5-`` covers ``claude-sonnet-5-5-20260928``), longest first.
+    """
+    models = (pricing().get('models') or {})
+    if model in models:
+        return models[model] or {}
+    candidates = sorted((key for key in models
+                         if key.endswith('-') and model.startswith(key)),
+                        key=len, reverse=True)
+    return (models[candidates[0]] or {}) if candidates else {}
 
 
 def cost_of(model: str, prompt_tokens: int, completion_tokens: int) -> float | None:

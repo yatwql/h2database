@@ -58,6 +58,21 @@ class PricingAndUsageTest(unittest.TestCase):
         self.assertIn('3.0000', line)
         self.assertGreater(today, 0)
 
+    def test_a_dated_model_name_falls_back_to_its_prefix_rule(self):
+        table = {'display_currency': 'CNY', 'models': {
+            'claude-sonnet-5-': {'input_per_mtok': 2.0, 'output_per_mtok': 10.0,
+                                 'currency': 'USD'}}}
+        with mock.patch.object(self.llm, 'pricing', lambda: table):
+            entry = self.llm.price_of('claude-sonnet-5-5-20260928')
+        self.assertEqual(entry['output_per_mtok'], 10.0)
+
+    def test_an_exact_name_beats_the_prefix_rule(self):
+        table = {'display_currency': 'CNY', 'models': {
+            'claude-sonnet-5-': {'input_per_mtok': 9.0, 'output_per_mtok': 9.0},
+            'claude-sonnet-5-5': {'input_per_mtok': 2.0, 'output_per_mtok': 10.0}}}
+        with mock.patch.object(self.llm, 'pricing', lambda: table):
+            self.assertEqual(self.llm.price_of('claude-sonnet-5-5')['input_per_mtok'], 2.0)
+
     def test_costs_display_in_cny_by_default(self):
         table = {'display_currency': 'CNY', 'fx': {'CNY': 1.0, 'USD': 7.1},
                  'currency': 'USD',
