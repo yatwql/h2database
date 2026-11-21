@@ -34,7 +34,7 @@ alias），与 §2.1 的**门禁级别**是两个轴：档位决定跑多少，�
 
 | 档 | 触发 | 内容 | 本地命令 |
 | --- | --- | --- | --- |
-| fast | 每次提交 / PR（`pre-commit` 钩子） | ruff + 结构门禁 + 单元套件（约 16s） | `scripts/check-fast.sh` |
+| fast | 每次提交 / PR（`pre-commit` 钩子） | ruff + 结构门禁 + 单元套件（秒级） | `scripts/check-fast.sh` |
 | full | 合入 master / 发布前（`pre-push` 钩子） | 全部门禁（`make.py check --keep-going`） | `scripts/check-full.sh` |
 | release | 打版本标签 | full + 慢档（chromium/pandoc）+ 顺序依赖探测 + `make.py deliver` 出产物 | `scripts/check-release.sh` |
 
@@ -73,14 +73,13 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 图表覆盖 | 内容型 `###` 小节 ≥ 2 图；模板型小节 ≥ 1 图 | `smart.py` | P0 |
 | 代码围栏与合并稿 | 所有围栏成对；源文件总行数与合并稿一致；合并顺序与前后件齐备 | `structure.py`（code fence balance）、`render/merge.py` | P0 |
 | 跨章引用 | 章节互引 ≥ 1，且 `详见第X章《…》` 与真实 H1 一致 | `structure.py`（cross-references）、`crossrefs.py` | P0 |
-| HTML 目录与渲染钩子 | TOC 与内容标题 1:1、零断链；`to_html.py` 含 9 项关键 CSS 标记；锚点与侧边栏/印刷目录齐备 | `structure.py`（HTML TOC / CSS style checks）、`render/to_html.py` | P0 |
+| HTML 目录与渲染钩子 | TOC 与内容标题 1:1、零断链；标题锚点与侧边栏/印刷目录齐备；样式与锚点钩子齐备（清单见 `technical.md` §4.4） | `structure.py`（HTML TOC / style hooks）、`render/to_html.py` | P0 |
 | 编码 | 合并稿与 HTML 均为有效 UTF-8 | `structure.py`（UTF-8 encoding） | P0 |
 | 链接与锚点 | 所有相对链接指向存在的文件；`#anchor` 命中真实标题；代码围栏内不检查 | `links.py` | P0 |
 | 配置结构 | `book.toml` 各章节键都在阅读顺序里、列出的章节都存在且无重复；`style.json` 只含已知顶层键、阈值区间合理 | `doc_drift.py`（CONFIG）、`style_schema.py`、`test_config` 用例 | P0 |
 | 构建幂等 | 连续两次 `make.py build` 的 HTML 哈希一致 | `.github/workflows/book.yml` | P0 |
 | 索引完整性 | 索引条目总数、每章条数、主条目/子条目/see-also 各自有下限（取值见配置）；条目与 see-also 全部可解析；子条目章节 ∈ 1-12 | `structure.py`、`index_xrefs.py` | P1 |
 | 术语完整性 | 术语条数达下限（取值见配置）；每条有对应章节引用；引用章节号 ∈ 1-12 | `structure.py`（glossary content） | P1 |
-| 工具脚本可用性 | 术语表与索引生成脚本语法有效 | `structure.py`（builder checks） | P1 |
 | 图注动宾结构 | 全书图注以批准动词起首；长度 ∈ [8, 30] 字；无模糊后缀；strict 阈值下违规 = 0 | `captions.py --threshold strict` | P2 |
 | 图簇桥接 | 3+ 张图在 ≤ 40 行内连续出现的"图簇"，前置一句桥接叙事点名所有图 | `figure_clusters.py`（`--window 40 --needs-bridge`，应输出空清单） | P2 |
 | 延伸思考 | 12 章全部含 `## N.X 延伸思考`；每章与全书的题量达下限（取值见配置）；每题含难度/题型 emoji + 提示行 + 含锚点的回顾行 | `structure.py`、`exercises.py` | P2 |
@@ -219,20 +218,14 @@ report` / `eval-score.sh`）、`balance` 的计量输出（`--json`），以及�
 - 源码引用：使用 `ClassName.java:行号`，但不得放入章节标题或 PDF Outline 标题。
 - 跨章引用：使用 `详见第X章《实际 H1 标题》`。
 
-## 4. 交付形态专项门禁
+## 4. 交付形态专项验收
 
-本节列出"非日常"的可选交付形态门禁。所有这些产出都不在日常流水线内生成；按需在交付的最后阶段单独运行。
+日常交付只跑 §1 的命令；本节列出"非日常"形态的验收项与按需命令。版式与实现细节不在本文：
+成书排版规格见 `style-guide.md` §6，渲染实现见 `technical.md` §4.4。
 
-### 4.1 标准 PDF（日常交付）
+### 4.1 标准 PDF
 
-正式 PDF 交付必须满足：
-
-- PDF 文件重新生成自当前 HTML。
-- PDF Document Outline 与 HTML 标题一致。
-- 正文前目录条目可点击并指向有效页面。
-- Outline 标题不得包含"代码片段"、源码文件名、源码位置或行号范围。
-
-验证命令为：
+判据同 §2.2「PDF 渲染与 TOC 链接注入」「PDF 交付」（P1）。本节只给按需重跑的顺序：
 
 ```bash
 python books/src/python/render/to_pdf.py
@@ -240,66 +233,41 @@ python books/src/python/render/pdf_toc_links.py
 python books/src/python/render/verify_pdf.py
 ```
 
-### 4.2 印刷级 PDF（可选交付）
+### 4.2 印刷级 PDF（按需）
 
-印刷级 PDF 是日常 PDF 的并行产出，用于实体印刷或正式归档场景。要求：
-
-- 印刷级 PDF 与日常 PDF 文件分离（`h2-source-code-analysis.pdf` 与 `h2-source-code-analysis-print.pdf`），互不覆盖
-- 每章 H1 在印刷级 PDF 上独占一页（chapter cover），含装饰性渐变条与底分隔线
-- 目录页每条 TOC 条目以"标题 ………… 页码"虚线对齐渲染
-- 页眉居中含配置给出的页眉标识（`book.toml [project].running_head`），页脚居中含"第 N 页 / 共 M 页"
-- 所有 H1-H4 在 PDF Outline 中可点击跳转
-- 印刷级 PDF 文件大小 ≤ 标准 PDF 1.5 倍
-
-验证命令：
+- 与日常 PDF 文件分离、互不覆盖（`-print` 后缀）
+- 每个 H1 独占一页；目录、页眉页脚按 `style-guide.md` §6 的成书排版规则渲染
+- H1–H4 在 PDF Outline 中可点击跳转
+- 版式与体积没有自动门禁，交付前人工核对；该工具不在 `make.py` 的步骤表里
 
 ```bash
 python books/src/python/render/print_pdf.py
 ```
 
-印刷级 PDF 由独立工具生成：它不在 `make.py` 的步骤表里，而在 `deliver` 之后按需单独调用。
+人工验收：在 Chrome / Adobe Reader 里看章首页、目录对齐、页眉页脚是否一致。
 
-视觉验证：在 Chrome / Adobe Reader 中检查 (a) 章首装饰条 (b) TOC 虚线对齐 (c) 页眉/页脚一致出现。
+### 4.3 EPUB（按需）
 
-### 4.3 EPUB（可选交付）
-
-EPUB 是面向电子阅读器（Apple Books / Kindle / Calibre / Readium 等）的可选交付形态，**只在交付的最后阶段按需输出**，不进入日常流水线。要求：
-
-- EPUB 由 pandoc 从合并后的 `h2-source-code-analysis.md` 生成；运行前先调用 `merge.py` 保证源最新
-- 输出路径：`books/dist/h2-source-code-analysis.epub`（与日常 PDF / 印刷级 PDF 互相独立）
-- 元数据：`<dc:title>` / `<dc:creator>` / `<dc:date>` / `<dc:language>=zh-CN` 由 cover.md 自动提取（标题 / 副标题 / 版本 / 作者 / 出版日期）
-- 每个 H1 章节在 EPUB 内部独立分卷（`--split-level=1`），便于阅读器分章导航
-- 目录深度 H1-H3（`--toc --toc-depth=3`），与 HTML 侧边栏 TOC 层级一致
-- 内嵌精简 CSS：等宽字体代码块 + 蓝色左竖条 + 表头蓝底白字 + 引用块浅蓝背景
-- 文件大小：合理 EPUB 通常在 2-5 MB 范围；超过 10 MB 视为异常需人工排查
-
-依赖：[pandoc](https://pandoc.org/)（不是日常依赖；只在出 EPUB 时需要）
-
-验证命令：
+- 由 pandoc 从合并稿生成（依赖不进日常链路），输出 `dist/<book>.epub`
+- 元数据（标题/作者/日期/语言）来自封面，由渲染层回填
+- 判据同 §2.2「EPUB 结构」（P1，`verify_epub.py`）：容器与清单可解析、阅读顺序与导航可达、
+  元数据齐备、体积不超预算；分卷与目录深度的取值见 `technical.md` §4.4
 
 ```bash
 python books/src/python/render/to_epub.py
 ```
 
-视觉验证：在 Apple Books / Calibre / Readium 中至少查看一章正文 + 一个代码块 + 一张 ASCII 图 + 目录导航是否正常。
-
-EPUB 的自动校验由 `verify_epub.py` 承担（§2.2「EPUB 结构」，P1），`structure.py` 不参与；
-样式或模板变更时仍建议按上面的清单人工看一遍。
+人工验收：在 Apple Books / Calibre 里看一章正文、一个代码块、一张 ASCII 图、目录导航。
 
 ## 5. 拒绝标准
 
-以下任一情况不得交付：
+判据以 §2.2 为准：表中任一 P0/P1 项未通过即不得交付，本文不再另列一份。额外两条流程性拒绝：
 
-- 标准验证流程失败。
-- 缺失核心章节、核心流程或核心算法。
-- HTML TOC 存在断链或标题数量不一致。
-- 代码围栏不平衡或导致正文大段进入代码块。
-- 图注格式、源码路径格式或跨章引用出现系统性不一致。
-- PDF 交付时未通过 PDF 三步验证。
+- 缺失核心章节、核心流程或核心算法（规模判断，不是形式判据）。
 - 管理文档之间存在版本、路径、流程或职责冲突。
 
 ## 6. 维护周期
 
-- 每次文档变更后运行标准流程。
-- 每次正式归档或发布前运行 PDF 验证。
-- 新发现的已知问题登记到 `data/baselines/`，经评审后固化；版本级变更才写 `changelog.md`。
+本文只在判据变化时更新：新增一道门禁补一行（§2.2）、改级别改一处（§2.1）、新增需求补 §2.4
+一行。日常与发布的运行节奏见 `docs/manuals/how-to-use.md`；基线的建立与收缩见
+`quality-model.md` §4。
