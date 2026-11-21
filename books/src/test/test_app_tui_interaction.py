@@ -25,6 +25,7 @@ class TuiInteractionTest(unittest.TestCase):
         self.keys = importlib.import_module('app.keys')
         self.menu = importlib.import_module('core.menu')
         self.calls: list[str] = []
+        self.kwargs: list[dict] = []
 
     def press(self, *keys: str, answers: list[str] | None = None):
         """Run the menu with scripted key presses, returning (code, output)."""
@@ -33,8 +34,9 @@ class TuiInteractionTest(unittest.TestCase):
         def fake_read_key() -> str:
             return queue.pop(0) if queue else self.keys.KEY_ESC
 
-        def fake_run(action: str):
+        def fake_run(action: str, **kwargs):
             self.calls.append(action)
+            self.kwargs.append(kwargs)
             return 0, f'输出-{action}-第一行\n输出-{action}-第二行'
 
         answers_list = list(answers or [])
@@ -121,6 +123,17 @@ class TuiInteractionTest(unittest.TestCase):
         self.assertEqual(keys, ['1', '2', '3', '4', '5', '6', '0'])
         self.press('5', '6')
         self.assertEqual(self.calls, ['analyze-refresh'])
+
+    def test_the_llm_ingest_asks_before_overwriting_written_prose(self):
+        self.press('l', answers=['n'])
+        self.assertEqual(self.calls, ['analyze-llm'])
+        self.assertFalse(self.kwargs[0].get('force'))
+
+    def test_confirming_the_rewrite_passes_force(self):
+        _code, out = self.press('l', answers=['y'])
+        self.assertEqual(self.calls, ['analyze-llm'])
+        self.assertTrue(self.kwargs[0].get('force'))
+        self.assertIn('--force', out)
 
     def test_l_shortcut_runs_the_llm_ingest(self):
         for pressed in ('l', 'L'):

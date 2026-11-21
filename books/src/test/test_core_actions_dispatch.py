@@ -115,6 +115,17 @@ class ActionDispatchTest(unittest.TestCase):
         self.assertIn('analyze-refresh', self.actions.ACTIONS)
         self.assertIn('analyze-refresh', self.actions.DISPATCH)
 
+    def test_a_zero_call_llm_run_explains_why(self):
+        def fake_run(script, *args):
+            return 0, ''
+
+        with mock.patch.object(self.actions, '_run', side_effect=fake_run), \
+                mock.patch.object(self.actions._llm, 'take_totals', return_value={}), \
+                mock.patch.object(self.actions._llm, 'since',
+                                  return_value={'calls': 0}):
+            _code, text = self.actions.analyze(use_llm=True)
+        self.assertIn('没有触发导读/小结润色', text)
+
     def test_analyze_reports_a_shrunk_manuscript_as_a_failure(self):
         payload = '{"count": 2, "problems": ["ch1: bytes below floor"]}'
 

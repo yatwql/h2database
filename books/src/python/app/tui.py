@@ -208,7 +208,7 @@ def confirm(question: str, reader=input) -> bool:
     return answer in ('y', 'yes', '是')
 
 
-def run_entry(action: str, label: str) -> str:
+def run_entry(action: str, label: str, force: bool = False) -> str:
     """Run one action and render the outcome core.menu reports."""
     if action == 'settings':
         return configure()
@@ -216,10 +216,11 @@ def run_entry(action: str, label: str) -> str:
         return _c('已取消', PALETTE['hint'])
     sys.stdout.write(_c(f'⠿ 正在执行 {label}（{action}）…', PALETTE['hint']) + '\n')
     sys.stdout.flush()
-    outcome = menu.run_report(action, label)
+    outcome = menu.run_report(action, label, force=force)
     verdict = (_c('✓ 完成', PALETTE['value_ok']) if outcome.ok
                else _c('✗ 失败', PALETTE['error']))
-    summary = (f'{verdict}  {outcome.label}  用时 {outcome.elapsed:.1f}s  '
+    mode = '  --force' if force else ''
+    summary = (f'{verdict}  {outcome.label}{mode}  用时 {outcome.elapsed:.1f}s  '
                f'退出码 {outcome.code}  输出 {outcome.output_lines} 行')
     return (f'\n{outcome.tail}\n{summary}\n'
             f'{_c("详情见 " + menu.log_location() + "/", PALETTE["hint"])}')
@@ -265,6 +266,11 @@ def handle(action: str, label: str, screen: str) -> tuple[bool, str, str]:
         return False, screen, edit_setting(action[len('@set:'):])
     if action.startswith('@move:'):
         return False, screen, edit_provider(action[len('@move:'):])
+    if action == 'analyze-llm':
+        # Overwriting written prose is the only way this action reaches the
+        # provider on a finished book, so ask first and default to "no".
+        force = confirm('用 LLM 重写已有正文的导读/小结（旧文件先备份到 data/tmp）？')
+        return False, screen, run_entry(action, label, force=force)
     return False, screen, run_entry(action, label)
 
 

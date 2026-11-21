@@ -56,6 +56,10 @@
   现统一到 `lib/_mdutil.py` 的 `FIGURE_LABEL`/`FIGURE_ID`/`CHAPTER_FIGURE`/`APPENDIX_FIGURE` 与
   `figure_caption()`/`figure_ids()`，消费者只引用形状。`structure.py` 的章节范围不再写死 1–12，
   改为从 `book.toml [chapters.coverage]` 推导（无该表时退回阅读顺序）。（rf-35）
+- **LLM 动作不再“默默不调用”**：已有正文时 `chapters.py` 会全部跳过，导读/小结的润色点不会执行，
+  原先只显示“本次未调用”。现在零写入时 `chapters.py` 说明原因，`actions.analyze` 在零调用时追加一行解释；
+  TUI 的 `analyze-llm` 先问“是否 `--force` 重写已有正文”（默认否，旧文件备份到 `data/tmp/`），
+  结果行标注 `--force`。同时修掉渲染器在“本章无映射包”时的越界崩溃。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

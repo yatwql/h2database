@@ -68,7 +68,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 
 | 类别 | 通过标准 | 验证方式 | 级别 |
 | --- | --- | --- | --- |
-| 章节结构 | 12 章节槽 + 2 附录文件齐全，H1/H2/H3/H4 层级连续；配置的必备段落齐备 | `structure.py`（heading hierarchy / required sections） | P0 |
+| 章节结构 | 内容覆盖表的章节槽 + 附录文件齐全，H1/H2/H3/H4 层级连续；配置的必备段落齐备 | `structure.py`（heading hierarchy / required sections；逐章统计按内容覆盖表取章号） | P0 |
 | 图号与图引用 | 每章图号唯一且完整；正文图号引用可解析；允许历史补号导致非严格位置顺序 | `structure.py`（figure numbering）、`figures.py` | P0 |
 | 图表覆盖 | 内容型 `###` 小节的图数达下限，模板型小节达下限（下限取配置） | `smart.py` | P0 |
 | 代码围栏与合并稿 | 所有围栏成对；源文件总行数与合并稿一致；合并顺序与前后件齐备 | `structure.py`（code fence balance）、`render/merge.py` | P0 |

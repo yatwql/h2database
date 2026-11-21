@@ -28,6 +28,11 @@ manuscript = "data/manuscript"     # 手稿目录
 dist = "dist"                      # 产物目录
 docs = "docs"
 tools = "src/python"
+tmp = "data/tmp"                   # 临时目录：HTML 片段缓存与 --force 备份（已 gitignore）
+state = "data/state"               # 派生状态：ingest 每次重建（已 gitignore）
+templates = "data/tmpl"            # 模板与案例流水线（templates.toml / case-studies.toml）
+baselines = "data/baselines"       # 已评审存量的账本目录
+cover_image = ""                   # 可选：封面图，留空则不生成
 
 [chapters]
 files = ["cover.md", "ch1-<主题>.md", "appendix-a-<主题>.md"]  # 阅读顺序

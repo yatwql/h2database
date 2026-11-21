@@ -5,10 +5,11 @@ from __future__ import annotations
 
 import importlib
 import io
+import json
 import os
 import tempfile
 import unittest
-from contextlib import redirect_stderr
+from contextlib import redirect_stderr, redirect_stdout
 from unittest import mock
 
 import _fixture
@@ -145,6 +146,36 @@ class OverwriteGuardTest(unittest.TestCase):
     def test_a_missing_file_is_written(self):
         self.assertTrue(self.chapters.rewrite_allowed(
             os.path.join(self.tmp.name, 'absent.md'), 'x', False))
+
+
+class LlmSkipNoticeTest(unittest.TestCase):
+    """A run that writes nothing says why the provider was never used."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.chapters = _fixture.load_module(self.root, 'chapters')
+        state = os.path.join(self.root, 'data', 'state')
+        os.makedirs(state, exist_ok=True)
+        chapter = {'file': 'ch1-test.md', 'source_lines': 10, 'packages': {}}
+        with open(os.path.join(state, 'source-inventory.json'), 'w', encoding='utf-8') as fh:
+            json.dump({'packages': {}}, fh)
+        with open(os.path.join(state, 'outline.json'), 'w', encoding='utf-8') as fh:
+            json.dump({'chapters': [chapter]}, fh)
+
+    def test_a_skip_only_llm_run_explains_the_zero_calls(self):
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            code = self.chapters.main(['--llm'])
+        self.assertEqual(code, 0)
+        self.assertIn('LLM 未介入', buffer.getvalue())
+
+    def test_a_deterministic_run_stays_quiet_about_the_provider(self):
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            self.chapters.main([])
+        self.assertNotIn('LLM 未介入', buffer.getvalue())
 
 
 if __name__ == '__main__':

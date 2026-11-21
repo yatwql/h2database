@@ -270,14 +270,20 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
              '按类聚簇，可直接跳转阅读。'), '',
             *_table(['入口', '源码坐标'], coord_rows)])
 
+    # A chapter can map to no package at all (an empty or front-matter-only
+    # outline); the reading path then falls back to the placeholders instead of
+    # indexing an empty list.
+    first_pkg = pkgs_sorted[0][0] if pkgs_sorted else top_pkg
+    last_pkg = pkgs_sorted[-1][0] if pkgs_sorted else top_pkg
+    last_lines = pkgs_sorted[-1][1].get('lines', 0) if pkgs_sorted else 0
     L += [f'## {cn}.4 阅读路径', '',
           tpl('path_intro', '从 `{top}` 先读骨架类，再沿依赖下钻。', **facts), '',
-          (f'1. 先读 `{pkgs_sorted[0][0]}` 的 package-info 与 '
+          (f'1. 先读 `{first_pkg}` 的 package-info 与 '
            f'`{big["name"]}`，建立第{cn}章的职责边界。'),
           (f'2. 再读 `{big["name"]}` 的 {big.get("public_methods", 0)} 个公开入口，'
            f'确认它对 `{dep_head}` 的调用方向与加锁方式。'),
-          (f'3. 最后读 `{pkgs_sorted[-1][0]}`（本章最小包，'
-           f'{pkgs_sorted[-1][1].get("lines", 0):,} 行）的实现，'
+          (f'3. 最后读 `{last_pkg}`（本章最小包，'
+           f'{last_lines:,} 行）的实现，'
            '关注容量与失败路径。'),
           '',
           f'跨章衔接请对照第{cross_num}章《{cross_name}》。', '']
@@ -748,6 +754,9 @@ def main(argv: list[str] | None = None) -> int:
     print(f'chapters written: {written}')
     if skipped:
         print(f'chapters skipped: {skipped}（已有正文；确认要重生成时加 --force）')
+    if _USE_LLM and not written:
+        print('LLM 未介入：本轮没有生成或重写的章节，导读/小结没有可润色的对象；'
+              '要对已有正文润色请加 --force（旧文件先备份）或按章用 --only。')
     return 0
 
 

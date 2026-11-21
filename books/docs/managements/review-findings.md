@@ -4,7 +4,7 @@
 > 版本：v0.1
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
-> **编号源**：`rf-next = 36`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-35，
+> **编号源**：`rf-next = 37`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-36，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -58,7 +58,7 @@
 | 文件 | 现状与拆分方向 |
 | --- | --- |
 | `src/python/render/to_html.py` 842 行 | 占比 94%，触线前拆：目录构建、正文渲染（已抽出 `render_body`）、样式段各自独立文件 |
-| `src/python/ingest/chapters.py` 755 行 | 占比 84%，按「骨架生成 / 模板填充 / 语言适配调用」三段拆（事实块标记与刷新已拆到 `ingest/factblocks.py`） |
+| `src/python/ingest/chapters.py` 764 行 | 占比 84%，按「骨架生成 / 模板填充 / 语言适配调用」三段拆（事实块标记与刷新已拆到 `ingest/factblocks.py`） |
 | `src/python/audit/style.py` 641 行 | 占比 71%，句式规则按规则族拆（单调 / 重复 / 段落），共享解析上提 |
 
 ## 已解决问题
@@ -110,6 +110,14 @@
 **修订**：形状归 `lib/_mdutil.py` 一处（`FIGURE_LABEL`/`FIGURE_ID`/`CHAPTER_FIGURE`/`APPENDIX_FIGURE`
 与 `figure_caption()`/`figure_ids()`），六个消费者改为引用；章节范围从 `book.toml [chapters.coverage]`
 推导，无覆盖表时退回阅读顺序，并对未声明章号容错计数 |
+
+| rf-36 | `book.toml` 的两张章节表互相矛盾：`[chapters.numbering]` 声明阅读顺序 1–14
+（ch6-2/ch6-3 各占一章、ch7-8 起顺延），`[chapters.coverage]` 与手稿 H1 却是 12 章
+（三个 6-x 文件同属第 6 章）。把 numbering 改成与手稿一致后，`content_depth` 的前向引用
+基线（按章号键控）立刻失配 |
+**待定**：需要决定哪张表是权威——若以手稿为准，必须同时按新章号重固 `content_depth`
+基线并复核索引/术语的章号归属；若以 numbering 为准，手稿 H1 需整体重编号。文档已改为
+"两张表各司其职"，不再笼统写 12 章 |
 
 ### 归档
 

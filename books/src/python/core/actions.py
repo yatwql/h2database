@@ -135,6 +135,13 @@ def analyze(use_llm: bool = False, force: bool = False,
     out.append(line)
     if use_llm:
         out.append(_llm_lines(llm_before))
+        try:
+            spent = _llm.since(llm_before or {})
+        except (_llm.LLMError, OSError):
+            spent = {'calls': 0}
+        if not spent.get('calls'):
+            out.append('说明：本轮没有生成或重写的章节，因此没有触发导读/小结润色；'
+                       '要对已有正文润色加 --force（旧文件先备份），或按章用 --only。')
     return volume_code, '\n'.join(out)
 
 
