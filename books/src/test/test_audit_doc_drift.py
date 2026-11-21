@@ -272,5 +272,55 @@ class DocDriftTest(unittest.TestCase):
         self.assertIn(code, (0, 1))
         self.assertTrue(buffer.getvalue())
 
+class PlanTreeNamingTest(unittest.TestCase):
+    """Iteration designs live in docs/plan/<topic>/ and are named after the topic."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.drift = _fixture.load_module(self.root, 'doc_drift')
+
+    def topic(self, name, *files):
+        folder = os.path.join(self.root, 'docs', 'plan', name)
+        os.makedirs(folder, exist_ok=True)
+        for entry in files or ('plan.md',):
+            with open(os.path.join(folder, entry), 'w', encoding='utf-8') as fh:
+                fh.write('# title\n')
+
+    def details(self):
+        return [item['detail'] for item in self.drift.check_plan_tree(self.root)]
+
+    def test_a_semantic_topic_directory_passes(self):
+        self.topic('diagram-upgrade', 'design.md', 'plan.md')
+        self.assertEqual(self.details(), [])
+
+    def test_absent_plan_root_is_not_an_error(self):
+        self.assertEqual(self.details(), [])
+
+    def test_a_numbered_directory_is_reported(self):
+        self.topic('plan-6', 'plan.md')
+        self.assertTrue(any('语义名' in detail for detail in self.details()))
+
+    def test_a_numbered_file_is_reported(self):
+        self.topic('diagram-upgrade', 'plan-6-plan.md', 'plan.md')
+        self.assertTrue(any('文件名' in detail for detail in self.details()))
+
+    def test_a_topic_without_a_plan_is_reported(self):
+        self.topic('diagram-upgrade', 'design.md')
+        self.assertTrue(any('缺少 plan.md' in detail for detail in self.details()))
+
+    def test_a_stray_file_at_the_root_is_reported(self):
+        os.makedirs(os.path.join(self.root, 'docs', 'plan'), exist_ok=True)
+        with open(os.path.join(self.root, 'docs', 'plan', 'notes.md'), 'w',
+                  encoding='utf-8') as fh:
+            fh.write('# x\n')
+        self.assertTrue(any('只放主题目录' in detail for detail in self.details()))
+
+    def test_an_unexpected_document_name_is_reported(self):
+        self.topic('diagram-upgrade', 'misc.md', 'plan.md')
+        self.assertTrue(any('只允许' in detail for detail in self.details()))
+
+
 if __name__ == '__main__':
     unittest.main()
