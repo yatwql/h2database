@@ -64,6 +64,9 @@
   NFR-05 标注性能门禁为 advisory。（rf-13）
 - 新增 `requirement_trace.py`：`requirements.md` 的 FR/IR/NFR 与 testplan 新增的
   §2.4 需求判据对照表双向一致，每行点名的载体必须存在；`make.py check` 由 30 步变 31 步。
+- 判据只写性质：`testplan` §2.2 的阈值列改为“不低于配置下限”这类表述，键名与取值集中到
+  `technical.md` §3.2 的阈值归属；`doc_drift` 新增 `THRESHOLD` 检查，判据表引用配置键
+  名即失败。（rf-14）
 - 补回 `src/test/test_no_network.py`：testplan 一直把它列为网络隔离的载体，文件已不存在。
 
 ### 文档清理

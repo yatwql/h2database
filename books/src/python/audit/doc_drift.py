@@ -328,6 +328,60 @@ def check_standard(path: str | None = None) -> list[dict]:
     return out
 
 
+# criterion documents state properties; the config carries the numbers and the key
+# paths that locate them (technical §3.2), so a criteria table must not cite keys
+CONFIG_KEY_MIN_LEN = 6
+
+
+def config_keys() -> set[str]:
+    """Every key name declared anywhere in the two JSON configuration inputs."""
+    names: set[str] = set()
+
+    def walk(node) -> None:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if isinstance(key, str) and len(key) >= CONFIG_KEY_MIN_LEN:
+                    names.add(key)
+                walk(value)
+        elif isinstance(node, list):
+            for item in node:
+                walk(item)
+
+    for name in ('base.json', 'style.json'):
+        path = os.path.join(_config.BOOK_ROOT, 'data', 'config', name)
+        if os.path.isfile(path):
+            walk(_fsutil.load_json(path))
+    return names
+
+
+def check_threshold_keys(files: list[str] | None = None,
+                         keys: set[str] | None = None) -> list[dict]:
+    """The criteria table states a property, not the place the number lives.
+
+    Citing a configuration key in a pass condition mixes two jobs: what counts as
+    passing, and where the threshold is configured. The second belongs to the
+    design document, which owns threshold ownership.
+    """
+    known = keys if keys is not None else config_keys()
+    if not known:
+        return []
+    out = []
+    for path in files if files is not None else doc_files():
+        if os.path.basename(path) != 'testplan.md':
+            continue
+        for lineno, line in enumerate(_fsutil.read_lines(path), start=1):
+            if not line.lstrip().startswith('|'):
+                continue
+            for token in INLINE_TOKEN_RE.findall(line):
+                if token in known:
+                    out.append({'kind': 'THRESHOLD',
+                                'file': os.path.relpath(path, REPO_ROOT),
+                                'line': lineno,
+                                'detail': f'criteria cite the config key {token}; state the '
+                                          f'property and leave the key to technical §3.2'})
+    return out
+
+
 def check_manual_scope(manual_dir: str | None = None) -> list[dict]:
     """User documents state their dimension once, and do not quote the design.
 
@@ -472,7 +526,7 @@ def main(argv: list[str] | None = None) -> int:
                 + check_config() + check_levels(files) + check_manual_scope()
                 + check_managements() + check_numbering(files)
                 + check_deliver(files) + check_prefixes(files) + check_locus()
-                + check_standard())
+                + check_standard() + check_threshold_keys(files))
 
     if args.json:
         print(json.dumps({'count': len(findings), 'findings': findings},

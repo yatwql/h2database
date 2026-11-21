@@ -142,10 +142,14 @@ books/
 
 阈值只允许出现在配置里，代码里不得内联。已知归属：
 
-- 内容体量与交付下限：`base.json [toolchain]` 的 `content_floor_ratio`、`pdf_page_ratio`、`epub_size_ratio`、`pdf_max_mb`、`epub_max_mb`。
+- 内容体量与交付下限：`base.json [toolchain]` 的 `content_floor_ratio`、`pdf_page_ratio`、`epub_size_ratio`、`pdf_max_mb`、`epub_max_mb`、`ascii_max_cols`。
+- 质量下限：`style.json [thresholds]`（练习题量、索引总数与每章条数、索引主/子/see-also 条数、术语条数、每章跨章引用数）——这些值以前硬编码在 `structure.py`，现均从此处读取。
 - 写作规则：`style.json [content_depth]`（如 `glossary_min_uses`、`excerpt_lines`）、`[captions]`、`[style_rules]`、`[limits]`。
+- 篇幅预算：`style.json [limits]` 的 `sources`/`tests`/`docs`/`manuscript` 四档；`file_length` 要求四档都显式声明，不靠默认值。
 - 章节骨架与必备段落：`book.toml [sections]`、`style.json [sections]`。
 - 覆盖率红线：`base.json [toolchain] coverage_fail_under`。
+
+判据文档（`testplan.md`）只说“不低于配置下限”，不引用这里的键名：键名与取值属于本节，`doc_drift` 的 `THRESHOLD` 检查守着这条边界。
 
 ### 3.3 语言与模板
 

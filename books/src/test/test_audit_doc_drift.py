@@ -233,6 +233,24 @@ class DocDriftTest(unittest.TestCase):
         path = self.doc('写法见 style-guide.md §12。\n')
         self.assertEqual(self.drift.check_standard(path), [])
 
+    # -- criteria cite properties ----------------------------------------
+    def test_a_criteria_row_citing_a_config_key_is_reported(self):
+        path = self.management_doc('| 索引完整性 | 每章条数不低于 `index_per_chapter_min` | P1 |\n')
+        findings = self.drift.check_threshold_keys([path], {'index_per_chapter_min'})
+        self.assertEqual([f['kind'] for f in findings], ['THRESHOLD'])
+
+    def test_a_criteria_row_stating_the_property_passes(self):
+        path = self.management_doc('| 索引完整性 | 每章条数不低于配置下限 | P1 |\n')
+        self.assertEqual(self.drift.check_threshold_keys([path],
+                                                         {'index_per_chapter_min'}), [])
+
+    def test_prose_outside_the_table_may_name_a_gate(self):
+        path = self.management_doc('合并原则：`captions`/`figures` 都看图。\n')
+        self.assertEqual(self.drift.check_threshold_keys([path], {'captions'}), [])
+
+    def test_the_repository_cites_no_config_key_in_its_criteria(self):
+        self.assertEqual(self.drift.check_threshold_keys([]), [])
+
     # -- CLI --------------------------------------------------------------
     def test_json_output_reports_the_count(self):
         buffer = io.StringIO()

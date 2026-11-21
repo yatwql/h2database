@@ -78,23 +78,23 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 链接与锚点 | 所有相对链接指向存在的文件；`#anchor` 命中真实标题；代码围栏内不检查 | `links.py` | P0 |
 | 配置结构 | `book.toml` 各章节键都在阅读顺序里、列出的章节都存在且无重复；`style.json` 只含已知顶层键、阈值区间合理 | `doc_drift.py`（CONFIG）、`style_schema.py`、`test_config` 用例 | P0 |
 | 构建幂等 | 连续两次 `make.py build` 的 HTML 哈希一致 | `.github/workflows/book.yml` | P0 |
-| 索引完整性 | 索引条数、每章条数、主条目/子条目/see-also 均不低于下限且全部解析；子条目章节 ∈ 1-12。下限取 `style.json [thresholds]` 的 `index_total_min`、`index_per_chapter_min`、`index_main_min`、`index_sub_min`、`index_see_also_min` | `structure.py`、`index_xrefs.py` | P1 |
-| 术语完整性 | 术语条数不低于 `style.json [thresholds].glossary_min_entries`；每条有对应章节引用；引用章节号 ∈ 1-12 | `structure.py`（glossary content） | P1 |
+| 索引完整性 | 索引条目总数、每章条数、主条目/子条目/see-also 各自有下限（取值见配置）；条目与 see-also 全部可解析；子条目章节 ∈ 1-12 | `structure.py`、`index_xrefs.py` | P1 |
+| 术语完整性 | 术语条数达下限（取值见配置）；每条有对应章节引用；引用章节号 ∈ 1-12 | `structure.py`（glossary content） | P1 |
 | 工具脚本可用性 | 术语表与索引生成脚本语法有效 | `structure.py`（builder checks） | P1 |
 | 图注动宾结构 | 全书图注以批准动词起首；长度 ∈ [8, 30] 字；无模糊后缀；strict 阈值下违规 = 0 | `captions.py --threshold strict` | P2 |
 | 图簇桥接 | 3+ 张图在 ≤ 40 行内连续出现的"图簇"，前置一句桥接叙事点名所有图 | `figure_clusters.py`（`--window 40 --needs-bridge`，应输出空清单） | P2 |
-| 延伸思考 | 12 章全部含 `## N.X 延伸思考`；题量不低于 `style.json [thresholds]` 的 `exercises_min_per_chapter` / `exercises_min_total`；每题含难度/题型 emoji + 提示行 + 含锚点的回顾行 | `structure.py`、`exercises.py` | P2 |
+| 延伸思考 | 12 章全部含 `## N.X 延伸思考`；每章与全书的题量达下限（取值见配置）；每题含难度/题型 emoji + 提示行 + 含锚点的回顾行 | `structure.py`、`exercises.py` | P2 |
 | 写作风格 | 每章 WARN 计数为 0 | `style.py` | P2 |
 | 版本一致 | 工具/源码/书籍三版本可解析且各有唯一事实位；管理文档头齐全且取软件版本；封面版本回写自 `book.toml`；合并稿 manifest 与三者一致 | `version_consistency.py`、`manuscript/cover.py` | P0 |
 | 源码坐标 | `Class.java:行号` 可解析、行号在文件长度内、方法存在、摘录与源码一致；已知漂移进基线，仅"新增漂移"阻塞 | `source_refs.py`、`content_depth.py`、`books/data/baselines/source-symbol-baseline.json` | P1 |
 | PDF 渲染与 TOC 链接注入 | HTML → PDF 成功、页面数据可读；每个印刷 TOC 条目在对应页上加一条 link annotation，目标页按 outline 位置映射 | `render/to_pdf.py`、`render/pdf_toc_links.py` | P1 |
-| PDF 交付 | PDF 重新生成自当前 HTML；A4（595×842±2）、无旋转；字体全部嵌入；outline 与 HTML 标题逐一对应；印刷 TOC 链接按序且在页内；体积 ≤ `pdf_max_mb` | `render/verify_pdf.py`（`--require-toc-links`） | P1 |
-| EPUB 结构 | mimetype 首条且未压缩；container/OPF/manifest/spine/nav 全部可解析、导航链接全部命中；元数据齐备；体积 ≤ `epub_max_mb` | `render/verify_epub.py` | P1 |
+| PDF 交付 | PDF 重新生成自当前 HTML；A4（595×842±2）、无旋转；字体全部嵌入；outline 与 HTML 标题逐一对应；印刷 TOC 链接按序且在页内；体积不超过配置的 PDF 预算 | `render/verify_pdf.py`（`--require-toc-links`） | P1 |
+| EPUB 结构 | mimetype 首条且未压缩；container/OPF/manifest/spine/nav 全部可解析、导航链接全部命中；元数据齐备；体积不超过配置的 EPUB 预算 | `render/verify_epub.py` | P1 |
 | EPUB 生成 | pandoc 可用时生成 EPUB（在 `deliver` 组内，生成后由 `verify_epub.py` 校验） | `render/to_epub.py` | P1 |
 | 可读性 | 长句、宽 ASCII 图、框线闭合、图注质量 | `readability.py` | P1 |
 | 术语与排版规则 | 同一概念不混用两种写法；标题无尾标点；链接文字可读；中英之间留空格；列表标点一致；段落 ≤ 上限（已知项走基线） | `style_rules.py` | P1 |
 | 内容深度 | 前向引用须点名主责章节；高频类型须入术语表；练习题须指向本章类型或 §锚点 | `content_depth.py` | P1 |
-| ASCII 图质量 | 图宽 ≤ `ascii_max_cols`（CJK 记 2 列）；无行尾空格/制表符；单图不混用框线与 ASCII 边框；已知项走基线 | `diagrams.py`、`books/data/baselines/ascii-baseline.json` | P1 |
+| ASCII 图质量 | 图宽不超过配置的列数上限（CJK 记 2 列）；无行尾空格/制表符；单图不混用框线与 ASCII 边框；已知项走基线 | `diagrams.py`、`books/data/baselines/ascii-baseline.json` | P1 |
 | LLM 边界 | LLM 只用于散文生成/评审场景；门禁与事实链路不得调用；密钥文件不入库 | `llm_policy.py` | P1 |
 | 发布评分 | 六维评分（功能/稳定/交互/代码/文档风格/文档质量）作为整改视图 | `make.py report` | 报告类（不计级别） |
 | 历史快照完整性 | 快照文件与 manifest 记录的哈希一致；快照不参与构建、不被门禁扫描 | `manuscript/snapshot.py verify` | P1 |
@@ -103,12 +103,12 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 类型检查 | pyright 可用时检查工具链类型（缺失则跳过） | `typecheck.py` | P1 |
 | 门禁追溯 | make.py 的每个门禁都在 testplan 登记，反之亦然 | `gate_trace.py` | P0 |
 | 需求追溯 | `requirements.md` 的每条 FR/IR/NFR 在 §2.4 有且只有一条判据行，判据点名的载体在仓库里存在 | `requirement_trace.py` | P0 |
-| 内容体积 | 每个章节的字节数与行数不低于基线（floor 0.95）、手稿总量不缩水、交付 PDF 页数 ≥ 基线 90%、EPUB 体积 ≥ 基线 85%；新增文件允许，删除须同步 `book.toml` 并重设基线 | `content_volume.py`、`books/data/baselines/content-volume.json` | P0 |
-| 文件长度 | 各档行数不超过 `style.json [limits]` 的 `sources`/`tests`/`docs`/`manuscript`；四档均须在配置里显式声明（不靠默认值）；手稿正文与附录共用 `manuscript` 档 | `file_length.py` | P0 |
+| 内容体积 | 每个章节的字节数与行数不低于基线比例、手稿总量不缩水、交付页数与 EPUB 体积不低于基线比例（比例取值见配置）；新增文件允许，删除须同步 `book.toml` 并重设基线 | `content_volume.py`、`books/data/baselines/content-volume.json` | P0 |
+| 文件长度 | 源码/测试/文档/手稿四档行数均不超过各自预算；四档预算须在配置里显式声明（不靠默认值）；手稿正文与附录同档 | `file_length.py` | P0 |
 | 脚本契约 | 每个入口脚本有模块说明、可执行入口、必要时说明退出码与 `--json` | `script_contract.py` | P0 |
 | 文档一致性 | 文档与配置的引用对象存在（路径、脚本、章节名、管理目录与索引/目录树、编号源）；同一事实只声明一次（章节键、门禁级别）；管理文档头部必须有一行 `> 定位：`；跨项目的内容标准只能指向 `style-guide.md`；引用的交付链路与脚本名前缀清单等于 `make.py` / `check_architecture.py` 里的声明 | `doc_drift.py` | P0 |
 | 网络隔离 | 测试全程零出站连接：`_netguard` 在 `_fixture` 导入时接管 socket，只允许回环；LLM 一律 mock，Playwright 用假引擎 | `src/test/_netguard.py`、`src/test/test_no_network.py` | P0 |
-| 覆盖率 | 分支覆盖率不低于 `base.json [toolchain].coverage_fail_under` | `make.py cover` | P1 |
+| 覆盖率 | 分支覆盖率不低于配置的红线 | `make.py cover` | P1 |
 | 历史痕迹 | 文档、代码注释、脚本/钩子/CI 注释与配置 `_note` 只描述当前状态 | `traces.py` | P0 |
 | 多入口一致 | CLI/TUI/Web 三个渠道共用 `core/actions.py`，`status` 与 `llm-ask` 均可运行 | `src/test/test_llm.py` | P1 |
 | LLM 配置 | provider 路由按 章节>书籍>场景 优先级解析；密钥只读环境变量；默认 mock 离线可跑 | `src/test/test_llm.py`、`data/config/llm_*.json` | P1 |
