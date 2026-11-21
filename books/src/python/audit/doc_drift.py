@@ -76,6 +76,22 @@ def _generated_prefixes() -> tuple[str, ...]:
     return tuple(prefixes)
 
 
+def _git_ignored(rel: str) -> bool:
+    """Whether git ignores this path: by design absent from a clean checkout.
+
+    `data/tmp/` and the optional key file are real locally and missing on CI, so
+    a documented path must be judged against the repository, not this machine.
+    """
+    import subprocess
+
+    try:
+        proc = subprocess.run(['git', 'check-ignore', '-q', rel], cwd=_config.BOOK_ROOT,
+                              check=False, capture_output=True)
+    except OSError:  # pragma: no cover - git missing
+        return False
+    return proc.returncode == 0
+
+
 def _exists(rel: str, repo_root: str | None = None) -> bool:
     # generated / runtime paths are absent from a fresh checkout; a reference may
     # name the directory itself (`books/.venv`) or something inside it
@@ -87,7 +103,9 @@ def _exists(rel: str, repo_root: str | None = None) -> bool:
     root = _config.BOOK_ROOT if book_relative else _repo_root(repo_root)
     if '*' in rel:
         return bool(glob.glob(os.path.join(root, rel), recursive=True))
-    return os.path.exists(os.path.join(root, rel))
+    if os.path.exists(os.path.join(root, rel)):
+        return True
+    return _git_ignored(os.path.join('books', rel) if book_relative else rel)
 
 
 DIMENSION_RE = re.compile(r'^>\s*维度：\**(.+?)\**\s*$', re.MULTILINE)

@@ -200,7 +200,13 @@ def run_step(step: Step) -> tuple[str, int, float]:
     started = time.perf_counter()
     if script is None:
         tests_dir = os.path.normpath(os.path.join(TOOLS_DIR, '..', 'test'))
-        cmd = [PY, '-m', 'unittest', 'discover', '-s', tests_dir, '-t', tests_dir]
+        # pytest finishes; `unittest discover` deadlocks on the threaded fixtures,
+        # which is how the slow tier burned 1800s in CI before failing.
+        if importlib.util.find_spec('pytest'):
+            marker = [] if os.environ.get('BOOK_SLOW') == '1' else ['-m', 'tier_fast']
+            cmd = [PY, '-m', 'pytest', '-q', *marker, tests_dir]
+        else:
+            cmd = [PY, '-m', 'unittest', 'discover', '-s', tests_dir, '-t', tests_dir]
     else:
         cmd = [PY, os.path.join(TOOLS_DIR, script), *extra]
     LOG.debug('run step %s: %s', name, ' '.join(cmd))

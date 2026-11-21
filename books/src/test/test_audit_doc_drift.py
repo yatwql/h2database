@@ -52,6 +52,11 @@ class DocDriftTest(unittest.TestCase):
         path = self.doc('见 `books/README.md`。\n')
         self.assertEqual(self.drift.check_paths([path], os.path.dirname(BOOK_ROOT)), [])
 
+    def test_a_gitignored_path_counts_as_present(self):
+        path = self.doc('日志在 `books/logs/` 下。\n')
+        with mock.patch.object(self.drift, '_git_ignored', lambda rel: True):
+            self.assertEqual(self.drift.check_paths([path]), [])
+
     def test_illustrative_paths_are_skipped(self):
         path = self.doc('例如 `books/…/x.md` 或 `<name>`。\n')
         self.assertEqual(self.drift.check_paths([path]), [])
