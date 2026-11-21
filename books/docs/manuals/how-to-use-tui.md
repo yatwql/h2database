@@ -38,7 +38,8 @@ python books/src/python/app/tui.py
 │ 源码 /path/to/src  (源码版本)                                 │
 │ 手稿 /path/to/books/data/manuscript                           │
 │ 产物 /path/to/books/dist                                      │
-│ 语言 java  日志 INFO  LLM deepseek-main                        │
+│ 语言 java  日志 INFO  LLM opencode-go                          │
+│ 用量 LLM 今日 0.42 USD/3.00 USD   体积余量 +14%               │
 └──────────────────────────────────────────────────────────────┘
  主菜单
 

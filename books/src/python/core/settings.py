@@ -18,7 +18,7 @@ import os
 import re
 import sys
 
-from lib import _config, _fsutil
+from lib import _config, _fsutil, _volume
 
 BOOK_TOML = os.path.join(_config.BOOK_ROOT, 'data', 'tmpl', 'book.toml')
 BASE_JSON = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'base.json')
@@ -252,6 +252,28 @@ def _source_dir() -> str:
         return ''
 
 
+def spend_summary() -> str:
+    """Today's LLM spend against the configured ceiling, for the header."""
+    from lib import _llm
+
+    try:
+        spent = _llm.today_cost()
+        limit = _llm.daily_limit()
+        currency = _llm.pricing().get('currency', 'USD')
+    except _llm.LLMError:
+        return '—'      # a book without LLM config still gets a header
+    left = f'/{limit:.2f} {currency}' if limit else ''
+    return f'{spent:.2f} {currency}{left}'
+
+
+def volume_summary() -> str:
+    """How much room the manuscript has above its volume floor."""
+    room = _volume.headroom()
+    if room is None:
+        return '—'
+    return f'{room["margin_pct"]:+.0f}%'
+
+
 def summary() -> dict:
     """Book identity plus the settings shown in the UI header."""
     return {
@@ -263,6 +285,8 @@ def summary() -> dict:
         'log_level': get('log.level') if 'log.level' in SPEC else '',
         'llm_provider': get('llm.provider'),
         'source_dir': _source_dir(),
+        'llm_spend': spend_summary(),
+        'volume_margin': volume_summary(),
         'tool_version': _config.versions()['tool'],
         'source_version': _config.versions()['source'],
         'doc_version': _config.versions()['doc'],

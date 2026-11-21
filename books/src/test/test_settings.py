@@ -33,6 +33,33 @@ class SettingsCase(unittest.TestCase):
         with open(os.path.join(self.root, rel), encoding='utf-8') as fh:
             return fh.read()
 
+class HeaderGlanceTest(SettingsCase):
+    """The header answers "how much left" without running an action."""
+
+    def test_summary_carries_spend_and_volume_margin(self):
+        summary = self.settings().summary()
+        self.assertIn('llm_spend', summary)
+        self.assertIn('volume_margin', summary)
+
+    def test_a_book_without_a_baseline_says_dash(self):
+        summary = self.settings().summary()
+        self.assertEqual(summary['volume_margin'], '—')
+
+    def test_the_volume_margin_is_measured_against_the_floor(self):
+        volume = _fixture.load_module(self.root, '_volume')
+        baseline = {'manuscript': {'total': {'lines': 100}},
+                    'thresholds': {'floor_ratio': 0.95}}
+        path = os.path.join(self.root, 'data', 'baselines')
+        os.makedirs(path, exist_ok=True)
+        with open(os.path.join(path, 'content-volume.json'), 'w', encoding='utf-8') as fh:
+            json.dump(baseline, fh)
+        current = volume.current_lines()
+        room = volume.headroom()
+        self.assertEqual(room['baseline'], 100)
+        self.assertEqual(room['lines'], current)
+        self.assertEqual(room['floor'], 95)
+
+
 class TestSettings(SettingsCase):
     def test_list_covers_known_keys(self):
         rows = {row['key'] for row in self.settings().list_settings()}
