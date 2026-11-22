@@ -84,6 +84,10 @@
   断言只登记存量（112 条进 `data/baselines/loose-assertions.json`），新增即失败。
 - **`CLAUDE.md` 去重与纠错**：删掉不存在的 `audit/doc_traces.py` / `audit/code_traces.py`（真实脚本是 `audit/traces.py`，一个脚本两个范围），命令块改用 `bookctl` 而不是裸 `python`（工具链只允许项目虚拟环境），`build`/`deliver` 的描述与编排表对齐（含归档），`Where to Look` 里把"命令"拆成使用与验证两处所有者，并把"测量—再跑最小命令"、"不做前台长任务 + 不并发"各自合并为一条。
 - **`CLAUDE.md` 改为中文**：内容与结构不变，术语与本仓库其余文档统一（命令走 `bookctl`、证据目录、追踪编号边界、工作节奏五条），措辞避开 `traces` 判据里的过程类词汇。
+- **工具链定位写清**：`CLAUDE.md` 把 `books/` 描述成“通用的源码分析成书工具链 + 它正在服务的
+  这本书”，并写明换书只需改 `base.json [sources]`、加语言只需加适配器、新书用 `bookctl new`；
+  顺带把 `README.md` 与 `how-to-config.md` 的语言清单从三种补齐到 java / python / rust /
+  kotlin / go。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

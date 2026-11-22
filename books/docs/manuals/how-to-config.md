@@ -62,7 +62,7 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
   "sources": {
     "src_main": "../h2/src/main",     // 源码树根
     "pom_root": "../h2/pom.xml",      // 版本来源（可缺省）
-    "languages": ["java"],            // 支持 java / python / rust，可多选
+    "languages": ["java"],            // 支持 java / python / rust / kotlin / go，可多选
     "file_suffix": ".java",
     "package_prefix": "org.h2"
   },

@@ -4,9 +4,15 @@
 
 ## 仓库范围
 
-1. `h2/` —— 上游 H2 v2.x Java SQL 数据库源码（Maven，JDK 11+）。
-2. `books/` —— 面向 H2 内部实现的源码分析书（中文），以及审阅手稿、渲染
-   HTML/PDF/EPUB 的工具链。
+1. `h2/` —— 当前被分析的上游源码树（H2 v2.x，Maven，JDK 11+）。它只是输入，
+   不是工具链的一部分：换一本书就把 `base.json [sources]` 指向另一棵源码树。
+2. `books/` —— **通用的源码分析成书工具链**，外加它正在服务的这本书（H2 内部实现分析，
+   中文）。同一套工具能分析别的项目、写别的书：
+   - 源码树、包前缀、文件后缀全在 `base.json [sources]` 里配置；
+   - 语言适配器在 `ingest/languages/`（java / python / rust / kotlin / go），新增语言＝加一个模块；
+   - `bookctl new <目录>` 用脚手架生成一本新书（四份文档侧配置 + 派生 `style.json`），
+     目录、章节、章节标题、图号规则全部来自那本书自己的 `book.toml`；
+   - `h2` 相关内容只出现在本书的配置与手稿里，不出现在工具链代码里。
 
 ## 常用命令
 
@@ -14,7 +20,7 @@
 （只有 `books/.venv` 才允许运行工具链）。
 
 ```bash
-cd h2 && ./mvnw compile                    # 引擎构建
+cd h2 && ./mvnw compile                    # 引擎构建（当前被分析的源码树）
 books/scripts/bookctl check                # 全部门禁（只读）
 books/scripts/bookctl build                # 封面统计 + 合并稿 + HTML + 当日归档
 books/scripts/bookctl test                 # 快档（约 25 秒）；--full 加浏览器与 pandoc

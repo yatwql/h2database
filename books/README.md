@@ -4,7 +4,7 @@
 全程由门禁把关（结构、事实、文风、交付）。
 
 书名与章节映射都来自 `books/data/tmpl/book.toml`；工具链与具体项目无关，换一份源码树与章节映射
-即可生成另一本书。支持 Java / Python / Rust 源码（可多语言混跑）。
+即可生成另一本书。支持 Java / Python / Rust / Kotlin / Go 源码（可多语言混跑）。
 
 ## 能做什么
 
