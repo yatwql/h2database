@@ -1,0 +1,3 @@
+[console_scripts]
+bookwright = app.cli:main
+makebook = make:main

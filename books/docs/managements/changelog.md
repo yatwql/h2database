@@ -337,6 +337,11 @@
   `baseline_dir()` / `provider_path()` / `settings_path()` 逐次解析，并加一条用例：切书后
   三个路径都跟着变。审计还扫了 39 处模块级配置读取，全部位于以子进程运行的脚本里，
   在「动作走子进程」的模型下无害，已在设计里写明该边界。
+- **打包骨架与实测到阻塞**（plan-11 步骤四首片）：新增 `books/pyproject.toml`——`src/python`
+  下七个顶层包以 `package-dir` 声明、零运行时依赖，可离线 `pip install --target` 装出可导入的
+  包。安装后实测 `bookwright status --book <书>` 失败：`lib/_log.py`、`check_runner.py`、
+  `make.py` 在**导入期**读配置，`--book` 尚未解析，书根退化成 `/`。因此暂不提供控制台命令，
+  先把这三处改为调用时读取——与先前在 `_baseline`/`_llm` 修的是同一类缺陷。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

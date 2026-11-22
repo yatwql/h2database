@@ -133,8 +133,21 @@
 
 ## 步骤四（条件成熟时）：工具链独立成包
 
-**状态**：未开始。前置（路径由注入得到、`--book` 必填）已具备，`src/python` 仍是
-扁平脚本布局，包化需要一次真实的目录与导入改造，风险高于本计划的其余步骤。
+**状态**：包骨架已落地（`books/pyproject.toml`：七个顶层包 + 空依赖，可离线
+`pip install --target`），尚未提供控制台命令。
+
+**为什么还没有命令**：安装后实测 `bookwright status --book <书>` 会失败——`lib/_log.py`、
+`check_runner.py`、`make.py` 在**导入期**读配置，此时 `--book` 还没解析，工具位置推导出的
+书根是 `/`，于是报 `missing config: /data/book/book.toml`。必须先让这三处改为调用时读取
+（库层面同样的缺陷此前已在 `_baseline`/`_llm` 修过），再把
+`[project.scripts] bookwright = "app.cli:main"` 打开。
+
+**余下动作**：
+
+1. `_log`、`check_runner`、`make` 的模块级配置读取改为函数内读取；
+2. 恢复控制台命令，`--book` 在安装形态下必填；
+3. 默认配置随包分发（`base.json`/`style.json`/`templates.toml`/`language/`），书里只留覆盖项；
+4. 安装后的端到端验收：把书目录复制到仓外，`bookwright check` 与仓内结论一致。
 
 **动作**：`src/python/` 抽成带 `pyproject.toml` 的包；默认配置随包分发；
 `--book` 必填；本仓只剩书目录与文档。包里必须一并带上三样东西，
