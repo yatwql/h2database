@@ -149,7 +149,11 @@
 
 1. `_log`、`check_runner`、`make` 的模块级配置读取改为函数内读取；
 2. 恢复控制台命令，`--book` 在安装形态下必填；
-3. 默认配置随包分发（`base.json`/`style.json`/`templates.toml`/`language/`），书里只留覆盖项；
+3. 默认配置随包分发（`base.json`/`style.json`/`templates.toml`/`language/`），书里只留覆盖项。
+   约束：**缺失即用包内默认值会改变语义**——`language()` 缺文件时原本退回「只有骨架名的
+   最小包」，若换成包内完整的 `zh.json`，最小书会被按完整骨架生成；`base.json`/`style.json`
+   同理（缺失＝空策略，而不是「等同仓库那份」）。因此这一层要按「键级回退」实现：书的文件
+   存在就用它，缺某个键才取包内默认值，并保留「整份缺失」的原有回退语义，配套用例钉住；
 4. 安装后的端到端验收：把书目录复制到仓外，`bookwright check` 与仓内结论一致。
 
 **动作**：`src/python/` 抽成带 `pyproject.toml` 的包；默认配置随包分发；
