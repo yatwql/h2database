@@ -192,8 +192,10 @@ books/
 
 该层只写 `data/state` 与手稿骨架，不参与质量判定：判定属于 `audit/`。
 
-两条硬规则：**骨架可重建，正文不可重建**——`chapters.py` 只在目标文件为空、内容相同
-或显式传 `--force` 时写入，否则跳过并报出行数；阶段结束时由 `core/actions.analyze`
+两条硬规则：**骨架可重建，正文不可重建**——`chapters.py` 对已有章节默认**只刷新事实块**
+（标记块之外一字不动），无标记块时跳过并报出行数；只有显式 `--force` 才整篇重写（重写前先把旧文件
+备份到 `data/tmp/`），`--refresh-facts` 是只刷块的显式形态。阶段开始时它先说一句源码清单是否
+与上次一致（`digest.py` 保留 `source-inventory.prev.json`），结束时由 `core/actions.analyze`
 调用 `audit/content_volume.py` 做一次基线比对，把"这次 ingest 有没有让稿子变薄"放进
 同一次运行的结果里，而不是留给之后的门禁。
 

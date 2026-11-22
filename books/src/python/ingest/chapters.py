@@ -672,14 +672,33 @@ def _refresh_chapter(ch: dict, text: str, dry_run: bool) -> str:
 
 
 def _emit_chapter(ch: dict, args, stamp: str) -> str:
-    """Write, refresh or skip one chapter; returns its status."""
+    """Write, refresh or skip one chapter; returns its status.
+
+    Without ``--force`` an existing chapter is never thrown away: when it carries
+    the generated markers only those blocks are swapped (``refresh``), and when it
+    carries none the file is left alone and the skip is reported. ``--force`` is
+    the explicit "rewrite the whole chapter" path, and it backs the old file up.
+    """
     text = _space(render_chapter(ch))
     path = _config.manuscript(ch['file'])
     if args.refresh_facts:
         return _refresh_chapter(ch, text, args.dry_run)
-    if not rewrite_allowed(path, text, args.force):
-        print(f'  skipped {ch["file"]}（已有正文，--force 才覆盖）')
-        return 'skip'
+    existing = _fsutil.read_text(path) if os.path.isfile(path) else ''
+    if existing and not args.force:
+        result = refresh_blocks(existing, text)
+        if result is None:
+            print(f'  skipped {ch["file"]}（正文无标记块，事实无从插入；--force 可整篇重生成）')
+            return 'skip'
+        new_text, removed, added = result
+        if new_text == existing:
+            print(f'  unchanged {ch["file"]}（事实块与源码一致）')
+            return 'unchanged'
+        if args.dry_run:
+            print(f'--- {ch["file"]}（事实块 -{removed}/+{added} 行）')
+            return 'refresh'
+        _fsutil.write_text(path, new_text)
+        print(f'  refreshed {ch["file"]}（事实块 -{removed}/+{added} 行）')
+        return 'refresh'
     if args.dry_run:
         print(f'--- {ch["file"]} ({len(text.splitlines())} lines)')
         return 'written'
@@ -692,6 +711,21 @@ def _emit_chapter(ch: dict, args, stamp: str) -> str:
     _fsutil.write_text(path, text)
     print(f'  wrote {ch["file"]} ({len(text.splitlines())} lines)')
     return 'written'
+
+
+def _source_change_line() -> str:
+    """Whether the source inventory moved since the previous ingest."""
+    current = _config.state_path('source-inventory.json')
+    previous = _config.state_path('source-inventory.prev.json')
+    if not os.path.isfile(previous):
+        return '源码清单：首次 ingest（无上次记录可比）'
+    try:
+        same = _fsutil.read_text(previous) == _fsutil.read_text(current)
+    except OSError:
+        return '源码清单：上次记录不可读，按已变化处理'
+    if same:
+        return '源码清单：与上次一致（源码树无变化，事实块不应变）'
+    return '源码清单：已变化（源码树有新内容，事实块会随之刷新）'
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -729,9 +763,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f'error: state files are not valid JSON: {exc}', file=sys.stderr)
         return 2
 
+    print(_source_change_line())
+
     written = 0
     skipped = 0
     refreshed = 0
+    unchanged = 0
     unmarked = 0
     stamp = time.strftime('%Y-%m-%d_%H%M%S')
     for ch in outline['chapters']:
@@ -746,14 +783,19 @@ def main(argv: list[str] | None = None) -> int:
         status = _emit_chapter(ch, args, stamp)
         written += status == 'written'
         refreshed += status == 'refresh'
+        unchanged += status == 'unchanged'
         skipped += status == 'skip'
         unmarked += status == 'skip' and args.refresh_facts
     if args.refresh_facts:
         print(f'刷新 {refreshed} 章 / 跳过 {unmarked} 章（无标记块）')
         return 0
     print(f'chapters written: {written}')
+    if refreshed:
+        print(f'事实块已刷新: {refreshed} 章（正文未动）')
+    if unchanged:
+        print(f'事实块无变化: {unchanged} 章')
     if skipped:
-        print(f'chapters skipped: {skipped}（已有正文；确认要重生成时加 --force）')
+        print(f'chapters skipped: {skipped}（正文无标记块或需整篇重生成；--force 可重写）')
     if _USE_LLM and not written:
         print('LLM 未介入：本轮没有生成或重写的章节，导读/小结没有可润色的对象；'
               '要对已有正文润色请加 --force（旧文件先备份）或按章用 --only。')

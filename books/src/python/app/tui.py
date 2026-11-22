@@ -269,7 +269,8 @@ def handle(action: str, label: str, screen: str) -> tuple[bool, str, str]:
     if action == 'analyze-llm':
         # Overwriting written prose is the only way this action reaches the
         # provider on a finished book, so ask first and default to "no".
-        force = confirm('用 LLM 重写已有正文的导读/小结（旧文件先备份到 data/tmp）？')
+        force = confirm('整篇重写已有正文并用 LLM 润色导读/小结？'
+                        '（回答 n 则只刷新事实块，正文不动）')
         return False, screen, run_entry(action, label, force=force)
     return False, screen, run_entry(action, label)
 

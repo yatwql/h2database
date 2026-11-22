@@ -13,6 +13,11 @@
 
 ### 变更
 
+- **重生成不再把判断全推给人**：`chapters.py` 对已有章节的默认行为从“跳过”改为“**只刷新事实块**”
+  ——标记块内按源码更新，块外一字不动；无标记块时才跳过并说明；`--force` 才是整篇重写（旧文件
+  备份到 `data/tmp/`）。同时 `digest.py` 保留 `source-inventory.prev.json`，渲染前先说一句
+  “源码清单与上次一致/已变化”，界面上的 `analyze-llm` 确认文本也写明“回答 n 则只刷新事实块”。
+
 - **管理文档职责归一**：配置分层只在 `technical.md` §3.1 定义（四层：`book.toml` /
   `base.json` / `style.json` / `language/zh.json`）；门禁级别只在 `testplan.md` §2.1/§2.2
   声明；管理文档头只取软件版本（`lib/_version.py`）；章节清单只以 `book.toml` 为准。删除 `folder.md` 里

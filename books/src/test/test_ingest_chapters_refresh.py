@@ -163,5 +163,91 @@ class ForceAndRefreshRunTest(unittest.TestCase):
         self.assertIn('刷新 0 章 / 跳过 1 章（无标记块）', buffer.getvalue())
 
 
+class DefaultModeTest(unittest.TestCase):
+    """Without --force the renderer refreshes facts and keeps the prose."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.chapters = _fixture.load_module(self.root, 'chapters')
+        self.args = argparse.Namespace(only=None, dry_run=False,
+                                       force=False, refresh_facts=False, llm=False)
+        self.chapter = {'file': 'ch1-test.md', 'source_lines': 120,
+                        'packages': {'org.example': package(120)}}
+
+    def path(self) -> str:
+        return os.path.join(self.root, 'data', 'manuscript', 'ch1-test.md')
+
+    def test_a_marked_file_is_refreshed_and_the_prose_survives(self):
+        prose = '作者写的一段正文。'
+        rendered = self.chapters.render_chapter(self.chapter)
+        with open(self.path(), 'w', encoding='utf-8') as fh:
+            fh.write(rendered.replace('## 1.1 模块版图', prose + '\n\n## 1.1 模块版图', 1))
+        self.chapter['source_lines'] = 900
+        self.chapter['packages'] = {'org.example': package(900)}
+
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            status = self.chapters._emit_chapter(self.chapter, self.args, 'STAMP')
+        self.assertEqual(status, 'refresh')
+        self.assertIn('事实块 -', buffer.getvalue())
+        with open(self.path(), encoding='utf-8') as fh:
+            text = fh.read()
+        self.assertIn(prose, text)
+        self.assertIn('| `org.example` | 3 | 900 |', text)
+
+    def test_an_unchanged_file_reports_no_work(self):
+        with open(self.path(), 'w', encoding='utf-8') as fh:
+            fh.write(self.chapters.render_chapter(self.chapter))
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            status = self.chapters._emit_chapter(self.chapter, self.args, 'STAMP')
+        self.assertEqual(status, 'unchanged')
+        self.assertIn('事实块与源码一致', buffer.getvalue())
+
+    def test_an_unmarked_file_is_left_alone(self):
+        before = '# 第1章 示例总览\n\n全是人写的正文。\n'
+        with open(self.path(), 'w', encoding='utf-8') as fh:
+            fh.write(before)
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            status = self.chapters._emit_chapter(self.chapter, self.args, 'STAMP')
+        self.assertEqual(status, 'skip')
+        self.assertIn('正文无标记块', buffer.getvalue())
+        with open(self.path(), encoding='utf-8') as fh:
+            self.assertEqual(fh.read(), before)
+
+
+class SourceChangeLineTest(unittest.TestCase):
+    """The renderer says whether the source tree moved since the last ingest."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.chapters = _fixture.load_module(self.root, 'chapters')
+        self.state = os.path.join(self.root, 'data', 'state')
+        os.makedirs(self.state, exist_ok=True)
+
+    def write(self, name: str, payload: dict) -> None:
+        with open(os.path.join(self.state, name), 'w', encoding='utf-8') as fh:
+            json.dump(payload, fh)
+
+    def test_first_ingest_has_nothing_to_compare(self):
+        self.write('source-inventory.json', {'packages': {}})
+        self.assertIn('首次 ingest', self.chapters._source_change_line())
+
+    def test_an_identical_inventory_reads_as_unchanged(self):
+        self.write('source-inventory.json', {'packages': {'a': 1}})
+        self.write('source-inventory.prev.json', {'packages': {'a': 1}})
+        self.assertIn('无变化', self.chapters._source_change_line())
+
+    def test_a_moved_inventory_reads_as_changed(self):
+        self.write('source-inventory.json', {'packages': {'a': 2}})
+        self.write('source-inventory.prev.json', {'packages': {'a': 1}})
+        self.assertIn('已变化', self.chapters._source_change_line())
+
+
 if __name__ == '__main__':
     unittest.main()

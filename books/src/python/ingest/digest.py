@@ -80,6 +80,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     _fsutil.ensure_dir(out)
+    if os.path.isfile(out):
+        # keep the previous result so the renderer can say whether the source
+        # tree actually moved, instead of asking the operator to remember.
+        _fsutil.write_text(_config.state_path('source-inventory.prev.json'),
+                           _fsutil.read_text(out))
     _fsutil.write_text(out, json.dumps(inventory, ensure_ascii=False, indent=2) + '\n')
     totals = inventory['totals']
     print(f"inventory -> {os.path.relpath(out, _config.BOOK_ROOT)}")
