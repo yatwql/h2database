@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import glob
+import hashlib
 import json
 import os
 import subprocess
@@ -123,6 +124,11 @@ def load_baseline(path: str | None = None) -> dict:
 
 def compare(baseline: dict, current: dict) -> list[str]:
     problems: list[str] = []
+    recorded = baseline.get('reviewed', {}).get('source')
+    if recorded:
+        now = source_fingerprint()
+        if recorded.get('inventory_sha256') != now.get('inventory_sha256'):
+            problems.append('基线来自另一个源（源码清单指纹不同），先复核再下调下限')
     floor = float(baseline.get('thresholds', {}).get('floor_ratio', FLOOR_RATIO))
     base_files = baseline.get('manuscript', {}).get('files', {})
     now_files = current['manuscript']['files']
@@ -168,6 +174,27 @@ def _git(*args: str) -> str:
     return proc.stdout.strip() if proc.returncode == 0 else ''
 
 
+def source_fingerprint() -> dict:
+    """What source tree the manuscript was built from.
+
+    A volume floor is a claim about one source, one manuscript. Recording the roots
+    and a digest of the inventory is what lets a later comparison notice that the
+    source moved — otherwise a much thinner manuscript built from a smaller tree
+    passes as if nothing happened.
+    """
+    roots = _config.current().source_roots()
+    labels = [entry['label'] for entry in roots]
+    inventory = _config.state_path('source-inventory.json')
+    digest = ''
+    try:
+        with open(inventory, 'rb') as fh:
+            digest = hashlib.sha256(fh.read()).hexdigest()[:16]
+    except OSError:
+        digest = ''
+    return {'roots': labels, 'versions': _config.current().source_versions(),
+            'inventory_sha256': digest}
+
+
 def provenance() -> dict:
     """What the reviewed baseline is being recorded against.
 
@@ -183,6 +210,7 @@ def provenance() -> dict:
         'committed_at': _git('log', '-1', '--format=%cI'),
         'author': _git('config', 'user.name'),
         'dirty': dirty,
+        'source': source_fingerprint(),
     }
 
 

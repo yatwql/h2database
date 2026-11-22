@@ -308,6 +308,10 @@
   等于首根，其它键按 `label` 解析。`versions()['source']` 单根仍是字符串、多根改为
   `label → 版本` 映射；`source_versions()` 给出逐根版本。用例 4 条钉住标签、解析与两种拒绝
   （重复 label、缺 path）。
+- **多根源逐根摘要与源指纹**（plan-11 步骤五收尾）：`digest.py` 在声明多个根时逐根分析并
+  合并——包按 `<label>:<包名>` 记账、各根总量进 `by_root`，单根时输出与之前逐字相同；
+  体量基线的 `reviewed` 增加 `source{roots, versions, inventory_sha256}`，比对时若指纹
+  不同即报「基线来自另一个源，先复核再下调下限」，不再静默通过。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

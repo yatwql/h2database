@@ -58,6 +58,31 @@ def digest(root: str, selected: list[str] | None = None) -> dict:
     return merged
 
 
+def merge_roots(per_root: list[tuple[str, dict]]) -> dict:
+    """Combine several source trees, keeping every package under its root label.
+
+    Packages are keyed ``<label>:<name>``: two trees may hold the same class name,
+    and silently collapsing them would make the coordinate gates check one and
+    report the other.
+    """
+    merged: dict = {
+        'roots': {},
+        'languages': sorted({lang for _label, inv in per_root
+                             for lang in (inv.get('languages') or [])}),
+        'totals': {'packages': 0, 'files': 0, 'lines': 0},
+        'by_root': {},
+        'packages': {},
+    }
+    for label, inventory in per_root:
+        merged['roots'][label] = inventory
+        merged['by_root'][label] = dict(inventory.get('totals') or {})
+        for name, package in (inventory.get('packages') or {}).items():
+            merged['packages'][f'{label}:{name}'] = {**package, 'root': label}
+        for field, value in (inventory.get('totals') or {}).items():
+            merged['totals'][field] = merged['totals'].get(field, 0) + int(value)
+    return merged
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -68,9 +93,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument('--json', action='store_true', help='print a summary only')
     args = parser.parse_args(argv)
 
-    root = args.root or _config.source_tree('src_main')
+    roots = _config.current().source_roots()
     out = args.out or _config.state_path('source-inventory.json')
-    inventory = digest(root, args.language)
+    if args.root or len(roots) == 1:
+        root = args.root or _config.source_tree('src_main')
+        inventory = digest(root, args.language)
+    else:
+        inventory = merge_roots([
+            (entry['label'],
+             digest(_config.source_tree(entry['label']), args.language))
+            for entry in roots])
 
     if args.json:
         print(json.dumps({'root': inventory['root'], 'languages': inventory['languages'],
