@@ -33,7 +33,7 @@ class StructureBranchesTest(unittest.TestCase):
         return _fixture.run_inproc(root, 'structure.py', *args)
 
     def test_a_book_without_a_coverage_table_falls_back_to_reading_order(self):
-        root = self.book(**{'data/book.toml': _fixture.BOOK_TOML.replace(
+        root = self.book(**{'data/book/book.toml': _fixture.BOOK_TOML.replace(
             '[chapters.coverage]\n"ch1-test.md" = [1]\n"ch2-test.md" = [2]\n',
             '[chapters.coverage]\n')})
         code, out = self.run_gate(root)
@@ -41,7 +41,7 @@ class StructureBranchesTest(unittest.TestCase):
         self.assertIn('ch1', out)
 
     def test_no_configured_required_sections_is_reported_as_such(self):
-        root = self.book(**{'data/book.toml': _fixture.BOOK_TOML.replace(
+        root = self.book(**{'data/book/book.toml': _fixture.BOOK_TOML.replace(
             'per_chapter = ["本章小结", "延伸思考"]', 'per_chapter = []')})
         code, out = self.run_gate(root)
         self.assertIn(code, (0, 1), out[-400:])

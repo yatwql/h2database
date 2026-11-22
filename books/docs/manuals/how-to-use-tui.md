@@ -124,7 +124,7 @@ dist 的新值（当前 dist）: out
 已更新 dist = out
 ```
 
-写入位置：书名/版本/目录 → `data/book.toml`；语言/日志级别 →
+写入位置：书名/版本/目录 → `data/book/book.toml`；语言/日志级别 →
 `data/config/base.json`；默认 LLM provider 与优先级 → `data/config/llm_provider.json`。
 写后会立即重载配置，头部随之更新；非法值会被拒绝并提示原因。
 

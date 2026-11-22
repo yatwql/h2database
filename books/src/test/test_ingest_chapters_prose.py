@@ -108,7 +108,7 @@ class IngestSwitchConfigTest(unittest.TestCase):
         self.assertFalse(config.llm_ingest_prose())
 
     def test_config_toggle_is_read_from_book_toml(self):
-        path = os.path.join(self.root, 'data', 'book.toml')
+        path = os.path.join(self.root, 'data', 'book', 'book.toml')
         with open(path, encoding='utf-8') as fh:
             text = fh.read()
         with open(path, 'w', encoding='utf-8') as fh:

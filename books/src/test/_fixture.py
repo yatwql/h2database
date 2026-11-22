@@ -376,7 +376,7 @@ def build_book(root: str, *, extra: dict[str, str] | None = None) -> str:
     os.makedirs(os.path.join(root, 'dist'), exist_ok=True)
     os.makedirs(os.path.join(root, 'docs', 'managements'), exist_ok=True)
     os.makedirs(os.path.join(root, 'tools'), exist_ok=True)
-    config_dir = os.path.join(root, 'data')
+    config_dir = os.path.join(root, 'data', 'book')
     os.makedirs(config_dir, exist_ok=True)
     with open(os.path.join(config_dir, 'book.toml'), 'w', encoding='utf-8') as fh:
         fh.write(BOOK_TOML)

@@ -54,7 +54,7 @@ class DeterminismTest(unittest.TestCase):
             '"cover.md",\n    "ch1-test.md",\n    "ch2-test.md",',
             '"cover.md",\n    "ch2-test.md",\n    "ch1-test.md",')
         self.assertNotEqual(reordered, toml, 'fixture chapter list changed')
-        root = _fixture.build_book(tmp.name, extra={'data/book.toml': reordered})
+        root = _fixture.build_book(tmp.name, extra={'data/book/book.toml': reordered})
         _fixture.run_inproc(root, 'merge.py')
         with open(os.path.join(root, 'dist', 'test-book.md'), encoding='utf-8') as fh:
             text = fh.read()

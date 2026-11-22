@@ -202,7 +202,7 @@
   模块级名字改为转发到活动书（PEP 562 `__getattr__`），新增 `current()` / `use()` /
   `for_root()`；调用形式与取值全部不变（渲染文本哈希 `13f8976f…` 未变），新增 8 条用例
   钉住两本书互不串值、`use()` 异常也还原、未知名字仍报错。
-- **书籍配置文件的落点**：`data/book.toml` 与 `data/case-studies.toml` 就摆在 `data/` 第一层，
+- **书籍配置文件的落点**：`data/book/book.toml` 与 `data/book/case-studies.toml` 就摆在 `data/` 第一层，
   与 `manuscript/`、`config/`、`tmpl/` 并列；`data/config/` 恢复为「工具链策略」专用
   （base/style/llm_*）。`Config.book_toml`、scaffold 写入位置、注释痕迹扫描面、fixture、
   用户文档与 20 处路径引用同步改指向。
