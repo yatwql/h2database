@@ -206,6 +206,10 @@
   与 `manuscript/`、`config/`、`tmpl/` 并列；`data/config/` 恢复为「工具链策略」专用
   （base/style/llm_*）。`Config.book_toml`、scaffold 写入位置、注释痕迹扫描面、fixture、
   用户文档与 20 处路径引用同步改指向。
+- **多书并行维护立档**：配置已能按书解析，但入口、派生状态与基线仍是单份，第二本书一进来就会
+  互相覆盖。新增 `docs/plan/multi-book/` 记录目标形态（先一仓多书、条件成熟再让工具链独立成包）、
+  按书隔离与共享的边界、配置三层与手稿 edition 轴，并把 `plan-11` 列为当前待办；
+  `technical.md` §10 的「不做多书合一构建」仍然有效——一本书一份产物。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
