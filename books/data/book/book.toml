@@ -112,3 +112,8 @@ per_chapter = ["本章导读", "本章小结", "延伸思考", "延展阅读"]
 [llm]
 # 源码 → 手稿时是否让 LLM 起草导读/小结（事实、坐标、表格始终确定性）
 ingest_prose = false
+
+[sources]
+src_main = "../h2/src/main"
+pom_root = "../h2/pom.xml"
+version = "2.5.259-SNAPSHOT"

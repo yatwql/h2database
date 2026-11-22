@@ -352,6 +352,11 @@
   `_reload()` 在重导入后按**当前书**重新绑定（否则重导入会把活动书换回进程默认）。修掉
   一个真实写入缺陷：`[llm]` 段已存在但缺该键时，写入会追加第二个 `[llm]` 段，文件直接变成
   非法 TOML——现在插到既有段内。安装后 `import app.cli` 通过，控制台命令待补。
+- **被分析的源树归书声明**：`src_main`/`pom_root`/`version` 从 `data/config/base.json [sources]`
+  移入 `data/book/book.toml [sources]`——「这本书读哪棵树」是书的身份，不是工具链策略；
+  `base.json [sources]` 只保留分析口径（`languages`、`suffixes`、`package_prefix`），两处按
+  书级覆盖共享合并。这样在安装形态（步骤四）下，默认配置随包分发时不会把某本书的源树
+  带成所有书的默认值。归属写进 `folder.md` §3 与 `technical.md` §3.1，多书设计的源章节同步。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

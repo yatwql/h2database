@@ -108,7 +108,10 @@ books/docs/managements/
 - **手稿只在 `data/manuscript/`**：`dist/` 里的合并 Markdown 是生成物，不手改。
 - **产物只在 `dist/`**：`*.html`、`*.pdf`、`*.epub`、`*.log` 全部 gitignored，
   由 `make.py build` / `make.py deliver` 重新生成。
-- **被分析的源码是外部输入**：由 `base.json [sources]` 指向，仓库里不需要它。
+- **被分析的源码是外部输入，但归书声明**：书读哪棵源树写在 `data/book/book.toml [sources]`
+  （`src_main`/`pom_root`/`roots[]`/`version`）——换一本书就是换一棵树，这是书的身份而非工具链
+  策略；分析口径（`languages`、`suffixes`、`package_prefix`）留在 `base.json [sources]`，两处按
+  书级覆盖共享合并。源码本身仍在书根之外，仓库里不需要它。
 - **工具链只在 `src/python/`**：正式交付脚本；临时脚本不得入库。
 - **测试只在 `src/test/`**：`make.py test` 跑全部；`make.py cover` 带覆盖率棘轮。
 - **管理文档只在 `docs/managements/`**：需求、计划、测试、变更各一份，互不重复。

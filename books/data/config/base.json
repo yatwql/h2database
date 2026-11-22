@@ -6,8 +6,6 @@
     "snapshots": "data/snapshots"
   },
   "sources": {
-    "src_main": "../h2/src/main",
-    "pom_root": "../h2/pom.xml",
     "file_suffix": ".java",
     "package_prefix": "org.h2",
     "language": "java",
@@ -20,8 +18,7 @@
       "rust": ".rs",
       "kotlin": ".kt",
       "go": ".go"
-    },
-    "version": "2.5.259-SNAPSHOT"
+    }
   },
   "baselines": {
     "ascii": "data/baselines/ascii-baseline.json",

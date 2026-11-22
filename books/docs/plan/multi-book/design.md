@@ -91,8 +91,9 @@ books/
 
 ## 5. 源目录怎么绑
 
-源是这本书的输入，声明在书级的 `data/config/base.json [sources]`（`src_main`、`pom_root`、
-`languages`、`suffixes`、`version`）。多书形态下每本书自带一份，隔离不需要额外机制。
+源是这本书的输入：书读哪棵树写在 `data/book/book.toml [sources]`（`src_main`、`pom_root`、
+`roots[]`、`version`），分析口径（`languages`、`suffixes`、`package_prefix`）留在
+`data/config/base.json [sources]`，后者被前者按书覆盖。多书形态下每本书自带一份，隔离不需要额外机制。
 
 **不做运行期切换源**：NFR-02 要求同一输入两次构建产物一致，体量下限又是对「某一版源 +
 某一版稿」的评审结论。随手换源会让坐标断言、体量比对、术语摘录同时失去含义。要比两个源，

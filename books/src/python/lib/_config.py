@@ -161,7 +161,10 @@ class Config:
         # book.toml values (fixtures) are only a fallback when no policy exists.
         self.thresholds = dict(self.policy.get('thresholds') or self.cfg.get('thresholds', {}))
         self.sections = dict(self.cfg.get('sections', {}))
-        self.sources = dict(self.policy.get('sources') or self.cfg.get('sources', {}))
+        # shared analysis defaults from base.json, with this book's own trees on top:
+        # which source a book digests is part of the book, not of the toolchain
+        self.sources = {**(self.policy.get('sources') or {}),
+                        **(self.cfg.get('sources') or {})}
         self.captions = dict(self.policy.get('captions', {}))
         self.diagrams = dict(self.policy.get('diagrams', {}))
         self.baselines = dict(self.policy.get('baselines', {}))
