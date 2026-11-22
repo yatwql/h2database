@@ -88,6 +88,9 @@
   这本书”，并写明换书只需改 `base.json [sources]`、加语言只需加适配器、新书用 `bookctl new`；
   顺带把 `README.md` 与 `how-to-config.md` 的语言清单从三种补齐到 java / python / rust /
   kotlin / go。
+- **`CLAUDE.md` 只留“这一层才有的判断”**：删掉与 `books/README.md` / `testplan.md` §1 重复的命令块，
+  改为“去哪读”索引；保留两块独有内容——工作节奏（先量后跑、单重活、看报告调试、CI 独立、
+  改完就发）与编辑边界（配置/手稿/产物/证据目录/追踪编号）。这样文档改版时不必回来同步。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
