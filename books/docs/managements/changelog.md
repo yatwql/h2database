@@ -469,6 +469,13 @@
   大纲与标题不匹配、缺印刷目录项、以及 `require_toc_links` 下从未增强过的链接。这些分支
   用 pypdf 合成 PDF 即可驱动，不需要浏览器或 pandoc。用例 14 → 19；总覆盖仍 87%（阈值 88），
   剩余缺口集中在 `to_epub`（42 语句 / 15 半分支）。
+- **覆盖率：`to_epub.py` 100%**：原有几条 `to_epub` 用例标着 `tier:slow`（要真 pandoc），
+  覆盖率门禁只跑快档，于是它们从未计入——该文件在报告里长期停在 72%。新增 13 条**快档**用例，
+  把 pandoc 与 `shutil.which` 换成桩，覆盖：pandoc 不在 PATH、`--version` 探测抛错、
+  `merge.py` 缺失/失败/静默、合并稿缺失、封面缺标题/副标题/版本/作者时回落到 `book.toml`、
+  封面版本与配置不一致的告警、pandoc 退出码非零（有/无输出两种）、成功却没产物、警告与
+  正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
+  门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
