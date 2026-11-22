@@ -461,6 +461,10 @@
   总覆盖 87%（未覆盖语句 1362 → 1319、半分支 594 → 592），单文件下限已清；**总阈值 88 仍差 1%
   分**——按缺口排序，`snapshot`（53+12）、`verify_pdf`（49+14）、`to_epub`（42+15）三处合计
   约 185 个单元，覆盖三处即可过线，下一步按此顺序做。
+- **覆盖率：补 `snapshot.py` 的 CLI 分发**：`main()` 四个子命令（`import`/`list`/`verify`/`baseline`）、
+  无子命令时的帮助退出码 2、`--json` 摘要与未知标签拒绝，此前完全没走；新增 4 条用例。
+  未覆盖语句 1319 → 1294，快档 1214 passed。总覆盖仍 87%（阈值 88）：缺口集中在
+  `verify_pdf`（49 语句 / 14 半分支）与 `to_epub`（42 / 15），下一步按此顺序。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

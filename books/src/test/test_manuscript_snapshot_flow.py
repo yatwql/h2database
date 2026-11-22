@@ -169,5 +169,27 @@ class SnapshotFlowTest(unittest.TestCase):
         self.assertEqual(self.mod.sha256_file(os.path.join(self.tmp.name, 'nope')), '')
 
 
+    def test_the_cli_prints_help_without_a_command(self):
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(self.mod.main([]), 2)
+
+    def test_the_cli_verify_and_baseline_run_by_label(self):
+        source = self.archive({'manuscript/ch1.md': '# 第1章\n\n正文。\n'})
+        with redirect_stdout(io.StringIO()):
+            self.mod.import_snapshot(source, 'june', '2026-06-11')
+            self.assertEqual(self.mod.main(['verify', '2026-06-11-june']), 0)
+            self.assertEqual(self.mod.main(['baseline', 'june']), 0)
+
+    def test_the_cli_json_summary_names_the_command(self):
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            code = self.mod.main(['--json', 'list'])
+        self.assertEqual(code, 0)
+        self.assertIn('"command": "list"', buffer.getvalue())
+
+    def test_the_cli_refuses_an_unknown_label(self):
+        with redirect_stdout(io.StringIO()):
+            self.assertNotEqual(self.mod.main(['verify', 'nope']), 0)
+
 if __name__ == '__main__':
     unittest.main()
