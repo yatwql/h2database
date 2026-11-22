@@ -293,6 +293,11 @@
   版本时报 `ConfigError` 并列出已声明版本。CLI/Web/make/TUI 已把选择带进同进程上下文，
   子进程照旧读环境变量。用例 5 条钉住单版本不变、隐式选中、多版本必填、未声明拒绝、
   环境变量选择。
+- **版本感知的三处**（plan-11 步骤三第二批）：`[editions.<id>]` 可以是表，带 `display`、
+  `merged_name` 与 `[editions.<id>.chapters]` 覆盖（files/numbering/titles/packages/coverage
+  逐键覆盖书级表）；`index_xrefs.py` 的子条目章号不再硬编码 1-12，改按本书声明的覆盖章号集
+  判定；数据归档目录与快照账本记录版本（`<slug>-<edition>`、`manifest.edition`），两份手稿
+  归档不再互相覆盖。单版本时三处行为与目录形态不变。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

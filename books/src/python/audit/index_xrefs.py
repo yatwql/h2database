@@ -201,6 +201,24 @@ def parse_index(path: str):
 
     return main_entries, sub_entries, see_alsos, sections
 
+def declared_chapters() -> set[int]:
+    """Chapter numbers the active book declares coverage for.
+
+    The set comes from configuration, so an edition with fewer chapters is judged
+    by its own numbering instead of a hardcoded range.
+    """
+    numbers: set[int] = set()
+    for name, declared in _config.chapter_coverage().items():
+        if not name.startswith('ch'):
+            continue
+        for number in declared:
+            try:
+                numbers.add(int(number))
+            except (TypeError, ValueError):
+                continue
+    return numbers or {1}
+
+
 def main(argv: list[str] | None = None) -> int:
     args = list(argv) if argv else list(sys.argv[1:])
     as_json = '--json' in args
@@ -255,16 +273,19 @@ def main(argv: list[str] | None = None) -> int:
         print('  OK: every see-also target resolves to a main entry')
 
     # Check 2: sub-entry chapter validity.
-    # Any chapter referenced by a sub-entry must be a valid chapter (1-12).
+    # A sub-entry may name any chapter the book declares coverage for; the set comes
+    # from the configuration so an edition with fewer chapters is judged by its own
+    # numbering rather than by a hardcoded range.
     # We deliberately do NOT enforce that sub-entries lie within their parent's
     # chapter span — sub-entries often legitimately cross-reference comparison
     # material in distant chapters (e.g. "与 LSM-Tree 对比 — §1.1" under a
     # "B-Tree 索引 — §6.1" parent is desirable, not a violation).
     print('\n=== sub-entry chapter validity ===')
+    valid_chapters = declared_chapters()
     bad_subs = []
     for sub in sub_entries:
         for ch in sub['chapters']:
-            if ch < 1 or ch > 12:
+            if ch not in valid_chapters:
                 bad_subs.append((sub['line'], sub['parent'], sub['term'], ch))
     if bad_subs:
         for line, parent, term, ch in bad_subs[:20]:

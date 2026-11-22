@@ -169,6 +169,7 @@ def import_snapshot(archive_path: str, label: str, date: str) -> int:
         'date': date,
         'source_archive': source_name,
         'archive_sha256': source_hash,
+        'edition': _config.current().edition,
         'files': files,
         'totals': {
             'files': len(files),

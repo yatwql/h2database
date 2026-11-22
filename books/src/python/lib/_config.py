@@ -172,14 +172,22 @@ class Config:
         self.docs_dir = self._path('docs')
         self.language_dir = os.path.join(self.root, 'data', 'language')
         self.templates_path = self.template_path('templates.toml')
-        self.editions = {str(key): str(value)
-                         for key, value in (self.cfg.get('editions') or {}).items()}
+        self.edition_tables: dict[str, dict] = {}
+        self.editions: dict[str, str] = {}
+        for key, value in (self.cfg.get('editions') or {}).items():
+            name = str(key)
+            if isinstance(value, dict):
+                self.edition_tables[name] = value
+                self.editions[name] = str(value.get('display') or name)
+            else:
+                self.editions[name] = str(value)
         self.edition = self._pick_edition(edition)
         if self.edition:
             self.manuscript_dir = os.path.join(self.manuscript_dir, self.edition)
         self.merged_name = self.cfg.get('book', {}).get('merged_name', 'book')
         if self.edition:
-            self.merged_name = f'{self.merged_name}-{self.edition}'
+            named = (self.edition_tables.get(self.edition) or {}).get('merged_name')
+            self.merged_name = str(named) if named else f'{self.merged_name}-{self.edition}'
         self.title = self.cfg.get('book', {}).get('title', '')
         self.version = self.cfg.get('book', {}).get('version', '')
 
@@ -359,9 +367,17 @@ class Config:
 
     # ---- manuscript organisation -------------------------------------------
 
+    def chapters_spec(self) -> dict:
+        """The chapter table this edition reads: book-level, edition override merged in."""
+        base = dict(self.cfg.get('chapters') or {})
+        if self.edition:
+            override = (self.edition_tables.get(self.edition) or {}).get('chapters') or {}
+            base.update(override)
+        return base
+
     def chapter_files(self, include_cover: bool = True) -> list[str]:
         """Chapter files in reading order (absolute paths)."""
-        names = list(self.cfg.get('chapters', {}).get('files', []))
+        names = list(self.chapters_spec().get('files', []))
         if not include_cover:
             names = [n for n in names if n != 'cover.md']
         return [self.manuscript(n) for n in names]
@@ -372,12 +388,12 @@ class Config:
 
     def chapter_table(self, name: str) -> dict:
         """One `[chapters.<name>]` table of book.toml (empty when absent)."""
-        chapters = self.cfg.get('chapters') or {}
+        chapters = self.chapters_spec()
         table = chapters.get(name) or {}
         return table if isinstance(table, dict) else {}
 
     def _glob_matter(self, key: str) -> list[str]:
-        pattern = self.cfg.get('chapters', {}).get(key, '')
+        pattern = self.chapters_spec().get(key, '')
         if not pattern:
             return []
         return sorted(glob.glob(self.manuscript(pattern)))
@@ -400,23 +416,23 @@ class Config:
 
     def chapter_packages(self) -> dict[str, list[str]]:
         """Chapter file -> source packages it must digest (stage-1 mapping)."""
-        return dict(self.cfg.get('chapters', {}).get('packages', {}))
+        return dict(self.chapters_spec().get('packages', {}))
 
     def chapter_titles(self) -> dict[str, list[str]]:
         """Chapter file -> ordered section titles contributed by that file."""
-        return {k: list(v) for k, v in self.cfg.get('chapters', {}).get('titles', {}).items()}
+        return {k: list(v) for k, v in self.chapters_spec().get('titles', {}).items()}
 
     def chapter_numbering(self) -> dict[str, list[int]]:
         """Chapter file -> H1 chapter numbers it owns (unique across files)."""
-        return {k: list(v) for k, v in self.cfg.get('chapters', {}).get('numbering', {}).items()}
+        return {k: list(v) for k, v in self.chapters_spec().get('numbering', {}).items()}
 
     def chapter_coverage(self) -> dict[str, list[int]]:
         """Chapter file -> book chapters it covers (may repeat across files)."""
-        return {k: list(v) for k, v in self.cfg.get('chapters', {}).get('coverage', {}).items()}
+        return {k: list(v) for k, v in self.chapters_spec().get('coverage', {}).items()}
 
     def missing_files(self) -> list[str]:
         """Configured chapter files that do not exist on disk."""
-        names = list(self.cfg.get('chapters', {}).get('files', []))
+        names = list(self.chapters_spec().get('files', []))
         return [n for n in names if not os.path.exists(self.manuscript(n))]
 
     # ---- source tree -------------------------------------------------------

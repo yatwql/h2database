@@ -56,7 +56,7 @@ def archive_root() -> str:
 
 
 def book_slug() -> str:
-    """Directory name for this book: the merged name, else a slugged title."""
+    """Directory name for this book, including the edition when one is selected."""
     name = (_config.MERGED_NAME or '').strip()
     if not name:
         name = _config.TITLE or 'book'
@@ -147,7 +147,8 @@ def take(kinds: list[str], today: datetime.date, dry_run: bool = False) -> dict:
             continue
         copied[kind] = _copy(files, source_root, os.path.join(day_dir, kind))
     removed = prune(book_dir, policy['retention_days'], today, dry_run)
-    summary = {'book': book_slug(), 'date': today.strftime(DATE_FMT),
+    summary = {'book': book_slug(), 'edition': _config.current().edition,
+               'date': today.strftime(DATE_FMT),
                'root': book_dir, 'kinds': sorted(copied),
                'files': {kind: len(items) for kind, items in copied.items()},
                'bytes': {kind: sum(items.values()) for kind, items in copied.items()},
