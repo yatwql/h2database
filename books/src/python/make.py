@@ -30,9 +30,10 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from lib import _config, _log
+from lib import _config, _fsutil, _log
 
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
+COVERAGE_BASELINE_REL = os.path.join('data', 'baselines', 'coverage.json')
 
 
 def book_root() -> str:
@@ -328,7 +329,7 @@ def report(extra: list[str] | None = None) -> int:
     return proc.returncode
 
 
-def coverage(*, full: bool = False) -> int:
+def coverage(*, full: bool = False, update_baseline: bool = False) -> int:
     """Run the test suite under coverage and enforce the ratchet.
 
     The default measures the **fast** tier: that is the per-commit gate and the
@@ -377,6 +378,15 @@ def coverage(*, full: bool = False) -> int:
         for path, percent in thin:
             print(f'  FAIL {path} ({percent}% < per-file floor)')
         return 1
+    drops, baseline = coverage_ratchet(update=update_baseline)
+    if update_baseline:
+        print(f'coverage baseline written: {baseline}')
+    for path, before, now in drops:
+        print(f'  FAIL {path} ({now}% < baseline {before}%)')
+    if drops:
+        print('  per-file coverage dropped: restore the paths, or re-record with '
+              '`make.py cover --update-baseline` after review')
+        return 1
     return report.returncode
 
 
@@ -405,6 +415,57 @@ def thin_files(floor: float) -> list[tuple[str, int]]:
     return sorted(out, key=lambda item: item[1])
 
 
+def _coverage_json() -> dict:
+    """The coverage data of the last run, as the same JSON the gates read."""
+    raw = subprocess.run([PY, '-m', 'coverage', 'json', '-o', '-'],
+                         cwd=os.path.dirname(book_root()), capture_output=True,
+                         text=True, check=False)
+    try:
+        return json.loads(raw.stdout or '{}')
+    except ValueError:
+        return {}
+
+
+def _percentages(payload: dict) -> dict[str, float]:
+    """Per-file branch coverage, rounded the way the report prints it."""
+    out: dict[str, float] = {}
+    for path, data in (payload.get('files') or {}).items():
+        summary = data.get('summary') or {}
+        if int(summary.get('num_statements') or 0) < 5:
+            continue
+        out[path] = round(float(summary.get('percent_covered') or 0.0), 1)
+    return out
+
+
+def coverage_ratchet(*, update: bool = False) -> tuple[list[tuple[str, float, float]], str]:
+    """Per-file coverage may not drop, whatever the global total says.
+
+    A single global threshold lets a 200-statement module sit at 73% forever: the
+    gap it leaves is invisible next to a well-covered neighbour. Recording every
+    file's number makes each one ratchet on its own. Files below five statements
+    are left out (a two-line module swings the percentage by tens of points).
+    """
+    path = os.path.join(book_root(), COVERAGE_BASELINE_REL)
+    current = _percentages(_coverage_json())
+    if update:
+        _fsutil.ensure_dir(path)
+        _fsutil.dump_json(path, {
+            'note': 'Per-file branch coverage of the fast tier. Only review raises '
+                    'these numbers; a drop fails `make.py cover`.',
+            'files': dict(sorted(current.items())),
+        })
+        return [], path
+    if not os.path.exists(path):
+        return [], path
+    try:
+        recorded = (_fsutil.load_json(path) or {}).get('files') or {}
+    except (OSError, ValueError):
+        return [], path
+    drops = [(name, float(before), current[name]) for name, before in sorted(recorded.items())
+             if name in current and current[name] < float(before)]
+    return drops, path
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -418,6 +479,8 @@ def main(argv: list[str] | None = None) -> int:
                         help='run every step even after a failure')
     parser.add_argument('--full', action='store_true',
                         help='also run the slow suite (chromium/pandoc)')
+    parser.add_argument('--update-baseline', action='store_true',
+                        help='re-record the per-file coverage baseline (review first)')
     parser.add_argument('--book', default='',
                         help='book root for every step (default: BOOK_ROOT, then the '
                              'nearest ancestor holding data/book/book.toml)')
@@ -439,7 +502,7 @@ def main(argv: list[str] | None = None) -> int:
         return doctor()
 
     if args.command == 'cover':
-        return coverage(full=args.full)
+        return coverage(full=args.full, update_baseline=args.update_baseline)
 
     if args.command == 'report':
         return report(report_extras)

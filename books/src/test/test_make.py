@@ -39,7 +39,8 @@ class MakeDriverTest(unittest.TestCase):
 
     def args(self, **kwargs) -> argparse.Namespace:
         base = {'command': 'check', 'only': None, 'skip': None,
-                'timings': False, 'keep_going': False, 'full': False}
+                'timings': False, 'keep_going': False, 'full': False,
+                'update_baseline': False}
         base.update(kwargs)
         return argparse.Namespace(**base)
 
@@ -111,6 +112,7 @@ class MakeDriverTest(unittest.TestCase):
         with mock.patch.object(self.make.importlib.util, 'find_spec', return_value=True), \
                 mock.patch.object(self.make.subprocess, 'run',
                                   side_effect=[completed(0), completed(1),
+                                               completed(0, out='{}'),
                                                completed(0, out='{}')]), \
                 redirect_stdout(buffer):
             self.assertEqual(self.make.coverage(), 1)
@@ -121,6 +123,7 @@ class MakeDriverTest(unittest.TestCase):
         with mock.patch.object(self.make.importlib.util, 'find_spec', return_value=True), \
                 mock.patch.object(self.make.subprocess, 'run',
                                   side_effect=[completed(0), completed(0),
+                                               completed(0, out='{}'),
                                                completed(0, out='{}')]), \
                 mock.patch.object(self.make, 'thin_files',
                                   return_value=[('books/src/python/x.py', 12)]), \
@@ -164,6 +167,44 @@ class MakeDriverTest(unittest.TestCase):
                                return_value=completed(0, out=payload)):
             self.assertEqual(self.make.thin_files(60),
                              [('books/src/python/thin.py', 10)])
+
+    def _ratchet_payload(self, values: dict) -> str:
+        return json.dumps({'files': {name: {'summary': {'num_statements': 20,
+                                                       'percent_covered': pct}}
+                                     for name, pct in values.items()}})
+
+    def test_coverage_baseline_records_every_file(self):
+        payload = self._ratchet_payload({'books/src/python/a.py': 90.0})
+        with mock.patch.object(self.make.subprocess, 'run',
+                               return_value=completed(0, out=payload)):
+            drops, path = self.make.coverage_ratchet(update=True)
+        self.assertEqual(drops, [])
+        self.assertTrue(os.path.isfile(path))
+        with open(path, encoding='utf-8') as fh:
+            self.assertIn('books/src/python/a.py', json.load(fh)['files'])
+
+    def test_a_file_below_its_baseline_is_reported(self):
+        self._ratchet_payload({'books/src/python/a.py': 90.0})
+        with mock.patch.object(self.make.subprocess, 'run',
+                               return_value=completed(0, out=self._ratchet_payload(
+                                   {'books/src/python/a.py': 90.0}))):
+            self.make.coverage_ratchet(update=True)
+        with mock.patch.object(self.make.subprocess, 'run',
+                               return_value=completed(0, out=self._ratchet_payload(
+                                   {'books/src/python/a.py': 77.5}))):
+            drops, _ = self.make.coverage_ratchet()
+        self.assertEqual(drops, [('books/src/python/a.py', 90.0, 77.5)])
+
+    def test_a_rising_file_does_not_lower_the_baseline(self):
+        with mock.patch.object(self.make.subprocess, 'run',
+                               return_value=completed(0, out=self._ratchet_payload(
+                                   {'books/src/python/a.py': 50.0}))):
+            self.make.coverage_ratchet(update=True)
+        with mock.patch.object(self.make.subprocess, 'run',
+                               return_value=completed(0, out=self._ratchet_payload(
+                                   {'books/src/python/a.py': 60.0}))):
+            drops, _ = self.make.coverage_ratchet()
+        self.assertEqual(drops, [])
 
     def test_main_report_forwards_its_own_arguments(self):
         with mock.patch.object(self.make.subprocess, 'run', return_value=completed(0)) as run:
