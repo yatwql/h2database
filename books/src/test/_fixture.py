@@ -434,6 +434,11 @@ def run_inproc(root: str, script: str, *args: str) -> tuple[int, str]:
         with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
             runpy.run_path(resolve_script(script), run_name='__main__')
     except SystemExit as exc:
+        # `sys.exit("error: ...")` carries its message in the code; a subprocess
+        # would have printed it to stderr, so print it here too — otherwise the
+        # message is lost and the case can only assert "non-zero".
+        if isinstance(exc.code, str):
+            buffer.write(exc.code + '\n')
         code = exc.code if isinstance(exc.code, int) else (0 if exc.code is None else 1)
     finally:
         sys.argv = previous_argv

@@ -65,14 +65,15 @@ class TestDeliveryPrerequisites(Base):
 
     def test_pdf_without_html_exits_cleanly(self):
         code, out = self.run_script('pdf_from_html.py')
-        self.assertIn(code, (0, 1), out[-300:])
-        self.assertNotIn('Traceback', out)
+        self.assertEqual(code, 1, out[-300:])
+        self.assertIn('cannot read', out)
 
-    def test_print_grade_without_pdf(self):
+    def test_print_grade_builds_from_the_html(self):
         self.run_script('merge.py')
         self.run_script('to_html.py')
         code, out = self.run_script('print_pdf.py')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('Print-grade PDF', out)
 
     def test_toc_links_without_pdf(self):
         self.run_script('merge.py')

@@ -62,8 +62,8 @@ class ToEpubInProcessTest(unittest.TestCase):
                 mock.patch.object(subprocess, 'run', side_effect=fake_pandoc), \
                 mock.patch.object(os.path, 'exists', side_effect=lambda p: False):
             code, out = _fixture.run_inproc(self.root, 'to_epub.py')
-        self.assertIn(code, (0, 1))
-        self.assertNotIn('Traceback', out)
+        self.assertEqual(code, 1, out[-400:])
+        self.assertIn('Merged Markdown not found', out)
 
     def test_merge_failure_aborts_the_build(self):
         def failing(command, **kwargs):
@@ -72,8 +72,9 @@ class ToEpubInProcessTest(unittest.TestCase):
         with mock.patch.object(shutil, 'which', return_value='/usr/bin/pandoc'), \
                 mock.patch.object(subprocess, 'run', side_effect=failing):
             code, out = _fixture.run_inproc(self.root, 'to_epub.py')
-        self.assertIn(code, (0, 1))
-        self.assertNotIn('Traceback', out)
+        self.assertEqual(code, 1, out[-400:])
+        self.assertIn('merge.py FAILED', out)
+        self.assertIn('merge boom', out)
 
 if __name__ == '__main__':
     unittest.main()
