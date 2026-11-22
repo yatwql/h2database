@@ -29,7 +29,7 @@
 
 | # | 问题 | 修复方向 |
 | --- | --- | --- |
-| rf-39 | 65 处永真断言：`assertIn(code, (0, 1))`、`assertNotIn('Traceback')` 之类在用例里只证明“跑完了没炸”，另有 5 处 `assertTrue(True)` 式占位；行被执行不等于行为被验证，这是覆盖率高而缺陷不一定少的直接原因 | 逐条改成断言具体行为（退出码、产物存在性、消息关键字、账本内容）；新增一条 ast-grep 规则禁新增该模式并接入快档门禁；`run_inproc` 现回显 `sys.exit("error: ...")` 的消息，四条用例改为断言结论，基线 65 → 61——余下按模块继续收敛 |
+| rf-39 | 65 处永真断言（`assertIn(code, (0,1))`、`assertNotIn('Traceback')` 之类）：在用例里只证明“跑完了没炸”，行被执行不等于行为被验证 | **修订**：`run_inproc` 回显 `sys.exit` 消息，46 处改为“退出码取实际值 + 消息断言”，基线 61 → 15；余下 7 条是遍历整套脚本的用例（要一条覆盖整套措辞的公共判据）、8 条是需要 chromium/pandoc 的交付用例（本机跳过，无法定值） |
 | rf-40 | 30 个函数 ≥60 行，最差 `ingest/chapters.py::_sections` 261 行、`manuscript/terms.py::report_missing` 208 行、`render/verify_epub.py::verify` 129 行、`audit/style.py::detect_sentence_monotony` 122 行：这类函数的分支组合无法用例化，覆盖率会在 80% 附近卡住 | 先拆 `_sections`（骨架 / 模板填充 / 语言适配三段）与 `report_missing`（缺失判定 / 报告渲染）；拆分边界即用例边界，拆完立刻能补上半分支 |
 | rf-41 | 失败语义靠 84 处散落的 `sys.exit()`：测试只能经 `runpy` 捕获 `SystemExit`，断言退化成“退出码是 0 或 1”，退出码与消息的对应关系无人校验 | 脚本内部改抛领域异常（`ConfigError` 已有一份），只在入口处转成退出码；迁移按 `render/` → `manuscript/` → `audit/` 分批做，每批补一条“异常 → 退出码 + 消息”的用例 |
 

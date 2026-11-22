@@ -46,7 +46,8 @@ class FixtureCase(unittest.TestCase):
 class TestCaptionAndExerciseBranches(FixtureCase):
     def test_captions_normal_threshold(self):
         code, out = self.run_script('captions.py', '--threshold', 'loose')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('TOTAL', out)
 
     def test_captions_json_output(self):
         _code, out = self.run_script('captions.py', '--json')
@@ -54,12 +55,14 @@ class TestCaptionAndExerciseBranches(FixtureCase):
 
     def test_exercises_json_output(self):
         code, out = self.run_script('exercises.py', '--json')
-        self.assertIn(code, (0, 1), out[-200:])
+        self.assertEqual(code, 1, out[-200:])
+        self.assertIn('chapters_pass', out)
         self.assertIn('{', out)
 
     def test_figure_clusters_json(self):
         code, out = self.run_script('figure_clusters.py', '--json')
-        self.assertIn(code, (0, 1), out[-200:])
+        self.assertEqual(code, 0, out[-200:])
+        self.assertIn('unbridged', out)
         self.assertIn('{', out)
 
 if __name__ == '__main__':

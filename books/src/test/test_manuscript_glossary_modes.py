@@ -62,7 +62,8 @@ if __name__ == '__main__':
 class TestGlossaryCoverageMode(FixtureCase):
     def test_coverage_mode_runs(self):
         code, out = self.run_script('glossary.py', '--coverage')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('术语不足', out)
         self.assertNotIn('Traceback', out)
 
     def test_check_mode_with_rich_glossary(self):
@@ -71,17 +72,20 @@ class TestGlossaryCoverageMode(FixtureCase):
                    '  **章节**：第1章 §1.1\n  **相关**：[[MVStore]]\n\n'
                    '## M\n\n- **MVStore**: 存储引擎。\n  **章节**：第2章 §2.1\n')
         code, out = self.run_script('glossary.py', '--check')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('自动生成', out)
 
 class TestGlossaryBuilderBranches(FixtureCase):
     def test_missing_glossary_exits_cleanly(self):
         os.unlink(os.path.join(self.root, 'data', 'manuscript', 'back', 'glossary.md'))
         code, out = self.run_script('glossary.py')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('自动生成', out)
         self.assertNotIn('Traceback', out)
 
     def test_check_mode_on_missing_terms(self):
         self.write('data/manuscript/back/glossary.md',
                    '# 术语表\n\n## A\n\n- **ACID**: 事务特性。\n  **章节**：第1章 §1.1\n')
         code, out = self.run_script('glossary.py', '--check')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('自动生成', out)

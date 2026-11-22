@@ -73,7 +73,8 @@ class TestSourceFreshnessBranches(FixtureCase):
         self.write('data/manuscript/ch1-test.md',
                    '# 第1章 测试章节\n\n见 NoSuchClass.java:12 与 Page.java:3\n')
         code, out = self.run_script('source_refs.py')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('source tree not found', out)
         self.assertNotIn('Traceback', out)
 
     def test_update_baseline_then_clean(self):
@@ -82,4 +83,5 @@ class TestSourceFreshnessBranches(FixtureCase):
         code, _ = self.run_script('source_refs.py', '--update-baseline')
         self.assertEqual(code, 0)
         code, out = self.run_script('source_refs.py', '--suggest')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('source tree not found', out)

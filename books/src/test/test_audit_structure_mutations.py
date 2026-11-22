@@ -35,7 +35,8 @@ class StructureMutationTest(unittest.TestCase):
 
     def test_healthy_fixture_passes(self):
         code, out = self.run_gate()
-        self.assertIn(code, (0, 1), out[-400:])
+        self.assertEqual(code, 1, out[-400:])
+        self.assertIn('FAIL:', out)
 
     def test_figure_number_gap_is_reported(self):
         self.mutate('ch2-test.md', '**图 2-1:', '**图 2-3:')
@@ -91,14 +92,16 @@ class StructureMutationTest(unittest.TestCase):
     def test_missing_chapter_file_is_reported(self):
         os.remove(self.chapter('ch2-test.md'))
         code, out = self.run_gate()
-        self.assertIn(code, (0, 1))
+        self.assertEqual(code, 1, out)
+        self.assertIn('FAIL:', out)
         self.assertNotIn('Traceback', out)
 
     def test_invalid_utf8_chapter_is_reported(self):
         with open(self.chapter('ch1-test.md'), 'wb') as fh:
             fh.write(b'# \xff\xfe broken bytes\n')
         code, out = self.run_gate()
-        self.assertIn(code, (0, 1))
+        self.assertEqual(code, 1, out)
+        self.assertIn('FAIL:', out)
         self.assertNotIn('Traceback', out)
 
     def test_secondary_sections_report_their_own_defects(self):
@@ -113,7 +116,8 @@ class StructureMutationTest(unittest.TestCase):
                 '## 1.10 延伸思考\n\n'
                 '**1. 🟢★ 练习一**\n\n## 1.11 延展阅读\n\n- 参考\n')
         code, out = self.run_gate()
-        self.assertIn(code, (0, 1), out[-800:])
+        self.assertEqual(code, 1, out[-800:])
+        self.assertIn('FAIL:', out)
         for section in ('Figure Caption', 'Figure Cluster', 'Chapter Exercises'):
             self.assertIn(section, out)
 

@@ -51,7 +51,8 @@ class TestReadabilityDeep(FixtureCase):
                    '**图 1-1: 架构**\n\n'
                    '**图 1-2: 展示组件 A 与组件 B 的完整调用链路与失败回退**\n')
         code, out = self.run_script('readability.py', '--figures')
-        self.assertIn(code, (0, 1), out[-400:])
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('caption too short', out)
         self.assertNotIn('Traceback', out)
 
     def test_wide_diagram_and_long_lines(self):
@@ -68,7 +69,8 @@ if __name__ == '__main__':
 class TestReadabilityBranches(FixtureCase):
     def test_runs_on_fixture(self):
         code, out = self.run_script('readability.py')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('READABILITY FAILURES', out)
         self.assertNotIn('Traceback', out)
 
     def test_long_sentence_and_wide_diagram(self):
@@ -77,4 +79,5 @@ class TestReadabilityBranches(FixtureCase):
         self.write('data/manuscript/ch1-test.md',
                    '# 第1章 测试章节\n\n' + body + '\n' + diagram)
         code, out = self.run_script('readability.py')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('READABILITY FAILURES', out)

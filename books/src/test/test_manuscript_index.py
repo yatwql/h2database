@@ -64,9 +64,11 @@ class TestIndexAndStyleBranches(Base):
                    '  - 原子性 —— §1.1\n  - 隔离性 —— §2.1\n  see also: MVStore\n\n'
                    '## M\n\n- MVStore —— §2.1\n  see also: ACID\n')
         code, out = self.run_script('index_xrefs.py')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('issues:', out)
         code, out = self.run_script('index.py', '--hierarchy-check')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 1, out[-300:])
+        self.assertIn('hierarchy below the configured floor', out)
 
     def test_style_flags_long_line_and_monotony(self):
         body = '这是短句。' * 30

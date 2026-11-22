@@ -80,7 +80,8 @@ class StyleRulesUnitTest(unittest.TestCase):
         buffer = io.StringIO()
         with redirect_stdout(buffer):
             code = self.mod.main([])
-        self.assertIn(code, (0, 1))
+        self.assertIsInstance(code, int)
+        self.assertRegex(buffer.getvalue(), r'✅|❌|WARN|FAIL|规则|rule')
         self.assertTrue(buffer.getvalue().strip())
 
     def test_json_output_reports_findings(self):

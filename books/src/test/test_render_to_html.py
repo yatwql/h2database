@@ -49,7 +49,8 @@ class TestStyleAndHtmlBranches(FixtureCase):
         self.write('data/manuscript/ch1-test.md',
                    '# 第1章 测试章节\n\n| a | b |\n|---|---|\n| 1 |\n')
         code, out = self.run_script('style.py')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('No WARN-level issues', out)
 
     def test_html_handles_unclosed_fence(self):
         self.write('data/manuscript/ch2-test.md',

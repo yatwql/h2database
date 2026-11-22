@@ -41,7 +41,8 @@ class IdempotencyTest(unittest.TestCase):
     def test_repeated_gate_runs_agree(self):
         for _ in range(3):
             code, _out = _fixture.run_inproc(self.root, 'structure.py')
-            self.assertIn(code, (0, 1), 'structure.py verdict changed between runs')
+            self.assertEqual(code, 1, _out[-300:])
+            self.assertIn('FAIL:', _out)
 
 class DeterminismTest(unittest.TestCase):
     """Chapter order comes from configuration, not from directory order."""

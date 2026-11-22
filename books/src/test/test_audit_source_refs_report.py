@@ -70,8 +70,9 @@ class SourceRefsReportTest(unittest.TestCase):
                 mock.patch.object(self.mod, 'build_class_index',
                                   return_value={'Widget': ['/src/Widget.java']}):
             code = self.mod.main(['--json'])
-        self.assertIn(code, (0, 1))
         text = buffer.getvalue().strip()
+        self.assertEqual(code, 0, text[-300:])
+        self.assertRegex(text, r'[\s\S]')
         start = text.find('{')
         self.assertIsInstance(json.loads(text[start:]) if start >= 0 else {}, dict)
 

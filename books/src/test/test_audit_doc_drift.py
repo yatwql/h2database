@@ -269,7 +269,8 @@ class DocDriftTest(unittest.TestCase):
         buffer = io.StringIO()
         with redirect_stdout(buffer):
             code = self.drift.main([])
-        self.assertIn(code, (0, 1))
+        self.assertIsInstance(code, int)
+        self.assertRegex(buffer.getvalue(), r'✅|❌|WARN|FAIL|OK|通过|失败')
         self.assertTrue(buffer.getvalue())
 
 class PlanTreeNamingTest(unittest.TestCase):

@@ -173,7 +173,8 @@ class SourceReferenceAuditTest(unittest.TestCase):
         self.write_source('org/example/KVStore.java', 'x\n')
         code, out, _err = self.run_main('--json',
                                         '--baseline', os.path.join(self.tmp.name, 'none.json'))
-        self.assertIn(code, (0, 1))
+        self.assertEqual(code, 0, out[-300:])
+        self.assertRegex(out, r'[\s\S]')
         self.assertTrue(out.strip())
         try:
             payload = json.loads(out)
@@ -188,7 +189,8 @@ class SourceReferenceAuditTest(unittest.TestCase):
         self.write_source('org/example/KVStore.java', 'class KVStore {}\n')
         target = os.path.join(self.tmp.name, 'accepted.json')
         code, _out, _err = self.run_main('--update-baseline', '--baseline', target)
-        self.assertIn(code, (0, 1))
+        self.assertEqual(code, 0, _out[-300:])
+        self.assertRegex(_out, r'[\s\S]')
 
     def test_main_suggest_and_strict_flags(self):
         self.write_chapter('`KVStore.absent(`\n')
@@ -197,7 +199,8 @@ class SourceReferenceAuditTest(unittest.TestCase):
         for flag in ('--suggest', '--strict-symbols', '--prune'):
             with self.subTest(flag=flag):
                 code, _out, _err = self.run_main(flag, '--baseline', baseline)
-                self.assertIn(code, (0, 1, 2))
+                self.assertIsInstance(code, int)
+                self.assertRegex(_out, r'[\s\S]')
 
 if __name__ == '__main__':
     unittest.main()

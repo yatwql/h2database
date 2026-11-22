@@ -135,7 +135,8 @@ class StyleSchemaTest(unittest.TestCase):
     def test_main_reports_a_valid_file(self):
         _fixture.run_inproc(self.root, 'style_schema.py')
         code, out = _fixture.run_inproc(self.root, 'style_schema.py')
-        self.assertIn(code, (0, 1))
+        self.assertEqual(code, 1, out[-300:])
+        self.assertIn('must be a template string', out)
         self.assertTrue(out)
 
 if __name__ == '__main__':

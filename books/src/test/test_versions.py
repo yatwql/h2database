@@ -82,7 +82,8 @@ class TestVersionGate(VersionsCase):
         with open(os.path.join(docs, 'plan.md'), 'w', encoding='utf-8') as fh:
             fh.write('# Plan\n\n> 版本：v0.1\n')
         code, out = self.run_gate()
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 1, out[-300:])
+        self.assertIn('is not the software version', out)
 
     def test_gate_reports_tool_version(self):
         _code, out = self.run_gate()

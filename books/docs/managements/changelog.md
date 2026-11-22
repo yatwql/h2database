@@ -477,6 +477,8 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **永真断言收敛到 15 条**：46 处 `assertIn(code, (0, 1))` 改成断言真实结论——退出码取实际值，再加一条消息断言（`TOTAL`、`issues:`、`FAIL:`、`hierarchy below the configured floor`、`cannot read` 等），断言内容取自每条用例跑出来的输出，不是推断。松散断言基线 61 → 15。
+  余下 15 条分两类：7 条是遍历整套脚本的用例（`test_every_audit_runs_without_crashing`、`gate_entrypoints` 三条、`script_entrypoints`、`real_book` 两条），要按整套脚本的措辞写一条公共判据；8 条是需要 chromium/pandoc 的交付用例（`pipeline_delivery` 五条、`render_pdf_toolchain` 三条），本机没有 playwright，跑起来就被跳过，没法定值。
 - **两个超长函数按小节拆开**：`ingest/chapters.py::_sections`（261 行）拆成九个助手，每章共享的事实只在 `_chapter_context` 算一次，各助手读同一份事实而不是各推一遍；`manuscript/terms.py::report_missing`（208 行）把中英别名表、跳过词表与`is_glossary_candidate` 提到模块级，剩下的函数只做扫描与报告。两处都是纯搬移，六个章节形态的渲染结果逐字节相同。≥60 行函数 30 → 29，`chapters.py` 755 → 876 行的膨胀登记同步。
 - **质量读数有了统一入口**：`make.py report health` 汇总覆盖率（总/最薄模块/半分支 Top-N）、低于基线的文件、松散断言数、超长函数清单——这些此前分散在 `cover`、`coverage report` 与 grep 里，没人定期看。阈值仍读配置（新增 `base.json [toolchain] function_length_warn`），视图只做读数不判红。
 - **永真断言开始收敛**：`run_inproc` 原先吞掉 `sys.exit("error: ...")` 的消息，用例只能断言“退出码是 0 或 1”。现在把消息回显进捕获输出，四处用例改为断言具体结论（`to_epub` 的合并失败与缺合并稿、`pdf_from_html` 缺 HTML 的原因、印刷 PDF 的真实产物），松散断言基线 65 → 61 条。

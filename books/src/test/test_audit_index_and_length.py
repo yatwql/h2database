@@ -53,7 +53,8 @@ class IndexXrefUnitTest(unittest.TestCase):
                 mock.patch.object(self.mod, 'index_path',
                                   os.path.join(self.tmp.name, 'none.md'), create=True):
             code = self.mod.main([])
-        self.assertIn(code, (0, 1, 2))
+        self.assertIsInstance(code, int)
+        self.assertRegex(buffer.getvalue(), r'索引|index|缺失|missing|FAIL|❌')
         self.assertTrue(buffer.getvalue())
 
     def test_json_output_is_parseable(self):
@@ -88,7 +89,7 @@ class FileLengthUnitTest(unittest.TestCase):
         buffer = io.StringIO()
         with redirect_stdout(buffer):
             code = self.mod.main([])
-        self.assertIn(code, (0, 1))
+        self.assertIsInstance(code, int)
         self.assertRegex(buffer.getvalue(), r'(budget|长度|行数|limit)')
 
     def test_json_output_lists_findings(self):

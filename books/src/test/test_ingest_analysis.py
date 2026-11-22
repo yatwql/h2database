@@ -46,7 +46,8 @@ class FixtureCase(unittest.TestCase):
 class TestAnalysisBranches(FixtureCase):
     def test_balance_check_json_and_baseline(self):
         code, out = self.run_script('balance.py', '--json')
-        self.assertIn(code, (0, 1), out[-200:])
+        self.assertEqual(code, 0, out[-200:])
+        self.assertIn('"files"', out)
         baseline = os.path.join(self.root, 'dist', 'baseline.json')
         code, _ = self.run_script('balance.py', '--baseline', baseline)
         self.assertEqual(code, 0)

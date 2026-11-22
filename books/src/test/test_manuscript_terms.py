@@ -55,7 +55,8 @@ class TestAnnotateTermsBranches(FixtureCase):
     def test_missing_glossary_exits_cleanly(self):
         os.unlink(os.path.join(self.root, 'data', 'manuscript', 'back', 'glossary.md'))
         code, out = self.run_script('terms.py', '--check-related')
-        self.assertIn(code, (0, 1), out[-200:])
+        self.assertEqual(code, 1, out[-200:])
+        self.assertIn('cannot read', out)
         self.assertNotIn('Traceback', out)
 
 if __name__ == '__main__':

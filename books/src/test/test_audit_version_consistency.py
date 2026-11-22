@@ -104,7 +104,8 @@ class VersionConsistencyTest(unittest.TestCase):
     def test_json_output_reports_every_section(self):
         code, out = self.run_main('--json')
         payload = json.loads(out)
-        self.assertIn(code, (0, 1))
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('versions', out)
         for key in ('versions', 'problems', 'warnings'):
             self.assertIn(key, payload)
 

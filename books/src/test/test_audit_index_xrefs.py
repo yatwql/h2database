@@ -46,14 +46,16 @@ class FixtureCase(unittest.TestCase):
 class TestIndexXrefBranches(FixtureCase):
     def test_runs_and_reports(self):
         code, out = self.run_script('index_xrefs.py')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('issues:          0', out)
         self.assertNotIn('Traceback', out)
 
     def test_broken_see_also_detected(self):
         self.write('data/manuscript/back/index.md',
                    '# 索引\n\n## A\n\n- ACID —— §1.1\n  see also: 不存在的词\n')
         code, out = self.run_script('index_xrefs.py')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 1, out[-300:])
+        self.assertIn('issues:          1', out)
 
 if __name__ == '__main__':
     unittest.main()

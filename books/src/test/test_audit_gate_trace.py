@@ -43,7 +43,8 @@ class GateTraceTest(unittest.TestCase):
         buffer = io.StringIO()
         with redirect_stdout(buffer):
             code = self.trace.main([])
-        self.assertIn(code, (0, 1))
+        self.assertEqual(code, 0, buffer.getvalue()[-300:])
+        self.assertRegex(buffer.getvalue(), r'✅|OK|通过|PASS')
         self.assertTrue(buffer.getvalue())
 
     def test_json_output_lists_problems(self):

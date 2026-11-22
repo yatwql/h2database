@@ -46,7 +46,8 @@ class FixtureCase(unittest.TestCase):
 class TestSmartAuditBranches(FixtureCase):
     def test_runs_on_fixture_with_report(self):
         code, out = self.run_script('smart.py')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('TOTAL sections needing additional diagrams', out)
         self.assertNotIn('Traceback', out)
 
     def test_diagram_markers_and_short_blocks(self):
@@ -86,7 +87,8 @@ class TestSmartAuditDeepCoverage(FixtureCase):
     def test_report_with_children(self):
         self.write('data/manuscript/ch1-test.md', self.RICH)
         code, out = self.run_script('smart.py')
-        self.assertIn(code, (0, 1), out[-400:])
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('TOTAL sections needing additional diagrams', out)
         self.assertNotIn('Traceback', out)
 
     def test_fig_refs_mode(self):

@@ -32,7 +32,7 @@ class CaptionsBaselineTest(unittest.TestCase):
     def test_json_output_has_the_expected_shape(self):
         code, out = self.run_captions('--json')
         payload = json.loads(out[out.index('{'):])
-        self.assertIn(code, (0, 1))
+        self.assertEqual(code, 0, out[-300:])
         for key in ('threshold', 'count', 'violations'):
             self.assertIn(key, payload)
 
@@ -67,7 +67,8 @@ class CaptionsBaselineTest(unittest.TestCase):
 
     def test_normal_threshold_tolerates_the_fixture(self):
         code, out = self.run_captions('--threshold', 'normal')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('TOTAL', out)
 
 if __name__ == '__main__':
     unittest.main()
