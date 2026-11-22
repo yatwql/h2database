@@ -45,7 +45,7 @@
     "content_profile": "baseline",
     "step_timeout_s": 900,
     "test_timeout_s": 300,
-    "coverage_min_per_file": 70
+    "coverage_min_per_file": 72
   },
   "logging": {
     "level": "INFO",

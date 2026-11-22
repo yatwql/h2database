@@ -144,6 +144,11 @@
   推导章号、必备段落为空时的退化路径、章节位置被目录占住时的 `cannot read`、索引缺失、坐标基线
   损坏时仍能跑完、`--prune` 收缩；这批用例在夹具书内自建一棵迷你源码树，不再借用临时目录的
   上级路径（那会让别的用例也看见源码树）。
+- **交付脚本的分支用例 + 单文件下限 70% → 72%**：新增 `test_render_script_branches.py`——
+  `pdf_from_html` 用可注入的假引擎驱动渲染（`file://` 入口、A4、返回标题），`parse_headings`、
+  缺 HTML 时的拒绝；`to_epub` 跑通一次真实构建；`verify_pdf` 的超体积、无印刷目录、大纲比标题深、
+  标注指向错页、Type0 字体未嵌入、畸形矩形。`pdf_from_html` 73→79%、`verify_pdf` 72→73%、
+  `to_epub` 72%。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
