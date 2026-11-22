@@ -210,6 +210,12 @@
   互相覆盖。新增 `docs/plan/multi-book/` 记录目标形态（先一仓多书、条件成熟再让工具链独立成包）、
   按书隔离与共享的边界、配置三层与手稿 edition 轴，并把 `plan-11` 列为当前待办；
   `technical.md` §10 的「不做多书合一构建」仍然有效——一本书一份产物。
+- **多书设计与计划定稿**：两轮以上逐条复核后改掉的事实错误与不可实施处——`PATH_LITERALS`
+  是禁止表而非耦合点、日志隔离靠书根而非文件名、edition 子目录会破坏单书等价条件、
+  `[editions].default` 与同名版本冲突（改顶层 `default_edition`）、覆盖三层第 2 层落到
+  `shared/base.json`、`data/snapshots/` 归书且不引入跨书快照、`use()` 是进程级状态
+  而 Web 用多线程服务（一进程一书的边界写进设计）。能力同时登记为需求 IR-10，判据载体
+  在 `testplan.md` §2.4；四步的验收改成可机检，并各自给出回滚方式。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

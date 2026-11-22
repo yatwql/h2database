@@ -198,6 +198,7 @@ report` / `eval-score.sh`）、`balance` 的计量输出（`--json`），以及�
 | FR-18 | 代码摘录与源码当前版本一致 | `content_depth.py`、`source_refs.py` |
 | IR-01 | 单一入口跑完一次完整检查 | `make.py` |
 | IR-02 | 按改动域分档，编辑期单次检查 ≤ 5 秒 | `src/python/check_runner.py`、`perf_baseline.py` |
+| IR-10 | 换一本书只换书根：路径、派生状态、基线、产物随之改变，互不覆盖 | `src/test/test_lib_config_books.py` |
 | IR-03 | 分档不改判据，提交/发布跑全集 | `src/python/check_runner.py` |
 | IR-04 | 失败给出文件与行号，退出码非 0 即失败 | `script_contract.py` |
 | IR-05 | 检查与构建离线完成 | `src/test/_netguard.py`、`src/test/test_no_network.py` |
