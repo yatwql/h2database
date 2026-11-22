@@ -73,7 +73,8 @@ class TestIndexAndStyleBranches(Base):
         self.write('data/manuscript/ch1-test.md',
                    '# 第1章 测试章节\n\n' + body + '\n\n' + '很' * 200 + '\n')
         code, out = self.run_script('style.py')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('长句', out)
 
 if __name__ == '__main__':
     unittest.main()

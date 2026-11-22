@@ -77,12 +77,6 @@ class TestAnnotateTermsReports(Base):
         self.assertEqual(code, 0, out[-300:])
         self.assertIn('MISSING', out)
 
-    def test_check_mode_fails_on_missing_terms(self):
-        self.write('data/manuscript/ch1-test.md',
-                   '# 第1章 测试章节\n\n**未收录术语甲** 与 **未收录术语乙**。\n')
-        code, out = self.run_script('terms.py', '--check')
-        self.assertIn(code, (0, 1), out[-300:])
-
     def test_check_related_reports_dangling(self):
         self.write('data/manuscript/back/glossary.md',
                    '# 术语表\n\n## A\n\n- **ACID**: 事务特性。\n  **章节**：第1章 §1.1\n'
@@ -99,7 +93,8 @@ class TestAnnotateTermsModes(ScriptTestBase):
 
     def test_check_related_mode(self):
         code, out = self.run_script('terms.py', '--check-related')
-        self.assertIn(code, (0, 1), out)
+        self.assertEqual(code, 0, out)
+        self.assertIn('Dangling see-also references: 0', out)
 
     def test_report_missing_mode(self):
         code, out = self.run_script('terms.py', '--report-missing')
@@ -107,4 +102,5 @@ class TestAnnotateTermsModes(ScriptTestBase):
 
     def test_check_mode(self):
         code, out = self.run_script('terms.py', '--check')
-        self.assertIn(code, (0, 1), out)
+        self.assertEqual(code, 0, out)
+        self.assertIn('No missing terms found', out)

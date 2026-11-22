@@ -160,14 +160,25 @@ def _loose_baseline() -> set[str]:
     return {str(item) for item in payload.get('accepted') or []}
 
 
-def loose_assertions(root: str | None = None) -> list[dict]:
-    """Exit-code assertions that also accept failure codes.
+CONTENT_ASSERT_RE = re.compile(
+    r"assert(?:In|NotIn|Regex|Equal|True)\(\s*[^)]*?['\"]([^'\"]{3,})['\"]")
 
-    ``assertIn(code, (0, 1))`` passes whether the step worked or not, so it tests
-    nothing about the outcome. The reviewer backlog is registered; a new one is a
-    finding, and the registered ones shrink as they are tightened.
+
+def _names_a_finding(body: str) -> bool:
+    """Whether the case asserts a concrete message besides the exit code."""
+    for literal in CONTENT_ASSERT_RE.findall(body):
+        if literal.strip() not in ('Traceback', '\n'):
+            return True
+    return False
+
+
+def loose_candidates(root: str | None = None) -> list[dict]:
+    """Cases whose sole outcome check is a loose exit-code assertion.
+
+    ``assertIn(code, (0, 1))`` passes whether the step worked or not, so the code
+    says nothing about the outcome. A case that also asserts what the output says
+    is pinned already, and is not a candidate.
     """
-    accepted = _loose_baseline()
     findings: list[dict] = []
     for path in test_files(root):
         try:
@@ -179,15 +190,18 @@ def loose_assertions(root: str | None = None) -> list[dict]:
                 continue
             if not node.name.startswith('test_'):
                 continue
-            for line in _fsutil.read_text(path).split('\n')[node.lineno - 1:node.end_lineno]:
+            lines = _fsutil.read_text(path).split('\n')[node.lineno - 1:node.end_lineno]
+            body = '\n'.join(lines)
+            # A loose code check is acceptable when the case also asserts what the
+            # output says: the outcome is still pinned, the code is not the subject.
+            if _names_a_finding(body):
+                continue
+            for line in lines:
                 match = LOOSE_RE.search(line)
                 if not match:
                     continue
                 codes = [part.strip() for part in match.group(1).split(',')]
                 if '0' not in codes or '1' not in codes:
-                    continue
-                key = f'{rel(path)}::{node.name}'
-                if key in accepted:
                     continue
                 findings.append({'kind': 'LOOSE-ASSERT', 'file': rel(path),
                                  'line': node.lineno,
@@ -195,6 +209,17 @@ def loose_assertions(root: str | None = None) -> list[dict]:
                                            'accepts both success and failure'})
                 break
     return findings
+
+
+def _loose_key(item: dict) -> str:
+    """Stable key for one candidate: file plus test name."""
+    return f"{item['file']}::{item['detail'].split(':')[0]}"
+
+
+def loose_assertions(root: str | None = None) -> list[dict]:
+    """Candidates that the baseline does not accept yet."""
+    accepted = _loose_baseline()
+    return [item for item in loose_candidates(root) if _loose_key(item) not in accepted]
 
 
 def analyse(root: str | None = None) -> list[dict]:
@@ -222,7 +247,13 @@ def analyse(root: str | None = None) -> list[dict]:
                                  'detail': f'{case.class_name}.{case.name}'})
             signature = _signature(body)
             bodies.setdefault(signature, []).append(case)
-    findings += loose_assertions(root)
+    candidates = loose_candidates(root)
+    accepted = _loose_baseline()
+    findings += [item for item in candidates if _loose_key(item) not in accepted]
+    stale = sorted(accepted - {_loose_key(item) for item in candidates})
+    if stale:
+        print(f'  [warn] {len(stale)} 条松散断言基线已不再命中'
+              f'（已收紧，可收缩 data/baselines/loose-assertions.json）', file=sys.stderr)
 
     for group in sorted(bodies.values(), key=len, reverse=True):
         if len(group) < 2:

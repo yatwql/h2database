@@ -46,14 +46,14 @@ class FixtureCase(unittest.TestCase):
 class TestIndexBuilderBranches(FixtureCase):
     def test_hierarchy_check_on_small_index(self):
         code, out = self.run_script('index.py', '--hierarchy-check')
-        self.assertIn(code, (0, 1), out[-300:])
-        self.assertNotIn('Traceback', out)
+        self.assertEqual(code, 1, out[-300:])
+        self.assertIn('below the configured floor', out)
 
     def test_missing_index_file(self):
         os.unlink(os.path.join(self.root, 'data', 'manuscript', 'back', 'index.md'))
         code, out = self.run_script('index.py')
-        self.assertIn(code, (0, 1), out[-300:])
-        self.assertNotIn('Traceback', out)
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('第1章', out)  # the draft is rebuilt from the chapters
 
 if __name__ == '__main__':
     unittest.main()
