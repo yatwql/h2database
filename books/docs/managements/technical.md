@@ -277,7 +277,9 @@ STEPS  = [(名称, 脚本, 额外参数, 分组)]       # 分组 ∈ build | ver
 GROUPS = {build, verify, deliver, check, test, cover, report}
 ```
 
-- `check` = `verify` 全集；`build` 只产物化；`deliver` 顺序固定：渲染 → 补链接 → 校验 → EPUB → 校验。
+- `check` = `verify` 全集；`build` 只产物化（`cover` → `merge` → `to_html` → `archive`）；
+  `deliver` 顺序固定：渲染 → 补链接 → 校验 → EPUB → 校验 → `archive_release`。
+  两个归档步骤共用 `manuscript/archive.py`，把当天的手稿与产物存进 `data/archive/<书>/<日期>/`。
 - 命令行支持 `--only`、`--skip`、`--keep-going`、`--timings`；失败时打印该步骤输出的末 30 行。
 - 入口先校验解释器：不是项目虚拟环境即拒绝执行（`BOOK_ALLOW_SYSTEM_PYTHON=1` 可临时放行，交付流程不使用）。
 

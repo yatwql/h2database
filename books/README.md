@@ -25,12 +25,16 @@ books/scripts/bookctl status        # 最短路径：cloak 掉 python 路径，�
 books/scripts/bookctl check         # 全部门禁
 books/scripts/bookctl build         # 手稿 → 合并 Markdown + HTML
 books/scripts/bookctl test          # 测试（--full 含 chromium/pandoc 档）
+python books/src/python/test_report.py run   # 跑测试并留报告（books/test-reports/），last 解出失败用例
 books/scripts/bookctl doctor        # 依赖与环境
 
 books/scripts/launch.sh        # TUI 菜单
 books/scripts/launch.sh cli    # CLI（与 bookctl 等价，可带子命令）
 books/scripts/launch.sh web    # Web 控制台
 ```
+
+`build` 与 `deliver` 结束时会把手稿与产物各存一份到 `books/data/archive/<书>/<日期>/`
+（保留窗口取配置，缺省 45 天）。
 
 `bookctl` 是薄封装：解析解释器（`books/.venv` → `$PYTHON` → `python3`）后转发到
 `app/cli.py`；`bookctl make <args>` 直接透传 `make.py`。Windows 用 `bookctl.ps1`。

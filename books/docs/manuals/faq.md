@@ -46,6 +46,10 @@
 每个检查步骤都要在质量计划里登记一行（编号、判据、级别、脚本）。加门禁时补上这一行，
 门禁与文档才能双向对上；漏登记等于这道门禁对外不存在。
 
+**Q：测试红了，怎么知道挂了哪几条？**
+跑 `python books/src/python/test_report.py run`，再用 `test_report.py last`：它列出失败用例
+与断言首行，并给出 `python -m pytest books/src/test/<模块>.py -q` 的只重跑命令；不要动辄重跑全量。
+
 **Q：`prose_quality` 分数不够？**
 按报告里最低的维度改生成器或配置（句长、列表占比、小节深度等），阈值在
 `style.json [prose]`；不要为凑分放水阈值。
@@ -70,6 +74,10 @@
 
 **Q：PDF 校验失败说 outline 数量不对？**
 PDF 是旧稿。重新 `make.py build` 后再 `to_pdf`（或 `make.py deliver`）。
+
+**Q：手稿与产物的历史副本在哪？**
+`books/data/archive/<书>/<日期>/{manuscript,dist}/`，由 `make.py build` 与 `deliver` 各存一份；
+保留窗口取 `base.json [archive] retention_days`（缺省 45 天），过期目录自动清理。
 
 ## 日志
 

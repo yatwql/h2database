@@ -61,6 +61,7 @@ python books/src/python/app/tui.py
 
 ```text
 主菜单   1 analyze  l analyze-llm  2 build  3 deliver  0 退出
+          两者默认只刷新事实块（正文不动）；按 l 时先问是否整篇重写并用 LLM 润色（默认否）
          4 质量  5 配置与状态
 质量     1 check  2 test  0 返回
 配置     1 status  2 llm-ask  3 配置项  4 LLM provider 优先级  5 doctor  6 刷新事实块  0 返回

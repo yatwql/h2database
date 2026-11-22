@@ -11,7 +11,7 @@
 
 ```bash
 python books/src/python/make.py check      # 全部门禁（不写产物）
-python books/src/python/make.py build      # cover 统计 + 合并 md + HTML
+python books/src/python/make.py build      # cover 统计 + 合并 md + HTML + 当日归档
 python books/src/python/make.py test       # 工具链单元测试（books/src/test）
 python books/src/python/make.py doctor     # 可选依赖检查（pandoc / playwright / pypdf）
 ```
@@ -21,10 +21,18 @@ python books/src/python/make.py doctor     # 可选依赖检查（pandoc / playw
 最终交付 PDF / EPUB 时：
 
 ```bash
-python books/src/python/make.py deliver    # build + to_pdf + pdf_toc_links + verify_pdf + to_epub + verify_epub
+python books/src/python/make.py deliver    # to_pdf + pdf_toc_links + verify_pdf + to_epub + verify_epub + archive_release
 ```
 
-PDF 生成较慢；日常编辑只要求 `make.py check` + `make.py build` 通过。CI（`.github/workflows/book.yml`）自动执行 lint + 单元测试 + 门禁 + 构建 + 幂等性校验。
+PDF 生成较慢；日常编辑只要求 `make.py check` + `make.py build` 通过。
+
+需要留下证据时用报告器（不走 `make.py`，它自带保留窗口）：
+
+```bash
+python books/src/python/test_report.py run     # 跑快档并写 books/test-reports/<时间戳>/
+python books/src/python/test_report.py last    # 解出最新报告的失败用例 + 只重跑这些模块的命令
+python books/src/python/test_report.py perf    # 各步骤近期耗时与回退提示
+```CI（`.github/workflows/book.yml`）自动执行 lint + 单元测试 + 门禁 + 构建 + 幂等性校验。
 
 ## 1.2 交付分档
 
