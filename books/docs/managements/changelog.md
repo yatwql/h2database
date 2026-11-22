@@ -347,6 +347,11 @@
   的 `REPO_ROOT` 同为函数；`lib/_log.py` 在书尚未解析时只输出到控制台，选定书后再挂文件
   处理器。实测安装后导入仍差最后一处：`core/settings.py` 的 `SPEC` 表在导入期拼路径，
   需改成惰性构建；控制台命令待那一处改完再打开。
+- **安装形态可导入；配置读写不再依赖导入期路径**（plan-11 步骤四）：`core/settings.py` 的
+  `SPEC` 表与四个路径常量改为 `spec_table()` / `book_toml()` / `provider_json()` 等逐次解析，
+  `_reload()` 在重导入后按**当前书**重新绑定（否则重导入会把活动书换回进程默认）。修掉
+  一个真实写入缺陷：`[llm]` 段已存在但缺该键时，写入会追加第二个 `[llm]` 段，文件直接变成
+  非法 TOML——现在插到既有段内。安装后 `import app.cli` 通过，控制台命令待补。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

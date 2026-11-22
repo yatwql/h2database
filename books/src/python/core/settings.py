@@ -20,15 +20,38 @@ import sys
 
 from lib import _config, _fsutil, _volume
 
-BOOK_TOML = _config.CONFIG_PATH
-BASE_JSON = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'base.json')
-LLM_PROVIDER_JSON = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'llm_provider.json')
-LLM_SETTINGS_JSON = os.path.join(_config.BOOK_ROOT, 'data', 'config', 'llm_settings.json')
+
+def config_dir() -> str:
+    """Configuration directory of the active book, resolved per call."""
+    return _config.current().config_dir
+
+
+def book_toml() -> str:
+    return _config.current().book_toml
+
+
+def base_json() -> str:
+    return os.path.join(config_dir(), 'base.json')
+
+
+def provider_json() -> str:
+    return os.path.join(config_dir(), 'llm_provider.json')
+
+
+def settings_json() -> str:
+    return os.path.join(config_dir(), 'llm_settings.json')
 
 LEVELS = ('DEBUG', 'INFO', 'WARNING', 'ERROR')
 
 # logical key -> (file, section, field, kind, description)
-SPEC: dict[str, tuple[str, str, str, str, str]] = {
+def spec_table() -> dict[str, tuple[str, str, str, str, str]]:
+    """Writable settings and where each one lives, built for the active book."""
+    folder = config_dir()
+    BOOK_TOML = book_toml()
+    BASE_JSON = os.path.join(folder, 'base.json')
+    LLM_PROVIDER_JSON = os.path.join(folder, 'llm_provider.json')
+    LLM_SETTINGS_JSON = os.path.join(folder, 'llm_settings.json')
+    return {
     'title': (BOOK_TOML, 'book', 'title', 'str', '书名'),
     'version': (BOOK_TOML, 'book', 'version', 'str', '版本号'),
     'manuscript': (BOOK_TOML, 'paths', 'manuscript', 'str', '手稿目录'),
@@ -40,12 +63,17 @@ SPEC: dict[str, tuple[str, str, str, str, str]] = {
                              'LLM 每日费用上限（0 = 不限，达到即提醒）'),
     'llm.ingest_prose': (BOOK_TOML, 'llm', 'ingest_prose', 'bool',
                          'ingest 的导读/小结是否用 LLM 起草'),
-}
+    }
 
 
 def _reload() -> None:
-    """Re-read configuration so the session sees the change."""
+    """Re-read configuration so the session sees the change.
+
+    The active book is carried across the re-import: a fresh module would otherwise
+    rediscover its root from the process environment and silently switch books.
+    """
     global _config
+    active = _config.current().root
     modules = sys.modules
     lib = modules.get('lib')
     for name in ('lib._config', '_config'):
@@ -53,6 +81,7 @@ def _reload() -> None:
     if lib is not None and hasattr(lib, '_config'):
         delattr(lib, '_config')
     fresh = importlib.import_module('lib._config')
+    fresh.reset(fresh.Config(active))
     _config = fresh
     if lib is not None:
         vars(lib)['_config'] = fresh
@@ -109,7 +138,22 @@ def _write_toml_literal(path: str, section: str, field: str, literal: str) -> No
             lines[index] = f'{field} = {literal}'
             _fsutil.write_text(path, '\n'.join(lines))
             return
-    # a book that predates the key gets it added, rather than a dead end
+    # the section may already exist without this key: add the key inside it,
+    # otherwise the file ends up with two sections of the same name and stops
+    # being valid TOML
+    if section:
+        header_at = next((i for i, line in enumerate(lines)
+                          if re.match(rf'^\s*\[{re.escape(section)}\]\s*$', line)), None)
+        if header_at is not None:
+            end = next((i for i in range(header_at + 1, len(lines))
+                        if re.match(r'^\s*\[', lines[i])), len(lines))
+            insert_at = end
+            while insert_at > header_at + 1 and not lines[insert_at - 1].strip():
+                insert_at -= 1
+            lines.insert(insert_at, f'{field} = {literal}')
+            _fsutil.write_text(path, '\n'.join(lines))
+            return
+    # a book that predates the section gets one added, rather than a dead end
     body = '\n'.join(lines).rstrip('\n')
     _fsutil.write_text(path, f'{body}\n\n[{section}]\n{field} = {literal}\n')
 
@@ -128,17 +172,17 @@ def _write_json(path: str, payload: dict) -> None:
 def list_settings() -> list[dict]:
     """Current value and description of every writable key."""
     rows = []
-    for key, spec in SPEC.items():
-        rows.append({'key': key, 'value': get(key), 'kind': spec[3],
-                     'description': spec[4]})
+    for key, row in spec_table().items():
+        rows.append({'key': key, 'value': get(key), 'kind': row[3],
+                     'description': row[4]})
     return rows
 
 
 def get(key: str) -> str:
     """Read one writable setting as a display string."""
-    if key not in SPEC:
+    if key not in spec_table():
         raise KeyError(key)
-    path, section, field, _kind, _ = SPEC[key]
+    path, section, field, _kind, _ = spec_table()[key]
     if path.endswith('.json'):
         payload = _read_json(path)
         if section:
@@ -152,7 +196,7 @@ def get(key: str) -> str:
 
 
 def _validate(key: str, value: str) -> object:
-    kind = SPEC[key][3]
+    kind = spec_table()[key][3]
     if kind == 'bool':
         text = value.strip().lower()
         if text not in ('true', 'false', 'yes', 'no', '1', '0', 'on', 'off'):
@@ -183,10 +227,10 @@ def _validate(key: str, value: str) -> object:
 
 def set_value(key: str, value: str) -> str:
     """Validate and persist one setting; returns the stored value."""
-    if key not in SPEC:
+    if key not in spec_table():
         raise KeyError(key)
     stored = _validate(key, value)
-    path, section, field, kind, _description = SPEC[key]
+    path, section, field, kind, _description = spec_table()[key]
     if kind == 'bool':
         _write_toml_literal(path, section, field, 'true' if stored else 'false')
         _reload()
@@ -212,7 +256,7 @@ def _priority(spec: dict | None) -> int:
 
 def provider_order() -> list[dict]:
     """Providers in fallback order, with the priority the router will read."""
-    payload = _read_json(LLM_PROVIDER_JSON)
+    payload = _read_json(provider_json())
     providers = payload.get('providers') or {}
     rows = [{'name': name, 'priority': _priority(spec)} for name, spec in providers.items()]
     return sorted(rows, key=lambda row: (row['priority'], row['name']))
@@ -226,7 +270,7 @@ def move_provider(name: str, delta: int) -> str:
     """
     if delta not in (-1, 1):
         raise ValueError('delta must be -1 or 1')
-    payload = _read_json(LLM_PROVIDER_JSON)
+    payload = _read_json(provider_json())
     providers = payload.get('providers') or {}
     if name not in providers:
         raise KeyError(f'unknown provider {name!r}')
@@ -239,7 +283,7 @@ def move_provider(name: str, delta: int) -> str:
     for index, provider in enumerate(order):
         providers.setdefault(provider, {})['priority'] = (index + 1) * 10
     payload['providers'] = providers
-    _write_json(LLM_PROVIDER_JSON, payload)
+    _write_json(provider_json(), payload)
     _reload()
     return ', '.join(order)
 
@@ -290,7 +334,7 @@ def summary() -> dict:
         'manuscript': _config.MANUSCRIPT_DIR,
         'dist': _config.DIST_DIR,
         'languages': ','.join(_config.source_languages()),
-        'log_level': get('log.level') if 'log.level' in SPEC else '',
+        'log_level': get('log.level') if 'log.level' in spec_table() else '',
         'llm_provider': get('llm.provider'),
         'source_dir': _source_dir(),
         'llm_spend': spend_summary(),

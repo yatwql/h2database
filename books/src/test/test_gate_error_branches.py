@@ -155,7 +155,7 @@ class SettingsTest(unittest.TestCase):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w', encoding='utf-8') as fh:
             json.dump(payload, fh)
-        with mock.patch.object(self.settings, 'LLM_PROVIDER_JSON', path):
+        with mock.patch.object(self.settings, 'provider_json', lambda: path):
             with self.assertRaises(KeyError):
                 self.settings.move_provider('zzz', 1)
             with self.assertRaises(ValueError):
@@ -166,7 +166,7 @@ class SettingsTest(unittest.TestCase):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w', encoding='utf-8') as fh:
             json.dump({'providers': {'a': {'priority': 10}, 'b': {'priority': 20}}}, fh)
-        with mock.patch.object(self.settings, 'LLM_PROVIDER_JSON', path), \
+        with mock.patch.object(self.settings, 'provider_json', lambda: path), \
                 mock.patch.object(self.settings, '_reload'):
             self.assertEqual(self.settings.move_provider('b', -1), 'b, a')
             with open(path, encoding='utf-8') as fh:
