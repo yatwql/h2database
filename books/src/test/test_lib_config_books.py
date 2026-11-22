@@ -248,6 +248,36 @@ class TwoBooksTest(unittest.TestCase):
         self.assertEqual(sorted(os.path.basename(root) for root in roots),
                          ['left', 'right'])
 
+    def enable_defaults(self, root: str) -> None:
+        path = os.path.join(root, 'data', 'book', 'book.toml')
+        text = pathlib.Path(path).read_text(encoding='utf-8')
+        pathlib.Path(path).write_text(text.replace('[book]', '[book]\ndefaults = true', 1),
+                                      encoding='utf-8')
+
+    def test_a_book_without_the_flag_keeps_an_empty_policy(self):
+        os.remove(os.path.join(self.one, 'data', 'config', 'base.json'))
+        cfg = _config.Config(self.one)
+        self.assertFalse(cfg.use_defaults)
+        self.assertEqual(cfg.policy.get('thresholds'), {})
+        self.assertFalse((cfg.language().get('sections') or {}))
+
+    def test_a_book_that_opts_in_gets_the_packaged_defaults(self):
+        os.remove(os.path.join(self.one, 'data', 'config', 'base.json'))
+        self.enable_defaults(self.one)
+        cfg = _config.Config(self.one)
+        self.assertTrue(cfg.use_defaults)
+        self.assertTrue(cfg.policy.get('sources'))
+        self.assertTrue(cfg.language().get('sections'))
+
+    def test_the_books_own_values_win_over_the_defaults(self):
+        self.enable_defaults(self.one)
+        path = os.path.join(self.one, 'data', 'config', 'style.json')
+        pathlib.Path(path).write_text(json.dumps({'thresholds': {'exercises_min': 3}}),
+                                      encoding='utf-8')
+        cfg = _config.Config(self.one)
+        self.assertEqual(cfg.thresholds.get('exercises_min'), 3)
+        self.assertTrue(len(cfg.thresholds) > 1)   # the rest still comes from defaults
+
     def test_the_default_book_matches_its_module_attributes(self):
         active = _config.current()
         self.assertEqual(_config.BOOK_ROOT, active.root)

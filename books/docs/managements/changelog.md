@@ -384,6 +384,11 @@
   `book.toml [paths].library` > 书的父目录」。只给目录不给书时：唯一一本直接用、多本把
   「书名 [目录名] + 路径」列出来并退 2（不猜）、空目录退 2。`books_in()` 提供目录枚举，
   `library_dir()` 读覆盖值。用户文档、`technical.md` §3.1、多书设计 §14 同步，用例 4 条。
+- **包内默认配置（按需启用）**：`lib/_defaults/` 内置 `base.json`、`style.json`、
+  `templates.toml` 与 `language/zh.json`；book.toml 写 `[book] defaults = true` 时按**键级**
+  合并（书里的值优先，缺的键取包内默认），不写则保持原语义——整份文件缺失＝空策略／最小骨架包。
+  这样新书不必抄一份完整配置，而既有书与最小书的行为一个字都不变。用例 3 条：不启用时策略为空、
+  启用后拿到默认值、书内同名键覆盖默认。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

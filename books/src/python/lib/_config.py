@@ -112,6 +112,30 @@ class ConfigError(RuntimeError):
     """Raised when book.toml is missing or inconsistent."""
 
 
+DEFAULTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '_defaults')
+
+
+def default_path(*parts: str) -> str:
+    """A file shipped inside the package: the defaults a book may opt into."""
+    return os.path.join(DEFAULTS_DIR, *parts)
+
+
+def _deep_merge(base: dict, over: dict) -> dict:
+    """Keys in ``over`` win; nested dicts merge instead of replacing."""
+    merged = dict(base)
+    for key, value in (over or {}).items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _deep_merge(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
+def _with_defaults(path: str, default_file: str) -> dict:
+    """The book's file layered over the packaged default (book wins per key)."""
+    return _deep_merge(_read_policy(default_file), _read_policy(path))
+
+
 def _read_policy(path: str) -> dict:
     """Load one policy file; an absent file yields an empty mapping."""
     try:
@@ -193,8 +217,18 @@ class Config:
         self.policy_path = (os.environ.get('BOOK_POLICY')
                             or os.path.join(self.config_dir, 'config.json'))
         self.cfg = self._load_book()
-        self.base_policy = _read_policy(self.base_policy_path)
-        self.style_policy = _read_policy(self.style_policy_path)
+        # Opt-in, because "file missing" is itself meaningful: a minimal book gets an
+        # empty policy and a skeleton-only language pack. A book that asks for the
+        # packaged defaults gets them per key, with its own values winning.
+        self.use_defaults = bool((self.cfg.get('book') or {}).get('defaults', False))
+        if self.use_defaults:
+            self.base_policy = _with_defaults(self.base_policy_path,
+                                              default_path('base.json'))
+            self.style_policy = _with_defaults(self.style_policy_path,
+                                               default_path('style.json'))
+        else:
+            self.base_policy = _read_policy(self.base_policy_path)
+            self.style_policy = _read_policy(self.style_policy_path)
         self.policy = _merge_policy(self.base_policy, self.style_policy, self.policy_path)
         self._change_stamps: dict[str, str] = {}
         # book.toml values (fixtures) are only a fallback when no policy exists.
@@ -388,7 +422,11 @@ class Config:
     def language(self) -> dict:
         """Language pack for the current manuscript language."""
         path = os.path.join(self.language_dir, f'{self.language_code}.json')
-        data = _read_policy(path)
+        if self.use_defaults:
+            data = _with_defaults(path, default_path('language',
+                                                     f'{self.language_code}.json'))
+        else:
+            data = _read_policy(path)
         if not data:
             data = {'code': self.language_code,
                     'sections': {k: v for k, v in self.sections.items()
@@ -398,6 +436,10 @@ class Config:
     def templates(self) -> dict:
         """Prose templates (document side). Falls back to style.json for old books."""
         path = self.templates_path
+        if self.use_defaults:
+            merged = _with_defaults(path, default_path('templates.toml'))
+            if merged:
+                return merged
         try:
             with open(path, 'rb') as fh:
                 return tomllib.load(fh)

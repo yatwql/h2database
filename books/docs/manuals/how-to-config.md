@@ -19,6 +19,7 @@
 
 ```toml
 [book]
+defaults = false                    # true：缺的键取包内默认值（新书可只写差异）
 title = "某系统源码剖析"
 version = "1.0"
 merged_name = "code-analysis"      # 产物文件名前缀

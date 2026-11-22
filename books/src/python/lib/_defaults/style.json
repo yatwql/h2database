@@ -1,0 +1,237 @@
+{
+  "_note": "Book style: display copy, section skeleton, caption vocabulary, writing thresholds, generation templates.",
+  "sections": {
+    "per_chapter": [
+      "本章导读",
+      "本章小结",
+      "延伸思考",
+      "延展阅读"
+    ],
+    "optional": [
+      "术语参考",
+      "知识点清单",
+      "阅读检查清单"
+    ]
+  },
+  "captions": {
+    "leading_verbs": [
+      "展示",
+      "对比",
+      "拆解",
+      "演示",
+      "标注",
+      "概览",
+      "追踪",
+      "描绘",
+      "刻画",
+      "归纳",
+      "罗列",
+      "列出",
+      "勾勒",
+      "呈现",
+      "串联",
+      "说明",
+      "揭示",
+      "体现",
+      "反映",
+      "阐释",
+      "解读",
+      "剖析",
+      "梳理",
+      "汇总",
+      "汇集",
+      "记录"
+    ],
+    "vague_trailing": [
+      "过程",
+      "示例",
+      "架构",
+      "图",
+      "机制",
+      "流程"
+    ],
+    "presets": {
+      "strict": {
+        "min_chars": 8,
+        "max_chars": 30,
+        "fail_at": 0
+      },
+      "normal": {
+        "min_chars": 6,
+        "max_chars": 35,
+        "fail_at": 30
+      },
+      "loose": {
+        "min_chars": 4,
+        "max_chars": 45,
+        "fail_at": 80
+      }
+    }
+  },
+  "diagrams": {
+    "markers": [
+      "┌",
+      "└",
+      "├",
+      "│",
+      "▼",
+      "▲",
+      "→"
+    ]
+  },
+  "clusters": {
+    "min_figures": 3,
+    "window_lines": 40
+  },
+  "quality": {
+    "max_duplicate_ratio": 12,
+    "max_avg_sentence": 45,
+    "max_long_lines": 40,
+    "min_coords_per_chapter": 15,
+    "min_chapter_lines": 150,
+    "max_chapter_lines": 450,
+    "max_table_rows": 20,
+    "min_terms_per_chapter": 5,
+    "min_exercises_per_chapter": 4,
+    "min_figures_per_section": 2,
+    "min_figure_coverage_pct": 95,
+    "_duplicate_ratio_note": "Single-owner chapter scopes brought prose duplication to ~4%; the gate is kept at 12% so a regression is caught without blocking legitimate overlap."
+  },
+  "generation": {
+    "max_packages_per_table": 12,
+    "max_classes_per_package": 4,
+    "max_api_rows": 20,
+    "exercises_per_chapter": 4,
+    "checklist_items": 5
+  },
+  "thresholds": {
+    "exercises_min_total": 50,
+    "index_total_min": 120,
+    "index_per_chapter_min": 5,
+    "index_main_min": 150,
+    "index_sub_min": 50,
+    "index_see_also_min": 30,
+    "glossary_min_entries": 60,
+    "exercises_min_per_chapter": 3
+  },
+  "prose": {
+    "avg_sentence_good": 28,
+    "avg_sentence_bad": 45,
+    "long_ratio_good": 8,
+    "long_ratio_bad": 30,
+    "paragraph_good_min": 80,
+    "paragraph_good_max": 420,
+    "bullet_good": 12,
+    "bullet_bad": 60,
+    "coords_good": 20,
+    "coords_bad": 4,
+    "h3_good": 6,
+    "h3_bad": 0,
+    "dup_good": 5,
+    "dup_bad": 20,
+    "table_good": 0,
+    "table_bad": 20,
+    "min_composite": 80,
+    "forbid_phrases": [
+      "本文",
+      "我们",
+      "上面说到",
+      "众所周知"
+    ],
+    "tone": "technical-reference",
+    "audience": "experienced engineers reading source code",
+    "sections": {
+      "body": {
+        "avg_sentence_good": 28,
+        "avg_sentence_bad": 45
+      },
+      "caption": {
+        "max_chars": 30
+      },
+      "exercise": {
+        "min_items": 4
+      }
+    }
+  },
+  "_schema": {
+    "version": 1,
+    "note": "Validated by audit/style_schema.py; unknown keys fail the gate."
+  },
+  "limits": {
+    "sources": {
+      "limit": 900,
+      "warn": 700
+    },
+    "tests": {
+      "limit": 1200,
+      "warn": 900
+    },
+    "docs": {
+      "limit": 1200,
+      "warn": 900
+    },
+    "manuscript": {
+      "limit": 9000,
+      "warn": 6000
+    }
+  },
+  "style_rules": {
+    "terminology": [
+      [
+        "快照读",
+        "快照读取"
+      ],
+      [
+        "预写日志",
+        "WAL"
+      ],
+      [
+        "写时复制",
+        "COW"
+      ],
+      [
+        "日志结构合并树",
+        "LSM-Tree"
+      ]
+    ],
+    "banned_link_text": [
+      "点击这里",
+      "这里",
+      "链接",
+      "详情"
+    ],
+    "heading": {
+      "no_trailing_punctuation": true,
+      "forbid_bare": [
+        "概述",
+        "简介",
+        "说明"
+      ]
+    },
+    "cjk_latin_spacing": true,
+    "list_punctuation": "consistent",
+    "max_paragraph_chars": 420
+  },
+  "content_depth": {
+    "glossary_min_uses": 60,
+    "excerpt_lines": 6,
+    "glossary_ignore": [
+      "BitSet",
+      "Command",
+      "File",
+      "FilePathWrapper",
+      "Header",
+      "Insert",
+      "Interval",
+      "Java",
+      "Layer",
+      "Phase",
+      "Queue",
+      "TRUE",
+      "Transfer",
+      "Tree",
+      "TypeInfo",
+      "Undo"
+    ]
+  }
+}

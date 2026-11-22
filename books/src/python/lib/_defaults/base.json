@@ -1,0 +1,60 @@
+{
+  "_note": "Infrastructure: where the source tree lives, where state/baselines go, toolchain budgets.",
+  "paths": {
+    "state": "data/state",
+    "baselines": "data/baselines",
+    "snapshots": "data/snapshots"
+  },
+  "sources": {
+    "file_suffix": ".java",
+    "package_prefix": "org.h2",
+    "language": "java",
+    "languages": [
+      "java"
+    ],
+    "suffixes": {
+      "java": ".java",
+      "python": ".py",
+      "rust": ".rs",
+      "kotlin": ".kt",
+      "go": ".go"
+    }
+  },
+  "baselines": {
+    "ascii": "data/baselines/ascii-baseline.json",
+    "source_symbol": "data/baselines/source-symbol-baseline.json",
+    "content_volume": "data/baselines/content-volume.json",
+    "captions": "data/baselines/captions-findings.json",
+    "content_depth": "data/baselines/content-depth-findings.json",
+    "style_rules": "data/baselines/style-rules-baseline.json"
+  },
+  "toolchain": {
+    "coverage_fail_under": 88,
+    "pdf_max_mb": 12,
+    "epub_max_mb": 10,
+    "ascii_max_cols": 100,
+    "pdf_page_width": 595,
+    "pdf_page_height": 842,
+    "pdf_page_tolerance": 2,
+    "content_floor_ratio": 0.95,
+    "pdf_page_ratio": 0.9,
+    "epub_size_ratio": 0.85,
+    "content_profile": "baseline",
+    "step_timeout_s": 900,
+    "test_timeout_s": 300,
+    "coverage_min_per_file": 72
+  },
+  "logging": {
+    "level": "INFO",
+    "dir": "logs",
+    "retention_days": 14
+  },
+  "archive": {
+    "dir": "data/archive",
+    "retention_days": 45
+  },
+  "reports": {
+    "dir": "test-reports",
+    "retention_days": 30
+  }
+}
