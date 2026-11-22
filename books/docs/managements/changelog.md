@@ -169,6 +169,10 @@
 - **`style.py` 检测器改为表驱动用例**：新增 `test_audit_style_detectors.py`，每条规则一行"触发文本 / 干净文本"
   （冗余副词、空泛修饰、超长句、被动滥用、"的"堆叠、句式单调），并断言围栏内文本不被判——
   这张表同时充当规则的说明，改词表时用例先红。
+- **pyright strict 试评估**：把 `books/src/python/lib` 设为 strict 后一次扫出 **522 个类型错误**（自动
+  生成的配置读取、字典解包、`Unknown` 传播为主）。直接开会让类型门禁长期红，且一次性修完会把
+  本轮改动面扩大到不可评审；因此**暂不开 strict**，记录为"要开就先按文件登记存量"的待办——
+  与松散断言、C901 使用同一套"登记存量、新增即失败"的接法。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
