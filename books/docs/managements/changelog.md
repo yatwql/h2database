@@ -331,6 +331,12 @@
   术语，读者仍要问「这是什么」。改为 `手稿 40,097 行（再少 5,049 行即判「内容变薄」）`：
   先说测的是什么，再说越过之后会发生什么；`?` 帮助补一句下限的算法，`DESIGN-TUI.md`
   同步，用例断言改为「不得出现百分比与『下限』字样」防回退。
+- **架构债：两个库模块在导入期绑死书路径**：`_baseline.py` 的 `BASELINE_DIR`、`_llm.py` 的
+  `PROVIDER_PATH`/`SETTINGS_PATH` 在 import 时取一次，于是 `--book` 换书后基线写入与 LLM
+  配置仍指向导入时那本书——库被 `app/` 同进程引用，这是真实缺陷而不是风格问题。改为
+  `baseline_dir()` / `provider_path()` / `settings_path()` 逐次解析，并加一条用例：切书后
+  三个路径都跟着变。审计还扫了 39 处模块级配置读取，全部位于以子进程运行的脚本里，
+  在「动作走子进程」的模型下无害，已在设计里写明该边界。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

@@ -28,9 +28,15 @@ from urllib.parse import urlsplit
 
 from lib import _config, _fsutil, _log
 
-CONFIG_DIR = _config.CONFIG_DIR
-PROVIDER_PATH = os.path.join(CONFIG_DIR, 'llm_provider.json')
-SETTINGS_PATH = os.path.join(CONFIG_DIR, 'llm_settings.json')
+
+def provider_path() -> str:
+    """LLM routing table of the active book (resolved per call, not at import)."""
+    return os.path.join(_config.current().config_dir, 'llm_provider.json')
+
+
+def settings_path() -> str:
+    """LLM generation settings of the active book."""
+    return os.path.join(_config.current().config_dir, 'llm_settings.json')
 
 
 class LLMError(RuntimeError):
@@ -49,12 +55,12 @@ def _load(path: str) -> dict:
 
 def providers() -> dict:
     """Provider table with routing rules."""
-    return _load(PROVIDER_PATH)
+    return _load(provider_path())
 
 
 def settings() -> dict:
     """Generation settings per scenario/book/chapter."""
-    return _load(SETTINGS_PATH)
+    return _load(settings_path())
 
 
 def _pick(mapping: dict | None, key: str | None) -> str | None:

@@ -26,8 +26,9 @@ class BaselineTest(unittest.TestCase):
         self.mod = importlib.import_module('lib._baseline')
         # point the module at the fixture book without touching the shared config
         patches = (mock.patch.object(self.mod._config, 'BOOK_ROOT', self.root),
-                   mock.patch.object(self.mod, 'BASELINE_DIR',
-                                     os.path.join(self.root, 'data', 'baselines')))
+                   mock.patch.object(self.mod, 'baseline_dir',
+                                     lambda: os.path.join(self.root,
+                                                          'data', 'baselines')))
         for patch in patches:
             patch.start()
             self.addCleanup(patch.stop)

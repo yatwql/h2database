@@ -16,7 +16,15 @@ import os
 
 from . import _config, _fsutil
 
-BASELINE_DIR = _config.baseline_dir()
+
+def baseline_dir() -> str:
+    """Directory holding this book's baseline files.
+
+    Read per call, not at import: the toolchain serves several books, and a value
+    captured at import would keep writing the first book's baselines no matter which
+    one is active.
+    """
+    return _config.baseline_dir()
 
 
 def path_for(name: str) -> str:
@@ -29,7 +37,7 @@ def path_for(name: str) -> str:
     configured = _config.BASE_POLICY.get('baselines', {}).get(name.replace('-', '_'))
     if configured:
         return os.path.join(_config.BOOK_ROOT, str(configured))
-    return os.path.join(BASELINE_DIR, f'{name}-findings.json')
+    return os.path.join(baseline_dir(), f'{name}-findings.json')
 
 
 def load(name: str) -> set[str]:

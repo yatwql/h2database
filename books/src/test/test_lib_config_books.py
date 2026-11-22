@@ -220,6 +220,16 @@ class TwoBooksTest(unittest.TestCase):
         with self.assertRaises(_config.ConfigError):
             _config.Config(self.one).source_roots()
 
+    def test_library_paths_follow_the_active_book(self):
+        baseline = importlib.import_module('lib._baseline')
+        llm = importlib.import_module('lib._llm')
+        for module, getter in ((baseline, baseline.baseline_dir),
+                               (llm, llm.provider_path),
+                               (llm, llm.settings_path)):
+            inner = module._config          # the instance this module actually holds
+            with inner.use(inner.Config(self.two)):
+                self.assertTrue(getter().startswith(self.two), getter.__name__)
+
     def test_the_default_book_matches_its_module_attributes(self):
         active = _config.current()
         self.assertEqual(_config.BOOK_ROOT, active.root)
