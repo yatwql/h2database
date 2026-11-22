@@ -247,6 +247,13 @@
   `audit/plan_coverage.py`：每个 `docs/plan/<主题>/` 恰好被一个计划项或待归档行认领、计划项
   的四段齐备且有序、`plan-N` 唯一、`plan-next` 等于最大编号 + 1、概述的在办项数与分档数字
   与实际一致——这类漂移以后跑 `make.py check` 就会当场判红。
+- **多书设计四轮复盘**：修掉与既有需求的冲突和几处「改了也没用」的方案——「不引入跨书快照」
+  与 NFR-07 冲突，改为按书只读、允许人工放入他书稿；只把 `_config` 改惰性不解决问题，
+  消费方在模块顶层取配置仍会冻结，立为规则并加 `check_architecture.py` 机检（登记存量、
+  只挡新增）；重编号会连带跨章引用、术语与索引，`index_xrefs.py` 的 1-12 硬编码列为必须
+  一并整改的债务；补多根源的类型兼容契约（`versions()['source']` 单根字符串 / 多根映射）、
+  `default_edition` 在多版本下必填、嵌套书根取最近一本、`--edition` 与 `--book` 同等的
+  子进程传播、以及「这几步明确不做」四条。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

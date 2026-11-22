@@ -23,6 +23,9 @@
 2. `lib/_config` 的 `_DEFAULT` 在导入期构造，那时 `--book` 还没解析。改为惰性（首次
    `current()` 才构造），入口先定书根再构造 `Config`。这条不改，`--book` 只在一部分
    调用路径上生效。
+3. 与第 2 条配套：消费方不得在模块顶层读配置（`SOURCE_ROOT = _config.source_tree(...)`
+   这类赋值会让惰性失效）。除上面三处，`check_architecture.py` 新增一条机检——模块顶层
+   出现 `_config.<属性>` 取值即失败——把这一类问题挡在入口之前。
 
 两条不改，步骤二只是「看起来切了书」。
 
@@ -32,7 +35,8 @@
    `data/book/book.toml`，找到即以其所在书根为准。
 2. 优先级固定为：`--book` > 环境变量 `BOOK_ROOT` > 向上查找 > 工具链所在 checkout。
    四者都落空时的报错必须点明「没找到 book.toml，试过哪些位置」。向上查找走到文件系统根
-   为止，路径比较用 `realpath`，在大小写不敏感的文件系统上按不敏感比较。
+   为止，路径比较用 `realpath`，在大小写不敏感的文件系统上按不敏感比较；书根可以嵌套
+   （一本书的 `docs/` 下再放另一本书），向上查找取**最近的一本**，并打印命中的是哪一个。
 3. 选定后整次运行在一个 `with _config.use(cfg):` 里；`scripts/bookctl` 透传 `--book`，
    `app/web.py` 启动时选定一本书并在进程内固定（见 `design.md` §7）；写配置的动作
    （`settings set`）写到活动书自己的文件里，不跨书写。
@@ -44,11 +48,14 @@
 
 **验收**：
 
-- 不带 `--book` 时，`make.py check` 的结论与产物路径逐字不变（渲染文本哈希不变）；
+- 不带 `--book`、在仓库根运行时，`make.py check` 的结论与产物路径逐字不变（渲染文本哈希
+  不变）。这条只对「仓库根就是书根」成立：从别的书目录里运行本来就是另一本书，不在等价
+  范围内；
 - 新增用例：给定两个夹具书根，`--book` 指向第二个时 `_config.BOOK_ROOT`、`state_path`、
   `dist` 全部落在第二个书根下；向上查找用例：在 `data/manuscript` 下运行时命中该书根；
 - 新增用例：`--book` 指向没有 `book.toml` 的目录时报错含「book.toml」且退出码 2；
-- 优先级用例：同时给 `--book` 与 `BOOK_ROOT` 时以 `--book` 为准。
+- 优先级用例：同时给 `--book` 与 `BOOK_ROOT` 时以 `--book` 为准；
+- 顶层取值的机检白名单在本步完成时为空（三处已改为函数内读取），新增违规即判红。
 
 **风险**：`make.py` 的步骤表通过子进程调脚本，`--book` 必须传达到每个子进程，否则子步骤
 退回兜底根。做法是选定后把书根写进子进程的环境变量（`BOOK_ROOT`），与步骤二的第 2 条
@@ -68,13 +75,21 @@
 2. 声明后，各版本手稿放 `data/manuscript/<edition>/`（`[paths].manuscript` 仍指向
    `data/manuscript`，版本目录在它下面），`--edition` 选择；缺省版本写在
    `book.toml` 的顶层键 `default_edition`（**不放在 `[editions]` 表里**，否则与名为
-   `default` 的版本冲突），未声明时取第一个键。
+   `default` 的版本冲突）。只有一个版本时可省略 `default_edition`；两个以上必须声明，
+   否则报错而不是「取第一个键」——键的顺序不是接口。
 3. 派生状态与体量基线按版本分键：`state/<edition>/`、`baselines/<edition>/`（目录内的
    键与当前相同）；未声明 `[editions]` 时仍写 `state/`、`baselines/`（当前的位置）。
-4. 产物按版本命名：缺省 `<merged_name>-<edition>`，需要固定名字时用
-   `[editions.<id>].merged_name`；同时有语言后缀时再接 `-<lang>`。
-5. `content_volume.py` 的体量比对只与同版本基线比；跨版本比对必须显式给
+4. 重编号后同步改写正文引用：`详见第X章《…》`、术语表的章号指引、索引条目里的章号，
+   全部按映射改写；`index_xrefs.py` 里 1-12 的硬编码章号集改为读取该版本的章号集
+   （这是既有债务，必须在本步一并整改，否则删节版必红）。
+5. 产物按版本命名：缺省 `<merged_name>-<edition>`，需要固定名字时用
+   `[editions.<id>].merged_name`；同时有语言后缀时再接 `-<lang>`；封面与 manifest
+   都记录版本标识与语言标识。
+6. `content_volume.py` 的体量比对只与同版本基线比；跨版本比对必须显式给
    `--baseline <文件>`，不允许隐式回退。
+7. `--edition` 与 `--book` 一样要传达到每个子步骤：`make.py` 的步骤表通过子进程执行，
+   父进程解析后把版本写进环境变量（`BOOK_EDITION`），子进程只读环境变量；`settings`
+   类动作只写当前活动书的文件，不跨版本、不跨书写。
 
 **验收**：
 
@@ -83,8 +98,13 @@
   甲版本下限判乙版本（用例构造甲厚乙薄，断言乙仅在与自己基线比时通过）；
 - `--edition` 指向未声明的版本时报错列出已声明版本。
 
-**风险**：`data/manuscript/` 下出现子目录后，`front_matter()`/`back_matter()` 的 glob
-会跨版本匹配。实现时必须把 glob 根限定到所选版本目录。这条是步骤三的主要陷阱。
+**风险**：
+
+1. `data/manuscript/` 下出现子目录后，`front_matter()`/`back_matter()` 的 glob 会跨版本
+   匹配——必须把 glob 根限定到所选版本目录。
+2. 重编号会同时动章号、跨章引用、术语与索引三处；任何一处漏改，`crossrefs.py`、
+   `index_xrefs.py` 或 `structure.py` 都会判红。用例要各钉一条。
+3. 两份手稿的产物名撞车会静默覆盖；命名规则与 manifest 记录要在同一步落地。
 
 **回滚**：删掉 `[editions]` 表即回到单版本形态；`state/<edition>/`、`baselines/<edition>/`
 会作为残留目录留着，不影响单版本运行，确认无用后手工删除。
@@ -115,12 +135,13 @@
 **动作**：
 
 1. `[sources].roots[]`（`label`、`path`、`language`、`version`）与单根 `src_main` 并存，
-   `source_tree('src_main')` 返回首根；
+   `source_tree('src_main')` 返回首根；`label` 必填、唯一，重复或缺失即 `ConfigError`；
 2. `source-inventory.json`、坐标报告、日志按 `label` 分组；
 3. 体量基线写入 `source{label, version, digest}`，指纹不匹配时报「基线来自另一个源」。
 
-**验收**：单源书 `make.py check` 结论与产物不变；双源夹具书的 inventory 两棵树的类都能
-被坐标门禁解析；换源后 `content_volume` 报指纹不匹配而不是静默通过。
+**验收**：单源书 `make.py check` 结论与产物不变；双源夹具书（两个各含一个类的临时源树，
+`label` 分别为 `h2` 与 `client`）的 inventory 两棵树的类都能被坐标门禁解析；`label` 重复
+时报 `ConfigError`；换源后 `content_volume` 报指纹不匹配而不是静默通过。
 
 **回滚**：删 `roots` 表回到单根；基线里的 `source` 字段留着不影响比对（单根时与
 `versions().source` 一致）。
@@ -137,6 +158,15 @@
   `git mv` 与 `_default_root()` 兜底值调整，单独提交，验收是「门禁全绿、产物逐字不变」。
 - **CI**：现有 `book.yml` 按单书跑；多书形态下按书各跑一次即可，不做跨书汇总。CI 的改造
   不在本计划内，但 B 形态不得让单书 job 变慢或变复杂。
+
+## 这几步明确不做
+
+- **不做 `--book` × `--edition` × `--language` 的组合矩阵门禁**：三者各自有判据，
+  组合只影响产物命名；为组合写门禁的收益低于维护成本。
+- **不自动迁移已有书**：旧布局（`book.toml` 不在 `data/book/`）报错并给出期望路径，
+  迁移是一次手工 `git mv` 加一次 `changelog` 记录。
+- **不改任何阈值语义**：选书、选版本、选源只决定「读哪个文件、写到哪里」。
+- **不在本次做跨书汇总**：没有「一次检查所有书」的命令，多书由外部按书各跑一次。
 
 ## 顺序理由
 
