@@ -227,112 +227,124 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     main_entries, sub_entries, see_alsos, sections = parse_index(index_path)
-
-    main_keys = set(main_entries.keys())
-    # Build an alias index so see-also can resolve either form (canonical or
-    # bare); a target hits if any of its aliases appears in main_alias_index.
-    main_alias_index: dict[str, str] = {}
-    for canonical in main_keys:
-        for alias in _aliases_for(canonical):
-            main_alias_index.setdefault(alias, canonical)
-    issues = 0
-
-    # Check 1: see-also targets resolve.
-    print('=== see-also resolution ===')
-    dangling = []
-    for sa in see_alsos:
-        for tgt in sa['targets']:
-            tgt_norm = _strip_alias(tgt)
-            tgt_clean = tgt_norm
-            for prefix in ('见 ', 'see '):
-                if tgt_clean.lower().startswith(prefix.lower()):
-                    tgt_clean = tgt_clean[len(prefix):].strip()
-            if not tgt_clean:
-                continue
-            # Try exact, then alias-resolved match
-            if tgt_clean in main_keys:
-                continue
-            if tgt_clean in main_alias_index:
-                continue
-            # Try matching by stripping each candidate's known aliases
-            matched = False
-            for alias in _aliases_for(tgt_clean):
-                if alias in main_keys or alias in main_alias_index:
-                    matched = True
-                    break
-            if matched:
-                continue
-            dangling.append((sa['line'], sa['parent'], tgt_clean))
-    if dangling:
-        for line, parent, tgt in dangling[:20]:
-            print(f"  L{line}: '{parent}' -> '{tgt}' (no main entry)")
-        if len(dangling) > 20:
-            print(f"  ... and {len(dangling) - 20} more")
-        issues += len(dangling)
-    else:
-        print('  OK: every see-also target resolves to a main entry')
-
-    # Check 2: sub-entry chapter validity.
-    # A sub-entry may name any chapter the book declares coverage for; the set comes
-    # from the configuration so an edition with fewer chapters is judged by its own
-    # numbering rather than by a hardcoded range.
-    # We deliberately do NOT enforce that sub-entries lie within their parent's
-    # chapter span — sub-entries often legitimately cross-reference comparison
-    # material in distant chapters (e.g. "与 LSM-Tree 对比 — §1.1" under a
-    # "B-Tree 索引 — §6.1" parent is desirable, not a violation).
-    print('\n=== sub-entry chapter validity ===')
-    valid_chapters = declared_chapters()
-    bad_subs = []
-    for sub in sub_entries:
-        for ch in sub['chapters']:
-            if ch not in valid_chapters:
-                bad_subs.append((sub['line'], sub['parent'], sub['term'], ch))
-    if bad_subs:
-        for line, parent, term, ch in bad_subs[:20]:
-            print(f"  L{line}: '{parent}' -> '{term}' references invalid 第{ch}章")
-        if len(bad_subs) > 20:
-            print(f"  ... and {len(bad_subs) - 20} more")
-        issues += len(bad_subs)
-    else:
-        print(f'  OK: {len(sub_entries)} sub-entries reference valid chapters')
-
-    # Check 3: section heading order (A..Z then 数字, 附录).
-    print('\n=== section ordering ===')
-    ascii_letters = []
-    tail = []
-    for name, line in sections:
-        if len(name) == 1 and 'A' <= name.upper() <= 'Z':
-            ascii_letters.append((name.upper(), line))
-        else:
-            tail.append((name, line))
-    order_problems = []
-    last = ''
-    for name, line in ascii_letters:
-        if name < last:
-            order_problems.append((line, name, last))
-        last = name
-    if order_problems:
-        for line, name, prev in order_problems:
-            print(f"  L{line}: '## {name}' appears after '## {prev}' (out of order)")
-        issues += len(order_problems)
-    else:
-        print(f'  OK: {len(ascii_letters)} alphabetic sections in order')
-    print(f'  INFO: {len(tail)} non-alphabetic trailing sections (中文/数字/附录)')
-
-    # Summary
-    main_count = len(main_entries)
-    sub_count = len(sub_entries)
-    sa_count = len(see_alsos)
-    print('\n=== summary ===')
-    print(f'  main entries:    {main_count}')
-    print(f'  sub-entries:     {sub_count}')
-    print(f'  see-also lines:  {sa_count}')
-    print(f'  total entries:   {main_count + sub_count}')
-    print(f'  issues:          {issues}')
+    alias_index = _alias_index(main_entries)
+    issues = (_check_see_also(set(main_entries), alias_index, see_alsos)
+              + _check_sub_entry_chapters(sub_entries)
+              + _check_section_order(sections))
+    _print_summary(main_entries, sub_entries, see_alsos, issues)
 
     if as_json:
         print(json.dumps({'issues': issues}, ensure_ascii=False))
     return 0 if issues == 0 else 1
+
+
+def _alias_index(main_entries: dict) -> dict[str, str]:
+    """Map every known alias onto the main entry it stands for.
+
+    A see-also may name a term by any of its forms (canonical or bare), so both
+    spellings have to land on the same entry.
+    """
+    index: dict[str, str] = {}
+    for canonical in main_entries:
+        for alias in _aliases_for(canonical):
+            index.setdefault(alias, canonical)
+    return index
+
+
+def _target_resolves(target: str, main_keys: set[str], alias_index: dict[str, str]) -> bool:
+    """Whether a see-also target names an entry, directly or through an alias."""
+    if target in main_keys or target in alias_index:
+        return True
+    return any(alias in main_keys or alias in alias_index
+               for alias in _aliases_for(target))
+
+
+def _check_see_also(main_keys: set[str], alias_index: dict[str, str],
+                    see_alsos: list) -> int:
+    """Every ``see also:`` target must resolve to a main entry."""
+    print('=== see-also resolution ===')
+    dangling = []
+    for sa in see_alsos:
+        for raw in sa['targets']:
+            target = _strip_alias(raw)
+            for prefix in ('见 ', 'see '):
+                if target.lower().startswith(prefix.lower()):
+                    target = target[len(prefix):].strip()
+            if not target:
+                continue
+            if _target_resolves(target, main_keys, alias_index):
+                continue
+            dangling.append((sa['line'], sa['parent'], target))
+    if not dangling:
+        print('  OK: every see-also target resolves to a main entry')
+        return 0
+    for line, parent, target in dangling[:20]:
+        print(f"  L{line}: '{parent}' -> '{target}' (no main entry)")
+    if len(dangling) > 20:
+        print(f'  ... and {len(dangling) - 20} more')
+    return len(dangling)
+
+
+def _check_sub_entry_chapters(sub_entries: list) -> int:
+    """A sub-entry may name any chapter the book declares coverage for.
+
+    The set comes from the configuration, so an edition with fewer chapters is
+    judged by its own numbering rather than by a hardcoded range. Sub-entries are
+    deliberately not confined to their parent's chapter span: cross-referencing a
+    comparison in a distant chapter is desirable, not a violation.
+    """
+    print('\n=== sub-entry chapter validity ===')
+    valid = declared_chapters()
+    bad = [(sub['line'], sub['parent'], sub['term'], chapter)
+           for sub in sub_entries
+           for chapter in sub['chapters'] if chapter not in valid]
+    if not bad:
+        print(f'  OK: {len(sub_entries)} sub-entries reference valid chapters')
+        return 0
+    for line, parent, term, chapter in bad[:20]:
+        print(f"  L{line}: '{parent}' -> '{term}' references invalid 第{chapter}章")
+    if len(bad) > 20:
+        print(f'  ... and {len(bad) - 20} more')
+    return len(bad)
+
+
+def _check_section_order(sections: list) -> int:
+    """Alphabetic sections must ascend; the tail only gets counted.
+
+    Chinese, numeric and appendix sections follow the alphabetic block by design,
+    so their position is reported for reading, not judged.
+    """
+    print('\n=== section ordering ===')
+    alphabetic = [(name.upper(), line) for name, line in sections
+                  if len(name) == 1 and 'A' <= name.upper() <= 'Z']
+    tail = [(name, line) for name, line in sections
+            if not (len(name) == 1 and 'A' <= name.upper() <= 'Z')]
+    out_of_order = []
+    previous = ''
+    for name, line in alphabetic:
+        if name < previous:
+            out_of_order.append((line, name, previous))
+        previous = name
+    if not out_of_order:
+        print(f'  OK: {len(alphabetic)} alphabetic sections in order')
+    else:
+        for line, name, before in out_of_order:
+            print(f"  L{line}: '## {name}' appears after '## {before}' (out of order)")
+    print(f'  INFO: {len(tail)} non-alphabetic trailing sections (中文/数字/附录)')
+    return len(out_of_order)
+
+
+def _print_summary(main_entries: dict, sub_entries: list, see_alsos: list,
+                   issues: int) -> None:
+    main_count = len(main_entries)
+    sub_count = len(sub_entries)
+    print('\n=== summary ===')
+    print(f'  main entries:    {main_count}')
+    print(f'  sub-entries:     {sub_count}')
+    print(f'  see-also lines:  {len(see_alsos)}')
+    print(f'  total entries:   {main_count + sub_count}')
+    print(f'  issues:          {issues}')
+
 
 if __name__ == '__main__':
     sys.exit(_errors.run(main, sys.argv[1:]))
