@@ -333,7 +333,9 @@ def coverage() -> int:
              ['-m', 'unittest', 'discover', '-s', tests, '-t', tests])
     try:
         run = subprocess.run(
-            [PY, '-m', 'coverage', 'run', '--source=books/src/python', *inner],
+            # --branch: a line can run while its false path never does; the
+            # ratchet is only meaningful when both are counted.
+            [PY, '-m', 'coverage', 'run', '--branch', '--source=books/src/python', *inner],
             cwd=os.path.dirname(BOOK_ROOT), capture_output=True, text=True,
             check=False, timeout=1800)
     except subprocess.TimeoutExpired:

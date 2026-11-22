@@ -157,7 +157,7 @@ books/
 - 归档与报告：`base.json [archive]` 的 `dir`、`retention_days`（默认 45 天，读 `archive.settings()`）；
   `base.json [reports]` 的 `dir`、`retention_days`（默认 30 天，读 `test_report.settings()`）。
   两者都是“只进不出”的证据目录，已 gitignore。
-- 覆盖率红线：`base.json [toolchain] coverage_fail_under`。
+- 覆盖率红线：`base.json [toolchain] coverage_fail_under`（**分支覆盖**口径：`coverage run --branch` 的总百分比）与 `coverage_min_per_file`（单文件行覆盖下限）。
 - 步骤超时：`base.json [toolchain]` 的 `step_timeout_s`（普通步骤）与 `test_timeout_s`（测试与覆盖率步骤）；`make.py` 按步骤名取值，超时按 124 记为步骤失败。取值是“谨注定能跑完”的上限而非预算，故与实测耗时保留十数倍余量。
 
 判据文档（`testplan.md`）只说“不低于配置下限”，不引用这里的键名：键名与取值属于本节，`doc_drift` 的 `THRESHOLD` 检查守着这条边界。

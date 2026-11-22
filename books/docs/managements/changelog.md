@@ -116,6 +116,10 @@
   `index.py` 的默认/检查模式、`--hierarchy-check`、缺源码树时 `source_refs.py` 的 `[skip]`）；
   基线从 76 条降到 **71 条**。剩下的多数是"坏输入下不得抛异常"的负向冒烟——0/1/2 都是合法结果，
   已在基线注里写明这类为何不钉死。
+- **覆盖率改为分支口径**：`make.py cover` 改用 `coverage run --branch`，棘轮按**分支覆盖**的
+  总百分比判定（实测 88%，阈值同步为 88）；`technical.md` §3.2 写明这个数字现在是
+"行 + 分支"口径，单文件下限 `coverage_min_per_file` 保持 70%。以前只看行覆盖，写了的
+  `if` 另一半从没走过也算绿；现在不会。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
