@@ -100,6 +100,10 @@
   `SystemExit` 打死门禁（`except Exception` 抓不到），现改为直接 `json.loads` 并捕获
   `OSError/ValueError`；`save()` 把**目录**传给 `ensure_dir()`（它要的是文件路径），
   `data/baselines` 不存在时写入直接失败。
+- **渲染器拆分第一步：样式表独立**：`render/to_html.py` 842 → **557 行**，CSS（284 行）迁到
+  `render/html_shell.py`；`dist/*.html` 的 sha256 与拆分前**逐字节一致**（`edef814e…`），
+  也就是这次只是搬动文本、没有改行为。`to_html.py` 已不在膨胀登记表里（557 行，远低于提醒线），
+  `technical.md` §4.4 补上 `html_shell.py` 一行。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

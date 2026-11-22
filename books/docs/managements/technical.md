@@ -226,7 +226,8 @@ books/
 | 步骤 | 输入 → 输出 | 设计要点 |
 | --- | --- | --- |
 | `merge.py` | 手稿 → `dist/<book>.md` | 顺序来自 `book.toml`；前件、后件按 glob 展开 |
-| `to_html.py` | 合并稿 → `dist/<book>.html` | 单一 HTML：侧边栏目录 + 印刷目录 + 锚点；CSS 内联；正文按章缓存 |
+| `to_html.py` | 合并稿 → `dist/<book>.html` | 单一 HTML：侧边栏目录 + 印刷目录 + 锚点；正文按章缓存
+| `html_shell.py` | `to_html.py` 的样式表 | CSS 单列一份；搬动它不得改动产物一个字节（以构建哈希为验收） |
 | `to_pdf.py` | HTML → PDF | 无头浏览器渲染；随后用 pypdf 写入大纲 |
 | `pdf_toc_links.py` | PDF | 按目录条目与大纲的**位置对应关系**补链接注释，不靠标题文本匹配 |
 | `print_pdf.py` | HTML → 印刷级 PDF | 章首装饰页、点线目录、页眉页脚；独立工具，不进 `deliver` 组 |
