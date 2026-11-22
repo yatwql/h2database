@@ -22,7 +22,6 @@
 
 | # | 问题 | 修复方向 |
 | --- | --- | --- |
-| rf-37 | 「覆盖率量的是哪一档」在两处声明且已分歧：`make.py::coverage()` 写死 `-m tier_fast`，而同一文件的 `test` 步骤认 `BOOK_SLOW=1`；CI 的慢档 job 装好 chromium 与 pandoc、注释写着 “coverage with the browser and pandoc paths present”，实际跑的仍是快档。后果：12 个 `tier:slow` 测试模块（82 条用例）对覆盖率零贡献，`verify_pdf`（73%）、`print_pdf`（80%）、`pdf_from_html`（79%）、`pdf_toc_links`（87%）、`verify_epub`（89%）、`to_epub`（补测前 72%）这批“必须真工具”的模块，数字反映的是没人跑过的路径；`to_epub` 的慢档用例只为拿一个 pandoc，桩掉之后 114 语句 / 42 分支 100% 可达 | **修订**：`cover` 接受分档（`--full` 或 `BOOK_SLOW=1` 时把 `tier_slow` 一并计入），CI 慢档 job 改跑它，快档仍是每次提交的判据；慢档里“只为拿真工具”的用例逐个改注入（`shutil.which` / `subprocess.run` / 浏览器句柄），能快档化的移出 `tier:slow` |
 
 ### H2 — 价值明确、成本可控（下批排期）
 
@@ -30,11 +29,9 @@
 
 | # | 问题 | 修复方向 |
 | --- | --- | --- |
-| rf-38 | 覆盖率只有一个全局阈值加 72% 的单文件下限：50 个模块低于 90%（合计 8543 条语句、漏 1143），而一个 200 语句的模块停在 73% 仍能让门禁全绿——抬阈值的边际成本全落在长尾上，靠“再补几条用例”永远追不上，578 个半分支也没有单独的口径 | 单文件棘轮：每文件把当前覆盖率记成基线，只许不降；`coverage_min_per_file` 72 → 80，核心模块（`lib/`、`render/`、`manuscript/`）另定 90/95 的目标值；报告按**半分支数**排序，补测优先补条件而不是补行 |
-| rf-39 | 65 处永真断言：`assertIn(code, (0, 1))`、`assertNotIn('Traceback')` 之类在用例里只证明“跑完了没炸”，另有 5 处 `assertTrue(True)` 式占位；行被执行不等于行为被验证，这是覆盖率高而缺陷不一定少的直接原因 | 逐条改成断言具体行为（退出码、产物存在性、消息关键字、账本内容）；新增一条 ast-grep 规则禁新增该模式并接入快档门禁 |
+| rf-39 | 65 处永真断言：`assertIn(code, (0, 1))`、`assertNotIn('Traceback')` 之类在用例里只证明“跑完了没炸”，另有 5 处 `assertTrue(True)` 式占位；行被执行不等于行为被验证，这是覆盖率高而缺陷不一定少的直接原因 | 逐条改成断言具体行为（退出码、产物存在性、消息关键字、账本内容）；新增一条 ast-grep 规则禁新增该模式并接入快档门禁；`run_inproc` 现回显 `sys.exit("error: ...")` 的消息，四条用例改为断言结论，基线 65 → 61——余下按模块继续收敛 |
 | rf-40 | 30 个函数 ≥60 行，最差 `ingest/chapters.py::_sections` 261 行、`manuscript/terms.py::report_missing` 208 行、`render/verify_epub.py::verify` 129 行、`audit/style.py::detect_sentence_monotony` 122 行：这类函数的分支组合无法用例化，覆盖率会在 80% 附近卡住 | 先拆 `_sections`（骨架 / 模板填充 / 语言适配三段）与 `report_missing`（缺失判定 / 报告渲染）；拆分边界即用例边界，拆完立刻能补上半分支 |
 | rf-41 | 失败语义靠 84 处散落的 `sys.exit()`：测试只能经 `runpy` 捕获 `SystemExit`，断言退化成“退出码是 0 或 1”，退出码与消息的对应关系无人校验 | 脚本内部改抛领域异常（`ConfigError` 已有一份），只在入口处转成退出码；迁移按 `render/` → `manuscript/` → `audit/` 分批做，每批补一条“异常 → 退出码 + 消息”的用例 |
-| rf-42 | 质量读数没有统一入口：覆盖率全局数、单文件下限、半分支、长函数数、永真断言数分别散在 `make.py cover`、`coverage report` 与 grep 里，每次评估都要拼一遍命令，也就没人定期看 | `make.py report` 增一个「测试与结构健康」视图：覆盖率（总 / 单文件 / 半分支 Top-N）、≥60 行函数清单、永真断言计数；阈值仍回配置，视图只做汇总 |
 
 ### H3 — 持续监控：兼容残留
 
@@ -127,6 +124,9 @@
 基线并复核索引/术语的章号归属；若以 numbering 为准，手稿 H1 需整体重编号。文档已改为
 "两张表各司其职"，不再笼统写 12 章 |
 
+| rf-37 | 覆盖率门禁只量快档：`make.py::coverage()` 写死 `-m tier_fast`，而同一文件的 `test` 认 `BOOK_SLOW=1`；CI 慢档 job 装好 chromium/pandoc 后跑的仍是快档，12 个 `tier:slow` 模块（82 条用例）对覆盖率零贡献 | **修订**：`cover` 接受 `--full` 与 `BOOK_SLOW=1`，报头写出量的是哪一档；CI 慢档 job 改跑 `cover --full`，testplan 判据同时点名两个载体。逐模块把“只为拿真工具”的用例改注入仍在做（`to_epub` 已 72% → 100%） |
+| rf-38 | 覆盖率只有全局阈值加 72% 的单文件下限：50 个模块低于 90%（8543 语句、漏 1143），一个 200 语句的模块停在 73% 仍能全绿 | **修订**：`cover` 把每个文件的覆盖率记进 `data/baselines/coverage.json`，任一文件低于基线即 FAIL，`--update-baseline` 经评审重记；不足 5 条语句的文件除外 |
+| rf-42 | 质量读数没有统一入口：覆盖率、单文件、半分支、长函数数、永真断言数分散在多个命令与 grep 里 | **修订**：新增 `audit/test_health.py`，由 `make.py report health` 调用，汇总覆盖率（总/最薄/半分支 Top-N）、低于基线的文件、松散断言数与超长函数清单；阈值读 `base.json [toolchain]`，视图只读数不判红 |
 ### 归档
 
 本项目不按版本切分问题归档文件：已修条目在下一次发布时摘要进 `changelog.md` 对应
