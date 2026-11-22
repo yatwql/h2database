@@ -455,6 +455,12 @@
 - **键位显示补齐两处**：LLM 行（`2`）此前只显示数字，现在同样显示 `[2/L]`；退出项增加
   `[0/Q]`（`q` 本来就是退出键，现在在菜单上写明）。`DESIGN-TUI.md` 屏幕树与用户手册键位表
   同步，用例补 `0/Q` 与「2 显示 L」两条断言。
+- **覆盖率：补上 `renumber.py` 的写路径与 CLI**：该文件原为 49%（新代码把整体压回 87%），
+  新增 5 条用例覆盖 `apply()` 的写入/改写、`dry-run`、`--write`、`--json` 与无版本拒绝；
+  顺带修正 `--write` 的语义（原来它等于 dry-run，从不落盘），`apply()` 增加 `write_only`。
+  总覆盖 87%（未覆盖语句 1362 → 1319、半分支 594 → 592），单文件下限已清；**总阈值 88 仍差 1%
+  分**——按缺口排序，`snapshot`（53+12）、`verify_pdf`（49+14）、`to_epub`（42+15）三处合计
+  约 185 个单元，覆盖三处即可过线，下一步按此顺序做。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
