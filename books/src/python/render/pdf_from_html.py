@@ -21,7 +21,7 @@ import os
 import re
 from typing import Any
 
-from lib import _config, _fsutil, _mdutil
+from lib import _config, _errors, _fsutil, _mdutil
 from playwright.sync_api import sync_playwright
 from pypdf import PdfReader, PdfWriter
 
@@ -204,4 +204,4 @@ def main(argv: list[str] | None = None, engine: Any = None) -> int:
 
 
 if __name__ == '__main__':
-    _sys.exit(main(_sys.argv[1:]))
+    _sys.exit(_errors.run(main, _sys.argv[1:]))

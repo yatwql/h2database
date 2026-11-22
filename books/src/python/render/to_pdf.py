@@ -34,7 +34,7 @@ import subprocess
 import sys
 from typing import Any
 
-from lib import _config, _fsutil
+from lib import _config, _errors, _fsutil
 
 _fsutil.pin_stdout_utf8()
 
@@ -50,7 +50,7 @@ pdf_path = _config.merged_pdf()
 try:
     os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
 except OSError as exc:
-    sys.exit(f'error: cannot create output directory for {pdf_path}: {exc}')
+    raise _errors.ToolError(f'error: cannot create output directory for {pdf_path}: {exc}') from exc
 generate_script = os.path.join(script_dir, 'to_html.py')
 
 print("=== Step 1: Generating HTML ===")
@@ -82,7 +82,7 @@ try:
     with open(html_path, encoding='utf-8') as f:
         html_content = f.read()
 except OSError as exc:
-    sys.exit(f'error: cannot read {html_path}: {exc}')
+    raise _errors.ToolError(f'error: cannot read {html_path}: {exc}') from exc
 
 headings = []  # (level, plain_text, anchor_id)
 for m in re.finditer(

@@ -28,7 +28,7 @@ import os
 import re
 import sys
 
-from lib import _config, _fsutil
+from lib import _config, _errors, _fsutil
 
 _fsutil.pin_stdout_utf8()
 
@@ -335,4 +335,4 @@ def main(argv: list[str] | None = None) -> int:
     return 0 if issues == 0 else 1
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

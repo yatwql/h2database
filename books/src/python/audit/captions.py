@@ -44,7 +44,7 @@ from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from glob import glob
 
-from lib import _baseline, _config, _fsutil, _mdutil
+from lib import _baseline, _config, _errors, _fsutil, _mdutil
 
 # Pin stdout to UTF-8 so Chinese terminal output renders correctly on Windows.
 _fsutil.pin_stdout_utf8()
@@ -266,4 +266,4 @@ def main(argv: list[str]) -> int:
     return 0 if total <= threshold['fail_at'] else 1
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

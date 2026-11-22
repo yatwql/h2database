@@ -42,7 +42,7 @@ import re
 import sys
 import unicodedata
 
-from lib import _config, _fsutil
+from lib import _config, _errors, _fsutil
 
 BOX_CHARS = set('─│┌┐└┘├┤┬┴┼━┃┏┓┗┛┣┫┳┻╋═║╔╗╚╝╠╣╦╩╬')
 BASELINE_PATH = _config.baseline_path('ascii')
@@ -204,4 +204,4 @@ def main(argv: list[str]) -> int:
     return 1
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

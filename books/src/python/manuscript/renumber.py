@@ -25,7 +25,7 @@ import sys
 _sys = sys
 _sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _fsutil  # noqa: E402
+from lib import _config, _errors, _fsutil  # noqa: E402
 
 REF_RE = re.compile(r'详见第(\d+)章《([^》]+)》')
 BARE_RE = re.compile(r'(第)(\d+)(章)')
@@ -143,4 +143,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(_errors.run(main))

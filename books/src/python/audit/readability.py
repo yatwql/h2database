@@ -18,7 +18,7 @@ import re
 import sys
 from pathlib import Path
 
-from lib import _config, _mdutil
+from lib import _config, _errors, _mdutil
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[3]
@@ -196,4 +196,4 @@ def main(argv: list[str] | None = None) -> int:
     return 1 if failures else 0
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

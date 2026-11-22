@@ -24,7 +24,7 @@ import os
 import re
 import sys
 
-from lib import _config, _fsutil
+from lib import _config, _errors, _fsutil
 
 _fsutil.pin_stdout_utf8()
 
@@ -41,12 +41,12 @@ glossary_path = os.path.join(src_dir, GLOSSARY_LINK)
 
 
 def _write_text(path: str, text: str) -> None:
-    """Write a UTF-8 text file, exiting with a clean message on I/O failure."""
+    """Write a UTF-8 text file, failing with a clean message on I/O error."""
     try:
         with open(path, 'w', encoding='utf-8') as fh:
             fh.write(text)
     except OSError as exc:
-        sys.exit(f'error: cannot write {path}: {exc}')
+        raise _errors.ToolError(f'error: cannot write {path}: {exc}') from exc
 
 def parse_glossary_terms(path: str) -> dict[str, list[int]]:
     """Parse glossary.md and return a mapping of term names to chapter numbers.
@@ -455,4 +455,4 @@ def main(argv: list[str]) -> int:
     return 0
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

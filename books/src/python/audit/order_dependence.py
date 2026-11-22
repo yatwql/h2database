@@ -35,7 +35,7 @@ from typing import Any, cast
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config
+from lib import _config, _errors
 
 TEST_DIR = os.path.join(_config.BOOK_ROOT, 'src', 'test')
 WORKER_FLAG = '--run'
@@ -265,4 +265,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

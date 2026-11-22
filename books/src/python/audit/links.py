@@ -30,7 +30,7 @@ import json
 import os
 import sys
 
-from lib import _config, _fsutil, _mdutil
+from lib import _config, _errors, _fsutil, _mdutil
 
 Violation = tuple[str, int, str, str, str]  # file, line, kind, target, detail
 
@@ -132,4 +132,4 @@ def main(argv: list[str]) -> int:
     return 1
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

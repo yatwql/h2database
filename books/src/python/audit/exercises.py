@@ -41,7 +41,7 @@ import re
 import sys
 from glob import glob
 
-from lib import _config, _fsutil
+from lib import _config, _errors, _fsutil
 
 _fsutil.pin_stdout_utf8()
 
@@ -409,4 +409,4 @@ def main(argv: list[str]) -> int:
     return render_report(reports, args.floor)
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

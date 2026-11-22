@@ -477,6 +477,7 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **失败只剩一个出口**：新增 `lib/_errors.py`——`ToolError` 同时带消息与退出码（派生自 `SystemExit`，`str(exc)` 仍是消息，`sys.exit(message)` 的既有语义不变），`run()` 在入口处把它转成“打印消息 + 返回码”。`_fsutil` 的读写失败、`terms.py` 的写入失败、`to_pdf.py` 的两处 I/O 失败改抛 `ToolError`；58 个入口脚本的 `sys.exit(main(...))` 统一换成 `sys.exit(_errors.run(main, ...))`。测试从此能一次断言“退出码 + 消息”，不必再猜 `SystemExit` 里装了哪个；新增 8 条用例钉住这条契约。（rf-41）
 - **遍历整套脚本的用例改为按脚本钉退出码**：`test_every_audit_runs_without_crashing`、`gate_entrypoints` 三条、`script_entrypoints`、`real_book` 两条，此前一律 `assertIn(code, (0, 1))`，等于只证明“没炸”。现在各自带一张退出码表（如审计脚本里 `exercises.py` 为 1、其余为 0；空书上 `links`/`figures` 均为 1），并断言该脚本在表内——新增脚本忘了定值会立刻红。松散断言基线 15 → 8，余下 8 条都是需要 chromium/pandoc 的交付用例，本机跳过，无法定值。
 - **永真断言收敛到 15 条**：46 处 `assertIn(code, (0, 1))` 改成断言真实结论——退出码取实际值，再加一条消息断言（`TOTAL`、`issues:`、`FAIL:`、`hierarchy below the configured floor`、`cannot read` 等），断言内容取自每条用例跑出来的输出，不是推断。松散断言基线 61 → 15。
   余下 15 条分两类：7 条是遍历整套脚本的用例（`test_every_audit_runs_without_crashing`、`gate_entrypoints` 三条、`script_entrypoints`、`real_book` 两条），要按整套脚本的措辞写一条公共判据；8 条是需要 chromium/pandoc 的交付用例（`pipeline_delivery` 五条、`render_pdf_toolchain` 三条），本机没有 playwright，跑起来就被跳过，没法定值。

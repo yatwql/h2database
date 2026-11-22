@@ -2,8 +2,9 @@
 """Filesystem helpers for the delivery toolchain.
 
 Every helper converts an ``OSError`` (missing file, permissions, bad
-directory) into a single-line, user-facing ``sys.exit`` message, so the
-callers stay free of per-call try/except noise.
+directory) into a single :class:`lib._errors.ToolError`, so the callers stay
+free of per-call try/except noise while the message and the exit code travel
+together to the entry point.
 """
 from __future__ import annotations
 
@@ -14,9 +15,14 @@ import os
 import sys
 from typing import Any
 
+try:  # `lib/` is also put on sys.path by scripts that import siblings directly
+    from ._errors import ToolError
+except ImportError:  # pragma: no cover - only the standalone import path
+    from _errors import ToolError
+
 
 def _die(action: str, path: str, exc: Exception) -> None:
-    sys.exit(f'error: cannot {action} {path}: {exc}')
+    raise ToolError(f'error: cannot {action} {path}: {exc}')
 
 
 def read_text(path: str) -> str:
@@ -98,7 +104,7 @@ def load_json(path: str) -> Any:
     except OSError as exc:
         _die('read', path, exc)
     except json.JSONDecodeError as exc:
-        sys.exit(f'error: invalid JSON in {path}: {exc}')
+        raise ToolError(f'error: invalid JSON in {path}: {exc}') from exc
     raise AssertionError('unreachable')  # pragma: no cover
 
 

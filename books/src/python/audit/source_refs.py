@@ -25,7 +25,7 @@ from collections import defaultdict
 from datetime import date
 from typing import NamedTuple
 
-from lib import _config, _fsutil
+from lib import _config, _errors, _fsutil
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -525,4 +525,4 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(_errors.run(main))

@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from appendix import APPENDIX_SPEC, TYPE_EMOJI, render_appendix
 from factblocks import backup_existing, line_delta, refresh_blocks
 from factblocks import mark_block as _gen
-from lib import _config, _fsutil, _log, _mdutil
+from lib import _config, _errors, _fsutil, _log, _mdutil
 
 OUTLINE = _config.state_path('outline.json')
 SOURCE_ROOT = _config.source_tree('src_main')
@@ -873,4 +873,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

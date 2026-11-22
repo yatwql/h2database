@@ -33,7 +33,7 @@ import os
 import sys
 from glob import glob
 
-from lib import _config, _fsutil, _mdutil
+from lib import _config, _errors, _fsutil, _mdutil
 
 _fsutil.pin_stdout_utf8()
 
@@ -210,4 +210,4 @@ def main(argv: list[str]) -> int:
     return 0
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

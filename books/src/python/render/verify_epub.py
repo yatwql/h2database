@@ -37,7 +37,7 @@ import zipfile
 from urllib.parse import unquote
 from xml.etree import ElementTree
 
-from lib import _config
+from lib import _config, _errors
 
 NS_CONTAINER = {'c': 'urn:oasis:names:tc:opendocument:xmlns:container'}
 NS_OPF = {'opf': 'http://www.idpf.org/2007/opf'}
@@ -252,4 +252,4 @@ def main(argv: list[str]) -> int:
     return 0
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

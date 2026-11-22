@@ -34,7 +34,7 @@ from defusedxml import ElementTree as _safe_xml
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _fsutil
+from lib import _config, _errors, _fsutil
 
 STAMP_FMT = '%Y%m%d-%H%M%S'
 SLOW_CASE_S = 1.0   # a fast-tier case above this is a budget warning
@@ -534,4 +534,4 @@ def seconds_text(seconds: float) -> str:
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

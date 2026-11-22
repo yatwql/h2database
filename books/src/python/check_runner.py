@@ -34,7 +34,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from lib import _config, _fsutil, _log
+from lib import _config, _errors, _fsutil, _log
 
 PY = sys.executable
 PY_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -436,4 +436,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

@@ -41,7 +41,7 @@ import re
 import sys
 from typing import Any
 
-from lib import _config, _fsutil
+from lib import _config, _errors, _fsutil
 
 _fsutil.pin_stdout_utf8()
 
@@ -317,4 +317,4 @@ if __name__ == "__main__":
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

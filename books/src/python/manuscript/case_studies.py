@@ -30,7 +30,7 @@ _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)
 import argparse
 import sys
 
-from lib import _config, _fsutil
+from lib import _config, _errors, _fsutil
 
 # Match the rest of the books tool chain: keep stdout pinned to UTF-8 so
 # Chinese narrative output renders correctly when redirected on Windows
@@ -150,4 +150,4 @@ def main() -> int:
     return 0
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(_errors.run(main))
