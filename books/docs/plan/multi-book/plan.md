@@ -15,6 +15,11 @@
 
 ## 步骤二：`--book` 与向上查找
 
+**前置（必须先做）**：`source_refs.SOURCE_DIR`、`content_depth.source_root`、
+`chapters.SOURCE_ROOT` 三处在导入期就把源根固定，切书对它们无效。改成调用时读取，
+并加一条用例：在同一进程里 `use()` 切到另一个书根后，这三处返回的源根随之改变。
+这条不改，步骤二只是「看起来切了书」。
+
 **动作**：
 
 1. `app/cli.py` 增加全局参数 `--book <目录>`；未给时从当前工作目录向上查找
@@ -23,7 +28,7 @@
    四者都落空时的报错必须点明「没找到 book.toml，试过哪些位置」。向上查找走到文件系统根
    为止，路径比较用 `realpath`，在大小写不敏感的文件系统上按不敏感比较。
 3. 选定后整次运行在一个 `with _config.use(cfg):` 里；`app/web.py` 启动时选定一本书并在
-   进程内固定（见 `design.md` §6）。
+   进程内固定（见 `design.md` §7）。
 4. 缺 `data/book/book.toml` 的书根：退出码 2，报出路径与期望文件名，不打印堆栈
    （退出码沿用 `core/actions.py` 的既有约定：未知动作与配置异常都退 2）。`book.toml`
    只认 `data/book/`，不自动回退到旧位置。
@@ -57,7 +62,7 @@
    `book.toml` 的顶层键 `default_edition`（**不放在 `[editions]` 表里**，否则与名为
    `default` 的版本冲突），未声明时取第一个键。
 3. 派生状态与体量基线按版本分键：`state/<edition>/`、`baselines/<edition>/`（目录内的
-   键与今天相同）；未声明 `[editions]` 时仍写 `state/`、`baselines/`（当前的位置）。
+   键与当前相同）；未声明 `[editions]` 时仍写 `state/`、`baselines/`（当前的位置）。
 4. `content_volume.py` 的体量比对只与同版本基线比；跨版本比对必须显式给
    `--baseline <文件>`，不允许隐式回退。
 
@@ -92,6 +97,23 @@
   任何门禁依赖）。
 
 **回滚**：包化前后书目录形态不变，回退到仓内工具链即可。
+
+## 步骤五（按需）：多根源与源指纹
+
+只有一本书要同时分析多个源时才做，单源时不做任何改动。
+
+**动作**：
+
+1. `[sources].roots[]`（`label`、`path`、`language`、`version`）与单根 `src_main` 并存，
+   `source_tree('src_main')` 返回首根；
+2. `source-inventory.json`、坐标报告、日志按 `label` 分组；
+3. 体量基线写入 `source{label, version, digest}`，指纹不匹配时报「基线来自另一个源」。
+
+**验收**：单源书 `make.py check` 结论与产物不变；双源夹具书的 inventory 两棵树的类都能
+被坐标门禁解析；换源后 `content_volume` 报指纹不匹配而不是静默通过。
+
+**回滚**：删 `roots` 表回到单根；基线里的 `source` 字段留着不影响比对（单根时与
+`versions().source` 一致）。
 
 ## 四步之外：本仓自举与 CI
 

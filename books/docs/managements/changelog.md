@@ -222,6 +222,11 @@
   「非功能需求怎么适用」（体积预算按书、可移植覆盖向上查找、不做跨书汇总）；写明
   `[paths]` 不得越出书根的校验、旧布局不猜位置、自举与 CI 的边界、删 `[editions]` 后的
   残留处理；与 `quality-model.md` §4「只比一份」对齐为「每版本只比自己那份」。
+- **源目录绑定进多书设计**：源是被分析对象，属于书的输入——声明在书级 `[sources]`，不在
+  运行期切换（NFR-02 可复现、体量基线是评审结论）；一棵树不够时用 `roots[]` 带 `label`，
+  单根 `src_main` 保持兼容；体量基线写入 `source{label, version, digest}`，换源后要求复核。
+  同时点出一处真实阻塞：`source_refs`、`content_depth`、`chapters` 在导入期就冻结源根，
+  `Config` 切书对它们无效，列为步骤二的前置。能力登记为 IR-11，多根源列为按需的步骤五。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
