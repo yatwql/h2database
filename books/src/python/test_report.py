@@ -43,6 +43,12 @@ TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 TESTS_DIR = os.path.normpath(os.path.join(TOOLS_DIR, '..', 'test'))
 
 
+def _write(path: str, text: str) -> None:
+    """Write a report file, creating its directory first."""
+    _fsutil.ensure_dir(path)
+    _fsutil.write_text(path, text)
+
+
 def settings() -> dict:
     """Report policy from ``base.json [reports]`` with conservative defaults."""
     raw = _config.POLICY.get('reports') or {}
@@ -161,7 +167,7 @@ code{{font-size:13px}}.verdict{{font-weight:600;color:{'#c62828' if failed else 
 
 
 def _write_reports(target: str, summary: dict, cases: list[dict]) -> None:
-    _fsutil.write_text(os.path.join(target, 'report.json'),
+    _write(os.path.join(target, 'report.json'),
                        json.dumps({**summary, 'cases': cases}, ensure_ascii=False,
                                   indent=2) + '\n')
     failing = [case for case in cases if case['outcome'] in ('fail', 'error')]
@@ -181,8 +187,8 @@ def _write_reports(target: str, summary: dict, cases: list[dict]) -> None:
     else:
         lines += ['## 失败用例', '', '无。']
     lines += ['', f"完整输出见 `{os.path.relpath(summary['log'], _config.BOOK_ROOT)}`"]
-    _fsutil.write_text(os.path.join(target, 'report.md'), '\n'.join(lines) + '\n')
-    _fsutil.write_text(os.path.join(target, 'report.html'), _html_report(summary, cases))
+    _write(os.path.join(target, 'report.md'), '\n'.join(lines) + '\n')
+    _write(os.path.join(target, 'report.html'), _html_report(summary, cases))
 
 
 def run(marker: str = 'tier_fast', timeout: int = 1800, tests: str | None = None) -> dict:
@@ -213,7 +219,7 @@ def run(marker: str = 'tier_fast', timeout: int = 1800, tests: str | None = None
                'totals': totals, 'dir': target, 'log': log, 'junit': junit,
                'machine': f'{platform.python_version()} on {platform.platform()}'}
     _write_reports(target, summary, cases)
-    _fsutil.write_text(latest_pointer(), json.dumps({'dir': stamp}, ensure_ascii=False) + '\n')
+    _write(latest_pointer(), json.dumps({'dir': stamp}, ensure_ascii=False) + '\n')
     prune()
     return summary
 
@@ -262,7 +268,7 @@ def collect() -> dict:
     payload = {'stamp': datetime.datetime.now().strftime(STAMP_FMT),
                'counts': tiers, 'files': per_file}
     target = os.path.join(reports_root(), f"collect-{payload['stamp']}.json")
-    _fsutil.write_text(target, json.dumps(payload, ensure_ascii=False, indent=2) + '\n')
+    _write(target, json.dumps(payload, ensure_ascii=False, indent=2) + '\n')
     return {**payload, 'path': target}
 
 

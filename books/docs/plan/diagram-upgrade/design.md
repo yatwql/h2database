@@ -262,7 +262,7 @@
 
 | 事项 | 归属文件 |
 | --- | --- |
-| 计划项编号、验收、事实位 | `docs/managements/plan.md` 的 `plan-6` 段 |
+| 计划项编号、验收、事实位 | `docs/managements/plan.md` 里对应的计划项 |
 | 本设计与本计划 | `docs/plan/diagram-upgrade/design.md`、`docs/plan/diagram-upgrade/plan.md` |
 | 渲染链与门禁职责 | `technical.md` §4.4（渲染）、§4.5（门禁） |
 | 新增配置键 `[paths] diagrams` | `technical.md` §3.2（路径与阈值归属） |

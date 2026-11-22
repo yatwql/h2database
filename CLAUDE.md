@@ -71,6 +71,9 @@ Waiting is the main cost of a session, so bound it before it happens:
   `_config.excluded_dirs()`; never judge them as manuscript or docs.
 - No historical traces in docs or code comments (review rounds, batches, dated
   plans, completed-work ledgers); version history lives in `changelog.md` only.
+  Tracker ids (`rf-N`, `plan-N`) belong to `review-findings.md` / `plan.md`: no
+  other document and no code comment may cite them, and no identifier or file
+  name may encode one — `audit/traces.py` enforces both sides.
   `make.py check` enforces this plus doc drift (paths, scripts, chapters,
   versions) through `audit/doc_traces.py`, `audit/code_traces.py`
   and `audit/doc_drift.py`.

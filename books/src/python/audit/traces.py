@@ -45,6 +45,7 @@ DOC_TRACES: tuple[tuple[str, str], ...] = (
     ('ledger', r'已完成清单|遗留问题|未闭环|TODO\s*[（(]历史'),
     ('relative-time', r'本次(?:迭代|改动|提交)|上一轮|本轮|目前已完成'),
     ('phase-label', r'Phase [A-H]\b|第[0-9一二三四五六七八九十]+轮|演进史|里程碑'),
+    ('task-id', r'(?<![\w-])(?:rf|plan)-\d+'),
 )
 
 # Code patterns: comments explaining which round produced the code.
@@ -55,7 +56,11 @@ CODE_TRACES: tuple[tuple[str, str], ...] = (
     ('relative-time', r'本次(?:迭代|改动|提交)|上一轮|本轮|新加的|临时绕过'),
     ('phase-label', r'Phase [A-H]\b|第[0-9一二三四五六七八九十]+轮'),
     ('migration-note', r'迁移自|由.{0,12}迁移|旧版本时|以前是'),
+    ('task-id', r'(?<![\w-])(?:rf|plan)-\d+'),
 )
+
+# Files whose job is to track work: they own the ids and may cite them.
+ID_OWNERS = ('plan.md', 'review-findings.md')
 
 
 def doc_files() -> list[str]:
@@ -104,8 +109,11 @@ def scan_docs() -> list[dict]:
     for path in doc_files():
         if any(path.endswith(name) for name in EXEMPT_DOCS):
             continue
+        owner = os.path.basename(path) in ID_OWNERS
         for lineno, line in enumerate(_fsutil.read_lines(path), start=1):
             for kind, pattern in DOC_TRACES:
+                if kind == 'task-id' and owner:
+                    continue
                 if re.search(pattern, line):
                     findings.append(_finding(path, lineno, kind, line))
     return findings
@@ -131,8 +139,11 @@ def scan_code() -> list[dict]:
                     if re.search(pattern, line):
                         findings.append(_finding(path, lineno, kind, line))
             continue
+        fixture = os.sep + 'test' + os.sep in path
         for lineno, line in comment_lines(_fsutil.read_text(path)):
             for kind, pattern in CODE_TRACES:
+                if kind == 'task-id' and fixture:
+                    continue  # tests cite ids on purpose: they are the fixtures
                 if re.search(pattern, line):
                     findings.append(_finding(path, lineno, kind, line))
     return findings
