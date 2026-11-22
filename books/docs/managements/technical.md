@@ -397,6 +397,14 @@ GROUPS = {build, verify, deliver, check, test, cover, report}
 | 测试顺序依赖 | `order_dependence.py` 以正序/逆序两轮比对，`--bisect` 收缩到最小污染前缀 |
 | 内容疑似缩水 | `content_volume` 直接指出文件与下限差额，并提示是否需要重设基线 |
 
+## 9.x 分支与版本
+
+- `dev`：开发分支，日常提交在此；工具版本为 `X.Y-dev`。
+- `master`：只接收发布合并——`dev` → `master`，版本去掉 `-dev`，打标签；发布流程的机械步骤见
+  `core/docs_archive.py`（迁出台账与已完成的迭代设计）。
+- 版本唯一定义处是 `lib/_version.py` 的 `TOOL_VERSION`；`versions()` 的另外两项（被分析源码、
+  书籍）分别来自 `book.toml [sources]` 与 `[book]`。
+
 ## 10. 非目标
 
 - 不做通用静态站点生成器：渲染只服务本书的结构与排版。

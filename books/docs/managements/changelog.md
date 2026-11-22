@@ -419,6 +419,9 @@
   都在 `sys.path.insert` 前后各写一遍 `import os`/`sys`，第二份是多余的；`app/web.py` 的
   候选项把 `config` 字段算了两次（第一次的算法对嵌套布局还是错的），改为构建一次、
   语义唯一（书所在目录名）。四道形态门禁（架构、脚本契约、文件长度、类型）与快档用例全绿。
+- **分支模型**：设立 `dev` 为开发分支（日常提交在此，版本号带 `-dev`），`master` 只接收发布
+  合并——发布时 `dev` → `master`、去掉 `-dev`、打标签，台账与已完成的迭代设计由
+  `core/docs_archive.py` 迁出。版本唯一来源仍是 `lib/_version.py`。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
