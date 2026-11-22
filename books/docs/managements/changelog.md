@@ -278,6 +278,10 @@
   `make.py` 同名参数导出给每个步骤，`bookctl` 原样透传；Web 加「书 / 版本」选择器与
   `/api/books`，请求携带选择、服务端按请求执行；TUI 加同名参数，会话内选定一本书。
   测试 13 条钉住解析优先级、向上查找、越界拒绝与候选发现。
+- **TUI 的「书籍」屏**（plan-11 步骤二收尾）：`core/menu.py` 新增 `books` 屏，挂在
+  「配置与状态」下（选书是偶尔动作，不占主菜单数字键）；行来自 `_config.candidate_books()`，
+  当前一本以 ● 起首，数字键选定、`0` 返回；`_config.reset()` 让切换对进程持续生效，
+  并用 `BOOK_ROOT` 同步给随后启动的子进程。契约写进 `DESIGN-TUI.md` §3.1，用例 4 条。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

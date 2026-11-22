@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib
 import io
+import os
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -120,7 +121,7 @@ class TuiInteractionTest(unittest.TestCase):
 
     def test_the_config_screen_offers_the_fact_refresh(self):
         keys = [row[0] for row in self.tui.screen_rows('config')]
-        self.assertEqual(keys, ['1', '2', '3', '4', '5', '6', '0'])
+        self.assertEqual(keys, ['1', '2', '3', '4', '5', '6', '7', '0'])
         self.press('5', '6')
         self.assertEqual(self.calls, ['analyze-refresh'])
 
@@ -218,6 +219,27 @@ class TuiInteractionTest(unittest.TestCase):
     def test_deliver_runs_when_confirmed(self):
         self.press('3', answers=['y'])
         self.assertEqual(self.calls, ['deliver'])
+
+    def test_the_books_screen_lists_candidates_and_marks_the_active_one(self):
+        rows = self.tui.screen_rows('books')
+        self.assertEqual(rows[-1][1], '@back')
+        self.assertTrue(rows[0][2].startswith('● '))
+        self.assertTrue(rows[0][1].startswith('@book:'))
+
+    def test_switching_books_rebinds_the_active_book(self):
+        other = os.path.join(self.tmp.name, 'second-book')
+        _fixture.build_book(other)
+        message = self.tui.switch_book(other)
+        self.assertIn('已切换', message)
+        active = self.tui._config.current().root
+        self.assertEqual(os.path.abspath(active), os.path.abspath(other))
+
+    def test_switching_to_a_directory_without_a_book_is_refused(self):
+        empty = os.path.join(self.tmp.name, 'empty')
+        os.makedirs(empty, exist_ok=True)
+        before = self.tui._config.current().root
+        self.assertIn('没有找到 book.toml', self.tui.switch_book(empty))
+        self.assertEqual(self.tui._config.current().root, before)
 
 if __name__ == '__main__':
     unittest.main()

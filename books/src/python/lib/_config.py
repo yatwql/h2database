@@ -532,6 +532,12 @@ def current() -> Config:
     return _ACTIVE
 
 
+def reset(cfg: Config | None = None) -> None:
+    """Rebind the active book for the rest of the process (None → rediscover)."""
+    global _ACTIVE
+    _ACTIVE = cfg
+
+
 @contextlib.contextmanager
 def use(cfg: Config) -> Iterator[Config]:
     """Read a different book for the duration of the block."""

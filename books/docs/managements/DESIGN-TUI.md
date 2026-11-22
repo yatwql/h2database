@@ -56,15 +56,20 @@
 主菜单  1 analyze · l analyze-llm · 2 build · 3 deliver      ← 高频动作直接在第一级
         4 质量 · 5 配置与状态 · 0 退出
 质量    1 check · 2 test · 0 返回
-配置    1 status · 2 llm-ask · 3 配置项 · 4 LLM provider 优先级 · 5 doctor · 6 刷新事实块 · 0 返回
+配置    1 status · 2 llm-ask · 3 配置项 · 4 LLM provider 优先级 · 5 doctor · 6 刷新事实块
+        7 书籍 · 0 返回
 配置项  逐项列出可写键 + 0 返回           （行来自 core.settings.list_settings）
 优先级  按回退顺序列出 provider + 0 返回  （行来自 core.settings.provider_order）
+书籍    列出可切换的书（书名 + 书根），当前一本以 ● 起首；数字键选定 + 0 返回
 ```
 
 分级标准只有一个：**每天要按的动作放第一级，偶尔才打开的分组才收进二级**。
 内容流水线（analyze / build / deliver）属于前者；质量与配置属于后者，一次进入后
 可以连按几项再返回。
 
+「书籍」屏只在多本书可发现时才有意义：候选来自 `_config.candidate_books()`（当前书、
+同目录兄弟书、从工作目录向上找到的书），切换立即生效并把结论写进状态行；只有一本时
+该屏仍可打开但只列一行，避免让人以为还有别的可选。
 模型的唯一来源是 `core/menu.py::SCREENS`：键、动作、标签、默认光标位置都在那里，
 `app/tui.py` 只渲染。动态屏（配置项、优先级）的行由数据生成，但 `0 返回` 行与
 其它屏一样由菜单层提供——**任何二级屏都必须有一行可按键的"返回上一级"**，不依赖

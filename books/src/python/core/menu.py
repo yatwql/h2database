@@ -26,6 +26,8 @@ QUIT_ACTION = '@quit'
 OPEN_PREFIX = '@open:'
 SETTINGS_SCREEN = 'settings'
 PROVIDERS_SCREEN = 'providers'
+BOOKS_SCREEN = 'books'
+BOOK_ACTION_PREFIX = '@book:'
 
 # screen -> [(key, action, label)]; `@open:<screen>` and `@back` are navigation
 SCREENS: dict[str, list[tuple[str, str, str]]] = {
@@ -45,19 +47,22 @@ SCREENS: dict[str, list[tuple[str, str, str]]] = {
                ('4', OPEN_PREFIX + PROVIDERS_SCREEN, 'LLM provider 优先级'),
                ('5', 'doctor', '依赖与环境'),
                ('6', 'analyze-refresh', '刷新事实块（只改可重算的表，正文不动）'),
+               ('7', OPEN_PREFIX + BOOKS_SCREEN, '切换书籍'),
                (BACK_KEY, BACK_ACTION, '返回主菜单')],
 }
 
 # screens whose rows come from live data instead of SCREENS
-DYNAMIC_SCREENS = (SETTINGS_SCREEN, PROVIDERS_SCREEN)
+DYNAMIC_SCREENS = (SETTINGS_SCREEN, PROVIDERS_SCREEN, BOOKS_SCREEN)
 
 PARENT: dict[str, str] = dict.fromkeys(('quality', 'config'), 'main')
-PARENT.update({SETTINGS_SCREEN: 'config', PROVIDERS_SCREEN: 'config'})
+PARENT.update({SETTINGS_SCREEN: 'config', PROVIDERS_SCREEN: 'config',
+               BOOKS_SCREEN: 'config'})
 
 TITLES: dict[str, str] = {
     'main': '主菜单',
     'quality': '质量',
     'config': '配置与状态',
+    'books': '书籍',
     SETTINGS_SCREEN: '配置项',
     PROVIDERS_SCREEN: 'LLM provider 优先级',
 }

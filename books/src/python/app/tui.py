@@ -133,6 +133,18 @@ def screen_rows(screen: str) -> list[tuple[str, str, str]]:
         rows = [(str(index), '@set:' + row['key'], f"{row['key']} = {row['value']}")
                 for index, row in enumerate(settings.list_settings(), start=1)]
         return rows + [(menu.BACK_KEY, menu.BACK_ACTION, '返回上一级')]
+    if screen == menu.BOOKS_SCREEN:
+        active = os.path.abspath(_config.current().root)
+        rows = []
+        for index, root in enumerate(_config.candidate_books(), start=1):
+            try:
+                cfg = _config.Config(root)
+                name = f"{cfg.title or os.path.basename(root)}  {root}"
+            except _config.ConfigError:
+                name = root
+            rows.append((str(index), menu.BOOK_ACTION_PREFIX + root,
+                         ('● ' if root == active else '  ') + name))
+        return rows + [(menu.BACK_KEY, menu.BACK_ACTION, '返回上一级')]
     if screen == menu.PROVIDERS_SCREEN:
         rows = [(str(index), '@move:' + item['name'],
                  f"{index}. {item['name']}  priority {item['priority']}")
@@ -266,6 +278,8 @@ def handle(action: str, label: str, screen: str) -> tuple[bool, str, str]:
         return False, screen, edit_setting(action[len('@set:'):])
     if action.startswith('@move:'):
         return False, screen, edit_provider(action[len('@move:'):])
+    if action.startswith(menu.BOOK_ACTION_PREFIX):
+        return False, screen, switch_book(action[len(menu.BOOK_ACTION_PREFIX):])
     if action == 'analyze-llm':
         # Overwriting written prose is the only way this action reaches the
         # provider on a finished book, so ask first and default to "no".
@@ -273,6 +287,16 @@ def handle(action: str, label: str, screen: str) -> tuple[bool, str, str]:
                         '（回答 n 则只刷新事实块，正文不动）')
         return False, screen, run_entry(action, label, force=force)
     return False, screen, run_entry(action, label)
+
+
+def switch_book(root: str) -> str:
+    """Make ``root`` the active book for the rest of the session."""
+    marker = os.path.join(root, 'data', 'book', 'book.toml')
+    if not os.path.isfile(marker):
+        return _c(f'没有找到 book.toml：{root}', PALETTE['warn'])
+    os.environ['BOOK_ROOT'] = root
+    _config.reset(_config.Config(root))
+    return _c(f'已切换到 {_config.TITLE or root}', PALETTE['value_ok'])
 
 
 def main(argv: list[str] | None = None) -> int:
