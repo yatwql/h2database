@@ -11,52 +11,52 @@ in `books/`.
 
 ## Commands
 
+`books/scripts/bookctl` resolves the project virtualenv itself; use it instead of
+a bare `python` (only `books/.venv` may run the toolchain).
+
 ```bash
-cd h2 && ./mvnw compile                       # engine build
-python books/src/python/make.py check         # all quality gates (read-only)
-python books/src/python/make.py build         # cover stats + merged md + HTML
-python books/src/python/make.py test          # unit + integration tests
-python books/src/python/make.py deliver       # build + PDF + verify + EPUB (on demand)
-python books/src/python/make.py doctor        # optional deps (pandoc/playwright/pypdf)
+cd h2 && ./mvnw compile                    # engine build
+books/scripts/bookctl check                # every quality gate (read-only)
+books/scripts/bookctl build                # cover stats + merged md + HTML + daily archive
+books/scripts/bookctl test                 # fast tier (~25s); --full adds browser + pandoc
+books/scripts/bookctl deliver              # PDF + TOC links + verify + EPUB + verify + archive
+books/scripts/bookctl make cover           # coverage ratchet and per-file floor
+books/scripts/bookctl doctor               # optional dependencies
 ```
 
 ## Where to Look
 
 | Topic | Authoritative file |
-|-------|--------------------|
+| --- | --- |
 | Directory structure, file ownership | `books/docs/managements/folder.md` |
-| Launchers and virtualenv | `books/README.md` (快速开始), `books/scripts/{bookctl,launch,bootstrap}.*` |
-| Script usage, gates, delivery steps | `books/docs/manuals/how-to-use.md` |
-| Quality gates and verification commands | `books/docs/managements/testplan.md` |
+| Commands: everyday use | `books/README.md`（快速开始） |
+| Commands: verification | `books/docs/managements/testplan.md` §1 |
+| Workflow: what to do in what order | `books/docs/manuals/how-to-use.md` |
+| Gate criteria and levels | `books/docs/managements/testplan.md` §2 |
 | Writing and format conventions | `books/docs/managements/style-guide.md` |
 | Content organisation (paths, chapter order) | `books/data/tmpl/book.toml` |
 | Toolchain policy (thresholds, budgets, baselines) | `books/data/config/base.json`, `books/data/config/style.json` |
+| Iteration designs and plans | `books/docs/plan/<topic>/` (`design.md`, `plan.md`) |
 
 ## Working Rhythm
 
-Waiting is the main cost of a session, so bound it before it happens:
-
-- **Measure before running.** Get the order of magnitude first (`--collect-only`,
-  one file, a `--durations` subset); never start a whole-suite run whose cost is
-  unknown. The suite is ~20s, so a job that takes minutes means one test is stuck.
-- **Nothing over ~2 minutes runs in the foreground.** Launch it in the background,
-  say the expected time, then wait for the exit signal — no `sleep` polling.
-- **Never run two heavy jobs at once.** A step killed at its timeout leaves its
-  child alive; run `ps` first and kill the orphan before starting again, or both
-  jobs fight for CPU and everything looks twice as slow.
-- **Answer with the smallest command that decides the question.** A single file or
-  a single case beats the full suite; run the full suite once, at the end.
+- **Measure, then run the smallest command that decides the question.** Read the
+  order of magnitude first (`--collect-only`, one file, a `--durations` subset).
+  The whole fast suite is ~25s, so anything taking minutes means one test is stuck;
+  a single file or case beats the full run, and the full run happens once, at the end.
+- **One heavy job at a time, and never in the foreground for long.** Anything past
+  ~2 minutes runs in the background with its expected time stated, then waits for
+  the exit signal — no `sleep` polling. A step killed at its timeout leaves its
+  child alive: `ps`, kill the orphan, then start again.
 - **Debug a red test from its report, not from a rerun.** `python
   books/src/python/test_report.py run` writes `books/test-reports/<stamp>/` and
   `test_report.py last` prints the failing cases plus the command that reruns only
-  those modules. Fix, rerun that one case, and only then take the full suite again.
-- **CI is a separate task.** Push and go back to the work at hand: the local gates
-  are the verification. Do not poll `gh run` or wait for a workflow unless the user
-  asks about CI specifically, and never hold a task open on a remote job.
-- **A finished change ships itself.** Unless the operator says otherwise, the last
-  steps of every change are: record it in `books/docs/managements/changelog.md`,
-  commit with a message that explains the why, and push. Do not leave reviewed work
-  sitting uncommitted for the next turn to pick up.
+  those modules. Fix, rerun that case, only then take the full suite again.
+- **CI is a separate task.** Push and return to the work at hand: the local gates
+  are the verification. Do not poll `gh run` unless the user asks about CI.
+- **A finished change ships itself.** Unless the operator says otherwise, end every
+  change by recording it in `books/docs/managements/changelog.md`, committing with a
+  message that explains the why, and pushing.
 
 ## Hard Rules
 
@@ -67,17 +67,15 @@ Waiting is the main cost of a session, so bound it before it happens:
 - Delivery artifacts live only in `books/dist/` (gitignored, regenerated).
 - Tooling lives in `books/src/python/` (thin launchers may live in `books/scripts/`);
   tests only in `books/src/test/`.
-- No temporary repair scripts, archives, or `__pycache__` in git; session
-  artifacts go to `books/data/tmp/` (gitignored), never into `.claude/`, which
-  belongs to the tooling's own runtime data.
+- Session artifacts (scratch scripts, drafts, exports) go to `books/data/tmp/`
+  (gitignored). `.claude/` belongs to the agent's own runtime data, not to the
+  repository, so nothing is written there on purpose.
 - Evidence directories are dated copies, not content: `books/test-reports/` and
   `books/data/archive/` are gitignored and excluded from every gate through
   `_config.excluded_dirs()`; never judge them as manuscript or docs.
 - No historical traces in docs or code comments (review rounds, batches, dated
   plans, completed-work ledgers); version history lives in `changelog.md` only.
   Tracker ids (`rf-N`, `plan-N`) belong to `review-findings.md` / `plan.md`: no
-  other document and no code comment may cite them, and no identifier or file
-  name may encode one — `audit/traces.py` enforces both sides.
-  `make.py check` enforces this plus doc drift (paths, scripts, chapters,
-  versions) through `audit/doc_traces.py`, `audit/code_traces.py`
-  and `audit/doc_drift.py`.
+  other document and no code comment may cite them, and no identifier or file name
+  may encode one. `audit/traces.py` (docs and code ranges) and `audit/doc_drift.py`
+  enforce this and the surrounding drift rules (paths, scripts, chapters, versions).
