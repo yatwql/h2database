@@ -149,6 +149,12 @@
   缺 HTML 时的拒绝；`to_epub` 跑通一次真实构建；`verify_pdf` 的超体积、无印刷目录、大纲比标题深、
   标注指向错页、Type0 字体未嵌入、畸形矩形。`pdf_from_html` 73→79%、`verify_pdf` 72→73%、
   `to_epub` 72%。
+- **变异测试试点 + 形状采样用例**：对 `lib/_mdutil.py` 做了一次零依赖变异（翻转比较符与布尔量，
+  共 3 个变异体 × 跑该模块用例）：全部存活，逐个看过是**等价变异**——两个是 `in_fence = True`
+  的状态初值、一个是代码跨度分支（`index % 2 != 1`），而该分支在纯 ASCII 代码跨度上本就不改变
+  输出。结论：这个小模块的断言密度够用，变异试点不作为门禁，只在怀疑断言空洞时手动跑。
+  同时补了生成式形状用例：`slugify` 20 个标题的稳定性与小写、`figure_caption` 12×5 组合往返、
+  代码跨度与链接在中英混排中保持原样。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

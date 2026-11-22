@@ -66,5 +66,35 @@ class FigureShapeTest(unittest.TestCase):
         self.assertFalse(self.mdutil.FIGURE_PREFIX_RE.match('**图 无编号**'))
 
 
+class ShapingSamplesTest(unittest.TestCase):
+    """Generated inputs: the shapes are pinned over a range, not one example."""
+
+    def setUp(self):
+        self.mdutil = importlib.import_module('lib._mdutil')
+
+    def test_code_spans_and_links_survive_spacing(self):
+        text = '用`MVStore.open()`打开，详见[图 1-1](ch1.md)。'
+        spaced = self.mdutil.space_cjk_latin(text)
+        self.assertIn('`MVStore.open()`', spaced)
+        self.assertIn('[图 1-1](ch1.md)', spaced)
+
+    def test_a_latin_only_line_is_untouched(self):
+        self.assertEqual(self.mdutil.space_cjk_latin('plain ascii text'), 'plain ascii text')
+
+    def test_slugify_is_stable_and_lowercases(self):
+        for title in (f'第{n}章 主题 {n}' for n in range(1, 21)):
+            slug = self.mdutil.slugify(title)
+            self.assertEqual(slug, self.mdutil.slugify(title))
+            self.assertEqual(slug, slug.lower())
+            self.assertNotIn(' ', slug)
+
+    def test_every_generated_caption_round_trips(self):
+        for chapter in range(1, 13):
+            for index in range(1, 6):
+                line = f'**图 {chapter}-{index}: 展示第{index}张图**'
+                self.assertEqual(self.mdutil.figure_caption(line),
+                                 (f'{chapter}-{index}', f'展示第{index}张图'))
+
+
 if __name__ == '__main__':
     unittest.main()
