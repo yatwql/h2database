@@ -13,7 +13,7 @@ books/
   data/                      # 输入数据：配置 + 手稿 + 机器维护的状态
     tmpl/
       book.toml              # 文档·结构：身份、路径、章节顺序、标题与编号、包映射
-      case-studies.toml      # 文档·案例：案例流水线（scenario -> steps）
+      case-studies.toml      # 文档·案例：案例流水线（scenario -> steps），按书可选
       templates.toml         # 文档·表述：四段引言与深读要点模板（占位符不可改）
     config/
       base.json              # 配置·基础：源码树、语言与后缀、包前缀、基线路径、预算、日志

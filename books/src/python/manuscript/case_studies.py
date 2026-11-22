@@ -29,7 +29,6 @@ _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)
 
 import argparse
 import sys
-import tomllib
 
 from lib import _config, _fsutil
 
@@ -46,12 +45,19 @@ CASE_STUDY_CONFIG = _config.template_path('case-studies.toml')
 
 
 def load_scenarios() -> dict[str, list[tuple[str, str, str]]]:
-    """Read the case-study pipelines from data/tmpl/case-studies.toml."""
+    """Read the case-study pipelines from data/tmpl/case-studies.toml.
+
+    The file belongs to one book: a book without case studies simply has no such
+    file. Callers treat an empty table as "nothing configured" rather than as a
+    broken toolchain, so importing this module never requires the file.
+    """
+    import tomllib  # stdlib only from 3.11 on; imported where it is used
+
     try:
         with open(CASE_STUDY_CONFIG, 'rb') as fh:
             data = tomllib.load(fh)
-    except FileNotFoundError as exc:
-        raise SystemExit(f'error: missing {CASE_STUDY_CONFIG}') from exc
+    except FileNotFoundError:
+        return {}
     except tomllib.TOMLDecodeError as exc:
         raise SystemExit(f'error: invalid TOML in {CASE_STUDY_CONFIG}: {exc}') from exc
     out: dict[str, list[tuple[str, str, str]]] = {}
@@ -62,7 +68,6 @@ def load_scenarios() -> dict[str, list[tuple[str, str, str]]]:
 
 
 SCENARIOS: dict[str, list[tuple[str, str, str]]] = load_scenarios()
-
 SCENARIO_HEADERS = {
     'select': {
         'h2': '## A.1 案例 A：一条 SELECT 从 JDBC 到磁盘',
@@ -137,7 +142,7 @@ def render(scenario: str) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--scenario', choices=sorted(SCENARIOS), required=True,
+    parser.add_argument('--scenario', choices=sorted(SCENARIOS) or None, required=True,
                         help='which case study to scaffold')
     args = parser.parse_args()
 

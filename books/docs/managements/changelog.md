@@ -186,6 +186,10 @@
 - **`templates.toml` 的无效查找去掉**：`chapters.py` 原来对每一条深读要点都调 `tpl('deep_dive_item', …)`，
   而模板文件里只有 `deep_dive` 列表（`deep_dive_item` 从未定义）——等于每次都走回退分支。
   现改为直接对条目做占位符替换，行为与产物哈希不变（`13f8976f…`）；膨胀登记同步到 755 行。
+- **`case-studies.toml` 改为可选**：它只服务 `manuscript/case_studies.py`（按需生成附录 A 大纲），
+  而 `core/scaffold.py` 建新书时并不生成本文件——原实现在**导入期**读它并 `SystemExit`，等于
+  一本没有案例研究的书连模块都进不去。现在缺失即视为「未配置」（`load_scenarios()` 返回空表），
+  TOML 写错仍判红，并补一条用例钉住。`folder.md` 同步写明它是按书可选的内容数据。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

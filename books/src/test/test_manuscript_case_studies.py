@@ -12,9 +12,11 @@ gap stays visible instead of silently passing.
 
 import importlib.util
 import os
+import shutil
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 import _fixture
 
@@ -88,3 +90,18 @@ class TestCaseStudyOutline(ScriptTestBase):
 
 if __name__ == '__main__':
     unittest.main()
+
+class MissingConfigTest(unittest.TestCase):
+    """A book without case studies has no file — that is not a crash."""
+
+    def test_load_scenarios_returns_empty_when_the_file_is_absent(self):
+        case_studies = importlib.import_module('case_studies')
+
+        with mock.patch.object(case_studies, 'CASE_STUDY_CONFIG',
+                               os.path.join(self.tmp, 'absent.toml')):
+            self.assertEqual(case_studies.load_scenarios(), {})
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+
