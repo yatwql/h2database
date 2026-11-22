@@ -112,9 +112,10 @@ jobs:
       - name: full suite
         run: BOOK_SLOW=1 python books/src/python/make.py test --full --timings
       - name: coverage with the browser and pandoc paths present
-        # the ratchet only means something when pypdf/playwright/pandoc are
-        # installed, otherwise the render paths are skipped and coverage dips
-        run: python books/src/python/make.py cover
+        # --full: the same number the per-commit gate takes, plus the slow tier.
+        # Without it the paths that need pypdf/playwright/pandoc are never
+        # measured and the report blames tests that simply were not run.
+        run: python books/src/python/make.py cover --full
 
   deliver:
     name: Build artifacts (release)

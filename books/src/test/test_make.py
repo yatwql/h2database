@@ -128,6 +128,30 @@ class MakeDriverTest(unittest.TestCase):
             self.assertEqual(self.make.coverage(), 1)
         self.assertIn('per-file floor', buffer.getvalue())
 
+    def _cover(self, *, slow_env: str = '', **kwargs):
+        """Drive coverage() with a recording subprocess.run and return the commands."""
+        calls = []
+
+        def run(command, **inner):
+            calls.append(command)
+            return completed(0, out='{}')
+
+        with mock.patch.object(self.make.importlib.util, 'find_spec', return_value=True), \
+                mock.patch.object(self.make.subprocess, 'run', side_effect=run), \
+                mock.patch.dict(os.environ, {'BOOK_SLOW': slow_env}), \
+                redirect_stdout(io.StringIO()):
+            self.make.coverage(**kwargs)
+        return calls[0]
+
+    def test_coverage_default_measures_the_fast_tier_only(self):
+        self.assertIn('tier_fast', self._cover())
+
+    def test_coverage_full_measures_the_slow_tier_too(self):
+        self.assertNotIn('tier_fast', self._cover(full=True))
+
+    def test_coverage_follows_book_slow_from_the_environment(self):
+        self.assertNotIn('tier_fast', self._cover(slow_env='1'))
+
     def test_thin_files_reads_the_coverage_json(self):
         payload = json.dumps({'files': {
             'books/src/python/thin.py': {'summary': {'num_statements': 20,

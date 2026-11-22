@@ -477,6 +477,7 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **覆盖率门禁分档**：`make.py cover` 原来写死 `-m tier_fast`，而 CI 慢档 job 装好 chromium/pandoc 后跑的还是快档；于是只有慢档才走到的渲染路径从未计入，`verify_pdf`（73%）这类数字反映的是没人跑过的分支。`cover` 现认 `--full` 与 `BOOK_SLOW=1`，报头直接写出量的是哪一档，CI 慢档 job 改跑 `cover --full`；判据也补上这两个载体。逐模块把“只为拿真工具”的用例改成注入是接着做的工作（`to_epub` 已完成）。（rf-37）
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
   `smart.py`、`figure_clusters.py`、`structure.py`、`verify_pdf.py` 改读配置——此前图簇窗口在

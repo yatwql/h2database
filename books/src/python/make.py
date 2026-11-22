@@ -328,17 +328,25 @@ def report(extra: list[str] | None = None) -> int:
     return proc.returncode
 
 
-def coverage() -> int:
-    """Run the test suite under coverage and enforce the ratchet."""
+def coverage(*, full: bool = False) -> int:
+    """Run the test suite under coverage and enforce the ratchet.
+
+    The default measures the **fast** tier: that is the per-commit gate and the
+    number the ratchet compares. ``full`` (``make cover --full``, or
+    ``BOOK_SLOW=1``) also runs the slow tier, so the paths that need chromium or
+    pandoc are measured for real instead of being reported as nobody's.
+    """
     if importlib.util.find_spec('coverage') is None:
         print('coverage is not installed: pip install coverage')
         return 2
     threshold = _config.THRESHOLDS.get('coverage_fail_under', 0)
+    slow = full or os.environ.get('BOOK_SLOW') == '1'
+    marker = [] if slow else ['-m', 'tier_fast']
     tests = os.path.normpath(os.path.join(TOOLS_DIR, '..', 'test'))
     # pytest runs the same suite the gates run (it finishes); unittest discover
     # under coverage deadlocks on the threaded fixtures, which is how this gate
     # sat silent instead of reporting a number.
-    inner = (['-m', 'pytest', '-q', '-m', 'tier_fast', tests]
+    inner = (['-m', 'pytest', '-q', *marker, tests]
              if importlib.util.find_spec('pytest') else
              ['-m', 'unittest', 'discover', '-s', tests, '-t', tests])
     try:
@@ -361,7 +369,8 @@ def coverage() -> int:
         cwd=os.path.dirname(book_root()), capture_output=True, text=True, check=False)
     print(report.stdout)
     print(report.stderr.strip())
-    print(f'coverage gate: threshold {threshold}% -> '
+    print(f'coverage gate: {"fast + slow" if slow else "fast"} tier, '
+          f'threshold {threshold}% -> '
           f'{"PASS" if report.returncode == 0 else "FAIL"}')
     thin = thin_files(_config.THRESHOLDS.get('coverage_min_per_file', 60))
     if thin:
@@ -430,7 +439,7 @@ def main(argv: list[str] | None = None) -> int:
         return doctor()
 
     if args.command == 'cover':
-        return coverage()
+        return coverage(full=args.full)
 
     if args.command == 'report':
         return report(report_extras)
