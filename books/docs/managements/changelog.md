@@ -282,6 +282,9 @@
   「配置与状态」下（选书是偶尔动作，不占主菜单数字键）；行来自 `_config.candidate_books()`，
   当前一本以 ● 起首，数字键选定、`0` 返回；`_config.reset()` 让切换对进程持续生效，
   并用 `BOOK_ROOT` 同步给随后启动的子进程。契约写进 `DESIGN-TUI.md` §3.1，用例 4 条。
+- **CI 红因：没装 pandoc 的机器上 EPUB 用例仍照跑**：`ToEpubTest` 的构建用例没有守卫，
+  在 runner（无 pandoc）上直接失败，`make.py test` 与三平台 job 全红。加 `HAS_PANDOC` 守卫
+  后与既有的「无 pandoc 时应说明安装方式」用例成对：有工具才验证构建，没工具验证提示。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

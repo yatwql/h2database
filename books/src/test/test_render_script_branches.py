@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import importlib.util
 import os
+import shutil
 import sys
 import tempfile
 import unittest
@@ -29,6 +30,7 @@ if TOOLS_DIR not in sys.path:
             sys.path.insert(0, _path)
 
 HAS_PYPDF = importlib.util.find_spec('pypdf') is not None
+HAS_PANDOC = bool(shutil.which('pandoc'))
 
 
 class FakePage:
@@ -120,6 +122,7 @@ class ToEpubTest(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.root = _fixture.build_book(self.tmp.name)
 
+    @unittest.skipUnless(HAS_PANDOC, 'pandoc not on PATH')
     def test_the_epub_is_built_from_the_merged_manuscript(self):
         code, out = _fixture.run_inproc(self.root, 'to_epub.py')
         self.assertEqual(code, 0, out[-600:])
