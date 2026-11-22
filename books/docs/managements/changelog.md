@@ -104,6 +104,10 @@
   `render/html_shell.py`；`dist/*.html` 的 sha256 与拆分前**逐字节一致**（`edef814e…`），
   也就是这次只是搬动文本、没有改行为。`to_html.py` 已不在膨胀登记表里（557 行，远低于提醒线），
   `technical.md` §4.4 补上 `html_shell.py` 一行。
+- **渲染器拆分第二步：附录独立**：附录的坐标表与练习从 `ingest/chapters.py` 迁到
+  `ingest/appendix.py`，表格排版上提到 `lib/_mdutil.table()` 供两处共用；`chapters.py`
+  806 → **750 行**。验收用渲染结果哈希：改动前后所有章节与附录的渲染文本
+  sha256 完全一致（`13f8976f…`）。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

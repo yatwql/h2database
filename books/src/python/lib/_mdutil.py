@@ -30,6 +30,15 @@ FIGURE_CAPTION_RE = re.compile(rf'^\*\*{FIGURE_LABEL} ({FIGURE_ID}):\s*(.+?)\*\*
 FIGURE_PREFIX_RE = re.compile(rf'^\*\*{FIGURE_LABEL} {FIGURE_ID}:')
 
 
+def table(headers: list[str], rows: list[list[str]], cap: int = 20) -> list[str]:
+    """Markdown table lines: header, separator, then at most ``cap`` rows."""
+    kept = rows[:cap]
+    out = ['| ' + ' | '.join(headers) + ' |',
+           '| ' + ' | '.join('---' for _ in headers) + ' |']
+    out += ['| ' + ' | '.join(str(cell) for cell in row) + ' |' for row in kept]
+    return out
+
+
 def figure_caption(line: str) -> tuple[str, str] | None:
     """(figure id, title) for a caption line, or None when it is not one."""
     match = FIGURE_CAPTION_RE.match(line.strip())
