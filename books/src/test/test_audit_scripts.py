@@ -108,26 +108,28 @@ class TestAuditScripts(ScriptTestBase):
 
     def test_glossary_builder_handles_fixture(self):
         code, out = self.run_script('glossary.py')
-        self.assertIn(code, (0, 1), out)
-        self.assertNotIn('Traceback', out)
+        self.assertEqual(code, 0, out)
+        self.assertIn('自动生成草稿', out)
 
     def test_index_builder_handles_fixture(self):
         code, out = self.run_script('index.py')
-        self.assertIn(code, (0, 1), out)
-        self.assertNotIn('Traceback', out)
+        self.assertEqual(code, 0, out)
+        self.assertIn('概念索引（自动生成草稿）', out)
 
     def test_glossary_builder_check_mode(self):
         code, out = self.run_script('glossary.py', '--check')
-        self.assertIn(code, (0, 1), out)
+        self.assertEqual(code, 0, out)
+        self.assertIn('自动生成草稿', out)
 
     def test_index_builder_hierarchy_check(self):
         code, out = self.run_script('index.py', '--hierarchy-check')
-        self.assertIn(code, (0, 1), out)
+        self.assertEqual(code, 1, out)
+        self.assertIn('Index Hierarchy Report', out)
 
     def test_source_refs_handles_missing_source_tree(self):
         code, out = self.run_script('source_refs.py')
-        self.assertIn(code, (0, 1), out)
-        self.assertNotIn('Traceback', out)
+        self.assertEqual(code, 0, out)
+        self.assertIn('[skip]', out)  # no source tree: reported, not fatal
 
 if __name__ == '__main__':
     unittest.main()

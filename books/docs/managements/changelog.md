@@ -112,6 +112,10 @@
   （`glossary --check/--validate/--coverage`、`index --hierarchy-check/--coverage`），基线从
   84 条降到 **76 条**；其中 `test_multi_line_entry_is_parsed` 原来跑的是**起草**模式（根本没解析
   既有词条），改为 `--validate` 并断言 `Entries: 1`，名字与行为对齐。
+- **松散断言收紧第二批**：`test_audit_scripts.py` 的 5 条钉到精确值 + 输出（`glossary.py` 与
+  `index.py` 的默认/检查模式、`--hierarchy-check`、缺源码树时 `source_refs.py` 的 `[skip]`）；
+  基线从 76 条降到 **71 条**。剩下的多数是"坏输入下不得抛异常"的负向冒烟——0/1/2 都是合法结果，
+  已在基线注里写明这类为何不钉死。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
