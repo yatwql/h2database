@@ -16,7 +16,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import glob
 import json
 import os
 import re
@@ -35,8 +34,8 @@ NORMALIZE = re.compile(r'[^\u4e00-\u9fffA-Za-z0-9]')
 
 
 def _files() -> list[str]:
-    return (sorted(glob.glob(os.path.join(_config.MANUSCRIPT_DIR, 'ch*.md')))
-            + sorted(glob.glob(os.path.join(_config.MANUSCRIPT_DIR, 'appendix-*.md'))))
+    """Chapters plus appendices, in the configured reading order."""
+    return _config.chapter_files(include_cover=False)
 
 
 def _sentences(text: str) -> list[str]:

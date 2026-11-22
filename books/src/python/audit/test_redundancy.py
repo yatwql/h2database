@@ -216,12 +216,6 @@ def _loose_key(item: dict) -> str:
     return f"{item['file']}::{item['detail'].split(':')[0]}"
 
 
-def loose_assertions(root: str | None = None) -> list[dict]:
-    """Candidates that the baseline does not accept yet."""
-    accepted = _loose_baseline()
-    return [item for item in loose_candidates(root) if _loose_key(item) not in accepted]
-
-
 def analyse(root: str | None = None) -> list[dict]:
     findings: list[dict] = []
     bodies: dict[str, list[Case]] = {}

@@ -120,6 +120,12 @@
   总百分比判定（实测 88%，阈值同步为 88）；`technical.md` §3.2 写明这个数字现在是
 "行 + 分支"口径，单文件下限 `coverage_min_per_file` 保持 70%。以前只看行覆盖，写了的
   `if` 另一半从没走过也算绿；现在不会。
+- **一轮技术债核查**：删掉 `test_redundancy.py` 里已无人调用的 `loose_assertions()`；
+  `book_quality` / `prose_quality` / `style_rules` 三份一模一样的章节收集器合并为
+  `_config.chapter_files(include_cover=False)`（章节清单的单份来源），遍历顺序因此与阅读顺序
+  一致；`style.py` 不拆的理由补进 `technical.md`（13 个检测器共用一份状态）。
+  核查结论：新模块（`html_shell`/`appendix`/`test_report`/`archive`）无内联仓库路径，
+  配置无死键，`make.py check` 与快档全绿。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

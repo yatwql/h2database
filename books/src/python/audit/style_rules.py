@@ -16,7 +16,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import glob
 import json
 import os
 import re
@@ -40,8 +39,8 @@ CJK_IDIOM_RE = re.compile(r'第\d+[章节题条个张]|图 [A-Z0-9]+-\d+|表 [A-
 
 
 def files() -> list[str]:
-    return (sorted(glob.glob(os.path.join(_config.MANUSCRIPT_DIR, 'ch*.md')))
-            + sorted(glob.glob(os.path.join(_config.MANUSCRIPT_DIR, 'appendix-*.md'))))
+    """Chapters plus appendices, in the configured reading order."""
+    return _config.chapter_files(include_cover=False)
 
 
 def check_file(path: str) -> list[dict]:
