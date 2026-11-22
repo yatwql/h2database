@@ -195,6 +195,12 @@
   一起（一是「换一本书整份替换」的身份/案例，一是生成时套用的模板），看目录分不出哪份能复用到
   别的书。`_config` 新增 `book_dir()`/`book_path()`，`book.toml [paths]` 增加 `book` 键，
   scaffold、traces、case_studies、fixture 与用户文档同步改指向。
+- **配置从常量改为按书解析的对象**：`lib/_config.py` 原来在导入期算死 `BOOK_ROOT`、
+  `MANUSCRIPT_DIR`、`POLICY`、`THRESHOLDS` 等十余个模块常量，一个进程只能读一本书，
+  测试要换书只能 `sys.modules.pop('lib._config')` 重导入。现在这些值属于 `Config(root)`，
+  模块级名字改为转发到活动书（PEP 562 `__getattr__`），新增 `current()` / `use()` /
+  `for_root()`；调用形式与取值全部不变（渲染文本哈希 `13f8976f…` 未变），新增 8 条用例
+  钉住两本书互不串值、`use()` 异常也还原、未知名字仍报错。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

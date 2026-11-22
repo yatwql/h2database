@@ -140,6 +140,13 @@ books/
 `data/config/` 下的单文件 `config.json`（兼容形态，仓库不带）。解析失败一律抛
 `ConfigError` 并指明文件，不允许静默降级。
 
+配置按书解析成对象：`_config.Config(root)` 读的是那一本书自己的四个文件与
+`data/language/`，`root` 缺省取 `BOOK_ROOT` 或工具链所在 checkout。模块级名字
+（`_config.BOOK_ROOT`、`_config.state_path(...)`、`_config.POLICY`）不再是一次算
+死的常量，而是转发到当前活动书的属性与方法——`with _config.use(cfg):` 期间切换，
+退出即还原，异常也不漏。同一进程要读多本书时用 `Config(root)` 或 `for_root(root)`，
+不要改环境变量再重导入。
+
 ### 3.2 阈值归属
 
 阈值只允许出现在配置里，代码里不得内联。已知归属：
@@ -175,7 +182,7 @@ books/
 
 | 模块 | 职责 | 关键约定 |
 | --- | --- | --- |
-| `_config` | TOML/JSON 三层配置、路径解析、章节清单、语言与模板读取 | 派生 `MANUSCRIPT_DIR`、`DIST_DIR`、`thresholds`；`excluded_dirs()` 给出产物与快照目录 |
+| `_config` | 每本书一个 `Config`：TOML/JSON 三层配置、路径解析、章节清单、语言与模板读取 | `Config(root)` 解析一本书；模块属性转发到活动书（`use()` 切换）；`excluded_dirs()` 给出产物与快照目录 |
 | `_fsutil` | 读写原语：`read_text`、`read_lines`、`write_text`、`load_json`、`ensure_dir`、`pin_stdout_utf8` | 统一 UTF-8；失败即退出并说明动作 |
 | `_log` | 按天滚动的文件日志 + 控制台摘要 | 级别取 `BOOK_LOG_LEVEL` > 配置 > INFO |
 | `_mdutil` | Markdown 结构解析：标题、围栏、图注 | 围栏内的内容不参与结构判定 |
