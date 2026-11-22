@@ -1,6 +1,6 @@
 {
   "updated": "2026-11-22",
-  "note": "Exit-code assertions that accept both success and failure. A case qualifies only when the code is its sole outcome check; every other case is pinned to an exact code plus an output assertion. What remains is negative-input smoke: the point is that the gate reports instead of raising, so 0/1/2 are all legitimate verdicts.",
+  "note": "Exit-code assertions that accept both success and failure. A case qualifies only when the code is its sole outcome check; the rest pin an exact code plus an output assertion.",
   "accepted": [
     "books/src/test/test_audit_captions_baseline.py::test_json_output_has_the_expected_shape",
     "books/src/test/test_audit_captions_baseline.py::test_normal_threshold_tolerates_the_fixture",
@@ -31,12 +31,6 @@
     "books/src/test/test_audit_style_rules_units.py::test_main_reports_the_rule_findings",
     "books/src/test/test_audit_style_schema.py::test_main_reports_a_valid_file",
     "books/src/test/test_audit_version_consistency.py::test_json_output_reports_every_section",
-    "books/src/test/test_edge_cases.py::test_crlf_chapter_keeps_its_sections",
-    "books/src/test/test_edge_cases.py::test_empty_chapter_does_not_crash_the_gates",
-    "books/src/test/test_edge_cases.py::test_missing_state_files_exit_cleanly",
-    "books/src/test/test_edge_cases.py::test_utf8_bom_is_tolerated",
-    "books/src/test/test_edge_cases.py::test_very_long_line_does_not_break_the_gates",
-    "books/src/test/test_edge_cases.py::test_zero_byte_chapter_is_treated_as_empty",
     "books/src/test/test_gate_entrypoints.py::test_each_gate_runs_and_reports_an_exit_code",
     "books/src/test/test_gate_entrypoints.py::test_each_gate_supports_json",
     "books/src/test/test_gate_entrypoints.py::test_gates_on_an_empty_book_still_exit_cleanly",

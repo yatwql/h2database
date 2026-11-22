@@ -38,21 +38,23 @@ class EdgeCaseTest(unittest.TestCase):
     # -- content edges ---------------------------------------------------
     def test_empty_chapter_does_not_crash_the_gates(self):
         self.write('ch1-test.md', '')
-        for script in ('structure.py', 'links.py', 'captions.py'):
+        for script, expected in (('structure.py', 1), ('links.py', 0), ('captions.py', 0)):
             with self.subTest(script=script):
                 code, out = _fixture.run_inproc(self.root, script)
-                self.assertIn(code, (0, 1, 2), out[-300:])
+                self.assertEqual(code, expected, out[-300:])
                 self.assertNotIn('Traceback', out)
 
     def test_zero_byte_chapter_is_treated_as_empty(self):
         self.write('ch1-test.md', '', raw=b'')
         code, out = _fixture.run_inproc(self.root, 'merge.py')
-        self.assertIn(code, (0, 1, 2), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('reading-guide.md', out)
 
     def test_utf8_bom_is_tolerated(self):
         self.write('ch1-test.md', '', raw=b'\xef\xbb\xbf' + self.read('ch1-test.md').encode())
         code, out = _fixture.run_inproc(self.root, 'structure.py')
-        self.assertIn(code, (0, 1, 2), out[-300:])
+        self.assertEqual(code, 1, out[-300:])
+        self.assertIn('=== Summary ===', out)    # the gate ran to its summary
         self.assertNotIn('Traceback', out)
 
     def test_crlf_chapter_keeps_its_sections(self):
@@ -61,13 +63,14 @@ class EdgeCaseTest(unittest.TestCase):
         with open(self.chapter('ch2-test.md'), 'w', encoding='utf-8', newline='') as fh:
             fh.write(text)
         code, out = _fixture.run_inproc(self.root, 'merge.py')
-        self.assertIn(code, (0, 1, 2), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('reading-guide.md', out)   # the merge still produced a document
 
     def test_very_long_line_does_not_break_the_gates(self):
         self.write('ch1-test.md', self.read('ch1-test.md') + '\n' + 'x' * 10000 + '\n')
         code, out = _fixture.run_inproc(self.root, 'readability.py')
-        self.assertIn(code, (0, 1, 2), out[-300:])
-        self.assertNotIn('Traceback', out)
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('READABILITY', out)
 
     # -- filesystem edges ------------------------------------------------
     def test_missing_state_files_exit_cleanly(self):
@@ -76,7 +79,7 @@ class EdgeCaseTest(unittest.TestCase):
             if os.path.exists(path):
                 os.remove(path)
         code, out = _fixture.run_inproc(self.root, 'chapters.py')
-        self.assertIn(code, (0, 1, 2), out[-300:])
+        self.assertEqual(code, 1, out[-300:])    # the stage reports the missing state
         self.assertNotIn('Traceback', out)
 
     def test_book_in_a_path_with_spaces_and_cjk(self):
