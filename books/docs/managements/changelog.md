@@ -411,6 +411,10 @@
   依赖 `Config`，直接切块导致 14 个用例导入失败，已回退且未留残件。拆分方向与这三处依赖
   写进 `review-findings.md` 的膨胀登记，下一次按「先下沉发现与加载、`candidate_books` 留门面」
   的顺序做。`style.py` 的登记行同步到实测 642 行。
+- **文档核对（管理 + 用户）**：TUI 手册的示例屏仍写着旧的 `行数余量 +14%`，改为现在的
+  `手稿 40,097 行（再少 5,049 行即判「内容变薄」）`；`technical.md` 模块表补四个新模块
+  （`core/docs_archive`、`audit/doc_archive`、`audit/plan_coverage`、`manuscript/renumber`）；
+  `scripts-and-reference.md` 新增「按需执行的工具脚本」一节，说明这三个工具何时用、怎么用。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

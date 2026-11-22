@@ -189,6 +189,10 @@ books/
 | `_fsutil` | 读写原语：`read_text`、`read_lines`、`write_text`、`load_json`、`ensure_dir`、`pin_stdout_utf8` | 统一 UTF-8；失败即退出并说明动作 |
 | `_log` | 按天滚动的文件日志 + 控制台摘要 | 级别取 `BOOK_LOG_LEVEL` > 配置 > INFO |
 | `_mdutil` | Markdown 结构解析：标题、围栏、图注 | 围栏内的内容不参与结构判定 |
+| `core/docs_archive.py` | 把已发布版本的台账与完成的迭代设计移入 `docs/archive/` | 纯文本变换 + 目录搬迁；幂等，`--dry-run` 只打印动作 |
+| `audit/doc_archive.py` | 归档布局门禁 | 版本目录名、三份台账与头行、索引可打开、已归档版本不得留在主文档 |
+| `audit/plan_coverage.py` | 计划覆盖门禁 | 每个 `docs/plan/<主题>/` 恰好一个所有者；计划项四段齐备；编号与概述一致 |
+| `manuscript/renumber.py` | 版本重编号与引用改写 | 由书级/版本 `[chapters.numbering]` 之差算映射，写 `state/<edition>/renumber.json` |
 | `_version` | 工具链语义化版本（唯一定义处） | 与书籍版本（`book.toml`）、被分析源码版本三向分离 |
 | `_llm` | LLM 客户端：provider 路由、密钥只读环境变量 | 只有 `app` 与 ingest 散文场景可导入 |
 | `_baseline` | 已评审问题清单的读写与差集 | 键由调用方定义；新增即失败，消失即提示收缩 |

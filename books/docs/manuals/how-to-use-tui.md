@@ -39,7 +39,7 @@ python books/src/python/app/tui.py
 │ 手稿 /path/to/books/data/manuscript                           │
 │ 产物 /path/to/books/dist                                      │
 │ 语言 java  日志 INFO  LLM opencode-go                          │
-│ 用量 LLM 今日 0.42 USD/3.00 USD   行数余量 +14%（40,097 / 下限 35,048 行）│
+│ 用量 LLM 今日 0.42 USD/3.00 USD   手稿 40,097 行（再少 5,049 行即判「内容变薄」）│
 └──────────────────────────────────────────────────────────────┘
  主菜单
 

@@ -230,3 +230,14 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | 只重建文档 | `bookctl build` |
 | 单独查某个问题 | `make.py check --only <step>`，或直接跑对应 `audit/*.py --json` |
 | 新建一本书 / 翻译版 | `books/scripts/new-book.sh ../new-book --title "…"`（翻译加 `--lang en`） |
+
+## 按需执行的工具脚本
+
+不是 `make.py` 的一步，需要时手工调用；都不改写判定口径。
+
+| 脚本 | 何时用 |
+| --- | --- |
+| `core/docs_archive.py --version X.Y [--topic <迭代目录>] [--dry-run]` | 发布一个版本后，把该版本台账与已完成的迭代设计移入 `docs/archive/` 下以版本命名的目录；`--dry-run` 先看动作，重复执行无副作用 |
+| `manuscript/renumber.py --write/--apply` | 声明了 `[editions]` 且章号有变化时，算映射并改写 `详见第X章《…》` 一类引用 |
+| `audit/doc_archive.py`、`audit/plan_coverage.py` | 归档布局与计划覆盖的门禁，已包含在 `make.py check` 里，可单独运行排查 |
+
