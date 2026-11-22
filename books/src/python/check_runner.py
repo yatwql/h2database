@@ -91,7 +91,7 @@ def domain_rows() -> tuple[tuple[str, str], ...]:
         (rel(os.path.join(BOOK_ROOT, 'docs')), 'docs'),
         (rel(_config.MANUSCRIPT_DIR), 'docs'),
         (rel(_config.CONFIG_DIR), 'docs'),
-        (rel(os.path.join(_config.BOOK_ROOT, 'data', 'tmpl')), 'docs'),
+        (rel(os.path.join(_config.BOOK_ROOT, 'data', 'config', 'book')), 'docs'),
         (rel(os.path.join(_config.BOOK_ROOT, 'data', 'baselines')), 'docs'),
         (rel(os.path.join(REPO_ROOT, '.github')), 'infra'),
         (rel(os.path.join(BOOK_ROOT, 'scripts')), 'infra'),
@@ -120,7 +120,7 @@ def gates_for_table() -> tuple[tuple[str, str], ...]:
         (rel(_config.MANUSCRIPT_DIR),
          'structure,captions,content_volume,audit_exercises,content_depth,style_rules'),
         (rel(_config.CONFIG_DIR), 'style_schema,style_rules,content_volume'),
-        (rel(os.path.join(_config.BOOK_ROOT, 'data', 'tmpl')), 'structure,versions'),
+        (rel(os.path.join(_config.BOOK_ROOT, 'data', 'config', 'book')), 'structure,versions'),
         (rel(os.path.join(_config.BOOK_ROOT, 'docs')), 'doc_drift,traces,audit_links'),
         (rel(os.path.join(_config.BOOK_ROOT, 'data', 'baselines')), 'content_volume'),
     )

@@ -38,7 +38,7 @@ class ScaffoldGeneratorTest(unittest.TestCase):
         target = os.path.join(self.tmp.name, 'newbook')
         created = self.module.scaffold(target, '新书', 'zh', False)
         self.assertTrue(created)
-        book_toml = os.path.join(target, 'data', 'tmpl', 'book.toml')
+        book_toml = os.path.join(target, 'data', 'config', 'book', 'book.toml')
         self.assertTrue(os.path.exists(book_toml))
         with open(book_toml, encoding='utf-8') as fh:
             self.assertIn('新书', fh.read())

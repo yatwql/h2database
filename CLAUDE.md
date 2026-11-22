@@ -20,7 +20,7 @@
 | 门禁判据与级别 | `books/docs/managements/testplan.md` §2 |
 | 目录结构与文件归属 | `books/docs/managements/folder.md` |
 | 写作与格式约定 | `books/docs/managements/style-guide.md` |
-| 内容组织（章节、图号、包映射） | `books/data/tmpl/book.toml` |
+| 内容组织（章节、图号、包映射） | `books/data/config/book/book.toml` |
 | 工具链策略（阈值、预算、基线） | `books/data/config/base.json`、`style.json` |
 | 单项迭代的设计与计划 | `books/docs/plan/<topic>/`（`design.md`、`plan.md`） |
 

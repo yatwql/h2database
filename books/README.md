@@ -3,7 +3,7 @@
 把一个源码仓库变成一本可交付的技术书：读源码 → 生成手稿 → 出 Markdown/HTML/PDF/EPUB，
 全程由门禁把关（结构、事实、文风、交付）。
 
-书名与章节映射都来自 `books/data/tmpl/book.toml`；工具链与具体项目无关，换一份源码树与章节映射
+书名与章节映射都来自 `books/data/config/book/book.toml`；工具链与具体项目无关，换一份源码树与章节映射
 即可生成另一本书。支持 Java / Python / Rust / Kotlin / Go 源码（可多语言混跑）。
 
 ## 能做什么

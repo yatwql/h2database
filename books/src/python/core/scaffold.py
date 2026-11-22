@@ -4,7 +4,7 @@
 Creates a directory containing the four document-side files with the right
 division of responsibility:
 
-  data/tmpl/book.toml          structure: identity, paths, chapter list, titles,
+  data/config/book/book.toml   structure: identity, paths, chapter list, titles,
                      numbering, coverage, package mapping
   data/tmpl/templates.toml     prose: narrative templates (placeholders kept)
   data/language/<code>.json    labels: section names, exercise hints, term line
@@ -107,7 +107,8 @@ def _rel(path: str) -> str:
 
 
 MANUSCRIPT_REL = _rel(_config.MANUSCRIPT_DIR)
-TMPL_REL = _rel(os.path.dirname(_config.CONFIG_PATH))
+BOOK_REL = _rel(os.path.dirname(_config.CONFIG_PATH))
+TMPL_REL = _rel(_config.template_dir())
 CONFIG_REL = _rel(os.path.dirname(_config.BASE_POLICY_PATH))
 LANG_REL = _rel(_config.LANGUAGE_DIR)
 
@@ -191,7 +192,7 @@ def scaffold(target: str, title: str, lang: str, copy_manuscript: bool) -> list[
         _fsutil.write_text(path, text)
         created.append(rel)
 
-    write(f'{TMPL_REL}/book.toml', BOOK_TOML_TEMPLATE.format(title=title, slug=slug,
+    write(f'{BOOK_REL}/book.toml', BOOK_TOML_TEMPLATE.format(title=title, slug=slug,
                                                  manuscript=MANUSCRIPT_REL))
     write(f'{TMPL_REL}/templates.toml', _fsutil.read_text(
         _config.template_path('templates.toml')))

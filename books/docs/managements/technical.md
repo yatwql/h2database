@@ -85,8 +85,9 @@
 ```text
 books/
   data/
-    tmpl/         book.toml（身份/路径/章节顺序/包归属）、案例与模板配置
     config/       base.json（基础设施策略）、style.json（写作与形态规则）
+      book/       book.toml（身份/路径/章节顺序/包归属）、case-studies.toml（案例流水线）
+    tmpl/         templates.toml（四段引言与深读要点模板）
     language/     章节骨架名、练习提示语等语言资源
     manuscript/   手稿：封面、前件、章节、附录、后件
     state/        机器维护的派生状态：outline、source-inventory
@@ -128,7 +129,7 @@ books/
 
 | 文件 | 管什么 | 谁读 |
 | --- | --- | --- |
-| `data/tmpl/book.toml` | 这本书的身份：标题、版本、路径、章节清单、包归属、必备段落 | `lib/_config.py` 直接解析 |
+| `data/config/book/book.toml` | 这本书的身份：标题、版本、路径、章节清单、包归属、必备段落 | `lib/_config.py` 直接解析 |
 | `data/config/base.json` | 基础设施策略：源码位置、路径映射、基线路径、工具链预算、日志 | 合并进 `POLICY` |
 | `data/config/style.json` | 写作与形态规则：阈值、词表、图注规则、篇幅预算、语言骨架 | 合并进 `POLICY` |
 | `data/language/zh.json` | 语言资源：章节骨架名、练习提示语、术语行 | `_config.language()` |
@@ -219,7 +220,7 @@ books/
 
 - `cover.py`：统计章节数、图数、行数并回写封面，是"统计数字唯一来源"。
 - `glossary.py`、`index.py`、`terms.py`：术语表、索引与术语标注的生成与校验。
-- `case_studies.py`：附录 A 的案例骨架，按 `data/tmpl/case-studies.toml` 展开。
+- `case_studies.py`：附录 A 的案例骨架，按 `data/config/book/case-studies.toml` 展开。
 - `snapshot.py`：把历史稿导入只读快照（见第 7 节）。
 
 生成器只产出骨架与派生内容，正文语义由人负责。

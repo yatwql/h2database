@@ -73,12 +73,13 @@ def doc_files() -> list[str]:
 
 def code_patterns() -> tuple[str, ...]:
     """Sources, configuration and launchers; paths come from the config."""
-    tmpl_dir = os.path.dirname(_config.CONFIG_PATH)
+    book_dir = os.path.dirname(_config.CONFIG_PATH)
     return (
         os.path.join(_config.BOOK_ROOT, 'src', '**', '*.py'),
         os.path.join(_config.BOOK_ROOT, 'scripts', '*.sh'),
         os.path.join(_config.BOOK_ROOT, 'scripts', '*.ps1'),
-        os.path.join(tmpl_dir, '*.toml'),
+        os.path.join(book_dir, '*.toml'),
+        os.path.join(_config.template_dir(), '*.toml'),
         os.path.join(_config.CONFIG_DIR, '*.json'),
     )
 

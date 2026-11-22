@@ -41,11 +41,11 @@ _fsutil.pin_stdout_utf8()
 # narrative as `详见 §X.Y`, which is the cross-reference idiom enforced by
 # structure.py. Decision points are short prose hooks the author then
 # expands with figures and source-code excerpts.
-CASE_STUDY_CONFIG = _config.template_path('case-studies.toml')
+CASE_STUDY_CONFIG = _config.book_path('case-studies.toml')
 
 
 def load_scenarios() -> dict[str, list[tuple[str, str, str]]]:
-    """Read the case-study pipelines from data/tmpl/case-studies.toml.
+    """Read the case-study pipelines from data/config/book/case-studies.toml.
 
     The file belongs to one book: a book without case studies simply has no such
     file. Callers treat an empty table as "nothing configured" rather than as a

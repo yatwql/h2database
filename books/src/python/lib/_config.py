@@ -3,7 +3,7 @@
 
 Two layers, both read here so no script hard-codes either:
 
-* ``books/data/tmpl/book.toml`` — content organisation: book identity, paths,
+* ``books/data/config/book/book.toml`` — content organisation: book identity, paths,
   chapter order, per-file titles/numbering/coverage, package mapping.
 * ``books/data/config/base.json`` — infrastructure: source tree location,
   file suffix / package prefix, state and baseline paths, toolchain budgets.
@@ -25,7 +25,8 @@ TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 # BOOK_ROOT may be overridden (tests, tooling, alternative checkouts).
 BOOK_ROOT = os.environ.get('BOOK_ROOT') or os.path.dirname(
     os.path.dirname(os.path.dirname(TOOLS_DIR)))
-CONFIG_PATH = os.path.join(BOOK_ROOT, 'data', 'tmpl', 'book.toml')
+BOOK_DIR = os.path.join(BOOK_ROOT, 'data', 'config', 'book')
+CONFIG_PATH = os.path.join(BOOK_DIR, 'book.toml')
 CONFIG_DIR = os.path.join(BOOK_ROOT, 'data', 'config')
 # Two policy layers: infrastructure (base.json) and book style (style.json).
 BASE_POLICY_PATH = os.path.join(CONFIG_DIR, 'base.json')
@@ -134,8 +135,19 @@ def config_path(name: str) -> str:
     return os.path.join(CONFIG_DIR, name)
 
 
+def book_dir() -> str:
+    """Directory holding the files that belong to this book alone."""
+    rel = _CFG.get('paths', {}).get('book') or 'data/config/book'
+    return os.path.join(BOOK_ROOT, rel)
+
+
+def book_path(name: str) -> str:
+    """One book-specific file (book.toml, case-studies.toml, ...)."""
+    return os.path.join(book_dir(), name)
+
+
 def template_dir() -> str:
-    """Directory holding the book's templates and case-study pipeline."""
+    """Directory holding the book's prose templates."""
     rel = _CFG.get('paths', {}).get('templates') or 'data/tmpl'
     return os.path.join(BOOK_ROOT, rel)
 

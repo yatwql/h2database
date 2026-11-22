@@ -27,7 +27,7 @@ class ScenarioMatrixTest(unittest.TestCase):
         self.addCleanup(tmp.cleanup)
         extra = {}
         if layout == 'single':
-            extra['data/tmpl/book.toml'] = _fixture.BOOK_TOML.replace(
+            extra['data/config/book/book.toml'] = _fixture.BOOK_TOML.replace(
                 '"ch2-test.md",\n', '').replace(
                 '"ch2-test.md" = ["核心模块"]\n', '').replace(
                 '"ch2-test.md" = [2]\n', '').replace(
