@@ -143,7 +143,7 @@ def candidate_books(active: str | None = None, start: str | None = None) -> list
 class Config:
     """One book: its root, its configuration files and the values read from them."""
 
-    def __init__(self, root: str | None = None) -> None:
+    def __init__(self, root: str | None = None, edition: str | None = None) -> None:
         self.root = os.path.abspath(root or resolve_book_root())
         self.config_dir = os.path.join(self.root, 'data', 'config')
         # book.toml sits at a fixed spot: it is what declares the [paths] overrides.
@@ -172,9 +172,45 @@ class Config:
         self.docs_dir = self._path('docs')
         self.language_dir = os.path.join(self.root, 'data', 'language')
         self.templates_path = self.template_path('templates.toml')
+        self.editions = {str(key): str(value)
+                         for key, value in (self.cfg.get('editions') or {}).items()}
+        self.edition = self._pick_edition(edition)
+        if self.edition:
+            self.manuscript_dir = os.path.join(self.manuscript_dir, self.edition)
         self.merged_name = self.cfg.get('book', {}).get('merged_name', 'book')
+        if self.edition:
+            self.merged_name = f'{self.merged_name}-{self.edition}'
         self.title = self.cfg.get('book', {}).get('title', '')
         self.version = self.cfg.get('book', {}).get('version', '')
+
+    def _pick_edition(self, explicit: str | None) -> str:
+        """The edition this Config reads: explicit, then BOOK_EDITION, then default.
+
+        An undeclared edition is an error rather than a silent fallback: quietly
+        reading the base manuscript while the caller asked for the abridged one is
+        how a release ships the wrong text.
+        """
+        requested = str(explicit or os.environ.get('BOOK_EDITION') or '').strip()
+        if not self.editions:
+            if requested:
+                raise ConfigError(
+                    f'book.toml: [editions] 未声明，不接受版本 {requested!r}')
+            return ''
+        if requested:
+            if requested not in self.editions:
+                raise ConfigError(
+                    f'book.toml: 未声明版本 {requested!r}；已声明 {sorted(self.editions)}')
+            return requested
+        default = str(self.cfg.get('default_edition') or '').strip()
+        if default:
+            if default not in self.editions:
+                raise ConfigError(
+                    f'book.toml: default_edition {default!r} 不在 [editions] 中')
+            return default
+        if len(self.editions) == 1:
+            return next(iter(self.editions))
+        raise ConfigError(
+            'book.toml: 声明了多个版本时必须给出 default_edition，或显式传入 --edition')
 
     # ---- loading -----------------------------------------------------------
 
@@ -220,7 +256,8 @@ class Config:
 
     def state_dir(self) -> str:
         """Directory for the derived state ingest rebuilds on every run."""
-        return self._rel('state', 'data/state')
+        base = self._rel('state', 'data/state')
+        return os.path.join(base, self.edition) if self.edition else base
 
     def template_dir(self) -> str:
         """Directory holding the book's prose templates."""
@@ -228,7 +265,8 @@ class Config:
 
     def baseline_dir(self) -> str:
         """Directory holding the reviewed-issue baselines."""
-        return self._rel('baselines', 'data/baselines')
+        base = self._rel('baselines', 'data/baselines')
+        return os.path.join(base, self.edition) if self.edition else base
 
     def state_path(self, name: str) -> str:
         """One file inside the derived-state directory."""

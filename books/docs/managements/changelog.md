@@ -285,6 +285,14 @@
 - **CI 红因：没装 pandoc 的机器上 EPUB 用例仍照跑**：`ToEpubTest` 的构建用例没有守卫，
   在 runner（无 pandoc）上直接失败，`make.py test` 与三平台 job 全红。加 `HAS_PANDOC` 守卫
   后与既有的「无 pandoc 时应说明安装方式」用例成对：有工具才验证构建，没工具验证提示。
+- **手稿版本轴进入配置层**（plan-11 步骤三首批）：`book.toml [editions]` 与顶层
+  `default_edition` 被 `Config` 读取；未声明即单版本、行为与目录形态不变；声明后手稿在
+  `data/manuscript/<edition>/`，派生状态与体量基线落到 `state/<edition>/`、
+  `baselines/<edition>/`，产物名缺省 `<merged_name>-<edition>`。版本来源优先级为显式
+  参数 → `BOOK_EDITION` → `default_edition` → 唯一版本；多版本未给缺省、或指向未声明
+  版本时报 `ConfigError` 并列出已声明版本。CLI/Web/make/TUI 已把选择带进同进程上下文，
+  子进程照旧读环境变量。用例 5 条钉住单版本不变、隐式选中、多版本必填、未声明拒绝、
+  环境变量选择。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

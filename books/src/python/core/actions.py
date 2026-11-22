@@ -252,7 +252,7 @@ def run(action: str, **kwargs) -> tuple[int, str]:
     book = str(kwargs.get('book') or '')
     select(book, str(kwargs.get('edition') or ''))
     if book:
-        with _config.use(_config.Config(book)):
+        with _config.use(_config.Config(book, _SELECTION['edition'] or None)):
             return _dispatch(action, **kwargs)
     return _dispatch(action, **kwargs)
 

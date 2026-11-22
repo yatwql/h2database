@@ -146,6 +146,48 @@ class TwoBooksTest(unittest.TestCase):
         with self.assertRaises(_config.ConfigError):
             _config.Config(self.one)
 
+    def declare_editions(self, root: str, editions: str, default: str = '') -> None:
+        """Add an [editions] table to a fixture book."""
+        path = os.path.join(root, 'data', 'book', 'book.toml')
+        text = pathlib.Path(path).read_text(encoding='utf-8')
+        block = editions if not default else f'default_edition = "{default}"\n{editions}'
+        pathlib.Path(path).write_text(text + '\n' + block, encoding='utf-8')
+
+    def test_a_book_without_editions_keeps_todays_layout(self):
+        cfg = _config.Config(self.one)
+        self.assertEqual(cfg.edition, '')
+        self.assertTrue(cfg.manuscript_dir.endswith(os.path.join('data', 'manuscript')))
+        self.assertTrue(cfg.state_dir().endswith(os.path.join('data', 'state')))
+        self.assertTrue(cfg.merged_md().endswith('alpha.md'))
+
+    def test_a_single_edition_is_selected_implicitly(self):
+        self.declare_editions(self.one, '[editions]\nmain = "主版本"\n')
+        cfg = _config.Config(self.one)
+        self.assertEqual(cfg.edition, 'main')
+        self.assertTrue(cfg.manuscript_dir.endswith(os.path.join('manuscript', 'main')))
+        self.assertTrue(cfg.state_dir().endswith(os.path.join('state', 'main')))
+        self.assertTrue(cfg.baseline_dir().endswith(os.path.join('baselines', 'main')))
+        self.assertTrue(cfg.merged_md().endswith('alpha-main.md'))
+
+    def test_several_editions_require_a_default(self):
+        self.declare_editions(self.one, '[editions]\nmain = "主版本"\nabridged = "删节版"\n')
+        with self.assertRaises(_config.ConfigError):
+            _config.Config(self.one)
+        self.assertEqual(_config.Config(self.one, 'abridged').edition, 'abridged')
+
+    def test_an_undeclared_edition_is_refused(self):
+        self.declare_editions(self.one, '[editions]\nmain = "主版本"\n')
+        with self.assertRaises(_config.ConfigError):
+            _config.Config(self.one, 'nope')
+
+    def test_the_environment_selects_the_edition(self):
+        self.declare_editions(self.one, '[editions]\nmain = "主版本"\n')
+        os.environ['BOOK_EDITION'] = 'main'
+        try:
+            self.assertEqual(_config.Config(self.one).edition, 'main')
+        finally:
+            os.environ.pop('BOOK_EDITION', None)
+
     def test_the_default_book_matches_its_module_attributes(self):
         active = _config.current()
         self.assertEqual(_config.BOOK_ROOT, active.root)

@@ -59,7 +59,7 @@ def main(argv: list[str] | None = None) -> int:
                 sys.stderr.write('usage: cli.py settings set <key> <value>\n')
                 return 2
             try:
-                with _config.use(_config.Config(book)):
+                with _config.use(_config.Config(book, args.edition or None)):
                     stored = settings.set_value(tail[1], ' '.join(tail[2:]))
             except (KeyError, ValueError) as exc:
                 sys.stderr.write(f'error: {exc}\n')
