@@ -13,7 +13,7 @@ import unittest
 
 import _fixture
 
-TAGS = ('layer:render', 'tier:slow')
+TAGS = ('layer:render', 'tier:fast')  # pypdf only; heavy deps stay skipped
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'

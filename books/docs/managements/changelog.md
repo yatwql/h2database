@@ -477,6 +477,7 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **三个 `verify_pdf` 测试文件迁到快档**：它们只需要 pypdf，却被标成 `tier:slow`（理由是“交付链要浏览器”），于是覆盖率门禁从不计入。改用 `skipUnless(HAS_PYPDF)` 跳过条件后 11 条用例进入默认套件，`verify_pdf.py` 83 → 85%，未覆盖语句 1237 → 1233。（rf-37）
 - **单文件覆盖率下限 72 → 75，先把最薄的三处补上**：新增快档用例覆盖 `verify_pdf.main()`（JSON 与人类两种输出、`--require-toc-links`、缺 PDF）——该文件 73 → 83%；`core/docs_archive.py` 的归档 CLI（`--dry-run`、未知版本、缺文档树）——73 → 88%；`ingest/digest.merge_roots()` 与多源根分支、`--json` 摘要——74 → 100%。总覆盖仍 88%（未覆盖语句 1298 → 1237），单文件下限随最薄处抬到 75，逐文件基线同步重记。
 - **失败只剩一个出口**：新增 `lib/_errors.py`——`ToolError` 同时带消息与退出码（派生自 `SystemExit`，`str(exc)` 仍是消息，`sys.exit(message)` 的既有语义不变），`run()` 在入口处把它转成“打印消息 + 返回码”。`_fsutil` 的读写失败、`terms.py` 的写入失败、`to_pdf.py` 的两处 I/O 失败改抛 `ToolError`；58 个入口脚本的 `sys.exit(main(...))` 统一换成 `sys.exit(_errors.run(main, ...))`。测试从此能一次断言“退出码 + 消息”，不必再猜 `SystemExit` 里装了哪个；新增 8 条用例钉住这条契约。（rf-41）
 - **遍历整套脚本的用例改为按脚本钉退出码**：`test_every_audit_runs_without_crashing`、`gate_entrypoints` 三条、`script_entrypoints`、`real_book` 两条，此前一律 `assertIn(code, (0, 1))`，等于只证明“没炸”。现在各自带一张退出码表（如审计脚本里 `exercises.py` 为 1、其余为 0；空书上 `links`/`figures` 均为 1），并断言该脚本在表内——新增脚本忘了定值会立刻红。松散断言基线 15 → 8，余下 8 条都是需要 chromium/pandoc 的交付用例，本机跳过，无法定值。

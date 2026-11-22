@@ -14,7 +14,7 @@ import unittest
 
 import _fixture
 
-TAGS = ('layer:render', 'tier:slow')
+TAGS = ('layer:render', 'tier:fast')  # pypdf only; heavy deps stay skipped
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -26,7 +26,6 @@ if TOOLS_DIR not in sys.path:
         if _path not in sys.path:
             sys.path.insert(0, _path)
 
-SLOW = os.environ.get('BOOK_SLOW') == '1'
 HAS_PANDOC = bool(__import__('shutil').which('pandoc'))
 HAS_PYPDF = importlib.util.find_spec('pypdf') is not None
 
@@ -58,7 +57,7 @@ class Base(unittest.TestCase):
         return path
 
 class TestVerifyPdfErrorPaths(Base):
-    @unittest.skipUnless(SLOW and HAS_PYPDF, 'slow suite: set BOOK_SLOW=1')
+    @unittest.skipUnless(HAS_PYPDF, 'pypdf not installed')
     def test_require_toc_links_without_annotations(self):
         from pypdf import PdfWriter
         writer = PdfWriter()
@@ -89,7 +88,7 @@ if __name__ == '__main__':
     unittest.main()
 
 class TestVerifyPdfTocLinkSuccess(Base):
-    @unittest.skipUnless(SLOW and HAS_PYPDF, 'slow suite: set BOOK_SLOW=1')
+    @unittest.skipUnless(HAS_PYPDF, 'pypdf not installed')
     def test_valid_toc_annotation_targets_outline_page(self):
         from pypdf import PdfWriter
         from pypdf.annotations import Link
