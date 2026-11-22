@@ -357,6 +357,11 @@
   `base.json [sources]` 只保留分析口径（`languages`、`suffixes`、`package_prefix`），两处按
   书级覆盖共享合并。这样在安装形态（步骤四）下，默认配置随包分发时不会把某本书的源树
   带成所有书的默认值。归属写进 `folder.md` §3 与 `technical.md` §3.1，多书设计的源章节同步。
+- **书目目录成为配置项**：`book.toml [paths].library` 声明「其他书放在哪」，缺省为本书的父级；
+  `candidate_books()` 在该目录下只认带 `data/book/book.toml` 的目录，TUI 的「书籍」屏与
+  Web 的 `/api/books` 共用这份发现逻辑。此前多书候选实际依赖「书根同父目录」的目录布局
+  约定——没有任何配置项表达这件事，换一种排布就看不出第二本书。用例 2 条：缺省值、声明后
+  候选随之改变；`folder.md`、`technical.md` §3.1、多书设计的渠道章节同步。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

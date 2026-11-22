@@ -111,13 +111,15 @@ def _merge_policy(base: dict, style: dict, legacy_path: str) -> dict:
     return merged
 
 
-def candidate_books(active: str | None = None, start: str | None = None) -> list[str]:
-    """Book roots the tool can work on, active one first.
+def candidate_books(active: str | None = None, start: str | None = None,
+                    library: str | None = None) -> list[str]:
+    """Book roots the tool can offer, active one first.
 
-    Candidates are the active book, its siblings (they share a parent directory),
-    and whatever looking up from the working directory finds. Only directories that
-    actually hold ``data/book/book.toml`` are offered, so a stray folder never shows
-    up as a book.
+    The library directory is where a book's neighbours live; it comes from
+    ``library``, else the active book's ``[paths].library``, else the active book's
+    parent (the layout the repository itself uses). Only directories holding
+    ``data/book/book.toml`` are offered, so a stray folder never appears as a book —
+    and the answer no longer depends on a directory convention nobody declared.
     """
     roots: list[str] = []
 
@@ -128,7 +130,14 @@ def candidate_books(active: str | None = None, start: str | None = None) -> list
 
     current_root = os.path.abspath(active or _IMPORT_ROOT)
     offer(current_root)
-    parent = os.path.dirname(current_root)
+    if library is None:
+        try:
+            library = (Config(current_root).library_dir()
+                       if os.path.isfile(os.path.join(current_root, BOOK_MARKER))
+                       else None)
+        except ConfigError:
+            library = None
+    parent = library or os.path.dirname(current_root)
     try:
         for name in sorted(os.listdir(parent)):
             offer(os.path.join(parent, name))
@@ -256,6 +265,17 @@ class Config:
         return self._contained(os.path.join(self.root, rel), key)
 
     # ---- directories -------------------------------------------------------
+
+    def library_dir(self) -> str:
+        """Directory whose children are book roots (default: this book's parent).
+
+        Declared with ``book.toml [paths].library`` so "where the other books live"
+        is a configured fact rather than a guess from the directory layout.
+        """
+        rel = (self.cfg.get('paths') or {}).get('library')
+        if not rel:
+            return os.path.dirname(self.root)
+        return os.path.abspath(os.path.join(self.root, str(rel)))
 
     def book_dir(self) -> str:
         """Directory holding the files that belong to this book alone."""

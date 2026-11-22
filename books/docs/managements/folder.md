@@ -94,7 +94,7 @@ books/docs/managements/
 ## 2.1 配置分四层
 
 四个文件各管一段，**合并顺序、读取入口与别名在 `technical.md` §3.1**，本文只记归属：
-`data/book/book.toml`（数据组织）、`data/config/base.json`（基础配置）、
+`data/book/book.toml`（数据组织与本书读哪棵源树）、`data/config/base.json`（基础配置与分析口径）、
 `data/config/style.json`（书籍风格）、`data/language/zh.json`（语言资源）。
 
 ## 3. 归属规则

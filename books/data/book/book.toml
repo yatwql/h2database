@@ -29,6 +29,7 @@ tmp = "data/tmp"
 state = "data/state"
 templates = "data/tmpl"
 book = "data/book"
+library = ".."        # 其他书所在的目录（缺省＝本目录的父级）
 baselines = "data/baselines"
 
 [chapters]

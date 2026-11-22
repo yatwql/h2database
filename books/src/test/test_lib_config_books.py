@@ -230,6 +230,24 @@ class TwoBooksTest(unittest.TestCase):
             with inner.use(inner.Config(self.two)):
                 self.assertTrue(getter().startswith(self.two), getter.__name__)
 
+    def test_the_library_defaults_to_the_parent_directory(self):
+        self.assertEqual(_config.Config(self.one).library_dir(), self.tmp)
+
+    def test_a_declared_library_changes_the_candidates(self):
+        library = os.path.join(self.tmp, 'library')
+        os.makedirs(library, exist_ok=True)
+        for name in ('left', 'right'):
+            make_book(os.path.join(library, name), name, name, 'data/state')
+        book = os.path.join(library, 'left')
+        path = os.path.join(book, 'data', 'book', 'book.toml')
+        text = pathlib.Path(path).read_text(encoding='utf-8')
+        pathlib.Path(path).write_text(
+            text.replace('[paths]', '[paths]\nlibrary = ".."'), encoding='utf-8')
+        self.assertEqual(_config.Config(book).library_dir(), library)
+        roots = _config.candidate_books(book, start=self.tmp)
+        self.assertEqual(sorted(os.path.basename(root) for root in roots),
+                         ['left', 'right'])
+
     def test_the_default_book_matches_its_module_attributes(self):
         active = _config.current()
         self.assertEqual(_config.BOOK_ROOT, active.root)
