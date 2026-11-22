@@ -63,7 +63,7 @@ class TestBalanceCheckHelpers(FixtureCase):
         self.assertIsInstance(index, dict)
         self.assertTrue(index, 'fixture glossary should contribute chapter hits')
 
-    def test_index_chapter_index(self):
+    def test_load_index_chapter_index_returns_a_mapping(self):
         bc = self.module('balance')
         index = bc.load_index_chapter_index()
         self.assertIsInstance(index, dict)
@@ -76,7 +76,7 @@ class TestBalanceCheckHelpers(FixtureCase):
         rendered = bc.render_markdown(metrics)
         self.assertIn('| 文件 |', rendered)
 
-    def test_render_diff(self):
+    def test_render_diff_returns_text(self):
         bc = self.module('balance')
         current = bc.collect_metrics()
         baseline = bc.collect_metrics()

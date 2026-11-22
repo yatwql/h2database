@@ -88,7 +88,7 @@ class _TempFile:
         os.unlink(self._tmp.name)
 
 class TestExerciseParser(unittest.TestCase):
-    def test_slots_detected(self):
+    def test_chapter_slots_are_detected(self):
         slots = _audit_exercises.parse_chapter_slots(CHAPTER_FIXTURE.splitlines())
         chapters = [s['chapter'] for s in slots if s['chapter'] is not None]
         self.assertIn(3, chapters)

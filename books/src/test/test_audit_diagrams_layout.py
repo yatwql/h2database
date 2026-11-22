@@ -30,11 +30,9 @@ class TestDisplayWidth(unittest.TestCase):
     def test_cjk_counts_two_columns(self):
         self.assertEqual(audit_ascii.display_width('架构'), 4)
 
-    def test_mixed(self):
+    def test_display_width_counts_cjk_as_two(self):
         self.assertEqual(audit_ascii.display_width('MV 存储'), 7)
 
-if __name__ == '__main__':
-    unittest.main()
 
 class TestTextBlocks(unittest.TestCase):
     LINES: ClassVar[list[str]] = [
@@ -61,7 +59,7 @@ class TestTextBlocks(unittest.TestCase):
         self.assertNotIn('class A {}', [line for _s, b in blocks for line in b])
 
 class TestMixedBorders(unittest.TestCase):
-    def test_mixed_reported(self):
+    def test_mixed_border_styles_are_reported(self):
         block = ['┌────┐', '+----+', '│ 组件 │']
         self.assertTrue(audit_ascii._mixes_borders(block))
 
@@ -72,3 +70,6 @@ class TestMixedBorders(unittest.TestCase):
     def test_ascii_only_is_fine(self):
         block = ['+----+', '| ab |', '+----+']
         self.assertFalse(audit_ascii._mixes_borders(block))
+
+if __name__ == '__main__':
+    unittest.main()

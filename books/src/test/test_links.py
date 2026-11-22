@@ -24,7 +24,7 @@ _mdutil = importlib.import_module('lib._mdutil')
 _audit_links = importlib.import_module('links')
 
 class TestSlugify(unittest.TestCase):
-    def test_basic(self):
+    def test_slugify_keeps_the_chapter_heading(self):
         self.assertEqual(_mdutil.slugify('第3章 包结构'), '第3章-包结构')
 
     def test_strips_punctuation(self):
@@ -54,11 +54,11 @@ class TestHeadingScan(unittest.TestCase):
         self.assertEqual([lvl for lvl, _t, _s in headings], [1, 2])
 
 class TestExternalDetection(unittest.TestCase):
-    def test_external(self):
+    def test_external_targets_are_recognised(self):
         for target in ('https://example.com', 'http://a.b', 'mailto:x@y.z'):
             self.assertTrue(_mdutil.is_external(target), target)
 
-    def test_internal(self):
+    def test_internal_targets_are_not_external(self):
         for target in ('ch3-packages.md', '#anchor', 'back/glossary.md#term'):
             self.assertFalse(_mdutil.is_external(target), target)
 

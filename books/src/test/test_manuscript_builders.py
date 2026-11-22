@@ -45,7 +45,7 @@ class GlossaryBuilderTest(unittest.TestCase):
         code, out = _fixture.run_inproc(self.root, 'glossary.py', '--validate')
         self.assertIn(code, (0, 1, 2), out[-400:])
 
-    def test_coverage_mode_runs(self):
+    def test_glossary_coverage_mode_runs(self):
         self.glossary('# 术语表\n\n## A\n\n- **ACID**: 描述。\n  **章节**：第1章\n')
         code, out = _fixture.run_inproc(self.root, 'glossary.py', '--coverage')
         self.assertIn(code, (0, 1), out[-400:])
@@ -92,7 +92,7 @@ class IndexBuilderTest(unittest.TestCase):
         self.assertIn(code, (0, 1), out[-400:])
         self.assertNotIn('Traceback', out)
 
-    def test_coverage_mode_runs(self):
+    def test_index_coverage_mode_runs(self):
         self.index('# 索引\n\n## A\n\n- ACID —— §1.1\n')
         code, out = _fixture.run_inproc(self.root, 'index.py', '--coverage')
         self.assertIn(code, (0, 1), out[-400:])

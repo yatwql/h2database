@@ -87,7 +87,7 @@ class TestEnsureDir(unittest.TestCase):
             _fsutil.ensure_dir(target)
             self.assertTrue(os.path.isdir(os.path.dirname(target)))
 
-    def test_idempotent(self):
+    def test_ensure_dir_is_idempotent(self):
         with tempfile.TemporaryDirectory() as tmp:
             target = os.path.join(tmp, 'out.pdf')
             _fsutil.ensure_dir(target)
