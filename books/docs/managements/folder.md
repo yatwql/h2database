@@ -27,9 +27,10 @@ books/
       *-baseline.json          # 各类已评审存量：ASCII 图、符号漂移、风格、体积
       *-findings.json          # 已评审的图注与深度存量
       snapshot-<快照>.json     # 历史快照的体积基线（比对用）
-    state/                     # 机器维护的派生状态（ingest 重建，不入库）
-      source-inventory.json    # 被分析源码的快照事实
-      outline.json             # 章节与主题的派生大纲
+    state/                     # 机器维护的派生状态：ingest 重建，人别手改
+      source-inventory.json    # 被分析源码的快照事实；事实类门禁与渲染都读它
+      outline.json             # 章节与主题的派生大纲；只有渲染器读它
+      source-inventory.prev.json  # 上一次清单（只为告知“源码是否变化”，不入库）
     tmp/                       # 一次性脚本与临时文件（不入库）
     snapshots/                 # 只读历史快照：人工挑选的对照点（可来自 zip 或 data/archive 的日期目录），入库
       <日期>-<标签>/

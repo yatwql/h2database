@@ -173,6 +173,11 @@
   生成的配置读取、字典解包、`Unknown` 传播为主）。直接开会让类型门禁长期红，且一次性修完会把
   本轮改动面扩大到不可评审；因此**暂不开 strict**，记录为"要开就先按文件登记存量"的待办——
   与松散断言、C901 使用同一套"登记存量、新增即失败"的接法。
+- **`data/state/` 的说明与事实对齐**：`folder.md` 原写“派生状态、不入库”，实际
+  `source-inventory.json` 与 `outline.json` **在库**——`content_depth`/`source_refs` 在全新检出上
+  也要能跑（实测删掉清单后 `content_depth` 直接报 21 处），所以这两个文件必须随仓库走。
+  新增的 `source-inventory.prev.json`（只用于告知源码是否变化）已进 `.gitignore`，并在目录树里
+  标明三者各自的用途与读者。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
