@@ -303,6 +303,11 @@
   并据它改写 `详见第X章《…》`、裸 `第X章` 引用（术语与索引里的章号同一条规则）；`--write`
   只落映射、`--apply` 才改正文、`--dry-run` 只报数量；未选版本时直接拒绝。构建清单加入
   `edition` 与 `language` 两个字段，两份手稿的合并稿可自证来源。用例 8 条覆盖映射与改写。
+- **多根源的声明与解析**（plan-11 步骤五首批）：`[sources]` 支持 `roots[]`（`label`、`path`、
+  `language`、`version`），`label` 必填且唯一；单根写法照旧，`source_tree('src_main')`
+  等于首根，其它键按 `label` 解析。`versions()['source']` 单根仍是字符串、多根改为
+  `label → 版本` 映射；`source_versions()` 给出逐根版本。用例 4 条钉住标签、解析与两种拒绝
+  （重复 label、缺 path）。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

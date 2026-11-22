@@ -452,8 +452,50 @@ class Config:
             raise ConfigError(f'config.json: missing [baselines].{name}')
         return os.path.join(self.root, rel)
 
+    def source_roots(self) -> list[dict[str, str]]:
+        """Every source tree this book digests, in declaration order.
+
+        A single ``src_main`` is one root labelled ``main``; ``roots[]`` carries one
+        entry per tree. Labels must be unique — the inventory, the coordinate report
+        and the logs key on them, and two trees sharing a label is indistinguishable
+        from one tree digested twice.
+        """
+        declared = self.sources.get('roots')
+        if declared:
+            roots: list[dict[str, str]] = []
+            seen: set[str] = set()
+            for entry in declared:
+                if not isinstance(entry, dict):
+                    raise ConfigError('config.json: [sources].roots 的每一项都应是对象')
+                label = str(entry.get('label') or '').strip()
+                path = str(entry.get('path') or '').strip()
+                if not label or not path:
+                    raise ConfigError('config.json: [sources].roots 需要 label 与 path')
+                if label in seen:
+                    raise ConfigError(f'config.json: [sources].roots 的 label 重复：{label}')
+                seen.add(label)
+                roots.append({'label': label, 'path': path,
+                              'language': str(entry.get('language') or ''),
+                              'version': str(entry.get('version') or '')})
+            return roots
+        rel = self.sources.get('src_main')
+        if not rel:
+            raise ConfigError('config.json: missing [sources].src_main')
+        return [{'label': 'main', 'path': str(rel),
+                 'language': '', 'version': str(self.sources.get('version') or '')}]
+
     def source_tree(self, key: str) -> str:
-        """Absolute path of a configured source location."""
+        """Absolute path of a configured source location.
+
+        ``src_main`` means the first root, so every caller written for a single tree
+        keeps working; any other key is a root label.
+        """
+        if key in ('src_main', 'main'):
+            root = self.source_roots()[0]
+            return os.path.normpath(os.path.join(self.root, root['path']))
+        for root in self.source_roots():
+            if root['label'] == key:
+                return os.path.normpath(os.path.join(self.root, root['path']))
         rel = self.sources.get(key)
         if not rel:
             raise ConfigError(f'config.json: missing [sources].{key}')
@@ -525,6 +567,13 @@ class Config:
         """The document/manuscript version (book.toml [book].version)."""
         return self.version
 
+    def source_versions(self) -> dict[str, str]:
+        """Per-root source versions, keyed by label."""
+        out: dict[str, str] = {}
+        for entry in self.source_roots():
+            out[entry['label']] = entry['version'] or self.source_version()
+        return out
+
     def source_version(self, root: str | None = None) -> str:
         """Version of the analyzed source tree.
 
@@ -552,10 +601,16 @@ class Config:
                 return detail
         return 'unknown'
 
-    def versions(self) -> dict[str, str]:
-        """The three versions the toolchain tracks."""
-        return {'tool': self.tool_version(), 'source': self.source_version(),
-                'doc': self.doc_version()}
+    def versions(self) -> dict:
+        """The three versions the toolchain tracks.
+
+        ``source`` is a string while one tree is digested and a label -> version map
+        once several are, which is what the callers that print it already handle.
+        """
+        roots = self.source_roots()
+        source = (self.source_version() if len(roots) == 1
+                  else self.source_versions())
+        return {'tool': self.tool_version(), 'source': source, 'doc': self.doc_version()}
 
 
 _MANIFEST_PATTERNS = {

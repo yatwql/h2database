@@ -48,7 +48,8 @@ files = ["ch1.md"]
 "ch1.md" = ["org.example"]
 ''')
     with open(os.path.join(root, 'data', 'config', 'base.json'), 'w', encoding='utf-8') as fh:
-        json.dump({'paths': {}, 'sources': {'languages': ['java'],
+        json.dump({'paths': {}, 'sources': {'src_main': 'src-tree',
+                                            'languages': ['java'],
                                             'suffixes': {'java': '.java'}}}, fh)
     with open(os.path.join(root, 'data', 'config', 'style.json'), 'w', encoding='utf-8') as fh:
         json.dump({'thresholds': {}}, fh)
@@ -187,6 +188,37 @@ class TwoBooksTest(unittest.TestCase):
             self.assertEqual(_config.Config(self.one).edition, 'main')
         finally:
             os.environ.pop('BOOK_EDITION', None)
+
+    def declare_sources(self, root: str, block: str) -> None:
+        """Replace [sources] in the fixture base.json."""
+        path = os.path.join(root, 'data', 'config', 'base.json')
+        payload = json.loads(pathlib.Path(path).read_text(encoding='utf-8'))
+        payload['sources'] = json.loads(block)
+        pathlib.Path(path).write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8')
+
+    def test_a_single_source_tree_is_labelled_main(self):
+        cfg = _config.Config(self.one)
+        self.assertEqual([root['label'] for root in cfg.source_roots()], ['main'])
+        self.assertTrue(cfg.source_tree('src_main').endswith('src-tree'))
+
+    def test_several_roots_are_listed_and_looked_up_by_label(self):
+        self.declare_sources(self.one, json.dumps({'roots': [
+            {'label': 'h2', 'path': 'a'}, {'label': 'client', 'path': 'b'}]}))
+        cfg = _config.Config(self.one)
+        self.assertEqual([root['label'] for root in cfg.source_roots()], ['h2', 'client'])
+        self.assertTrue(cfg.source_tree('src_main').endswith('a'))
+        self.assertTrue(cfg.source_tree('client').endswith('b'))
+
+    def test_a_duplicate_root_label_is_refused(self):
+        self.declare_sources(self.one, json.dumps({'roots': [
+            {'label': 'h2', 'path': 'a'}, {'label': 'h2', 'path': 'b'}]}))
+        with self.assertRaises(_config.ConfigError):
+            _config.Config(self.one).source_roots()
+
+    def test_a_root_without_a_path_is_refused(self):
+        self.declare_sources(self.one, json.dumps({'roots': [{'label': 'h2'}]}))
+        with self.assertRaises(_config.ConfigError):
+            _config.Config(self.one).source_roots()
 
     def test_the_default_book_matches_its_module_attributes(self):
         active = _config.current()
