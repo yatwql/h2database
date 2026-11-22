@@ -31,7 +31,7 @@ books/
       source-inventory.json    # 被分析源码的快照事实
       outline.json             # 章节与主题的派生大纲
     tmp/                       # 一次性脚本与临时文件（不入库）
-    snapshots/                 # 只读历史快照：别的书的稿子，仅供比对，不参与构建
+    snapshots/                 # 只读历史快照：人工挑选的对照点（可来自 zip 或 data/archive 的日期目录），入库
       <日期>-<标签>/
         manifest.json        # 来源压缩包哈希、逐文件字节/行数/哈希
         manuscript/          # 快照正文
@@ -56,7 +56,7 @@ books/
     test/                    # unittest 测试套件（单元 + 集成 + 真实书稿回归）
   logs/                      # 运行日志（按天回滚，gitignored）
   test-reports/              # 测试报告（每次一份日期目录 + latest.json，gitignored）
-  data/archive/              # 手稿与产物的日期归档（保留窗口取配置，gitignored）
+  data/archive/              # 本书手稿与产物的滚动副本（自动、保留窗口取配置、gitignored）
   dist/                      # 交付产物（生成物，gitignored）
     h2-source-code-analysis.md
     h2-source-code-analysis.html

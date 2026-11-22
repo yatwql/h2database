@@ -369,7 +369,7 @@ GROUPS = {build, verify, deliver, check, test, cover, report}
 | 新增输出格式 | 在 `render/` 写生成器 + 独立校验器 → 进 `deliver` 组，校验排在生成之后 |
 | 新增语言 | 提供 `ingest/languages/<语言>.py` 适配器与 `data/language/<语种>.json` 资源 |
 | 新建一本同类书 | `core/scaffold.py` 生成目录骨架与配置，再把内容写进 `data/manuscript/` |
-| 接收历史稿 | `manuscript/snapshot.py import` 导入只读快照，再生成其体积基线 |
+| 接收历史稿 | `manuscript/snapshot.py import` 导入只读快照（源可以是 zip，也可以是 `data/archive/` 下的日期目录，无需重新打包），再生成其体积基线 |
 
 ## 9. 失败模式与诊断
 

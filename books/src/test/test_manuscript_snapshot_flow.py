@@ -140,6 +140,25 @@ class SnapshotFlowTest(unittest.TestCase):
         with redirect_stdout(io.StringIO()):
             self.assertEqual(self.mod.verify(name), 2)
 
+    def test_a_directory_can_be_promoted_to_a_snapshot(self):
+        # an archived copy is already the right shape: promoting it must not need a zip
+        source = os.path.join(self.tmp.name, 'archive', 'book', '2026-11-22', 'manuscript')
+        os.makedirs(os.path.join(source, 'back'), exist_ok=True)
+        with open(os.path.join(source, 'ch1.md'), 'w', encoding='utf-8') as fh:
+            fh.write('# 第1章\n\n正文。\n')
+        with open(os.path.join(source, 'back', 'glossary.md'), 'w', encoding='utf-8') as fh:
+            fh.write('# 术语表\n')
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(self.mod.import_snapshot(source, 'from-archive', '2026-11-22'), 0)
+        target = os.path.join(self.snapshots, '2026-11-22-from-archive')
+        with open(os.path.join(target, 'manifest.json'), encoding='utf-8') as fh:
+            manifest = json.load(fh)
+        self.assertEqual(manifest['totals']['files'], 2)
+        self.assertIn('back/glossary.md', manifest['files'])
+        self.assertTrue(manifest['archive_sha256'])
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(self.mod.verify('2026-11-22-from-archive'), 0)
+
     def test_list_on_an_empty_root_says_so(self):
         buffer = io.StringIO()
         with redirect_stdout(buffer):

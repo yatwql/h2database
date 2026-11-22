@@ -126,6 +126,11 @@
   一致；`style.py` 不拆的理由补进 `technical.md`（13 个检测器共用一份状态）。
   核查结论：新模块（`html_shell`/`appendix`/`test_report`/`archive`）无内联仓库路径，
   配置无死键，`make.py check` 与快档全绿。
+- **快照可直接取自归档目录**：`snapshot.py import` 现在既接受 zip，也接受目录树（例如
+  `data/archive/<书>/<日期>/manuscript`）——两者职责不同但数据形态相同，把某天的归档提为
+  对照点不必先打包；目录来源的 manifest 用内容摘要代替 zip 哈希。`folder.md` 与
+  `technical.md` 同时写明两个目录的分界：`data/archive/` 是自动滚动保险（含产物、45 天、
+  gitignored），`data/snapshots/` 是人工挑选的永久对照点（入库、供体量基线引用）。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

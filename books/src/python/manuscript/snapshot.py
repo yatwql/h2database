@@ -74,15 +74,48 @@ def chapter_members(archive: zipfile.ZipFile) -> list[str]:
     for name in archive.namelist():
         if not name.endswith('.md') or name.endswith('/'):
             continue
-        base = os.path.basename(name)
-        parent = os.path.basename(os.path.dirname(name))
-        is_chapter = re.match(r'^ch\d', base) or base.startswith(('cover.', 'appendix'))
-        if is_chapter or parent in ('front', 'back'):
+        if _belongs_to_manuscript(name):
             keep.append(name)
     return sorted(keep)
 
 
+def _belongs_to_manuscript(name: str) -> bool:
+    """The same rule for a zip member and for a file inside a directory."""
+    base = os.path.basename(name)
+    parent = os.path.basename(os.path.dirname(name))
+    is_chapter = bool(re.match(r'^ch\d', base)) or base.startswith(('cover.', 'appendix'))
+    return is_chapter or parent in ('front', 'back')
+
+
+def directory_members(root: str) -> list[str]:
+    """Manuscript files inside a directory tree, as paths relative to ``root``."""
+    keep: list[str] = []
+    for base, _dirs, names in os.walk(root):
+        for name in names:
+            if not name.endswith('.md'):
+                continue
+            rel = os.path.relpath(os.path.join(base, name), root)
+            if _belongs_to_manuscript(rel.replace(os.sep, '/')):
+                keep.append(rel)
+    return sorted(keep)
+
+
+def source_digest(path: str, members: list[str]) -> str:
+    """Content digest of an imported tree, recorded in place of a zip hash."""
+    digest = hashlib.sha256()
+    for rel in members:
+        digest.update(rel.replace(os.sep, '/').encode('utf-8'))
+        digest.update(str(facts(os.path.join(path, rel))['sha256']).encode('utf-8'))
+    return digest.hexdigest()
+
+
 def import_snapshot(archive_path: str, label: str, date: str) -> int:
+    """Copy a manuscript in as a read-only snapshot.
+
+    The source is either a zip or a directory tree — an archived copy under
+    `data/archive/<book>/<date>/manuscript` is already the right shape, so
+    promoting it to a snapshot must not require zipping it again.
+    """
     if not os.path.exists(archive_path):
         print(f'error: archive not found: {archive_path}', file=sys.stderr)
         return 2
@@ -93,30 +126,49 @@ def import_snapshot(archive_path: str, label: str, date: str) -> int:
     manuscript_dir = os.path.join(target, 'manuscript')
     make_dir(manuscript_dir)
     files: dict[str, dict] = {}
-    with zipfile.ZipFile(archive_path) as archive:
-        members = chapter_members(archive)
+    if os.path.isdir(archive_path):
+        members = directory_members(archive_path)
         if not members:
             print(f'error: no manuscript members in {archive_path}', file=sys.stderr)
             return 2
         for member in members:
-            rel = os.path.basename(member)
-            parent = os.path.basename(os.path.dirname(member))
-            if parent in ('front', 'back'):
-                rel = os.path.join(parent, rel)
-            destination = os.path.join(manuscript_dir, rel)
+            destination = os.path.join(manuscript_dir, member)
             make_dir(os.path.dirname(destination))
             try:
-                with archive.open(member) as source, open(destination, 'wb') as out:
-                    shutil.copyfileobj(source, out)
-            except (OSError, zipfile.BadZipFile) as exc:
-                print(f'error: cannot extract {member}: {exc}', file=sys.stderr)
+                shutil.copyfile(os.path.join(archive_path, member), destination)
+            except OSError as exc:
+                print(f'error: cannot copy {member}: {exc}', file=sys.stderr)
                 return 2
-            files[rel.replace(os.sep, '/')] = facts(destination)
+            files[member.replace(os.sep, '/')] = facts(destination)
+        source_name = os.path.relpath(archive_path, _config.BOOK_ROOT)
+        source_hash = source_digest(archive_path, members)
+    else:
+        with zipfile.ZipFile(archive_path) as archive:
+            members = chapter_members(archive)
+            if not members:
+                print(f'error: no manuscript members in {archive_path}', file=sys.stderr)
+                return 2
+            for member in members:
+                rel = os.path.basename(member)
+                parent = os.path.basename(os.path.dirname(member))
+                if parent in ('front', 'back'):
+                    rel = os.path.join(parent, rel)
+                destination = os.path.join(manuscript_dir, rel)
+                make_dir(os.path.dirname(destination))
+                try:
+                    with archive.open(member) as source, open(destination, 'wb') as out:
+                        shutil.copyfileobj(source, out)
+                except (OSError, zipfile.BadZipFile) as exc:
+                    print(f'error: cannot extract {member}: {exc}', file=sys.stderr)
+                    return 2
+                files[rel.replace(os.sep, '/')] = facts(destination)
+        source_name = os.path.basename(archive_path)
+        source_hash = sha256_file(archive_path)
     manifest = {
         'label': label,
         'date': date,
-        'source_archive': os.path.basename(archive_path),
-        'archive_sha256': sha256_file(archive_path),
+        'source_archive': source_name,
+        'archive_sha256': source_hash,
         'files': files,
         'totals': {
             'files': len(files),
