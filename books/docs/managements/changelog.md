@@ -368,6 +368,9 @@
   TUI「书籍」屏与 `/api/books` 在书名旁显示目录名，同名书不再混淆（`/api/books` 增加
   `config` 字段）。设计里记下第 4 点取舍：每本书本就是独立书根，`dist`/`manuscript` 不再
   按书嵌套。
+- **TUI：切换书籍提到主菜单**：`6 切换书籍` 从「配置与状态」二级屏移到第一级（配置屏恢复
+  `1–6` + `0`）。多书并行时切书的频次与构建同级，藏在二级等于每次多按两下；
+  `DESIGN-TUI.md` §3.1 的菜单树与分级说明同步，用例改为断言主菜单含 `@open:books`。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

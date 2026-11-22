@@ -37,6 +37,7 @@ SCREENS: dict[str, list[tuple[str, str, str]]] = {
              ('3', 'deliver', 'PDF + EPUB（按需）'),
              ('4', OPEN_PREFIX + 'quality', '质量：门禁与测试'),
              ('5', OPEN_PREFIX + 'config', '配置：状态、配置项与 LLM'),
+             ('6', OPEN_PREFIX + BOOKS_SCREEN, '切换书籍'),
              (BACK_KEY, QUIT_ACTION, '退出')],
     'quality': [('1', 'check', '全部质量门禁'),
                 ('2', 'test', '测试套件（快档）'),
@@ -47,7 +48,6 @@ SCREENS: dict[str, list[tuple[str, str, str]]] = {
                ('4', OPEN_PREFIX + PROVIDERS_SCREEN, 'LLM provider 优先级'),
                ('5', 'doctor', '依赖与环境'),
                ('6', 'analyze-refresh', '刷新事实块（只改可重算的表，正文不动）'),
-               ('7', OPEN_PREFIX + BOOKS_SCREEN, '切换书籍'),
                (BACK_KEY, BACK_ACTION, '返回主菜单')],
 }
 

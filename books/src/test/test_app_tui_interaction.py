@@ -53,7 +53,8 @@ class TuiInteractionTest(unittest.TestCase):
     # -- two-level structure ---------------------------------------------
     def test_the_main_screen_carries_the_frequent_actions(self):
         keys = [row[0] for row in self.tui.screen_rows('main')]
-        self.assertEqual(keys, ['1', 'l', '2', '3', '4', '5', '0'])
+        self.assertEqual(keys, ['1', 'l', '2', '3', '4', '5', '6', '0'])
+        self.assertIn('@open:books', [row[1] for row in self.tui.screen_rows('main')])
 
     def test_the_main_screen_runs_actions_without_a_category(self):
         actions = [row[1] for row in self.tui.screen_rows('main')]
@@ -121,7 +122,7 @@ class TuiInteractionTest(unittest.TestCase):
 
     def test_the_config_screen_offers_the_fact_refresh(self):
         keys = [row[0] for row in self.tui.screen_rows('config')]
-        self.assertEqual(keys, ['1', '2', '3', '4', '5', '6', '7', '0'])
+        self.assertEqual(keys, ['1', '2', '3', '4', '5', '6', '0'])
         self.press('5', '6')
         self.assertEqual(self.calls, ['analyze-refresh'])
 
