@@ -57,7 +57,7 @@
 
 | 文件 | 现状与拆分方向 |
 | --- | --- |
-| `src/python/ingest/chapters.py` 750 行 | 占比 84%，按「骨架生成 / 模板填充 / 语言适配调用」三段拆（事实块标记与刷新已拆到 `ingest/factblocks.py`） |
+| `src/python/ingest/chapters.py` 755 行 | 占比 84%，按「骨架生成 / 模板填充 / 语言适配调用」三段拆（事实块标记与刷新已拆到 `ingest/factblocks.py`） |
 | `src/python/audit/style.py` 641 行 | 占比 71%，句式规则按规则族拆（单调 / 重复 / 段落），共享解析上提 |
 
 ## 已解决问题

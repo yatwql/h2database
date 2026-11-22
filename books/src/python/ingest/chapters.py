@@ -13,6 +13,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import re
@@ -329,9 +330,13 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
                       f'- `{{top}}` 依赖 {{deps}} 个 `{PKG_PREFIX}` 包，`{{dep}}` 最频繁。',
                       '- `{big}` 有 {methods} 个公开方法，是本章主干。']
     for item in deep_items:
-        L += [tpl('deep_dive_item', str(item), top=facts['top'], share=share,
-                  deps=info_dep_count(top_info), dep=dep_head,
-                  big=big['name'], methods=big.get('public_methods', 0))]
+        deep = {'top': facts['top'], 'share': share,
+                'deps': info_dep_count(top_info), 'dep': dep_head,
+                'big': big['name'], 'methods': big.get('public_methods', 0)}
+        line = str(item)
+        with contextlib.suppress(KeyError, IndexError):
+            line = line.format(**deep)   # a template naming a fact it was not given stays literal
+        L += [line]
     L += ['']
 
     hit_terms = _glossary_hits(packages)

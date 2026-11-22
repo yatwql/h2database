@@ -183,6 +183,9 @@
   `balance` 手动快照（`balance.py --baseline` 随时可重生成，且书名版本已到 6.5）。剩下的 9 份
   各有明确读者：六份经 `base.json [baselines]` 配置，两份是按日期命名的快照体积账本，一份是
   松散断言登记表。
+- **`templates.toml` 的无效查找去掉**：`chapters.py` 原来对每一条深读要点都调 `tpl('deep_dive_item', …)`，
+  而模板文件里只有 `deep_dive` 列表（`deep_dive_item` 从未定义）——等于每次都走回退分支。
+  现改为直接对条目做占位符替换，行为与产物哈希不变（`13f8976f…`）；膨胀登记同步到 755 行。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
