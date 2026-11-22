@@ -141,11 +141,35 @@ def _table(headers: list[str], rows: list[list[str]]) -> list[str]:
 
 
 def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> list[str]:
-    """Render the body sections for one chapter number."""
+    """Render the body sections for one chapter number.
+
+    The numbers every section quotes are computed once in `_chapter_context`;
+    the body is then assembled section group by section group, so each helper
+    reads the same facts the previous group printed instead of deriving them
+    again.
+    """
     pkgs_sorted = sorted(packages.items(), key=lambda kv: -kv[1]['lines'])
     total_lines = sum(p['lines'] for p in packages.values()) or 1
     cross_num, cross_name = cross
-    L: list[str] = []
+    ctx = _chapter_context(cn, packages, pkgs_sorted, total_lines)
+    ctx['cross'] = cross
+    out = _map_sections(cn, packages, ctx)
+    out += _api_sections(cn, ctx)
+    reading, cn_tradeoff = _reading_sections(cn, cross_num, cross_name, ctx)
+    out += reading
+    out += _tradeoff_sections(cn, ctx, cn_tradeoff)
+    out += _deep_dive_sections(cn, ctx, cn_tradeoff)
+    terms, cn_summary = _term_sections(cn, packages, ctx, cn_tradeoff)
+    out += terms
+    out += _summary_sections(cn, packages, ctx, cn_summary)
+    out += _aspect_sections(cn, ctx, cn_summary)
+    out += _checklist_sections(cn, packages, ctx, cn_summary)
+    return out
+
+
+def _chapter_context(cn: int, packages: dict, pkgs_sorted: list[tuple[str, dict]],
+                     total_lines: int) -> dict:
+    """The facts every section of this chapter body quotes."""
     top_pkg, top_info = pkgs_sorted[0] if pkgs_sorted else (
         '—', {'lines': 0, 'files': 0, 'key_classes': [], 'depends_on': {}})
     second_pkg, second_info = pkgs_sorted[1] if len(pkgs_sorted) > 1 else (top_pkg, top_info)
@@ -163,6 +187,19 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
     facts_intro = {'num': cn, 'pkgs': len(packages), 'lines': f'{total_lines:,}',
                    'sig': '、'.join(list(packages)[:3]) or '—',
                    'top': next(iter(packages), '—')}
+    return {'cn': cn, 'pkgs_sorted': pkgs_sorted, 'total_lines': total_lines,
+            'top_pkg': top_pkg, 'top_info': top_info,
+            'second_pkg': second_pkg, 'second_info': second_info,
+            'big': big, 'dep_head': dep_head,
+            'facts': facts, 'facts_intro': facts_intro}
+
+
+def _map_sections(cn: int, packages: dict, ctx: dict) -> list[str]:
+    """§1 module map and §2 core types: what the chapter is made of."""
+    facts = ctx['facts']
+    facts_intro = ctx['facts_intro']
+    pkgs_sorted = ctx['pkgs_sorted']
+    L: list[str] = []
     L += [f'## {cn}.1 模块版图', '',
           tpl('map_intro', '本章覆盖 {pkgs} 个包、{lines} 行实现。',
               **facts_intro), '']
@@ -189,7 +226,14 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
             [[f"`{c['name']}`", f"{c['lines']:,}", f"{c['public_methods']}",
               c['summary'] or '（无类注释，按方法名归纳）']
              for c in info['key_classes'][:int(GEN.get('max_classes_per_package', 4))]]))
+    return L
 
+
+def _api_sections(cn: int, ctx: dict) -> list[str]:
+    """§3 entries and coordinates: where to start reading, and in which file."""
+    facts = ctx['facts']
+    pkgs_sorted = ctx['pkgs_sorted']
+    L: list[str] = []
     L += [f'## {cn}.3 关键 API 与源码坐标', '']
     rows = []
     for _pkg, info in pkgs_sorted:
@@ -259,7 +303,22 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
             (f'本章主责包中 {len(coord_rows)} 个公开入口的行号，'
              '按类聚簇，可直接跳转阅读。'), '',
             *_table(['入口', '源码坐标'], coord_rows)])
+    return L
 
+
+def _reading_sections(cn: int, cross_num: str, cross_name: str,
+                      ctx: dict) -> tuple[list[str], int]:
+    """§4 reading path and §5 dependency direction; also picks the trade-off number.
+
+    The trade-off heading number depends on whether a dependency table was
+    printed, so it leaves here as the second return value.
+    """
+    facts = ctx['facts']
+    top_pkg = ctx['top_pkg']
+    big = ctx['big']
+    dep_head = ctx['dep_head']
+    pkgs_sorted = ctx['pkgs_sorted']
+    L: list[str] = []
     # A chapter can map to no package at all (an empty or front-matter-only
     # outline); the reading path then falls back to the placeholders instead of
     # indexing an empty list.
@@ -294,6 +353,18 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         cn_tradeoff = 6
     else:
         cn_tradeoff = 5
+    return L, cn_tradeoff
+
+
+def _tradeoff_sections(cn: int, ctx: dict, cn_tradeoff: int) -> list[str]:
+    """Design trade-offs and the misreading they invite."""
+    top_pkg = ctx['top_pkg']
+    top_info = ctx['top_info']
+    second_pkg = ctx['second_pkg']
+    second_info = ctx['second_info']
+    big = ctx['big']
+    dep_head = ctx['dep_head']
+    L: list[str] = []
     L += [
         f'## {cn}.{cn_tradeoff} 设计权衡', '',
         (f'`{top_pkg}` 有 {top_info["files"]} 个文件、{top_info["lines"]:,} 行。'
@@ -321,7 +392,17 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
          '扩展点分布完全不同。'),
         '',
     ]
+    return L
 
+
+def _deep_dive_sections(cn: int, ctx: dict, cn_tradeoff: int) -> list[str]:
+    """§N deep reading: the numbers a reader should carry into the chapter."""
+    facts = ctx['facts']
+    top_info = ctx['top_info']
+    big = ctx['big']
+    dep_head = ctx['dep_head']
+    total_lines = ctx['total_lines']
+    L: list[str] = []
     share = round(100 * top_info.get('lines', 0) / max(1, total_lines))
     L += [f'## {cn}.{cn_tradeoff + 2} 深读要点', '']
     deep_items = TPL.get('deep_dive')
@@ -338,7 +419,17 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
             line = line.format(**deep)   # a template naming a fact it was not given stays literal
         L += [line]
     L += ['']
+    return L
 
+
+def _term_sections(cn: int, packages: dict, ctx: dict,
+                   cn_tradeoff: int) -> tuple[list[str], int]:
+    """Terminology block; returns the number the summary heading uses.
+
+    Chapters without a term hit skip the block, which shifts every following
+    heading number by one, so the caller gets the number back.
+    """
+    L: list[str] = []
     hit_terms = _glossary_hits(packages)
     cited_terms = glossary_terms_for_chapter(cn)
     for term in cited_terms:
@@ -351,7 +442,15 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         cn_summary = cn_tradeoff + 3
     else:
         cn_summary = cn_tradeoff + 2
+    return L, cn_summary
 
+
+def _summary_sections(cn: int, packages: dict, ctx: dict, cn_summary: int) -> list[str]:
+    """Knowledge block, chapter summary and exercise block."""
+    top_pkg = ctx['top_pkg']
+    total_lines = ctx['total_lines']
+    pkgs_sorted = ctx['pkgs_sorted']
+    L: list[str] = []
     L += knowledge_block(cn, pkgs_sorted)
     summary_line = prose('summary',
                          f'- 本章覆盖 {len(packages)} 个包、{total_lines:,} 行。',
@@ -363,7 +462,19 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
 
     L += [f'## {cn}.{cn_summary + 1} 延伸思考', '']
     L += exercise_block(cn, pkgs_sorted)
+    return L
 
+
+def _aspect_sections(cn: int, ctx: dict, cn_summary: int) -> list[str]:
+    """§N the per-chapter angle, plus the dependency detail behind it."""
+    top_pkg = ctx['top_pkg']
+    top_info = ctx['top_info']
+    second_pkg = ctx['second_pkg']
+    second_info = ctx['second_info']
+    big = ctx['big']
+    dep_head = ctx['dep_head']
+    pkgs_sorted = ctx['pkgs_sorted']
+    L: list[str] = []
     aspect = ASPECTS[cn % len(ASPECTS)]
     L += [f'## {cn}.{cn_summary + 2} 本章视角：{aspect}', '',
           (f'- 以「{aspect}」看 `{top_pkg}`：{top_info.get("files", 0)} 个文件、'
@@ -383,7 +494,17 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         L += _gen('dep-detail', [
             '按 `import` 出现次数排序，数值越大耦合越深，重构窗口越窄。', '',
             *_table(['来源包', '目标包', '次数'], dep_detail)])
+    return L
 
+
+def _checklist_sections(cn: int, packages: dict, ctx: dict,
+                        cn_summary: int) -> list[str]:
+    """The reading checklist, the cross-index and the further-reading line."""
+    top_pkg = ctx['top_pkg']
+    second_pkg = ctx['second_pkg']
+    big = ctx['big']
+    cross_num, cross_name = ctx['cross']
+    L: list[str] = []
     checklist_items = int(GEN.get('checklist_items', 5))
     L += [f'## {cn}.{cn_summary + 2}.2 阅读检查清单', '',
           (f'本章给出 {checklist_items} 条自查项，逐条确认后再进入下一章。'), '',
