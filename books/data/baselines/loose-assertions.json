@@ -1,6 +1,6 @@
 {
   "updated": "2026-11-22",
-  "note": "Exit-code assertions that accept both success and failure. A case qualifies only when the code is the sole outcome check; cases that also assert what the output says are pinned already. Register here while tightening, and entries disappear from the baseline as the assertions become exact.",
+  "note": "Exit-code assertions that accept both success and failure. A case qualifies only when the code is its sole outcome check; every other case is pinned to an exact code plus an output assertion.",
   "accepted": [
     "books/src/test/test_audit_captions_baseline.py::test_json_output_has_the_expected_shape",
     "books/src/test/test_audit_captions_baseline.py::test_normal_threshold_tolerates_the_fixture",
@@ -46,14 +46,6 @@
     "books/src/test/test_gate_entrypoints.py::test_each_gate_supports_json",
     "books/src/test/test_gate_entrypoints.py::test_gates_on_an_empty_book_still_exit_cleanly",
     "books/src/test/test_ingest_analysis.py::test_balance_check_json_and_baseline",
-    "books/src/test/test_manuscript_builders.py::test_check_mode_reports_term_coverage",
-    "books/src/test/test_manuscript_builders.py::test_glossary_coverage_mode_runs",
-    "books/src/test/test_manuscript_builders.py::test_hierarchy_check_flags_a_thin_index",
-    "books/src/test/test_manuscript_builders.py::test_index_coverage_mode_runs",
-    "books/src/test/test_manuscript_builders.py::test_malformed_glossary_is_tolerated",
-    "books/src/test/test_manuscript_builders.py::test_missing_index_file_is_reported",
-    "books/src/test/test_manuscript_builders.py::test_multi_line_entry_is_parsed",
-    "books/src/test/test_manuscript_builders.py::test_validate_mode_checks_chapter_refs",
     "books/src/test/test_manuscript_glossary_modes.py::test_check_mode_on_missing_terms",
     "books/src/test/test_manuscript_glossary_modes.py::test_check_mode_with_rich_glossary",
     "books/src/test/test_manuscript_glossary_modes.py::test_coverage_mode_runs",

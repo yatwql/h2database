@@ -108,6 +108,10 @@
   `ingest/appendix.py`，表格排版上提到 `lib/_mdutil.table()` 供两处共用；`chapters.py`
   806 → **750 行**。验收用渲染结果哈希：改动前后所有章节与附录的渲染文本
   sha256 完全一致（`13f8976f…`）。
+- **松散断言收紧第一批**：`test_manuscript_builders.py` 的 8 条退出码断言钉到精确值 + 输出断言
+  （`glossary --check/--validate/--coverage`、`index --hierarchy-check/--coverage`），基线从
+  84 条降到 **76 条**；其中 `test_multi_line_entry_is_parsed` 原来跑的是**起草**模式（根本没解析
+  既有词条），改为 `--validate` 并断言 `Entries: 1`，名字与行为对齐。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

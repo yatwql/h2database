@@ -30,25 +30,27 @@ class GlossaryBuilderTest(unittest.TestCase):
     def test_check_mode_reports_term_coverage(self):
         self.glossary('# 术语表\n\n## A\n\n- **ACID**: 事务特性。\n  **章节**：第1章\n')
         code, out = _fixture.run_inproc(self.root, 'glossary.py', '--check')
-        self.assertIn(code, (0, 1), out[-400:])
-        self.assertIn('术语', out)
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('自动生成草稿', out)
 
     def test_multi_line_entry_is_parsed(self):
         self.glossary('# 术语表\n\n## A\n\n- **ACID**: 第一行。\n  第二行。\n'
                       '  **章节**：第1章\n')
-        code, out = _fixture.run_inproc(self.root, 'glossary.py', '--check')
-        self.assertIn(code, (0, 1), out[-400:])
-        self.assertNotIn('Traceback', out)
+        code, out = _fixture.run_inproc(self.root, 'glossary.py', '--validate')
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('Entries: 1', out)  # both lines belong to one entry
 
     def test_validate_mode_checks_chapter_refs(self):
         self.glossary('# 术语表\n\n## A\n\n- **ACID**: 描述。\n  **章节**：第99章\n')
         code, out = _fixture.run_inproc(self.root, 'glossary.py', '--validate')
-        self.assertIn(code, (0, 1, 2), out[-400:])
+        self.assertEqual(code, 1, out[-400:])
+        self.assertIn('INVALID', out)
 
     def test_glossary_coverage_mode_runs(self):
         self.glossary('# 术语表\n\n## A\n\n- **ACID**: 描述。\n  **章节**：第1章\n')
         code, out = _fixture.run_inproc(self.root, 'glossary.py', '--coverage')
-        self.assertIn(code, (0, 1), out[-400:])
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('术语表章节覆盖率', out)
 
     def test_default_mode_drafts_a_glossary(self):
         self.glossary('# 术语表\n\n## A\n\n- **ACID**: 描述。\n  **章节**：第1章\n')
@@ -68,8 +70,8 @@ class GlossaryBuilderTest(unittest.TestCase):
     def test_malformed_glossary_is_tolerated(self):
         self.glossary('# 术语表\n- 没有加粗的条目\n- **B**: 描述\n')
         code, out = _fixture.run_inproc(self.root, 'glossary.py', '--check')
-        self.assertIn(code, (0, 1, 2), out[-400:])
-        self.assertNotIn('Traceback', out)
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('自动生成草稿', out)
 
 class IndexBuilderTest(unittest.TestCase):
     """index.py is script-style: drive it with flags, assert the verdict."""
@@ -89,21 +91,22 @@ class IndexBuilderTest(unittest.TestCase):
     def test_hierarchy_check_flags_a_thin_index(self):
         self.index('# 索引\n\n## A\n\n- 只有一个 —— §1.1\n')
         code, out = _fixture.run_inproc(self.root, 'index.py', '--hierarchy-check')
-        self.assertIn(code, (0, 1), out[-400:])
-        self.assertNotIn('Traceback', out)
+        self.assertEqual(code, 1, out[-400:])
+        self.assertIn('Index Hierarchy Report', out)
 
     def test_index_coverage_mode_runs(self):
         self.index('# 索引\n\n## A\n\n- ACID —— §1.1\n')
         code, out = _fixture.run_inproc(self.root, 'index.py', '--coverage')
-        self.assertIn(code, (0, 1), out[-400:])
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('索引覆盖率报告', out)
 
     def test_missing_index_file_is_reported(self):
         target = os.path.join(self.root, 'data', 'manuscript', 'back', 'index.md')
         if os.path.exists(target):
             os.remove(target)
         code, out = _fixture.run_inproc(self.root, 'index.py', '--hierarchy-check')
-        self.assertIn(code, (0, 1, 2), out[-400:])
-        self.assertNotIn('Traceback', out)
+        self.assertEqual(code, 1, out[-400:])
+        self.assertIn('index not found', out)
 
 if __name__ == '__main__':
     unittest.main()
