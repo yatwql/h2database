@@ -316,6 +316,10 @@
   `BOOK_ROOT`，用例没有还原，于是之后启动子进程的慢档用例（`order_dependence`）指向已被
   删除的临时书根，报 `ConfigError: missing config`。用例改为 `addCleanup` 还原环境变量；
   全量套件（含慢档）**1249 passed / 14 skipped**。同批的两次 cancelled 是并发取消，不是失败。
+- **TUI 每次重绘先清屏**：主循环原来只是把下一帧写到上一帧下面，按一次键就多一整屏，
+  菜单被顶出可视区。新增 `clear_screen()`（`\033[H\033[2J`），仅在终端且启用颜色时发出——
+  管道与测试捕获到的仍是纯文本。契约写进 `DESIGN-TUI.md` §2 的屏幕分区说明，用例 3 条：
+  终端清屏、非终端不发转义、主循环每帧清一次。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

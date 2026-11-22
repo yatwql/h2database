@@ -247,5 +247,36 @@ class TuiInteractionTest(unittest.TestCase):
         self.assertIn('没有找到 book.toml', self.tui.switch_book(empty))
         self.assertEqual(self.tui._config.current().root, before)
 
+    def test_a_frame_is_cleared_before_it_is_drawn(self):
+        class Tty(io.StringIO):
+            def isatty(self) -> bool:
+                return True
+
+        buffer = Tty()
+        with mock.patch.object(self.tui, 'USE_COLOR', True), \
+                mock.patch.object(self.tui.sys, 'stdout', buffer):
+            self.tui.clear_screen()
+        self.assertTrue(buffer.getvalue().startswith('\033[H\033[2J'))
+
+    def test_piped_output_stays_plain_text(self):
+        buffer = io.StringIO()
+        with mock.patch.object(self.tui, 'USE_COLOR', False), \
+                mock.patch.object(self.tui.sys, 'stdout', buffer):
+            self.tui.clear_screen()
+        self.assertEqual(buffer.getvalue(), '')
+
+    def test_the_menu_loop_clears_each_frame(self):
+        class Tty(io.StringIO):
+            def isatty(self) -> bool:
+                return True
+
+        buffer = Tty()
+        with mock.patch.object(self.tui, 'USE_COLOR', True), \
+                mock.patch.object(self.tui.sys, 'stdout', buffer), \
+                mock.patch.object(self.tui.keys, 'read_key',
+                                  side_effect=KeyboardInterrupt):
+            self.tui.main([])
+        self.assertIn('\033[H\033[2J', buffer.getvalue())
+
 if __name__ == '__main__':
     unittest.main()

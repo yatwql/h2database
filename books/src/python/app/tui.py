@@ -299,6 +299,18 @@ def switch_book(root: str) -> str:
     return _c(f'已切换到 {_config.TITLE or root}', PALETTE['value_ok'])
 
 
+def clear_screen() -> None:
+    """Home the cursor and wipe the frame.
+
+    Without this every keypress appends a whole screen below the previous one and
+    the menu scrolls out of view. Only a terminal gets the escape sequence: piped
+    or captured output stays plain text, which is what the tests and the logs want.
+    """
+    if USE_COLOR and sys.stdout.isatty():
+        sys.stdout.write('\033[H\033[2J')
+        sys.stdout.flush()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -331,6 +343,7 @@ def main(argv: list[str] | None = None) -> int:
         if status:
             lines += ['', status,
                       _c(' 按任意键继续 · 0 收起结果回到菜单', PALETTE['hint'])]
+        clear_screen()
         sys.stdout.write('\n'.join(lines))
         sys.stdout.flush()
         shown_result = bool(status)   # a finished run is on screen right now
