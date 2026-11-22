@@ -32,8 +32,8 @@ NEW_BOOK_ACTION = '@new-book'
 # Letter shortcut -> the row key it stands for, per screen. Matching is
 # case-insensitive, so S and s both run "1 源码 → 手稿".
 LETTER_ALIASES: dict[str, dict[str, str]] = {
-    'main': {'a': '1', 'l': '2', 'b': '3', 'p': '4', 't': '5', 'c': '6',
-             's': '7', 'n': '8', 'q': '0'},
+    'main': {'a': '1', 'l': '2', 'b': '3', 'p': '4', 's': '5', 'n': '6',
+             't': '7', 'c': '8', 'q': '0'},
 }
 
 
@@ -59,10 +59,10 @@ SCREENS: dict[str, list[tuple[str, str, str]]] = {
              ('2', 'analyze-llm', '源码 → 手稿（LLM 润色导读/小结）'),
              ('3', 'build', '手稿 → Markdown + HTML'),
              ('4', 'deliver', 'PDF + EPUB（按需）'),
-             ('5', OPEN_PREFIX + 'quality', '质量：门禁与测试'),
-             ('6', OPEN_PREFIX + 'config', '配置：状态、配置项与 LLM'),
-             ('7', OPEN_PREFIX + BOOKS_SCREEN, '切换书籍'),
-             ('8', NEW_BOOK_ACTION, '新增书籍'),
+             ('5', OPEN_PREFIX + BOOKS_SCREEN, '切换书籍'),
+             ('6', NEW_BOOK_ACTION, '新增书籍'),
+             ('7', OPEN_PREFIX + 'quality', '质量：门禁与测试'),
+             ('8', OPEN_PREFIX + 'config', '配置：状态、配置项与 LLM'),
              (BACK_KEY, QUIT_ACTION, '退出')],
     'quality': [('1', 'check', '全部质量门禁'),
                 ('2', 'test', '测试套件（快档）'),

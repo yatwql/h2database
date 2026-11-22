@@ -56,9 +56,9 @@
 菜单只有两层，第二层以下不再往下分：
 
 ```text
-主菜单  1 analyze · 2 analyze-llm · 3 build · 4 deliver · 5 质量 · 6 配置与状态
-        7 切换书籍 · 8 新增书籍 · 0 退出
-        （数字键另有字母快捷键：1/a · 2/l · 3/b · 4/p · 5/t · 6/c · 7/s · 8/n · 0/q，
+主菜单  1 analyze · 2 analyze-llm · 3 build · 4 deliver · 5 切换书籍 · 6 新增书籍
+        7 质量 · 8 配置与状态 · 0 退出
+        （数字键另有字母快捷键：1/a · 2/l · 3/b · 4/p · 5/s · 6/n · 7/t · 8/c · 0/q，
         大小写不敏感；LLM 行同样显示字母）
 质量    1 check · 2 test · 0 返回
 配置    1 status · 2 llm-ask · 3 配置项 · 4 LLM provider 优先级 · 5 doctor · 6 刷新事实块
