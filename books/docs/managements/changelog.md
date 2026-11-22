@@ -76,6 +76,12 @@
   `latest.json`；`last` 解出最新报告的失败用例（跳过不计）并给出重跑命令。新增
   `manuscript/archive.py`：构建与交付各存一份手稿/产物到 `data/archive/<书>/<日期>/`，保留窗口取
   `base.json [archive] retention_days`（默认 45 天）。两者均 gitignore，不参与构建。
+- **覆盖率与断言强度各推一档**：新增 `test_render_verify_pdf_branches.py`（pypdf 合成 PDF 驱动
+  尺寸/旋转/字体未嵌入/大纲/目录链接/越界标注等分支），`verify_pdf.py` 14% → 75%、
+  `pdf_toc_links.py` 32% → 87%，总量 87% → **89%**，`coverage_fail_under` 抬到 **88**；
+  `make.py cover` 新增单文件覆盖率下限（`coverage_min_per_file`，默认 60），防止新模块
+  零测试混进总量；`test_redundancy.py` 新增 `LOOSE-ASSERT`：接受成功与失败两种退出码的
+  断言只登记存量（112 条进 `data/baselines/loose-assertions.json`），新增即失败。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

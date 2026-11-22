@@ -53,6 +53,10 @@ Waiting is the main cost of a session, so bound it before it happens:
 - **CI is a separate task.** Push and go back to the work at hand: the local gates
   are the verification. Do not poll `gh run` or wait for a workflow unless the user
   asks about CI specifically, and never hold a task open on a remote job.
+- **A finished change ships itself.** Unless the operator says otherwise, the last
+  steps of every change are: record it in `books/docs/managements/changelog.md`,
+  commit with a message that explains the why, and push. Do not leave reviewed work
+  sitting uncommitted for the next turn to pick up.
 
 ## Hard Rules
 

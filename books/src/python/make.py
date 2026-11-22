@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import json
 import os
 import shutil
 import signal
@@ -350,7 +351,37 @@ def coverage() -> int:
     print(report.stderr.strip())
     print(f'coverage gate: threshold {threshold}% -> '
           f'{"PASS" if report.returncode == 0 else "FAIL"}')
+    thin = thin_files(_config.THRESHOLDS.get('coverage_min_per_file', 60))
+    if thin:
+        for path, percent in thin:
+            print(f'  FAIL {path} ({percent}% < per-file floor)')
+        return 1
     return report.returncode
+
+
+def thin_files(floor: float) -> list[tuple[str, int]]:
+    """Files below the per-file floor: a new module cannot be born untested.
+
+    The whole-repo threshold can hide a 0%-covered file behind a large, well
+    covered neighbour; this floor is what catches a module added without tests.
+    """
+    try:
+        raw = subprocess.run([PY, '-m', 'coverage', 'json', '-o', '-'],
+                             cwd=os.path.dirname(BOOK_ROOT), capture_output=True,
+                             text=True, check=False)
+        payload = json.loads(raw.stdout or '{}')
+    except (OSError, ValueError):
+        return []
+    out: list[tuple[str, int]] = []
+    for path, data in (payload.get('files') or {}).items():
+        summary = data.get('summary') or {}
+        statements = int(summary.get('num_statements') or 0)
+        if statements < 5:
+            continue
+        percent = int(summary.get('percent_covered') or 0)
+        if percent < float(floor):
+            out.append((path, percent))
+    return sorted(out, key=lambda item: item[1])
 
 
 def main(argv: list[str] | None = None) -> int:

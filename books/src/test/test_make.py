@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import json
 import os
 import sys
 import tempfile
@@ -109,10 +110,36 @@ class MakeDriverTest(unittest.TestCase):
         buffer = io.StringIO()
         with mock.patch.object(self.make.importlib.util, 'find_spec', return_value=True), \
                 mock.patch.object(self.make.subprocess, 'run',
-                                  side_effect=[completed(0), completed(1)]), \
+                                  side_effect=[completed(0), completed(1),
+                                               completed(0, out='{}')]), \
                 redirect_stdout(buffer):
             self.assertEqual(self.make.coverage(), 1)
         self.assertIn('FAIL', buffer.getvalue())
+
+    def test_a_thin_file_fails_the_coverage_gate(self):
+        buffer = io.StringIO()
+        with mock.patch.object(self.make.importlib.util, 'find_spec', return_value=True), \
+                mock.patch.object(self.make.subprocess, 'run',
+                                  side_effect=[completed(0), completed(0),
+                                               completed(0, out='{}')]), \
+                mock.patch.object(self.make, 'thin_files',
+                                  return_value=[('books/src/python/x.py', 12)]), \
+                redirect_stdout(buffer):
+            self.assertEqual(self.make.coverage(), 1)
+        self.assertIn('per-file floor', buffer.getvalue())
+
+    def test_thin_files_reads_the_coverage_json(self):
+        payload = json.dumps({'files': {
+            'books/src/python/thin.py': {'summary': {'num_statements': 20,
+                                                     'percent_covered': 10.0}},
+            'books/src/python/ok.py': {'summary': {'num_statements': 20,
+                                                   'percent_covered': 95.0}},
+            'books/src/python/tiny.py': {'summary': {'num_statements': 2,
+                                                     'percent_covered': 0.0}}}})
+        with mock.patch.object(self.make.subprocess, 'run',
+                               return_value=completed(0, out=payload)):
+            self.assertEqual(self.make.thin_files(60),
+                             [('books/src/python/thin.py', 10)])
 
     def test_main_report_forwards_its_own_arguments(self):
         with mock.patch.object(self.make.subprocess, 'run', return_value=completed(0)) as run:

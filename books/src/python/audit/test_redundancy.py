@@ -144,6 +144,59 @@ def rel(path: str) -> str:
     return os.path.relpath(path, os.path.join(_config.BOOK_ROOT, '..'))
 
 
+LOOSE_RE = re.compile(r'assertIn\(\s*code\s*,\s*\(([^)]*)\)')
+LOOSE_BASELINE = os.path.join('data', 'baselines', 'loose-assertions.json')
+
+
+def _loose_baseline() -> set[str]:
+    from lib import _config as config
+    path = os.path.join(config.BOOK_ROOT, LOOSE_BASELINE)
+    if not os.path.isfile(path):
+        return set()
+    try:
+        payload = json.loads(_fsutil.read_text(path))
+    except (OSError, ValueError):
+        return set()
+    return {str(item) for item in payload.get('accepted') or []}
+
+
+def loose_assertions(root: str | None = None) -> list[dict]:
+    """Exit-code assertions that also accept failure codes.
+
+    ``assertIn(code, (0, 1))`` passes whether the step worked or not, so it tests
+    nothing about the outcome. The reviewer backlog is registered; a new one is a
+    finding, and the registered ones shrink as they are tightened.
+    """
+    accepted = _loose_baseline()
+    findings: list[dict] = []
+    for path in test_files(root):
+        try:
+            tree = ast.parse(_fsutil.read_text(path))
+        except SyntaxError:  # pragma: no cover - reported by analyse()
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            if not node.name.startswith('test_'):
+                continue
+            for line in _fsutil.read_text(path).split('\n')[node.lineno - 1:node.end_lineno]:
+                match = LOOSE_RE.search(line)
+                if not match:
+                    continue
+                codes = [part.strip() for part in match.group(1).split(',')]
+                if '0' not in codes or '1' not in codes:
+                    continue
+                key = f'{rel(path)}::{node.name}'
+                if key in accepted:
+                    continue
+                findings.append({'kind': 'LOOSE-ASSERT', 'file': rel(path),
+                                 'line': node.lineno,
+                                 'detail': f'{node.name}: assertIn(code, ({match.group(1)})) '
+                                           'accepts both success and failure'})
+                break
+    return findings
+
+
 def analyse(root: str | None = None) -> list[dict]:
     findings: list[dict] = []
     bodies: dict[str, list[Case]] = {}
@@ -169,6 +222,7 @@ def analyse(root: str | None = None) -> list[dict]:
                                  'detail': f'{case.class_name}.{case.name}'})
             signature = _signature(body)
             bodies.setdefault(signature, []).append(case)
+    findings += loose_assertions(root)
 
     for group in sorted(bodies.values(), key=len, reverse=True):
         if len(group) < 2:
