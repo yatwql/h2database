@@ -73,11 +73,16 @@ def book_choices() -> dict:
     active = _config.current().root
     books = []
     for root in _config.candidate_books(active):
+        entry = {'root': root, 'title': '', 'version': '',
+                 'config': os.path.basename(os.path.dirname(
+                     os.path.join(root, 'data', 'book')))}
         try:
             cfg = _config.Config(root)
-            books.append({'root': root, 'title': cfg.title, 'version': cfg.version})
+            entry.update({'title': cfg.title, 'version': cfg.version,
+                          'config': os.path.basename(root)})
         except _config.ConfigError:
-            books.append({'root': root, 'title': '', 'version': ''})
+            pass
+        books.append(entry)
     return {'current': active, 'books': books}
 
 

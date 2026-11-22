@@ -139,9 +139,9 @@ def screen_rows(screen: str) -> list[tuple[str, str, str]]:
         for index, root in enumerate(_config.candidate_books(), start=1):
             try:
                 cfg = _config.Config(root)
-                name = f"{cfg.title or os.path.basename(root)}  {root}"
+                name = f"{cfg.title or '（无标题）'}  [{os.path.basename(root)}]"
             except _config.ConfigError:
-                name = root
+                name = f"（配置读不出）  [{os.path.basename(root)}]"
             rows.append((str(index), menu.BOOK_ACTION_PREFIX + root,
                          ('● ' if root == active else '  ') + name))
         return rows + [(menu.BACK_KEY, menu.BACK_ACTION, '返回上一级')]

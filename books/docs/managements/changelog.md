@@ -362,6 +362,12 @@
   Web 的 `/api/books` 共用这份发现逻辑。此前多书候选实际依赖「书根同父目录」的目录布局
   约定——没有任何配置项表达这件事，换一种排布就看不出第二本书。用例 2 条：缺省值、声明后
   候选随之改变；`folder.md`、`technical.md` §3.1、多书设计的渠道章节同步。
+- **书目发现支持两种配置布局，选择界面带目录名**：`config_file_of()` 同时接受
+  `<书根>/data/book/book.toml` 与 `<书根>/book.toml`，`find_book_root()`、候选扫描与
+  `Config` 都走同一判定，因此一个书目目录里可以既有根上的一本、也有子目录里的多本；
+  TUI「书籍」屏与 `/api/books` 在书名旁显示目录名，同名书不再混淆（`/api/books` 增加
+  `config` 字段）。设计里记下第 4 点取舍：每本书本就是独立书根，`dist`/`manuscript` 不再
+  按书嵌套。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

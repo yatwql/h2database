@@ -33,7 +33,20 @@ import tomllib
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-BOOK_MARKER = os.path.join('data', 'book', 'book.toml')
+# A book is a directory that carries its configuration. Two layouts are accepted:
+# the standard one (data/book/book.toml) and a flat one (book.toml at the root), so a
+# config directory can hold several books, one per subdirectory.
+BOOK_CONFIG = 'book.toml'
+BOOK_MARKER = os.path.join('data', 'book', BOOK_CONFIG)
+
+
+def config_file_of(path: str) -> str:
+    """The book configuration inside ``path`` ('' when it is not a book)."""
+    for candidate in (os.path.join(path, BOOK_MARKER),
+                      os.path.join(path, BOOK_CONFIG)):
+        if os.path.isfile(candidate):
+            return candidate
+    return ''
 
 
 def checkout_root() -> str:
@@ -45,7 +58,7 @@ def find_book_root(start: str | None = None) -> str:
     """Nearest ancestor of ``start`` holding data/book/book.toml ('' when none)."""
     current = os.path.abspath(start or os.getcwd())
     while True:
-        if os.path.isfile(os.path.join(current, BOOK_MARKER)):
+        if config_file_of(current):
             return current
         parent = os.path.dirname(current)
         if parent == current:
@@ -125,7 +138,7 @@ def candidate_books(active: str | None = None, start: str | None = None,
 
     def offer(path: str) -> None:
         path = os.path.abspath(path)
-        if path not in roots and os.path.isfile(os.path.join(path, BOOK_MARKER)):
+        if path not in roots and config_file_of(path):
             roots.append(path)
 
     current_root = os.path.abspath(active or _IMPORT_ROOT)
@@ -133,7 +146,7 @@ def candidate_books(active: str | None = None, start: str | None = None,
     if library is None:
         try:
             library = (Config(current_root).library_dir()
-                       if os.path.isfile(os.path.join(current_root, BOOK_MARKER))
+                       if config_file_of(current_root)
                        else None)
         except ConfigError:
             library = None
