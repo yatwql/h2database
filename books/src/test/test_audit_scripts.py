@@ -61,6 +61,24 @@ AUDIT_SCRIPTS = [
     'index.py',
 ]
 
+AUDIT_EXIT_CODES = {
+    'links.py': 0,
+    'diagrams.py': 0,
+    'captions.py': 0,
+    'figures.py': 0,
+    'crossrefs.py': 0,
+    'exercises.py': 1,
+    'figure_clusters.py': 0,
+    'index_xrefs.py': 0,
+    'smart.py': 0,
+    'balance.py': 0,
+    'style.py': 0,
+    'readability.py': 0,
+    'source_refs.py': 0,
+    'glossary.py': 0,
+    'index.py': 0,
+}
+
 class ScriptTestBase(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -82,7 +100,9 @@ class TestAuditScripts(ScriptTestBase):
         for script in AUDIT_SCRIPTS:
             with self.subTest(script=script):
                 code, out = self.run_script(script)
-                self.assertIn(code, (0, 1), f'{script} crashed:\n{out}')
+                self.assertIn(script, AUDIT_EXIT_CODES, f'{script} has no recorded verdict')
+                self.assertEqual(code, AUDIT_EXIT_CODES[script], f'{script} crashed:\n{out}')
+                self.assertRegex(out, r'[\s\S]')
                 self.assertNotIn('Traceback', out, f'{script} raised:\n{out}')
 
     def test_link_audit_detects_break(self):

@@ -54,6 +54,38 @@ MODES = [
     ('links.py', ('--json',)),
 ]
 
+REAL_EXIT_CODES = {
+    'links.py': 0,
+    'diagrams.py': 0,
+    'captions.py': 1,
+    'figures.py': 0,
+    'crossrefs.py': 0,
+    'exercises.py': 0,
+    'figure_clusters.py': 0,
+    'index_xrefs.py': 0,
+    'smart.py': 0,
+    'balance.py': 0,
+    'readability.py': 0,
+    'source_refs.py': 0,
+    'glossary.py': 0,
+    'index.py': 0,
+    'style.py': 0,
+    'structure.py': 0,
+}
+
+REAL_MODE_CODES = {
+    ('captions.py', ('--json',)): 1,
+    ('exercises.py', ('--json',)): 0,
+    ('figure_clusters.py', ('--json',)): 0,
+    ('glossary.py', ('--coverage',)): 0,
+    ('glossary.py', ('--validate',)): 0,
+    ('index.py', ('--hierarchy-check',)): 0,
+    ('balance.py', ('--json',)): 0,
+    ('source_refs.py', ('--suggest',)): 0,
+    ('diagrams.py', ('--json',)): 0,
+    ('links.py', ('--json',)): 0,
+}
+
 @unittest.skipUnless(os.path.isdir(os.path.join(BOOK_ROOT, 'manuscript')),
                      'real manuscript not available')
 class TestRealBook(unittest.TestCase):
@@ -61,14 +93,18 @@ class TestRealBook(unittest.TestCase):
         for script in AUDITS:
             with self.subTest(script=script):
                 code, out = _fixture.run_inproc(BOOK_ROOT, script)
-                self.assertIn(code, (0, 1), f'{script} -> {code}\n{out[-800:]}')
+                self.assertIn(script, REAL_EXIT_CODES, 'every audit needs a recorded verdict')
+                self.assertEqual(code, REAL_EXIT_CODES[script],
+                                 f'{script} -> {code}\n{out[-800:]}')
                 self.assertNotIn('Traceback', out, f'{script}:\n{out[-800:]}')
 
     def test_alternate_modes_on_real_book(self):
         for script, args in MODES:
             with self.subTest(script=script, args=args):
                 code, out = _fixture.run_inproc(BOOK_ROOT, script, *args)
-                self.assertIn(code, (0, 1), f'{script} {args} -> {code}\n{out[-800:]}')
+                self.assertIn((script, args), REAL_MODE_CODES, 'every mode needs a recorded verdict')
+                self.assertEqual(code, REAL_MODE_CODES[(script, args)],
+                                 f'{script} {args} -> {code}\n{out[-800:]}')
                 self.assertNotIn('Traceback', out, f'{script} {args}:\n{out[-800:]}')
 
 if __name__ == '__main__':
