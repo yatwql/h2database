@@ -37,6 +37,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lib import _config, _fsutil
 
 STAMP_FMT = '%Y%m%d-%H%M%S'
+SLOW_CASE_S = 1.0   # a fast-tier case above this is a budget warning
 DEFAULT_KEEP_DAYS = 30
 PY = sys.executable
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -189,6 +190,11 @@ def _write_reports(target: str, summary: dict, cases: list[dict]) -> None:
     lines += ['', f"完整输出见 `{os.path.relpath(summary['log'], _config.BOOK_ROOT)}`"]
     _write(os.path.join(target, 'report.md'), '\n'.join(lines) + '\n')
     _write(os.path.join(target, 'report.html'), _html_report(summary, cases))
+    slow = [case for case in cases if case['seconds'] >= SLOW_CASE_S and case['outcome'] == 'pass']
+    if slow:
+        print(f'  [warn] {len(slow)} 条快档用例超过 {SLOW_CASE_S}s：'
+              f'{", ".join(c["id"] for c in slow[:3])}')
+
 
 
 def run(marker: str = 'tier_fast', timeout: int = 1800, tests: str | None = None) -> dict:
@@ -222,6 +228,36 @@ def run(marker: str = 'tier_fast', timeout: int = 1800, tests: str | None = None
     _write(latest_pointer(), json.dumps({'dir': stamp}, ensure_ascii=False) + '\n')
     prune()
     return summary
+
+
+def coverage_snapshot(timeout: int = 1800) -> dict:
+    """Per-file coverage of the fast tier, stored beside the run's report.
+
+    The gate knows the current number; only a stored series shows a file sliding
+    down while the total stays green.
+    """
+    stamp = datetime.datetime.now().strftime(STAMP_FMT)
+    target = os.path.join(reports_root(), f'coverage-{stamp}.json')
+    source_rel = os.path.relpath(TOOLS_DIR, os.path.dirname(_config.BOOK_ROOT))
+    command = [PY, '-m', 'coverage', 'run', '--branch',
+               f'--source={source_rel}', '-m', 'pytest', '-q',
+               '-m', 'tier_fast', TESTS_DIR]
+    try:
+        subprocess.run(command, cwd=os.path.dirname(_config.BOOK_ROOT), text=True,
+                       capture_output=True, timeout=timeout, check=False)
+        raw = subprocess.run([PY, '-m', 'coverage', 'json', '-o', '-'],
+                             cwd=os.path.dirname(_config.BOOK_ROOT), text=True,
+                             capture_output=True, check=False)
+        payload = json.loads(raw.stdout or '{}')
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        return {'stamp': stamp, 'files': {}, 'path': ''}
+    files = {os.path.relpath(path, source_rel) if path.startswith(source_rel) else path:
+             round(info['summary']['percent_covered'], 1)
+             for path, info in (payload.get('files') or {}).items()
+             if info['summary']['num_statements'] >= 5}
+    _write(target, json.dumps({'stamp': stamp, 'files': files},
+                              ensure_ascii=False, indent=2) + '\n')
+    return {'stamp': stamp, 'files': files, 'path': target}
 
 
 def collect() -> dict:
@@ -404,6 +440,8 @@ def main(argv: list[str] | None = None) -> int:
                             help='pytest marker expression (empty string = everything)')
     run_parser.add_argument('--timeout', type=int, default=1800)
     run_parser.add_argument('--tests', help='test path override')
+    run_parser.add_argument('--coverage', action='store_true',
+                            help='also store a per-file coverage snapshot')
 
     last_parser = sub.add_parser('last', help='failures of the newest report')
     last_parser.add_argument('--json', action='store_true')
@@ -424,6 +462,10 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == 'run':
         summary = run(args.marker, args.timeout, args.tests)
+        if args.coverage:
+            snapshot = coverage_snapshot(args.timeout)
+            if snapshot['path']:
+                print(f"coverage -> {os.path.relpath(snapshot['path'], _config.BOOK_ROOT)}")
         totals = summary['totals']
         print(f"report -> {os.path.relpath(summary['dir'], _config.BOOK_ROOT)}"
               f"  ({totals.get('tests', 0)} cases, {totals.get('failures', 0)} failed,"

@@ -159,6 +159,9 @@
   `structure` 为 1、`links`/`captions` 为 0；零字节章节与 CRLF 让 `merge` 仍产出文档（0）；
   BOM 章节跑到汇总行（1）；超长行 `readability` 为 0 且报 `READABILITY`；缺状态文件 `chapters` 为 1。
   松散断言基线 71 → **65** 条。
+- **报告器加了两个观测点**：`test_report.py run --coverage` 会在报告目录旁再存一份 **per-file 覆盖率快照**
+  （分支口径），单文件下滑而总量仍绿时看得出来；快档用例耗时 ≥ 1s 会被标成预算提示，
+  提醒它该优化或改标 `tier:slow`。覆盖率命令的源码路径改为从配置推导，不再写死 `books/`。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

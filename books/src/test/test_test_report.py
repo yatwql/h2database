@@ -269,6 +269,35 @@ class ReportToolTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn('回退', out)
 
+    def test_a_coverage_snapshot_records_every_file(self):
+        payload = json.dumps({'files': {
+            'books/src/python/thin.py': {'summary': {'num_statements': 20,
+                                                     'percent_covered': 61.5}},
+            'books/src/python/tiny.py': {'summary': {'num_statements': 2,
+                                                     'percent_covered': 0.0}}}})
+
+        def fake_run(command, **_kwargs):
+            return subprocess.CompletedProcess(command, 0, payload, '')
+
+        with mock.patch.object(self.tool.subprocess, 'run', side_effect=fake_run):
+            snapshot = self.tool.coverage_snapshot(timeout=5)
+        values = {key: value for key, value in snapshot['files'].items()
+                  if key.endswith('thin.py')}
+        self.assertEqual(list(values.values()), [61.5])   # the small file is filtered out
+        self.assertTrue(os.path.isfile(snapshot['path']))
+
+    def test_a_slow_fast_case_is_flagged(self):
+        target = os.path.join(self.root, 'slow')
+        summary = {'stamp': 'stamp', 'marker': 'tier_fast', 'code': 0, 'seconds': 1.0,
+                   'totals': {'tests': 1, 'failures': 0, 'errors': 0, 'skipped': 0},
+                   'machine': 'm', 'log': 'x'}
+        cases = [{'id': 'src.test.test_x.X::slow', 'outcome': 'pass',
+                  'seconds': 2.5, 'message': ''}]
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            self.tool._write_reports(target, summary, cases)
+        self.assertIn('超过', buffer.getvalue())
+
     def test_cli_run_forwards_and_reports_the_exit_code(self):
         summary = {'code': 1, 'dir': os.path.join(self.root, 'r'), 'totals': {},
                    'seconds': 1.0}
