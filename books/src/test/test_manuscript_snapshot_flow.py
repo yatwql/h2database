@@ -104,5 +104,51 @@ class SnapshotFlowTest(unittest.TestCase):
         self.assertEqual(code, 0)
 
 
+    # -- error branches ---------------------------------------------------
+    def test_a_missing_archive_is_refused(self):
+        err = io.StringIO()
+        with redirect_stdout(err):
+            code = self.mod.import_snapshot(os.path.join(self.tmp.name, 'no.zip'),
+                                            'june', '2026-06-11')
+        self.assertEqual(code, 2)
+
+    def test_an_existing_snapshot_is_not_overwritten(self):
+        source = self.archive({'manuscript/ch1.md': '# 第1章\n'})
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(self.mod.import_snapshot(source, 'june', '2026-06-11'), 0)
+            self.assertEqual(self.mod.import_snapshot(source, 'june', '2026-06-11'), 2)
+
+    def test_an_archive_without_manuscript_members_is_refused(self):
+        source = self.archive({'readme.txt': 'x'})
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(self.mod.import_snapshot(source, 'june', '2026-06-11'), 2)
+
+    def test_resolve_reports_an_ambiguous_label(self):
+        for name in ('2026-06-11-a-june', '2026-06-12-b-june'):
+            os.makedirs(os.path.join(self.snapshots, name))
+        self.assertIsNone(self.mod.resolve('june'))
+        self.assertEqual(self.mod.require('june')[1], 2)
+
+    def test_resolve_accepts_the_exact_directory_name(self):
+        name = '2026-06-11-june'
+        os.makedirs(os.path.join(self.snapshots, name))
+        self.assertEqual(self.mod.resolve(name), os.path.join(self.snapshots, name))
+
+    def test_verify_reports_a_missing_manifest(self):
+        name = '2026-06-11-empty'
+        os.makedirs(os.path.join(self.snapshots, name, 'manuscript'))
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(self.mod.verify(name), 2)
+
+    def test_list_on_an_empty_root_says_so(self):
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            self.assertEqual(self.mod.list_snapshots(), 0)
+        self.assertIn('no snapshots', buffer.getvalue())
+
+    def test_an_unreadable_file_hashes_to_empty(self):
+        self.assertEqual(self.mod.sha256_file(os.path.join(self.tmp.name, 'nope')), '')
+
+
 if __name__ == '__main__':
     unittest.main()

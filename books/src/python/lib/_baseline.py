@@ -11,6 +11,7 @@ Keys are whatever identifies a finding locally (`file:figure-id`,
 """
 from __future__ import annotations
 
+import json
 import os
 
 from . import _config, _fsutil
@@ -37,16 +38,16 @@ def load(name: str) -> set[str]:
     if not os.path.exists(path):
         return set()
     try:
-        payload = _fsutil.load_json(path)
-    except Exception:  # noqa: BLE001 - a broken baseline must not crash a gate
-        return set()
+        payload = json.loads(_fsutil.read_text(path))
+    except (OSError, ValueError):
+        return set()  # a broken baseline must not crash the gate it protects
     keys = payload.get('accepted', []) if isinstance(payload, dict) else []
     return {str(key) for key in keys}
 
 
 def save(name: str, keys: set[str], note: str = '') -> str:
     path = path_for(name)
-    _fsutil.ensure_dir(BASELINE_DIR)
+    _fsutil.ensure_dir(path)
     _fsutil.dump_json(path, {
         'note': note or 'Reviewed backlog: these findings are accepted, new ones fail.',
         'accepted': sorted(keys),

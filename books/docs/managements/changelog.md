@@ -91,6 +91,15 @@
 - **`CLAUDE.md` 只留“这一层才有的判断”**：删掉与 `books/README.md` / `testplan.md` §1 重复的命令块，
   改为“去哪读”索引；保留两块独有内容——工作节奏（先量后跑、单重活、看报告调试、CI 独立、
   改完就发）与编辑边界（配置/手稿/产物/证据目录/追踪编号）。这样文档改版时不必回来同步。
+- **覆盖率 88% → 90%，棘轮抬到 89**：新增 `test_gate_error_branches.py`（体积门的下落/产物下限/
+  快照账本/脏工作区拒绝记账、设置项的未知键与栏杆校验、版本门的封面与书名冲突）与
+  `test_lib_baseline.py`，并补了快照流程的错误分支；`content_volume` 66%→84%、
+  `version_consistency` 79%→87%、`settings` 78%→91%、`snapshot` 68%→75%。单文件下限从
+  60% 抬到 **70%**。
+- **修两处真缺陷（测试写出来才暴露）**：`lib/_baseline.py` 的 `load()` 遇到损坏的基线文件会以
+  `SystemExit` 打死门禁（`except Exception` 抓不到），现改为直接 `json.loads` 并捕获
+  `OSError/ValueError`；`save()` 把**目录**传给 `ensure_dir()`（它要的是文件路径），
+  `data/baselines` 不存在时写入直接失败。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

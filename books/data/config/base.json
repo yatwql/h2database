@@ -32,7 +32,7 @@
     "style_rules": "data/baselines/style-rules-baseline.json"
   },
   "toolchain": {
-    "coverage_fail_under": 88,
+    "coverage_fail_under": 89,
     "pdf_max_mb": 12,
     "epub_max_mb": 10,
     "ascii_max_cols": 100,
@@ -45,7 +45,7 @@
     "content_profile": "baseline",
     "step_timeout_s": 900,
     "test_timeout_s": 300,
-    "coverage_min_per_file": 60
+    "coverage_min_per_file": 70
   },
   "logging": {
     "level": "INFO",
