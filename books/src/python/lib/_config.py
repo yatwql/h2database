@@ -426,6 +426,14 @@ class Config:
         """Chapter file -> H1 chapter numbers it owns (unique across files)."""
         return {k: list(v) for k, v in self.chapters_spec().get('numbering', {}).items()}
 
+    def chapter_numbering_for(self, edition: str | None) -> dict[str, list[int]]:
+        """Numbering table for one edition; ``None`` means the book's own table."""
+        base = dict(self.cfg.get('chapters') or {})
+        if edition:
+            override = (self.edition_tables.get(edition) or {}).get('chapters') or {}
+            base = {**base, **override}
+        return {k: list(v) for k, v in (base.get('numbering') or {}).items()}
+
     def chapter_coverage(self) -> dict[str, list[int]]:
         """Chapter file -> book chapters it covers (may repeat across files)."""
         return {k: list(v) for k, v in self.chapters_spec().get('coverage', {}).items()}

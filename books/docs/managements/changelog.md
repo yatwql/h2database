@@ -298,6 +298,11 @@
   逐键覆盖书级表）；`index_xrefs.py` 的子条目章号不再硬编码 1-12，改按本书声明的覆盖章号集
   判定；数据归档目录与快照账本记录版本（`<slug>-<edition>`、`manifest.edition`），两份手稿
   归档不再互相覆盖。单版本时三处行为与目录形态不变。
+- **版本章号重编号与引用改写**（plan-11 步骤三收尾）：新增 `manuscript/renumber.py`——按书级与
+  版本的 `[chapters.numbering]` 差异算出 `原章号 → 新章号`，写进 `state/<edition>/renumber.json`，
+  并据它改写 `详见第X章《…》`、裸 `第X章` 引用（术语与索引里的章号同一条规则）；`--write`
+  只落映射、`--apply` 才改正文、`--dry-run` 只报数量；未选版本时直接拒绝。构建清单加入
+  `edition` 与 `language` 两个字段，两份手稿的合并稿可自证来源。用例 8 条覆盖映射与改写。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

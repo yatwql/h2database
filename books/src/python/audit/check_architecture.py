@@ -69,6 +69,7 @@ STANDALONE_ENTRY = frozenset({
     'manuscript/terms.py',        # annotates chapter lead-ins on demand
     'manuscript/case_studies.py',  # builds the appendix A outline on demand
     'manuscript/snapshot.py',     # imports and verifies read-only snapshots
+    'manuscript/renumber.py',     # per-edition chapter renumbering on demand
 })
 WIRED_LAYERS = ('render', 'audit', 'ingest', 'manuscript')
 # Commands that dispatch to a dedicated function in make.py instead of walking a
