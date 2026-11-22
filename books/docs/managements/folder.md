@@ -12,7 +12,7 @@
 books/
   data/                      # 输入数据：配置 + 手稿 + 机器维护的状态
     book/                    # 本书专属：换一本书就整份替换
-      book.toml              # 文档·结构：身份、路径、章节顺序、标题与编号、包映射
+      book.toml              # 文档·结构：身份、路径、章节顺序、标题与编号、包映射（也可直接放在书根）
       case-studies.toml      # 文档·案例：案例流水线（scenario -> steps），按书可选
     config/                  # 工具链策略：换一本书也照用
       base.json              # 配置·基础：源码树、语言与后缀、包前缀、基线路径、预算、日志
@@ -101,6 +101,9 @@ books/docs/managements/
 
 - **文档与配置分离**：判定规则/阈值在 `style.json`，叙述模板在 `templates.toml`，
   名称与提示语在 `language/`，书籍身份与展示文案在 `book.toml`。
+- **书身份文件两种布局都认**：`<书根>/data/book/book.toml`（标准）或 `<书根>/book.toml`
+  （扁平）。判定「这里是一本书」只看能否读到 `book.toml`，与它放在哪一层无关；两种布局下
+  `[paths]` 都相对**书根**解析，产物与手稿仍在各自书根下，不按书再分层。
 - **配置分四层**：内容组织 `data/book/book.toml`、基础设施 `data/config/base.json`、
   写作规则 `data/config/style.json`、语言资源 `data/language/zh.json`。合并规则只在
   `technical.md` §3.1 定义；脚本统一通过 `_config` 读取，禁止硬编码。

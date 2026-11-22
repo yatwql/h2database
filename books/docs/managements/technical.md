@@ -129,7 +129,7 @@ books/
 
 | 文件 | 管什么 | 谁读 |
 | --- | --- | --- |
-| `data/book/book.toml` | 这本书的身份：标题、版本、路径、章节清单、包归属、必备段落 | `lib/_config.py` 直接解析 |
+| `data/book/book.toml`（或书根的 `book.toml`，扁平布局） | 这本书的身份：标题、版本、路径、章节清单、包归属、必备段落 | `lib/_config.py` 直接解析 |
 | `data/config/base.json` | 基础设施与**分析口径**：源码语言与后缀、包前缀、路径映射、基线路径、工具链预算、日志 | 合并进 `POLICY`；`[sources]` 与书级的同名键合并，书级优先 |
 | `data/config/style.json` | 写作与形态规则：阈值、词表、图注规则、篇幅预算、语言骨架 | 合并进 `POLICY` |
 | `data/language/zh.json` | 语言资源：章节骨架名、练习提示语、术语行 | `_config.language()` |
