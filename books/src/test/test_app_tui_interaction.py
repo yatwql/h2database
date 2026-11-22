@@ -53,7 +53,7 @@ class TuiInteractionTest(unittest.TestCase):
     # -- two-level structure ---------------------------------------------
     def test_the_main_screen_carries_the_frequent_actions(self):
         keys = [row[0] for row in self.tui.screen_rows('main')]
-        self.assertEqual(keys, ['1', 'l', '2', '3', '4', '5', '6', '0'])
+        self.assertEqual(keys, ['1', 'l', '2', '3', '4', '5', '6', 'n', '0'])
         self.assertIn('@open:books', [row[1] for row in self.tui.screen_rows('main')])
 
     def test_the_main_screen_runs_actions_without_a_category(self):
@@ -278,6 +278,29 @@ class TuiInteractionTest(unittest.TestCase):
                                   side_effect=KeyboardInterrupt):
             self.tui.main([])
         self.assertIn('\033[H\033[2J', buffer.getvalue())
+
+    def test_the_new_book_key_asks_for_a_name_and_a_source(self):
+        answers = iter(['测试新书', ''])
+        created = []
+        target = os.path.join(self.tmp.name, 'created-book')
+        with mock.patch('core.scaffold.create_book',
+                        lambda name, source: (created.append((name, source))
+                                              or (target, ['book.toml']))):
+            message = self.tui.new_book(reader=lambda prompt='': next(answers))
+        self.assertEqual(created, [('测试新书', '')])
+        self.assertIn('已新建', message)
+
+    def test_a_repository_source_is_cloned_into_the_new_book(self):
+        answers = iter(['repo-book', 'https://github.com/a/b.git'])
+        target = _fixture.build_book(os.path.join(self.tmp.name, 'repo-book'))
+        cloned = []
+        with mock.patch('core.scaffold.create_book',
+                        lambda name, source: (target, ['book.toml'])), \
+                mock.patch('core.fetch_source.main',
+                           lambda argv: cloned.append(argv) or 0):
+            message = self.tui.new_book(reader=lambda prompt='': next(answers))
+        self.assertTrue(cloned)
+        self.assertIn('克隆', message)
 
 if __name__ == '__main__':
     unittest.main()

@@ -280,6 +280,8 @@ def handle(action: str, label: str, screen: str) -> tuple[bool, str, str]:
         return False, screen, edit_setting(action[len('@set:'):])
     if action.startswith('@move:'):
         return False, screen, edit_provider(action[len('@move:'):])
+    if action == menu.NEW_BOOK_ACTION:
+        return False, screen, new_book()
     if action.startswith(menu.BOOK_ACTION_PREFIX):
         return False, screen, switch_book(action[len(menu.BOOK_ACTION_PREFIX):])
     if action == 'analyze-llm':
@@ -289,6 +291,25 @@ def handle(action: str, label: str, screen: str) -> tuple[bool, str, str]:
                         '（回答 n 则只刷新事实块，正文不动）')
         return False, screen, run_entry(action, label, force=force)
     return False, screen, run_entry(action, label)
+
+
+def new_book(reader=input) -> str:
+    """Create a book from the menu: a name, then a directory or a git URL."""
+    name = reader('书名：').strip()
+    if not name:
+        return _c('已取消：书名不能为空', PALETTE['warn'])
+    source = reader('源码目录或 git 地址（可留空）：').strip()
+    from core import fetch_source, scaffold  # local: the menu is not the common path
+    try:
+        target, created = scaffold.create_book(name, source)
+    except OSError as exc:
+        return _c(f'新建失败：{exc}', PALETTE['warn'])
+    message = f'已新建 {target}（{len(created)} 个文件）'
+    if scaffold.is_repository(source):
+        clone = _config.Config(target).clone_target(source)
+        code = fetch_source.main(['--repo', source, '--dir', clone])
+        message += '；源码已克隆' if code == 0 else '；源码克隆失败，见上方输出'
+    return _c(message, PALETTE['value_ok'])
 
 
 def switch_book(root: str) -> str:

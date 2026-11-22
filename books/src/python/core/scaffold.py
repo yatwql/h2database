@@ -223,6 +223,53 @@ def scaffold(target: str, title: str, lang: str, copy_manuscript: bool) -> list[
     return created
 
 
+def is_repository(source: str) -> bool:
+    """Whether the source is a git URL rather than a directory."""
+    text = source.strip()
+    return '://' in text or text.startswith('git@')
+
+
+def set_source(book_root: str, source: str) -> str:
+    """Record what the new book analyses: a repository, or a directory.
+
+    A repository is cloned into ``srcref`` later (``fetch_source.py``); a directory is
+    referenced where it lives. Either way the value belongs in the book's own
+    ``[sources]`` table, which is the file that makes this directory a book.
+    """
+    source = source.strip()
+    if not source:
+        return ''
+    key = 'repo' if is_repository(source) else 'src_main'
+    value = source if is_repository(source) else os.path.abspath(
+        os.path.join(_config.current().root, source)) if not os.path.isabs(source) else source
+    path = os.path.join(book_root, BOOK_REL, 'book.toml')
+    text = _fsutil.read_text(path)
+    line = f'{key} = {json.dumps(value)}'
+    if '[sources]' in text:
+        text = text.replace('[sources]', f'[sources]\n{line}', 1)
+    else:
+        text = text.rstrip('\n') + f'\n\n[sources]\n{line}\n'
+    _fsutil.write_text(path, text)
+    return f'{key} = {value}'
+
+
+def create_book(name: str, source: str = '', base_dir: str = '') -> tuple[str, list[str]]:
+    """Create a book under ``<base>/<slug>``; returns (root, created files).
+
+    The default base is the active book's ``data/book`` directory, so books created
+    from the TUI sit together and the picker finds them at once.
+    """
+    slug = ''.join(ch if ch.isalnum() or ch in '-_' else '-' for ch in name.strip().lower())
+    slug = slug.strip('-') or 'book'
+    base = base_dir or os.path.join(_config.current().book_dir(), '')
+    target = os.path.abspath(os.path.join(base, slug))
+    created = scaffold(target, name.strip() or slug, 'zh', copy_manuscript=False)
+    recorded = set_source(target, source)
+    if recorded:
+        created.append(recorded)
+    return target, created
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)

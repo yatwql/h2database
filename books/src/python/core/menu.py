@@ -27,6 +27,7 @@ SETTINGS_SCREEN = 'settings'
 PROVIDERS_SCREEN = 'providers'
 BOOKS_SCREEN = 'books'
 BOOK_ACTION_PREFIX = '@book:'
+NEW_BOOK_ACTION = '@new-book'
 
 # screen -> [(key, action, label)]; `@open:<screen>` and `@back` are navigation
 SCREENS: dict[str, list[tuple[str, str, str]]] = {
@@ -37,6 +38,7 @@ SCREENS: dict[str, list[tuple[str, str, str]]] = {
              ('4', OPEN_PREFIX + 'quality', '质量：门禁与测试'),
              ('5', OPEN_PREFIX + 'config', '配置：状态、配置项与 LLM'),
              ('6', OPEN_PREFIX + BOOKS_SCREEN, '切换书籍'),
+             ('n', NEW_BOOK_ACTION, '新增书籍'),
              (BACK_KEY, QUIT_ACTION, '退出')],
     'quality': [('1', 'check', '全部质量门禁'),
                 ('2', 'test', '测试套件（快档）'),

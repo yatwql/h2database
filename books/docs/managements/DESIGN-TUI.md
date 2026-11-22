@@ -56,7 +56,7 @@
 
 ```text
 主菜单  1 analyze · l analyze-llm · 2 build · 3 deliver      ← 高频动作直接在第一级
-        4 质量 · 5 配置与状态 · 6 切换书籍 · 0 退出
+        4 质量 · 5 配置与状态 · 6 切换书籍 · n 新增书籍 · 0 退出
 质量    1 check · 2 test · 0 返回
 配置    1 status · 2 llm-ask · 3 配置项 · 4 LLM provider 优先级 · 5 doctor · 6 刷新事实块
         · 0 返回
@@ -69,6 +69,9 @@
 内容流水线（analyze / build / deliver）属于前者；质量与配置属于后者，一次进入后
 可以连按几项再返回。
 
+「新增书籍」也在第一级：按 `n` 依序问「书名」「源码目录或 git 地址」，随后调用
+`core/scaffold.py` 在**当前书的 `data/book/` 下**建 `books/data/book/<书名>/`，源码是 URL 时
+再克隆到 `books/data/srcref/<owner>__<name>/`；任一步失败都只报原因，不留下半本书。
 「切换书籍」在第一级：多书并行时它和「构建」同一频次，藏进配置里等于每次多按两下。
 「书籍」屏只在多本书可发现时才有意义：候选来自 `_config.candidate_books()`（当前书、
 同目录兄弟书、从工作目录向上找到的书），切换立即生效并把结论写进状态行；只有一本时

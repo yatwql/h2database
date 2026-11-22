@@ -432,6 +432,11 @@
   `_config` 增加 `srcref_dir()/source_repo()/source_ref()/clone_target()`，`source_tree()` 在
   声明了仓库但尚未克隆时直接报错并指路。目录内容不入库（只保留 README），`how-to-config`、
   `folder.md` 同步；用例 8 条（命令构造、目标推导、不覆盖、dry-run、未克隆即报错）。
+- **TUI 新增书籍（`n`）**：主菜单增加「新增书籍」，依次询问书名与源码（目录或 git 地址）。
+  `core/scaffold.py` 新增 `create_book()`/`set_source()`/`is_repository()`：新书建在**当前书的
+  `data/book/<书名>/`** 下（选书屏立刻能看到），目录源记 `src_main`、仓库源记 `repo` 并调用
+  `fetch_source` 克隆到 `books/data/srcref/`。失败只报原因、不留半本书；建完不自动切换。
+  菜单与屏幕树（`DESIGN-TUI.md`）、用户手册同步，用例 2 条。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
