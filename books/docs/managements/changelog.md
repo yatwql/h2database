@@ -342,6 +342,11 @@
   包。安装后实测 `bookwright status --book <书>` 失败：`lib/_log.py`、`check_runner.py`、
   `make.py` 在**导入期**读配置，`--book` 尚未解析，书根退化成 `/`。因此暂不提供控制台命令，
   先把这三处改为调用时读取——与先前在 `_baseline`/`_llm` 修的是同一类缺陷。
+- **安装形态的导入期读配置逐处拆除**（plan-11 步骤四）：`make.py`、`check_runner.py` 的
+  `BOOK_ROOT`/`REPO_ROOT` 常量改为 `book_root()`/`repo_root()` 逐次解析；`core/actions.py`
+  的 `REPO_ROOT` 同为函数；`lib/_log.py` 在书尚未解析时只输出到控制台，选定书后再挂文件
+  处理器。实测安装后导入仍差最后一处：`core/settings.py` 的 `SPEC` 表在导入期拼路径，
+  需改成惰性构建；控制台命令待那一处改完再打开。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

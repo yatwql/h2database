@@ -25,7 +25,12 @@ DEFAULT_FORMAT = '%(asctime)s %(levelname)-7s %(name)-18s %(message)s'
 
 
 def _settings() -> dict:
-    policy = _config.BASE_POLICY.get('logging') or {}
+    try:
+        policy = _config.BASE_POLICY.get('logging') or {}
+    except _config.ConfigError:
+        # no book resolved yet: an installed toolchain is imported before --book is
+        # parsed, and logging must not be the thing that aborts the run
+        policy = {}
     return {
         'level': (os.environ.get('BOOK_LOG_LEVEL') or policy.get('level') or 'INFO').upper(),
         'dir': policy.get('dir') or 'logs',
@@ -36,7 +41,10 @@ def _settings() -> dict:
 def log_dir() -> str:
     """Absolute path of the log directory (created on demand)."""
     settings = _settings()
-    path = os.path.join(_config.BOOK_ROOT, settings['dir'])
+    try:
+        path = os.path.join(_config.current().root, settings['dir'])
+    except _config.ConfigError:
+        return ''  # console only until a book is selected
     try:
         os.makedirs(path, exist_ok=True)
     except OSError as exc:
@@ -64,16 +72,18 @@ def setup(level: str | None = None) -> logging.Logger:
     root.setLevel(numeric)
     root.propagate = False
 
-    logfile = os.path.join(log_dir(), f'{_config.app_name()}.log')
-    try:
-        file_handler = logging.handlers.TimedRotatingFileHandler(
-            logfile, when='midnight', backupCount=settings['retention_days'],
-            encoding='utf-8')
-    except OSError as exc:
-        sys.stderr.write(f'warning: file logging disabled ({logfile}: {exc})\n')
-    else:
-        file_handler.setFormatter(logging.Formatter(DEFAULT_FORMAT))
-        root.addHandler(file_handler)
+    folder = log_dir()
+    logfile = os.path.join(folder, f'{_config.app_name()}.log') if folder else ''
+    if logfile:
+        try:
+            file_handler = logging.handlers.TimedRotatingFileHandler(
+                logfile, when='midnight', backupCount=settings['retention_days'],
+                encoding='utf-8')
+        except OSError as exc:
+            sys.stderr.write(f'warning: file logging disabled ({logfile}: {exc})\n')
+        else:
+            file_handler.setFormatter(logging.Formatter(DEFAULT_FORMAT))
+            root.addHandler(file_handler)
 
     console = logging.StreamHandler(stream=sys.stderr)
     console.setFormatter(logging.Formatter('%(levelname)s %(name)s: %(message)s'))

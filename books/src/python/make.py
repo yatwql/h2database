@@ -33,7 +33,15 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib import _config, _log
 
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
-BOOK_ROOT = _config.BOOK_ROOT
+
+
+def book_root() -> str:
+    """The active book's root, resolved when asked.
+
+    Not a module constant: an installed toolchain has no checkout to derive a book
+    from, and --book is parsed after import.
+    """
+    return _config.current().root
 PY = sys.executable
 LOG = _log.get_logger('make')
 
@@ -41,7 +49,7 @@ LOG = _log.get_logger('make')
 def venv_python() -> str | None:
     """Path to the project interpreter (books/.venv), None when absent."""
     for rel in (('.venv', 'bin', 'python'), ('.venv', 'Scripts', 'python.exe')):
-        candidate = os.path.normpath(os.path.join(BOOK_ROOT, *rel))
+        candidate = os.path.normpath(os.path.join(book_root(), *rel))
         if os.path.exists(candidate):
             return candidate
     return None
@@ -84,7 +92,7 @@ def enforce_venv(expected: str | None = None, executable: str | None = None) -> 
 def pinned_versions() -> dict[str, str]:
     """name -> version from requirements.txt (the dependency single source)."""
     pins: dict[str, str] = {}
-    path = os.path.join(BOOK_ROOT, 'requirements.txt')
+    path = os.path.join(book_root(), 'requirements.txt')
     try:
         with open(path, encoding='utf-8') as handle:
             lines = handle.read().splitlines()
@@ -144,7 +152,7 @@ def _step_process(cmd: list[str], limit: float) -> subprocess.CompletedProcess:
     nobody can see. Killing the group takes the grandchildren with it.
     """
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                            text=True, cwd=BOOK_ROOT, start_new_session=True)
+                            text=True, cwd=book_root(), start_new_session=True)
     try:
         stdout, stderr = proc.communicate(timeout=limit)
     except subprocess.TimeoutExpired:
@@ -316,7 +324,7 @@ def report(extra: list[str] | None = None) -> int:
     """Six-dimension release scorecard (book quality, code, docs, interaction)."""
     extra = extra or []
     proc = subprocess.run([PY, os.path.join(TOOLS_DIR, 'audit', 'scorecard.py'), *extra],
-                          cwd=os.path.dirname(BOOK_ROOT), check=False)
+                          cwd=os.path.dirname(book_root()), check=False)
     return proc.returncode
 
 
@@ -338,7 +346,7 @@ def coverage() -> int:
             # --branch: a line can run while its false path never does; the
             # ratchet is only meaningful when both are counted.
             [PY, '-m', 'coverage', 'run', '--branch', '--source=books/src/python', *inner],
-            cwd=os.path.dirname(BOOK_ROOT), capture_output=True, text=True,
+            cwd=os.path.dirname(book_root()), capture_output=True, text=True,
             check=False, timeout=1800)
     except subprocess.TimeoutExpired:
         print('coverage run timed out after 1800s')
@@ -350,7 +358,7 @@ def coverage() -> int:
     report = subprocess.run(
         [PY, '-m', 'coverage', 'report', '--skip-covered',
          f'--fail-under={threshold}'],
-        cwd=os.path.dirname(BOOK_ROOT), capture_output=True, text=True, check=False)
+        cwd=os.path.dirname(book_root()), capture_output=True, text=True, check=False)
     print(report.stdout)
     print(report.stderr.strip())
     print(f'coverage gate: threshold {threshold}% -> '
@@ -371,7 +379,7 @@ def thin_files(floor: float) -> list[tuple[str, int]]:
     """
     try:
         raw = subprocess.run([PY, '-m', 'coverage', 'json', '-o', '-'],
-                             cwd=os.path.dirname(BOOK_ROOT), capture_output=True,
+                             cwd=os.path.dirname(book_root()), capture_output=True,
                              text=True, check=False)
         payload = json.loads(raw.stdout or '{}')
     except (OSError, ValueError):

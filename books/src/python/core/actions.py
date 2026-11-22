@@ -19,7 +19,15 @@ import sys
 from lib import _config, _llm, _log
 
 PY_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-REPO_ROOT = os.path.normpath(os.path.join(_config.BOOK_ROOT, '..'))
+
+
+def repo_root() -> str:
+    """Parent of the active book — the directory child scripts run in.
+
+    A function, not a constant: an installed toolchain has no checkout, and the
+    book is only known once the entry point has parsed --book.
+    """
+    return os.path.dirname(_config.current().root)
 MAKE = os.path.join(PY_ROOT, 'make.py')
 LOG = _log.get_logger('app')
 
@@ -62,14 +70,14 @@ def child_env() -> dict[str, str]:
 
 def _run(script: str, *args: str) -> tuple[int, str]:
     proc = subprocess.run([sys.executable, os.path.join(PY_ROOT, script), *args],
-                          capture_output=True, text=True, cwd=REPO_ROOT, check=False,
+                          capture_output=True, text=True, cwd=repo_root(), check=False,
                           env=child_env())
     return proc.returncode, (proc.stdout or '') + (proc.stderr or '')
 
 
 def _make(*args: str) -> tuple[int, str]:
     proc = subprocess.run([sys.executable, MAKE, *args], capture_output=True, text=True,
-                          cwd=REPO_ROOT, check=False, env=child_env())
+                          cwd=repo_root(), check=False, env=child_env())
     return proc.returncode, (proc.stdout or '') + (proc.stderr or '')
 
 

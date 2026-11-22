@@ -38,10 +38,20 @@ from lib import _config, _fsutil, _log
 
 PY = sys.executable
 PY_ROOT = os.path.dirname(os.path.abspath(__file__))
-BOOK_ROOT = _config.BOOK_ROOT
-REPO_ROOT = os.path.dirname(BOOK_ROOT)
-SRC_REL = os.path.relpath(PY_ROOT, REPO_ROOT).replace(os.sep, '/')
-TEST_REL = os.path.relpath(os.path.join(BOOK_ROOT, 'src', 'test'), REPO_ROOT).replace(os.sep, '/')
+
+
+def book_root() -> str:
+    """Active book root, resolved per call (see make.book_root)."""
+    return _config.current().root
+
+
+def repo_root() -> str:
+    return os.path.dirname(book_root())
+def src_rel() -> str:
+    return os.path.relpath(PY_ROOT, repo_root()).replace(os.sep, '/')
+def test_rel() -> str:
+    return os.path.relpath(os.path.join(book_root(), 'src', 'test'),
+                           repo_root()).replace(os.sep, '/')
 LOG = _log.get_logger('check')
 
 # Fast tier: the structural gates that never depend on prose or artifacts.
@@ -83,18 +93,18 @@ MODE_DOMAINS = {
 def domain_rows() -> tuple[tuple[str, str], ...]:
     """(path fragment, domain) for the change classifier, config derived."""
     def rel(path: str) -> str:
-        return os.path.relpath(path, REPO_ROOT).replace(os.sep, '/') + '/'
+        return os.path.relpath(path, repo_root()).replace(os.sep, '/') + '/'
 
     return (
-        (rel(os.path.join(BOOK_ROOT, 'src', 'test')), 'tests'),
-        (rel(os.path.join(BOOK_ROOT, 'src', 'python')), 'code'),
-        (rel(os.path.join(BOOK_ROOT, 'docs')), 'docs'),
+        (rel(os.path.join(book_root(), 'src', 'test')), 'tests'),
+        (rel(os.path.join(book_root(), 'src', 'python')), 'code'),
+        (rel(os.path.join(book_root(), 'docs')), 'docs'),
         (rel(_config.MANUSCRIPT_DIR), 'docs'),
         (rel(_config.CONFIG_DIR), 'docs'),
-        (rel(os.path.join(_config.BOOK_ROOT, 'data')), 'docs'),
-        (rel(os.path.join(_config.BOOK_ROOT, 'data', 'baselines')), 'docs'),
-        (rel(os.path.join(REPO_ROOT, '.github')), 'infra'),
-        (rel(os.path.join(BOOK_ROOT, 'scripts')), 'infra'),
+        (rel(os.path.join(book_root(), 'data')), 'docs'),
+        (rel(os.path.join(book_root(), 'data', 'baselines')), 'docs'),
+        (rel(os.path.join(repo_root(), '.github')), 'infra'),
+        (rel(os.path.join(book_root(), 'scripts')), 'infra'),
     )
 
 
@@ -114,15 +124,15 @@ def scoped_changes(domains: tuple[str, ...] | None = None) -> list[str]:
 
 def gates_for_table() -> tuple[tuple[str, str], ...]:
     def rel(path: str) -> str:
-        return os.path.relpath(path, REPO_ROOT).replace(os.sep, '/') + '/'
+        return os.path.relpath(path, repo_root()).replace(os.sep, '/') + '/'
 
     return (
         (rel(_config.MANUSCRIPT_DIR),
          'structure,captions,content_volume,audit_exercises,content_depth,style_rules'),
         (rel(_config.CONFIG_DIR), 'style_schema,style_rules,content_volume'),
-        (rel(os.path.join(_config.BOOK_ROOT, 'data')), 'structure,versions'),
-        (rel(os.path.join(_config.BOOK_ROOT, 'docs')), 'doc_drift,doc_archive,plan_coverage,traces,audit_links'),
-        (rel(os.path.join(_config.BOOK_ROOT, 'data', 'baselines')), 'content_volume'),
+        (rel(os.path.join(book_root(), 'data')), 'structure,versions'),
+        (rel(os.path.join(book_root(), 'docs')), 'doc_drift,doc_archive,plan_coverage,traces,audit_links'),
+        (rel(os.path.join(book_root(), 'data', 'baselines')), 'content_volume'),
     )
 
 # Marker expression per tier, the same idea as investor-review's runner modes:
@@ -141,7 +151,7 @@ def machine_info() -> dict:
         'platform': platform.platform(),
         'cpus': os.cpu_count(),
         'locale': os.environ.get('LC_ALL') or os.environ.get('LANG') or '',
-        'book_root': BOOK_ROOT,
+        'book_root': book_root(),
     }
 
 
@@ -160,7 +170,7 @@ def select_steps(steps: tuple[str, ...], only: str = '', skip: str = '') -> tupl
 def tests_command(marker: str = '') -> list[str]:
     """Pytest command for a marker expression; unittest when pytest is absent."""
     if importlib.util.find_spec('pytest') is not None:
-        command = [PY, '-m', 'pytest', TEST_REL, '-q']
+        command = [PY, '-m', 'pytest', test_rel(), '-q']
         if marker:
             command += ['-m', marker]
         return command
@@ -171,10 +181,10 @@ def changed_files() -> list[str]:
     """Paths touched in the working tree, staged or not (repo-relative)."""
     try:
         diff = subprocess.run(['git', 'diff', '--name-only', 'HEAD'],
-                              cwd=REPO_ROOT, capture_output=True, text=True, check=False)
+                              cwd=repo_root(), capture_output=True, text=True, check=False)
         untracked = subprocess.run(
             ['git', 'ls-files', '--others', '--exclude-standard'],
-            cwd=REPO_ROOT, capture_output=True, text=True, check=False)
+            cwd=repo_root(), capture_output=True, text=True, check=False)
     except OSError:
         return []
     paths = set()
@@ -203,7 +213,7 @@ def tests_for_change(changed: list[str]) -> list[str]:
     Modules that spawn the runner itself are excluded: they re-run whole tiers as
     subprocesses, which turns a scoped run into a full one. p0/p1 still run them.
     """
-    test_dir = os.path.join(BOOK_ROOT, 'src', 'test')
+    test_dir = os.path.join(book_root(), 'src', 'test')
     try:
         available = {name[:-3] for name in os.listdir(test_dir)
                      if name.startswith('test_') and name.endswith('.py')}
@@ -237,11 +247,11 @@ def _command(step: str, marker: str = '',
         # a different version with different rules (same reason the toolchain runs
         # on .venv only).
         if importlib.util.find_spec('ruff') is not None:
-            return [PY, '-m', 'ruff', 'check', SRC_REL, TEST_REL]
+            return [PY, '-m', 'ruff', 'check', src_rel(), test_rel()]
         if shutil.which('ruff'):
-            return ['ruff', 'check', SRC_REL, TEST_REL]
+            return ['ruff', 'check', src_rel(), test_rel()]
         if shutil.which('uvx'):
-            return ['uvx', 'ruff', 'check', SRC_REL, TEST_REL]
+            return ['uvx', 'ruff', 'check', src_rel(), test_rel()]
         return None
     if step == 'lint-changed':
         files = [path for path in scoped_changes(domains) if path.endswith('.py')]
@@ -259,11 +269,11 @@ def _command(step: str, marker: str = '',
         modules = tests_for_change(scoped_changes(domains))
         if not modules:
             return None
-        test_rel = os.path.relpath(os.path.join(BOOK_ROOT, 'src', 'test'), REPO_ROOT)
+        tests_dir = os.path.relpath(os.path.join(book_root(), 'src', 'test'), repo_root())
         # Same tier filter as p0: a scoped run must stay in the fast tier,
         # otherwise it can pull in the slow suites that spawned this selection.
         return [PY, '-m', 'pytest', '-q', '-m', 'tier_fast',
-                *(os.path.join(test_rel, f'{name}.py') for name in modules)]
+                *(os.path.join(tests_dir, f'{name}.py') for name in modules)]
     if step == 'fast-gates':
         return [PY, os.path.join(PY_ROOT, 'make.py'), 'check', '--only', FAST_GATES]
     if step == 'gates':
@@ -299,7 +309,7 @@ def run_step(step: str, log_path: str, timeout: float = 1800.0,
     if step == 'slow':
         env['BOOK_SLOW'] = '1'
     try:
-        proc = subprocess.run(command, cwd=REPO_ROOT, capture_output=True, text=True,
+        proc = subprocess.run(command, cwd=repo_root(), capture_output=True, text=True,
                               encoding='utf-8', errors='replace', env=env,
                               timeout=timeout, check=False)
     except subprocess.TimeoutExpired:
@@ -335,7 +345,7 @@ def _record_perf(summary: dict) -> None:
 
 
 def report_paths(mode: str, stamp: str) -> tuple[str, str]:
-    directory = os.path.join(BOOK_ROOT, 'logs')
+    directory = os.path.join(book_root(), 'logs')
     _fsutil.ensure_dir(directory)
     base = os.path.join(directory, f'check-{mode}-{stamp}')
     return base + '.log', base + '.json'
@@ -390,7 +400,7 @@ def run(mode: str, *, archive: bool = True, as_json: bool = False,
         payload = json.dumps(summary, ensure_ascii=False, indent=2) + '\n'
         _record_perf(summary)
         _fsutil.write_text(json_path, payload)
-        _fsutil.write_text(os.path.join(BOOK_ROOT, 'logs', 'check-latest.json'), payload)
+        _fsutil.write_text(os.path.join(book_root(), 'logs', 'check-latest.json'), payload)
     LOG.info('check %s -> %s (%.2fs, %d steps)',
              key, 'pass' if not failed else 'fail', elapsed, len(results))
     if as_json:
@@ -399,7 +409,7 @@ def run(mode: str, *, archive: bool = True, as_json: bool = False,
         verdict = '✅ pass' if not failed else f"❌ fail at {failed[0]['step']}"
         print(f'{verdict}  ({elapsed}s)', end='')
         if archive:
-            print(f'  → {os.path.relpath(json_path, REPO_ROOT)}')
+            print(f'  → {os.path.relpath(json_path, repo_root())}')
         else:
             print()
     return summary

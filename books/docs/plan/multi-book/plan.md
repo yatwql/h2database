@@ -136,11 +136,14 @@
 **状态**：包骨架已落地（`books/pyproject.toml`：七个顶层包 + 空依赖，可离线
 `pip install --target`），尚未提供控制台命令。
 
-**为什么还没有命令**：安装后实测 `bookwright status --book <书>` 会失败——`lib/_log.py`、
-`check_runner.py`、`make.py` 在**导入期**读配置，此时 `--book` 还没解析，工具位置推导出的
-书根是 `/`，于是报 `missing config: /data/book/book.toml`。必须先让这三处改为调用时读取
-（库层面同样的缺陷此前已在 `_baseline`/`_llm` 修过），再把
-`[project.scripts] bookwright = "app.cli:main"` 打开。
+**为什么还没有命令**：安装后导入即失败——若干模块在**导入期**读配置，那时 `--book` 还没
+解析，书根按安装位置推导成 `/`，报 `missing config: /data/book/book.toml`。
+
+已改为调用时读取：`make.book_root()`、`check_runner.book_root()/repo_root()`、
+`core/actions.repo_root()`，以及 `_log`（无书时只输出到控制台，选定书后才写文件）。
+**仍余一处**：`core/settings.py` 的 `SPEC` 表在导入期用 `_config.CONFIG_PATH` 拼路径，
+要改成惰性构建（`spec()`）才能让安装形态导入通过。改完再打开
+`[project.scripts] bookwright = "app.cli:main"`。
 
 **余下动作**：
 
