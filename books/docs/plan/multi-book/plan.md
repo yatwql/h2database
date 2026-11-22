@@ -20,11 +20,15 @@
 1. `app/cli.py` 增加全局参数 `--book <目录>`；未给时从当前工作目录向上查找
    `data/book/book.toml`，找到即以其所在书根为准。
 2. 优先级固定为：`--book` > 环境变量 `BOOK_ROOT` > 向上查找 > 工具链所在 checkout。
-   四者都落空时的报错必须点明「没找到 book.toml，试过哪些位置」。
+   四者都落空时的报错必须点明「没找到 book.toml，试过哪些位置」。向上查找走到文件系统根
+   为止，路径比较用 `realpath`，在大小写不敏感的文件系统上按不敏感比较。
 3. 选定后整次运行在一个 `with _config.use(cfg):` 里；`app/web.py` 启动时选定一本书并在
    进程内固定（见 `design.md` §6）。
 4. 缺 `data/book/book.toml` 的书根：退出码 2，报出路径与期望文件名，不打印堆栈
-   （退出码沿用 `core/actions.py` 的既有约定：未知动作与配置异常都退 2）。
+   （退出码沿用 `core/actions.py` 的既有约定：未知动作与配置异常都退 2）。`book.toml`
+   只认 `data/book/`，不自动回退到旧位置。
+5. 书根校验：`book.toml [paths]` 的每一项都必须落在书根内（拒绝绝对路径与 `..`），
+   否则产物可能写到书根之外，两本书就会在同一处撞车。
 
 **验收**：
 
@@ -46,12 +50,14 @@
 **动作**：
 
 1. `book.toml [editions]`：键为版本标识，值为显示名；**未声明即单版本**，目录形态不变。
+   章节清单仍归书级（`[chapters]`），版本默认继承，需要时用 `[editions.<id>.chapters]`
+   覆盖；图号与章号不因版本重排。
 2. 声明后，各版本手稿放 `data/manuscript/<edition>/`（`[paths].manuscript` 仍指向
    `data/manuscript`，版本目录在它下面），`--edition` 选择；缺省版本写在
    `book.toml` 的顶层键 `default_edition`（**不放在 `[editions]` 表里**，否则与名为
    `default` 的版本冲突），未声明时取第一个键。
-3. 派生状态与体量基线按版本分键：`state/<edition>/`、`baselines/<edition>.json`；
-   未声明 `[editions]` 时仍写 `state/`、`baselines/`（当前的位置）。
+3. 派生状态与体量基线按版本分键：`state/<edition>/`、`baselines/<edition>/`（目录内的
+   键与今天相同）；未声明 `[editions]` 时仍写 `state/`、`baselines/`（当前的位置）。
 4. `content_volume.py` 的体量比对只与同版本基线比；跨版本比对必须显式给
    `--baseline <文件>`，不允许隐式回退。
 
@@ -65,7 +71,8 @@
 **风险**：`data/manuscript/` 下出现子目录后，`front_matter()`/`back_matter()` 的 glob
 会跨版本匹配。实现时必须把 glob 根限定到所选版本目录。这条是步骤三的主要陷阱。
 
-**回滚**：删掉 `[editions]` 表即回到单版本形态；子目录保留不影响单版本运行。
+**回滚**：删掉 `[editions]` 表即回到单版本形态；`state/<edition>/`、`baselines/<edition>/`
+会作为残留目录留着，不影响单版本运行，确认无用后手工删除。
 
 ## 步骤四（条件成熟时）：工具链独立成包
 
@@ -85,6 +92,13 @@
   任何门禁依赖）。
 
 **回滚**：包化前后书目录形态不变，回退到仓内工具链即可。
+
+## 四步之外：本仓自举与 CI
+
+- **自举**：B 形态一启用，仓库自己也要变成「各书目录 + 并列的 shared 目录」。这需要一次
+  `git mv` 与 `_default_root()` 兜底值调整，单独提交，验收是「门禁全绿、产物逐字不变」。
+- **CI**：现有 `book.yml` 按单书跑；多书形态下按书各跑一次即可，不做跨书汇总。CI 的改造
+  不在本计划内，但 B 形态不得让单书 job 变慢或变复杂。
 
 ## 顺序理由
 

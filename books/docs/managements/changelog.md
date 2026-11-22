@@ -216,6 +216,12 @@
   `shared/base.json`、`data/snapshots/` 归书且不引入跨书快照、`use()` 是进程级状态
   而 Web 用多线程服务（一进程一书的边界写进设计）。能力同时登记为需求 IR-10，判据载体
   在 `testplan.md` §2.4；四步的验收改成可机检，并各自给出回滚方式。
+- **多书设计二轮复核**：补上被漏掉的语义并去掉越界表述——章节清单归书、版本可用
+  `[editions.<id>.chapters]` 覆盖且不重排图号章号；版本基线改成与原状态同形的
+  `baselines/<edition>/`；合并规则只指向 `technical.md` §3.1，不在设计里重述；新增
+  「非功能需求怎么适用」（体积预算按书、可移植覆盖向上查找、不做跨书汇总）；写明
+  `[paths]` 不得越出书根的校验、旧布局不猜位置、自举与 CI 的边界、删 `[editions]` 后的
+  残留处理；与 `quality-model.md` §4「只比一份」对齐为「每版本只比自己那份」。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
