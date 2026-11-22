@@ -426,6 +426,12 @@
   `> 版本：` 头随之更新。`version_consistency.py` 的两处版本解析（文档头、封面）原先只认
   `[\d.]+`，`v0.1-dev` 会被截成 `0.1` 而判红——现在接受可选 `-dev` 后缀，判据不变。
   发布时按 `CLAUDE.md` 的流程：`dev` → `master`、去 `-dev`、打标签、`docs_archive.py` 迁台账。
+- **源码仓库可克隆到 `data/srcref/`**：`[sources].repo`（可选 `ref`）声明 GitHub 等项目后，
+  新增的 `core/fetch_source.py` 把仓库浅克隆到 `books/data/srcref/<owner>__<name>/` 再展开分析；
+  已存在的目录不加 `--update` 不覆盖，`--dry-run` 只打印 git 命令，失败保留现场并给出原因。
+  `_config` 增加 `srcref_dir()/source_repo()/source_ref()/clone_target()`，`source_tree()` 在
+  声明了仓库但尚未克隆时直接报错并指路。目录内容不入库（只保留 README），`how-to-config`、
+  `folder.md` 同步；用例 8 条（命令构造、目标推导、不覆盖、dry-run、未克隆即报错）。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

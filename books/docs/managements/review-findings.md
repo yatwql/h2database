@@ -59,7 +59,7 @@
 | --- | --- |
 | `src/python/ingest/chapters.py` 755 行 | 占比 84%，按「骨架生成 / 模板填充 / 语言适配调用」三段拆（事实块标记与刷新已拆到 `ingest/factblocks.py`） |
 | `src/python/audit/style.py` 642 行 | 占比 71%，句式规则按规则族拆（单调 / 重复 / 段落），共享解析上提 |
-| `src/python/lib/_config.py` 852 行 | 占比 95%，按「书目发现 / 配置加载」「路径与策略」「手稿结构与版本」三段拆。拆分时的三处内部依赖：`_IMPORT_ROOT` 由发现逻辑算出、`ConfigError` 被两侧共用、`candidate_books()` 反过来用 `Config`——先把前两者下沉到新模块、`candidate_books` 留在门面，才能避开循环导入（试过整体抽取，14 个用例导入失败） |
+| `src/python/lib/_config.py` 881 行 | 占比 95%，按「书目发现 / 配置加载」「路径与策略」「手稿结构与版本」三段拆。拆分时的三处内部依赖：`_IMPORT_ROOT` 由发现逻辑算出、`ConfigError` 被两侧共用、`candidate_books()` 反过来用 `Config`——先把前两者下沉到新模块、`candidate_books` 留在门面，才能避开循环导入（试过整体抽取，14 个用例导入失败） |
 | 待办：`core/settings.py::_reload()` | 每次改配置都重导入 `lib._config` 并手工重绑活动书——`_config` 已改为逐次解析后，只有 `Config` 构造时缓存的 `policy`/`sections` 还需要刷新；下一步是给 `Config` 一个 `refresh()`，用重读代替重导入 |
 | 待办：`core/settings.py` 的 JSON 读写 | `_read_json`/`_write_json` 与 `lib/_fsutil` 的`load_json`/`dump_json` 是同一件事的两份实现，合并到 `_fsutil` |
 

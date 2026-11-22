@@ -594,12 +594,41 @@ class Config:
         return [{'label': 'main', 'path': str(rel),
                  'language': '', 'version': str(self.sources.get('version') or '')}]
 
+    def srcref_dir(self) -> str:
+        """Where cloned repositories live (``[paths].srcref``, default data/srcref)."""
+        return self._rel('srcref', os.path.join('data', 'srcref'))
+
+    def source_repo(self) -> str:
+        """The git URL this book reads from, when it reads one."""
+        return str(self.sources.get('repo') or '')
+
+    def source_ref(self) -> str:
+        """Branch, tag or commit to check out (default: the clone's HEAD)."""
+        return str(self.sources.get('ref') or '')
+
+    def clone_target(self, repo: str | None = None) -> str:
+        """Directory a repository is cloned into: ``<srcref>/<owner>__<name>``."""
+        url = (repo if repo is not None else self.source_repo()).strip()
+        if not url:
+            return ''
+        slug = url.rstrip('/').removesuffix('.git')
+        parts = [part for part in slug.replace(':', '/').split('/') if part]
+        name = '__'.join(parts[-2:]) if len(parts) >= 2 else parts[-1]
+        return os.path.join(self.srcref_dir(), name)
+
     def source_tree(self, key: str) -> str:
         """Absolute path of a configured source location.
 
         ``src_main`` means the first root, so every caller written for a single tree
         keeps working; any other key is a root label.
         """
+        if self.source_repo() and key in ('src_main', 'main'):
+            target = self.clone_target()
+            if not os.path.isdir(target):
+                raise ConfigError(
+                    f'[sources].repo 已声明但还没有克隆：{target}；'
+                    '先运行 python books/src/python/core/fetch_source.py')
+            return os.path.normpath(target)
         if key in ('src_main', 'main'):
             root = self.source_roots()[0]
             return os.path.normpath(os.path.join(self.root, root['path']))

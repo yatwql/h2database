@@ -22,6 +22,7 @@ books/
       llm_pricing.json       # 配置·LLM：各模型单价（未列出的模型费用记为未定价）
     tmpl/
       templates.toml         # 文档·表述：四段引言与深读要点模板（占位符不可改）
+    srcref/                    # 克隆的源码仓库（fetch_source.py 写入；内容不入库）
     language/
       zh.json                # 文档·名词：章节骨架名、练习提示语、术语行
     baselines/                 # 机器维护的已知问题账本（非人写文档）

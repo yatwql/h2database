@@ -62,7 +62,13 @@ src_main = "../h2/src/main"        # 单根；路径相对书根，可以指向�
 pom_root = "../h2/pom.xml"         # 可选：清单文件位置
 version = "2.5.259-SNAPSHOT"       # 可选：逐一解析不到时用
 # roots = [{ label = "h2", path = "../h2/src/main" }]   # 多根时用这个，label 必填且唯一
+repo = "https://github.com/owner/project"   # 可选：源码在 git 仓库里时，克隆到 data/srcref/
+ref = "main"                               # 可选：分支/标签/提交
 ```
+
+`repo` 声明后，`core/fetch_source.py` 把仓库克隆到 `books/data/srcref/<owner>__<name>/`
+（目录不入库），分析读那份副本；还未克隆时 `source_tree()` 直接报错并给出要执行的命令。
+`--update` 会 fetch + checkout 到 `ref`，已存在的目录不会被覆盖。
 
 分析口径（`languages`、`suffixes`、`package_prefix`）仍在 `data/config/base.json [sources]`，
 书级同名键覆盖它。

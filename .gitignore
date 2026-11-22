@@ -50,3 +50,6 @@ books/data/tmp/
 books/build/
 books/*.egg-info/
 books/src/python/*.egg-info/
+# cloned sources (fetch_source.py); only the README is tracked
+books/data/srcref/*
+!books/data/srcref/README.md
