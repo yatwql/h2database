@@ -3,7 +3,7 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/)。
 
 > 软件：bookwright — 源码分析成书工具 v0.1
-> 版本：v0.1
+> 版本：v0.1-dev
 > 定位：**版本变更记录，只留当前开发段**——写“变了什么”；问题编号与修复细节见
 > `review-findings.md`，设计理由见 `technical.md`。已发布版本由 git 标签保留。
 
@@ -422,6 +422,10 @@
 - **分支模型**：设立 `dev` 为开发分支（日常提交在此，版本号带 `-dev`），`master` 只接收发布
   合并——发布时 `dev` → `master`、去掉 `-dev`、打标签，台账与已完成的迭代设计由
   `core/docs_archive.py` 迁出。版本唯一来源仍是 `lib/_version.py`。
+- **版本号进入开发形态**：`lib/_version.py` 的 `TOOL_VERSION` 改为 `0.1-dev`，14 份管理文档的
+  `> 版本：` 头随之更新。`version_consistency.py` 的两处版本解析（文档头、封面）原先只认
+  `[\d.]+`，`v0.1-dev` 会被截成 `0.1` 而判红——现在接受可选 `-dev` 后缀，判据不变。
+  发布时按 `CLAUDE.md` 的流程：`dev` → `master`、去 `-dev`、打标签、`docs_archive.py` 迁台账。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

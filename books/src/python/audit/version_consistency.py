@@ -38,7 +38,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from lib import _config, _fsutil
 
-DOC_HEAD_RE = re.compile(r'^\s*>?\s*版本\s*[:：]\s*v?([\d.]+)', re.MULTILINE)
+DOC_HEAD_RE = re.compile(r'^\s*>?\s*版本\s*[:：]\s*v?([\d.]+(?:-dev)?)', re.MULTILINE)
 MANIFEST_RE = re.compile(r'<!-- versions: tool=(\S+) source=(\S+) doc=(\S+) -->')
 
 
@@ -126,7 +126,7 @@ def title_problems() -> list[str]:
     return problems
 
 
-COVER_VERSION_RE = re.compile(r'版本\s+v([\d.]+)')
+COVER_VERSION_RE = re.compile(r'版本\s+v([\d.]+(?:-dev)?)')
 
 
 def cover_problems() -> list[str]:
