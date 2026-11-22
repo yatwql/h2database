@@ -52,14 +52,16 @@ class HeaderGlanceTest(SettingsCase):
         self.assertEqual(summary['volume_margin'], '—')
 
     def test_the_margin_names_lines_and_both_counts(self):
-        room = {'lines': 40097, 'baseline': 36893, 'floor': 35048, 'margin_pct': 14.4}
+        room = {'lines': 40097, 'baseline': 36893, 'floor': 35048,
+                'above': 5049, 'margin_pct': 14.4}
         settings = self.settings()
         with mock.patch.object(settings._volume, 'headroom', lambda: room):
             text = settings.volume_summary()
         self.assertIn('行', text)
         self.assertIn('下限', text)
         self.assertIn('40,097', text)
-        self.assertIn('+14%', text)
+        self.assertIn('尚余 5,049 行', text)
+        self.assertNotIn('%', text)   # a percentage here reads as growth
 
     def test_the_volume_margin_is_measured_against_the_floor(self):
         volume = _fixture.load_module(self.root, '_volume')

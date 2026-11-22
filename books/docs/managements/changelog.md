@@ -320,6 +320,10 @@
   菜单被顶出可视区。新增 `clear_screen()`（`\033[H\033[2J`），仅在终端且启用颜色时发出——
   管道与测试捕获到的仍是纯文本。契约写进 `DESIGN-TUI.md` §2 的屏幕分区说明，用例 3 条：
   终端清屏、非终端不发转义、主循环每帧清一次。
+- **用量行改成绝对差额**：`+14%` 会被读成「增长了 14%」，实际是「离下限还有多少」。`headroom()`
+  增加 `above`，界面显示 `体量 40,097 行（下限 35,048，尚余 5,049 行）`——下限 = 已评审
+  基线 36,893 行 × `floor_ratio` 0.95；`?` 帮助补一句口径说明，`DESIGN-TUI.md` 的用量行
+  同步，并加一条「不得出现百分比」的断言防回退。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

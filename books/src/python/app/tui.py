@@ -78,7 +78,7 @@ def header() -> str:
             info['languages'], _c('日志', PALETTE['label']), info['log_level'],
             _c('LLM', PALETTE['label']), info['llm_provider'])),
         ('用量', f"{_c('LLM 今日', PALETTE['label'])} {info['llm_spend']}   "
-                 f"{_c('行数余量', PALETTE['label'])} {info['volume_margin']}"),
+                 f"{_c('体量', PALETTE['label'])} {info['volume_margin']}"),
     ]
     label_width = max(_width(label) for label, _value in facts) + 1
 
@@ -188,7 +188,9 @@ def screen_title(screen: str) -> str:
 def help_text() -> str:
     return ('两级菜单：主菜单选类目，类目里选动作。二级目录按 `0` 回到上一级，\n'
             '主菜单按 `0` 或 `q` 退出。`c` 直接进配置项，`r` 重新读取配置。\n'
-            '非交互场景用 `--once <动作>`，例如 `--once status`。')
+            '非交互场景用 `--once <动作>`，例如 `--once status`。\n'
+            '用量行的「体量」是本稿行数；下限 = 已评审基线 × 约定比例，'
+            '「尚余」是还能再减多少行才触到下限。')
 
 
 def configure(reader=input) -> str:

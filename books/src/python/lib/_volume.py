@@ -40,7 +40,10 @@ def current_lines() -> int:
 
 
 def headroom() -> dict | None:
-    """Current lines, the floor they must clear, and the margin as a percentage.
+    """Current lines, the floor they must clear, and how far above it they sit.
+
+    ``above`` is the honest number for the interface: "still 5,049 lines to spare"
+    cannot be misread as "grew by 14%", which a signed percentage invites.
 
     ``None`` when no baseline has been reviewed yet — a new book has nothing to
     measure against, and a blank is honest where a zero would read as failure.
@@ -59,5 +62,7 @@ def headroom() -> dict | None:
         return None
     lines = current_lines()
     floor = int(base_lines * floor_ratio)
-    margin = (lines - floor) / floor * 100 if floor else 0.0
-    return {'lines': lines, 'baseline': base_lines, 'floor': floor, 'margin_pct': margin}
+    above = lines - floor
+    margin = above / floor * 100 if floor else 0.0
+    return {'lines': lines, 'baseline': base_lines, 'floor': floor,
+            'above': above, 'margin_pct': margin}
