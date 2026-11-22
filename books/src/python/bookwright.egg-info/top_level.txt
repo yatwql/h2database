@@ -1,7 +1,0 @@
-app
-audit
-core
-ingest
-lib
-manuscript
-render
