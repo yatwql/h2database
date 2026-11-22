@@ -53,7 +53,7 @@ class TuiInteractionTest(unittest.TestCase):
     # -- two-level structure ---------------------------------------------
     def test_the_main_screen_carries_the_frequent_actions(self):
         keys = [row[0] for row in self.tui.screen_rows('main')]
-        self.assertEqual(keys, ['1', 'l', '2', '3', '4', '5', '6', 'n', '0'])
+        self.assertEqual(keys, ['1', '2', '3', '4', '5', '6', '7', '8', '0'])
         self.assertIn('@open:books', [row[1] for row in self.tui.screen_rows('main')])
 
     def test_the_main_screen_runs_actions_without_a_category(self):
@@ -145,8 +145,9 @@ class TuiInteractionTest(unittest.TestCase):
                 self.assertEqual(self.calls, ['analyze-llm'])
 
     def test_arrows_move_within_a_screen_and_wrap(self):
+        # the cursor starts on "2 手稿 → Markdown + HTML"; up lands on the row above
         self.press(self.keys.KEY_UP, self.keys.KEY_ENTER)
-        self.assertEqual(self.calls, ['analyze-llm'])
+        self.assertEqual(self.calls, ['analyze'])
 
     # -- settings and provider priority -----------------------------------
     def settings_rows(self):
@@ -301,6 +302,24 @@ class TuiInteractionTest(unittest.TestCase):
             message = self.tui.new_book(reader=lambda prompt='': next(answers))
         self.assertTrue(cloned)
         self.assertIn('克隆', message)
+
+    def test_letter_shortcuts_alias_the_digits(self):
+        self.assertEqual(self.tui.menu.resolve('main', 'M'), '1')
+        self.assertEqual(self.tui.menu.resolve('main', 's'), '6')
+        self.assertEqual(self.tui.menu.resolve('main', 'N'), '7')
+        self.assertEqual(self.tui.menu.resolve('main', 'l'), '8')
+        self.assertEqual(self.tui.menu.resolve('main', 'c'), '5')
+        self.assertEqual(self.tui.menu.resolve('config', 's'), 's')   # only main has letters
+
+    def test_a_row_shows_its_letter_beside_the_digit(self):
+        self.assertEqual(self.tui.menu.display_key('main', '1'), '1/m')
+        self.assertEqual(self.tui.menu.display_key('main', '6'), '6/s')
+        self.assertEqual(self.tui.menu.display_key('main', '8'), '8/l')
+        self.assertEqual(self.tui.menu.display_key('quality', '1'), '1')
+
+    def test_pressing_a_letter_runs_the_same_action_as_its_digit(self):
+        self.press('m')
+        self.assertEqual(self.calls, ['analyze'])
 
 if __name__ == '__main__':
     unittest.main()

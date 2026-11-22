@@ -29,16 +29,40 @@ BOOKS_SCREEN = 'books'
 BOOK_ACTION_PREFIX = '@book:'
 NEW_BOOK_ACTION = '@new-book'
 
+# Letter shortcut -> the row key it stands for, per screen. Matching is
+# case-insensitive, so S and s both run "1 源码 → 手稿".
+LETTER_ALIASES: dict[str, dict[str, str]] = {
+    'main': {'m': '1', 'b': '2', 'p': '3', 't': '4', 'c': '5', 's': '6',
+             'n': '7', 'l': '8'},
+}
+
+
+def aliases(screen: str) -> dict[str, str]:
+    """Letter shortcuts that apply to one screen."""
+    return LETTER_ALIASES.get(screen, {})
+
+
+def resolve(screen: str, key: str) -> str:
+    """Map a pressed key onto the row key it means (letters are case-insensitive)."""
+    lowered = key.lower()
+    return aliases(screen).get(lowered, lowered)
+
+
+def display_key(screen: str, key: str) -> str:
+    """How a row's key is rendered: ``1/s`` when a letter shortcut exists."""
+    letters = [letter for letter, target in aliases(screen).items() if target == key]
+    return f'{key}/{letters[0]}' if letters else key
+
 # screen -> [(key, action, label)]; `@open:<screen>` and `@back` are navigation
 SCREENS: dict[str, list[tuple[str, str, str]]] = {
     'main': [('1', 'analyze', '源码 → 手稿'),
-             ('l', 'analyze-llm', '源码 → 手稿（LLM 润色导读/小结）'),
              ('2', 'build', '手稿 → Markdown + HTML'),
              ('3', 'deliver', 'PDF + EPUB（按需）'),
              ('4', OPEN_PREFIX + 'quality', '质量：门禁与测试'),
              ('5', OPEN_PREFIX + 'config', '配置：状态、配置项与 LLM'),
              ('6', OPEN_PREFIX + BOOKS_SCREEN, '切换书籍'),
-             ('n', NEW_BOOK_ACTION, '新增书籍'),
+             ('7', NEW_BOOK_ACTION, '新增书籍'),
+             ('8', 'analyze-llm', '源码 → 手稿（LLM 润色导读/小结）'),
              (BACK_KEY, QUIT_ACTION, '退出')],
     'quality': [('1', 'check', '全部质量门禁'),
                 ('2', 'test', '测试套件（快档）'),

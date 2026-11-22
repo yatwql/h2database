@@ -161,7 +161,7 @@ def menu_text(screen: str = 'main', cursor: int | None = None) -> str:
         label_style = PALETTE['cursor'] if cursor == index else PALETTE['value']
         llm_row = menu.is_llm(action)
         badge = f" {_c('LLM', PALETTE['llm_badge'])}" if llm_row else ''
-        key_label = key.upper() if llm_row else key
+        key_label = key.upper() if llm_row else menu.display_key(screen, key)
         key_colour = PALETTE['llm_key'] if llm_row else None
         lines.append(f" {_c(marker, PALETTE['cursor_bar'])} "
                      f"{_key(key_label, key_colour)}  "
@@ -401,15 +401,12 @@ def main(argv: list[str] | None = None) -> int:
             settings._reload()
             status = _c('配置已重新读取', PALETTE['value_ok'])
             continue
-        if pressed == 'c':
-            screen = menu.SETTINGS_SCREEN
-            cursors[screen] = 0
-            continue
 
         if pressed == keys.KEY_ENTER and rows:
             action, label = rows[cursor][1], rows[cursor][2]
         else:
-            match = next((row for row in rows if row[0] == pressed.lower()), None)
+            wanted = menu.resolve(screen, pressed)
+            match = next((row for row in rows if row[0] == wanted), None)
             if match is None:
                 status = _c(f'无效按键 {pressed!r}，按 ? 查看帮助', PALETTE['warn'])
                 continue

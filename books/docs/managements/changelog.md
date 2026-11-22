@@ -437,6 +437,14 @@
   `data/book/<书名>/`** 下（选书屏立刻能看到），目录源记 `src_main`、仓库源记 `repo` 并调用
   `fetch_source` 克隆到 `books/data/srcref/`。失败只报原因、不留半本书；建完不自动切换。
   菜单与屏幕树（`DESIGN-TUI.md`）、用户手册同步，用例 2 条。
+- **主菜单字母快捷键**：每项除数字外增加字母键（`1/s`、`2/m`、`3/p`、`4/t`、`5/c`、`6/b`，
+  大小写不敏感），行内以 `[1/S]` 形式同时显示两种键。`core/menu.py` 增加 `LETTER_ALIASES`
+  与 `resolve()`/`display_key()`，按键先经别名再匹配；原先 `c` 直跳配置屏的特例取消——
+  现在 `C` 等价于 `5 配置与状态`，语义统一。`DESIGN-TUI.md` 键位表与屏幕树、用户手册同步，
+  用例 3 条（别名解析、行内显示、按字母等于按数字）。
+- **主菜单定版为 1–8 + 字母键**：`1/m`、`2/b`、`3/p`、`4/t`、`5/c`、`6/s`、`7/n`、`8/l`
+  （大小写不敏感）——`8` 收编原来的 `l`（LLM 润色），`7` 收编原来的 `n`（新增书籍），
+  行内以 `[1/M]` 形式同时显示两种键。`DESIGN-TUI.md` 屏幕树与键位表、用户手册同步。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
