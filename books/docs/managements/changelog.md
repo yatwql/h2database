@@ -380,6 +380,10 @@
   `book = "data/config/book"`（实际是 `data/book`），并补 `[paths].library`、`[sources]`
   （已归书）、`[editions]`、两种书身份布局；FAQ 增加三个高频问题（多书并存、两个 toml
   谁算数、源码路径在哪配）。示例统一用占位名，`versions` 门禁要求工具文档不点名具体书。
+- **书目目录可显式覆盖**：新增 `--books-dir` 与 `BOOKS_DIR`，优先级为「命令行／环境变量 >
+  `book.toml [paths].library` > 书的父目录」。只给目录不给书时：唯一一本直接用、多本把
+  「书名 [目录名] + 路径」列出来并退 2（不猜）、空目录退 2。`books_in()` 提供目录枚举，
+  `library_dir()` 读覆盖值。用户文档、`technical.md` §3.1、多书设计 §14 同步，用例 4 条。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

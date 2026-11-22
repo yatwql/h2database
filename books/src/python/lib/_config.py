@@ -54,6 +54,23 @@ def checkout_root() -> str:
     return os.path.dirname(os.path.dirname(os.path.dirname(TOOLS_DIR)))
 
 
+def books_in(library: str) -> list[str]:
+    """Book roots directly under ``library`` (itself included when it is a book)."""
+    roots: list[str] = []
+    base = os.path.abspath(library)
+    if config_file_of(base):
+        roots.append(base)
+    try:
+        names = sorted(os.listdir(base))
+    except OSError:
+        return roots
+    for name in names:
+        candidate = os.path.join(base, name)
+        if config_file_of(candidate) and candidate not in roots:
+            roots.append(candidate)
+    return roots
+
+
 def find_book_root(start: str | None = None) -> str:
     """Nearest ancestor of ``start`` holding data/book/book.toml ('' when none)."""
     current = os.path.abspath(start or os.getcwd())
@@ -280,11 +297,16 @@ class Config:
     # ---- directories -------------------------------------------------------
 
     def library_dir(self) -> str:
-        """Directory whose children are book roots (default: this book's parent).
+        """Where the other books live, in precedence order.
 
-        Declared with ``book.toml [paths].library`` so "where the other books live"
-        is a configured fact rather than a guess from the directory layout.
+        ``BOOKS_DIR`` (a flag or environment override) beats ``book.toml
+        [paths].library``, which beats the book's parent directory. The override
+        exists so a session can point at a different library without editing any
+        book's configuration.
         """
+        override = os.environ.get('BOOKS_DIR')
+        if override:
+            return os.path.abspath(override)
         rel = (self.cfg.get('paths') or {}).get('library')
         if not rel:
             return os.path.dirname(self.root)

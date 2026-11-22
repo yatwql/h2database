@@ -37,6 +37,9 @@ def main(argv: list[str] | None = None) -> int:
                         help='book root to work on (default: BOOK_ROOT, then the '
                              'nearest ancestor holding data/book/book.toml)')
     parser.add_argument('--edition', default='', help='manuscript edition to work on')
+    parser.add_argument('--books-dir', default='',
+                        help='directory holding several books; with no --book, a single '
+                             'book inside it is used, several are listed')
     args = parser.parse_args(argv)
 
     if (args.force or args.refresh_facts) and args.action not in actions.ANALYZE_ACTIONS:
@@ -45,7 +48,26 @@ def main(argv: list[str] | None = None) -> int:
     if args.force and args.refresh_facts:
         sys.stderr.write('error: --force 与 --refresh-facts 不能同时使用\n')
         return 2
+    if args.books_dir:
+        os.environ['BOOKS_DIR'] = os.path.abspath(args.books_dir)
     book = _config.resolve_book_root(args.book or None)
+    if args.books_dir and not args.book:
+        found = _config.books_in(args.books_dir)
+        if len(found) == 1:
+            book = found[0]
+        elif not found:
+            sys.stderr.write(f'error: {args.books_dir} 下没有带 book.toml 的书\n')
+            return 2
+        else:
+            sys.stderr.write(f'{args.books_dir} 下有 {len(found)} 本书，用 --book 指定其一：\n')
+            for root in found:
+                title = ''
+                try:
+                    title = _config.Config(root).title
+                except _config.ConfigError:
+                    title = '（配置读不出）'
+                sys.stderr.write(f'  {title}  [{os.path.basename(root)}]  {root}\n')
+            return 2
     marker = os.path.join(book, 'data', 'book', 'book.toml')
     if not os.path.isfile(marker):
         sys.stderr.write(f'error: 没找到 book.toml，试过 {book}\n')

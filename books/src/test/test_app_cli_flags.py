@@ -27,6 +27,12 @@ class CliSwitchTest(unittest.TestCase):
             side_effect=lambda action, **kwargs: (self.calls.append((action, kwargs)) or (0, '')))
         patcher.start()
         self.addCleanup(patcher.stop)
+        # the CLI writes BOOKS_DIR/BOOK_ROOT for child processes; a test must not
+        # leave those pointing at a directory it is about to delete
+        for name in ('BOOKS_DIR', 'BOOK_ROOT'):
+            previous = os.environ.get(name)
+            self.addCleanup(lambda n=name, v=previous: os.environ.__setitem__(n, v)
+                            if v is not None else os.environ.pop(n, None))
 
     def switches(self) -> dict:
         """The action kwargs without the book selection every call carries."""
@@ -73,6 +79,34 @@ class CliSwitchTest(unittest.TestCase):
     def test_force_and_refresh_cannot_be_combined(self):
         self.assertEqual(self.cli.main(['analyze', '--force', '--refresh-facts']), 2)
         self.assertEqual(self.calls, [])
+
+
+    def test_a_books_directory_with_one_book_is_used_directly(self):
+        library = os.path.join(self.tmp.name, 'library')
+        only = _fixture.build_book(os.path.join(library, 'only-book'))
+        self.calls.clear()
+        self.cli.main(['analyze', '--books-dir', library])
+        self.assertEqual(self.calls[0][1]['book'], only)
+
+    def test_several_books_are_listed_instead_of_guessed(self):
+        library = os.path.join(self.tmp.name, 'library2')
+        _fixture.build_book(os.path.join(library, 'one'))
+        _fixture.build_book(os.path.join(library, 'two'))
+        self.calls.clear()
+        self.assertEqual(self.cli.main(['analyze', '--books-dir', library]), 2)
+        self.assertEqual(self.calls, [])
+
+    def test_an_empty_books_directory_is_an_error(self):
+        empty = os.path.join(self.tmp.name, 'empty-library')
+        os.makedirs(empty, exist_ok=True)
+        self.assertEqual(self.cli.main(['analyze', '--books-dir', empty]), 2)
+
+    def test_the_environment_overrides_the_library(self):
+        library = os.path.join(self.tmp.name, 'library3')
+        os.makedirs(library, exist_ok=True)
+        os.environ['BOOKS_DIR'] = library
+        cfg = self.cli._config.Config(self.root)
+        self.assertEqual(cfg.library_dir(), os.path.abspath(library))
 
 
 if __name__ == '__main__':

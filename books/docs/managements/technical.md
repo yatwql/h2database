@@ -158,7 +158,8 @@ books/
 - 图表与图簇：`style.json [quality]` 的 `min_figures_per_section`、`min_figure_coverage_pct`，`[clusters]` 的 `min_figures`、`window_lines`——`smart.py`、`figure_clusters.py`、`structure.py` 共用这一处，不再各自内联。
 - 页面几何：`base.json [toolchain]` 的 `pdf_page_width`、`pdf_page_height`、`pdf_page_tolerance`（`verify_pdf.py` 按此判定 A4）。
 - 章节骨架与必备段落：`book.toml [sections]`、`style.json [sections]`。
-- 书目目录：`book.toml [paths] library`（缺省为书的父目录），`candidate_books()` 在其下找
+- 书目目录：`--books-dir`／`BOOKS_DIR` > `book.toml [paths] library` > 书的父目录；
+  `books_in()` 列出该目录下的书，`candidate_books()` 在其下找
   `data/book/book.toml`——「其他书放在哪」是配置事实，不是目录约定；
 - 临时目录：`book.toml [paths] tmp`（缺省 `data/tmp`，读 `_config.tmp_dir()`）；
   HTML 片段缓存与 `--force` 备份都在它下面，已 gitignore。

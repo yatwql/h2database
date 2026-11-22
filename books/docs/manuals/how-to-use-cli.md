@@ -61,6 +61,11 @@ books/scripts/bookctl analyze --edition abridged      # 一本书的某个版本
 books/scripts/bookctl make build --book ../other-book # 透传给 make.py
 ```
 
+`--books-dir <目录>` 指向「装多本书的目录」，配合 `--book` 时可临时换书目目录；只给
+`--books-dir` 而不给 `--book` 时：目录里只有一本就直接用它，有多本则列出「书名 [目录名]」
+并退出码 2（不做猜测），一本都没有同样退出码 2。环境变量 `BOOKS_DIR` 与 `--books-dir`
+等价，并且会覆盖 `book.toml [paths].library`。
+
 `--edition` 选版本（`book.toml [editions]` 声明），缺省取 `default_edition`；
 指向未声明的版本会报错并列出已声明的版本。产物、手稿、派生状态、体量基线都跟着
 「书 + 版本」走，不同书之间互不覆盖。
