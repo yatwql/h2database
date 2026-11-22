@@ -389,6 +389,10 @@
   合并（书里的值优先，缺的键取包内默认），不写则保持原语义——整份文件缺失＝空策略／最小骨架包。
   这样新书不必抄一份完整配置，而既有书与最小书的行为一个字都不变。用例 3 条：不启用时策略为空、
   启用后拿到默认值、书内同名键覆盖默认。
+- **配置审计：删掉一个无读者的键**：`style.json [quality]._duplicate_ratio_note` 是说明性文本，
+  代码从不读取，留在配置里只会被当成可调参数——删除。审计同时列出其余候选（`path.tools`、
+  `base.json paths.state/baselines` 与 `book.toml [paths]` 重复、`language/zh.json [style]`、
+  `style.json [sections].per_chapter` 与 `book.toml [sections]` 并存），待逐条确认后再动。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

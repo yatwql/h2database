@@ -259,7 +259,7 @@ class TwoBooksTest(unittest.TestCase):
         cfg = _config.Config(self.one)
         self.assertFalse(cfg.use_defaults)
         self.assertEqual(cfg.policy.get('thresholds'), {})
-        self.assertFalse((cfg.language().get('sections') or {}))
+        self.assertEqual(cfg.language().get('sections') or {}, {})
 
     def test_a_book_that_opts_in_gets_the_packaged_defaults(self):
         os.remove(os.path.join(self.one, 'data', 'config', 'base.json'))

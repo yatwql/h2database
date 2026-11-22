@@ -94,8 +94,7 @@
     "min_terms_per_chapter": 5,
     "min_exercises_per_chapter": 4,
     "min_figures_per_section": 2,
-    "min_figure_coverage_pct": 95,
-    "_duplicate_ratio_note": "Single-owner chapter scopes brought prose duplication to ~4%; the gate is kept at 12% so a regression is caught without blocking legitimate overlap."
+    "min_figure_coverage_pct": 95
   },
   "generation": {
     "max_packages_per_table": 12,
