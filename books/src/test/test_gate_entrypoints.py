@@ -28,7 +28,7 @@ if TOOLS_DIR not in sys.path:
 
 GATES = [
     'balance', 'book_quality', 'captions', 'check_architecture',
-    'content_depth', 'diagrams', 'doc_drift', 'exercises',
+    'content_depth', 'diagrams', 'doc_archive', 'doc_drift', 'exercises',
     'figure_clusters', 'figures', 'file_length', 'gate_trace', 'index_xrefs',
     'links', 'llm_policy', 'prose_quality', 'readability', 'script_contract',
     'style_rules', 'style_schema', 'version_consistency', 'structure', 'style',

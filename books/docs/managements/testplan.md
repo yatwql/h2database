@@ -93,6 +93,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 延伸思考 | 12 章全部含 `## N.X 延伸思考`；每章与全书的题量达下限（取值见配置）；每题含难度/题型 emoji + 提示行 + 含锚点的回顾行 | `structure.py`、`exercises.py` | P2 |
 | 写作风格 | 每章 WARN 计数为 0 | `style.py` | P2 |
 | 版本一致 | 工具/源码/书籍三版本可解析且各有唯一事实位；管理文档头齐全且取软件版本；封面版本回写自 `book.toml`；合并稿 manifest 与三者一致 | `version_consistency.py`、`manuscript/cover.py` | P0 |
+| 版本归档 | 已发布版本的台账与完成的迭代设计只在版本目录里：三份归档文件与头行齐备、主文档索引可打开、已归档版本不再留在主文档；迭代目录名不含追踪编号 | `doc_archive.py` | P1 |
 | 源码坐标 | `Class.java:行号` 可解析、行号在文件长度内、方法存在、摘录与源码一致；已知漂移进基线，仅"新增漂移"阻塞 | `source_refs.py`、`content_depth.py`、`books/data/baselines/source-symbol-baseline.json` | P1 |
 | PDF 渲染与 TOC 链接注入 | HTML → PDF 成功、页面数据可读；每个印刷 TOC 条目在对应页上加一条 link annotation，目标页按 outline 位置映射 | `render/to_pdf.py`、`render/pdf_toc_links.py` | P1 |
 | PDF 交付 | PDF 重新生成自当前 HTML；页面为 A4（尺寸与容差取配置）、无旋转；字体全部嵌入；outline 与 HTML 标题逐一对应；印刷 TOC 链接按序且在页内；体积不超过配置的 PDF 预算 | `render/verify_pdf.py`（`--require-toc-links`） | P1 |

@@ -177,6 +177,7 @@ STEPS: list[Step] = [
     ('script_contract', 'audit/script_contract.py', (), 'verify'),
     ('traces', 'audit/traces.py', (), 'verify'),
     ('doc_drift', 'audit/doc_drift.py', (), 'verify'),
+    ('doc_archive', 'audit/doc_archive.py', (), 'verify'),
     ('audit_links', 'audit/links.py', (), 'verify'),
     ('audit_ascii', 'audit/diagrams.py', (), 'verify'),
     ('audit_smart', 'audit/smart.py', (), 'verify'),

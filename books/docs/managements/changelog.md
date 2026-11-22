@@ -233,6 +233,13 @@
   导入期构造，`--book` 尚未解析就会按兜底根读盘，改为惰性并与「源根解冻」并列为步骤二前置。
   新增「与语言包计划的关系」（语言是资源、版本是内容是两件事）、五份管理文档的改动面清单，
   并把 `scripts/bookctl` 透传与 `settings set` 的写入目标写进步骤二。
+- **版本归档落地**：新增 `docs/archive/v<major>.<minor>/`，装该版本的三份台账
+  （`archived_changelog` / `archived_plan` / `archived_review-findings`）与已完成的迭代设计目录；
+  `core/docs_archive.py` 做机械迁移——纯文本变换加目录搬迁、幂等、`--dry-run` 先看动作，
+  哪些迭代算完成由人用 `--topic` 指定，脚本不猜；`audit/doc_archive.py` 把布局变成门禁
+  （版本目录名、三份文件与头行、索引链接可打开、已归档版本不得留在主文档、迭代目录名不含
+  追踪编号），空归档视为通过。规则写在 `docs/archive/README.md`，归属写进 `folder.md` §3，
+  能力登记为 IR-12；用例按层拆成 `test_core_docs_archive.py` 与 `test_audit_doc_archive.py`。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
