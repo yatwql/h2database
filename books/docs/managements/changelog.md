@@ -116,6 +116,7 @@
   `index.py` 的默认/检查模式、`--hierarchy-check`、缺源码树时 `source_refs.py` 的 `[skip]`）；
   基线从 76 条降到 **71 条**。剩下的多数是"坏输入下不得抛异常"的负向冒烟——0/1/2 都是合法结果，
   已在基线注里写明这类为何不钉死。
+- **plan-3（覆盖率棘轮）达成并归档**：88% 的目标已在分支口径下达成并成为红线。
 - **覆盖率改为分支口径**：`make.py cover` 改用 `coverage run --branch`，棘轮按**分支覆盖**的
   总百分比判定（实测 88%，阈值同步为 88）；`technical.md` §3.2 写明这个数字现在是
 "行 + 分支"口径，单文件下限 `coverage_min_per_file` 保持 70%。以前只看行覆盖，写了的
@@ -131,6 +132,10 @@
   对照点不必先打包；目录来源的 manifest 用内容摘要代替 zip 哈希。`folder.md` 与
   `technical.md` 同时写明两个目录的分界：`data/archive/` 是自动滚动保险（含产物、45 天、
   gitignored），`data/snapshots/` 是人工挑选的永久对照点（入库、供体量基线引用）。
+- **文档跟随本轮改动**：`plan.md` 移除已达成的覆盖率棘轮项（在办回到 2 项：语言包扩展、图示升级）；
+  `scripts-and-reference.md` 与 `quality-model.md` 的 `snapshot.py import` 用法补上"目录也可"；
+  `folder.md` 新增 §3.1 讲清 `data/archive/` 与 `data/snapshots/` 的分界（谁写、存什么、留多久、
+  入不入库、谁读、怎么提为对照点）。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

@@ -153,7 +153,7 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `index.py` | 索引：生成与层级检查 |
 | `terms.py` | 给每章导读块补术语表引用；`--check` 只报告 |
 | `case_studies.py` | 案例研究章节大纲 |
-| `snapshot.py` | 历史稿只读快照：`import <zip> <label> --date`、`list`、`verify <label>`、`baseline <label>`（写 `data/baselines/snapshot-<label>.json`，供 `content_volume.py --from-snapshot` 提为基线） |
+| `snapshot.py` | 历史稿只读快照：`import <zip 或目录> <label> --date`（目录来源无需重新打包）、`list`、`verify <label>`、`baseline <label>`（写 `data/baselines/snapshot-<label>.json`，供 `content_volume.py --from-snapshot` 提为基线） |
 
 ## 8. 质量门禁 `src/python/audit/`
 

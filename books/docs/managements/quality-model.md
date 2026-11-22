@@ -92,6 +92,8 @@ python books/src/python/audit/content_volume.py --update-baseline \
 
 ```bash
 python books/src/python/manuscript/snapshot.py import ../docs-stm.zip june-2026 --date 2026-06-11
+# 或直接取某天的归档目录（两者职责见 folder.md §3.1，无需先打包）：
+# python books/src/python/manuscript/snapshot.py import data/archive/<书>/<日期>/manuscript <标签> --date <日期>
 python books/src/python/manuscript/snapshot.py baseline 2026-06-11-june-2026
 python books/src/python/audit/content_volume.py --update-baseline \
     --from-snapshot 2026-06-11-june-2026 --reviewed-by "阿龙" \

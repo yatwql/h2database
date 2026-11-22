@@ -119,6 +119,27 @@ books/docs/managements/
   `doc_drift.py` 的 `PLANNAME` 检查搂住这条规则（目录必须含 `plan.md`、只允许
   `design.md`/`plan.md`/`README.md`、不得含编号）。
 
+## 3.1 两份稿子副本的分界
+
+仓库里有两处按日期存手稿的地方，形态相似、职责不同，不得互相代替：
+
+| | `data/archive/<书>/<日期>/` | `data/snapshots/<日期>-<标签>/` |
+| --- | --- | --- |
+| 谁写 | `make.py build` / `deliver` 自动写入 | 人手动 `snapshot.py import` |
+| 存什么 | 本书手稿 **+ `dist/` 里的产物** | 只存手稿 |
+| 存多久 | 滚动，默认保留 45 天（`base.json [archive] retention_days`） | 永久，人工删除 |
+| 入不入库 | gitignored | 入库，作为可引用的证据 |
+| 谁读它 | 不读，纯回滚用 | `content_volume --from-snapshot` 取来当体量基线；`snapshot.py verify` 校哈希 |
+| 门禁 | `_config.excluded_dirs()` 排除，不当正文扫 | 同左 |
+
+用法边界：
+
+- `archive` 只管“刚才那一版还能拿回来”。它会被窗口自动删掉，所以**不能当长期对照点**。
+- 真正要被基线引用的版本，用
+  `python books/src/python/manuscript/snapshot.py import data/archive/<书>/<日期>/manuscript <标签>`
+  固化进 `snapshots/`。`import` 同时接受 zip 与目录，目录来源不必重新打包（manifest 用内容摘要代替 zip 哈希）。
+- 快照只读：`verify` 只比对哈希不改文件；过期快照由人删除，没有自动清理。
+
 ## 4. 常用入口
 
 入口清单只有两份：使用者看 [`books/README.md`](../../README.md) 的快速开始，验证命令
