@@ -29,7 +29,10 @@ LADDER = ('模块版图', '核心类型', '关键 API 与源码坐标', '阅读�
 COORD_RE = re.compile(r'\.java:\d+')
 EXERCISE_RE = re.compile(r'^\*\*\d+\.\s*([🟢🔵🟠])(★+)', re.MULTILINE)
 H2_RE = re.compile(r'^## \d+\.(\d+)\s+(.+)$', re.MULTILINE)
-SENT_SPLIT = re.compile(r'(?<=[。！？；.!?])\s*')
+def sent_split():
+    """Sentence splitter for the active language pack."""
+    endings = re.escape(_config.sentence_endings()) + r'.!?'
+    return re.compile(rf'(?<=[{endings}])\s*')
 NORMALIZE = re.compile(r'[^\u4e00-\u9fffA-Za-z0-9]')
 
 
@@ -42,7 +45,7 @@ def _sentences(text: str) -> list[str]:
     body = re.sub(r'```[\s\S]*?```', '', text)
     prose = '\n'.join(line for line in body.split('\n')
                       if not line.lstrip().startswith(('|', '>')))
-    return [s.strip() for s in SENT_SPLIT.split(prose) if len(s.strip()) > 8]
+    return [s.strip() for s in sent_split().split(prose) if len(s.strip()) > 8]
 
 
 def measure() -> dict:

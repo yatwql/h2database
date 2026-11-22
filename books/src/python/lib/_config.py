@@ -37,6 +37,7 @@ TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 # the standard one (data/book/book.toml) and a flat one (book.toml at the root), so a
 # config directory can hold several books, one per subdirectory.
 BOOK_CONFIG = 'book.toml'
+DEFAULT_SENTENCE_ENDINGS = '。！？；'
 BOOK_MARKER = os.path.join('data', 'book', BOOK_CONFIG)
 
 
@@ -432,6 +433,15 @@ class Config:
                     'sections': {k: v for k, v in self.sections.items()
                                  if isinstance(v, str)}}
         return data
+
+    def sentence_endings(self) -> str:
+        """Characters that end a sentence, from the language pack.
+
+        Four gates split sentences; a second language must not be judged with the
+        Chinese set, so the set belongs to the pack and the gates read it here.
+        """
+        value = (self.language().get('style') or {}).get('sentence_endings')
+        return str(value) if value else DEFAULT_SENTENCE_ENDINGS
 
     def templates(self) -> dict:
         """Prose templates (document side). Falls back to style.json for old books."""

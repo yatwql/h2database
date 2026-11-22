@@ -27,7 +27,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lib import _config, _fsutil
 
 FENCE_RE = re.compile(r'```[\s\S]*?```')
-SENT_RE = re.compile(r'(?<=[。！？；.!?])\s*')
+def sent_re():
+    """Sentence pattern for the active language pack."""
+    endings = re.escape(_config.sentence_endings()) + r'.!?'
+    return re.compile(rf'(?<=[{endings}])\s*')
 COORD_RE = re.compile(r'\.java:\d+')
 LIST_RE = re.compile(r'^\s*(?:[-*+]|\d+\.)\s+', re.MULTILINE)
 H2_RE = re.compile(r'^## ', re.MULTILINE)
@@ -68,7 +71,7 @@ def measure() -> dict:
         name = os.path.basename(path)
         prose = FENCE_RE.sub('', text)
         prose_lines = [line for line in prose.split('\n') if line.strip()]
-        sentences = [s.strip() for s in SENT_RE.split(prose) if len(s.strip()) > 6]
+        sentences = [s.strip() for s in sent_re().split(prose) if len(s.strip()) > 6]
         paragraphs = [b for b in re.split(r'\n\s*\n', prose) if b.strip()]
         bullets = len(LIST_RE.findall(prose))
         # group consecutive table rows so column counts are compared per table

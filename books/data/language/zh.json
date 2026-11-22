@@ -17,7 +17,6 @@
     "glossary_link": "back/glossary.md"
   },
   "style": {
-    "sentence_endings": "。！？；",
-    "fullwidth_punctuation": true
+    "sentence_endings": "。！？；"
   }
 }

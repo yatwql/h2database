@@ -143,7 +143,8 @@ def detect_sentence_monotony(lines, fname):
         )
 
         # Split into sentences by Chinese/English punctuation
-        sentences = re.split(r'(?<=[。！？.!?])\s*', protected_text)
+        endings = re.escape(_config.sentence_endings()) + r'.!?'
+        sentences = re.split(rf'(?<=[{endings}])\s*', protected_text)
         sentences = [s.strip() for s in sentences if len(s.strip()) > 5]
 
         # Restore protected periods
@@ -406,7 +407,7 @@ def calculate_readability_metrics(lines, fname):
         cn_char_count += cn_chars
 
         # Count sentence boundaries
-        sents = len(re.findall(r'[。！？.!?]', stripped))
+        sents = len(re.findall(rf'[{re.escape(_config.sentence_endings())}.!?]', stripped))
         sentence_count += sents
 
     chapter_stats[fname]['cn_chars'] = cn_char_count

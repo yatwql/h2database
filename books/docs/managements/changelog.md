@@ -401,6 +401,11 @@
   - `book.toml [paths].tools` 删除——没有任何代码读取，工具目录由脚本位置推导。
   文档（`how-to-config.md` 示例与表格、`technical.md` 配置归属）同步修订；`version` 的
   三处（书版本、源码版本、样式 schema 版本）语义不同，保留。
+- **句末标点归语言包**：`language/zh.json [style].sentence_endings` 此前没有任何读者，而四处判据把
+  `。！？；` 直接写在正则里（`style.py` 两处、`book_quality.py`、`prose_quality.py`）。新增
+  `_config.sentence_endings()`（默认 `。！？；`），四处改为按语言包构建匹配集——第二语种不会
+  再被中文标点判。`fullwidth_punctuation` 没有任何规则可喂，删除。附带后果：`style.py` 增到
+  642 行，膨胀登记同步。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
