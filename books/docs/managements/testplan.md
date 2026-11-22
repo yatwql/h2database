@@ -105,7 +105,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 内容深度 | 前向引用须点名主责章节；高频类型须入术语表；练习题须指向本章类型或 §锚点 | `content_depth.py` | P1 |
 | ASCII 图质量 | 图宽不超过配置的列数上限（CJK 记 2 列）；无行尾空格/制表符；单图不混用框线与 ASCII 边框；已知项走基线 | `diagrams.py`、`books/data/baselines/ascii-baseline.json` | P1 |
 | LLM 边界 | LLM 只用于散文生成/评审场景；门禁与事实链路不得调用；密钥文件不入库 | `llm_policy.py` | P1 |
-| 发布评分 | 六维评分（功能/稳定/交互/代码/文档风格/文档质量）作为整改视图 | `make.py report` | 报告类（不计级别） |
+| 发布评分 | 六维评分（功能/稳定/交互/代码/文档风格/文档质量）作为整改视图；测试与结构健康视图给出覆盖率读数、低于基线的文件、半分支 Top-N、松散断言数与超长函数清单 | `make.py report`、`make.py report health` | 报告类（不计级别） |
 | 历史快照完整性 | 快照文件与 manifest 记录的哈希一致；快照不参与构建、不被门禁扫描 | `manuscript/snapshot.py verify` | P1 |
 | 归档可用 | 每次构建与交付各存一份手稿与产物的日期副本；保留窗口取自配置（默认 45 天），过期目录被清理；归档只进不进、不被构建读取 | `manuscript/archive.py` | P2 |
 | 架构约束 | 分层依赖方向、门禁只读、不硬编码路径、命名不遮蔽标准库、入口脚本均接入 make.py 步骤 | `check_architecture.py` | P0 |

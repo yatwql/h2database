@@ -66,6 +66,7 @@ STANDALONE_ENTRY = frozenset({
     'audit/review_packet.py',     # produces the failure packet, decides nothing
     'audit/order_dependence.py',  # slow tier, driven by check_runner --mode p2
     'audit/scorecard.py',         # dispatched by `make.py report`
+    'audit/test_health.py',       # dispatched by `make.py report health`
     'manuscript/terms.py',        # annotates chapter lead-ins on demand
     'manuscript/case_studies.py',  # builds the appendix A outline on demand
     'manuscript/snapshot.py',     # imports and verifies read-only snapshots

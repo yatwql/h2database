@@ -322,9 +322,12 @@ def doctor() -> int:
 
 
 def report(extra: list[str] | None = None) -> int:
-    """Six-dimension release scorecard (book quality, code, docs, interaction)."""
+    """Six-dimension release scorecard; `report health` shows the debt readings."""
     extra = extra or []
-    proc = subprocess.run([PY, os.path.join(TOOLS_DIR, 'audit', 'scorecard.py'), *extra],
+    script = 'test_health.py' if extra[:1] == ['health'] else 'scorecard.py'
+    if script == 'test_health.py':
+        extra = extra[1:]
+    proc = subprocess.run([PY, os.path.join(TOOLS_DIR, 'audit', script), *extra],
                           cwd=os.path.dirname(book_root()), check=False)
     return proc.returncode
 

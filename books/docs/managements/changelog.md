@@ -477,6 +477,7 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **质量读数有了统一入口**：`make.py report health` 汇总覆盖率（总/最薄模块/半分支 Top-N）、低于基线的文件、松散断言数、超长函数清单——这些此前分散在 `cover`、`coverage report` 与 grep 里，没人定期看。阈值仍读配置（新增 `base.json [toolchain] function_length_warn`），视图只做读数不判红。
 - **永真断言开始收敛**：`run_inproc` 原先吞掉 `sys.exit("error: ...")` 的消息，用例只能断言“退出码是 0 或 1”。现在把消息回显进捕获输出，四处用例改为断言具体结论（`to_epub` 的合并失败与缺合并稿、`pdf_from_html` 缺 HTML 的原因、印刷 PDF 的真实产物），松散断言基线 65 → 61 条。
 - **覆盖率先按文件棘轮**：全局单数阈值下，一个 200 语句的模块停在 73% 也永远过线。`make.py cover` 现在把每个文件的覆盖率记进 `books/data/baselines/coverage.json`，任一文件低于自己的基线即 FAIL（`--update-baseline` 经评审后重记）；不足 5 条语句的文件除外。当前 95 个模块里 50 个低于 90%，基线把长尾逐个钉住，抬高阈值不再是一次性总账。
 - **覆盖率门禁分档**：`make.py cover` 原来写死 `-m tier_fast`，而 CI 慢档 job 装好 chromium/pandoc 后跑的还是快档；于是只有慢档才走到的渲染路径从未计入，`verify_pdf`（73%）这类数字反映的是没人跑过的分支。`cover` 现认 `--full` 与 `BOOK_SLOW=1`，报头直接写出量的是哪一档，CI 慢档 job 改跑 `cover --full`；判据也补上这两个载体。逐模块把“只为拿真工具”的用例改成注入是接着做的工作（`to_epub` 已完成）。（rf-37）
