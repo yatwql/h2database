@@ -261,6 +261,12 @@
   `templates.toml` 与 `language/*.json`。复盘还查出一处管理缺陷：IR-12 从未真正写进需求表
   （登记脚本没命中也不报错），已补 IR-12 与 IR-13；`requirement_trace` 新增编号空洞检查，
   以后漏写一行编号就会被判红。
+- **多书设计补上三个渠道与两套界面**：CLI 与 `make.py` 用全局参数；Web 改为顶部「书 / 版本」
+  下拉框 + `/api/books` 候选，服务端把动作执行放进全局锁并在锁内 `use(Config(book))`，
+  两个并发请求不会串书；TUI 沿用 `DESIGN-TUI.md` 七段分区，对象行多书时补书根，
+  「切换书籍」放进「配置与状态」二级屏（数字直选、`0` 返回、执行中拒绝切换、切换后清空
+  结果与摘要）。两界面都不记忆上次选择，避免「为什么跑的是那本」难以解释。
+  相应验收写进步骤二：`/api/books` 列候选、并发不串书、切换清屏、执行中拒绝。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
