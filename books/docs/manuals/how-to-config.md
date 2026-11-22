@@ -31,7 +31,8 @@ tools = "src/python"
 tmp = "data/tmp"                   # 临时目录：HTML 片段缓存与 --force 备份（已 gitignore）
 state = "data/state"               # 派生状态：ingest 每次重建（已 gitignore）
 templates = "data/tmpl"            # 叙述模板（templates.toml）
-book = "data/config/book"          # 本书专属文件（book.toml / case-studies.toml）
+book = "data/book"                 # 本书专属文件（book.toml / case-studies.toml）
+library = ".."                     # 其他书所在的目录（缺省＝本书的父目录）
 baselines = "data/baselines"       # 已评审存量的账本目录
 cover_image = ""                   # 可选：封面图，留空则不生成
 
@@ -52,6 +53,32 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 [chapters.packages]                # 单主责：每个源码包只归一章
 "ch1-<主题>.md" = ["org.example", "org.example.core"]
 ```
+
+`[sources]` 声明**这本书读哪棵树**（属于书的身份，不是工具链策略）：
+
+```toml
+[sources]
+src_main = "../h2/src/main"        # 单根；路径相对书根，可以指向书外
+pom_root = "../h2/pom.xml"         # 可选：清单文件位置
+version = "2.5.259-SNAPSHOT"       # 可选：逐一解析不到时用
+# roots = [{ label = "h2", path = "../h2/src/main" }]   # 多根时用这个，label 必填且唯一
+```
+
+分析口径（`languages`、`suffixes`、`package_prefix`）仍在 `data/config/base.json [sources]`，
+书级同名键覆盖它。
+
+`[editions]` 声明手稿版本（不声明即单版本，目录与产物名都不变）：
+
+```toml
+default_edition = "main"           # 多于一个版本时必填
+[editions]
+main = "主版本"
+[editions.abridged]                # 版本也可以是表：display / merged_name / chapters 覆盖
+display = "删节版"
+```
+
+书身份文件两种布局等价：`<书根>/data/book/book.toml` 与 `<书根>/book.toml`；判定只看能否
+读到 `book.toml`，`[paths]` 一律相对**书根**解析。
 
 要点：`numbering` 必须唯一（决定 H1 顺序），`coverage` 允许重复（用于均衡度量），
 `packages` 必须唯一（否则 `gate_trace`/`check_architecture` 会报）。

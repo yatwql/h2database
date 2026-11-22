@@ -44,6 +44,27 @@ python books/src/python/app/cli.py build
 python books/src/python/make.py check --timings
 ```
 
+## 选择书籍与版本
+
+一份工具链可以服务多本书。选书有三个来源，优先级固定：
+
+| 来源 | 写法 | 说明 |
+| --- | --- | --- |
+| 命令行 | `--book <书目录>` | 显式指定，缺 `book.toml` 时退出码 2 并给出试过的路径 |
+| 环境变量 | `BOOK_ROOT=<书目录>` | 子进程与脚本继承，`bookctl make …` 也用它 |
+| 向上查找 | 无 | 从当前目录向上找第一本带 `book.toml` 的书 |
+
+```bash
+books/scripts/bookctl status --book ../other-book     # 看另一本书
+books/scripts/bookctl check --book ../other-book      # 检查另一本书
+books/scripts/bookctl analyze --edition abridged      # 一本书的某个版本
+books/scripts/bookctl make build --book ../other-book # 透传给 make.py
+```
+
+`--edition` 选版本（`book.toml [editions]` 声明），缺省取 `default_edition`；
+指向未声明的版本会报错并列出已声明的版本。产物、手稿、派生状态、体量基线都跟着
+「书 + 版本」走，不同书之间互不覆盖。
+
 ## 退出码
 
 | 码 | 含义 |

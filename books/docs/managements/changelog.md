@@ -374,6 +374,12 @@
 - **多书文档与目录编号对齐**：多书设计里出现两个 `## 13.`（重编号为 1–17）；`folder.md` §3 与
   `technical.md` §3.1 补上「书身份文件两种布局都认」——`<书根>/data/book/book.toml` 与
   `<书根>/book.toml` 等价，判定只看能否读到 `book.toml`，产物与手稿仍在各自书根下。
+- **用户文档补上多书能力**：CLI／TUI／Web 三份手册此前完全没有「选书与选版本」——
+  分别新增：`--book`/`--edition` 的优先级与退出码、主菜单 `6` 的「书籍」屏（含拒绝切换与
+  清屏规则）、Web 顶部下拉框与 `/api/books`。`how-to-config.md` §1 修正过期的
+  `book = "data/config/book"`（实际是 `data/book`），并补 `[paths].library`、`[sources]`
+  （已归书）、`[editions]`、两种书身份布局；FAQ 增加三个高频问题（多书并存、两个 toml
+  谁算数、源码路径在哪配）。示例统一用占位名，`versions` 门禁要求工具文档不点名具体书。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

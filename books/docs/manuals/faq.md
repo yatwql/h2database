@@ -95,3 +95,20 @@ WARNING 以上，避免刷屏。
 **Q：怎么让某一章用不同 provider？**
 在 `llm_provider.json` 的 `routing.chapter` 里按章节文件名指定；优先级
 `chapter > book > scenario > default_provider`。
+
+## 一套工具链能同时管几本书吗？
+
+能。每本书是一个**书根**（目录里有 `book.toml`），互不共享 `dist/`、`data/manuscript/`、
+`data/state/` 与体量基线。切换方式：`--book <书目录>`、`BOOK_ROOT`，或在 TUI 主菜单按
+`6`、在 Web 顶部下拉框选择（候选来自 `book.toml [paths].library` 指定的目录）。
+
+## `data/book/` 下有两个 toml，哪个才算「这本书」？
+
+`book.toml`。它是身份文件（标题、路径、章节表、源树、版本表），`case-studies.toml` 只是
+它的一份内容数据（附录 A 的案例流水线），缺了不影响这本书成立。
+
+## 被分析的源码路径在哪配？换书会不会换源？
+
+在 `data/book/book.toml [sources]`（`src_main` 或 `roots[]`），路径相对书根、可以指向书外。
+换书就换源——「读哪棵树」属于书的身份；语言与后缀这类分析口径留在 `base.json [sources]`。
+
