@@ -73,13 +73,14 @@ def book_choices() -> dict:
     active = _config.current().root
     books = []
     for root in _config.candidate_books(active):
+        # `config` is the book's directory name: with one book per directory it is
+        # what tells two identically titled books apart
         entry = {'root': root, 'title': '', 'version': '',
-                 'config': os.path.basename(os.path.dirname(
-                     os.path.join(root, 'data', 'book')))}
+                 'config': os.path.basename(root)}
         try:
             cfg = _config.Config(root)
-            entry.update({'title': cfg.title, 'version': cfg.version,
-                          'config': os.path.basename(root)})
+            entry['title'] = cfg.title
+            entry['version'] = cfg.version
         except _config.ConfigError:
             pass
         books.append(entry)

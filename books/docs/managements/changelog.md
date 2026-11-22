@@ -415,6 +415,10 @@
   `手稿 40,097 行（再少 5,049 行即判「内容变薄」）`；`technical.md` 模块表补四个新模块
   （`core/docs_archive`、`audit/doc_archive`、`audit/plan_coverage`、`manuscript/renumber`）；
   `scripts-and-reference.md` 新增「按需执行的工具脚本」一节，说明这三个工具何时用、怎么用。
+- **代码体检：去掉重复导入与一处重复计算**：`core/actions.py`、`core/menu.py`、`core/settings.py`
+  都在 `sys.path.insert` 前后各写一遍 `import os`/`sys`，第二份是多余的；`app/web.py` 的
+  候选项把 `config` 字段算了两次（第一次的算法对嵌套布局还是错的），改为构建一次、
+  语义唯一（书所在目录名）。四道形态门禁（架构、脚本契约、文件长度、类型）与快档用例全绿。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

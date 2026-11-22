@@ -14,9 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import importlib
 import json
-import os
 import re
-import sys
 
 from lib import _config, _fsutil, _volume
 
