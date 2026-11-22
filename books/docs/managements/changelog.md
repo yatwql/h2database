@@ -445,6 +445,10 @@
 - **主菜单定版为 1–8 + 字母键**：`1/m`、`2/b`、`3/p`、`4/t`、`5/c`、`6/s`、`7/n`、`8/l`
   （大小写不敏感）——`8` 收编原来的 `l`（LLM 润色），`7` 收编原来的 `n`（新增书籍），
   行内以 `[1/M]` 形式同时显示两种键。`DESIGN-TUI.md` 屏幕树与键位表、用户手册同步。
+- **主菜单再定版为 1–8 + `a/l/b/p/t/c/s/n`**：LLM 变体紧随主流程排在 `2`（原 `8`），
+  构建及其后各项依次后移一位（构建 `3`、交付 `4`、质量 `5`、配置 `6`、切换书籍 `7`、
+  新增书籍 `8`）；默认光标仍落在构建（现在是 `3`）。`DESIGN-TUI.md` 屏幕树与键位表、
+  用户手册、5 条用例同步。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

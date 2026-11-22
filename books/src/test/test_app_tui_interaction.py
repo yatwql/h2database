@@ -86,44 +86,44 @@ class TuiInteractionTest(unittest.TestCase):
         self.assertEqual(self.calls, [])
 
     def test_zero_collapses_a_finished_result_instead_of_quitting(self):
-        code, out = self.press('2', '0', '2', 'q')
+        code, out = self.press('3', '0', '3', 'q')
         self.assertEqual(code, 0)
         # the action ran twice: `0` returned to the menu, it did not exit
         self.assertEqual(self.calls, ['build', 'build'])
         self.assertIn('按任意键继续', out)
 
     def test_the_result_frame_does_not_show_an_input_prompt(self):
-        _code, out = self.press('2', 'q')
+        _code, out = self.press('3', 'q')
         tail = [line for line in out.splitlines() if line.strip()][-3:]
         self.assertFalse(any(line.strip() == '❯' for line in tail), tail)
 
     def test_escape_at_a_sub_level_goes_back_and_at_main_quits(self):
-        code, out = self.press('5', self.keys.KEY_ESC, 'q')
+        code, out = self.press('6', self.keys.KEY_ESC, 'q')
         self.assertEqual(code, 0)
         self.assertIn('主菜单', out)
 
     def test_q_quits_from_a_sub_level(self):
-        code, _out = self.press('4', 'q')
+        code, _out = self.press('5', 'q')
         self.assertEqual(code, 0)
 
     def test_the_cursor_starts_on_the_everyday_action(self):
         self.assertEqual(self.menu.default_cursor('main'),
-                         self.menu.index_of('main', '2'))
+                         self.menu.index_of('main', '3'))
 
     def test_enter_inside_a_category_runs_its_default_entry(self):
-        code, out = self.press('4', self.keys.KEY_ENTER, 'q')
+        code, out = self.press('5', self.keys.KEY_ENTER, 'q')
         self.assertEqual(code, 0)
         self.assertEqual(self.calls, ['check'])
         self.assertIn('正在执行 全部质量门禁', out)
 
     def test_digit_key_runs_immediately_without_enter(self):
-        self.press('4', '1')
+        self.press('5', '1')
         self.assertEqual(self.calls, ['check'])
 
     def test_the_config_screen_offers_the_fact_refresh(self):
         keys = [row[0] for row in self.tui.screen_rows('config')]
         self.assertEqual(keys, ['1', '2', '3', '4', '5', '6', '0'])
-        self.press('5', '6')
+        self.press('6', '6')
         self.assertEqual(self.calls, ['analyze-refresh'])
 
     def test_the_llm_ingest_asks_before_overwriting_written_prose(self):
@@ -145,9 +145,9 @@ class TuiInteractionTest(unittest.TestCase):
                 self.assertEqual(self.calls, ['analyze-llm'])
 
     def test_arrows_move_within_a_screen_and_wrap(self):
-        # the cursor starts on "2 手稿 → Markdown + HTML"; up lands on the row above
+        # the cursor starts on "3 手稿 → Markdown + HTML"; up lands on analyze-llm
         self.press(self.keys.KEY_UP, self.keys.KEY_ENTER)
-        self.assertEqual(self.calls, ['analyze'])
+        self.assertEqual(self.calls, ['analyze-llm'])
 
     # -- settings and provider priority -----------------------------------
     def settings_rows(self):
@@ -191,7 +191,7 @@ class TuiInteractionTest(unittest.TestCase):
 
     # -- reporting --------------------------------------------------------
     def test_each_run_reports_timing_exit_code_and_output_tail(self):
-        _code, out = self.press('4', '1')
+        _code, out = self.press('5', '1')
         self.assertIn('输出-check-第二行', out)
         self.assertIn('退出码 0', out)
         self.assertIn('用时', out)
@@ -213,13 +213,13 @@ class TuiInteractionTest(unittest.TestCase):
         self.assertIn('无效按键', out)
 
     def test_deliver_asks_before_rebuilding(self):
-        self.press('3', answers=['n'])
+        self.press('4', answers=['n'])
         self.assertEqual(self.calls, [])
-        _code, out = self.press('3', answers=['n'])
+        _code, out = self.press('4', answers=['n'])
         self.assertIn('已取消', out)
 
     def test_deliver_runs_when_confirmed(self):
-        self.press('3', answers=['y'])
+        self.press('4', answers=['y'])
         self.assertEqual(self.calls, ['deliver'])
 
     def test_the_books_screen_lists_candidates_and_marks_the_active_one(self):
@@ -304,21 +304,21 @@ class TuiInteractionTest(unittest.TestCase):
         self.assertIn('克隆', message)
 
     def test_letter_shortcuts_alias_the_digits(self):
-        self.assertEqual(self.tui.menu.resolve('main', 'M'), '1')
-        self.assertEqual(self.tui.menu.resolve('main', 's'), '6')
-        self.assertEqual(self.tui.menu.resolve('main', 'N'), '7')
-        self.assertEqual(self.tui.menu.resolve('main', 'l'), '8')
-        self.assertEqual(self.tui.menu.resolve('main', 'c'), '5')
+        self.assertEqual(self.tui.menu.resolve('main', 'A'), '1')
+        self.assertEqual(self.tui.menu.resolve('main', 'l'), '2')
+        self.assertEqual(self.tui.menu.resolve('main', 's'), '7')
+        self.assertEqual(self.tui.menu.resolve('main', 'N'), '8')
+        self.assertEqual(self.tui.menu.resolve('main', 'c'), '6')
         self.assertEqual(self.tui.menu.resolve('config', 's'), 's')   # only main has letters
 
     def test_a_row_shows_its_letter_beside_the_digit(self):
-        self.assertEqual(self.tui.menu.display_key('main', '1'), '1/m')
-        self.assertEqual(self.tui.menu.display_key('main', '6'), '6/s')
-        self.assertEqual(self.tui.menu.display_key('main', '8'), '8/l')
+        self.assertEqual(self.tui.menu.display_key('main', '1'), '1/a')
+        self.assertEqual(self.tui.menu.display_key('main', '2'), '2/l')
+        self.assertEqual(self.tui.menu.display_key('main', '8'), '8/n')
         self.assertEqual(self.tui.menu.display_key('quality', '1'), '1')
 
     def test_pressing_a_letter_runs_the_same_action_as_its_digit(self):
-        self.press('m')
+        self.press('a')
         self.assertEqual(self.calls, ['analyze'])
 
 if __name__ == '__main__':

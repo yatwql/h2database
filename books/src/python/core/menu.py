@@ -32,8 +32,8 @@ NEW_BOOK_ACTION = '@new-book'
 # Letter shortcut -> the row key it stands for, per screen. Matching is
 # case-insensitive, so S and s both run "1 源码 → 手稿".
 LETTER_ALIASES: dict[str, dict[str, str]] = {
-    'main': {'m': '1', 'b': '2', 'p': '3', 't': '4', 'c': '5', 's': '6',
-             'n': '7', 'l': '8'},
+    'main': {'a': '1', 'l': '2', 'b': '3', 'p': '4', 't': '5', 'c': '6',
+             's': '7', 'n': '8'},
 }
 
 
@@ -56,13 +56,13 @@ def display_key(screen: str, key: str) -> str:
 # screen -> [(key, action, label)]; `@open:<screen>` and `@back` are navigation
 SCREENS: dict[str, list[tuple[str, str, str]]] = {
     'main': [('1', 'analyze', '源码 → 手稿'),
-             ('2', 'build', '手稿 → Markdown + HTML'),
-             ('3', 'deliver', 'PDF + EPUB（按需）'),
-             ('4', OPEN_PREFIX + 'quality', '质量：门禁与测试'),
-             ('5', OPEN_PREFIX + 'config', '配置：状态、配置项与 LLM'),
-             ('6', OPEN_PREFIX + BOOKS_SCREEN, '切换书籍'),
-             ('7', NEW_BOOK_ACTION, '新增书籍'),
-             ('8', 'analyze-llm', '源码 → 手稿（LLM 润色导读/小结）'),
+             ('2', 'analyze-llm', '源码 → 手稿（LLM 润色导读/小结）'),
+             ('3', 'build', '手稿 → Markdown + HTML'),
+             ('4', 'deliver', 'PDF + EPUB（按需）'),
+             ('5', OPEN_PREFIX + 'quality', '质量：门禁与测试'),
+             ('6', OPEN_PREFIX + 'config', '配置：状态、配置项与 LLM'),
+             ('7', OPEN_PREFIX + BOOKS_SCREEN, '切换书籍'),
+             ('8', NEW_BOOK_ACTION, '新增书籍'),
              (BACK_KEY, QUIT_ACTION, '退出')],
     'quality': [('1', 'check', '全部质量门禁'),
                 ('2', 'test', '测试套件（快档）'),
@@ -99,7 +99,7 @@ LLM_ACTIONS = frozenset({'analyze-llm', 'llm-ask'})
 CONFIRM_ACTIONS = frozenset({'deliver'})
 
 # Where the cursor starts on each screen: the everyday next step, not ingest.
-DEFAULT_ENTRY_KEY = {'main': '2', 'quality': '1', 'config': '1'}
+DEFAULT_ENTRY_KEY = {'main': '3', 'quality': '1', 'config': '1'}
 
 TAIL_LINES = 15
 
