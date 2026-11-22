@@ -15,10 +15,16 @@
 
 ## 步骤二：`--book` 与向上查找
 
-**前置（必须先做）**：`source_refs.SOURCE_DIR`、`content_depth.source_root`、
-`chapters.SOURCE_ROOT` 三处在导入期就把源根固定，切书对它们无效。改成调用时读取，
-并加一条用例：在同一进程里 `use()` 切到另一个书根后，这三处返回的源根随之改变。
-这条不改，步骤二只是「看起来切了书」。
+**前置（必须先做）**：
+
+1. `source_refs.SOURCE_DIR`、`content_depth.source_root`、`chapters.SOURCE_ROOT` 三处在
+   导入期就把源根固定，切书对它们无效。改成调用时读取，并加一条用例：在同一进程里
+   `use()` 切到另一个书根后，这三处返回的源根随之改变。
+2. `lib/_config` 的 `_DEFAULT` 在导入期构造，那时 `--book` 还没解析。改为惰性（首次
+   `current()` 才构造），入口先定书根再构造 `Config`。这条不改，`--book` 只在一部分
+   调用路径上生效。
+
+两条不改，步骤二只是「看起来切了书」。
 
 **动作**：
 
@@ -27,8 +33,9 @@
 2. 优先级固定为：`--book` > 环境变量 `BOOK_ROOT` > 向上查找 > 工具链所在 checkout。
    四者都落空时的报错必须点明「没找到 book.toml，试过哪些位置」。向上查找走到文件系统根
    为止，路径比较用 `realpath`，在大小写不敏感的文件系统上按不敏感比较。
-3. 选定后整次运行在一个 `with _config.use(cfg):` 里；`app/web.py` 启动时选定一本书并在
-   进程内固定（见 `design.md` §7）。
+3. 选定后整次运行在一个 `with _config.use(cfg):` 里；`scripts/bookctl` 透传 `--book`，
+   `app/web.py` 启动时选定一本书并在进程内固定（见 `design.md` §7）；写配置的动作
+   （`settings set`）写到活动书自己的文件里，不跨书写。
 4. 缺 `data/book/book.toml` 的书根：退出码 2，报出路径与期望文件名，不打印堆栈
    （退出码沿用 `core/actions.py` 的既有约定：未知动作与配置异常都退 2）。`book.toml`
    只认 `data/book/`，不自动回退到旧位置。
@@ -56,14 +63,17 @@
 
 1. `book.toml [editions]`：键为版本标识，值为显示名；**未声明即单版本**，目录形态不变。
    章节清单仍归书级（`[chapters]`），版本默认继承，需要时用 `[editions.<id>.chapters]`
-   覆盖；图号与章号不因版本重排。
+   覆盖。章号按保留章节重编号（`structure.py` 要求 `1..N` 连续），原章号到新章号的映射
+   记进该版本的派生状态；图号在各自章节内不变。
 2. 声明后，各版本手稿放 `data/manuscript/<edition>/`（`[paths].manuscript` 仍指向
    `data/manuscript`，版本目录在它下面），`--edition` 选择；缺省版本写在
    `book.toml` 的顶层键 `default_edition`（**不放在 `[editions]` 表里**，否则与名为
    `default` 的版本冲突），未声明时取第一个键。
 3. 派生状态与体量基线按版本分键：`state/<edition>/`、`baselines/<edition>/`（目录内的
    键与当前相同）；未声明 `[editions]` 时仍写 `state/`、`baselines/`（当前的位置）。
-4. `content_volume.py` 的体量比对只与同版本基线比；跨版本比对必须显式给
+4. 产物按版本命名：缺省 `<merged_name>-<edition>`，需要固定名字时用
+   `[editions.<id>].merged_name`；同时有语言后缀时再接 `-<lang>`。
+5. `content_volume.py` 的体量比对只与同版本基线比；跨版本比对必须显式给
    `--baseline <文件>`，不允许隐式回退。
 
 **验收**：
@@ -114,6 +124,12 @@
 
 **回滚**：删 `roots` 表回到单根；基线里的 `source` 字段留着不影响比对（单根时与
 `versions().source` 一致）。
+
+## 每步都要带的文档同步
+
+多书能力会同时出现在五份管理文档里，漏一处就出现两套说法。清单见
+`design.md` §11；每一步的验收里都要勾一遍自己那条，`doc_drift` 只兜得住路径与章节名，
+兜不住「同一事实两种说法」。
 
 ## 四步之外：本仓自举与 CI
 

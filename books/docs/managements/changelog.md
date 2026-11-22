@@ -227,6 +227,12 @@
   单根 `src_main` 保持兼容；体量基线写入 `source{label, version, digest}`，换源后要求复核。
   同时点出一处真实阻塞：`source_refs`、`content_depth`、`chapters` 在导入期就冻结源根，
   `Config` 切书对它们无效，列为步骤二的前置。能力登记为 IR-11，多根源列为按需的步骤五。
+- **多书设计三轮复核**：修掉自相矛盾与两处会踩坑的沉默行为——设计原写「章号不重排」，
+  而 `structure.py` 要求 `1..N` 连续，删节版留空洞必红，改为版本重编号并记录原章号映射；
+  多版本共用 `merged_name` 会互相覆盖，改为缺省 `<merged_name>-<edition>`；`_DEFAULT` 在
+  导入期构造，`--book` 尚未解析就会按兜底根读盘，改为惰性并与「源根解冻」并列为步骤二前置。
+  新增「与语言包计划的关系」（语言是资源、版本是内容是两件事）、五份管理文档的改动面清单，
+  并把 `scripts/bookctl` 透传与 `settings set` 的写入目标写进步骤二。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
