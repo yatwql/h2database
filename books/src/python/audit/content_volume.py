@@ -266,7 +266,7 @@ def update_baseline(current: dict, accept_shrink: bool = False,
         for item in drops[:10]:
             print(f'  - {item}', file=sys.stderr)
         print('   确认是有意收缩后加 --accept-shrink --reason "<理由>"；'
-              '要保留原来的下限，就修回内容再重记。', file=sys.stderr)
+              '要保留下限不变，就修回内容再重记。', file=sys.stderr)
         return 1
     if drops:
         current.setdefault('accepted_shrinks', []).append(

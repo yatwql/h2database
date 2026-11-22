@@ -43,7 +43,7 @@
 第二语种包与骨架 → 双语等价性判据 → 产物与交付）；先把取词从脚本挪进语言包且中文版行为
 零变化，再上第二语种。
 **验收**：第二语种可构建；章节数与图号与中文版逐一对应；`structure.py` 绿；判据脚本里
-不再有语种字面量，缺字段回退可见且有断言。
+不出现语种字面量，缺字段回退可见且有断言。
 **事实位**：设计与计划在 `docs/plan/language-pack/design.md` 与 `docs/plan/language-pack/plan.md`；
 语言资源在 `data/language/`；读取入口见 `technical.md` §3.3。
 

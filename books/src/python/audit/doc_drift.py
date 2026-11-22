@@ -35,7 +35,7 @@ PATH_RE = re.compile(r'`((?:books|h2|\.github|src|scripts|data|docs)/[A-Za-z0-9_
 SCRIPT_RE = re.compile(r'`([a-z_]+\.py)`')
 CHAPTER_RE = re.compile(r'(?<![\w/-])((?:ch\d[\w-]*|appendix-[\w-]+|cover)\.md)')
 LEVEL_RE = re.compile(r'^\**P[0-3]\**$')
-# files whose job is to record what changed may name files that no longer exist
+# files whose job is to record what changed may name files that do not exist
 LEDGER_DOCS = ('changelog.md', 'review-findings.md')
 # testplan headings that own the gate-level axis; everywhere else the level is
 # repeated, and a repeated level drifts from the one that is checked
@@ -330,9 +330,9 @@ def check_managements(directory: str | None = None) -> list[dict]:
     """The management directory and its two registries name the same set.
 
     Two surfaces claim to describe the same directory: the index table in
-    README.md and the tree in folder.md. Neither used to be compared with the
-    directory itself, so a document could exist unlisted, be listed twice, or
-    stay listed after it was gone.
+    README.md and the tree in folder.md. Both are compared with the directory
+    itself, so a document cannot exist unlisted, be listed twice, or stay listed
+    after it is gone.
     """
     base = directory or os.path.join(_config.BOOK_ROOT, 'docs', 'managements')
     actual = management_files(base)

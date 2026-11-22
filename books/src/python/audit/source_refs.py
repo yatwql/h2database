@@ -42,7 +42,7 @@ POM_PATH = _config.source_tree('pom_root')
 BASELINE_PATH = _config.baseline_path('source_symbol')
 
 # Scanned files come from book.toml, so a renamed or merged chapter can never
-# leave the gate silently checking a file that no longer exists. Appendices are
+# leave the gate checking a file that does not exist. Appendices are
 # prose too: their coordinates and `Class.method(` claims follow the same rules
 # instead of waiting for a proofreading pass.
 CHAPTER_FILES = _config.chapter_names(include_cover=False)
