@@ -9,7 +9,7 @@
 
 | 层 | 载体 | 负责 | 不负责 |
 | --- | --- | --- | --- |
-| 风格文件 | `data/config/style.json`、`data/config/base.json`、`data/config/book/book.toml`、`data/language/` | 阈值、词表、章节顺序、语言映射；唯一的政策事实来源（`style-guide.md` 只解释规则怎么读，不持有取值） | 判断某段文字是否真的说清楚了 |
+| 风格文件 | `data/config/style.json`、`data/config/base.json`、`data/book.toml`、`data/language/` | 阈值、词表、章节顺序、语言映射；唯一的政策事实来源（`style-guide.md` 只解释规则怎么读，不持有取值） | 判断某段文字是否真的说清楚了 |
 | 脚本门禁 | `src/python/audit/*`、`src/python/render/verify_*` | 一切可枚举、可复现、可基线的判定：体量与结构、编号与链接、术语一致性、图注形态、代码摘录与源码一致 | 语义正确性、叙述是否成立 |
 | LLM | `lib/_llm.py`（`app/` 与 ingest 散文场景） | 生成初稿、评审语义、给出改写建议；产出**建议**，不产出结论 | 任何门禁判定、任何数字、任何「通过/不通过」 |
 

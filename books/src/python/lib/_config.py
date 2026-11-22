@@ -5,7 +5,7 @@ Everything a script needs about a book is resolved by :class:`Config`, which
 takes the book root and reads that book's own files. No script hard-codes a
 path or a threshold:
 
-* ``data/config/book/book.toml`` — content organisation: book identity, paths,
+* ``data/book.toml`` — content organisation: book identity, paths,
   chapter order, per-file titles/numbering/coverage, package mapping.
 * ``data/config/base.json`` — infrastructure: source tree location,
   file suffix / package prefix, state and baseline paths, toolchain budgets.
@@ -79,7 +79,7 @@ class Config:
         self.root = os.path.abspath(root or _default_root())
         self.config_dir = os.path.join(self.root, 'data', 'config')
         # book.toml sits at a fixed spot: it is what declares the [paths] overrides.
-        self.book_toml = os.path.join(self.config_dir, 'book', 'book.toml')
+        self.book_toml = os.path.join(self.root, 'data', 'book.toml')
         self.base_policy_path = os.path.join(self.config_dir, 'base.json')
         self.style_policy_path = os.path.join(self.config_dir, 'style.json')
         # Legacy single-file policy, still honoured when the split files are absent.
@@ -135,7 +135,7 @@ class Config:
 
     def book_dir(self) -> str:
         """Directory holding the files that belong to this book alone."""
-        return self._rel('book', 'data/config/book')
+        return self._rel('book', 'data')
 
     def tmp_dir(self) -> str:
         """Scratch directory under the book root (gitignored, regenerated)."""

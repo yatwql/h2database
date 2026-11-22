@@ -4,7 +4,7 @@
 Creates a directory containing the four document-side files with the right
 division of responsibility:
 
-  data/config/book/book.toml   structure: identity, paths, chapter list, titles,
+  data/book.toml   structure: identity, paths, chapter list, titles,
                      numbering, coverage, package mapping
   data/tmpl/templates.toml     prose: narrative templates (placeholders kept)
   data/language/<code>.json    labels: section names, exercise hints, term line

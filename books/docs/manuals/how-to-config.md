@@ -9,7 +9,7 @@
 
 | 层 | 文件 | 管什么 |
 | ---- | ------ | -------- |
-| 数据组织 | `data/config/book/book.toml` | 书名、版本、路径、章节清单、章节标题、H1 编号、覆盖归属、章节→包映射 |
+| 数据组织 | `data/book.toml` | 书名、版本、路径、章节清单、章节标题、H1 编号、覆盖归属、章节→包映射 |
 | 基础配置 | `data/config/base.json` | 源码树、语言、文件后缀、包前缀、状态与基线路径、工具链预算、日志 |
 | 风格配置 | `data/config/style.json` | 展示文案、章节骨架、图注词表、写作与质量阈值、生成能力与模板 |
 | 语言包 | `data/language/<code>.json` | 章节骨架名、练习提示语、术语提示行 |
@@ -122,7 +122,7 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 | 判定规则与阈值（图注词表、质量/文风阈值、篇幅预算、必备段落名） | `data/config/style.json` | 配置 |
 | 文体文案（四段引言、深读要点等叙述模板） | `data/tmpl/templates.toml` | 文档 |
 | 名称与提示语（章节骨架名、练习提示/回顾前缀、术语行） | `data/language/zh.json` | 文档 |
-| 书籍身份与展示文案（书名、作者、页眉、产物名） | `data/config/book/book.toml [book]/[project]` | 文档 |
+| 书籍身份与展示文案（书名、作者、页眉、产物名） | `data/book.toml [book]/[project]` | 文档 |
 
 `style_schema.py` 会拒绝把叙述模板塞回 `style.json`（`generation.templates`）
 或把展示文案放进配置（`project`），保证两边不串味。

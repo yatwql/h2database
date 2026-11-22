@@ -11,10 +11,9 @@
 ```text
 books/
   data/                      # 输入数据：配置 + 手稿 + 机器维护的状态
-    config/
-      book/                  # 本书专属：换一本书就整份替换
-        book.toml            # 文档·结构：身份、路径、章节顺序、标题与编号、包映射
-        case-studies.toml    # 文档·案例：案例流水线（scenario -> steps），按书可选
+    book.toml                # 文档·结构：身份、路径、章节顺序、标题与编号、包映射（本书专属）
+    case-studies.toml        # 文档·案例：案例流水线（scenario -> steps），按书可选
+    config/                  # 工具链策略：换一本书也照用
       base.json              # 配置·基础：源码树、语言与后缀、包前缀、基线路径、预算、日志
       style.json             # 配置·规则：图注词表、质量/文风阈值、禁用语、必备段落、预算上限
       llm_provider.json      # 配置·LLM：provider、路由与回退优先级
@@ -94,14 +93,14 @@ books/docs/managements/
 ## 2.1 配置分四层
 
 四个文件各管一段，**合并顺序、读取入口与别名在 `technical.md` §3.1**，本文只记归属：
-`data/config/book/book.toml`（数据组织）、`data/config/base.json`（基础配置）、
+`data/book.toml`（数据组织）、`data/config/base.json`（基础配置）、
 `data/config/style.json`（书籍风格）、`data/language/zh.json`（语言资源）。
 
 ## 3. 归属规则
 
 - **文档与配置分离**：判定规则/阈值在 `style.json`，叙述模板在 `templates.toml`，
   名称与提示语在 `language/`，书籍身份与展示文案在 `book.toml`。
-- **配置分四层**：内容组织 `data/config/book/book.toml`、基础设施 `data/config/base.json`、
+- **配置分四层**：内容组织 `data/book.toml`、基础设施 `data/config/base.json`、
   写作规则 `data/config/style.json`、语言资源 `data/language/zh.json`。合并规则只在
   `technical.md` §3.1 定义；脚本统一通过 `_config` 读取，禁止硬编码。
 - **基线与状态归 data**：`data/baselines/` 存放机器维护的已知问题记账，不放人写文档。

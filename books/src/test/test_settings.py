@@ -86,12 +86,12 @@ class TestSettings(SettingsCase):
     def test_set_title_persists_to_toml(self):
         settings = self.settings()
         settings.set_value('title', '新的书名')
-        self.assertIn('title = "新的书名"', self.read('data/config/book/book.toml'))
+        self.assertIn('title = "新的书名"', self.read('data/book.toml'))
 
     def test_set_dist_persists(self):
         settings = self.settings()
         settings.set_value('dist', 'out')
-        self.assertIn('dist = "out"', self.read('data/config/book/book.toml'))
+        self.assertIn('dist = "out"', self.read('data/book.toml'))
 
     def test_set_languages_list(self):
         settings = self.settings()
@@ -102,7 +102,7 @@ class TestSettings(SettingsCase):
     def test_set_ingest_prose_writes_a_toml_boolean(self):
         settings = self.settings()
         self.assertEqual(settings.set_value('llm.ingest_prose', 'true'), 'true')
-        with open(os.path.join(self.root, 'data', 'config', 'book', 'book.toml'),
+        with open(os.path.join(self.root, 'data', 'book.toml'),
                   encoding='utf-8') as fh:
             body = fh.read()
         self.assertIn('ingest_prose = true', body)
@@ -232,7 +232,7 @@ class TestCliSurface(SettingsCase):
         code, out = _fixture.run_inproc(self.root, 'cli.py', 'settings', 'set',
                                         'title', 'CLI 书名')
         self.assertEqual(code, 0, out[-300:])
-        self.assertIn('CLI 书名', self.read('data/config/book/book.toml'))
+        self.assertIn('CLI 书名', self.read('data/book.toml'))
 
     def test_cli_settings_set_rejects_unknown_key(self):
         code, out = _fixture.run_inproc(self.root, 'cli.py', 'settings', 'set', 'nope', 'x')

@@ -190,8 +190,9 @@
   而 `core/scaffold.py` 建新书时并不生成本文件——原实现在**导入期**读它并 `SystemExit`，等于
   一本没有案例研究的书连模块都进不去。现在缺失即视为「未配置」（`load_scenarios()` 返回空表），
   TOML 写错仍判红，并补一条用例钉住。`folder.md` 同步写明它是按书可选的内容数据。
-- **本书专属文件移出模板目录**：`book.toml` 与 `case-studies.toml` 从 `data/tmpl/` 移到
-  `data/config/book/`，`data/tmpl/` 只留 `templates.toml` 这类叙述模板。原先两类东西混放在
+- **本书专属文件搬到 `data/` 顶层**：`book.toml` 与 `case-studies.toml` 直接放在 `data/` 下，
+  `data/tmpl/` 只留 `templates.toml` 这类叙述模板。这两份是每天要看的书身份与案例，藏在
+  `config/` 的子目录里等于让读者多翻两层；`[paths].book` 的缺省值随之改为 `data`。原先两类东西混放在
   一起（一是「换一本书整份替换」的身份/案例，一是生成时套用的模板），看目录分不出哪份能复用到
   别的书。`_config` 新增 `book_dir()`/`book_path()`，`book.toml [paths]` 增加 `book` 键，
   scaffold、traces、case_studies、fixture 与用户文档同步改指向。
@@ -201,6 +202,10 @@
   模块级名字改为转发到活动书（PEP 562 `__getattr__`），新增 `current()` / `use()` /
   `for_root()`；调用形式与取值全部不变（渲染文本哈希 `13f8976f…` 未变），新增 8 条用例
   钉住两本书互不串值、`use()` 异常也还原、未知名字仍报错。
+- **书籍配置文件的落点**：`data/book.toml` 与 `data/case-studies.toml` 就摆在 `data/` 第一层，
+  与 `manuscript/`、`config/`、`tmpl/` 并列；`data/config/` 恢复为「工具链策略」专用
+  （base/style/llm_*）。`Config.book_toml`、scaffold 写入位置、注释痕迹扫描面、fixture、
+  用户文档与 20 处路径引用同步改指向。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

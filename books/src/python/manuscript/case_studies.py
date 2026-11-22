@@ -45,7 +45,7 @@ CASE_STUDY_CONFIG = _config.book_path('case-studies.toml')
 
 
 def load_scenarios() -> dict[str, list[tuple[str, str, str]]]:
-    """Read the case-study pipelines from data/config/book/case-studies.toml.
+    """Read the case-study pipelines from data/case-studies.toml.
 
     The file belongs to one book: a book without case studies simply has no such
     file. Callers treat an empty table as "nothing configured" rather than as a

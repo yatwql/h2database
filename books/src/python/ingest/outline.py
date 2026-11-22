@@ -3,7 +3,7 @@
 
 Reads ``books/data/state/source-inventory.json`` (produced by
 ``digest.py``) plus the chapter -> package mapping in
-``books/data/config/book/book.toml`` and writes ``books/data/state/outline.json``:
+``books/data/book.toml`` and writes ``books/data/state/outline.json``:
 per chapter, the packages it must cover with their size and key classes.
 
 Usage:

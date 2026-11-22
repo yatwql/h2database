@@ -37,7 +37,7 @@
 ## 3. 新增一章或一节
 
 1. 写手稿文件，放进 `books/data/manuscript/`。
-2. 在 `books/data/config/book/book.toml` 的 `[chapters] files` 里登记顺序；章节清单决定了合并顺序。
+2. 在 `books/data/book.toml` 的 `[chapters] files` 里登记顺序；章节清单决定了合并顺序。
 3. 章末补齐四段：本章导读、本章小结、延伸思考、延展阅读，顺序固定。延伸思考每章至少 3 题，每题要有提示行与带锚点的回顾行。
 4. 如果这一章负责新的源码包，在 `[chapters.packages]` 里登记归属，避免与别的章重复描述。
 5. 跑一遍：

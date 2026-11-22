@@ -28,7 +28,7 @@ tools = "src/python"
 tmp = "data/tmp"
 state = "data/state"
 templates = "data/tmpl"
-book = "data/config/book"
+book = "data"
 baselines = "data/baselines"
 
 [chapters]

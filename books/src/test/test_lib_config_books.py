@@ -24,7 +24,7 @@ _config = importlib.import_module('lib._config')
 
 def make_book(root: str, title: str, merged: str, state: str) -> None:
     """Write the smallest book that Config can load."""
-    book_dir = os.path.join(root, 'data', 'config', 'book')
+    book_dir = os.path.join(root, 'data')
     os.makedirs(book_dir, exist_ok=True)
     os.makedirs(os.path.join(root, 'data', 'config'), exist_ok=True)
     with open(os.path.join(book_dir, 'book.toml'), 'w', encoding='utf-8') as fh:
