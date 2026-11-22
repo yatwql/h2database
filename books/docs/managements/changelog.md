@@ -465,6 +465,10 @@
   无子命令时的帮助退出码 2、`--json` 摘要与未知标签拒绝，此前完全没走；新增 4 条用例。
   未覆盖语句 1319 → 1294，快档 1214 passed。总覆盖仍 87%（阈值 88）：缺口集中在
   `verify_pdf`（49 语句 / 14 半分支）与 `to_epub`（42 / 15），下一步按此顺序。
+- **覆盖率：`verify_pdf` 的判定分支**：补 5 条用例走此前没走过的路径——缺 PDF、缺源 HTML、
+  大纲与标题不匹配、缺印刷目录项、以及 `require_toc_links` 下从未增强过的链接。这些分支
+  用 pypdf 合成 PDF 即可驱动，不需要浏览器或 pandoc。用例 14 → 19；总覆盖仍 87%（阈值 88），
+  剩余缺口集中在 `to_epub`（42 语句 / 15 半分支）。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
