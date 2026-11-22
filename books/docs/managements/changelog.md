@@ -324,6 +324,9 @@
   增加 `above`，界面显示 `体量 40,097 行（下限 35,048，尚余 5,049 行）`——下限 = 已评审
   基线 36,893 行 × `floor_ratio` 0.95；`?` 帮助补一句口径说明，`DESIGN-TUI.md` 的用量行
   同步，并加一条「不得出现百分比」的断言防回退。
+- **多书设计第 1 节对齐现状**：删掉「维护第二本书只能再检出一次工具链」的说法——`--book`
+  已能指向任意目录，实测仓外书目录 `cli.py status --book …` 正常；缺口改写为「工具链自己的
+  交付形态」：默认配置仍是每书一份、`bookctl` 仍是仓内脚本，这才是步骤四要解决的东西。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

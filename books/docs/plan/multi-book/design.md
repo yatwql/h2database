@@ -18,14 +18,15 @@
 `book.toml [paths]` 的 `state`、`baselines`、`manuscript`、`dist`、`tmp`、`book`、`templates`
 各自可指到任意位置，`_log.log_dir()` 落在书根下。
 
-缺口有三件事：
+按书选定的入口已经有了：`--book`（CLI、`make.py`、Web、TUI 各自接受）、`BOOK_ROOT`、
+向上查找，优先级固定，缺 `book.toml` 时退出码 2 并给出试过的路径。因此**一本书不必和工具链
+待在同一个检出里**——`--book` 指向任意目录即可，书目录与工具链之间没有文件复制。
+手稿的版本轴也已落地（`[editions]`、按版本的状态与基线、重编号与引用改写）。
 
-1. **没有入口指定「这次跑哪本书」**——`Config()` 的缺省根由 `_default_root()` 从工具链
-   所在 checkout 推导（或读 `BOOK_ROOT`），命令行、TUI、Web 都没有「选书」的位置；
-2. **一次运行只有一个活动书**：`use()` 切换的是模块级活动书，`app/web.py` 用
-   `ThreadingHTTPServer` 并发处理请求，同一进程里两本书并行处理的请求会互相串；
-3. **没有手稿的多版本轴**：`[paths].manuscript` 只有一个目录，同一本书的第二份手稿
-   只能靠另建一本「书」来装，于是身份、章节表、案例全都要复制一份。
+仍然缺的一件：**工具链自己的交付形态**。默认值（`base.json`、`style.json`、
+`templates.toml`、`language/*.json`）目前是每本书各持一份，工具也只以仓内脚本的形式存在，
+所以「给另一台机器上的另一本书用」仍要靠整份检出。步骤四把默认值收进包里、把 `bookctl`
+变成安装后的命令，书目录里只留覆盖项。
 
 门禁侧的耦合只有两处，且都不在门禁逻辑里：`_default_root()`（工具位置 → 书根）与
 测试夹具的 `BOOK_ROOT`（同样由工具目录推导）。`check_architecture.py` 的
