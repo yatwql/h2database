@@ -33,7 +33,7 @@ NEW_BOOK_ACTION = '@new-book'
 # case-insensitive, so S and s both run "1 源码 → 手稿".
 LETTER_ALIASES: dict[str, dict[str, str]] = {
     'main': {'a': '1', 'l': '2', 'b': '3', 'p': '4', 't': '5', 'c': '6',
-             's': '7', 'n': '8'},
+             's': '7', 'n': '8', 'q': '0'},
 }
 
 
@@ -51,7 +51,7 @@ def resolve(screen: str, key: str) -> str:
 def display_key(screen: str, key: str) -> str:
     """How a row's key is rendered: ``1/s`` when a letter shortcut exists."""
     letters = [letter for letter, target in aliases(screen).items() if target == key]
-    return f'{key}/{letters[0]}' if letters else key
+    return f'{key}/{letters[0].upper()}' if letters else key
 
 # screen -> [(key, action, label)]; `@open:<screen>` and `@back` are navigation
 SCREENS: dict[str, list[tuple[str, str, str]]] = {

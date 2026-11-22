@@ -312,9 +312,18 @@ class TuiInteractionTest(unittest.TestCase):
         self.assertEqual(self.tui.menu.resolve('config', 's'), 's')   # only main has letters
 
     def test_a_row_shows_its_letter_beside_the_digit(self):
-        self.assertEqual(self.tui.menu.display_key('main', '1'), '1/a')
-        self.assertEqual(self.tui.menu.display_key('main', '2'), '2/l')
-        self.assertEqual(self.tui.menu.display_key('main', '8'), '8/n')
+        self.assertEqual(self.tui.menu.display_key('main', '1'), '1/A')
+        self.assertEqual(self.tui.menu.display_key('main', '2'), '2/L')
+        self.assertEqual(self.tui.menu.display_key('main', '8'), '8/N')
+        self.assertEqual(self.tui.menu.display_key('main', '0'), '0/Q')
+        self.assertIn('2/L', [self.tui.menu.display_key('main', key)
+                              for key in ('1', '2', '3', '4', '5', '6', '7', '8')])
+
+    def test_the_letter_is_drawn_in_its_own_colour(self):
+        with mock.patch.object(self.tui, 'USE_COLOR', True):
+            rendered = self.tui._key('1/A', None, self.tui.PALETTE['shortcut'])
+        self.assertIn(self.tui.PALETTE['shortcut'], rendered)
+        self.assertIn('A', rendered)
         self.assertEqual(self.tui.menu.display_key('quality', '1'), '1')
 
     def test_pressing_a_letter_runs_the_same_action_as_its_digit(self):

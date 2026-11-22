@@ -47,6 +47,7 @@ PALETTE = {
     'value_ok': '38;5;114',
     'llm_badge': '38;5;179',   # amber: this row spends LLM tokens
     'llm_key': '1;38;5;214',   # brighter amber: the LLM shortcut itself
+    'shortcut': '1;38;5;51',   # bright cyan: the letter beside a digit
 }
 
 
@@ -56,8 +57,17 @@ def _width(text: str) -> int:
                for ch in text)
 
 
-def _key(text: str, colour: str | None = None) -> str:
-    """Render one shortcut as [key] so the pressable thing stands out."""
+def _key(text: str, colour: str | None = None,
+         letter_colour: str | None = None) -> str:
+    """Render one shortcut as [key] so the pressable thing stands out.
+
+    A ``1/A`` pair is drawn with the letter in its own colour: the two keys lead to
+    the same action, and the colour is what makes that obvious at a glance.
+    """
+    if letter_colour and '/' in text:
+        digit, letter = text.split('/', 1)
+        return (f'[{_c(digit, colour or PALETTE["key"])}/'
+                f'{_c(letter, letter_colour)}]')
     return _c(f'[{text}]', colour or PALETTE['key'])
 
 
@@ -161,10 +171,10 @@ def menu_text(screen: str = 'main', cursor: int | None = None) -> str:
         label_style = PALETTE['cursor'] if cursor == index else PALETTE['value']
         llm_row = menu.is_llm(action)
         badge = f" {_c('LLM', PALETTE['llm_badge'])}" if llm_row else ''
-        key_label = key.upper() if llm_row else menu.display_key(screen, key)
+        key_label = menu.display_key(screen, key)
         key_colour = PALETTE['llm_key'] if llm_row else None
         lines.append(f" {_c(marker, PALETTE['cursor_bar'])} "
-                     f"{_key(key_label, key_colour)}  "
+                     f"{_key(key_label, key_colour, None if llm_row else PALETTE['shortcut'])}  "
                      f"{_c(label, label_style)}{badge}")
     lines.append('')
     if screen == 'main':
