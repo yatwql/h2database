@@ -57,11 +57,11 @@ class HeaderGlanceTest(SettingsCase):
         settings = self.settings()
         with mock.patch.object(settings._volume, 'headroom', lambda: room):
             text = settings.volume_summary()
-        self.assertIn('行', text)
-        self.assertIn('下限', text)
-        self.assertIn('40,097', text)
-        self.assertIn('尚余 5,049 行', text)
-        self.assertNotIn('%', text)   # a percentage here reads as growth
+        self.assertIn('40,097 行', text)
+        self.assertIn('再少 5,049 行', text)
+        self.assertIn('内容变薄', text)
+        self.assertNotIn('%', text)        # a percentage here reads as growth
+        self.assertNotIn('下限', text)      # the gate's vocabulary, not the reader's
 
     def test_the_volume_margin_is_measured_against_the_floor(self):
         volume = _fixture.load_module(self.root, '_volume')

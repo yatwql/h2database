@@ -268,18 +268,18 @@ def spend_summary() -> str:
 
 
 def volume_summary() -> str:
-    """Manuscript lines, the floor they are compared against, and the difference.
+    """The manuscript's line count and what would happen if it kept shrinking.
 
-    The floor is a reviewed baseline times ``floor_ratio``: "how thin the text may
-    get before it counts as silently shrunk". Printing it as "current lines (floor,
-    +margin)" answers the two questions the header has to settle — what is measured,
-    and how close it is to the limit.
+    "Volume", "floor" and "margin" are the gate's own vocabulary; a reader in the
+    TUI has to be told the consequence, not the mechanism. So the line states the
+    count, then the action that would trip the gate: still N lines to lose before
+    the text counts as silently shrunk.
     """
     room = _volume.headroom()
     if room is None:
         return '—'
-    return (f'{room["lines"]:,} 行（下限 {room["floor"]:,}，'
-            f'尚余 {room["above"]:,} 行）')
+    return (f'{room["lines"]:,} 行'
+            f'（再少 {room["above"]:,} 行即判「内容变薄」）')
 
 
 def summary() -> dict:
