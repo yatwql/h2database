@@ -78,6 +78,31 @@ def known_carriers() -> set[str]:
     return names
 
 
+PARTS_RE = re.compile(r'^([A-Z]+)-(\d+)$')
+
+
+def gaps(declared: list[str]) -> list[str]:
+    """Identifiers that the numbering skipped, per family.
+
+    A requirement row that silently fails to get written leaves no trace at all:
+    `check` compares declared against traced, so an id nobody declares is invisible.
+    Gaps make that visible — IR-01..IR-13 with IR-12 missing is a hole, not a gap in
+    the numbering scheme.
+    """
+    families: dict[str, list[int]] = {}
+    for identifier in declared:
+        match = PARTS_RE.match(identifier)
+        if match is None:
+            continue
+        families.setdefault(match.group(1), []).append(int(match.group(2)))
+    missing: list[str] = []
+    for family, numbers in sorted(families.items()):
+        present = set(numbers)
+        missing += [f'{family}-{number:02d}'
+                    for number in range(1, max(present) + 1) if number not in present]
+    return missing
+
+
 def check(requirements: list[str] | None = None,
           rows: list[tuple[str, str, int]] | None = None,
           carriers: set[str] | None = None) -> list[dict]:
@@ -106,6 +131,12 @@ def check(requirements: list[str] | None = None,
             if name not in available:
                 out.append({'kind': 'TRACE', 'file': rel, 'line': lineno,
                             'detail': f'{identifier} names {name}, which does not exist'})
+    if requirements is None:
+        # only the real document has to number contiguously; synthetic lists in tests do not
+        for identifier in gaps(declared):
+            out.append({'kind': 'GAP',
+                        'file': os.path.join('docs', 'managements', REQUIREMENT_DOC),
+                        'line': 0, 'detail': f'{identifier} is missing from the numbering'})
     for identifier in declared:
         if identifier not in seen:
             out.append({'kind': 'TRACE', 'file': rel, 'line': 1,

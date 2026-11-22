@@ -95,6 +95,15 @@ class RequirementTraceTest(unittest.TestCase):
             code = self.mod.main([])
         self.assertEqual(code, 0)
         self.assertIn('可追溯', buffer.getvalue())
+    def test_a_missing_requirement_number_is_reported_as_a_gap(self):
+        self.assertEqual(self.mod.gaps(['IR-01', 'IR-03']), ['IR-02'])
+
+    def test_a_contiguous_numbering_has_no_gap(self):
+        self.assertEqual(self.mod.gaps(['IR-01', 'IR-02']), [])
+
+    def test_the_repository_numbering_has_no_holes(self):
+        self.assertEqual(self.mod.gaps(self.mod.requirement_ids()), [])
+
 
 if __name__ == '__main__':
     unittest.main()

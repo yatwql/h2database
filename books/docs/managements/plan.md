@@ -36,7 +36,7 @@
 哪本书」，派生状态、基线、产物、日志都只有一份；第二本书进来会与第一本互相覆盖。
 **动作**：按 `docs/plan/multi-book/plan.md` 推进——先做三项前置（源根解冻、惰性默认书、顶层取值机检），
 再加 `--book` 与向上查找，随后是手稿的 edition 轴；多根源与工具链独立成包按需安排。
-**验收**：`requirements.md` IR-10 与 IR-11 的判据——指定不同书根时，路径、派生状态、基线与
+**验收**：`requirements.md` IR-10、IR-11 与 IR-13 的判据——指定不同书根时，路径、派生状态、基线与
 产物全部随之改变且互不覆盖；不带 `--book` 时产物与日志位置保持不变。
 **事实位**：设计与步骤在 `docs/plan/multi-book/design.md` 与 `docs/plan/multi-book/plan.md`；
 配置对象的约定在 `technical.md` §3.1，按书隔离的目录归属在 `folder.md` §3。

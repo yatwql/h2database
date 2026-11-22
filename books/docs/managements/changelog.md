@@ -254,6 +254,13 @@
   一并整改的债务；补多根源的类型兼容契约（`versions()['source']` 单根字符串 / 多根映射）、
   `default_edition` 在多版本下必填、嵌套书根取最近一本、`--edition` 与 `--book` 同等的
   子进程传播、以及「这几步明确不做」四条。
+- **多书设计五轮复盘**：补上「多版本时哪些目录按版本、哪些不按」——状态与基线按版本、
+  日志按书、数据归档目录带版本、快照账本记版本；重编号映射落 `state/<edition>/renumber.json`；
+  入口写明有两个（`app/cli.py` 与 `make.py`，含 `bookctl make` 透传）；`check_runner` 的改动
+  分档跟随活动书，他书改动不得当 infra 触发全量；包化必须携带默认 `book.toml` 模板、
+  `templates.toml` 与 `language/*.json`。复盘还查出一处管理缺陷：IR-12 从未真正写进需求表
+  （登记脚本没命中也不报错），已补 IR-12 与 IR-13；`requirement_trace` 新增编号空洞检查，
+  以后漏写一行编号就会被判红。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

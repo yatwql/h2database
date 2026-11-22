@@ -202,6 +202,8 @@ report` / `eval-score.sh`）、`balance` 的计量输出（`--json`），以及�
 | IR-02 | 按改动域分档，编辑期单次检查 ≤ 5 秒 | `src/python/check_runner.py`、`perf_baseline.py` |
 | IR-10 | 换一本书只换书根：路径、派生状态、基线、产物随之改变，互不覆盖 | `src/test/test_lib_config_books.py` |
 | IR-11 | 源随书绑定：换源不会被静默忽略，基线指纹不符时要求复核 | `src/python/audit/content_volume.py` |
+| IR-12 | 已发布版本只在归档里：版本目录含三份台账、索引可打开、主文档不再留有已归档版本 | `src/python/audit/doc_archive.py` |
+| IR-13 | 多份手稿互不覆盖：状态、基线与产物名按版本分开，单版本行为不变 | `src/python/lib/_config.py` |
 | IR-03 | 分档不改判据，提交/发布跑全集 | `src/python/check_runner.py` |
 | IR-04 | 失败给出文件与行号，退出码非 0 即失败 | `script_contract.py` |
 | IR-05 | 检查与构建离线完成 | `src/test/_netguard.py`、`src/test/test_no_network.py` |
