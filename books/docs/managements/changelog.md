@@ -162,6 +162,10 @@
 - **报告器加了两个观测点**：`test_report.py run --coverage` 会在报告目录旁再存一份 **per-file 覆盖率快照**
   （分支口径），单文件下滑而总量仍绿时看得出来；快档用例耗时 ≥ 1s 会被标成预算提示，
   提醒它该优化或改标 `tier:slow`。覆盖率命令的源码路径改为从配置推导，不再写死 `books/`。
+- **复杂度阈值试评估**：用 `ruff --select C901 --config max-complexity=15` 扫全仓，**15 个函数**超过
+  15 个分支（`structure.py`/`style.py`/`chapters.py`/`test_report.py` 的 `main` 等）。直接设为门禁
+  会把现有代码判红，而没有基线机制前只能大改；因此**暂不作门禁**，留作重构时的排序依据——
+  需要时用 `test_redundancy` 那套"存量登记 + 新增即失败"的做法接入。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
