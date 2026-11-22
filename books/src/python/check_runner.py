@@ -121,7 +121,7 @@ def gates_for_table() -> tuple[tuple[str, str], ...]:
          'structure,captions,content_volume,audit_exercises,content_depth,style_rules'),
         (rel(_config.CONFIG_DIR), 'style_schema,style_rules,content_volume'),
         (rel(os.path.join(_config.BOOK_ROOT, 'data')), 'structure,versions'),
-        (rel(os.path.join(_config.BOOK_ROOT, 'docs')), 'doc_drift,doc_archive,traces,audit_links'),
+        (rel(os.path.join(_config.BOOK_ROOT, 'docs')), 'doc_drift,doc_archive,plan_coverage,traces,audit_links'),
         (rel(os.path.join(_config.BOOK_ROOT, 'data', 'baselines')), 'content_volume'),
     )
 

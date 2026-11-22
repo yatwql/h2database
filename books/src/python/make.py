@@ -178,6 +178,7 @@ STEPS: list[Step] = [
     ('traces', 'audit/traces.py', (), 'verify'),
     ('doc_drift', 'audit/doc_drift.py', (), 'verify'),
     ('doc_archive', 'audit/doc_archive.py', (), 'verify'),
+    ('plan_coverage', 'audit/plan_coverage.py', (), 'verify'),
     ('audit_links', 'audit/links.py', (), 'verify'),
     ('audit_ascii', 'audit/diagrams.py', (), 'verify'),
     ('audit_smart', 'audit/smart.py', (), 'verify'),

@@ -240,6 +240,13 @@
   （版本目录名、三份文件与头行、索引链接可打开、已归档版本不得留在主文档、迭代目录名不含
   追踪编号），空归档视为通过。规则写在 `docs/archive/README.md`，归属写进 `folder.md` §3，
   能力登记为 IR-12；用例按层拆成 `test_core_docs_archive.py` 与 `test_audit_doc_archive.py`。
+- **计划管理补上双向覆盖**：`docs/plan/figure-chapter-plumbing/` 这一完成态迭代没有认领它的
+  计划项，`plan-11`（多书并行维护）的条目在 `plan.md` 里丢失——概述仍写「在办 3 项」而正文
+  只剩两项。恢复 `plan-11` 全条，并在 `plan.md` 新增「待归档」节：已完成的迭代在这里列名
+  并给出结论出处，发布时由 `core/docs_archive.py` 整体移入版本归档。新增门禁
+  `audit/plan_coverage.py`：每个 `docs/plan/<主题>/` 恰好被一个计划项或待归档行认领、计划项
+  的四段齐备且有序、`plan-N` 唯一、`plan-next` 等于最大编号 + 1、概述的在办项数与分档数字
+  与实际一致——这类漂移以后跑 `make.py check` 就会当场判红。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
