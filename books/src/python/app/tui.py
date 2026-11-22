@@ -279,13 +279,20 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--once', metavar='ACTION', help='run one action and exit')
+    parser.add_argument('--book', default='', help='book root to work on')
+    parser.add_argument('--edition', default='', help='manuscript edition to work on')
     args = parser.parse_args(argv)
+    if args.book:
+        os.environ['BOOK_ROOT'] = os.path.abspath(args.book)
+    if args.edition:
+        os.environ['BOOK_EDITION'] = args.edition
 
     if args.once:
         if args.once == 'settings':
             sys.stdout.write(configure())
             return 0
-        code, text = actions.run(args.once)
+        code, text = actions.run(args.once, book=_config.resolve_book_root(args.book or None),
+                                 edition=args.edition)
         sys.stdout.write(text)
         return code
 

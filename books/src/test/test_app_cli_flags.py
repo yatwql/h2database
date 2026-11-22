@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
 from unittest import mock
@@ -27,17 +28,40 @@ class CliSwitchTest(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
+    def switches(self) -> dict:
+        """The action kwargs without the book selection every call carries."""
+        return {key: value for key, value in self.calls[0][1].items()
+                if key not in ('book', 'edition')}
+
     def test_refresh_facts_reaches_the_shared_action(self):
         self.cli.main(['analyze', '--refresh-facts'])
-        self.assertEqual(self.calls, [('analyze', {'force': False, 'refresh': True})])
+        self.assertEqual(self.calls[0][0], 'analyze')
+        self.assertEqual(self.switches(), {'force': False, 'refresh': True})
 
     def test_force_reaches_the_shared_action(self):
         self.cli.main(['analyze', '--force'])
-        self.assertEqual(self.calls, [('analyze', {'force': True, 'refresh': False})])
+        self.assertEqual(self.switches(), {'force': True, 'refresh': False})
 
     def test_plain_analyze_passes_both_switches_off(self):
         self.cli.main(['analyze'])
-        self.assertEqual(self.calls, [('analyze', {'force': False, 'refresh': False})])
+        self.assertEqual(self.switches(), {'force': False, 'refresh': False})
+
+    def test_every_action_carries_the_resolved_book(self):
+        self.cli.main(['analyze'])
+        self.assertTrue(self.calls[0][1]['book'].endswith(os.path.basename(self.root)))
+        self.assertEqual(self.calls[0][1]['edition'], '')
+
+    def test_explicit_book_wins_over_the_environment(self):
+        other = _fixture.build_book(os.path.join(self.tmp.name, 'other', 'book'))
+        self.calls.clear()
+        self.cli.main(['analyze', '--book', other])
+        self.assertEqual(self.calls[0][1]['book'], other)
+
+    def test_a_directory_without_book_toml_is_refused(self):
+        empty = os.path.join(self.tmp.name, 'empty')
+        os.makedirs(empty, exist_ok=True)
+        self.assertEqual(self.cli.main(['analyze', '--book', empty]), 2)
+        self.assertEqual(self.calls, [])
 
     def test_the_switches_are_refused_on_other_actions(self):
         for action in ('status', 'build', 'check'):

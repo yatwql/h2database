@@ -10,6 +10,7 @@ from __future__ import annotations
 import importlib
 import json
 import os
+import pathlib
 import shutil
 import tempfile
 import unittest
@@ -113,6 +114,37 @@ class TwoBooksTest(unittest.TestCase):
     def test_a_missing_book_file_is_a_config_error(self):
         with self.assertRaises(_config.ConfigError):
             _config.Config(os.path.join(self.tmp, 'nowhere'))
+
+    def test_an_explicit_book_beats_the_environment(self):
+        with _config.use(_config.Config(self.one)):
+            os.environ['BOOK_ROOT'] = self.two
+            try:
+                self.assertEqual(_config.resolve_book_root(self.one), self.one)
+                self.assertEqual(_config.resolve_book_root(None), os.path.abspath(self.two))
+            finally:
+                os.environ.pop('BOOK_ROOT', None)
+
+    def test_looking_up_finds_the_nearest_book(self):
+        nested = os.path.join(self.one, 'data', 'manuscript', 'ch1')
+        os.makedirs(nested, exist_ok=True)
+        self.assertEqual(_config.find_book_root(nested), self.one)
+
+    def test_where_there_is_no_book_the_lookup_returns_nothing(self):
+        self.assertEqual(_config.find_book_root(self.tmp), '')
+
+    def test_candidates_include_the_active_book_and_its_siblings(self):
+        roots = _config.candidate_books(self.one, start=self.tmp)
+        self.assertEqual(roots[0], self.one)
+        self.assertIn(os.path.abspath(self.two), roots)
+
+    def test_a_path_that_escapes_the_book_root_is_refused(self):
+        book = os.path.join(self.one, 'data', 'book', 'book.toml')
+        text = pathlib.Path(book).read_text(encoding='utf-8')
+        pathlib.Path(book).write_text(
+            text.replace('manuscript = "data/manuscript"', 'manuscript = "../outside"'),
+            encoding='utf-8')
+        with self.assertRaises(_config.ConfigError):
+            _config.Config(self.one)
 
     def test_the_default_book_matches_its_module_attributes(self):
         active = _config.current()

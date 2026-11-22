@@ -38,15 +38,38 @@ ACTIONS = {
 }
 
 
+# The book (and edition) the current run works on. Every child process reads it
+# from the environment, which is how one selection reaches thirty scripts without
+# threading a parameter through each of them.
+_SELECTION: dict[str, str] = {'book': '', 'edition': ''}
+
+
+def select(book: str = '', edition: str = '') -> None:
+    """Pin the book and edition for this run (empty clears the pin)."""
+    _SELECTION['book'] = book
+    _SELECTION['edition'] = edition
+
+
+def child_env() -> dict[str, str]:
+    """Environment for a child process: the inherited one plus the selection."""
+    env = dict(os.environ)
+    if _SELECTION['book']:
+        env['BOOK_ROOT'] = _SELECTION['book']
+    if _SELECTION['edition']:
+        env['BOOK_EDITION'] = _SELECTION['edition']
+    return env
+
+
 def _run(script: str, *args: str) -> tuple[int, str]:
     proc = subprocess.run([sys.executable, os.path.join(PY_ROOT, script), *args],
-                          capture_output=True, text=True, cwd=REPO_ROOT, check=False)
+                          capture_output=True, text=True, cwd=REPO_ROOT, check=False,
+                          env=child_env())
     return proc.returncode, (proc.stdout or '') + (proc.stderr or '')
 
 
 def _make(*args: str) -> tuple[int, str]:
     proc = subprocess.run([sys.executable, MAKE, *args], capture_output=True, text=True,
-                          cwd=REPO_ROOT, check=False)
+                          cwd=REPO_ROOT, check=False, env=child_env())
     return proc.returncode, (proc.stdout or '') + (proc.stderr or '')
 
 
@@ -220,7 +243,21 @@ ANALYZE_ACTIONS = frozenset({'analyze', 'analyze-llm', 'analyze-refresh'})
 
 
 def run(action: str, **kwargs) -> tuple[int, str]:
-    """Execute one action by name (used by every channel)."""
+    """Execute one action by name (used by every channel).
+
+    ``book`` and ``edition`` select what the action works on. Child processes read
+    the selection from the environment; the few actions that run in-process read it
+    from an active-config context, so both paths see the same book.
+    """
+    book = str(kwargs.get('book') or '')
+    select(book, str(kwargs.get('edition') or ''))
+    if book:
+        with _config.use(_config.Config(book)):
+            return _dispatch(action, **kwargs)
+    return _dispatch(action, **kwargs)
+
+
+def _dispatch(action: str, **kwargs) -> tuple[int, str]:
     if action == 'llm-ask':
         return llm_ask(kwargs.get('prompt', ''), kwargs.get('scenario', 'summary'))
     if action in ANALYZE_ACTIONS:

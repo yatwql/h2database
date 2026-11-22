@@ -401,6 +401,10 @@ def main(argv: list[str] | None = None) -> int:
                         help='run every step even after a failure')
     parser.add_argument('--full', action='store_true',
                         help='also run the slow suite (chromium/pandoc)')
+    parser.add_argument('--book', default='',
+                        help='book root for every step (default: BOOK_ROOT, then the '
+                             'nearest ancestor holding data/book/book.toml)')
+    parser.add_argument('--edition', default='', help='manuscript edition for every step')
 
     report_extras: list[str] = []
     if argv and len(argv) > 0 and argv[0] == 'report':
@@ -408,6 +412,12 @@ def main(argv: list[str] | None = None) -> int:
     else:
         args = parser.parse_args(argv)
 
+    if args.book or args.edition:
+        # the steps are separate processes; they read the selection from the env
+        if args.book:
+            os.environ['BOOK_ROOT'] = os.path.abspath(args.book)
+        if args.edition:
+            os.environ['BOOK_EDITION'] = args.edition
     if args.command == 'doctor':
         return doctor()
 

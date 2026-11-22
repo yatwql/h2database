@@ -31,6 +31,9 @@ PAGE = """<!DOCTYPE html>
 button{margin:.2rem;padding:.4rem .8rem}pre{background:#f5f5f5;padding:1rem;
 white-space:pre-wrap}</style></head>
 <body><h1>__APP__</h1>
+<p><label>书 <select id="book"></select></label>
+<label>版本 <select id="edition"><option value="">main</option></select></label>
+<span id="where"></span></p>
 <p id="actions"></p>
 <p><input id="prompt" size="50" placeholder="llm-ask 的提示词">
 <button onclick="run('llm-ask')">llm-ask</button></p>
@@ -40,17 +43,42 @@ const ACTIONS = __ACTIONS__;
 document.getElementById('actions').innerHTML = Object.entries(ACTIONS)
   .map(([name, desc]) => `<button title="${desc}" onclick="run('${name}')">${name}</button>`)
   .join('');
+async function loadBooks() {
+  const data = await (await fetch('/api/books')).json();
+  const book = document.getElementById('book');
+  book.innerHTML = data.books.map(item =>
+    `<option value="${item.root}"${item.root === data.current ? ' selected' : ''}>` +
+    `${item.title || item.root}${item.edition ? ' · ' + item.edition : ''}</option>`).join('');
+  document.getElementById('where').textContent =
+    data.current ? `工作目录：${data.current}` : '';
+}
+loadBooks();
 async function run(action) {
   const out = document.getElementById('out');
   out.textContent = `运行 ${action} …`;
   const response = await fetch('/api/run', {method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({action, prompt: document.getElementById('prompt').value})});
+    body: JSON.stringify({action, prompt: document.getElementById('prompt').value,
+      book: document.getElementById('book').value,
+      edition: document.getElementById('edition').value})});
   const data = await response.json();
   out.textContent = `[退出码 ${data.code}]\\n${data.output}`;
 }
 </script></body></html>
 """
+
+
+def book_choices() -> dict:
+    """Books this console can work on, plus the one it started with."""
+    active = _config.current().root
+    books = []
+    for root in _config.candidate_books(active):
+        try:
+            cfg = _config.Config(root)
+            books.append({'root': root, 'title': cfg.title, 'version': cfg.version})
+        except _config.ConfigError:
+            books.append({'root': root, 'title': '', 'version': ''})
+    return {'current': active, 'books': books}
 
 
 class Handler(server.BaseHTTPRequestHandler):
@@ -69,6 +97,9 @@ class Handler(server.BaseHTTPRequestHandler):
             page = (PAGE.replace('__ACTIONS__', json.dumps(actions.ACTIONS, ensure_ascii=False))
                     .replace('__APP__', _config.app_title()))
             self._send(200, page, 'text/html; charset=utf-8')
+        elif self.path == '/api/books':
+            self._send(200, json.dumps(book_choices(), ensure_ascii=False),
+                       'application/json; charset=utf-8')
         elif self.path == '/api/status':
             code, text = actions.run('status')
             self._send(200, json.dumps({'code': code, 'output': text}, ensure_ascii=False),
@@ -88,6 +119,12 @@ class Handler(server.BaseHTTPRequestHandler):
                        'application/json; charset=utf-8')
             return
         action = str(payload.get('action', ''))
+        book = str(payload.get('book', '') or '')
+        if book and not os.path.isfile(os.path.join(book, 'data', 'book', 'book.toml')):
+            self._send(400, json.dumps({'code': 2, 'output': f'没有找到 book.toml：{book}'},
+                                       ensure_ascii=False),
+                       'application/json; charset=utf-8')
+            return
         if action == 'llm-ask':
             kwargs = {'prompt': str(payload.get('prompt', ''))}
         elif action in actions.ANALYZE_ACTIONS:
@@ -96,7 +133,8 @@ class Handler(server.BaseHTTPRequestHandler):
         else:
             kwargs = {}
         try:
-            code, text = actions.run(action, **kwargs)
+            code, text = actions.run(action, book=book,
+                                     edition=str(payload.get('edition', '') or ''), **kwargs)
         except Exception as exc:  # noqa: BLE001 - the page relays failures, it does not raise
             code, text = 1, f'{type(exc).__name__}: {exc}'
         self._send(200, json.dumps({'code': code, 'output': text}, ensure_ascii=False),
@@ -109,6 +147,8 @@ class Handler(server.BaseHTTPRequestHandler):
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--book', default='', help='book root to serve')
+    parser.add_argument('--edition', default='', help='manuscript edition to serve')
     parser.add_argument('--host', default='127.0.0.1')
     parser.add_argument('--port', type=int, default=8080)
     args = parser.parse_args(argv)

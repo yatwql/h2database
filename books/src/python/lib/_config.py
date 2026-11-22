@@ -33,10 +33,49 @@ import tomllib
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def _default_root() -> str:
-    """Book root: the environment override, else the checkout holding this tool."""
-    return os.environ.get('BOOK_ROOT') or os.path.dirname(
-        os.path.dirname(os.path.dirname(TOOLS_DIR)))
+BOOK_MARKER = os.path.join('data', 'book', 'book.toml')
+
+
+def checkout_root() -> str:
+    """The checkout that holds this toolchain (last-resort book root)."""
+    return os.path.dirname(os.path.dirname(os.path.dirname(TOOLS_DIR)))
+
+
+def find_book_root(start: str | None = None) -> str:
+    """Nearest ancestor of ``start`` holding data/book/book.toml ('' when none)."""
+    current = os.path.abspath(start or os.getcwd())
+    while True:
+        if os.path.isfile(os.path.join(current, BOOK_MARKER)):
+            return current
+        parent = os.path.dirname(current)
+        if parent == current:
+            return ''
+        current = parent
+
+
+def discover_root(start: str | None = None) -> str:
+    """First look: BOOK_ROOT, then the nearest ancestor, then this checkout."""
+    override = os.environ.get('BOOK_ROOT')
+    if override:
+        return os.path.abspath(override)
+    return find_book_root(start) or checkout_root()
+
+
+def resolve_book_root(explicit: str | None = None, start: str | None = None) -> str:
+    """Pick the book root: an explicit ``--book``, else what this process bound to.
+
+    The fallback is the root discovered at import, not a fresh search: a process
+    that started on one book must not silently switch because the working directory
+    changed or an environment variable was cleared.
+    """
+    if explicit:
+        return os.path.abspath(explicit)
+    override = os.environ.get('BOOK_ROOT')
+    if override:
+        return os.path.abspath(override)
+    if _IMPORT_ROOT:
+        return _IMPORT_ROOT
+    return find_book_root(start) or checkout_root()
 
 
 class ConfigError(RuntimeError):
@@ -72,11 +111,40 @@ def _merge_policy(base: dict, style: dict, legacy_path: str) -> dict:
     return merged
 
 
+def candidate_books(active: str | None = None, start: str | None = None) -> list[str]:
+    """Book roots the tool can work on, active one first.
+
+    Candidates are the active book, its siblings (they share a parent directory),
+    and whatever looking up from the working directory finds. Only directories that
+    actually hold ``data/book/book.toml`` are offered, so a stray folder never shows
+    up as a book.
+    """
+    roots: list[str] = []
+
+    def offer(path: str) -> None:
+        path = os.path.abspath(path)
+        if path not in roots and os.path.isfile(os.path.join(path, BOOK_MARKER)):
+            roots.append(path)
+
+    current_root = os.path.abspath(active or _IMPORT_ROOT)
+    offer(current_root)
+    parent = os.path.dirname(current_root)
+    try:
+        for name in sorted(os.listdir(parent)):
+            offer(os.path.join(parent, name))
+    except OSError:
+        pass
+    found = find_book_root(start)
+    if found:
+        offer(found)
+    return roots
+
+
 class Config:
     """One book: its root, its configuration files and the values read from them."""
 
     def __init__(self, root: str | None = None) -> None:
-        self.root = os.path.abspath(root or _default_root())
+        self.root = os.path.abspath(root or resolve_book_root())
         self.config_dir = os.path.join(self.root, 'data', 'config')
         # book.toml sits at a fixed spot: it is what declares the [paths] overrides.
         self.book_toml = os.path.join(self.root, 'data', 'book', 'book.toml')
@@ -119,17 +187,26 @@ class Config:
         except tomllib.TOMLDecodeError as exc:
             raise ConfigError(f'invalid TOML in {self.book_toml}: {exc}') from exc
 
+    def _contained(self, path: str, key: str) -> str:
+        """Refuse a [paths] entry that leaves the book root."""
+        root = os.path.abspath(self.root)
+        target = os.path.abspath(path)
+        if target != root and not target.startswith(root + os.sep):
+            raise ConfigError(
+                f'book.toml: [paths].{key} escapes the book root: {path}')
+        return path
+
     def _path(self, key: str) -> str:
         """A path declared in book.toml [paths]; absent keys are an error."""
         rel = (self.cfg.get('paths') or {}).get(key)
         if not rel:
             raise ConfigError(f'book.toml: missing [paths].{key}')
-        return os.path.join(self.root, rel)
+        return self._contained(os.path.join(self.root, rel), key)
 
     def _rel(self, key: str, default: str) -> str:
         """A path declared in book.toml [paths], with a fallback for new books."""
         rel = (self.cfg.get('paths') or {}).get(key) or default
-        return os.path.join(self.root, rel)
+        return self._contained(os.path.join(self.root, rel), key)
 
     # ---- directories -------------------------------------------------------
 
@@ -440,12 +517,18 @@ def _source_version_from(path: str, pattern: str) -> str:
 
 # ---- the active book -------------------------------------------------------
 
-_DEFAULT = Config()
-_ACTIVE: Config = _DEFAULT
+# Resolved once at import (that is what the old constants did), but the Config
+# itself is built on first use: a missing book then raises where a caller can
+# catch it instead of aborting the import.
+_IMPORT_ROOT = discover_root()
+_ACTIVE: Config | None = None
 
 
 def current() -> Config:
     """The book the module-level helpers resolve against."""
+    global _ACTIVE
+    if _ACTIVE is None:
+        _ACTIVE = Config(_IMPORT_ROOT)
     return _ACTIVE
 
 
@@ -526,9 +609,9 @@ def __getattr__(name: str):
     """Resolve the historical constants and helpers against the active book."""
     resolver = _ALIASES.get(name)
     if resolver is not None:
-        return resolver(_ACTIVE)
+        return resolver(current())
     if name in _CALLABLES:
-        return getattr(_ACTIVE, name)
+        return getattr(current(), name)
     raise AttributeError(f'module {__name__!r} has no attribute {name!r}')
 
 

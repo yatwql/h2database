@@ -270,6 +270,14 @@
 - **多书设计与计划只留当前状态**：清掉评审过程措辞（「改回」「已完成」「既有债务」「真正缺的」
   这类指向前一版的表述），改成直述当前设计与动作；`plan-coverage` 的检查面不受影响。
   同时把会话复盘记录移出仓库并存进忽略清单——过程记录留在本地，仓库里只放结论。
+- **多书选定：按书解析与三个渠道的选书入口**（plan-11 步骤二）：`lib/_config` 新增
+  `find_book_root()`/`resolve_book_root()`/`candidate_books()`，导入时记下书根、`Config`
+  首次使用时构造，`[paths]` 越出书根的条目直接判 `ConfigError`；选择经 `BOOK_ROOT` /
+  `BOOK_EDITION` 传给子进程，`core/actions.py` 的 `_run`/`_make` 统一带上，状态与设置类
+  轻动作包在 `use(Config(book))` 上下文里。CLI 加 `--book`/`--edition`（缺 book.toml 退 2），
+  `make.py` 同名参数导出给每个步骤，`bookctl` 原样透传；Web 加「书 / 版本」选择器与
+  `/api/books`，请求携带选择、服务端按请求执行；TUI 加同名参数，会话内选定一本书。
+  测试 13 条钉住解析优先级、向上查找、越界拒绝与候选发现。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
