@@ -406,6 +406,11 @@
   `_config.sentence_endings()`（默认 `。！？；`），四处改为按语言包构建匹配集——第二语种不会
   再被中文标点判。`fullwidth_punctuation` 没有任何规则可喂，删除。附带后果：`style.py` 增到
   642 行，膨胀登记同步。
+- **`_config.py` 的拆分登记为存量债**：该文件已达 852 行（提醒线 700、硬线 900）。整体抽取
+  试过一版：`_IMPORT_ROOT` 由发现逻辑算出、`ConfigError` 两侧共用、`candidate_books()` 反转
+  依赖 `Config`，直接切块导致 14 个用例导入失败，已回退且未留残件。拆分方向与这三处依赖
+  写进 `review-findings.md` 的膨胀登记，下一次按「先下沉发现与加载、`candidate_books` 留门面」
+  的顺序做。`style.py` 的登记行同步到实测 642 行。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
