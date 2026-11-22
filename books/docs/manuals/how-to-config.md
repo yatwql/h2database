@@ -28,7 +28,6 @@ merged_name = "code-analysis"      # 产物文件名前缀
 manuscript = "data/manuscript"     # 手稿目录
 dist = "dist"                      # 产物目录
 docs = "docs"
-tools = "src/python"
 tmp = "data/tmp"                   # 临时目录：HTML 片段缓存与 --force 备份（已 gitignore）
 state = "data/state"               # 派生状态：ingest 每次重建（已 gitignore）
 templates = "data/tmpl"            # 叙述模板（templates.toml）
@@ -110,7 +109,6 @@ display = "删节版"
 ```json
 {
   "project": {"display_title_zh": "……", "author": "……", "running_head": "……"},
-  "sections": {"per_chapter": ["本章导读", "本章小结", "延伸思考", "延展阅读"]},
   "captions": {"leading_verbs": ["展示", "对比"], "vague_trailing": ["过程"],
                "presets": {"strict": {"min_chars": 8, "max_chars": 30, "fail_at": 0}}},
   "quality": {"min_coords_per_chapter": 15, "min_chapter_lines": 150, "max_table_rows": 20},
@@ -127,7 +125,6 @@ display = "删节版"
 | 段 | 键 | 作用 |
 | ---- | ---- | ------ |
 | `project` | `display_title_*`、`author`、`running_head` | 渲染文案（HTML/PDF/EPUB） |
-| `sections` | `per_chapter`、`optional` | 必备段落（结构门禁按此检查）与允许的可选段落 |
 | `captions` | `leading_verbs`、`vague_trailing`、`presets.{strict,normal,loose}` | 图注动宾词表与阈值预设（min_chars < max_chars、fail_at ≥ 0） |
 | `diagrams` | `markers` | ASCII 图的框线/箭头字符集 |
 | `clusters` | `min_figures`、`window_lines` | 图簇的张数下限与行距（`figure_clusters.py`、`structure.py` 共用） |

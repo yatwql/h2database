@@ -26,11 +26,10 @@ from lib import _config, _fsutil
 STYLE_PATH = _config.config_path('style.json')
 TEMPLATES_PATH = _config.template_path('templates.toml')
 KNOWN_TEMPLATES = {'map_intro', 'types_intro', 'api_intro', 'path_intro', 'deep_dive'}
-KNOWN_TOP = {'_note', '_schema', 'sections', 'captions', 'diagrams', 'clusters',
+KNOWN_TOP = {'_note', '_schema', 'captions', 'diagrams', 'clusters',
              'quality', 'prose', 'style_rules', 'content_depth', 'generation',
              'limits', 'thresholds'}
 REQUIRED = {
-    'sections': ('per_chapter',),
     'captions': ('leading_verbs', 'vague_trailing', 'presets'),
     'clusters': ('min_figures', 'window_lines'),
     'quality': ('min_coords_per_chapter', 'min_chapter_lines', 'max_chapter_lines',

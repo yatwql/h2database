@@ -1,8 +1,6 @@
 {
   "_note": "Infrastructure: where the source tree lives, where state/baselines go, toolchain budgets.",
   "paths": {
-    "state": "data/state",
-    "baselines": "data/baselines",
     "snapshots": "data/snapshots"
   },
   "sources": {

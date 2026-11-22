@@ -393,6 +393,14 @@
   代码从不读取，留在配置里只会被当成可调参数——删除。审计同时列出其余候选（`path.tools`、
   `base.json paths.state/baselines` 与 `book.toml [paths]` 重复、`language/zh.json [style]`、
   `style.json [sections].per_chapter` 与 `book.toml [sections]` 并存），待逐条确认后再动。
+- **配置去重：同一事实只留一个所有者**（按审计结论执行）：
+  - `style.json [sections]` 删除——章节骨架与必备段落只由 `book.toml [sections]` 声明；
+    `style_schema` 不再要求该键，也不再把它列为已知顶层键（重复声明会判为未知键）。
+  - `base.json [paths].state/baselines` 删除——路径由 `book.toml [paths]` 唯一给出，
+    `snapshots` 仍留在 `base.json`（`excluded_dirs()` 读它）。
+  - `book.toml [paths].tools` 删除——没有任何代码读取，工具目录由脚本位置推导。
+  文档（`how-to-config.md` 示例与表格、`technical.md` 配置归属）同步修订；`version` 的
+  三处（书版本、源码版本、样式 schema 版本）语义不同，保留。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

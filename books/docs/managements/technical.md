@@ -157,7 +157,7 @@ books/
 - 篇幅预算：`style.json [limits]` 的 `sources`/`tests`/`docs`/`manuscript` 四档；`file_length` 要求四档都显式声明，不靠默认值。
 - 图表与图簇：`style.json [quality]` 的 `min_figures_per_section`、`min_figure_coverage_pct`，`[clusters]` 的 `min_figures`、`window_lines`——`smart.py`、`figure_clusters.py`、`structure.py` 共用这一处，不再各自内联。
 - 页面几何：`base.json [toolchain]` 的 `pdf_page_width`、`pdf_page_height`、`pdf_page_tolerance`（`verify_pdf.py` 按此判定 A4）。
-- 章节骨架与必备段落：`book.toml [sections]`、`style.json [sections]`。
+- 章节骨架与必备段落：只在 `book.toml [sections]`（`style.json` 不再接受 `sections`，重复声明会被 `style_schema` 判为未知键）。
 - 书目目录：`--books-dir`／`BOOKS_DIR` > `book.toml [paths] library` > 书的父目录；
   `books_in()` 列出该目录下的书，`candidate_books()` 在其下找
   `data/book/book.toml`——「其他书放在哪」是配置事实，不是目录约定；

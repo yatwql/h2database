@@ -24,7 +24,6 @@ cover_image = ""       # optional: books/data/assets/cover.png
 manuscript = "data/manuscript"
 dist = "dist"
 docs = "docs"
-tools = "src/python"
 tmp = "data/tmp"
 state = "data/state"
 templates = "data/tmpl"
