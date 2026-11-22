@@ -229,6 +229,12 @@ class TuiInteractionTest(unittest.TestCase):
     def test_switching_books_rebinds_the_active_book(self):
         other = os.path.join(self.tmp.name, 'second-book')
         _fixture.build_book(other)
+        # switch_book writes BOOK_ROOT for child processes; leaving it set would
+        # point later suites at a temp directory this test deletes
+        previous = os.environ.get('BOOK_ROOT')
+        self.addCleanup(lambda: os.environ.__setitem__('BOOK_ROOT', previous)
+                        if previous is not None
+                        else os.environ.pop('BOOK_ROOT', None))
         message = self.tui.switch_book(other)
         self.assertIn('已切换', message)
         active = self.tui._config.current().root

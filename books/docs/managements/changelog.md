@@ -312,6 +312,10 @@
   合并——包按 `<label>:<包名>` 记账、各根总量进 `by_root`，单根时输出与之前逐字相同；
   体量基线的 `reviewed` 增加 `source{roots, versions, inventory_sha256}`，比对时若指纹
   不同即报「基线来自另一个源，先复核再下调下限」，不再静默通过。
+- **CI 红因：TUI 切换用例把 `BOOK_ROOT` 留给后续套件**：`switch_book()` 会为子进程写
+  `BOOK_ROOT`，用例没有还原，于是之后启动子进程的慢档用例（`order_dependence`）指向已被
+  删除的临时书根，报 `ConfigError: missing config`。用例改为 `addCleanup` 还原环境变量；
+  全量套件（含慢档）**1249 passed / 14 skipped**。同批的两次 cancelled 是并发取消，不是失败。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；
