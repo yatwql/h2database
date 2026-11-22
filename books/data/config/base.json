@@ -50,5 +50,13 @@
     "level": "INFO",
     "dir": "logs",
     "retention_days": 14
+  },
+  "archive": {
+    "dir": "data/archive",
+    "retention_days": 45
+  },
+  "reports": {
+    "dir": "test-reports",
+    "retention_days": 30
   }
 }

@@ -65,6 +65,11 @@
   原先只显示“本次未调用”。现在零写入时 `chapters.py` 说明原因，`actions.analyze` 在零调用时追加一行解释；
   TUI 的 `analyze-llm` 先问“是否 `--force` 重写已有正文”（默认否，旧文件备份到 `data/tmp/`），
   结果行标注 `--force`。同时修掉渲染器在“本章无映射包”时的越界崩溃。
+- **测试报告与归档**：新增 `test_report.py`（`run`/`last`/`list`/`prune`），每次运行把结果写成
+  `books/test-reports/<时间戳>/`（`report.json`、`report.md`、`junit.xml`、`pytest.log`）并更新
+  `latest.json`；`last` 解出最新报告的失败用例（跳过不计）并给出重跑命令。新增
+  `manuscript/archive.py`：构建与交付各存一份手稿/产物到 `data/archive/<书>/<日期>/`，保留窗口取
+  `base.json [archive] retention_days`（默认 45 天）。两者均 gitignore，不参与构建。
 ### 门禁
 - 阈值继续回配置：`style.json [clusters]`（图簇张数与行距）、`[quality]` 的 `min_figures_per_section`/
   `min_figure_coverage_pct`、`base.json [toolchain]` 的 `pdf_page_width/height/tolerance`；

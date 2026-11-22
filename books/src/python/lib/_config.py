@@ -18,6 +18,7 @@ import glob
 import json
 import os
 import subprocess
+
 import tomllib
 
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -90,10 +91,18 @@ def excluded_dirs() -> tuple[str, ...]:
     """Directories that hold artifacts or read-only history, never live content.
 
     `dist/` is regenerated output; `data/snapshots/` is a frozen copy of another
-    book kept for comparison. Gates must judge the manuscript only.
+    book kept for comparison; `data/archive/` and the report directory are dated
+    evidence copies. Gates judge the manuscript and the authored documents only,
+    so none of these may be scanned as content.
     """
     snapshots = str(BASE_POLICY.get('paths', {}).get('snapshots', 'data/snapshots'))
-    return (os.path.join(BOOK_ROOT, 'dist'), os.path.join(BOOK_ROOT, snapshots))
+    archive = str((BASE_POLICY.get('archive') or {}).get('dir') or 'data/archive')
+    reports = str((BASE_POLICY.get('reports') or {}).get('dir') or 'test-reports')
+    return (os.path.join(BOOK_ROOT, 'dist'),
+            os.path.join(BOOK_ROOT, snapshots),
+            os.path.join(BOOK_ROOT, archive),
+            os.path.join(BOOK_ROOT, reports),
+            tmp_dir())
 
 
 def _path(key: str) -> str:

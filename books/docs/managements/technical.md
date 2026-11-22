@@ -42,7 +42,7 @@
             │              dist/<book>.md ──► dist/<book>.html
             │                       │              │
             │                       │              ├─► to_pdf ─► pdf_toc_links ─► verify_pdf
-            │                       │              └─► to_epub ─► verify_epub
+            │                       │              └─► to_epub ─► verify_epub ─► archive
             ▼                       ▼
         audit/*（只读门禁）      data/baselines/*（已评审存量）
 ```
@@ -154,6 +154,9 @@ books/
   HTML 片段缓存与 `--force` 备份都在它下面，已 gitignore。
 - 派生状态：`book.toml [paths] state`（缺省 `data/state`，读 `_config.state_dir()` /
   `state_path(name)`）；ingest 每次重建，不入库。
+- 归档与报告：`base.json [archive]` 的 `dir`、`retention_days`（默认 45 天，读 `archive.settings()`）；
+  `base.json [reports]` 的 `dir`、`retention_days`（默认 30 天，读 `test_report.settings()`）。
+  两者都是“只进不出”的证据目录，已 gitignore。
 - 覆盖率红线：`base.json [toolchain] coverage_fail_under`。
 - 步骤超时：`base.json [toolchain]` 的 `step_timeout_s`（普通步骤）与 `test_timeout_s`（测试与覆盖率步骤）；`make.py` 按步骤名取值，超时按 124 记为步骤失败。取值是“谨注定能跑完”的上限而非预算，故与实测耗时保留十数倍余量。
 
@@ -230,6 +233,7 @@ books/
 | `pdf_from_html.py` | 现成 HTML → PDF | 不重建 HTML 的旁路；独立工具，不进 `deliver` 组 |
 | `verify_pdf.py` | PDF + HTML | 校验页数、A4、旋转、字体嵌入、体积、大纲与标题一一对应、目录链接落点 |
 | `to_epub.py` | 合并稿 → EPUB | pandoc 生成，元数据经 `--metadata-file` 传入 |
+| `archive.py` | 手稿 + `dist/` → `data/archive/<书>/<日期>/` | 只进不出、不入构建；保留窗口取 `base.json [archive] retention_days`（默认 45 天） |
 | `verify_epub.py` | EPUB | 校验 mimetype 首条未压缩、容器与 OPF 可解析、清单与阅读顺序、导航可达、体积 |
 
 渲染链的确定性由两点保证：输入只有手稿与配置；渲染器不引入随机与时间戳。

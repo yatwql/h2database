@@ -160,6 +160,7 @@ STEPS: list[Step] = [
     ('cover_stats', 'manuscript/cover.py', (), 'build'),
     ('rebuild_merged', 'render/merge.py', (), 'build'),
     ('to_html', 'render/to_html.py', (), 'build'),
+    ('archive', 'manuscript/archive.py', ('--kind', 'all'), 'build'),
     # ---- verify ----
     ('architecture', 'audit/check_architecture.py', (), 'verify'),
     ('llm_policy', 'audit/llm_policy.py', (), 'verify'),
@@ -198,12 +199,14 @@ STEPS: list[Step] = [
     ('verify_pdf', 'render/verify_pdf.py', ('--require-toc-links',), 'deliver'),
     ('to_epub', 'render/to_epub.py', (), 'deliver'),
     ('verify_epub', 'render/verify_epub.py', (), 'deliver'),
+    ('archive_release', 'manuscript/archive.py', ('--kind', 'all'), 'deliver'),
 ]
 
 GROUPS = {
-    'build': ('cover_stats', 'rebuild_merged', 'to_html'),
+    'build': ('cover_stats', 'rebuild_merged', 'to_html', 'archive'),
     'verify': tuple(n for n, _s, _a, g in STEPS if g == 'verify'),
-    'deliver': ('to_pdf', 'pdf_toc_links', 'verify_pdf', 'to_epub', 'verify_epub'),
+    'deliver': ('to_pdf', 'pdf_toc_links', 'verify_pdf', 'to_epub', 'verify_epub',
+                'archive_release'),
 }
 GROUPS['check'] = GROUPS['verify']
 GROUPS['test'] = ('unittest',)

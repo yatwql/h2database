@@ -126,6 +126,17 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 `style_schema.py` 会拒绝把叙述模板塞回 `style.json`（`generation.templates`）
 或把展示文案放进配置（`project`），保证两边不串味。
 
+## 3.5 归档与测试报告（base.json）
+
+```json
+"archive": {"dir": "data/archive", "retention_days": 45},
+"reports": {"dir": "test-reports", "retention_days": 30}
+```
+
+- `archive.dir`：手稿与产物的日期归档根目录；`retention_days` 缺省 45 天（只保留最近 45 天）。
+- `reports.dir`：测试报告目录；`retention_days` 缺省 30 天。
+- 两者都只进不出、不参与构建，已在 `.gitignore` 里。
+
 ## 4. 语言包（language/zh.json）
 
 ```json

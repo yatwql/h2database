@@ -37,6 +37,17 @@
 
 全部支持 `PYTHON=/path/to/python` 覆盖解释器。
 
+### 测试报告与归档
+
+| 脚本 | 作用 |
+| --- | --- |
+| `src/python/test_report.py run` | 跑测试并把报告写进 `books/test-reports/<时间戳>/`（`report.json`、`report.md`、`report.html`、`junit.xml`、`pytest.log`），更新 `latest.json`，按保留窗口清理旧报告 |
+| `src/python/test_report.py last` | 解出最新报告里的失败用例（跳过不计），并给出只重跑这些模块的命令 |
+| `src/python/test_report.py collect` | 只收集不执行：按模块的 `TAGS` 统计 fast/slow/未分层用例数，写一份快照 |
+| `src/python/test_report.py perf` | 最近一次运行的各步骤耗时 vs 前几次中位数，标出回退（判定仍由 `audit/perf_baseline.py` 做） |
+| `src/python/test_report.py list` / `prune` | 列出报告目录 / 按窗口清理（`--dry-run` 只报告） |
+| `src/python/manuscript/archive.py` | 把手稿与 `dist/` 产物按日期归档到 `data/archive/<书>/<日期>/`，并按 `base.json [archive] retention_days` 清理过期归档 |
+
 ### 档位编排器 `src/python/check_runner.py`
 
 `check.sh` 只是它的薄封装；本地与 CI 共用同一份编排。
@@ -93,12 +104,12 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | 命令 | 内容 |
 | --- | --- |
 | `check` | 全部门禁（只读，不写产物；清单见本文 §8，登记一致性由 `gate_trace.py` 校验） |
-| `build` | `cover.py` → `merge.py` → `to_html.py` |
+| `build` | `cover.py` → `merge.py` → `to_html.py` → `archive.py` |
 | `verify` | `check` 的语义别名 |
 | `test` | 单元套件；`--full` 加慢档，`--timings` 出耗时 |
 | `cover` | 覆盖率 + 棘轮 |
 | `report` | 六维评分（`eval-score.sh` 的实现） |
-| `deliver` | `to_pdf` + `pdf_toc_links` + `verify_pdf` + `to_epub` + `verify_epub` |
+| `deliver` | `to_pdf` + `pdf_toc_links` + `verify_pdf` + `to_epub` + `verify_epub` + `archive_release` |
 | `doctor` | 可选依赖与环境自检 |
 
 参数：`--only NAME[,NAME]`、`--skip NAME[,NAME]`、`--timings`、`--keep-going`、

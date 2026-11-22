@@ -30,6 +30,8 @@ __pycache__/
 .claude/worktrees/
 .claude/scratch/
 books/logs/
+books/data/archive/
+books/test-reports/
 .venv/
 
 # secrets — never committed (see books/data/config/llm_key.example.json)

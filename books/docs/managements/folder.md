@@ -55,6 +55,8 @@ books/
                              #   + make.py（单入口）、check_runner.py（档位编排）、release.py
     test/                    # unittest 测试套件（单元 + 集成 + 真实书稿回归）
   logs/                      # 运行日志（按天回滚，gitignored）
+  test-reports/              # 测试报告（每次一份日期目录 + latest.json，gitignored）
+  data/archive/              # 手稿与产物的日期归档（保留窗口取配置，gitignored）
   dist/                      # 交付产物（生成物，gitignored）
     h2-source-code-analysis.md
     h2-source-code-analysis.html

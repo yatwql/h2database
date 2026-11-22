@@ -62,6 +62,7 @@ STANDALONE_ENTRY = frozenset({
     'audit/book_quality.py',      # metric consumed by the scorecard
     'audit/prose_quality.py',     # metric consumed by the scorecard
     'audit/failure_extract.py',   # diagnostic: pull failures out of a log
+    'test_report.py',             # ad-hoc: run the suite with a saved report
     'audit/review_packet.py',     # produces the failure packet, decides nothing
     'audit/order_dependence.py',  # slow tier, driven by check_runner --mode p2
     'audit/scorecard.py',         # dispatched by `make.py report`

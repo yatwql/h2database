@@ -46,6 +46,10 @@ Waiting is the main cost of a session, so bound it before it happens:
   jobs fight for CPU and everything looks twice as slow.
 - **Answer with the smallest command that decides the question.** A single file or
   a single case beats the full suite; run the full suite once, at the end.
+- **Debug a red test from its report, not from a rerun.** `python
+  books/src/python/test_report.py run` writes `books/test-reports/<stamp>/` and
+  `test_report.py last` prints the failing cases plus the command that reruns only
+  those modules. Fix, rerun that one case, and only then take the full suite again.
 - **CI is a separate task.** Push and go back to the work at hand: the local gates
   are the verification. Do not poll `gh run` or wait for a workflow unless the user
   asks about CI specifically, and never hold a task open on a remote job.
@@ -60,7 +64,11 @@ Waiting is the main cost of a session, so bound it before it happens:
 - Tooling lives in `books/src/python/` (thin launchers may live in `books/scripts/`);
   tests only in `books/src/test/`.
 - No temporary repair scripts, archives, or `__pycache__` in git; session
-  artifacts go to `.claude/`.
+  artifacts go to `books/data/tmp/` (gitignored), never into `.claude/`, which
+  belongs to the tooling's own runtime data.
+- Evidence directories are dated copies, not content: `books/test-reports/` and
+  `books/data/archive/` are gitignored and excluded from every gate through
+  `_config.excluded_dirs()`; never judge them as manuscript or docs.
 - No historical traces in docs or code comments (review rounds, batches, dated
   plans, completed-work ledgers); version history lives in `changelog.md` only.
   `make.py check` enforces this plus doc drift (paths, scripts, chapters,

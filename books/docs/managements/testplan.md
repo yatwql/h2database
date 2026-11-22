@@ -97,6 +97,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | LLM 边界 | LLM 只用于散文生成/评审场景；门禁与事实链路不得调用；密钥文件不入库 | `llm_policy.py` | P1 |
 | 发布评分 | 六维评分（功能/稳定/交互/代码/文档风格/文档质量）作为整改视图 | `make.py report` | 报告类（不计级别） |
 | 历史快照完整性 | 快照文件与 manifest 记录的哈希一致；快照不参与构建、不被门禁扫描 | `manuscript/snapshot.py verify` | P1 |
+| 归档可用 | 每次构建与交付各存一份手稿与产物的日期副本；保留窗口取自配置（默认 45 天），过期目录被清理；归档只进不进、不被构建读取 | `manuscript/archive.py` | P2 |
 | 架构约束 | 分层依赖方向、门禁只读、不硬编码路径、命名不遮蔽标准库、入口脚本均接入 make.py 步骤 | `check_architecture.py` | P0 |
 | 章节均衡 | 每章行数/图数/坐标分布 | `balance.py` | P2 |
 | 类型检查 | pyright 可用时检查工具链类型（缺失则跳过） | `typecheck.py` | P1 |
