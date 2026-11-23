@@ -477,6 +477,12 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **代码与配置核查后的三处整改**：① 删掉五个无人引用的函数（`core/settings.py` 的 `base_json`/
+`settings_json`、`lib/_config.for_root`、`audit/plan_coverage.plan_path`、`core/docs_archive.topic_dirs`）——
+都是重构后的残留；② `check_runner` 的 `domain_rows()` 与 `gates_for_table()` 原本各写一张同构表，
+合并为 `path_scopes()`（路径片段 → 域 → 门禁），分类与门禁选择从同一份数据派生，
+顺带去掉 `gates_for_change()` 里对 `src/python` 的字符串特判；③ 配置项无死键（`base.json`/`style.json` 的
+每个叶子键都在代码里被读到），架构/契约门禁全过。
 - **rf-39 收尾：松散断言清零**。此前 8 条被判为「只能接受 0 或 1」的用例都在交付链里，
 而本机其实装着 pandoc 3.5 与 playwright + chromium——默认快档只是按 marker 跳过它们，不是缺工具。
 开启慢档实跑后逐条定值：`to_pdf`/`verify_pdf`/`pdf_toc_links`/`print_pdf`/`pdf_from_html`/`to_epub`

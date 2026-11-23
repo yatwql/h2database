@@ -26,16 +26,9 @@ def book_toml() -> str:
     return _config.current().book_toml
 
 
-def base_json() -> str:
-    return os.path.join(config_dir(), 'base.json')
-
-
 def provider_json() -> str:
     return os.path.join(config_dir(), 'llm_provider.json')
 
-
-def settings_json() -> str:
-    return os.path.join(config_dir(), 'llm_settings.json')
 
 LEVELS = ('DEBUG', 'INFO', 'WARNING', 'ERROR')
 

@@ -41,10 +41,6 @@ def plan_dir() -> str:
     return os.path.join(_config.DOCS_DIR, 'plan')
 
 
-def plan_path() -> str:
-    return os.path.join(_config.DOCS_DIR, 'managements', 'plan.md')
-
-
 def design_dirs(root: str | None = None) -> list[str]:
     """Iteration directories that exist on disk."""
     try:

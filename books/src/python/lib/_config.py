@@ -822,11 +822,6 @@ def use(cfg: Config) -> Iterator[Config]:
         _ACTIVE = previous
 
 
-def for_root(root: str) -> Config:
-    """Load a book by its root directory."""
-    return Config(root)
-
-
 def app_name() -> str:
     """Product name of the toolchain (logs, CLI, TUI, Web)."""
     from lib._version import APP_NAME

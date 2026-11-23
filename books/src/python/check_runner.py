@@ -90,22 +90,35 @@ MODE_DOMAINS = {
 # mapping is deliberately coarse: it narrows a run, it never narrows what counts
 # as correct (p0/p1 always run everything). Path prefixes come from the config so
 # a renamed directory cannot turn the mapping into a silent no-op.
-def domain_rows() -> tuple[tuple[str, str], ...]:
-    """(path fragment, domain) for the change classifier, config derived."""
+def path_scopes() -> tuple[tuple[str, str, str], ...]:
+    """(path fragment, domain, gates) for every book area a change can touch.
+
+    One table with two readers: the classifier asks which domain a path is in,
+    the scoped runner asks which gates that area can invalidate. Two tables would
+    drift the moment a directory moves.
+    """
     def rel(path: str) -> str:
         return os.path.relpath(path, repo_root()).replace(os.sep, '/') + '/'
 
     return (
-        (rel(os.path.join(book_root(), 'src', 'test')), 'tests'),
-        (rel(os.path.join(book_root(), 'src', 'python')), 'code'),
-        (rel(os.path.join(book_root(), 'docs')), 'docs'),
-        (rel(_config.MANUSCRIPT_DIR), 'docs'),
-        (rel(_config.CONFIG_DIR), 'docs'),
-        (rel(os.path.join(book_root(), 'data')), 'docs'),
-        (rel(os.path.join(book_root(), 'data', 'baselines')), 'docs'),
-        (rel(os.path.join(repo_root(), '.github')), 'infra'),
-        (rel(os.path.join(book_root(), 'scripts')), 'infra'),
+        (rel(os.path.join(book_root(), 'src', 'test')), 'tests', ''),
+        (rel(os.path.join(book_root(), 'src', 'python')), 'code',
+         'architecture,script_contract'),
+        (rel(_config.MANUSCRIPT_DIR), 'docs',
+         'structure,captions,content_volume,audit_exercises,content_depth,style_rules'),
+        (rel(_config.CONFIG_DIR), 'docs', 'style_schema,style_rules,content_volume'),
+        (rel(os.path.join(book_root(), 'data')), 'docs', 'structure,versions'),
+        (rel(os.path.join(book_root(), 'docs')), 'docs',
+         'doc_drift,doc_archive,plan_coverage,traces,audit_links'),
+        (rel(os.path.join(book_root(), 'data', 'baselines')), 'docs', 'content_volume'),
+        (rel(os.path.join(repo_root(), '.github')), 'infra', ''),
+        (rel(os.path.join(book_root(), 'scripts')), 'infra', ''),
     )
+
+
+def domain_rows() -> tuple[tuple[str, str], ...]:
+    """(path fragment, domain) for the change classifier."""
+    return tuple((fragment, domain) for fragment, domain, _gates in path_scopes())
 
 
 def domain_of(path: str) -> str:
@@ -144,17 +157,9 @@ def scoped_changes(domains: tuple[str, ...] | None = None) -> list[str]:
 
 
 def gates_for_table() -> tuple[tuple[str, str], ...]:
-    def rel(path: str) -> str:
-        return os.path.relpath(path, repo_root()).replace(os.sep, '/') + '/'
+    """(path fragment, gates) for the scoped runner, from the same table."""
+    return tuple((fragment, gates) for fragment, _domain, gates in path_scopes() if gates)
 
-    return (
-        (rel(_config.MANUSCRIPT_DIR),
-         'structure,captions,content_volume,audit_exercises,content_depth,style_rules'),
-        (rel(_config.CONFIG_DIR), 'style_schema,style_rules,content_volume'),
-        (rel(os.path.join(book_root(), 'data')), 'structure,versions'),
-        (rel(os.path.join(book_root(), 'docs')), 'doc_drift,doc_archive,plan_coverage,traces,audit_links'),
-        (rel(os.path.join(book_root(), 'data', 'baselines')), 'content_volume'),
-    )
 
 # Marker expression per tier, the same idea as investor-review's runner modes:
 # the tier decides *which* tests run, not which assertions count.
@@ -219,9 +224,6 @@ def gates_for_change(changed: list[str]) -> str:
     wanted: list[str] = []
     table = gates_for_table()
     for path in changed:
-        if '/src/python/' in path:
-            wanted += [gate for gate in ('architecture', 'script_contract')
-                       if gate not in wanted]
         for fragment, gates in table:
             if fragment in path:
                 wanted += [gate for gate in gates.split(',') if gate not in wanted]

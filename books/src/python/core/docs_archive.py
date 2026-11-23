@@ -124,15 +124,6 @@ def ensure_index(text: str, entries: list[str]) -> str:
     return text.rstrip('\n') + '\n\n' + block
 
 
-def topic_dirs(path: str) -> list[str]:
-    """Iteration directories already inside a version archive."""
-    try:
-        names = os.listdir(path)
-    except OSError:
-        return []
-    return sorted(name for name in names if os.path.isdir(os.path.join(path, name)))
-
-
 # ---- actions ---------------------------------------------------------------
 
 
