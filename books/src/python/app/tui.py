@@ -374,42 +374,63 @@ def clear_screen() -> None:
         sys.stdout.flush()
 
 
-def main(argv: list[str] | None = None) -> int:
+def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--once', metavar='ACTION', help='run one action and exit')
     parser.add_argument('--book', default='', help='book root to work on')
     parser.add_argument('--edition', default='', help='manuscript edition to work on')
-    args = parser.parse_args(argv)
+    return parser
+
+
+def _once(args) -> int:
+    """`--once ACTION`: one action, its output on stdout, exit with its code."""
+    if args.once == 'settings':
+        sys.stdout.write(configure())
+        return 0
+    code, text = actions.run(args.once, book=_config.resolve_book_root(args.book or None),
+                             edition=args.edition)
+    sys.stdout.write(text)
+    return code
+
+
+def _draw(screen: str, cursors: dict[str, int], status: str) -> bool:
+    """Draw one frame; returns whether a finished result was on screen."""
+    rows = screen_rows(screen)
+    cursor = cursors.get(screen, 0) % len(rows) if rows else 0
+    lines = ['\n' + header(), '', screen_title(screen), '', menu_text(screen, cursor)]
+    if status:
+        lines += ['', status,
+                  _c(' 按任意键继续 · 0 收起结果回到菜单', PALETTE['hint'])]
+    clear_screen()
+    sys.stdout.write('\n'.join(lines))
+    sys.stdout.flush()
+    return bool(status)
+
+
+def _row_for(screen: str, pressed: str, rows: list, cursor: int):
+    """The (action, label) a keypress selects, or None when it selects nothing."""
+    if pressed == keys.KEY_ENTER and rows:
+        return rows[cursor][1], rows[cursor][2]
+    wanted = menu.resolve(screen, pressed)
+    match = next((row for row in rows if row[0] == wanted), None)
+    return (match[1], match[2]) if match else None
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parser().parse_args(argv)
     if args.book:
         os.environ['BOOK_ROOT'] = os.path.abspath(args.book)
     if args.edition:
         os.environ['BOOK_EDITION'] = args.edition
-
     if args.once:
-        if args.once == 'settings':
-            sys.stdout.write(configure())
-            return 0
-        code, text = actions.run(args.once, book=_config.resolve_book_root(args.book or None),
-                                 edition=args.edition)
-        sys.stdout.write(text)
-        return code
+        return _once(args)
 
     screen = 'main'
     cursors = {name: menu.default_cursor(name) for name in menu.TITLES}
     status = ''
     while True:
-        rows = screen_rows(screen)
-        cursor = cursors.get(screen, 0) % len(rows) if rows else 0
-        lines = ['\n' + header(), '', screen_title(screen),
-                 '', menu_text(screen, cursor)]
-        if status:
-            lines += ['', status,
-                      _c(' 按任意键继续 · 0 收起结果回到菜单', PALETTE['hint'])]
-        clear_screen()
-        sys.stdout.write('\n'.join(lines))
-        sys.stdout.flush()
-        shown_result = bool(status)   # a finished run is on screen right now
+        shown_result = _draw(screen, cursors, status)
         status = ''
         try:
             pressed = keys.normalize(keys.read_key())
@@ -428,6 +449,9 @@ def main(argv: list[str] | None = None) -> int:
                 return 0
             screen = menu.parent_of(screen)
             continue
+
+        rows = screen_rows(screen)
+        cursor = cursors.get(screen, 0) % len(rows) if rows else 0
         if pressed == keys.KEY_UP:
             cursors[screen] = (cursor - 1) % len(rows)
             continue
@@ -442,20 +466,15 @@ def main(argv: list[str] | None = None) -> int:
             status = _c('配置已重新读取', PALETTE['value_ok'])
             continue
 
-        if pressed == keys.KEY_ENTER and rows:
-            action, label = rows[cursor][1], rows[cursor][2]
-        else:
-            wanted = menu.resolve(screen, pressed)
-            match = next((row for row in rows if row[0] == wanted), None)
-            if match is None:
-                status = _c(f'无效按键 {pressed!r}，按 ? 查看帮助', PALETTE['warn'])
-                continue
-            action, label = match[1], match[2]
-
-        quit_now, screen, status = handle(action, label, screen)
+        chosen = _row_for(screen, pressed, rows, cursor)
+        if chosen is None:
+            status = _c(f'无效按键 {pressed!r}，按 ? 查看帮助', PALETTE['warn'])
+            continue
+        quit_now, screen, status = handle(*chosen, screen)
         if quit_now:
             sys.stdout.write('\n')
             return 0
+
 
 if __name__ == '__main__':
     sys.exit(_errors.run(main, sys.argv[1:]))

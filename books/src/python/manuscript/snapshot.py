@@ -109,6 +109,68 @@ def source_digest(path: str, members: list[str]) -> str:
     return digest.hexdigest()
 
 
+def _copy_directory(archive_path: str, manuscript_dir: str):
+    """(files, source name, source hash) for a directory tree, or None on error."""
+    members = directory_members(archive_path)
+    if not members:
+        print(f'error: no manuscript members in {archive_path}', file=sys.stderr)
+        return None
+    files: dict[str, dict] = {}
+    for member in members:
+        destination = os.path.join(manuscript_dir, member)
+        make_dir(os.path.dirname(destination))
+        try:
+            shutil.copyfile(os.path.join(archive_path, member), destination)
+        except OSError as exc:
+            print(f'error: cannot copy {member}: {exc}', file=sys.stderr)
+            return None
+        files[member.replace(os.sep, '/')] = facts(destination)
+    return (files, os.path.relpath(archive_path, _config.BOOK_ROOT),
+            source_digest(archive_path, members))
+
+
+def _extract_zip(archive_path: str, manuscript_dir: str):
+    """(files, source name, source hash) for a zip archive, or None on error."""
+    with zipfile.ZipFile(archive_path) as archive:
+        members = chapter_members(archive)
+        if not members:
+            print(f'error: no manuscript members in {archive_path}', file=sys.stderr)
+            return None
+        files: dict[str, dict] = {}
+        for member in members:
+            rel = os.path.basename(member)
+            parent = os.path.basename(os.path.dirname(member))
+            if parent in ('front', 'back'):
+                rel = os.path.join(parent, rel)
+            destination = os.path.join(manuscript_dir, rel)
+            make_dir(os.path.dirname(destination))
+            try:
+                with archive.open(member) as source, open(destination, 'wb') as out:
+                    shutil.copyfileobj(source, out)
+            except (OSError, zipfile.BadZipFile) as exc:
+                print(f'error: cannot extract {member}: {exc}', file=sys.stderr)
+                return None
+            files[rel.replace(os.sep, '/')] = facts(destination)
+    return files, os.path.basename(archive_path), sha256_file(archive_path)
+
+
+def _manifest(label: str, date: str, source_name: str, source_hash: str,
+              files: dict[str, dict]) -> dict:
+    return {
+        'label': label,
+        'date': date,
+        'source_archive': source_name,
+        'archive_sha256': source_hash,
+        'edition': _config.current().edition,
+        'files': files,
+        'totals': {
+            'files': len(files),
+            'bytes': sum(item['bytes'] for item in files.values()),
+            'lines': sum(item['lines'] for item in files.values()),
+        },
+    }
+
+
 def import_snapshot(archive_path: str, label: str, date: str) -> int:
     """Copy a manuscript in as a read-only snapshot.
 
@@ -123,60 +185,16 @@ def import_snapshot(archive_path: str, label: str, date: str) -> int:
     if os.path.exists(target):
         print(f'error: snapshot already exists: {target}', file=sys.stderr)
         return 2
+
     manuscript_dir = os.path.join(target, 'manuscript')
     make_dir(manuscript_dir)
-    files: dict[str, dict] = {}
-    if os.path.isdir(archive_path):
-        members = directory_members(archive_path)
-        if not members:
-            print(f'error: no manuscript members in {archive_path}', file=sys.stderr)
-            return 2
-        for member in members:
-            destination = os.path.join(manuscript_dir, member)
-            make_dir(os.path.dirname(destination))
-            try:
-                shutil.copyfile(os.path.join(archive_path, member), destination)
-            except OSError as exc:
-                print(f'error: cannot copy {member}: {exc}', file=sys.stderr)
-                return 2
-            files[member.replace(os.sep, '/')] = facts(destination)
-        source_name = os.path.relpath(archive_path, _config.BOOK_ROOT)
-        source_hash = source_digest(archive_path, members)
-    else:
-        with zipfile.ZipFile(archive_path) as archive:
-            members = chapter_members(archive)
-            if not members:
-                print(f'error: no manuscript members in {archive_path}', file=sys.stderr)
-                return 2
-            for member in members:
-                rel = os.path.basename(member)
-                parent = os.path.basename(os.path.dirname(member))
-                if parent in ('front', 'back'):
-                    rel = os.path.join(parent, rel)
-                destination = os.path.join(manuscript_dir, rel)
-                make_dir(os.path.dirname(destination))
-                try:
-                    with archive.open(member) as source, open(destination, 'wb') as out:
-                        shutil.copyfileobj(source, out)
-                except (OSError, zipfile.BadZipFile) as exc:
-                    print(f'error: cannot extract {member}: {exc}', file=sys.stderr)
-                    return 2
-                files[rel.replace(os.sep, '/')] = facts(destination)
-        source_name = os.path.basename(archive_path)
-        source_hash = sha256_file(archive_path)
-    manifest = {
-        'label': label,
-        'date': date,
-        'source_archive': source_name,
-        'archive_sha256': source_hash,
-        'edition': _config.current().edition,
-        'files': files,
-        'totals': {
-            'files': len(files),
-            'bytes': sum(item['bytes'] for item in files.values()),
-            'lines': sum(item['lines'] for item in files.values()),
-        },
-    }
+    copied = (_copy_directory(archive_path, manuscript_dir) if os.path.isdir(archive_path)
+              else _extract_zip(archive_path, manuscript_dir))
+    if copied is None:
+        return 2
+    files, source_name, source_hash = copied
+
+    manifest = _manifest(label, date, source_name, source_hash, files)
     _fsutil.dump_json(os.path.join(target, 'manifest.json'), manifest)
     print(f'snapshot imported: {os.path.relpath(target, _config.BOOK_ROOT)} '
           f'({manifest["totals"]["files"]} files, {manifest["totals"]["bytes"]} bytes)')

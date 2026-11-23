@@ -477,6 +477,13 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **rf-40 完成：不再有 ≥60 行的函数**。最后一批把 `ingest/chapters.py::_api_sections`（74 →
+§3 整段移到新模块 `ingest/api_sections.py`，chapters.py 889 → 835 行）、`manuscript/snapshot.py::import_snapshot`
+（71 → 目录/压缩包两条复制路径 + 清单构造）、`exercises.parse_chapter_slots`（67 → 头部事件生成器）、
+`core/docs_archive.py::apply_plan`（61 → 段落搬运、主题移动、索引刷新）、`ingest/chapters.py::main`
+（71 → 参数/状态/执行/报告）、`app/cli.py::main`（78 → 参数、标志校验、书目目录、settings、分发）、
+`app/tui.py::main`（81 → 参数、`--once`、单帧绘制、按键→行解析）都拆开。
+全库 30 → **0** 个。
 - **`audit/style_rules.py::check_file`（67 行）拆开**：标题规则、逐行规则（链接文字/术语混写/中英间距）、
 段落长度各成一个助手，主循环只做围栏与分派。≥60 行函数 12 → 11，剩余清单记在 rf-40。
 - **四个审计脚本的 `main()` 拆开（rf-40 第五批）**：`audit/captions.py`（图注基线/JSON/与基线对比三路各自成函数）、`audit/readability.py`（围栏扫描、HTML 越界检查、报告三段）、`audit/figure_clusters.py`（参数、扫描、汇总、两种输出）、`audit/smart.py::check_figure_refs`（图注提取、引用判定、逐文件报告）。真实书目上的输出与判定不变（图注覆盖 599 张 / 597 引用，仍 PASS）。≥60 行函数 16 → 12。

@@ -21,7 +21,7 @@ from lib import _config, _errors, _fsutil
 _fsutil.pin_stdout_utf8()
 
 
-def main(argv: list[str] | None = None) -> int:
+def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('action', choices=sorted(actions.ACTIONS),
@@ -40,57 +40,78 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument('--books-dir', default='',
                         help='directory holding several books; with no --book, a single '
                              'book inside it is used, several are listed')
-    args = parser.parse_args(argv)
+    return parser
 
+
+def _flag_errors(args) -> str:
+    """The message for a flag used with the wrong action ('' when fine)."""
     if (args.force or args.refresh_facts) and args.action not in actions.ANALYZE_ACTIONS:
-        sys.stderr.write('error: --force / --refresh-facts 只能用于 analyze 类动作\n')
-        return 2
+        return 'error: --force / --refresh-facts 只能用于 analyze 类动作'
     if args.force and args.refresh_facts:
-        sys.stderr.write('error: --force 与 --refresh-facts 不能同时使用\n')
+        return 'error: --force 与 --refresh-facts 不能同时使用'
+    return ''
+
+
+def _book_from_dir(books_dir: str) -> tuple[str, int]:
+    """(book root, 0) for a --books-dir with one book, else ('', 2) with the list."""
+    found = _config.books_in(books_dir)
+    if len(found) == 1:
+        return found[0], 0
+    if not found:
+        sys.stderr.write(f'error: {books_dir} 下没有带 book.toml 的书\n')
+        return '', 2
+    sys.stderr.write(f'{books_dir} 下有 {len(found)} 本书，用 --book 指定其一：\n')
+    for root in found:
+        try:
+            title = _config.Config(root).title
+        except _config.ConfigError:
+            title = '（配置读不出）'
+        sys.stderr.write(f'  {title}  [{os.path.basename(root)}]  {root}\n')
+    return '', 2
+
+
+def _settings(book: str, args) -> int:
+    """`settings`, plus the `settings set <key> <value>` write path."""
+    tail = list(args.prompt)
+    if tail and tail[0] == 'set':
+        if len(tail) < 3:
+            sys.stderr.write('usage: cli.py settings set <key> <value>\n')
+            return 2
+        try:
+            with _config.use(_config.Config(book, args.edition or None)):
+                stored = settings.set_value(tail[1], ' '.join(tail[2:]))
+        except (KeyError, ValueError) as exc:
+            sys.stderr.write(f'error: {exc}\n')
+            return 2
+        sys.stdout.write(f'{tail[1]} = {stored}\n')
+        return 0
+    code, text = actions.run('settings', book=book, edition=args.edition)
+    sys.stdout.write(text)
+    return code
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parser().parse_args(argv)
+
+    invalid = _flag_errors(args)
+    if invalid:
+        sys.stderr.write(invalid + '\n')
         return 2
     if args.books_dir:
         os.environ['BOOKS_DIR'] = os.path.abspath(args.books_dir)
+
     book = _config.resolve_book_root(args.book or None)
     if args.books_dir and not args.book:
-        found = _config.books_in(args.books_dir)
-        if len(found) == 1:
-            book = found[0]
-        elif not found:
-            sys.stderr.write(f'error: {args.books_dir} 下没有带 book.toml 的书\n')
-            return 2
-        else:
-            sys.stderr.write(f'{args.books_dir} 下有 {len(found)} 本书，用 --book 指定其一：\n')
-            for root in found:
-                title = ''
-                try:
-                    title = _config.Config(root).title
-                except _config.ConfigError:
-                    title = '（配置读不出）'
-                sys.stderr.write(f'  {title}  [{os.path.basename(root)}]  {root}\n')
-            return 2
-    marker = os.path.join(book, 'data', 'book', 'book.toml')
-    if not os.path.isfile(marker):
+        book, code = _book_from_dir(args.books_dir)
+        if code:
+            return code
+    if not os.path.isfile(os.path.join(book, 'data', 'book', 'book.toml')):
         sys.stderr.write(f'error: 没找到 book.toml，试过 {book}\n')
         return 2
     selection = {'book': book, 'edition': args.edition}
 
     if args.action == 'settings':
-        tail = list(args.prompt)
-        if tail and tail[0] == 'set':
-            if len(tail) < 3:
-                sys.stderr.write('usage: cli.py settings set <key> <value>\n')
-                return 2
-            try:
-                with _config.use(_config.Config(book, args.edition or None)):
-                    stored = settings.set_value(tail[1], ' '.join(tail[2:]))
-            except (KeyError, ValueError) as exc:
-                sys.stderr.write(f'error: {exc}\n')
-                return 2
-            sys.stdout.write(f'{tail[1]} = {stored}\n')
-            return 0
-        code, text = actions.run('settings', **selection)
-        sys.stdout.write(text)
-        return code
+        return _settings(book, args)
 
     kwargs = {}
     if args.action == 'llm-ask':

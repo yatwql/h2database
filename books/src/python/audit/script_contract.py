@@ -38,7 +38,9 @@ def scripts() -> list[str]:
                os.sep + 'core' + os.sep + 'settings.py',
                os.sep + 'core' + os.sep + 'menu.py',
                os.sep + 'app' + os.sep + 'keys.py',
-               os.sep + 'ingest' + os.sep + 'languages' + os.sep)
+               os.sep + 'ingest' + os.sep + 'languages' + os.sep,
+               # chapter-body sections split out of chapters.py: pure helpers
+               os.sep + 'ingest' + os.sep + 'api_sections.py')
     return sorted(p for p in found
                   if not any(marker in p for marker in library)
                   and not p.endswith('__init__.py'))

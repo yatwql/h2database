@@ -22,6 +22,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from api_sections import api_section
 from appendix import APPENDIX_SPEC, TYPE_EMOJI, render_appendix
 from factblocks import backup_existing, line_delta, refresh_blocks
 from factblocks import mark_block as _gen
@@ -243,80 +244,8 @@ def _map_sections(cn: int, packages: dict, ctx: dict) -> list[str]:
 
 
 def _api_sections(cn: int, ctx: dict) -> list[str]:
-    """§3 entries and coordinates: where to start reading, and in which file."""
-    facts = ctx['facts']
-    pkgs_sorted = ctx['pkgs_sorted']
-    L: list[str] = []
-    L += [f'## {cn}.3 关键 API 与源码坐标', '']
-    rows = []
-    for _pkg, info in pkgs_sorted:
-        for cls in info['key_classes'][:3]:
-            rel = cls.get('rel') or ''
-            api_lines = cls.get('api_lines') or {}
-            if not rel:
-                continue
-            for api in cls.get('api', [])[:2]:
-                lineno = api_lines.get(api)
-                rows.append([f"`{cls['name']}.{api}()`",
-                             f'`{rel}:{lineno}`' if lineno else f'`{rel}`'])
-    L += _gen('api', [
-        tpl('api_intro',
-            '下表把公开入口与源码位置对应起来，共 {rows} 条坐标。', **facts), '',
-        *_table(['入口', '源码坐标'], rows[:20] or [['`—`', '`org/h2/...`']])])
-
-    type_rows = []
-    for pkg, info in pkgs_sorted:
-        for cls in (info.get('key_classes') or [])[:5]:
-            type_rows.append([f'`{cls["name"]}`', f'`{pkg}`',
-                              f'{cls["lines"]:,}', f'{cls["public_methods"]}'])
-    if type_rows:
-        L += [f'## {cn}.3.1 公共类型清单', '']
-        L += _gen('type-list', [
-            (f'本章抽样类型按包分组，共 {len(type_rows)} 行；'
-             '规模与公开方法数是阅读优先级的第一信号。'), '',
-            *_table(['类型', '包', '行数', '公开方法'], type_rows)])
-
-    take = 8 if len(pkgs_sorted) <= 2 else 4
-    guide = []
-    for pkg, info in pkgs_sorted:
-        for cls in (info.get('key_classes') or [])[:take]:
-            guide.append((pkg, cls))
-    if guide:
-        L += [f'## {cn}.3.2 逐类导读', '',
-              ('按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，'
-              '便于按需下钻。'), '']
-        for n, (pkg, cls) in enumerate(guide, start=1):
-            info = dict(pkgs_sorted)[pkg]
-            share = round(100 * cls["lines"] / max(1, info["lines"]))
-            L += [f'### {cn}.3.2.{n} `{cls["name"]}`', '',
-                  (f'`{cls["name"]}` 位于 `{pkg}`，{cls["lines"]:,} 行、'
-                   f'{cls["public_methods"]} 个公开方法。'
-                   f'它占该包实现的 {share}%，包内排名第 {n}。'),
-                  '',
-                  (f'职责一句话：{cls["summary"] or "按方法名与调用点归纳"}。'
-                   f'读它之前先看包级依赖（{info_dep_count(info)} 个），'
-                   '再决定是否顺带读同包的相邻类型。'),
-                  '',
-                  ]
-
-    coord_rows = []
-    for _pkg, info in pkgs_sorted:
-        for cls in (info.get('key_classes') or [])[:6]:
-            rel = cls.get('rel') or ''
-            api_lines = cls.get('api_lines') or {}
-            if not rel:
-                continue
-            for api in cls.get('api', [])[:6]:
-                lineno = api_lines.get(api)
-                if lineno:
-                    coord_rows.append([f'`{cls["name"]}.{api}()`', f'`{rel}:{lineno}`'])
-    if coord_rows:
-        L += [f'## {cn}.3.2 源码坐标明细', '']
-        L += _gen('coords', [
-            (f'本章主责包中 {len(coord_rows)} 个公开入口的行号，'
-             '按类聚簇，可直接跳转阅读。'), '',
-            *_table(['入口', '源码坐标'], coord_rows)])
-    return L
+    """§3 entries and coordinates; the assembly lives in `ingest/api_sections`."""
+    return api_section(cn, ctx, tpl=tpl, table=_table, mark=_gen, dep_count=info_dep_count)
 
 
 def _reading_sections(cn: int, cross_num: str, cross_name: str,
@@ -811,7 +740,7 @@ def _source_change_line() -> str:
     return '源码清单：已变化（源码树有新内容，事实块会随之刷新）'
 
 
-def main(argv: list[str] | None = None) -> int:
+def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--only', help='single chapter file name')
@@ -825,8 +754,62 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument('--llm', action='store_true',
                         help='let the LLM draft the lead-in and summary prose '
                              '(facts, tables and coordinates stay deterministic)')
-    args = parser.parse_args(argv)
+    return parser
 
+
+def _load_state():
+    """(inventory, outline) from the derived state, or None when unreadable."""
+    global _INVENTORY
+    try:
+        inventory = json.loads(_fsutil.read_text(
+            _config.state_path('source-inventory.json')))
+        outline = json.loads(_fsutil.read_text(_outline_path()))
+    except json.JSONDecodeError as exc:
+        print(f'error: state files are not valid JSON: {exc}', file=sys.stderr)
+        return None
+    _INVENTORY = inventory
+    return inventory, outline
+
+
+def _emit_all(outline: dict, args, stamp: str) -> dict[str, int]:
+    """Render or refresh every chapter the outline lists; returns the counters."""
+    counters = {'written': 0, 'skipped': 0, 'refreshed': 0, 'unchanged': 0, 'unmarked': 0}
+    for chapter in outline['chapters']:
+        if args.only and chapter['file'] != args.only:
+            continue
+        if chapter['file'] in APPENDIX_SPEC:
+            counters['written'] += _append_appendix(chapter, args.dry_run) == 'written'
+            continue
+        if chapter['file'] not in CHAPTER_SPEC:
+            continue
+        status = _emit_chapter(chapter, args, stamp)
+        counters['written'] += status == 'written'
+        counters['refreshed'] += status == 'refresh'
+        counters['unchanged'] += status == 'unchanged'
+        counters['skipped'] += status == 'skip'
+        counters['unmarked'] += status == 'skip' and args.refresh_facts
+    return counters
+
+
+def _report(counters: dict[str, int], args) -> None:
+    if args.refresh_facts:
+        print(f"刷新 {counters['refreshed']} 章 / 跳过 {counters['unmarked']} 章（无标记块）")
+        return
+    print(f"chapters written: {counters['written']}")
+    if counters['refreshed']:
+        print(f"事实块已刷新: {counters['refreshed']} 章（正文未动）")
+    if counters['unchanged']:
+        print(f"事实块无变化: {counters['unchanged']} 章")
+    if counters['skipped']:
+        print(f"chapters skipped: {counters['skipped']}"
+              '（正文无标记块或需整篇重生成；--force 可重写）')
+    if _USE_LLM and not counters['written']:
+        print('LLM 未介入：本轮没有生成或重写的章节，导读/小结没有可润色的对象；'
+              '要对已有正文润色请加 --force（旧文件先备份）或按章用 --only。')
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parser().parse_args(argv)
     if args.refresh_facts and args.force:
         print('error: --refresh-facts 与 --force 是两条路径，不能同时使用',
               file=sys.stderr)
@@ -837,51 +820,14 @@ def main(argv: list[str] | None = None) -> int:
                     or os.environ.get('BOOK_LLM_INGEST') == '1'
                     or _config.llm_ingest_prose())
 
-    global _INVENTORY
-    try:
-        _INVENTORY = json.loads(_fsutil.read_text(
-            _config.state_path('source-inventory.json')))
-        outline = json.loads(_fsutil.read_text(_outline_path()))
-    except json.JSONDecodeError as exc:
-        print(f'error: state files are not valid JSON: {exc}', file=sys.stderr)
+    state = _load_state()
+    if state is None:
         return 2
+    _inventory, outline = state
 
     print(_source_change_line())
-
-    written = 0
-    skipped = 0
-    refreshed = 0
-    unchanged = 0
-    unmarked = 0
-    stamp = time.strftime('%Y-%m-%d_%H%M%S')
-    for ch in outline['chapters']:
-        if args.only and ch['file'] != args.only:
-            continue
-        if ch['file'] in APPENDIX_SPEC:
-            status = _append_appendix(ch, args.dry_run)
-            written += status == 'written'
-            continue
-        if ch['file'] not in CHAPTER_SPEC:
-            continue
-        status = _emit_chapter(ch, args, stamp)
-        written += status == 'written'
-        refreshed += status == 'refresh'
-        unchanged += status == 'unchanged'
-        skipped += status == 'skip'
-        unmarked += status == 'skip' and args.refresh_facts
-    if args.refresh_facts:
-        print(f'刷新 {refreshed} 章 / 跳过 {unmarked} 章（无标记块）')
-        return 0
-    print(f'chapters written: {written}')
-    if refreshed:
-        print(f'事实块已刷新: {refreshed} 章（正文未动）')
-    if unchanged:
-        print(f'事实块无变化: {unchanged} 章')
-    if skipped:
-        print(f'chapters skipped: {skipped}（正文无标记块或需整篇重生成；--force 可重写）')
-    if _USE_LLM and not written:
-        print('LLM 未介入：本轮没有生成或重写的章节，导读/小结没有可润色的对象；'
-              '要对已有正文润色请加 --force（旧文件先备份）或按章用 --only。')
+    counters = _emit_all(outline, args, time.strftime('%Y-%m-%d_%H%M%S'))
+    _report(counters, args)
     return 0
 
 

@@ -89,6 +89,33 @@ def _scan_fences(lines: list[str]) -> list[bool]:
         inside[i] = fence_open
     return inside
 
+def _empty_slot(chapter: int | None = None) -> dict:
+    return {'chapter': chapter, 'summary_line': None,
+            'exercises_line': None, 'further_line': None}
+
+
+def _heading_events(lines: list[str], fence: list[bool]):
+    """Yield (kind, chapter, line_number) for every slot-relevant heading."""
+    for index, raw in enumerate(lines):
+        if fence[index]:
+            continue
+        chapter = HEADING_CHAPTER.match(raw)
+        if chapter:
+            yield 'chapter', int(chapter.group(1)), index + 1
+            continue
+        summary = HEADING_SUMMARY.match(raw)
+        if summary:
+            yield 'summary', int(summary.group(1)), index + 1
+            continue
+        exercises = HEADING_EXERCISES.match(raw)
+        if exercises:
+            yield 'exercises', int(exercises.group(1)), index + 1
+            continue
+        further = HEADING_FURTHER.match(raw)
+        if further:
+            yield 'further', int(further.group(1)), index + 1
+
+
 def parse_chapter_slots(lines: list[str]) -> list[dict]:
     """Identify every (chapter, summary_line, exercises_line, further_line) slot.
 
@@ -99,64 +126,35 @@ def parse_chapter_slots(lines: list[str]) -> list[dict]:
         'summary_line': int | None,
         'exercises_line': int | None,
         'further_line': int | None,
-        'next_h2_after_exercises': int | None,
       }
     """
-    fence = _scan_fences(lines)
     slots: list[dict] = []
-    current: dict[str, int | None] = {'chapter': None, 'summary_line': None,
-                                      'exercises_line': None, 'further_line': None}
+    current = _empty_slot()
 
-    def flush():
-        nonlocal current
-        if current['chapter'] is not None:
-            slots.append(current)
-        current = {'chapter': None, 'summary_line': None,
-                   'exercises_line': None, 'further_line': None}
-
-    for i, raw in enumerate(lines):
-        if fence[i]:
-            continue
-        cm = HEADING_CHAPTER.match(raw)
-        if cm:
-            # New chapter starts — flush previous slot context, but only
-            # actually emit a slot when we see its 本章小结. Just track
-            # which chapter we're in.
+    for kind, chapter, line_number in _heading_events(lines, _scan_fences(lines)):
+        if kind == 'chapter':
+            # Only a chapter that already reached its summary becomes a slot.
             if current['chapter'] is not None and current['summary_line']:
-                # Previous chapter had a summary; finalise it before moving on.
-                flush()
-            current = {'chapter': int(cm.group(1)), 'summary_line': None,
-                       'exercises_line': None, 'further_line': None}
+                slots.append(current)
+            current = _empty_slot(chapter)
             continue
-        sm = HEADING_SUMMARY.match(raw)
-        if sm:
-            ch = int(sm.group(1))
-            if current['chapter'] != ch:
-                # The chapter heading wasn't seen (file starts mid-chapter,
-                # e.g. ch6-2 starts at §6.4). Use the H2's chapter number.
-                current = {'chapter': ch, 'summary_line': None,
-                           'exercises_line': None, 'further_line': None}
-            current['summary_line'] = i + 1
-            continue
-        em = HEADING_EXERCISES.match(raw)
-        if em:
-            ch = int(em.group(1))
-            if current['chapter'] is None:
-                current['chapter'] = ch
-            current['exercises_line'] = i + 1
-            continue
-        fm = HEADING_FURTHER.match(raw)
-        if fm:
-            ch = int(fm.group(1))
-            if current['chapter'] is None:
-                current['chapter'] = ch
-            current['further_line'] = i + 1
+        # The file may start mid-chapter (e.g. ch6-2 starts at §6.4), so the H2's
+        # own chapter number is authoritative when the heading changes it.
+        if current['chapter'] != chapter and (kind == 'summary' or current['chapter'] is None):
+            current = _empty_slot(chapter)
+        if kind == 'summary':
+            current['summary_line'] = line_number
+        elif kind == 'exercises':
+            current['exercises_line'] = line_number
+        elif kind == 'further':
+            current['further_line'] = line_number
             # 延展阅读 closes a chapter slot; emit and reset.
-            flush()
-            continue
+            slots.append(current)
+            current = _empty_slot()
 
-    flush()
-    return [s for s in slots if s['chapter'] is not None]
+    slots.append(current)
+    return [slot for slot in slots if slot['chapter'] is not None]
+
 
 def parse_exercises(lines: list[str], start_line: int, end_line: int) -> list[dict]:
     """Walk a 延伸思考 section and return a list of exercise records.

@@ -37,7 +37,6 @@
 | # | 问题 | 修复方向 |
 | --- | --- | --- |
 | rf-39 | 65 处永真断言（`assertIn(code, (0,1))`、`assertNotIn('Traceback')` 之类）：在用例里只证明“跑完了没炸”，行被执行不等于行为被验证 | **修订**：`run_inproc` 回显 `sys.exit` 消息；46 处改成“退出码取实际值 + 消息断言”，7 条遍历整套脚本的用例改成“每脚本一张退出码表 + 断言在表内”，基线 61 → 8。余下 8 条需要 chromium/pandoc 的交付用例（本机跳过，没法定值），留待有工具的环境补齐 |
-| rf-40 | 长函数无法逐个用例化：拆分前有 30 个 ≥60 行函数，分支组合只能整体回归 | **进展**：已拆 18 个：`_sections`、`report_missing`、`verify_epub.verify`、`index_xrefs.main`、`style_schema.validate`、`detect_sentence_monotony`、`source_refs.main`、`print_report`、`verify_pdf.verify`、`prose_quality.measure`、`test_report.main`、`make.main`、`parse_index`、`pdf_toc_links.add_links`、`check_architecture.check`、`captions.main`、`readability.main`、`figure_clusters.main`、`check_figure_refs`、`style_rules.check_file`，每处都用同批输入比对输出。余 11 个：`tui.main`(81)、`cli.main`(78)、`chapters._api_sections`(74)、`chapters.main`(71)、`snapshot.import_snapshot`(71)、`plan_coverage.check`(68)、`exercises.parse_chapter_slots`(67)、`exercises.audit_file`(63)、`smart`(66)、`to_html.render_body`(64)、`doc_archive.check`(63)、`docs_archive.apply_plan`(61) |
 | rf-41 | 失败语义靠 27 处散落的 `sys.exit()` 与 58 个入口各自转换：消息与退出码分开维护，测试只能断言“退出码是 0 或 1” | **修订**：`lib/_errors.py` 的 `ToolError` 把消息与退出码绑成一个对象（派生 `SystemExit`，既有 `sys.exit(message)` 语义不变），`_fsutil` / `terms` / `to_pdf` 的 I/O 失败改抛它，58 个入口统一走 `_errors.run()`；新增 8 条用例。余下 `sys.exit(1)` 之类的判定点仍逐批迁移 |
 
 ### H3 — 持续监控：兼容残留
@@ -67,7 +66,7 @@
 
 | 文件 | 现状与拆分方向 |
 | --- | --- |
-| `src/python/ingest/chapters.py` 889 行 | 占比 97%，章节正文已按小节组拆成模块版图 / 接口坐标 / 阅读路径 / 设计权衡 / 深读要点 / 术语 / 小结 / 视角 / 检查清单九个助手（每章事实只在 `_chapter_context` 算一次），剩余方向是骨架生成与语言适配调用两段（事实块标记与刷新已拆到 `ingest/factblocks.py`） |
+| `src/python/ingest/chapters.py` 835 行 | 占比 97%，章节正文已按小节组拆成模块版图 / 接口坐标 / 阅读路径 / 设计权衡 / 深读要点 / 术语 / 小结 / 视角 / 检查清单九个助手（每章事实只在 `_chapter_context` 算一次），剩余方向是骨架生成与语言适配调用两段（事实块标记与刷新已拆到 `ingest/factblocks.py`） |
 | `src/python/audit/style.py` 614 行 | 占比 68%，句式规则已按规则族拆开（单调 / 重复 / 段落各自成函数），剩余方向是共享解析（行扫描、句切分）上提到 `lib/_mdutil` |
 | `src/python/lib/_config.py` 898 行 | 占比 95%，按「书目发现 / 配置加载」「路径与策略」「手稿结构与版本」三段拆。拆分时的三处内部依赖：`_IMPORT_ROOT` 由发现逻辑算出、`ConfigError` 被两侧共用、`candidate_books()` 反过来用 `Config`——先把前两者下沉到新模块、`candidate_books` 留在门面，才能避开循环导入（试过整体抽取，14 个用例导入失败） |
 
@@ -133,6 +132,8 @@
 | rf-38 | 覆盖率只有全局阈值加 72% 的单文件下限：50 个模块低于 90%（8543 语句、漏 1143），一个 200 语句的模块停在 73% 仍能全绿 | **修订**：`cover` 把每个文件的覆盖率记进 `data/baselines/coverage.json`，任一文件低于基线即 FAIL，`--update-baseline` 经评审重记；不足 5 条语句的文件除外 |
 | rf-42 | 质量读数没有统一入口：覆盖率、单文件、半分支、长函数数、永真断言数分散在多个命令与 grep 里 | **修订**：新增 `audit/test_health.py`，由 `make.py report health` 调用，汇总覆盖率（总/最薄/半分支 Top-N）、低于基线的文件、松散断言数与超长函数清单；阈值读 `base.json [toolchain]`，视图只读数不判红 |
 | rf-43 | 有 6 个模块在**导入期**读配置并把它存成模块常量：`audit/source_refs.py`(7)、`ingest/chapters.py`(5)、`render/to_html.py`(2)、`ingest/outline.py`(2)、`audit/style_schema.py`(2)、`audit/smart.py`(2)；一个进程换书、或工具链独立成包后 `--book` 在导入之后才解析，这些常量会指向上一本书 | **修订**：全部改为调用时解析——路径直接读 `_config` 门面，策略派生的值走 `suffixes()`/`generation()`/`templates()`/`quality_policy()` 一类小函数，`source_refs` 的引用正则按后缀元组缓存；同名局部变量（`source_dir`、`baseline_path`）处的访问器改名避免遮蔽。新增 `test_lib_baselines.py` 钉住基线的配置解析与版本作用域 |
+| rf-40 | 长函数无法逐个用例化：拆分前有 30 个 ≥60 行函数，分支组合只能整体回归 | **修订**：全部拆完，全库不再有 ≥60 行函数（30 → 0）。每处都用同一批输入比对输出：章节渲染逐字节相同、坐标/图注/可读性/架构门禁的整树报告不变、`make` 与 `test_report` 的子命令输出一致；`ingest/chapters.py` 的 §3 建议整段移到新模块 `ingest/api_sections.py`（835 行，回到预算内） |
+
 ### 归档
 
 本项目不按版本切分问题归档文件：已修条目在下一次发布时摘要进 `changelog.md` 对应
