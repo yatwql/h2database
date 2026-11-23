@@ -34,6 +34,10 @@ DEFAULT_SANS = ['DejaVu Sans', 'Droid Sans Fallback', 'Source Han Sans SC',
                 'Noto Sans CJK SC', 'Microsoft YaHei', 'PingFang SC', 'Arial']
 DEFAULT_MONO = ['DejaVu Sans Mono', 'Droid Sans Fallback', 'Consolas',
                 'Noto Sans Mono CJK SC', 'Courier New', 'Menlo']
+# Families that only carry CJK glyphs are appended after the Latin ones: the
+# cascade then picks per character, which is what a mixed-script book needs.
+DEFAULT_CJK = ['Droid Sans Fallback', 'Source Han Sans SC', 'Noto Sans CJK SC',
+               'Microsoft YaHei', 'PingFang SC', 'WenQuanYi Micro Hei']
 
 COLLECTION_SUFFIXES = ('.ttc', '.otc')
 FONT_SUFFIXES = ('.ttf', '.otf', '.ttc', '.otc')
@@ -105,13 +109,26 @@ def _open_face(entry: dict):
         return None
 
 
+def is_collection_file(path: str) -> bool:
+    """True when the file is a font collection, judged by its header.
+
+    The extension is a hint, not a fact: `.otf` files can be collections and a
+    renamed file keeps its header. `ttcf` is the collection magic.
+    """
+    try:
+        with open(path, 'rb') as handle:
+            return handle.read(4) == b'ttcf'
+    except OSError:
+        return False
+
+
 def _read_families(path: str) -> list[tuple[str, int, bool]]:
     """(family, face index, is_collection) for every face in one file."""
     try:
         from fontTools.ttLib import TTCollection, TTFont  # noqa: PLC0415 - optional
     except ImportError:
         return []
-    collection = path.lower().endswith(COLLECTION_SUFFIXES)
+    collection = is_collection_file(path)
     rows: list[tuple[str, int, bool]] = []
     try:
         faces = TTCollection(path, lazy=True).fonts if collection else [TTFont(path, lazy=True)]
@@ -240,6 +257,23 @@ def resolve(candidates: tuple[str, ...], generic: str) -> str:
 def default_sans() -> list[str]:
     """The default sans candidates, for callers that only want to inspect them."""
     return list(DEFAULT_SANS)
+
+
+def default_cjk() -> list[str]:
+    """The default CJK candidates, appended after the Latin ones."""
+    return list(DEFAULT_CJK)
+
+
+def script_stack(latin: list[str], cjk: list[str] | None = None,
+                 generic: str = 'sans-serif') -> str:
+    """CSS stack for mixed scripts: Latin candidates, then CJK, then the generic.
+
+    One list cannot serve both scripts well: a Latin face has no CJK glyphs and a
+    CJK face typesets Latin wider, which changes every paragraph's metrics. The
+    cascade is the mechanism for "use this for these characters".
+    """
+    combined = list(latin) + [name for name in (cjk or []) if name not in latin]
+    return resolve(tuple(combined), generic)
 
 
 def sans_stack(candidates: list[str] | None = None) -> str:

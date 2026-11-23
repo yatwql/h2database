@@ -1,16 +1,18 @@
 """The layout object is the single place density numbers are read and checked."""
-import os
-import sys
+from __future__ import annotations
+
 import unittest
+
+import _fixture
 
 TAGS = ('layer:lib', 'tier:fast')
 
-TOOLS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if TOOLS_DIR not in sys.path:
-    sys.path.insert(0, TOOLS_DIR)
+_fixture.ensure_tools_path()
 
-# lib is on sys.path only at runtime, so a checker cannot resolve it
-from lib.layout import DEFAULTS, Layout  # noqa: E402  # pyright: ignore[reportMissingImports]
+# imported dynamically: the test path is set up above, at runtime
+_layout = __import__('lib.layout', fromlist=['DEFAULTS', 'Layout'])
+DEFAULTS = _layout.DEFAULTS
+Layout = _layout.Layout
 
 
 class LayoutDefaultsTest(unittest.TestCase):
