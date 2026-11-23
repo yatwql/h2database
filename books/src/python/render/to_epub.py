@@ -38,7 +38,7 @@ import subprocess
 import sys
 import textwrap
 
-from lib import _config, _fsutil
+from lib import _config, _errors, _fsutil
 
 _fsutil.pin_stdout_utf8()
 
@@ -55,17 +55,15 @@ cover_md = os.path.join(src_dir, 'cover.md')
 # ── Step 0: Pandoc availability check ────────────────────────────────────
 pandoc = shutil.which('pandoc')
 if not pandoc:
-    print(
+    raise _errors.ToolError(
         "pandoc not found on PATH.\n"
         "Install it before running this script:\n"
         "  Windows :  winget install --id JohnMacFarlane.Pandoc -e\n"
         "             (or)  choco install pandoc\n"
         "  macOS   :  brew install pandoc\n"
         "  Debian  :  sudo apt install pandoc\n"
-        "Then re-run:  python books/tools/to_epub.py",
-        file=sys.stderr,
+        "Then re-run:  python books/tools/to_epub.py"
     )
-    sys.exit(1)
 print(f"=== Step 0: pandoc detected at {pandoc} ===")
 try:
     res = subprocess.run([pandoc, '--version'], capture_output=True, text=True, encoding='utf-8', check=False)
@@ -86,15 +84,13 @@ if os.path.exists(rebuild):
     check=False,
     )
     if res.returncode != 0:
-        print("merge.py FAILED:", res.stderr, file=sys.stderr)
-        sys.exit(1)
+        raise _errors.ToolError(f"merge.py FAILED: {res.stderr}")
     last = (res.stdout or '').strip().splitlines()[-1] if res.stdout else ''
     if last:
         print(f"  {last}")
 
 if not os.path.exists(merged_md):
-    print(f"Merged Markdown not found: {merged_md}", file=sys.stderr)
-    sys.exit(1)
+    raise _errors.ToolError(f"Merged Markdown not found: {merged_md}")
 
 # ── Step 2: Extract title / version / author from cover.md ───────────────
 title = _config.project("display_title_en", _config.TITLE)
@@ -219,12 +215,9 @@ print("           --toc --toc-depth=3 --split-level=1 --to=epub3")
 try:
     res = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', check=False)
     if res.returncode != 0:
-        print("pandoc FAILED:", file=sys.stderr)
-        if res.stdout:
-            print(res.stdout, file=sys.stderr)
-        if res.stderr:
-            print(res.stderr, file=sys.stderr)
-        sys.exit(1)
+        detail = '\n'.join(part for part in (res.stdout, res.stderr) if part)
+        raise _errors.ToolError(f"pandoc FAILED:\n{detail}" if detail
+                                else "pandoc FAILED")
     if res.stdout.strip():
         for line in res.stdout.splitlines():
             print(f"  {line}")
@@ -233,9 +226,8 @@ try:
         for line in res.stderr.splitlines():
             print(f"  [pandoc warn] {line}")
 except FileNotFoundError:
-    print("pandoc executable disappeared between detection and invocation.",
-          file=sys.stderr)
-    sys.exit(1)
+    raise _errors.ToolError(
+        "pandoc executable disappeared between detection and invocation.") from None
 finally:
     # Tidy up the staging files; pandoc has already consumed them.
     for p in (metadata_path, css_path):
@@ -244,8 +236,7 @@ finally:
 
 # ── Step 6: Report ───────────────────────────────────────────────────────
 if not os.path.exists(epub_out):
-    print(f"EPUB not produced at {epub_out}", file=sys.stderr)
-    sys.exit(1)
+    raise _errors.ToolError(f"EPUB not produced at {epub_out}")
 
 size = os.path.getsize(epub_out)
 print("\n=== Done ===")

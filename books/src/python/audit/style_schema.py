@@ -47,6 +47,20 @@ def load() -> dict:
 
 
 def validate(style: dict) -> list[str]:
+    """Everything wrong with one style.json, one group of checks at a time."""
+    problems: list[str] = []
+    problems += _check_top_level(style)
+    problems += _check_captions(style)
+    problems += _check_quality(style)
+    problems += _check_prose(style)
+    problems += _check_rules_and_depth(style)
+    problems += _check_templates(style)
+    problems += _check_limits(style)
+    return problems
+
+
+def _check_top_level(style: dict) -> list[str]:
+    """Unknown keys and missing required sections."""
     problems: list[str] = []
     unknown = set(style) - KNOWN_TOP
     if unknown:
@@ -60,6 +74,12 @@ def validate(style: dict) -> list[str]:
             if key not in payload:
                 problems.append(f'[{section}].{key} missing')
 
+    return problems
+
+
+def _check_captions(style: dict) -> list[str]:
+    """The three caption presets and their ranges."""
+    problems: list[str] = []
     presets = (style.get('captions') or {}).get('presets') or {}
     for name in ('strict', 'normal', 'loose'):
         preset = presets.get(name)
@@ -72,6 +92,12 @@ def validate(style: dict) -> list[str]:
         if not isinstance(preset.get('fail_at'), int) or preset['fail_at'] < 0:
             problems.append(f'[captions.presets].{name}: fail_at must be >= 0')
 
+    return problems
+
+
+def _check_quality(style: dict) -> list[str]:
+    """Chapter length and duplicate-ratio bounds."""
+    problems: list[str] = []
     quality = style.get('quality') or {}
     if isinstance(quality.get('min_chapter_lines'), int) and \
             isinstance(quality.get('max_chapter_lines'), int) and \
@@ -81,6 +107,12 @@ def validate(style: dict) -> list[str]:
     if not isinstance(ratio, (int, float)) or not 0 <= ratio <= 100:
         problems.append('[quality].max_duplicate_ratio must be within 0-100')
 
+    return problems
+
+
+def _check_prose(style: dict) -> list[str]:
+    """Prose targets and the per-section overrides."""
+    problems: list[str] = []
     prose = style.get('prose') or {}
     for good, bad in (('avg_sentence_good', 'avg_sentence_bad'),
                       ('dup_good', 'dup_bad'), ('bullet_good', 'bullet_bad')):
@@ -106,6 +138,12 @@ def validate(style: dict) -> list[str]:
     if not isinstance(composite, (int, float)) or not 0 < composite <= 100:
         problems.append('[prose].min_composite must be within (0, 100]')
 
+    return problems
+
+
+def _check_rules_and_depth(style: dict) -> list[str]:
+    """Style rules and the content-depth floors."""
+    problems: list[str] = []
     rules = style.get('style_rules')
     if not isinstance(rules, dict):
         problems.append('[style_rules] missing or not an object')
@@ -129,6 +167,12 @@ def validate(style: dict) -> list[str]:
         if not isinstance(depth.get('excerpt_lines', 1), int):
             problems.append('[content_depth].excerpt_lines must be an int')
 
+    return problems
+
+
+def _check_templates(style: dict) -> list[str]:
+    """The prose templates, which live outside style.json."""
+    problems: list[str] = []
     templates = _config.templates()
     unknown_templates = set(templates) - KNOWN_TEMPLATES
     if unknown_templates:
@@ -143,6 +187,12 @@ def validate(style: dict) -> list[str]:
     if 'project' in style:
         problems.append('style.json must not carry display copy (belongs to book.toml [project])')
 
+    return problems
+
+
+def _check_limits(style: dict) -> list[str]:
+    """Per-kind file budgets."""
+    problems: list[str] = []
     for kind, values in (style.get('limits') or {}).items():
         if not isinstance(values, dict) or 'limit' not in values:
             problems.append(f'[limits].{kind} needs limit/warn')
