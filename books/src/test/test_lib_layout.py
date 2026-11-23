@@ -9,7 +9,8 @@ TOOLS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
 
-from lib.layout import DEFAULTS, Layout  # noqa: E402 - after the path insert
+# lib is on sys.path only at runtime, so a checker cannot resolve it
+from lib.layout import DEFAULTS, Layout  # noqa: E402  # pyright: ignore[reportMissingImports]
 
 
 class LayoutDefaultsTest(unittest.TestCase):
