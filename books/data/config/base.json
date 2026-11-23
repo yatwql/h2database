@@ -43,7 +43,8 @@
     "coverage_min_per_file": 84,
     "function_length_warn": 60,
     "print_scale": 1.1,
-    "pdf_split_by_chapter": false
+    "pdf_split_by_chapter": true,
+    "pdf_bytes_per_page": 24576
   },
   "logging": {
     "level": "INFO",

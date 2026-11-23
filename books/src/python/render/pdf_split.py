@@ -121,11 +121,6 @@ def merge(paths: list[str], pdf_path: str, entries: list[dict]) -> int:
             title=entry['text'], page_number=entry['page'], parent=parent)
         for level in [lvl for lvl in stack if lvl > entry['level']]:
             del stack[level]
-    # each part carries its own font subsets and background resources; merging
-    # them leaves duplicates, so collapse identical objects before writing
-    # (without this the merged file is ~3x the single-print size).
-    with contextlib.suppress(Exception):
-        writer.compress_identical_objects(remove_identicals=True, remove_orphans=True)
     writer.write(pdf_path)
     _optimize(pdf_path)
     return len(writer.pages)
@@ -152,9 +147,8 @@ def _optimize(pdf_path: str) -> None:
     with contextlib.suppress(OSError):
         if os.path.getsize(tmp) < os.path.getsize(pdf_path):
             os.replace(tmp, pdf_path)
-    if os.path.exists(tmp):
-        with contextlib.suppress(OSError):
-            os.remove(tmp)
+    with contextlib.suppress(OSError):
+        os.remove(tmp)
 
 
 def render(page, pdf_path: str, pdf_kwargs: dict, headings: list[dict]) -> int:

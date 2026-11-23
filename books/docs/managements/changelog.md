@@ -477,6 +477,10 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **标准版改为逐章渲染并默认开启**：`to_pdf.py` 按 `pdf_split_by_chapter` 走 `render/pdf_split.py`——
+按 `<h1` 切段、逐段 `page.pdf`、pypdf 合并、大纲按 `__hdr_i__` 标记定位，最后在写完大纲之后用 ghostscript `/printer` 重压缩
+（大纲回写会丢掉压缩，顺序不能反）。**892 页 / 每页 1,790 字符 / 大纲 623/623 / 19 MB**，6/15 参照为 843 页 / 1,905。
+交付体积预算改为随页数线性（`pdf_bytes_per_page` = 24 KB，实测逐章渲染约 21 KB/页），`verify_pdf` 通过。
 - **体积预算改为随页数线性**：`verify_pdf` 的 12 MB 原本是按 743 页单次打印校准的；逐章渲染每个分部各嵌一份字体子集，
 体积跟着页数走。现在取 `max(pdf_max_mb, pdf_bytes_per_page × 页数)`（默认 16 KB/页），并补了两条用例
 （预算随页数增长、阈值非数字时回落）。`pdf_split.merge` 合并后接一段 ghostscript `/printer` 重压缩（无 gs 时跳过）。
