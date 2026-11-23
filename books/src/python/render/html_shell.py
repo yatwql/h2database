@@ -294,6 +294,6 @@ li { margin: 0.3em 0; }
   pre, table { page-break-inside: avoid; }
   h1, h2, h3, h4 { page-break-after: avoid; }
   pre { font-size: 10px; }
-  @page { size: A4; margin: 26mm 22mm; }
+  @page { size: A4; margin: 24mm 20mm; }
 }
 """

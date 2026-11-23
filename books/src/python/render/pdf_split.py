@@ -17,6 +17,8 @@ import re
 import tempfile
 from typing import Any
 
+MARKER_RE = re.compile(r'__hdr_(\d+)__')
+
 SPLIT_JS = '''() => {
     const content = document.getElementById('content');
     if (!content) return [];
@@ -44,12 +46,13 @@ def _page_texts(pdf_path: str) -> list[str]:
     return [_strip_ws(page.extract_text() or '') for page in PdfReader(pdf_path).pages]
 
 
-def render_parts(page, work_dir: str, pdf_kwargs: dict) -> tuple[list[str], list[dict]]:
+def render_parts(page, work_dir: str, pdf_kwargs: dict, headings: list[dict]) -> tuple[list[str], list[dict]]:
     """Render front matter and every chapter; returns (pdf paths, outline entries).
 
-    Outline entries carry an absolute page number: the chapter's first page plus
-    the offset of the heading inside that chapter, found by a monotonic search in
-    the chapter's own text (titles repeat across chapters, never within one).
+    Headings are located by the `__hdr_<index>__` markers the caller injects into
+    each heading (3px white text, so they survive as real text in the layer). The
+    index is global, so the marker maps straight back to `headings` — no title
+    search, which used to lose entries to line wrapping and repeated short titles.
     """
     # lay the content out at the paper width (A4 at 96dpi) before printing, or
     # Chromium paginates against the 800x600 default viewport and doubles the count
@@ -58,6 +61,8 @@ def render_parts(page, work_dir: str, pdf_kwargs: dict) -> tuple[list[str], list
     if not parts:
         raise RuntimeError('no chapters found in #content')
 
+    by_index = {h['index']: h for h in headings if 'index' in h}
+    seen: set[int] = set()
     paths: list[str] = []
     entries: list[dict] = []
     offset = 0
@@ -84,19 +89,13 @@ def render_parts(page, work_dir: str, pdf_kwargs: dict) -> tuple[list[str], list
         texts = _page_texts(target)
         paths.append(target)
 
-        cursor = 0
-        for head in part['headings']:
-            key = _strip_ws(head['text'])
-            found = None
-            for local in range(cursor, len(texts)):
-                if key and key in texts[local]:
-                    found = local
-                    break
-            if found is None:
-                continue
-            cursor = found
-            entries.append({'level': head['level'], 'text': head['text'],
-                            'page': offset + found})
+        for local, text in enumerate(texts):
+            for raw in MARKER_RE.findall(text):
+                head = by_index.get(int(raw))
+                if head is not None and head['index'] not in seen:
+                    seen.add(head['index'])
+                    entries.append({'level': head['level'], 'text': head['text'],
+                                    'page': offset + local})
         offset += len(texts)
     return paths, entries
 
@@ -120,15 +119,20 @@ def merge(paths: list[str], pdf_path: str, entries: list[dict]) -> int:
             title=entry['text'], page_number=entry['page'], parent=parent)
         for level in [lvl for lvl in stack if lvl > entry['level']]:
             del stack[level]
+    # each part carries its own font subsets and background resources; merging
+    # them leaves duplicates, so collapse identical objects before writing
+    # (without this the merged file is ~3x the single-print size).
+    with contextlib.suppress(Exception):
+        writer.compress_identical_objects(remove_identicals=True, remove_orphans=True)
     writer.write(pdf_path)
     return len(writer.pages)
 
 
-def render(page, pdf_path: str, pdf_kwargs: dict) -> int:
+def render(page, pdf_path: str, pdf_kwargs: dict, headings: list[dict]) -> int:
     """Split-render into a temporary directory, merge, and report the page count."""
     work = tempfile.mkdtemp(prefix='pdf-split-')
     try:
-        paths, entries = render_parts(page, work, pdf_kwargs)
+        paths, entries = render_parts(page, work, pdf_kwargs, headings)
         count = merge(paths, pdf_path, entries)
         print(f'  Rendered {len(paths) - 1} chapter part(s) + front matter: {count} pages')
         print(f'  Outline entries: {len(entries)}')

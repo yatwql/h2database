@@ -185,7 +185,7 @@ try:
                 'print_background': True,
                 'display_header_footer': False,
                 'prefer_css_page_size': True,
-            })
+            }, headings_json)
         else:
                 page.pdf(
                 path=pdf_path,
