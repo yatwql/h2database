@@ -469,6 +469,20 @@ def coverage_ratchet(*, update: bool = False) -> tuple[list[tuple[str, float, fl
     return drops, path
 
 
+def _missing_book_toml() -> str:
+    """The selected book root when it holds no ``data/book/book.toml``.
+
+    An explicit book has to fail before a single step runs: the steps are child
+    processes, and each would otherwise report the same missing file as its own
+    traceback. One message and status 2 is the contract every entry follows.
+    """
+    if not os.environ.get('BOOK_ROOT'):
+        return ''
+    root = os.path.abspath(os.environ['BOOK_ROOT'])
+    expected = os.path.join(root, 'data', 'book', 'book.toml')
+    return '' if os.path.isfile(expected) else root
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -503,6 +517,14 @@ def main(argv: list[str] | None = None) -> int:
             os.environ['BOOK_EDITION'] = args.edition
     if args.command == 'doctor':
         return doctor()
+    missing = _missing_book_toml()
+    if missing:
+        print(f'error: 没找到 book.toml，试过 {missing}', file=sys.stderr)
+        return 2
+    if args.book:
+        # this module bound a book at import; an explicit --book rebinds it so the
+        # parent reads the same book its child steps do
+        _config.reset(_config.Config(os.environ['BOOK_ROOT']))
 
     if args.command == 'cover':
         return coverage(full=args.full, update_baseline=args.update_baseline)

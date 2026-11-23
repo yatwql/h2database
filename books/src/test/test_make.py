@@ -102,6 +102,40 @@ class MakeDriverTest(unittest.TestCase):
             code = self.make.doctor()
         self.assertEqual(code, 0)
 
+    def keep_the_active_book(self) -> None:
+        """--book rebinds the process; put the previous binding back afterwards."""
+        previous = self.make._config.current()
+        previous_env = os.environ.get('BOOK_ROOT')
+        self.addCleanup(self.make._config.reset, previous)
+        self.addCleanup(self.restore_env, previous_env)
+
+    def restore_env(self, value: str | None) -> None:
+        if value is None:
+            os.environ.pop('BOOK_ROOT', None)
+        else:
+            os.environ['BOOK_ROOT'] = value
+
+    def test_an_explicit_book_without_book_toml_exits_two_before_any_step(self):
+        empty = os.path.join(self.tmp.name, 'not-a-book')
+        os.makedirs(empty, exist_ok=True)
+        self.keep_the_active_book()
+        err = io.StringIO()
+        with mock.patch.object(self.make, 'run_step') as step, \
+                redirect_stderr(err):
+            code = self.make.main(['check', '--book', empty])
+        self.assertEqual(code, 2)
+        self.assertIn('book.toml', err.getvalue())
+        step.assert_not_called()
+
+    def test_an_explicit_book_rebinds_the_active_one(self):
+        other = _fixture.build_book(os.path.join(self.tmp.name, 'second'))
+        self.keep_the_active_book()
+        with mock.patch.object(self.make, 'run_step', return_value=('x', 0, 0.0)), \
+                redirect_stdout(io.StringIO()):
+            code = self.make.main(['check', '--book', other])
+        self.assertEqual(code, 0)
+        self.assertEqual(self.make.book_root(), os.path.abspath(other))
+
     def test_coverage_without_the_module(self):
         with mock.patch.object(self.make.importlib.util, 'find_spec', return_value=None), \
                 redirect_stdout(io.StringIO()):
