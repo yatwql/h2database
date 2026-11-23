@@ -18,11 +18,18 @@ Usage:
 from __future__ import annotations
 
 import os
+import re
 import statistics
 import sys
 from collections import Counter
 
 from pypdf import PdfReader
+
+_HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _HERE not in sys.path:
+    sys.path.insert(0, _HERE)
+
+from lib import _config, _fsutil  # noqa: E402
 
 SAMPLE_PAGES = 80
 
@@ -174,8 +181,45 @@ def parse_targets(spec: str) -> dict[str, float]:
     return targets
 
 
+def calibrate(render, target: int, low: float, high: float, tolerance: int = 4,
+              max_rounds: int = 4) -> tuple[Calibration, float | None]:
+    """Bisect one density knob until the page count lands near `target`.
+
+    `render(scale) -> path` performs one build and returns the PDF it produced; the
+    caller owns that because a build is expensive and cannot be faked here. Returns
+    the search record and the scale that hit the target, if any.
+    """
+    search = Calibration(target=target, low=low, high=high, tolerance=tolerance)
+    for _ in range(max_rounds):
+        scale = search.suggest()
+        if scale is None:
+            break
+        produced = render(scale)
+        search.record(scale, measure(produced)['pages'])
+    if search.converged:
+        return search, search.history[-1][0]
+    return search, None
+
+
+def write_back(config_path: str, key: str, value: float) -> None:
+    """Persist a calibrated value into `[toolchain]` without disturbing the rest."""
+    text = _fsutil.read_text(config_path)
+    pattern = re.compile(rf'("{re.escape(key)}"\s*:\s*)[-\d.]+')
+    if not pattern.search(text):
+        raise SystemExit(f'{key} 不在 {config_path} 中')
+    _fsutil.write_text(config_path, pattern.sub(rf'\g<1>{value}', text, count=1))
+
+
 def main(argv: list[str]) -> int:
     args = [a for a in argv[1:] if not a.startswith('-')]
+    if '--write-back' in argv:
+        index = argv.index('--write-back')
+        spec = parse_targets(argv[index + 1])
+        knob, value = next(iter(spec.items()))
+        config = _config.current().base_policy_path
+        write_back(config, knob, value)
+        print(f'  {knob} = {value} 已写入 {config}')
+        return 0
     if '--target' in argv:
         index = argv.index('--target')
         if index + 1 < len(argv):
@@ -185,6 +229,14 @@ def main(argv: list[str]) -> int:
     if not args:
         print(__doc__)
         return 2
+    if '--write-back' in argv:
+        index = argv.index('--write-back')
+        spec = parse_targets(argv[index + 1])
+        knob, value = next(iter(spec.items()))
+        config = _config.current().base_policy_path
+        write_back(config, knob, value)
+        print(f'  {knob} = {value} 已写入 {config}')
+        return 0
     if '--target' in argv:
         if not args:
             print('--target 需要一个 PDF')

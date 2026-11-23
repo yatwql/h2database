@@ -74,5 +74,37 @@ class CalibrationTest(unittest.TestCase):
         self.assertIn('未收敛', report)
 
 
+class CalibrateTest(unittest.TestCase):
+    """The search renders through a caller-supplied function, so it is testable."""
+
+    def test_a_monotone_render_converges_and_returns_the_knob(self):
+        import unittest.mock as mock
+
+        # a stand-in for the real relationship: wider spacing, more pages
+        def render(scale):
+            return {'pages': int(843 * scale / 0.7)}
+
+        def measure(_path):
+            return {'pages': _path['pages']}
+
+        with mock.patch.object(_metrics, 'measure', measure):
+            search, scale = _metrics.calibrate(render, target=843, low=0.5, high=1.0,
+                                               tolerance=10, max_rounds=8)
+        self.assertIsNotNone(scale)
+        self.assertTrue(search.converged)
+        self.assertLessEqual(abs(scale - 0.7), 0.05)
+
+    def test_a_search_that_never_lands_returns_no_value(self):
+        import unittest.mock as mock
+
+        def render(scale):
+            return {'pages': 100}
+
+        with mock.patch.object(_metrics, 'measure', lambda p: {'pages': p['pages']}):
+            search, scale = _metrics.calibrate(render, target=843, low=0.5, high=1.0)
+        self.assertIsNone(scale)
+        self.assertFalse(search.converged)
+
+
 if __name__ == '__main__':
     unittest.main()
