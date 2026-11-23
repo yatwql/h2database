@@ -477,6 +477,7 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **测试用例核查与整改**：`test_redundancy`（重复体、空断言、松散断言）、`test_no_network`/`test_isolation`（零出站）、`test_meta_taxonomy`（层标签与文件名）全绿；人工扫描后修四处：① 真跑 pandoc 的 EPUB 用例从 `tier:fast` 的 `test_render_script_branches.py` 移出，新建 `test_render_epub_pandoc.py`（`tier:slow`）——快档不得依赖 pandoc；② `test_healthy_fixture_passes` 改为 `test_the_fixture_reports_the_gaps_it_has`（夹具本就有缺口，名不副实）；③ `test_repeated_gate_runs_agree` 改为真的比对三次运行的退出码与结论，而不是三次断言同一个值；④ `test_missing_glossary_exits_cleanly` 改为 `test_a_missing_glossary_is_regenerated`（该用例断言的是重新生成）。
 - **架构核查后的三处整改**：① `lib/_baseline.path_for()` 不再自己拼路径（一份与 `Config.baseline_path` 重复的实现，且漏掉版本目录），改为委托后者；② `audit/captions.py`、`audit/figure_clusters.py`、`audit/exercises.py` 删掉导入期算出的 `DOCS_DIR`/`MS_DIR` 常量，改读 `_config` 门面；③ `manuscript/terms.py` 的语言包与 `manuscript/case_studies.py` 的输入文件同样改为调用时解析——一个进程换书时不再继续用上一本的路径。另将剩下 6 个仍在导入期读配置的模块记入问题台账。
 - **单文件下限 75 → 77**：`core/actions.py` 76 → 81%（补 5 条用例：LLM 层不可用时的状态行、体积结论的三种分支、按定价/未定价两种预估输出），最薄处变成 `core/scaffold.py`（77.1%），下限随之抬到 77。
 - **同名文件的书间隔离回归**：新增 `test_lib_book_isolation.py`——两本书各有 同名手稿 `ch1-test.md`、`data/config/base.json` 与 `dist/`，用例钉住四条不变量：同名相对路径各自解析到自己书根、跑一本书的合并不会在另一本里留下产物、一本书的体量基线另一本读不到、两本的同名配置文件各读各的。

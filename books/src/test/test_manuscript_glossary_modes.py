@@ -76,7 +76,7 @@ class TestGlossaryCoverageMode(FixtureCase):
         self.assertIn('自动生成', out)
 
 class TestGlossaryBuilderBranches(FixtureCase):
-    def test_missing_glossary_exits_cleanly(self):
+    def test_a_missing_glossary_is_regenerated(self):
         os.unlink(os.path.join(self.root, 'data', 'manuscript', 'back', 'glossary.md'))
         code, out = self.run_script('glossary.py')
         self.assertEqual(code, 0, out[-300:])

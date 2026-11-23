@@ -39,10 +39,12 @@ class IdempotencyTest(unittest.TestCase):
         self.assertEqual(first, digest(cover), 'cover.py is not idempotent')
 
     def test_repeated_gate_runs_agree(self):
-        for _ in range(3):
-            code, _out = _fixture.run_inproc(self.root, 'structure.py')
-            self.assertEqual(code, 1, _out[-300:])
-            self.assertIn('FAIL:', _out)
+        runs = [_fixture.run_inproc(self.root, 'structure.py') for _ in range(3)]
+        codes = {code for code, _out in runs}
+        self.assertEqual(len(codes), 1, [out[-200:] for _code, out in runs])
+        self.assertEqual(codes.pop(), 1)
+        for _code, out in runs:
+            self.assertIn('FAIL:', out)
 
 class DeterminismTest(unittest.TestCase):
     """Chapter order comes from configuration, not from directory order."""

@@ -33,7 +33,7 @@ class StructureMutationTest(unittest.TestCase):
     def run_gate(self):
         return _fixture.run_inproc(self.root, 'structure.py')
 
-    def test_healthy_fixture_passes(self):
+    def test_the_fixture_reports_the_gaps_it_has(self):
         code, out = self.run_gate()
         self.assertEqual(code, 1, out[-400:])
         self.assertIn('FAIL:', out)
