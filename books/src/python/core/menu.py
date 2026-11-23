@@ -76,6 +76,22 @@ SCREENS: dict[str, list[tuple[str, str, str]]] = {
                (BACK_KEY, BACK_ACTION, '返回主菜单')],
 }
 
+# The main screen reads as three groups: what turns source into a book, what
+# manages books, and what configures the toolchain. Group order is reading
+# order; rows keep the order they have in SCREENS. Rows not named here (退出)
+# render after the last group, so the exit key never sits inside a group.
+MENU_GROUPS: list[tuple[str, tuple[str, ...]]] = [
+    ('源码成书', ('1', '2', '3', '4')),
+    ('书籍管理', ('5', '6')),
+    ('配置与管理', ('7', '8')),
+]
+
+
+def groups_for(screen: str) -> list[tuple[str, tuple[str, ...]]]:
+    """Group headings and their row keys for one screen (empty = ungrouped)."""
+    return MENU_GROUPS if screen == 'main' else []
+
+
 # screens whose rows come from live data instead of SCREENS
 DYNAMIC_SCREENS = (SETTINGS_SCREEN, PROVIDERS_SCREEN, BOOKS_SCREEN)
 

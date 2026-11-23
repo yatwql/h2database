@@ -163,19 +163,49 @@ def screen_rows(screen: str) -> list[tuple[str, str, str]]:
     return menu.entries(screen)
 
 
+def _row_text(screen: str, index: int, key: str, action: str, label: str,
+              cursor: int | None) -> str:
+    """One menu row: cursor, key, label, and the LLM badge where it applies."""
+    marker = '❯' if cursor == index else ' '
+    label_style = PALETTE['cursor'] if cursor == index else PALETTE['value']
+    llm_row = menu.is_llm(action)
+    badge = f" {_c('LLM', PALETTE['llm_badge'])}" if llm_row else ''
+    key_label = menu.display_key(screen, key)
+    key_colour = PALETTE['llm_key'] if llm_row else None
+    return (f" {_c(marker, PALETTE['cursor_bar'])} "
+            f"{_key(key_label, key_colour, None if llm_row else PALETTE['shortcut'])}  "
+            f"{_c(label, label_style)}{badge}")
+
+
 def menu_text(screen: str = 'main', cursor: int | None = None) -> str:
-    """One screen; `cursor` highlights a row (↑/↓ moves it)."""
+    """One screen; `cursor` highlights a row (↑/↓ moves it).
+
+    The main screen reads as groups (source → book, book management, settings);
+    a row the groups do not name renders after the last one, so the exit key is
+    never tucked inside a group.
+    """
     lines: list[str] = []
-    for index, (key, action, label) in enumerate(screen_rows(screen)):
-        marker = '❯' if cursor == index else ' '
-        label_style = PALETTE['cursor'] if cursor == index else PALETTE['value']
-        llm_row = menu.is_llm(action)
-        badge = f" {_c('LLM', PALETTE['llm_badge'])}" if llm_row else ''
-        key_label = menu.display_key(screen, key)
-        key_colour = PALETTE['llm_key'] if llm_row else None
-        lines.append(f" {_c(marker, PALETTE['cursor_bar'])} "
-                     f"{_key(key_label, key_colour, None if llm_row else PALETTE['shortcut'])}  "
-                     f"{_c(label, label_style)}{badge}")
+    rows = screen_rows(screen)
+    groups = menu.groups_for(screen)
+    if groups:
+        index_of = {key: index for index, (key, _action, _label) in enumerate(rows)}
+        grouped = {key for _title, keys in groups for key in keys}
+        for title, keys in groups:
+            members = [index_of[key] for key in keys if key in index_of]
+            if not members:
+                continue
+            lines.append('')
+            lines.append(f"   {_c(title, PALETTE['group'])}")
+            for index in members:
+                key, action, label = rows[index]
+                lines.append(_row_text(screen, index, key, action, label, cursor))
+        for index, (key, action, label) in enumerate(rows):
+            if key in grouped:
+                continue
+            lines.append(_row_text(screen, index, key, action, label, cursor))
+    else:
+        for index, (key, action, label) in enumerate(rows):
+            lines.append(_row_text(screen, index, key, action, label, cursor))
     lines.append('')
     if screen == 'main':
         lines.append(f"   {_key('0')} 退出  {_key('q')} / {_key('Ctrl+C')} 退出")

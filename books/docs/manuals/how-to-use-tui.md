@@ -60,8 +60,10 @@ python books/src/python/app/tui.py
 高频动作在第一级，分组才进第二级：
 
 ```text
-主菜单   1 analyze  2 analyze-llm  3 build  4 deliver  5 切换书籍  6 新增书籍
-         7 质量  8 配置与状态  0 退出
+主菜单   源码成书    1 analyze  2 analyze-llm  3 build  4 deliver
+         书籍管理    5 切换书籍  6 新增书籍
+         配置与管理  7 质量  8 配置与状态
+         0 退出
           两者默认只刷新事实块（正文不动）；按 l 时先问是否整篇重写并用 LLM 润色（默认否）
 质量     1 check  2 test  0 返回
 配置     1 status  2 llm-ask  3 配置项  4 LLM provider 优先级  5 doctor  6 刷新事实块  0 返回

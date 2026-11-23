@@ -56,8 +56,10 @@
 菜单只有两层，第二层以下不再往下分：
 
 ```text
-主菜单  1 analyze · 2 analyze-llm · 3 build · 4 deliver · 5 切换书籍 · 6 新增书籍
-        7 质量 · 8 配置与状态 · 0 退出
+主菜单  源码成书    1 analyze · 2 analyze-llm · 3 build · 4 deliver
+        书籍管理    5 切换书籍 · 6 新增书籍
+        配置与管理  7 质量 · 8 配置与状态
+        0 退出     （不入组，渲染在分组之后）
         （数字键另有字母快捷键：1/a · 2/l · 3/b · 4/p · 5/s · 6/n · 7/t · 8/c · 0/q，
         大小写不敏感；LLM 行同样显示字母）
 质量    1 check · 2 test · 0 返回
@@ -67,6 +69,10 @@
 优先级  按回退顺序列出 provider + 0 返回  （行来自 core.settings.provider_order）
 书籍    列出可切换的书（书名 + 书根），当前一本以 ● 起首；数字键选定 + 0 返回
 ```
+
+首页按任务域分三组（源码成书 / 书籍管理 / 配置与管理），组序即阅读序，组内保持行序；
+分组只在 `core/menu.py::MENU_GROUPS` 声明一处，未列入任何组的行（退出）渲染在分组之后——
+组覆盖完整性由用例守护（`test_every_main_row_sits_inside_a_group_except_exit`）。
 
 分级标准只有一个：**每天要按的动作放第一级，偶尔才打开的分组才收进二级**。
 内容流水线（analyze / build / deliver）属于前者；质量与配置属于后者，一次进入后

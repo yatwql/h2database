@@ -92,6 +92,25 @@ class TuiInteractionTest(unittest.TestCase):
         self.assertEqual(self.calls, ['build', 'build'])
         self.assertIn('按任意键继续', out)
 
+    def test_the_main_screen_reads_as_three_groups(self):
+        text = self.tui.menu_text('main')
+        order = [name for name in ('源码成书', '书籍管理', '配置与管理') if name in text]
+        self.assertEqual(order, ['源码成书', '书籍管理', '配置与管理'], text)
+        self.assertLess(text.index('源码成书'), text.index('1/A'))
+        self.assertLess(text.index('书籍管理'), text.index('5/S'))
+        self.assertLess(text.index('配置与管理'), text.index('7/T'))
+
+    def test_every_main_row_sits_inside_a_group_except_exit(self):
+        groups = self.tui.menu.groups_for('main')
+        grouped = {key for _title, keys in groups for key in keys}
+        rows = {key for key, _action, _label in self.tui.screen_rows('main')}
+        self.assertEqual(rows - grouped, {'0'})
+
+    def test_a_sub_screen_has_no_group_headings(self):
+        text = self.tui.menu_text('quality')
+        for name in ('源码成书', '书籍管理', '配置与管理'):
+            self.assertNotIn(name, text)
+
     def test_the_result_frame_does_not_show_an_input_prompt(self):
         _code, out = self.press('3', 'q')
         tail = [line for line in out.splitlines() if line.strip()][-3:]
