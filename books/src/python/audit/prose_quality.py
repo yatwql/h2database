@@ -59,6 +59,112 @@ def _score(value: float, good: float, bad: float, *, higher_is_better: bool = Tr
     return 100.0 * (bad - value) / max(1e-9, bad - good)
 
 
+def _table_metrics(text: str) -> tuple[int, int, int]:
+    """(body rows, empty cells, ragged rows) for every table in the text.
+
+    Consecutive rows are grouped so column counts are compared per table rather
+    than across the whole file.
+    """
+    tables: list[list[str]] = []
+    current: list[str] = []
+    for line in text.split('\n'):
+        if line.startswith('|'):
+            current.append(line)
+        elif current:
+            tables.append(current)
+            current = []
+    if current:
+        tables.append(current)
+
+    rows_with_cells = 0
+    empty_cells = 0
+    ragged = 0
+    for table in tables:
+        body = [r for r in table if not re.match(r'^\|[\s:|-]+\|$', r)]
+        rows_with_cells += len(body)
+        if not body:
+            continue
+        widths = {len(r.rstrip().split('|')) for r in body}
+        if len(widths) > 1:
+            ragged += len(body)
+        empty_cells += sum(1 for r in body
+                           if any(not cell.strip() for cell in r.strip().strip('|').split('|')))
+    return rows_with_cells, empty_cells, ragged
+
+
+def _sentence_counts(sentences: list[str]) -> dict:
+    """The four sentence-level numbers one file contributes."""
+    count = max(1, len(sentences))
+    return {
+        'sentences': len(sentences),
+        'avg_sentence': round(sum(map(len, sentences)) / count, 1),
+        'long_sentence_ratio': round(100 * sum(1 for s in sentences if len(s) > 60) / count, 1),
+    }
+
+
+def _file_metrics(path: str) -> tuple[str, dict, list[str], int]:
+    """(name, metrics, duplicate keys, bad rows) for one manuscript file.
+
+    ``bad rows`` counts rows with an empty cell plus the rows of a ragged table:
+    both make a table unreadable in the rendered book.
+    """
+    text = _fsutil.read_text(path)
+    name = os.path.basename(path)
+    prose = FENCE_RE.sub('', text)
+    prose_lines = [line for line in prose.split('\n') if line.strip()]
+    sentences = [s.strip() for s in sent_re().split(prose) if len(s.strip()) > 6]
+    paragraphs = [b for b in re.split(r'\n\s*\n', prose) if b.strip()]
+    bullets = len(LIST_RE.findall(prose))
+    rows_with_cells, empty_cells, ragged = _table_metrics(text)
+
+    dup_keys = []
+    for sentence in sentences:
+        key = NORM_RE.sub('', sentence)[:40]
+        if len(key) > 20:
+            dup_keys.append(key)
+
+    metrics = {
+        'lines': len(prose_lines),
+        **_sentence_counts(sentences),
+        'paragraphs': len(paragraphs),
+        'avg_paragraph': round(sum(len(p) for p in paragraphs) / max(1, len(paragraphs)), 1),
+        'bullet_ratio': round(100 * bullets / max(1, len(prose_lines)), 1),
+        'coords': len(COORD_RE.findall(text)),
+        'h2': len(H2_RE.findall(text)),
+        'h3': len(H3_RE.findall(text)),
+        'table_rows': rows_with_cells,
+        'empty_cells': empty_cells,
+    }
+    return name, metrics, dup_keys, empty_cells + ragged
+
+
+def _totals(per_file: dict[str, dict], dup_index: dict[str, set[str]],
+            all_rows: int, bad_rows: int) -> dict:
+    duplicated = sum(1 for files in dup_index.values() if len(files) > 1)
+    dupe_ratio = round(100 * duplicated / max(1, len(dup_index)), 1)
+    body = {name: v for name, v in per_file.items() if name.startswith('ch')}
+    body_metrics = body or per_file
+    count = max(1, len(per_file))
+    body_count = max(1, len(body_metrics))
+    return {
+        'files': len(per_file),
+        'lines': sum(v['lines'] for v in per_file.values()),
+        'coords': sum(v['coords'] for v in per_file.values()),
+        # sentence readability is graded on body chapters; appendix narratives
+        # are long-form case studies with a different tolerable shape
+        'avg_sentence': round(sum(v['avg_sentence'] for v in body_metrics.values())
+                              / body_count, 1),
+        'long_sentence_ratio': round(sum(v['long_sentence_ratio'] for v in body_metrics.values())
+                                     / body_count, 1),
+        'avg_paragraph': round(sum(v['avg_paragraph'] for v in per_file.values()) / count, 1),
+        'bullet_ratio': round(sum(v['bullet_ratio'] for v in per_file.values()) / count, 1),
+        'duplicate_ratio': dupe_ratio,
+        'empty_cell_ratio': round(100 * bad_rows / max(1, all_rows), 1),
+        'h3_per_file': round(sum(v['h3'] for v in per_file.values()) / count, 1),
+        'coords_per_file': round(sum(v['coords'] for v in per_file.values()) / count, 1),
+    }
+
+
 def measure() -> dict:
     """Per-file and aggregate prose metrics."""
     per_file: dict[str, dict] = {}
@@ -67,86 +173,15 @@ def measure() -> dict:
     bad_rows = 0
 
     for path in _files():
-        text = _fsutil.read_text(path)
-        name = os.path.basename(path)
-        prose = FENCE_RE.sub('', text)
-        prose_lines = [line for line in prose.split('\n') if line.strip()]
-        sentences = [s.strip() for s in sent_re().split(prose) if len(s.strip()) > 6]
-        paragraphs = [b for b in re.split(r'\n\s*\n', prose) if b.strip()]
-        bullets = len(LIST_RE.findall(prose))
-        # group consecutive table rows so column counts are compared per table
-        tables: list[list[str]] = []
-        current: list[str] = []
-        for line in text.split('\n'):
-            if line.startswith('|'):
-                current.append(line)
-            elif current:
-                tables.append(current)
-                current = []
-        if current:
-            tables.append(current)
-        rows_with_cells = 0
-        empty_cells = 0
-        ragged = 0
-        for table in tables:
-            body = [r for r in table if not re.match(r'^\|[\s:|-]+\|$', r)]
-            rows_with_cells += len(body)
-            if not body:
-                continue
-            widths = {len(r.rstrip().split('|')) for r in body}
-            if len(widths) > 1:
-                ragged += len(body)
-            empty_cells += sum(1 for r in body
-                               if any(not cell.strip() for cell in r.strip().strip('|').split('|')))
-        all_rows += rows_with_cells
-        bad_rows += empty_cells + ragged
+        name, metrics, dup_keys, file_bad_rows = _file_metrics(path)
+        all_rows += metrics['table_rows']
+        bad_rows += file_bad_rows
+        for key in dup_keys:
+            dup_index.setdefault(key, set()).add(name)
+        per_file[name] = metrics
 
-        for sentence in sentences:
-            key = NORM_RE.sub('', sentence)[:40]
-            if len(key) > 20:
-                dup_index.setdefault(key, set()).add(name)
-
-        per_file[name] = {
-            'lines': len(prose_lines),
-            'sentences': len(sentences),
-            'avg_sentence': round(sum(map(len, sentences)) / max(1, len(sentences)), 1),
-            'long_sentence_ratio': round(100 * sum(1 for s in sentences if len(s) > 60)
-                                         / max(1, len(sentences)), 1),
-            'paragraphs': len(paragraphs),
-            'avg_paragraph': round(sum(len(p) for p in paragraphs) / max(1, len(paragraphs)), 1),
-            'bullet_ratio': round(100 * bullets / max(1, len(prose_lines)), 1),
-            'coords': len(COORD_RE.findall(text)),
-            'h2': len(H2_RE.findall(text)),
-            'h3': len(H3_RE.findall(text)),
-            'table_rows': rows_with_cells,
-            'empty_cells': empty_cells,
-        }
-
-    duplicated = sum(1 for files in dup_index.values() if len(files) > 1)
-    dupe_ratio = round(100 * duplicated / max(1, len(dup_index)), 1)
-    body = {name: v for name, v in per_file.items() if name.startswith('ch')}
-    body_metrics = body or per_file
-    totals = {
-        'files': len(per_file),
-        'lines': sum(v['lines'] for v in per_file.values()),
-        'coords': sum(v['coords'] for v in per_file.values()),
-        # sentence readability is graded on body chapters; appendix narratives
-        # are long-form case studies with a different tolerable shape
-        'avg_sentence': round(sum(v['avg_sentence'] for v in body_metrics.values())
-                              / max(1, len(body_metrics)), 1),
-        'long_sentence_ratio': round(sum(v['long_sentence_ratio'] for v in body_metrics.values())
-                                     / max(1, len(body_metrics)), 1),
-        'avg_paragraph': round(sum(v['avg_paragraph'] for v in per_file.values())
-                               / max(1, len(per_file)), 1),
-        'bullet_ratio': round(sum(v['bullet_ratio'] for v in per_file.values())
-                              / max(1, len(per_file)), 1),
-        'duplicate_ratio': dupe_ratio,
-        'empty_cell_ratio': round(100 * bad_rows / max(1, all_rows), 1),
-        'h3_per_file': round(sum(v['h3'] for v in per_file.values()) / max(1, len(per_file)), 1),
-        'coords_per_file': round(sum(v['coords'] for v in per_file.values())
-                                 / max(1, len(per_file)), 1),
-    }
-    return {'totals': totals, 'per_file': per_file}
+    return {'totals': _totals(per_file, dup_index, all_rows, bad_rows),
+            'per_file': per_file}
 
 
 def score(report: dict) -> tuple[float, dict[str, float]]:
