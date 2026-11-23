@@ -126,6 +126,29 @@ class ContentVolumeTest(unittest.TestCase):
                    'delivered': {'pdf_pages': 12, 'epub_bytes': 1200}}
         self.assertEqual(self.mod.compare(baseline, current), [])
 
+    # -- the mutations that survived the first round ----------------------
+    def test_the_manuscript_list_includes_the_cover(self):
+        cover = os.path.join(self.root, 'data', 'manuscript', 'cover.md')
+        with open(cover, 'w', encoding='utf-8') as fh:
+            fh.write('# 封面\n')
+        files = self.mod.manuscript_files()
+        self.assertTrue(any(path.endswith('cover.md') for path in files), files)
+
+    def test_a_baseline_total_with_only_one_unit_does_not_raise(self):
+        baseline = {'manuscript': {'files': {}, 'total': {'bytes': 10}},
+                    'delivered': {}}
+        current = {'manuscript': {'files': {}, 'total': {'bytes': 20, 'lines': 5}},
+                   'delivered': {}}
+        self.assertEqual(self.mod.compare(baseline, current), [])
+
+    def test_a_real_failing_git_command_is_reported_as_empty(self):
+        # no mock: a directory that is not a repository makes git exit non-zero,
+        # and `check=False` is what keeps that from raising
+        empty = os.path.join(self.tmp.name, 'not-a-repo')
+        os.makedirs(empty, exist_ok=True)
+        with mock.patch.object(self.mod._config, 'BOOK_ROOT', empty):
+            self.assertEqual(self.mod._git('rev-parse', '--short', 'HEAD'), '')
+
     # -- helpers the mutations exposed ------------------------------------
     def test_a_failing_git_command_yields_no_text(self):
         done = mock.Mock(returncode=1, stdout=' M dirty\n', stderr='')
