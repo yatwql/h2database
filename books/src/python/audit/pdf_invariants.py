@@ -29,25 +29,29 @@ from lib import _fsutil  # noqa: E402
 # a line may sit a hair outside the column: justifier rounding, not a layout error
 EDGE_TOLERANCE_PT = 2.0
 MAX_TYPE3 = 50
-# the outline carries three levels, so the comparison must too
-HEADING_LINE = re.compile(r'^#{1,3} \S')
+# how deep the outline goes is decided when it is written, so the comparison must
+# read that depth off the outline itself rather than assume one
+HEADING_LINE = re.compile(r'^(#{1,6}) \S')
 
 
-def _outline_count(reader) -> int:
-    """How many entries the outline carries, at every depth."""
-    def walk(items) -> int:
+def _outline_shape(reader) -> tuple[int, int]:
+    """Entry count and the deepest nesting level the outline uses."""
+    def walk(items, depth: int) -> tuple[int, int]:
         total = 0
+        deepest = depth
         for item in items or []:
             if isinstance(item, list):
-                total += walk(item)
+                count, deep = walk(item, depth + 1)
+                total += count
+                deepest = max(deepest, deep)
             else:
                 total += 1
-        return total
+        return total, deepest
 
     try:
-        return walk(reader.outline)
+        return walk(reader.outline, 1)
     except Exception:  # noqa: BLE001 - a broken outline is a finding, not a crash
-        return 0
+        return 0, 1
 
 
 def _type3_count(reader) -> int:
@@ -98,15 +102,17 @@ def check(pdf_path: str, merged: str | None) -> dict:
     from pypdf import PdfReader
 
     reader = PdfReader(pdf_path)
-    outline = _outline_count(reader)
+    outline, depth = _outline_shape(reader)
     headings = None
     if merged and os.path.exists(merged):
         text = _fsutil.read_text(merged)
-        headings = sum(1 for line in text.splitlines() if HEADING_LINE.match(line))
+        headings = sum(1 for line in text.splitlines()
+                       if (m := HEADING_LINE.match(line)) and len(m.group(1)) <= depth)
     spills, unreadable = _outside_column(reader)
     report = {
         'pages': len(reader.pages),
         'outline': outline,
+        'outline_depth': depth,
         'headings': headings,
         'type3': _type3_count(reader),
         'outside_column': spills,
@@ -116,7 +122,7 @@ def check(pdf_path: str, merged: str | None) -> dict:
     if report['type3'] > MAX_TYPE3:
         problems.append(f'Type3 fonts {report["type3"]} > {MAX_TYPE3}：字体未被嵌入，字形被描成过程')
     if headings is not None and outline != headings:
-        problems.append(f'大纲 {outline} 条，一级至三级标题 {headings} 条')
+        problems.append(f'大纲 {outline} 条（{depth} 层），前 {depth} 级标题 {headings} 条')
     if spills:
         problems.append(f'{len(spills)} 页有文字超出页面边界：{spills[0]}')
     if unreadable:

@@ -35,7 +35,10 @@ class CheckTest(unittest.TestCase):
             report = check(path, merged)
         self.assertEqual(report['pages'], 1)
         self.assertEqual(report['outline'], 0)
-        self.assertEqual(report['headings'], 2)
+        # the comparison counts headings down to the depth the outline uses, and an
+        # empty outline is one level, so only the level-one heading is counted
+        self.assertEqual(report['outline_depth'], 1)
+        self.assertEqual(report['headings'], 1)
         self.assertTrue(any('大纲' in p for p in report['problems']))
 
     def test_without_a_merged_file_the_outline_is_not_judged(self):
