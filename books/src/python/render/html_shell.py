@@ -11,6 +11,13 @@ import sys as _sys
 # importable from the renderer whether it runs as a script or as a module
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
+from render import fonts  # noqa: E402 - after the path insert above
+
+try:
+    from lib import _config  # noqa: E402
+except Exception:  # noqa: BLE001 - the shell must import even without config
+    _config = None
+
 STYLE = r"""
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { min-height: 100vh; }
@@ -299,18 +306,25 @@ li { margin: 0.3em 0; }
 }
 """
 
-# The font stack decides whether Chromium embeds real font programs or falls back
-# to Type3 glyph outlines — one stream per glyph, which inflates a 7 MB book to
-# 19 MB. Name a family the build host actually has, and keep portable names as
-# fallbacks so the same config works on macOS and Windows.
-SANS_STACK = ('"Droid Sans Fallback", "Noto Sans CJK SC", "Source Han Sans SC", '
-              '"Microsoft YaHei", "PingFang SC", sans-serif')
-MONO_STACK = ('"DejaVu Sans Mono", "Droid Sans Fallback", Consolas, '
-              '"Courier New", monospace')
+# The font stack is resolved from what this host actually has (see render/fonts):
+# naming a family that is missing, or one that only exists as a .ttc collection,
+# makes Chromium export the text as Type3 glyph procedures instead of embedding a
+# font program. Candidates come from configuration, so another book can differ.
+def _configured_families(key: str) -> list[str] | None:
+    raw = _config.THRESHOLDS.get(key) if _config else None
+    if isinstance(raw, str):
+        return [name.strip() for name in raw.split(',') if name.strip()]
+    if isinstance(raw, list):
+        return [str(name).strip() for name in raw if str(name).strip()]
+    return None
+
+
+SANS_STACK = fonts.sans_stack(_configured_families('font_stack_sans'))
+MONO_STACK = fonts.mono_stack(_configured_families('font_stack_mono'))
 
 
 def apply_font_stacks(css: str) -> str:
-    """Replace the hard-coded families in the stylesheet with SANS_STACK/MONO_STACK."""
+    """Replace the hard-coded families in the stylesheet with the resolved stacks."""
     return (css
             .replace("-apple-system, 'Microsoft YaHei', sans-serif", SANS_STACK)
             .replace("'Microsoft YaHei', SimSun, -apple-system, sans-serif", SANS_STACK)

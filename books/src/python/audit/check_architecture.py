@@ -59,6 +59,7 @@ WRITE_MODES = 'wax+'
 STANDALONE_ENTRY = frozenset({
     'render/print_pdf.py',        # ad-hoc: render a different document
     'render/pdf_from_html.py',    # ad-hoc: HTML -> PDF without the book pipeline
+    'render/pdf_metrics.py',      # ad-hoc: compare the layout of two built PDFs
     'audit/book_quality.py',      # metric consumed by the scorecard
     'audit/prose_quality.py',     # metric consumed by the scorecard
     'audit/failure_extract.py',   # diagnostic: pull failures out of a log
