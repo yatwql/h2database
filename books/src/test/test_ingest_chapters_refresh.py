@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import io
 import json
 import os
@@ -161,6 +162,93 @@ class ForceAndRefreshRunTest(unittest.TestCase):
             code = self.chapters.main(['--refresh-facts'])
         self.assertEqual(code, 0)
         self.assertIn('刷新 0 章 / 跳过 1 章（无标记块）', buffer.getvalue())
+
+
+class CliPathsTest(unittest.TestCase):
+    """--dry-run, --force (with backup), appendices and unreadable state."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.chapters = _fixture.load_module(self.root, 'chapters')
+        self.args = argparse.Namespace(only=None, dry_run=False, force=False,
+                                       refresh_facts=False, llm=False)
+        self.chapter = {'file': 'ch1-test.md', 'source_lines': 120,
+                        'packages': {'org.example': package(120)}}
+
+    def path(self, name: str = 'ch1-test.md') -> str:
+        return os.path.join(self.root, 'data', 'manuscript', name)
+
+    def write_state(self, outline: dict) -> None:
+        state = os.path.join(self.root, 'data', 'state')
+        os.makedirs(state, exist_ok=True)
+        with open(os.path.join(state, 'source-inventory.json'), 'w', encoding='utf-8') as fh:
+            json.dump({'packages': {}}, fh)
+        with open(os.path.join(state, 'outline.json'), 'w', encoding='utf-8') as fh:
+            json.dump(outline, fh)
+
+    def test_dry_run_reports_the_size_and_writes_nothing(self):
+        os.remove(self.path())            # nothing to preserve, so the renderer runs
+        self.args.dry_run = True
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            status = self.chapters._emit_chapter(self.chapter, self.args, 'STAMP')
+        self.assertEqual(status, 'written')
+        self.assertIn('--- ch1-test.md (', buffer.getvalue())
+        self.assertFalse(os.path.exists(self.path()))
+
+    def test_force_overwrites_prose_after_backing_it_up(self):
+        with open(self.path(), 'w', encoding='utf-8') as fh:
+            fh.write('作者写的一段正文。\n')
+        self.args.force = True
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            status = self.chapters._emit_chapter(self.chapter, self.args, 'STAMP')
+        self.assertEqual(status, 'written')
+        with open(self.path(), encoding='utf-8') as fh:
+            self.assertIn('本章导读', fh.read())
+        backups = os.path.join(self.root, 'data', 'tmp')
+        self.assertTrue(any('STAMP' in folder for _dir, _dirs, _files in os.walk(backups)
+                            for folder in [_dir]), list(os.walk(backups)))
+
+    def test_an_appendix_is_written_only_once(self):
+        appendix = next(iter(self.chapters.APPENDIX_SPEC), None)
+        if appendix is None:
+            self.skipTest('this book declares no appendix')
+        self.chapters.APPENDIX_SPEC[appendix] = (1, '测试附录')
+        self.addCleanup(self.chapters.APPENDIX_SPEC.pop, appendix, None)
+        chapter = {'file': appendix, 'source_lines': 10,
+                   'packages': {'org.example': package(10)}}
+        first = self.chapters._append_appendix(chapter, False)
+        second = self.chapters._append_appendix(chapter, False)
+        self.assertEqual((first, second), ('written', 'skip'))
+
+    def test_unreadable_state_files_are_refused(self):
+        state = os.path.join(self.root, 'data', 'state')
+        os.makedirs(state, exist_ok=True)
+        with open(os.path.join(state, 'outline.json'), 'w', encoding='utf-8') as fh:
+            fh.write('{broken')
+        with open(os.path.join(state, 'source-inventory.json'), 'w', encoding='utf-8') as fh:
+            json.dump({}, fh)
+        err = io.StringIO()
+        with redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+            code = self.chapters.main([])
+        self.assertEqual(code, 2)
+        self.assertIn('not valid JSON', err.getvalue())
+
+    def test_only_restricts_the_run_to_one_file(self):
+        other = {'file': 'ch2-test.md', 'source_lines': 60,
+                 'packages': {'org.example': package(60)}}
+        self.write_state({'chapters': [self.chapter, other]})
+        with open(self.path('ch1-test.md'), encoding='utf-8') as fh:
+            before = fh.read()
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            code = self.chapters.main(['--only', 'ch2-test.md'])
+        self.assertEqual(code, 0, buffer.getvalue()[-300:])
+        with open(self.path('ch1-test.md'), encoding='utf-8') as fh:
+            self.assertEqual(fh.read(), before)   # untouched by an --only run
 
 
 class DefaultModeTest(unittest.TestCase):
