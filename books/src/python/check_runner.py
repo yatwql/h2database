@@ -112,7 +112,28 @@ def domain_of(path: str) -> str:
     for fragment, domain in domain_rows():
         if path.startswith(fragment) or fragment.strip('/') in path:
             return domain
+    if _inside_another_book(path):
+        return 'other-book'
     return 'infra'
+
+
+def _inside_another_book(path: str) -> bool:
+    """Whether a path belongs to a neighbour book rather than to this one.
+
+    Books sit side by side. A commit that touches only the other book says
+    nothing about this book's toolchain, so it must not be classified as
+    infrastructure — that classification is what pulls every gate into a run.
+    """
+    target = os.path.realpath(path if os.path.isabs(path)
+                              else os.path.join(repo_root(), path))
+    active = os.path.realpath(book_root())
+    for root in _config.candidate_books(active):
+        real = os.path.realpath(root)
+        if real == active:
+            continue
+        if target == real or target.startswith(real + os.sep):
+            return True
+    return False
 
 
 def scoped_changes(domains: tuple[str, ...] | None = None) -> list[str]:

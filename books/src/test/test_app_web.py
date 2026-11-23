@@ -7,6 +7,7 @@ import http.client
 import io
 import json
 import os
+import shutil
 import sys
 import tempfile
 import threading
@@ -82,6 +83,80 @@ class WebConsoleTest(unittest.TestCase):
     def test_unknown_get_is_404(self):
         status, _payload = self.get('/nope')
         self.assertEqual(status, 404)
+
+    def sibling_book(self, name: str) -> str:
+        """A book next to this one: the library is the active book's parent."""
+        parent = os.path.dirname(os.path.abspath(self.root))
+        sibling = os.path.join(parent, f'{name}-{os.getpid()}')
+        _fixture.build_book(sibling)
+        self.addCleanup(shutil.rmtree, sibling, True)
+        return sibling
+
+    def test_the_book_list_offers_the_active_book_and_its_neighbours(self):
+        sibling = self.sibling_book('second-book')
+        status, raw = self.get('/api/books')
+        payload = json.loads(raw)
+        self.assertEqual(status, 200)
+        self.assertEqual(os.path.abspath(payload['current']),
+                         os.path.abspath(self.root))
+        offered = {os.path.abspath(book['root']) for book in payload['books']}
+        self.assertIn(os.path.abspath(self.root), offered)
+        self.assertIn(os.path.abspath(sibling), offered)
+
+    def test_an_action_request_may_name_its_book(self):
+        sibling = self.sibling_book('third-book')
+        before = self.web._config.current().root
+        _status, raw = self.post('/api/run', json.dumps(
+            {'action': 'status', 'book': sibling}).encode())
+        self.assertEqual(json.loads(raw)['code'], 0)
+        # the request selects a book for that run only; the console keeps its own
+        self.assertEqual(self.web._config.current().root, before)
+
+    def test_a_request_naming_a_directory_that_is_no_book_is_refused(self):
+        empty = os.path.join(self.tmp.name, 'no-book-here')
+        os.makedirs(empty, exist_ok=True)
+        status, raw = self.post('/api/run', json.dumps(
+            {'action': 'status', 'book': empty}).encode())
+        self.assertEqual(status, 400)
+        self.assertIn('book.toml', json.loads(raw)['output'])
+
+    def test_the_page_names_the_book_it_serves(self):
+        _status, raw = self.get('/')
+        html = raw.decode('utf-8')
+        self.assertIn('测试之书', html)
+        self.assertIn('0.1', html)
+
+    def retitle(self, root: str, title: str) -> None:
+        """Give a fixture book a title of its own, so responses can be told apart."""
+        path = os.path.join(root, 'data', 'book', 'book.toml')
+        with open(path, encoding='utf-8') as fh:
+            text = fh.read()
+        import re
+        with open(path, 'w', encoding='utf-8') as fh:
+            fh.write(re.sub(r'title = "[^"]*"', f'title = "{title}"', text, count=1))
+
+    def test_two_concurrent_requests_each_get_the_book_they_named(self):
+        first = self.sibling_book('concurrent-a')
+        second = self.sibling_book('concurrent-b')
+        self.retitle(first, '甲书')
+        self.retitle(second, '乙书')
+        seen = {}
+
+        def run(name: str, root: str) -> None:
+            _status, raw = self.post('/api/run', json.dumps(
+                {'action': 'status', 'book': root}).encode())
+            seen[name] = json.loads(raw)['output']
+
+        threads = [threading.Thread(target=run, args=('a', first)),
+                   threading.Thread(target=run, args=('b', second))]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=30)
+        self.assertIn('甲书', seen['a'])
+        self.assertNotIn('乙书', seen['a'])
+        self.assertIn('乙书', seen['b'])
+        self.assertNotIn('甲书', seen['b'])
 
     def test_post_runs_action(self):
         _status, raw = self.post('/api/run', json.dumps({'action': 'status'}).encode())

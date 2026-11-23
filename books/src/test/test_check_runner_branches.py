@@ -20,6 +20,42 @@ _fixture.ensure_tools_path()
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
 
 
+class OtherBookChangeTest(unittest.TestCase):
+    """A neighbour book's change is not this book's infrastructure."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(os.path.join(self.tmp.name, 'book-a'))
+        self.other = _fixture.build_book(os.path.join(self.tmp.name, 'book-b'))
+        self.runner = _fixture.load_module(self.root, 'check_runner')
+
+    def relative(self, root: str, *parts: str) -> str:
+        return os.path.relpath(os.path.join(root, *parts),
+                               self.runner.repo_root()).replace(os.sep, '/')
+
+    def test_a_change_in_the_other_book_is_its_own_domain(self):
+        changed = self.relative(self.other, 'data', 'manuscript', 'ch1-test.md')
+        self.assertEqual(self.runner.domain_of(changed), 'other-book')
+
+    def test_it_does_not_pull_this_books_gates_in(self):
+        changed = self.relative(self.other, 'data', 'manuscript', 'ch1-test.md')
+        self.assertEqual(self.runner.gates_for_change([changed]), '')
+
+    def test_an_absolute_path_is_classified_the_same_way(self):
+        changed = os.path.join(self.other, 'docs', 'managements', 'plan.md')
+        self.assertEqual(self.runner.domain_of(changed), 'other-book')
+        own = os.path.join(self.root, 'data', 'manuscript', 'ch1-test.md')
+        self.assertNotEqual(self.runner.domain_of(own), 'other-book')
+
+    def test_a_path_outside_every_book_stays_infrastructure(self):
+        self.assertEqual(self.runner.domain_of('README.md'), 'infra')
+
+    def test_a_change_in_this_book_still_maps_to_its_own_domain(self):
+        changed = self.relative(self.root, 'data', 'manuscript', 'ch1-test.md')
+        self.assertNotEqual(self.runner.domain_of(changed), 'other-book')
+
+
 class CommandTableTest(unittest.TestCase):
     """One command per step, and a clear refusal for anything else."""
 
