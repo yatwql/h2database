@@ -142,8 +142,11 @@ class EditionSelectionChannelsTest(EditionCase):
         self.restore()
         cli = _fixture.load_module(self.root, 'cli')
         tui = _fixture.load_module(self.root, 'tui')
-        for name, run in (('cli', lambda: cli.main(['status', '--edition', 'abridged'])),
-                          ('tui', lambda: tui.main(['--once', 'status',
+        # name the book explicitly: the case is about the entry points taking the
+        # selection, not about whatever book the process happens to be bound to
+        for name, run in (('cli', lambda: cli.main(['status', '--book', self.root,
+                                                    '--edition', 'abridged'])),
+                          ('tui', lambda: tui.main(['--once', 'status', '--book', self.root,
                                                     '--edition', 'abridged']))):
             with self.subTest(channel=name):
                 buffer = io.StringIO()

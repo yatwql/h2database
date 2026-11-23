@@ -39,6 +39,15 @@ class SameNameIsolationTest(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.first = _fixture.build_book(os.path.join(self.tmp.name, 'alpha'))
         self.second = _fixture.build_book(os.path.join(self.tmp.name, 'beta'))
+        # running a delivery script points the process at that book; put the
+        # selection back or the next suite inherits a directory this test deletes
+        previous_env = os.environ.get('BOOK_ROOT')
+        previous_cfg = _fixture.load_module(self.first, 'make')._config.current()
+        self.addCleanup(lambda: __import__('lib._config', fromlist=['reset']).reset(previous_cfg))
+        if previous_env is None:
+            self.addCleanup(os.environ.pop, 'BOOK_ROOT', None)
+        else:
+            self.addCleanup(os.environ.__setitem__, 'BOOK_ROOT', previous_env)
         # same relative path, different text: a leak would be visible as a hash
         self.write(self.second, CHAPTER, '# 第1章 另一本书的正文\n\n完全不同的一段。\n')
 

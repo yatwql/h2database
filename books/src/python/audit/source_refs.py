@@ -17,6 +17,7 @@ _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)
 
 import argparse
 import difflib
+import functools
 import json
 import os
 import re
@@ -32,23 +33,43 @@ from lib import _config, _errors, _fsutil
 # ---------------------------------------------------------------------------
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, '..', '..', '..', '..'))
-DOCS_DIR = _config.MANUSCRIPT_DIR
-SUFFIXES = _config.source_suffixes()
-PACKAGE_PREFIX = _config.SOURCES.get('package_prefix') or 'unknown'
-SOURCE_DIR = _config.source_tree('src_main')
-POM_PATH = _config.source_tree('pom_root')
-# Known (accepted) symbol drift, so an upstream rename does not break the gate
-# on every run. Refresh with: python source_refs.py --update-baseline
-BASELINE_PATH = _config.baseline_path('source_symbol')
+def suffixes() -> list[str]:
+    """Source suffixes this book declares, read when asked."""
+    return _config.source_suffixes()
+
+
+def package_prefix() -> str:
+    """The package prefix the coordinates are written in."""
+    return _config.SOURCES.get('package_prefix') or 'unknown'
+
+
+def source_root() -> str:
+    """The source tree the references point into."""
+    return _config.source_tree('src_main')
+
+
+def pom_path() -> str:
+    return _config.source_tree('pom_root')
+
+
+def baseline_file() -> str:
+    """Known (accepted) symbol drift; refresh with `--update-baseline`."""
+    return _config.baseline_path('source_symbol')
 
 # Scanned files come from book.toml, so a renamed or merged chapter can never
 # leave the gate checking a file that does not exist. Appendices are
 # prose too: their coordinates and `Class.method(` claims follow the same rules
 # instead of waiting for a proofreading pass.
-CHAPTER_FILES = _config.chapter_names(include_cover=False)
+def scanned_chapter_files() -> list[str]:
+    """Files the gate reads: every chapter and appendix, from book.toml."""
+    return _config.chapter_names(include_cover=False)
 
 # Pattern: ClassName.java:lineno (also captures start of range ClassName.java:start-end)
-REF_RE = re.compile(r'\b(\w+)(?:' + '|'.join(re.escape(x) for x in SUFFIXES) + r'):(\d+)')
+@functools.lru_cache(maxsize=4)
+def ref_re(source_suffixes: tuple[str, ...]) -> re.Pattern:
+    """`Class.java:12` shaped references, for the suffixes a book declares."""
+    return re.compile(r'\b(\w+)(?:' + '|'.join(re.escape(x) for x in source_suffixes)
+                      + r'):(\d+)')
 
 # ---------------------------------------------------------------------------
 # Data types
@@ -82,7 +103,7 @@ class Verification(NamedTuple):
 def get_project_version() -> str:
     """Project version from the configured build file (empty when absent)."""
     try:
-        lines = _fsutil.read_lines(POM_PATH)
+        lines = _fsutil.read_lines(pom_path())
     except (SystemExit, OSError):
         return 'unknown'
     for line in lines:
@@ -116,13 +137,13 @@ def _preferred_paths() -> dict:
 def build_class_index(source_dir: str | None = None) -> dict:
     """Map file stem -> absolute paths, inventory-preferred file first."""
     index: dict = defaultdict(list)
-    root_dir = source_dir or SOURCE_DIR
+    root_dir = source_dir or source_root()
     if not os.path.isdir(root_dir):
         return index
     preferred = _preferred_paths()
     for root, _dirs, files in os.walk(root_dir):
         for f in files:
-            if f.endswith(tuple(SUFFIXES)):
+            if f.endswith(tuple(suffixes())):
                 index[os.path.splitext(f)[0]].append(os.path.join(root, f))
     for name, paths in index.items():
         rel = preferred.get(name)
@@ -134,8 +155,8 @@ def extract_references(chapter_files: list[str] | None = None,
                        docs_dir: str | None = None) -> list:
     """Parse all chapter files for ClassName.java:lineno refs outside code fences."""
     refs: list = []
-    for ch_name in (chapter_files or CHAPTER_FILES):
-        ch_path = os.path.join(docs_dir or DOCS_DIR, ch_name)
+    for ch_name in (chapter_files or scanned_chapter_files()):
+        ch_path = os.path.join(docs_dir or _config.MANUSCRIPT_DIR, ch_name)
         if not os.path.exists(ch_path):
             print(f'  [WARN] Chapter file not found: {ch_name}', file=sys.stderr)
             continue
@@ -155,7 +176,7 @@ def extract_references(chapter_files: list[str] | None = None,
                 continue
 
             # Extract all references on this line
-            for m in REF_RE.finditer(line):
+            for m in ref_re(tuple(suffixes())).finditer(line):
                 refs.append(Reference(
                     doc_file=ch_name,
                     doc_line=i,
@@ -181,8 +202,8 @@ def extract_symbol_claims(chapter_files: list[str] | None = None,
                           docs_dir: str | None = None) -> list:
     """Collect ClassName.method( claims from chapter prose (outside fences)."""
     claims: list = []
-    for ch_name in (chapter_files or CHAPTER_FILES):
-        ch_path = os.path.join(docs_dir or DOCS_DIR, ch_name)
+    for ch_name in (chapter_files or scanned_chapter_files()):
+        ch_path = os.path.join(docs_dir or _config.MANUSCRIPT_DIR, ch_name)
         if not os.path.exists(ch_path):
             continue
         lines = _fsutil.read_lines(ch_path)
@@ -286,7 +307,7 @@ def _claim_key(doc_file: str, class_name: str, method: str) -> str:
 
 def load_baseline(path: str | None = None) -> dict:
     """Return the accepted-drift baseline (empty skeleton when absent)."""
-    target = path or BASELINE_PATH
+    target = path or baseline_file()
     if not os.path.isfile(target):
         return {'source_version': '', 'accepted': []}
     try:
@@ -300,7 +321,7 @@ def load_baseline(path: str | None = None) -> dict:
 
 def save_baseline(broken: list, source_version: str, path: str | None = None) -> None:
     """Record the current drift as accepted."""
-    target = path or BASELINE_PATH
+    target = path or baseline_file()
     payload = {
         'updated': date.today().isoformat(),
         'source_version': source_version,
@@ -338,7 +359,7 @@ def suggest_renames(claim, class_index: dict) -> list[str]:
 # ---------------------------------------------------------------------------
 def format_rel_path(path: str) -> str:
     """Convert an absolute file path to its source-root relative form."""
-    return os.path.relpath(path, SOURCE_DIR).replace('\\', '/')
+    return os.path.relpath(path, source_root()).replace('\\', '/')
 
 def print_report(results: list, class_index: dict,
                  h2_version: str | None = None) -> None:
@@ -437,14 +458,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument('--baseline', metavar='PATH',
                         help='alternate drift baseline file')
     args = parser.parse_args(argv)
-    baseline_path = args.baseline or BASELINE_PATH
+    baseline_path = args.baseline or baseline_file()
 
     h2_version = get_project_version()
     try:
-        print(f'Building class index from the configured source tree: {SOURCE_DIR}')
+        print(f'Building class index from the configured source tree: {source_root()}')
         class_index = build_class_index()
         if not class_index:
-            print(f'  [skip] H2 source tree not found at {SOURCE_DIR}; '
+            print(f'  [skip] H2 source tree not found at {source_root()}; '
                   f'set [sources].src_main in data/config/config.json', file=sys.stderr)
             return 0
         print(f'Indexed {len(class_index)} unique class names')
@@ -483,7 +504,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.update_baseline:
             save_baseline(broken_symbols, h2_version, baseline_path)
             print(f'  baseline updated: {len(broken_symbols)} accepted claim(s) '
-                  f'-> {os.path.relpath(BASELINE_PATH, REPO_ROOT)}')
+                  f'-> {os.path.relpath(baseline_file(), REPO_ROOT)}')
             new_drift = []
         elif broken_symbols:
             print(f'  {len(broken_symbols)} symbol claim(s) not found in source: '

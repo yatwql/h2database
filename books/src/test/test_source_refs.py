@@ -65,9 +65,9 @@ class SourceReferenceAuditTest(unittest.TestCase):
         self.assertIn('not found', err.getvalue())
 
     def test_the_checked_files_come_from_the_configuration(self):
-        self.assertEqual(self.module.CHAPTER_FILES,
+        self.assertEqual(self.module.scanned_chapter_files(),
                          self.module._config.chapter_names(include_cover=False))
-        for name in self.module.CHAPTER_FILES:
+        for name in self.module.scanned_chapter_files():
             self.assertTrue(os.path.isfile(os.path.join(self.docs_dir, name)), name)
 
     def test_appendices_are_scanned_like_chapters(self):

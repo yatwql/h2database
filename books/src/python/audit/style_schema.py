@@ -23,8 +23,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from lib import _config, _errors, _fsutil
 
-STYLE_PATH = _config.config_path('style.json')
-TEMPLATES_PATH = _config.template_path('templates.toml')
 KNOWN_TEMPLATES = {'map_intro', 'types_intro', 'api_intro', 'path_intro', 'deep_dive'}
 KNOWN_TOP = {'_note', '_schema', 'captions', 'diagrams', 'clusters',
              'quality', 'prose', 'style_rules', 'content_depth', 'generation',
@@ -41,10 +39,11 @@ REQUIRED = {
 
 
 def load() -> dict:
+    path = _config.config_path('style.json')
     try:
-        return json.loads(_fsutil.read_text(STYLE_PATH))
+        return json.loads(_fsutil.read_text(path))
     except (OSError, json.JSONDecodeError) as exc:
-        raise SystemExit(f'error: cannot read {STYLE_PATH}: {exc}') from exc
+        raise SystemExit(f'error: cannot read {path}: {exc}') from exc
 
 
 def validate(style: dict) -> list[str]:

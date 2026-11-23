@@ -20,7 +20,6 @@ from lib import _config, _fsutil, _mdutil
 
 _fsutil.pin_stdout_utf8()
 
-CHAPTERS = _config.chapter_files(include_cover=False)
 
 docs_dir = _config.BOOK_ROOT
 src_dir = _config.MANUSCRIPT_DIR
@@ -41,7 +40,7 @@ def check_figure_refs():
     print("Figure Reference Consistency Report")
     print(f"{'='*70}\n")
 
-    for filepath in CHAPTERS:
+    for filepath in _config.chapter_files(include_cover=False):
         short = os.path.basename(filepath)
         lines = _fsutil.read_lines(filepath)
 
@@ -92,7 +91,7 @@ def check_figure_refs():
             print(f"    UNREF L{ln}: 图{fid}: {cap_short}")
 
     overall_pct = total_refd / total_figs * 100 if total_figs else 0
-    target_pct = COVERAGE_TARGET_PCT
+    target_pct = coverage_target_pct()
     print(f"\n  {'='*50}")
     print(f"  TOTAL: {total_figs} figures, {total_refd} referenced ({overall_pct:.1f}%)")
     verdict = 'PASS' if overall_pct >= target_pct else 'NEEDS IMPROVEMENT'
@@ -149,9 +148,17 @@ def build_exempt_ranges(headings, lines):
     return exempt
 
 # --- Main ---
-_QUALITY = _config.STYLE_POLICY.get('quality') or {}
-MIN_FIGURES = int(_QUALITY.get('min_figures_per_section', 2))
-COVERAGE_TARGET_PCT = int(_QUALITY.get('min_figure_coverage_pct', 95))
+def quality_policy() -> dict:
+    """The figure floors this book declares, read when asked."""
+    return _config.STYLE_POLICY.get('quality') or {}
+
+
+def min_figures() -> int:
+    return int(quality_policy().get('min_figures_per_section', 2))
+
+
+def coverage_target_pct() -> int:
+    return int(quality_policy().get('min_figure_coverage_pct', 95))
 
 if __name__ == '__main__':
     if '--fig-refs' in sys.argv:
@@ -160,7 +167,7 @@ if __name__ == '__main__':
 
     all_gaps = []
 
-    for filepath in CHAPTERS:
+    for filepath in _config.chapter_files(include_cover=False):
         short = os.path.basename(filepath)
         lines = _fsutil.read_lines(filepath)
 
@@ -217,11 +224,11 @@ if __name__ == '__main__':
             code_blocks = ''.join(lines[line_num:end]).count('```') // 2
             java_refs = ''.join(lines[line_num:end]).count('.java:')
 
-            if total_diagrams < MIN_FIGURES:
+            if total_diagrams < min_figures():
                 all_gaps.append((short, title[:70], section_len, total_diagrams, code_blocks, java_refs, has_children))
 
     print(f"\n{'='*70}")
-    print(f"Sections needing >={MIN_FIGURES} diagrams (aggregated from #### children)")
+    print(f"Sections needing >={min_figures()} diagrams (aggregated from #### children)")
     print(f"{'='*70}")
     by_file = {}
     for short, title, sl, dd, cb, jr, hc in all_gaps:

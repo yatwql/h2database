@@ -27,8 +27,6 @@ from factblocks import backup_existing, line_delta, refresh_blocks
 from factblocks import mark_block as _gen
 from lib import _config, _errors, _fsutil, _log, _mdutil
 
-OUTLINE = _config.state_path('outline.json')
-SOURCE_ROOT = _config.source_tree('src_main')
 
 def _spec_table() -> dict[str, list[tuple[int, str]]]:
     """Chapter file -> [(H1 number, title)] derived from book.toml."""
@@ -55,9 +53,24 @@ PUBLIC_METHOD_LINE = re.compile(
     r'[\w<>\[\],.?\s]+\s+(\w+)\s*\(')
 
 
-PKG_PREFIX = _config.SOURCES.get('package_prefix') or 'unknown'
-GEN = _config.POLICY.get('generation', {})
-TPL = _config.templates()
+def _outline_path() -> str:
+    """Where this book keeps its outline, resolved when used."""
+    return _config.state_path('outline.json')
+
+
+def _pkg_prefix() -> str:
+    """The source package prefix this book declares."""
+    return _config.SOURCES.get('package_prefix') or 'unknown'
+
+
+def _generation() -> dict:
+    """Generation limits from the policy, read when asked."""
+    return _config.POLICY.get('generation', {})
+
+
+def _templates() -> dict:
+    """Prose templates, read when asked."""
+    return _config.templates()
 
 
 # Set by main(): whether the lead-in and summary may be written by the LLM.
@@ -125,14 +138,14 @@ def _prose_prompt(kind: str, facts: dict) -> str:
 
 def tpl(key: str, fallback: str, **facts) -> str:
     """Render a config-provided string template; falls back to the default."""
-    pattern = TPL.get(key)
+    pattern = _templates().get(key)
     if not isinstance(pattern, str):
         pattern = fallback
     try:
         return pattern.format(**facts)
     except (KeyError, IndexError):
         return fallback.format(**facts)
-MAX_TABLE_ROWS = int(GEN.get('max_api_rows', 20))
+MAX_TABLE_ROWS = int(_generation().get('max_api_rows', 20))
 
 
 def _table(headers: list[str], rows: list[list[str]]) -> list[str]:
@@ -181,7 +194,7 @@ def _chapter_context(cn: int, packages: dict, pkgs_sorted: list[tuple[str, dict]
              'top': top_pkg, 'toplines': f'{top_info.get("lines", 0):,}',
              'sig': '、'.join(list(packages)[:3]) or '—',
              'pkgcount': len(packages), 'rows': min(len(packages) * 3, 20),
-             'take': int(GEN.get('max_classes_per_package', 4)),
+             'take': int(_generation().get('max_classes_per_package', 4)),
              'others': max(0, len(packages) - 1),
              'files': top_info.get('files', 0), 'dep': dep_head}
     facts_intro = {'num': cn, 'pkgs': len(packages), 'lines': f'{total_lines:,}',
@@ -203,7 +216,7 @@ def _map_sections(cn: int, packages: dict, ctx: dict) -> list[str]:
     L += [f'## {cn}.1 模块版图', '',
           tpl('map_intro', '本章覆盖 {pkgs} 个包、{lines} 行实现。',
               **facts_intro), '']
-    keep = int(GEN.get('max_packages_per_table', 12))
+    keep = int(_generation().get('max_packages_per_table', 12))
     map_lines = _table(['包', '文件数', '行数', '职责'],
                        [[f'`{p}`', f"{i['files']}", f"{i['lines']:,}",
                          i['summary'] or '（无包注释，按主类型归纳）']
@@ -225,7 +238,7 @@ def _map_sections(cn: int, packages: dict, ctx: dict) -> list[str]:
             ['类型', '行数', '公开方法', '职责'],
             [[f"`{c['name']}`", f"{c['lines']:,}", f"{c['public_methods']}",
               c['summary'] or '（无类注释，按方法名归纳）']
-             for c in info['key_classes'][:int(GEN.get('max_classes_per_package', 4))]]))
+             for c in info['key_classes'][:int(_generation().get('max_classes_per_package', 4))]]))
     return L
 
 
@@ -373,7 +386,7 @@ def _tradeoff_sections(cn: int, ctx: dict, cn_tradeoff: int) -> list[str]:
         (f'其中 `{big["name"]}` 独占 {big["lines"]:,} 行，'
          f'{big["public_methods"]} 个公开方法。规模集中，风险也集中。'),
         '',
-        (f'它对外声明 {info_dep_count(top_info)} 个 `{PKG_PREFIX}` 依赖，'
+        (f'它对外声明 {info_dep_count(top_info)} 个 `{_pkg_prefix()}` 依赖，'
          f'最重的是 `{dep_head}`。依赖越集中，越说明它是被复用的底座。'),
         '',
         (f'与 `{second_pkg}`（{second_info["lines"]:,} 行）的分工是本章最该记住的边界。'
@@ -405,10 +418,10 @@ def _deep_dive_sections(cn: int, ctx: dict, cn_tradeoff: int) -> list[str]:
     L: list[str] = []
     share = round(100 * top_info.get('lines', 0) / max(1, total_lines))
     L += [f'## {cn}.{cn_tradeoff + 2} 深读要点', '']
-    deep_items = TPL.get('deep_dive')
+    deep_items = _templates().get('deep_dive')
     if not isinstance(deep_items, list):
         deep_items = ['- `{top}` 占本章 {share}% 的实现行数。',
-                      f'- `{{top}}` 依赖 {{deps}} 个 `{PKG_PREFIX}` 包，`{{dep}}` 最频繁。',
+                      f'- `{{top}}` 依赖 {{deps}} 个 `{_pkg_prefix()}` 包，`{{dep}}` 最频繁。',
                       '- `{big}` 有 {methods} 个公开方法，是本章主干。']
     for item in deep_items:
         deep = {'top': facts['top'], 'share': share,
@@ -505,7 +518,7 @@ def _checklist_sections(cn: int, packages: dict, ctx: dict,
     big = ctx['big']
     cross_num, cross_name = ctx['cross']
     L: list[str] = []
-    checklist_items = int(GEN.get('checklist_items', 5))
+    checklist_items = int(_generation().get('checklist_items', 5))
     L += [f'## {cn}.{cn_summary + 2}.2 阅读检查清单', '',
           (f'本章给出 {checklist_items} 条自查项，逐条确认后再进入下一章。'), '',
           (f'读完本章，先自问三个问题。能否不看正文画出 `{top_pkg}` 与 '
@@ -535,7 +548,7 @@ def exercise_block(cn: int, pkgs_sorted: list[tuple[str, dict]]) -> list[str]:
         '以 {cls} 为入口，画出一次完整调用经过的包。',
         '只保留一个类型时，你留 {cls} 还是 {cls2}？说明代价。',
     )
-    for index in range(int(GEN.get('exercises_per_chapter', 4))):
+    for index in range(int(_generation().get('exercises_per_chapter', 4))):
         pkg, info = picks[index % len(picks)]
         classes = [c['name'] for c in info.get('key_classes') or []]
         cls = classes[0] if classes else '主入口'
@@ -828,7 +841,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         _INVENTORY = json.loads(_fsutil.read_text(
             _config.state_path('source-inventory.json')))
-        outline = json.loads(_fsutil.read_text(OUTLINE))
+        outline = json.loads(_fsutil.read_text(_outline_path()))
     except json.JSONDecodeError as exc:
         print(f'error: state files are not valid JSON: {exc}', file=sys.stderr)
         return 2

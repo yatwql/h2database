@@ -360,7 +360,8 @@ def resolve_script(script: str) -> str:
 def refresh_config(root: str) -> None:
     """Point lib._config at ``root`` and drop every cached config module."""
     os.environ['BOOK_ROOT'] = root
-    for key in ('_config', 'lib._config', 'lib._log', '_log',
+    for key in ('_config', 'lib._config', 'lib._baseline', 'lib._errors',
+                'lib._fsutil', 'lib._log', '_log',
                 'app', 'app.cli', 'app.tui', 'app.web', 'app.keys',
                 'core', 'core.actions', 'core.settings',
                 'html_cache', 'factblocks'):

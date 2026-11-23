@@ -29,7 +29,6 @@
 
 | # | 问题 | 修复方向 |
 | --- | --- | --- |
-| rf-43 | 仍有 6 个模块在**导入期**读配置并把它存成模块常量：`audit/source_refs.py`(7)、`ingest/chapters.py`(5)、`render/to_html.py`(2)、`ingest/outline.py`(2)、`audit/style_schema.py`(2)、`audit/smart.py`(2)。一条进程只服务一本书时看不出问题，换书、或工具链独立成包后 `--book` 在导入之后才解析，这些常量就会指向上一本书 | 把常量改成调用时解析（与 `captions` / `figure_clusters` / `exercises` / `terms` 这轮的做法一致：删除模块级常量，改读 `_config` 的门面）；每改一个模块跑一遍 `check --only structure,source_refs` |
 
 
 
@@ -68,7 +67,7 @@
 
 | 文件 | 现状与拆分方向 |
 | --- | --- |
-| `src/python/ingest/chapters.py` 876 行 | 占比 97%，章节正文已按小节组拆成模块版图 / 接口坐标 / 阅读路径 / 设计权衡 / 深读要点 / 术语 / 小结 / 视角 / 检查清单九个助手（每章事实只在 `_chapter_context` 算一次），剩余方向是骨架生成与语言适配调用两段（事实块标记与刷新已拆到 `ingest/factblocks.py`） |
+| `src/python/ingest/chapters.py` 889 行 | 占比 97%，章节正文已按小节组拆成模块版图 / 接口坐标 / 阅读路径 / 设计权衡 / 深读要点 / 术语 / 小结 / 视角 / 检查清单九个助手（每章事实只在 `_chapter_context` 算一次），剩余方向是骨架生成与语言适配调用两段（事实块标记与刷新已拆到 `ingest/factblocks.py`） |
 | `src/python/audit/style.py` 642 行 | 占比 71%，句式规则按规则族拆（单调 / 重复 / 段落），共享解析上提 |
 | `src/python/lib/_config.py` 898 行 | 占比 95%，按「书目发现 / 配置加载」「路径与策略」「手稿结构与版本」三段拆。拆分时的三处内部依赖：`_IMPORT_ROOT` 由发现逻辑算出、`ConfigError` 被两侧共用、`candidate_books()` 反过来用 `Config`——先把前两者下沉到新模块、`candidate_books` 留在门面，才能避开循环导入（试过整体抽取，14 个用例导入失败） |
 
@@ -133,6 +132,7 @@
 | rf-37 | 覆盖率门禁只量快档：`make.py::coverage()` 写死 `-m tier_fast`，而同一文件的 `test` 认 `BOOK_SLOW=1`；CI 慢档 job 装好 chromium/pandoc 后跑的仍是快档，12 个 `tier:slow` 模块（82 条用例）对覆盖率零贡献 | **修订**：`cover` 接受 `--full` 与 `BOOK_SLOW=1`，报头写出量的是哪一档；CI 慢档 job 改跑 `cover --full`，testplan 判据同时点名两个载体。逐模块把“只为拿真工具”的用例改注入仍在做（`to_epub` 已 72% → 100%） |
 | rf-38 | 覆盖率只有全局阈值加 72% 的单文件下限：50 个模块低于 90%（8543 语句、漏 1143），一个 200 语句的模块停在 73% 仍能全绿 | **修订**：`cover` 把每个文件的覆盖率记进 `data/baselines/coverage.json`，任一文件低于基线即 FAIL，`--update-baseline` 经评审重记；不足 5 条语句的文件除外 |
 | rf-42 | 质量读数没有统一入口：覆盖率、单文件、半分支、长函数数、永真断言数分散在多个命令与 grep 里 | **修订**：新增 `audit/test_health.py`，由 `make.py report health` 调用，汇总覆盖率（总/最薄/半分支 Top-N）、低于基线的文件、松散断言数与超长函数清单；阈值读 `base.json [toolchain]`，视图只读数不判红 |
+| rf-43 | 有 6 个模块在**导入期**读配置并把它存成模块常量：`audit/source_refs.py`(7)、`ingest/chapters.py`(5)、`render/to_html.py`(2)、`ingest/outline.py`(2)、`audit/style_schema.py`(2)、`audit/smart.py`(2)；一个进程换书、或工具链独立成包后 `--book` 在导入之后才解析，这些常量会指向上一本书 | **修订**：全部改为调用时解析——路径直接读 `_config` 门面，策略派生的值走 `suffixes()`/`generation()`/`templates()`/`quality_policy()` 一类小函数，`source_refs` 的引用正则按后缀元组缓存；同名局部变量（`source_dir`、`baseline_path`）处的访问器改名避免遮蔽。新增 `test_lib_baselines.py` 钉住基线的配置解析与版本作用域 |
 ### 归档
 
 本项目不按版本切分问题归档文件：已修条目在下一次发布时摘要进 `changelog.md` 对应

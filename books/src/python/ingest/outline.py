@@ -21,8 +21,15 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from lib import _config, _errors, _fsutil
 
-INVENTORY = _config.state_path('source-inventory.json')
-OUTLINE = _config.state_path('outline.json')
+
+def inventory_path() -> str:
+    """The inventory the outline is derived from, resolved when used."""
+    return _config.state_path('source-inventory.json')
+
+
+def outline_path() -> str:
+    """Where this book keeps its outline."""
+    return _config.state_path('outline.json')
 
 
 def ownership_conflicts(mapping: dict[str, list[str]]) -> dict[str, list[str]]:
@@ -37,9 +44,9 @@ def ownership_conflicts(mapping: dict[str, list[str]]) -> dict[str, list[str]]:
 
 def build_outline() -> dict:
     try:
-        inventory = json.loads(_fsutil.read_text(INVENTORY))
+        inventory = json.loads(_fsutil.read_text(inventory_path()))
     except json.JSONDecodeError as exc:
-        raise SystemExit(f'error: invalid inventory {INVENTORY}: {exc}') from exc
+        raise SystemExit(f'error: invalid inventory {inventory_path()}: {exc}') from exc
     packages = inventory['packages']
     mapping = _config.chapter_packages()
     chapters = []
@@ -86,8 +93,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument('--json', action='store_true', help='print instead of writing')
     args = parser.parse_args(argv)
 
-    if not os.path.isfile(INVENTORY):
-        print(f'error: run digest.py first ({INVENTORY} missing)', file=sys.stderr)
+    if not os.path.isfile(inventory_path()):
+        print(f'error: run digest.py first ({inventory_path()} missing)', file=sys.stderr)
         return 2
 
     outline = build_outline()
@@ -95,9 +102,9 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(outline, ensure_ascii=False, indent=2))
         return 0
 
-    _fsutil.ensure_dir(OUTLINE)
-    _fsutil.write_text(OUTLINE, json.dumps(outline, ensure_ascii=False, indent=2) + '\n')
-    print(f'outline -> {os.path.relpath(OUTLINE, _config.BOOK_ROOT)}')
+    _fsutil.ensure_dir(outline_path())
+    _fsutil.write_text(outline_path(), json.dumps(outline, ensure_ascii=False, indent=2) + '\n')
+    print(f'outline -> {os.path.relpath(outline_path(), _config.BOOK_ROOT)}')
     if outline['ownership_conflicts']:
         print('warning: packages claimed by several chapters:')
         for package, chapters in sorted(outline['ownership_conflicts'].items()):

@@ -19,12 +19,10 @@ docs_dir = _config.BOOK_ROOT
 src_dir = _config.MANUSCRIPT_DIR
 dist_dir = _config.DIST_DIR
 
-INPUT = _config.merged_md()
-OUTPUT = _config.merged_html()
 
-_fsutil.ensure_dir(OUTPUT)
+_fsutil.ensure_dir(_config.merged_html())
 
-lines = _fsutil.read_lines(INPUT)
+lines = _fsutil.read_lines(_config.merged_md())
 
 # Find where main content starts (first # 第N章 heading)
 main_start = 0
@@ -548,9 +546,9 @@ content.appendChild(nav);
 </body>
 </html>"""
 
-_fsutil.write_text(OUTPUT, HTML)
+_fsutil.write_text(_config.merged_html(), HTML)
 
-print(f"Generated: {OUTPUT}")
+print(f"Generated: {_config.merged_html()}")
 print(f"TOC entries: {len(toc_entries)}")
 print(f"Fence lines: {fence_lines_found}")
 print(f"Unclosed pre at EOF: {in_pre}")
