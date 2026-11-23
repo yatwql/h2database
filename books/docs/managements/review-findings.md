@@ -37,7 +37,7 @@
 | # | 问题 | 修复方向 |
 | --- | --- | --- |
 | rf-39 | 65 处永真断言（`assertIn(code, (0,1))`、`assertNotIn('Traceback')` 之类）：在用例里只证明“跑完了没炸”，行被执行不等于行为被验证 | **修订**：`run_inproc` 回显 `sys.exit` 消息；46 处改成“退出码取实际值 + 消息断言”，7 条遍历整套脚本的用例改成“每脚本一张退出码表 + 断言在表内”，基线 61 → 8。余下 8 条需要 chromium/pandoc 的交付用例（本机跳过，没法定值），留待有工具的环境补齐 |
-| rf-40 | 30 个函数 ≥60 行，最差 `ingest/chapters.py::_sections` 261 行、`manuscript/terms.py::report_missing` 208 行、`render/verify_epub.py::verify` 129 行、`audit/style.py::detect_sentence_monotony` 122 行：这类函数的分支组合无法用例化，覆盖率会在 80% 附近卡住 | 先拆 `_sections`（骨架 / 模板填充 / 语言适配三段）与 `report_missing`（缺失判定 / 报告渲染）；拆分边界即用例边界，拆完立刻能补上半分支 |
+| rf-40 | 长函数无法逐个用例化：拆分前有 30 个 ≥60 行函数，分支组合只能整体回归 | **进展**：已拆 18 个：`_sections`、`report_missing`、`verify_epub.verify`、`index_xrefs.main`、`style_schema.validate`、`detect_sentence_monotony`、`source_refs.main`、`print_report`、`verify_pdf.verify`、`prose_quality.measure`、`test_report.main`、`make.main`、`parse_index`、`pdf_toc_links.add_links`、`check_architecture.check`、`captions.main`、`readability.main`、`figure_clusters.main`、`check_figure_refs`、`style_rules.check_file`，每处都用同批输入比对输出。余 11 个：`tui.main`(81)、`cli.main`(78)、`chapters._api_sections`(74)、`chapters.main`(71)、`snapshot.import_snapshot`(71)、`plan_coverage.check`(68)、`exercises.parse_chapter_slots`(67)、`exercises.audit_file`(63)、`smart`(66)、`to_html.render_body`(64)、`doc_archive.check`(63)、`docs_archive.apply_plan`(61) |
 | rf-41 | 失败语义靠 27 处散落的 `sys.exit()` 与 58 个入口各自转换：消息与退出码分开维护，测试只能断言“退出码是 0 或 1” | **修订**：`lib/_errors.py` 的 `ToolError` 把消息与退出码绑成一个对象（派生 `SystemExit`，既有 `sys.exit(message)` 语义不变），`_fsutil` / `terms` / `to_pdf` 的 I/O 失败改抛它，58 个入口统一走 `_errors.run()`；新增 8 条用例。余下 `sys.exit(1)` 之类的判定点仍逐批迁移 |
 
 ### H3 — 持续监控：兼容残留
