@@ -417,18 +417,29 @@ def _row_for(screen: str, pressed: str, rows: list, cursor: int):
     return (match[1], match[2]) if match else None
 
 
-def main(argv: list[str] | None = None) -> int:
-    args = _parser().parse_args(argv)
+def _guard_book(args) -> int:
+    """Apply the selection; 0 when it is fine, else the exit status.
+
+    Same contract as the CLI and make.py: a bad book root is one message and
+    status 2, never a traceback from deep inside the config.
+    """
     if args.book:
         os.environ['BOOK_ROOT'] = os.path.abspath(args.book)
         marker = os.path.join(os.environ['BOOK_ROOT'], 'data', 'book', 'book.toml')
         if not os.path.isfile(marker):
-            # same contract as the CLI and make.py: one message, status 2
             print(f'error: 没找到 book.toml，试过 {os.environ["BOOK_ROOT"]}',
                   file=sys.stderr)
             return 2
     if args.edition:
         os.environ['BOOK_EDITION'] = args.edition
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parser().parse_args(argv)
+    invalid = _guard_book(args)
+    if invalid:
+        return invalid
     if args.once:
         return _once(args)
 
