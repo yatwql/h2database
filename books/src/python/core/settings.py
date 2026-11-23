@@ -12,8 +12,6 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import importlib
-import json
 import re
 
 from lib import _config, _fsutil, _volume
@@ -65,24 +63,13 @@ def spec_table() -> dict[str, tuple[str, str, str, str, str]]:
 
 
 def _reload() -> None:
-    """Re-read configuration so the session sees the change.
+    """Re-read the active book's files so the running session sees the change.
 
-    The active book is carried across the re-import: a fresh module would otherwise
-    rediscover its root from the process environment and silently switch books.
+    Re-reading replaces re-importing: the book object (and every reference to it)
+    survives, so a settings write cannot silently switch books the way a fresh
+    module rediscovering its root from the environment could.
     """
-    global _config
-    active = _config.current().root
-    modules = sys.modules
-    lib = modules.get('lib')
-    for name in ('lib._config', '_config'):
-        modules.pop(name, None)
-    if lib is not None and hasattr(lib, '_config'):
-        delattr(lib, '_config')
-    fresh = importlib.import_module('lib._config')
-    fresh.reset(fresh.Config(active))
-    _config = fresh
-    if lib is not None:
-        vars(lib)['_config'] = fresh
+    _config.current().refresh()
 
 
 def _read_toml_value(path: str, section: str, field: str) -> str | None:
@@ -156,17 +143,6 @@ def _write_toml_literal(path: str, section: str, field: str, literal: str) -> No
     _fsutil.write_text(path, f'{body}\n\n[{section}]\n{field} = {literal}\n')
 
 
-def _read_json(path: str) -> dict:
-    try:
-        return json.loads(_fsutil.read_text(path))
-    except json.JSONDecodeError as exc:
-        raise ValueError(f'invalid JSON in {path}: {exc}') from exc
-
-
-def _write_json(path: str, payload: dict) -> None:
-    _fsutil.write_text(path, json.dumps(payload, ensure_ascii=False, indent=2) + '\n')
-
-
 def list_settings() -> list[dict]:
     """Current value and description of every writable key."""
     rows = []
@@ -182,7 +158,7 @@ def get(key: str) -> str:
         raise KeyError(key)
     path, section, field, _kind, _ = spec_table()[key]
     if path.endswith('.json'):
-        payload = _read_json(path)
+        payload = _fsutil.load_json(path)
         if section:
             payload = payload.get(section) or {}
         value = payload.get(field)
@@ -234,10 +210,10 @@ def set_value(key: str, value: str) -> str:
         _reload()
         return 'true' if stored else 'false'
     if path.endswith('.json'):
-        payload = _read_json(path)
+        payload = _fsutil.load_json(path)
         target = payload.setdefault(section, {}) if section else payload
         target[field] = stored
-        _write_json(path, payload)
+        _fsutil.dump_json(path, payload)
     else:
         _write_toml_value(path, section, field, str(stored))
     _reload()
@@ -254,7 +230,7 @@ def _priority(spec: dict | None) -> int:
 
 def provider_order() -> list[dict]:
     """Providers in fallback order, with the priority the router will read."""
-    payload = _read_json(provider_json())
+    payload = _fsutil.load_json(provider_json())
     providers = payload.get('providers') or {}
     rows = [{'name': name, 'priority': _priority(spec)} for name, spec in providers.items()]
     return sorted(rows, key=lambda row: (row['priority'], row['name']))
@@ -268,7 +244,7 @@ def move_provider(name: str, delta: int) -> str:
     """
     if delta not in (-1, 1):
         raise ValueError('delta must be -1 or 1')
-    payload = _read_json(provider_json())
+    payload = _fsutil.load_json(provider_json())
     providers = payload.get('providers') or {}
     if name not in providers:
         raise KeyError(f'unknown provider {name!r}')
@@ -281,7 +257,7 @@ def move_provider(name: str, delta: int) -> str:
     for index, provider in enumerate(order):
         providers.setdefault(provider, {})['priority'] = (index + 1) * 10
     payload['providers'] = providers
-    _write_json(provider_json(), payload)
+    _fsutil.dump_json(provider_json(), payload)
     _reload()
     return ', '.join(order)
 

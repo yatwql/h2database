@@ -217,6 +217,11 @@ class Config:
         # Legacy single-file policy, still honoured when the split files are absent.
         self.policy_path = (os.environ.get('BOOK_POLICY')
                             or os.path.join(self.config_dir, 'config.json'))
+        self._edition_arg = edition
+        self._derive()
+
+    def _derive(self) -> None:
+        """Read the files this book declares and derive the values from them."""
         self.cfg = self._load_book()
         # Opt-in, because "file missing" is itself meaningful: a minimal book gets an
         # empty policy and a skeleton-only language pack. A book that asks for the
@@ -258,7 +263,7 @@ class Config:
                 self.editions[name] = str(value.get('display') or name)
             else:
                 self.editions[name] = str(value)
-        self.edition = self._pick_edition(edition)
+        self.edition = self._pick_edition(self._edition_arg)
         if self.edition:
             self.manuscript_dir = os.path.join(self.manuscript_dir, self.edition)
         self.merged_name = self.cfg.get('book', {}).get('merged_name', 'book')
@@ -267,6 +272,16 @@ class Config:
             self.merged_name = str(named) if named else f'{self.merged_name}-{self.edition}'
         self.title = self.cfg.get('book', {}).get('title', '')
         self.version = self.cfg.get('book', {}).get('version', '')
+
+    def refresh(self) -> Config:
+        """Re-read this book's files, keeping the same object and root.
+
+        A settings change must be visible to the running session without
+        re-importing the module: the identity of the book (and everything
+        holding a reference to it) stays, only what was read from disk moves.
+        """
+        self._derive()
+        return self
 
     def _pick_edition(self, explicit: str | None) -> str:
         """The edition this Config reads: explicit, then BOOK_EDITION, then default.

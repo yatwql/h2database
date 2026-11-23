@@ -477,6 +477,7 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **改配置不再重导入模块**：`core/settings.py::_reload()` 原先每次写配置都重新导入 `lib._config` 并手工重绑活动书；现在 `Config` 把派生值的计算收进 `_derive()`，新增 `refresh()` 就地重读（书对象与其引用不变），`_reload()` 只剩一行。顺带删掉 `settings.py` 的 `_read_json`/`_write_json`，改用 `lib/_fsutil` 的 `load_json`/`dump_json`——同一件事原本两份实现。
 - **`audit/index_xrefs.py::main`（113 行）按检查项拆开**：`_alias_index`、`_target_resolves`、`_check_see_also`、`_check_sub_entry_chapters`、`_check_section_order`、`_print_summary` 各管一段，每个检查返回自己的问题数，`main` 只剩求和与退出码。真实书目上输出与退出码逐字节相同；≥60 行函数 28 → 27。（rf-40）
 - **`render/verify_epub.py::verify`（129 行）按检查项拆开**：`_open_archive`（存在/体积/可读）、`_check_mimetype`、`_check_container`、`_parse_opf`、`_check_package`（元数据/封面/manifest 与 spine）、`_check_resolution`、`_check_navigation` 各管一段，`verify` 只剩编排与早退。纯搬移，18 条 EPUB 校验用例全绿；≥60 行函数 29 → 28。（rf-40）
 - **三个 `verify_pdf` 测试文件迁到快档**：它们只需要 pypdf，却被标成 `tier:slow`（理由是“交付链要浏览器”），于是覆盖率门禁从不计入。改用 `skipUnless(HAS_PYPDF)` 跳过条件后 11 条用例进入默认套件，`verify_pdf.py` 83 → 85%，未覆盖语句 1237 → 1233。（rf-37）

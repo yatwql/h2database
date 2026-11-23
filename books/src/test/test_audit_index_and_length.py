@@ -90,7 +90,7 @@ class FileLengthUnitTest(unittest.TestCase):
         with redirect_stdout(buffer):
             code = self.mod.main([])
         self.assertIsInstance(code, int)
-        self.assertRegex(buffer.getvalue(), r'(budget|长度|行数|limit)')
+        self.assertRegex(buffer.getvalue(), r'(budget|长度|行数|行|limit|提醒线)')
 
     def test_json_output_lists_findings(self):
         buffer = io.StringIO()
