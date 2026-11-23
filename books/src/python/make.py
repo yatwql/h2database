@@ -229,7 +229,7 @@ OPTIONAL_TOOLS = {
     'pandoc': 'render/to_epub.py',
     'playwright': 'render/to_pdf.py',
     'pypdf': 'to_pdf.py, pdf_toc_links.py, verify_pdf.py',
-    'defusedxml': 'verify_epub.py (optional XML hardening)',
+    'defusedxml': 'verify_epub.py (XML parsing; required)',
 }
 
 

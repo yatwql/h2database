@@ -32,6 +32,7 @@ import argparse
 import json
 import os
 import posixpath
+import re
 import sys
 import zipfile
 from urllib.parse import unquote
@@ -47,13 +48,12 @@ NS_NCX = {'ncx': 'http://www.daisy.org/z3986/2005/ncx/'}
 def parse_xml(data: bytes) -> ElementTree.Element:
     """Parse EPUB XML with entity expansion disabled.
 
-    Prefers defusedxml when installed; otherwise falls back to ElementTree on
-    data this toolchain produced itself (pandoc output, no external entities).
+    defusedxml is required, not optional: an EPUB is untrusted input even when this
+    toolchain produced it, and a verification step that lowers its own guard is
+    worth less than the check it performs.
     """
-    try:
-        from defusedxml import ElementTree as SafeET  # type: ignore[import-not-found]
-    except ImportError:
-        return ElementTree.fromstring(data)  # nosec B314 - self-generated EPUB
+    from defusedxml import ElementTree as SafeET
+
     return SafeET.fromstring(data)
 
 class Report:
@@ -97,7 +97,34 @@ def verify(epub_path: str) -> Report:
         manifest, spine = _check_package(report, opf)
         _check_resolution(report, manifest, spine, names, opf_dir)
         _check_navigation(report, archive, manifest, names, opf_dir)
+        _check_chapters(report, archive, names)
     return report
+
+
+CHAPTER_FILE = re.compile(r'.*/ch\d+\.xhtml$')
+H1 = re.compile(r'<h1[\s>]')
+
+
+def _check_chapters(report: Report, archive: zipfile.ZipFile, names: list[str]) -> None:
+    """One h1 per body file.
+
+    A chapter file is what pandoc makes of a level-one heading, so a file with no
+    h1 is content that lost its title and a file with two was split on the wrong
+    heading — the defect that once put a figure caption in the navigation.
+    """
+    bodies = sorted(n for n in names if CHAPTER_FILE.match(n))
+    if not bodies:
+        report.add('CHAPTERS', False, 'no chapter files')
+        return
+    offenders = []
+    for name in bodies:
+        count = len(H1.findall(archive.read(name).decode('utf-8', 'ignore')))
+        if count != 1:
+            offenders.append(f'{posixpath.basename(name)} has {count}')
+    if offenders:
+        report.add('CHAPTERS', False, ', '.join(offenders))
+    else:
+        report.add('CHAPTERS', True, f'{len(bodies)} chapter files, one h1 each')
 
 
 def _open_archive(report: Report, epub_path: str):

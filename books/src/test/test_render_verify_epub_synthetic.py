@@ -78,7 +78,7 @@ class EpubVerifySyntheticTest(unittest.TestCase):
                 add('META-INF/container.xml', container)
             add('OEBPS/content.opf', opf_text if opf_text is not None else opf())
             if with_ch1:
-                add('OEBPS/text/ch1.xhtml', '<html><body>c</body></html>')
+                add('OEBPS/text/ch1.xhtml', '<html><body><h1>c</h1></body></html>')
             if nav is not None:
                 add('OEBPS/nav.xhtml', nav)
             if ncx_text is not None:
