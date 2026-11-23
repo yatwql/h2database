@@ -19,7 +19,7 @@ from pypdf.generic import (
     NameObject,
 )
 
-TAGS = ('layer:infra', 'tier:slow')
+TAGS = ('layer:infra', 'tier:fast')  # fake chromium engine: no browser
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
