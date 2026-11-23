@@ -41,7 +41,9 @@ _fsutil.pin_stdout_utf8()
 # narrative as `详见 §X.Y`, which is the cross-reference idiom enforced by
 # structure.py. Decision points are short prose hooks the author then
 # expands with figures and source-code excerpts.
-CASE_STUDY_CONFIG = _config.book_path('case-studies.toml')
+def case_study_config() -> str:
+    """Where this book keeps its case-study input, resolved when used."""
+    return _config.book_path('case-studies.toml')
 
 
 def load_scenarios() -> dict[str, list[tuple[str, str, str]]]:
@@ -54,12 +56,12 @@ def load_scenarios() -> dict[str, list[tuple[str, str, str]]]:
     import tomllib  # stdlib only from 3.11 on; imported where it is used
 
     try:
-        with open(CASE_STUDY_CONFIG, 'rb') as fh:
+        with open(case_study_config(), 'rb') as fh:
             data = tomllib.load(fh)
     except FileNotFoundError:
         return {}
     except tomllib.TOMLDecodeError as exc:
-        raise SystemExit(f'error: invalid TOML in {CASE_STUDY_CONFIG}: {exc}') from exc
+        raise SystemExit(f'error: invalid TOML in {case_study_config()}: {exc}') from exc
     out: dict[str, list[tuple[str, str, str]]] = {}
     for name, scenario in (data.get('scenarios') or {}).items():
         out[name] = [(step.get('component', ''), step.get('anchor', ''),

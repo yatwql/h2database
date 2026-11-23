@@ -28,15 +28,16 @@ def baseline_dir() -> str:
 
 
 def path_for(name: str) -> str:
-    """Baseline file for a gate.
+    """Baseline file for a gate, resolved through the active book.
 
-    `base.json [baselines]` is authoritative; a gate without an entry falls back
-    to `<name>-findings.json`, so adding a baseline stays a config decision
-    rather than a code one.
+    `base.json [baselines]` is authoritative and `Config.baseline_path` scopes the
+    answer to the current edition; a gate without an entry falls back to
+    `<name>-findings.json`, so adding a baseline stays a config decision rather
+    than a code one.
     """
-    configured = _config.BASE_POLICY.get('baselines', {}).get(name.replace('-', '_'))
-    if configured:
-        return os.path.join(_config.BOOK_ROOT, str(configured))
+    key = name.replace('-', '_')
+    if key in (_config.BASE_POLICY.get('baselines') or {}):
+        return _config.current().baseline_path(key)
     return os.path.join(baseline_dir(), f'{name}-findings.json')
 
 

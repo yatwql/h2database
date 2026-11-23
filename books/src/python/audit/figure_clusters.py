@@ -38,8 +38,6 @@ from lib import _config, _errors, _fsutil, _mdutil
 _fsutil.pin_stdout_utf8()
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DOCS_DIR = _config.BOOK_ROOT
-MS_DIR = _config.MANUSCRIPT_DIR
 
 FIG_RE = _mdutil.FIGURE_CAPTION_RE
 
@@ -159,8 +157,8 @@ def main(argv: list[str]) -> int:
                         help='only print clusters lacking a bridge')
     args = parser.parse_args(argv)
 
-    paths = sorted(glob(os.path.join(MS_DIR, 'ch*.md')))
-    paths.extend(sorted(glob(os.path.join(MS_DIR, 'appendix-*.md'))))
+    paths = sorted(glob(os.path.join(_config.MANUSCRIPT_DIR, 'ch*.md')))
+    paths.extend(sorted(glob(os.path.join(_config.MANUSCRIPT_DIR, 'appendix-*.md'))))
 
     total_clusters = 0
     total_bridged = 0
@@ -179,7 +177,7 @@ def main(argv: list[str]) -> int:
             'total_clusters': total_clusters,
             'bridged': total_bridged,
             'unbridged': total_clusters - total_bridged,
-            'files': {os.path.relpath(p, DOCS_DIR).replace(os.sep, '/'): cl
+            'files': {os.path.relpath(p, _config.BOOK_ROOT).replace(os.sep, '/'): cl
                       for p, cl in by_file.items()},
         }
         print(json.dumps(payload, ensure_ascii=False, indent=2))
@@ -191,7 +189,7 @@ def main(argv: list[str]) -> int:
           f'待桥接={total_clusters - total_bridged}')
     print('=' * 72)
     for path, cl in sorted(by_file.items()):
-        rel = os.path.relpath(path, DOCS_DIR).replace(os.sep, '/')
+        rel = os.path.relpath(path, _config.BOOK_ROOT).replace(os.sep, '/')
         items = cl
         if args.has_bridge:
             items = [c for c in cl if c['bridged']]

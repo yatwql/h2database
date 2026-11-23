@@ -72,8 +72,9 @@ class TestFigureClusterHelpers(FixtureCase):
         clusters = self.module('figure_clusters')
         patched = dict(clusters._config.STYLE_POLICY)
         patched['clusters'] = {'min_figures': 2, 'window_lines': 12}
+        # the module reads the manuscript directory through the active book, which
+        # this fixture already is, so only the policy needs patching
         with mock.patch.object(clusters._config, 'STYLE_POLICY', patched), \
-             mock.patch.object(clusters, 'MS_DIR', os.path.join(self.root, 'data', 'manuscript')), \
              mock.patch('sys.stdout', new=io.StringIO()) as out:
             clusters.main(['--json'])
         payload = json.loads(out.getvalue())

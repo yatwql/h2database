@@ -46,8 +46,6 @@ from lib import _config, _errors, _fsutil
 _fsutil.pin_stdout_utf8()
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DOCS_DIR = _config.BOOK_ROOT
-MS_DIR = _config.MANUSCRIPT_DIR
 
 # Match `## N.X 延伸思考` where N is the chapter number and X is the local
 # subsection index. We accept any subsection number — placement enforcement
@@ -224,7 +222,7 @@ def audit_file(path: str) -> dict:
     lines = _fsutil.read_lines(path)
     slots = parse_chapter_slots(lines)
     file_report = {
-        'file': os.path.relpath(path, DOCS_DIR).replace(os.sep, '/'),
+        'file': os.path.relpath(path, _config.BOOK_ROOT).replace(os.sep, '/'),
         'slots': [],
         'issues': [],
     }
@@ -379,9 +377,9 @@ def main(argv: list[str]) -> int:
         return 0
 
     if args.target:
-        paths = [os.path.join(MS_DIR, args.target)]
+        paths = [os.path.join(_config.MANUSCRIPT_DIR, args.target)]
     else:
-        paths = sorted(glob(os.path.join(MS_DIR, 'ch*.md')))
+        paths = sorted(glob(os.path.join(_config.MANUSCRIPT_DIR, 'ch*.md')))
 
     reports = [audit_file(p) for p in paths if os.path.isfile(p)]
 

@@ -31,12 +31,27 @@ _fsutil.pin_stdout_utf8()
 docs_dir = _config.BOOK_ROOT
 src_dir = _config.MANUSCRIPT_DIR
 dist_dir = _config.DIST_DIR
-LANG = _config.language()
-LANG_TERMS = LANG.get('terms', {})
-REFERENCE_LINE = LANG_TERMS.get('reference_line', '术语参考')
-GLOSSARY_TITLE = LANG_TERMS.get('glossary_title', '术语表')
-GLOSSARY_LINK = LANG_TERMS.get('glossary_link', 'back/glossary.md')
-glossary_path = os.path.join(src_dir, GLOSSARY_LINK)
+def _lang_terms() -> dict:
+    """The active book's language pack, read when asked.
+
+    Read through the book rather than captured at import: one process may serve
+    more than one book, and a module-level copy would keep answering for the
+    first one.
+    """
+    return (_config.language().get('terms') or {})
+
+
+def reference_line() -> str:
+    return _lang_terms().get('reference_line', '术语参考')
+
+
+def glossary_title() -> str:
+    return _lang_terms().get('glossary_title', '术语表')
+
+
+def glossary_link() -> str:
+    return _lang_terms().get('glossary_link', 'back/glossary.md')
+glossary_path = os.path.join(src_dir, glossary_link())
 
 
 
@@ -420,8 +435,8 @@ def main(argv: list[str]) -> int:
 
     # Default: insert the glossary reference into unannotated chapters.
     chapter_files = sorted(glob.glob(os.path.join(src_dir, 'ch[0-9]*.md')))
-    glossary_ref = (f'> **{REFERENCE_LINE}**: 本章涉及的专业术语详见书末'
-                    f'[{GLOSSARY_TITLE}]({GLOSSARY_LINK})。\n')
+    glossary_ref = (f'> **{reference_line()}**: 本章涉及的专业术语详见书末'
+                    f'[{glossary_title()}]({glossary_link()})。\n')
     count = 0
 
     for fpath in chapter_files:

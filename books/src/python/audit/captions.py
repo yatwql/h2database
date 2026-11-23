@@ -50,8 +50,6 @@ from lib import _baseline, _config, _errors, _fsutil, _mdutil
 _fsutil.pin_stdout_utf8()
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DOCS_DIR = _config.BOOK_ROOT
-MS_DIR = _config.MANUSCRIPT_DIR
 
 # Verb dictionary — heuristic recognition. A caption "passes the verb gate" if
 # its leading two characters match any of these. Keep this list close to the
@@ -86,7 +84,7 @@ class Violation:
 
     def to_record(self) -> dict:
         d = asdict(self)
-        d['file'] = os.path.relpath(self.file, DOCS_DIR).replace(os.sep, '/')
+        d['file'] = os.path.relpath(self.file, _config.BOOK_ROOT).replace(os.sep, '/')
         return d
 
 def _strip_fences(lines: list[str]) -> list[bool]:
@@ -136,10 +134,10 @@ def scan(threshold: dict, target_glob: str | None = None) -> list[Violation]:
     """Walk every .md file under books/ and return ordered violations."""
     paths: list[str] = []
     if target_glob:
-        paths = sorted(glob(os.path.join(DOCS_DIR, target_glob)))
+        paths = sorted(glob(os.path.join(_config.BOOK_ROOT, target_glob)))
     else:
-        paths.extend(sorted(glob(os.path.join(MS_DIR, 'ch*.md'))))
-        paths.extend(sorted(glob(os.path.join(MS_DIR, 'appendix-*.md'))))
+        paths.extend(sorted(glob(os.path.join(_config.MANUSCRIPT_DIR, 'ch*.md'))))
+        paths.extend(sorted(glob(os.path.join(_config.MANUSCRIPT_DIR, 'appendix-*.md'))))
 
     out: list[Violation] = []
     for path in paths:
@@ -182,7 +180,7 @@ def render_report(violations: Iterable[Violation], threshold: dict) -> int:
     print('=' * 72)
 
     for file, items in sorted(by_file.items()):
-        rel = os.path.relpath(file, DOCS_DIR).replace(os.sep, '/')
+        rel = os.path.relpath(file, _config.BOOK_ROOT).replace(os.sep, '/')
         print(f'\n## {rel}  ({len(items)} 项)')
         for v in items:
             print(f'  L{v.line:>5} 图 {v.fig_id:<6} [{v.kind}] '
@@ -214,7 +212,7 @@ def main(argv: list[str]) -> int:
     threshold = THRESHOLDS[args.threshold]
     violations = scan(threshold, args.target)
 
-    keys = {f'{os.path.relpath(v.file, DOCS_DIR)}:{v.fig_id}' for v in violations}
+    keys = {f'{os.path.relpath(v.file, _config.BOOK_ROOT)}:{v.fig_id}' for v in violations}
     if args.update_baseline:
         path = _baseline.save('captions', keys,
                               'Reviewed caption backlog: figures written before the verb rule.')
@@ -223,7 +221,7 @@ def main(argv: list[str]) -> int:
     if not args.diff:
         new, stale = _baseline.split('captions', keys)
         violations = [v for v in violations
-                      if f'{os.path.relpath(v.file, DOCS_DIR)}:{v.fig_id}' in new]
+                      if f'{os.path.relpath(v.file, _config.BOOK_ROOT)}:{v.fig_id}' in new]
     else:
         new, stale = set(), set()
 
