@@ -196,6 +196,7 @@
 - 每章末尾的「延伸思考」（v6.0 起加入）是引导读者将本章知识转化为可应用思维的工具，配合「延展阅读」中的官方文档与外部参考链接使用效果最佳。
 - 附录 A 的端到端案例建议在通读完第1-10章后阅读——它把分散在各章的步骤按时间顺序串成主线，能在很短时间内帮助读者建立对 H2 整体行为的直观理解。
 - 配合源码阅读时推荐使用 IntelliJ IDEA 或 Eclipse 等支持"按行号跳转"的 IDE，可极大提升源码引用的查阅效率。
+
 # 前言
 
 ## 写作动机
@@ -300,6 +301,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 ---
 
 *本书为源码分析文档，非 H2 Database 官方文档。书中分析基于特定版本源码，可能与您使用的版本存在差异。当本书内容与官方文档冲突时，请以官方文档为准。*
+
 # H2 Database Engine Source Code Analysis
 
 ## H2 数据库引擎源码剖析
@@ -328,6 +330,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 共 10 个经典算法 · 598 幅 ASCII 示意图 · 232 处源码引用
 
 ---
+
 # 第1章 总体架构
 
 > **本章导读**: 本章介绍 H2 Database 的发展历史、核心特性和技术定位，并与其他嵌入式数据库进行对比。接着详细剖析 H2 的八层架构，从 JDBC 接入层到底层文件系统，逐层分析各模块的职责和类设计。
@@ -2540,6 +2543,7 @@ MVStore 的引入不仅仅是性能的提升，更重要的是它为 H2 未来�
 - 本书第3章《核心包结构详解》 — 各层对应包的详细类分析
 - 本书第4-5章《核心模块与流程》 — Command/Expression/Table-Index 层的流程详解
 - 本书第6章《H2 数据库核心算法分析》 — B-Tree、MVCC 等底层算法基础
+
 # 第3章 核心包结构详解
 
 > **本章导读**: 本章对 H2 的 `org.h2` 主包按功能层次进行拆解，逐层分析 JDBC、Engine、Command、Expression、Table/Index、MVStore、FileSystem 和 Server 共八个层的包结构、核心类职责和依赖关系。
@@ -4843,6 +4847,7 @@ org.h2.tools            │ ~20   │ Server, Shell, Recover
 - 本书第2章《分层模块划分》 — 各层的抽象职责与交互关系
 - 本书第4-5章《核心模块与流程》 — Command/Expression 模块的详细分析
 - 本书第9章《持久化引擎深度解析》 — MVStore 和 FileSystem 层的深入分析
+
 # 第4章 核心模块深度解读
 
 > **本章导读**: 本章深入分析 H2 的 Command、Expression 和 Table/Index 三个核心层的模块设计和类职责。同时介绍 TransactionStore 事务存储和 MVMap 数据结构的实现机制。
@@ -5073,6 +5078,7 @@ private final Set<SessionLocal> userSessions;
   └───────┘
 ```
 **图 4-7: 方法调用层次**
+
 ### 4.1.5 元数据锁 (Meta Lock)
 如图 4-7 所示，Database 内部维护了一个用于元数据并发控制的锁机制，通过 `META_LOCK_DEBUGGING` ThreadLocal 调试跟踪。
 
@@ -7730,6 +7736,7 @@ COMMIT 流程从 SessionLocal.commit() 发起，经 Transaction 层委派到 Tra
 **图 5-22: MVCC 可见性规则**
 
 ### 5.5.3 关键代码引用
+
 #### 5.5.3.1 CommitDecisionMaker 关键代码
 ```java
 // CommitDecisionMaker.java:25
@@ -7928,6 +7935,7 @@ final class CommitDecisionMaker<V> extends MVMap.DecisionMaker<VersionedValue<V>
 ROLLBACK 流程与 COMMIT 对称但方向相反，其核心逻辑是从 undo log 中逆序遍历变更记录，逐条恢复旧值。入口为 SessionLocal.rollback()，经 Transaction.rollback() 委派到 TransactionStore.rollbackTo()。关键操作分两步：状态标记 — 将事务状态设为 STATUS_ROLLED_BACK，阻止后续读取；数据恢复 — 从最新 logId 到最旧反向遍历 undo log，对每条记录判断：若 oldValue 为 null 说明是 INSERT，执行 REMOVE 删除此行；若 oldValue 非 null 说明是 UPDATE，执行 PUT 恢复旧值。这种逆序恢复的设计保证了依赖顺序的正确性——先恢复最新变更，避免中间状态的引用冲突。
 
 ### 5.6.3 关键代码引用
+
 #### 5.6.3.1 RollbackDecisionMaker 关键代码
 ```java
 // RollbackDecisionMaker.java:34-48
@@ -8337,6 +8345,7 @@ Step 6: 截断文件
 Chunk 压缩整理是 MVStore 在 Chunk 层面执行的碎片回收流程，与 5.7 节的全局空间整理 (Compaction) 协同工作。核心流程分六步：识别完全死亡 Chunk (pageCountLive == 0) 直接释放空间；识别部分死亡 Chunk (0 < 存活 < 总数) 需重写；按 collectPriority 函数（基于填充率、大小、位置三因子加权）计算压缩优先级；将存活 page 复制到新 Chunk 并更新 MVMap root reference；通过 compactMoveChunks 将文件头部的碎片 Chunk 移动到文件尾部；最后 truncate 截断文件回收空间。doHousekeeping() 后台线程周期执行此流程，关键判断条件为 isFragmented() 与 fillRate 阈值组合。
 
 ### 5.8.3 关键代码引用
+
 #### 5.8.3.1 后台自动整理 (doHousekeeping)
 ```java
 // RandomAccessStore.java:720
@@ -8560,6 +8569,7 @@ TransactionMap.get(key)
 **图 5-40: 读已提交隔离级别示意图**
 
 ### 5.9.3 关键代码引用
+
 #### 5.9.3.1 MVMap.get() — B-Tree 读取路径
 ```text
 MVMap.get(key)
@@ -8818,6 +8828,7 @@ MVSecondaryIndex.find(session, searchRow)
 
 > 本文档基于 H2 Database 源码 (master branch, commit c39970fff) 撰写。
 > 所有路径均相对于 `org/h2/`。
+
 # 第6章 H2 数据库核心算法分析
 
 > **本章导读**: 本章是全书最长的章节，覆盖 H2 使用的 10 个核心算法，分为数据结构基础篇（6.1-6.3）、存储算法篇（6.4-6.7）和查询算法篇（6.8-6.10）三篇。本篇（6.1-6.3）介绍 B-Tree 索引结构、Copy-on-Write 版本管理和 MVCC 多版本并发控制这三个基础数据结构与算法，它们是理解后续存储和查询算法的前提。
@@ -16298,6 +16309,7 @@ H2 的合并只在"删除后仅剩一个子节点"时触发（树深度折叠）
 ```
 
 ---
+
 ## 6.8 本章小结
 
 Chunk 的压缩整理、LIRS 缓存替换、Free Space 分配回收和 MVStore 平衡机制共同构成了 MVStore 存储引擎的自动维护体系。Chunk 的 append-only 写入和定期 compact 平衡了写入性能和空间利用率；LIRS 通过区分近期访问和频繁访问的 page 来抵抗扫描污染；Free Space 的空间位图管理和 MVStore 的自动平衡确保存储系统在长时间运行后仍能保持稳定性能。
@@ -28044,6 +28056,7 @@ EXPLAIN 输出的注释部分是理解 H2 执行计划的关键。注释格式�
 - 本书第6章§6.8《Optimizer — 查询优化器》 — 优化器连接顺序选择算法
 - 本书第6章§6.10《Parser — 递归下降解析》 — SQL 解析的底层实现
 - 本书第5章§5.1-5.4 — DML 流程入口与 Command 层的关系
+
 # 第9章 持久化引擎深度解析
 
 > **本章导读**: 本章深入分析 H2 的 MVStore 持久化引擎，从总体架构、Chunk 文件布局、Page 格式到检查点机制和文件格式（File Header、Chunk、Page 三级二进制布局）。MVStore 是 H2 v2.0 重构的核心，理解本章内容对于掌握 H2 的性能特性和存储原理至关重要。
@@ -34665,6 +34678,7 @@ H2 官方文档在《Advanced》一章中专门讨论了 ACID 的支持范围（
 - **VersionedValue 序列化格式变更**：序列化从 "先写 operationId varLong" 改为 "先写 flags 字节"——根据 flags 决定后续字段（operationId/entryId/value/committedValue）的存在。已持久化的旧版本（v2.4.240）数据文件不兼容此格式。**架构影响**：此变更意味着 v2.4.249-SNAPSHOT 无法直接读取 v2.4.240 创建的 MVStore 数据文件，需通过数据迁移或 DDL 重新导入。
 - **事务恢复排序**：非正常关闭后的残余事务按提交序列号（commitment order）排序注册，确保重放顺序正确。
 - **死锁修复**：`saveChunkMetadataChanges()` 去除忙等轮询；`acceptChunkOccupancyChanges()` 将未分配 chunk 的 `RemovedPageInfo` 压回队列。`Transaction.waitForThisToEnd()` 新增 `STATUS_COMMITTED` 检查。
+
 # 第11章 核心源代码导读指引
 
 > **本章导读**: 本章为希望深入源码学习的读者提供实用的开发指南，包括高效的源码阅读路线、调试环境搭建方法和 H2 测试框架的使用说明。
@@ -35489,7 +35503,6 @@ H2 官方文档在《Advanced》一章中专门讨论了 ACID 的支持范围（
 ```
 
 **图 11-6: 阅读阶段文件依赖与交叉引用图**
-============================================================
 
 ```text
   阶段 1 ──── 阶段 2 所需的基础知识
@@ -37109,6 +37122,7 @@ H2 源码研读是一个循序渐进的过程。第 11 章提供了系统性的�
 - 快速入门与命令行指南：H2 官方文档《Tutorial》(`h2/src/docsrc/html/tutorial.html`)
 - H2 官方文档《Advanced》(`h2/src/docsrc/html/advanced.html#sql_injection`) — SQL 注入防护配置
 - 本书第1章§1.1 — H2 核心特性对比总览
+
 # 附录 A：端到端案例研究
 
 > 本附录用三个端到端案例把分散在第 1-10 章的关键论述连成单线叙事：
@@ -38554,6 +38568,7 @@ B-Tree 根重建后，`TransactionStore.open()` 被调用。它在 metaMap 中�
 | `IndexCondition.cloneWithIndexColumns()` | `org/h2/index/IndexCondition.java:559` |
 | `IndexCursor.canUseIndexForIn()` | `org/h2/index/IndexCursor.java:318` |
 | `LinkedIndex.add()` | `org/h2/index/LinkedIndex.java:61` |
+
 # 附录 B：源码版本变更说明（v2.4.240 → v2.4.249-SNAPSHOT）
 
 > 本书以 H2 v2.4.249-SNAPSHOT 为基础源码版本进行分析。撰写期间，
@@ -38618,6 +38633,7 @@ B-Tree 根重建后，`TransactionStore.open()` 被调用。它在 metaMap 中�
 | `Interval.equals()` | `org/h2/api/Interval.java:617` |
 | `IntervalQualifier.getTypeName()` | `org/h2/api/IntervalQualifier.java:253` |
 | `H2Type.array()` | `org/h2/api/H2Type.java:258` |
+
 # 附录 C：术语表
 
 > 本书核心术语的中英文对照、详细定义、章节索引与相关术语。条目按字母顺序排列。每条遵循"释义 + 章节 + 相关"三段结构，便于读者从任一入口跳转到完整讨论。
@@ -39373,6 +39389,7 @@ B-Tree 根重建后，`TransactionStore.open()` 被调用。它在 metaMap 中�
 - **NonLeaf**: B-Tree 的非叶页面。只存放键与子页引用，参与查找路径但不下沉数据；与 `Leaf` 页面共同构成索引树。
   **章节**：第9章 §9.2（B-Tree 与 Page 结构）
   **相关**：[[Tree]]、[[RootReference]]
+
 # 附录 D：概念索引
 
 > 关键概念、API 类名和算法名的章节位置索引。条目按字母顺序排列；中文词条单列于末尾。
@@ -39961,6 +39978,7 @@ B-Tree 根重建后，`TransactionStore.open()` 被调用。它在 metaMap 中�
 ---
 
 *共收录 300+ 条索引（含主条目与子条目）。每个主条目指向首次出现或最相关的章节；子条目对主题做更细粒度的章节分布；`see also` 行连接概念上相关的索引项，便于读者跨章探索。*
+
 # 附录 E：参考文献
 
 > 本书在分析和撰写过程中参考的官方文档、学术论文和技术资料。分类整理如下。

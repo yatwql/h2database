@@ -187,7 +187,46 @@ strong { font-weight: 600; }
 css_path = os.path.join(dist_dir, '_epub.css')
 _fsutil.write_text(css_path, EPUB_CSS)
 
+
+
+# Two markdown rules decide where pandoc's `--split-level=1` cuts a chapter, and
+# both are easy to violate by accident in a generated document:
+#
+#   1. an ATX heading needs a blank line before it — a `# 第11章` glued under a
+#      list item is read as list continuation, so that chapter never starts a file;
+#   2. a `====` run under a line makes it a setext H1 — captions written as a bold
+#      line with a decorative underline therefore cut a chapter in half.
+#
+# Both are fixed generically here: no book-specific text, only the conventions.
+ATX_HEADING = re.compile(r'^#{1,6}[ \t]+')
+UNDERLINE = re.compile(r'^[ \t]*={3,}[ \t]*$')
+SHORT_BOLD = re.compile(r'^[ \t]*(?:\*\*|__)[^*_]{1,120}(?:\*\*|__)[ \t]*$')
+
+
+def normalise_headings(text: str) -> tuple[str, dict]:
+    """Blank-line before ATX headings, drop decorative underlines under captions."""
+    out: list[str] = []
+    spaced = dropped = 0
+    for line in text.splitlines():
+        if UNDERLINE.match(line) and out and SHORT_BOLD.match(out[-1]):
+            # the caption stays as a bold paragraph; only its underline goes, so
+            # pandoc stops reading it as a setext H1
+            dropped += 1
+            continue
+        if ATX_HEADING.match(line) and out and out[-1].strip():
+            out.append('')
+            spaced += 1
+        out.append(line)
+    return '\n'.join(out), {'spaced': spaced, 'dropped': dropped}
+
+
 # ── Step 5: Run pandoc ───────────────────────────────────────────────────
+_epub_text, _fixes = normalise_headings(_fsutil.read_text(merged_md))
+if _fixes['spaced'] or _fixes['dropped']:
+    _fsutil.write_text(merged_md, _epub_text)
+    print(f"  Headings normalised: {_fixes['spaced']} missing blank line(s), "
+          f"{_fixes['dropped']} decorative underline(s)")
+
 print(f"\n=== Step 2: Converting {merged_md} -> EPUB ===")
 
 cmd = [
