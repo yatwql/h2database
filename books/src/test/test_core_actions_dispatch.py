@@ -50,6 +50,45 @@ class ActionDispatchTest(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn('down', text)
 
+    def test_status_survives_an_llm_layer_that_cannot_answer(self):
+        class Boom(Exception):
+            pass
+
+        with mock.patch.object(self.actions._llm, 'status', side_effect=Boom('无配置')):
+            self.actions._llm.LLMError = Boom
+            code, text = self.actions.status()
+        self.assertEqual(code, 0, text[-200:])
+        self.assertIn('llm       :', text)
+
+    def test_the_volume_line_says_when_there_is_nothing_to_compare(self):
+        code, line = self.actions._volume_line('not json')
+        self.assertEqual(code, 0)
+        self.assertIn('无基线可比', line)
+
+    def test_the_volume_line_flags_a_shrunk_manuscript(self):
+        code, line = self.actions._volume_line('{"count": 2}')
+        self.assertEqual(code, 1)
+        self.assertIn('2 项低于基线', line)
+        self.assertIn('--update-baseline', line)
+
+    def test_the_estimate_names_the_price_and_the_day_so_far(self):
+        guess = {'model': 'm', 'prompt_tokens': 10, 'max_tokens': 20,
+                 'cost_low': 0.001, 'cost_high': 0.002, 'currency': 'USD'}
+        with mock.patch.object(self.actions._llm, 'estimate', return_value=guess), \
+                mock.patch.object(self.actions._llm, 'today_cost', return_value=0.5):
+            line = self.actions.estimate_line('写一段小结')
+        self.assertIn('≈ 0.0010-0.0020 USD', line)
+        self.assertIn('今日已用', line)
+
+    def test_an_unpriced_model_says_so_instead_of_inventing_a_number(self):
+        guess = {'model': '', 'prompt_tokens': 1, 'max_tokens': 2,
+                 'cost_low': None, 'cost_high': None, 'currency': 'USD'}
+        with mock.patch.object(self.actions._llm, 'estimate', return_value=guess), \
+                mock.patch.object(self.actions._llm, 'today_cost', return_value=0.0):
+            line = self.actions.estimate_line('写一段小结')
+        self.assertIn('未定价', line)
+        self.assertNotIn('今日已用', line)
+
     def test_analyze_runs_three_stage_scripts_then_the_volume_check(self):
         calls = []
 
