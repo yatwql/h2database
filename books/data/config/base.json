@@ -44,7 +44,8 @@
     "function_length_warn": 60,
     "print_scale": 1.12,
     "pdf_split_by_chapter": true,
-    "pdf_bytes_per_page": 24576
+    "pdf_bytes_per_page": 24576,
+    "layout_spacing_scale": 0.7
   },
   "logging": {
     "level": "INFO",

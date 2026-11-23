@@ -343,7 +343,21 @@ LAYOUT_DEFAULTS = {
     'layout_code_px': 10,
     'layout_code_line_height': 1.0,
     'layout_column_px': 960,
+    # Vertical rhythm, in em: relative values follow the type scale, so a book that
+    # changes its body size keeps its proportions. `layout_spacing_scale` multiplies
+    # all of them at once — the single knob a calibration run is allowed to move.
+    'layout_spacing_scale': 1.0,
+    'layout_para_gap_em': 0.8,
+    'layout_heading_gap_before_em': 1.5,
+    'layout_heading_gap_after_em': 0.5,
+    'layout_list_gap_em': 0.5,
+    'layout_table_gap_em': 1.0,
 }
+
+
+# numeric defaults, so a malformed config value still yields a usable number
+DEFAULT_NUMBERS = {k: float(v) if isinstance(v, (int, float)) else 0.0
+                   for k, v in LAYOUT_DEFAULTS.items()}
 
 
 def _layout_value(key):
@@ -365,13 +379,41 @@ def apply_layout(css: str) -> str:
     column = _layout_value('layout_column_px')
     page_size = _layout_value('layout_page_size')
     margin = _layout_value('layout_page_margin')
+
+    def number(key: str, fallback: float) -> float:
+        """Threshold read from JSON may be a string or missing; never crash on it."""
+        raw = _layout_value(key)
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            return fallback
+
+    def gap(key: str) -> str:
+        """One spacing value, scaled by the global multiplier and printed in em."""
+        base = number(key, DEFAULT_NUMBERS[key])
+        scale = number('layout_spacing_scale', 1.0)
+        return f'{round(base * scale, 3)}em'
+
+    para = gap('layout_para_gap_em')
+    head_before = gap('layout_heading_gap_before_em')
+    head_after = gap('layout_heading_gap_after_em')
+    list_gap = gap('layout_list_gap_em')
+    table_gap = gap('layout_table_gap_em')
     return (css
             .replace('  pre { font-size: 10px; }',
                      f'  pre {{ font-size: {code}px; line-height: {lead}; }}')
             .replace('  @page { size: A4; margin: 24mm 20mm; }',
                      f'  @page {{ size: {page_size}; margin: {margin}; }}')
             .replace('flex: 1; max-width: 960px;', f'flex: 1; max-width: {column}px;')
-            .replace('body {\n    font-size: 16px;', f'body {{\n    font-size: {body}px;'))
+            .replace('body {\n    font-size: 16px;', f'body {{\n    font-size: {body}px;')
+            .replace('p { margin: 0.8em 0; text-align: justify; }',
+                     f'p {{ margin: {para} 0; text-align: justify; }}')
+            .replace('margin-top: 1.5em; margin-bottom: 0.5em; font-family:',
+                     f'margin-top: {head_before}; margin-bottom: {head_after}; font-family:')
+            .replace('ul, ol { margin: 0.5em 0; padding-left: 2em; }',
+                     f'ul, ol {{ margin: {list_gap} 0; padding-left: 2em; }}')
+            .replace('table { border-collapse: collapse; width: 100%; margin: 1em 0; }',
+                     f'table {{ border-collapse: collapse; width: 100%; margin: {table_gap} 0; }}'))
 
 
 STYLE = apply_layout(apply_font_stacks(STYLE))
