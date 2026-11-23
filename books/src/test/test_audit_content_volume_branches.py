@@ -126,6 +126,81 @@ class ContentVolumeTest(unittest.TestCase):
                    'delivered': {'pdf_pages': 12, 'epub_bytes': 1200}}
         self.assertEqual(self.mod.compare(baseline, current), [])
 
+    # -- helpers the mutations exposed ------------------------------------
+    def test_a_failing_git_command_yields_no_text(self):
+        done = mock.Mock(returncode=1, stdout=' M dirty\n', stderr='')
+        with mock.patch.object(self.mod.subprocess, 'run', return_value=done):
+            self.assertEqual(self.mod._git('status', '--porcelain'), '')
+
+    def test_a_snapshot_label_must_match_exactly_one_ledger(self):
+        folder = os.path.join(self.root, 'data', 'baselines')
+        os.makedirs(folder, exist_ok=True)
+        for name in ('snapshot-2026-01-01-a.json', 'snapshot-2026-02-02-a.json'):
+            with open(os.path.join(folder, name), 'w', encoding='utf-8') as fh:
+                fh.write('{"files": {}}')
+        # no exact snapshot-a.json, and the dated ledgers tie: refuse to guess
+        self.assertIsNone(self.mod.from_snapshot('a'))
+
+    def test_a_dated_ledger_resolves_by_its_bare_label(self):
+        folder = os.path.join(self.root, 'data', 'baselines')
+        os.makedirs(folder, exist_ok=True)
+        with open(os.path.join(folder, 'snapshot-2026-01-01-a.json'), 'w',
+                  encoding='utf-8') as fh:
+            json.dump({'files': {'ch1-test.md': {'bytes': 10, 'lines': 1}}}, fh)
+        payload = self.mod.from_snapshot('a')
+        self.assertEqual(payload['source']['snapshot'], 'a')
+        self.assertEqual(payload['manuscript']['total']['bytes'], 10)
+
+    def test_a_baseline_is_ignored_when_the_profile_is_not_cold_start(self):
+        baseline_path = os.path.join(self.tmp.name, 'baseline.json')
+        with open(baseline_path, 'w', encoding='utf-8') as fh:
+            json.dump({'manuscript': manuscript(100000)}, fh)
+        with mock.patch.object(self.mod, 'PROFILE', 'baseline'):
+            code, out, _err = self.run_main('--baseline', baseline_path)
+        self.assertEqual(code, 1, out[-300:])
+        self.assertNotIn('cold-start', out)
+
+    # -- asymmetric inputs the mutations exposed --------------------------
+    def test_a_baseline_with_pdf_pages_but_no_current_pdf_is_fine(self):
+        baseline = {'manuscript': manuscript(),
+                    'delivered': {'pdf_pages': 100, 'epub_bytes': 1000}}
+        current = {'manuscript': manuscript(), 'delivered': {'epub_bytes': 1000}}
+        problems = self.mod.compare(baseline, current)
+        self.assertFalse(any('delivered PDF' in problem for problem in problems), problems)
+
+    def test_the_manuscript_file_list_drops_missing_entries(self):
+        missing = os.path.join(self.root, 'data', 'manuscript', 'gone.md')
+        with mock.patch.object(self.mod._config, 'chapter_files', return_value=['gone.md']), \
+                mock.patch.object(self.mod._config, 'front_matter', return_value=[]), \
+                mock.patch.object(self.mod._config, 'back_matter', return_value=[]):
+            files = self.mod.manuscript_files()
+        self.assertEqual(files, [])
+        self.assertNotIn(missing, files)
+
+    def test_a_baseline_with_a_delivered_size_but_no_current_one_is_fine(self):
+        baseline = {'manuscript': manuscript(),
+                    'delivered': {'pdf_pages': 10, 'epub_bytes': 1000}}
+        current = {'manuscript': manuscript(), 'delivered': {'pdf_pages': 10}}
+        problems = self.mod.compare(baseline, current)
+        self.assertFalse(any('EPUB' in problem for problem in problems), problems)
+
+    def test_an_accepted_shrink_is_recorded_instead_of_refused(self):
+        thin = {'manuscript': manuscript(500), 'delivered': {}}
+        thick = {'manuscript': manuscript(5000), 'delivered': {}}
+        target = os.path.join(self.tmp.name, 'reviewed.json')
+        clean = {'dirty': '', 'commit': 'abc1234', 'committed_at': '2026-01-01T00:00:00+08:00',
+                 'author': 'reviewer'}
+        with mock.patch.object(self.mod, 'provenance', return_value=clean), \
+                mock.patch.object(self.mod, 'load_baseline', return_value=thick), \
+                mock.patch.object(self.mod, 'baseline_path', return_value=target):
+            refused = self.mod.update_baseline(thin)
+            accepted = self.mod.update_baseline(thin, True, '删节版', '阿龙')
+        self.assertEqual((refused, accepted), (1, 0))
+        with open(target, encoding='utf-8') as fh:
+            payload = json.load(fh)
+        self.assertTrue(payload['accepted_shrinks'])
+        self.assertEqual(payload['reviewed']['by'], '阿龙')
+
     # -- main ------------------------------------------------------------
     def test_without_a_baseline_the_gate_says_how_to_establish_one(self):
         code, out, _err = self.run_main()

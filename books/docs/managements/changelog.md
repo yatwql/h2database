@@ -477,6 +477,14 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **④ 阈值边界表驱动**：新增 `test_threshold_boundaries.py`——图注长度在 strict/normal 两档的边界、
+图簇最小张数、ASCII 宽度预算（改配置文件而非改内存）、覆盖率红线与单文件下限的读入、
+体量下限比例的松紧两侧，外加一条「配置里没有孤儿键」的机检（键存在但没人读 = 阈值静默失效）。
+- **⑥ 变异抽查工具**：新增 `src/python/mutation_smoke.py`（评审用，不进提交门禁）——把 `src/python` 与
+`src/test` 复制到临时目录，逐条施加变异（`==`↔`!=`、`>=`→`>`、`True`↔`False`、`and`↔`or`，跳过注释与文档串），
+跑该模块的用例，报告**存活**的变异。首轮对 `audit/content_volume.py` 跑 10 条：5 条存活 → 补 5 条
+非对称输入的用例后降到 2 条（`content_volume.py` 的 `drops and not accept_shrink` 与交付物一侧的
+`'pdf_pages' in delivered and ...`），这两处已记入后续补测清单。
 - **③ 失败路径矩阵 + ⑤ 不变量测试**：新增 `test_failure_matrix.py`（九条拒绝路径一张表：
 `--book` 缺 book.toml、未声明版本、未知步骤、未知动作、`--force` 用错动作、两个互斥开关、
 `settings set` 缺值、TUI 的坏书根——每条断言「退出码 + 消息片段 + 无 traceback」）；

@@ -12,6 +12,7 @@
 | `books/scripts/` | 动词前缀 + 对象：`check-*` 验证（退出码决定成败）、`eval-*` 度量（出报告）、`new-*` 生成 | `check-fast.sh`、`eval-score.sh`、`new-book.sh` |
 | `src/python/<层>/` | 目录定类别、文件名写对象，不加动词前缀 | `audit/links.py`、`render/to_pdf.py` |
 | `src/python/lib/` | 内部模块用下划线前缀 | `lib/_config.py` |
+| `src/python/mutation_smoke.py` | 变异抽查（评审用）：把工具链与测试复制到临时目录，逐条施加条件/布尔变异并跑该模块的用例，列出存活的变异 | `python src/python/mutation_smoke.py --module audit/content_volume.py --tests test_audit_content_volume_branches.py` |
 
 `books/scripts/` 的文件名由 `audit/check_architecture.py` 机检：只允许下列前缀：
 `bookctl`、`launch`、`bootstrap`、`check`、`eval`、`new`、`test`、`release`、`install`
