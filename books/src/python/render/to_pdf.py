@@ -178,18 +178,27 @@ try:
         print(f"  Injected {len(headings_json)} heading markers")
 
         # Print to PDF
-        page.pdf(
-            path=pdf_path,
-            format='A4',
+        if bool(_config.THRESHOLDS.get('pdf_split_by_chapter', False)):
+            from render import pdf_split  # noqa: PLC0415 - optional path
+            pdf_split.render(page, pdf_path, {
+                'format': 'A4',
+                'print_background': True,
+                'display_header_footer': False,
+                'prefer_css_page_size': True,
+            })
+        else:
+                page.pdf(
+                path=pdf_path,
+                format='A4',
 
-            print_background=True,
-            display_header_footer=True,
-            header_template=('<div style="font-size:8px;color:#999;text-align:center;'
-                             'width:100%;border-bottom:1px solid #ddd;padding:2px 15mm;">'
-                             f'{_config.project("running_head")}</div>'),
-            footer_template='<div style="font-size:8px;color:#999;text-align:center;width:100%;border-top:1px solid #ddd;padding:4px 15mm;">第 <span class="pageNumber"></span> 页 / 共 <span class="totalPages"></span> 页</div>',
-            prefer_css_page_size=True,
-        )
+                print_background=True,
+                display_header_footer=True,
+                header_template=('<div style="font-size:8px;color:#999;text-align:center;'
+                                 'width:100%;border-bottom:1px solid #ddd;padding:2px 15mm;">'
+                                 f'{_config.project("running_head")}</div>'),
+                footer_template='<div style="font-size:8px;color:#999;text-align:center;width:100%;border-top:1px solid #ddd;padding:4px 15mm;">第 <span class="pageNumber"></span> 页 / 共 <span class="totalPages"></span> 页</div>',
+                prefer_css_page_size=True,
+            )
 
         browser.close()
     generated_with_markers = True
