@@ -103,11 +103,97 @@ def compare(reference: dict, built: dict) -> str:
     return '\n'.join(out)
 
 
+class Calibration:
+    """Bounded bisection on one density knob, aiming at a page count.
+
+    A calibration run costs a full render, so the search has to be explainable and
+    short: the knob moves monotonically with the page count, so each measurement
+    brackets the answer further. The class holds the arithmetic only — the caller
+    supplies the render — which keeps the search testable without building a book.
+    """
+
+    def __init__(self, target: int, low: float, high: float, tolerance: int = 4):
+        self.target = target
+        self.low = low
+        self.high = high
+        self.tolerance = tolerance
+        self.history: list[tuple[float, int]] = []
+
+    def record(self, scale: float, pages: int) -> None:
+        self.history.append((scale, pages))
+        # more spacing -> more pages, so a measurement on either side tightens a bound
+        if pages < self.target:
+            self.low = max(self.low, scale)
+        elif pages > self.target:
+            self.high = min(self.high, scale)
+
+    @property
+    def converged(self) -> bool:
+        if not self.history:
+            return False
+        return abs(self.history[-1][1] - self.target) <= self.tolerance
+
+    def suggest(self) -> float | None:
+        """The next knob value, or None when the search should stop."""
+        if self.converged or self.high - self.low <= 0.005:
+            return None
+        if not self.history:
+            return round((self.low + self.high) / 2, 4)
+        return round((self.low + self.high) / 2, 4)
+
+    def report(self) -> str:
+        lines = [f'  目标 {self.target} 页（容差 ±{self.tolerance}）']
+        for scale, pages in self.history:
+            lines.append(f'  scale={scale:.3f} → {pages} 页')
+        verdict = '已收敛' if self.converged else '未收敛'
+        return '\n'.join(lines) + f'\n  {verdict}：区间 [{self.low:.3f}, {self.high:.3f}]'
+
+
+def compare_targets(built: dict, targets: dict[str, float]) -> str:
+    """Compare one measurement against numbers, for when there is no reference PDF."""
+    out = []
+    for key, want in targets.items():
+        if key not in built:
+            out.append(f'  {key:12s} 未知指标')
+            continue
+        have = float(built[key])
+        delta = (have - want) / want * 100 if want else 0.0
+        flag = '' if abs(delta) <= 3 else ('  ← 偏' + ('大' if delta > 0 else '小'))
+        out.append(f'  {key:12s} {want:8.2f} → {have:8.2f}  ({delta:+.1f}%){flag}')
+    return '\n'.join(out)
+
+
+def parse_targets(spec: str) -> dict[str, float]:
+    """`pages=843,chars_per_page=1905` -> {'pages': 843.0, ...}."""
+    targets: dict[str, float] = {}
+    for part in spec.split(','):
+        if not part.strip():
+            continue
+        key, _, value = part.partition('=')
+        targets[key.strip()] = float(value)
+    return targets
+
+
 def main(argv: list[str]) -> int:
     args = [a for a in argv[1:] if not a.startswith('-')]
+    if '--target' in argv:
+        index = argv.index('--target')
+        if index + 1 < len(argv):
+            spec = argv[index + 1]
+            if spec in args:
+                args.remove(spec)  # the target spec is not a file path
     if not args:
         print(__doc__)
         return 2
+    if '--target' in argv:
+        if not args:
+            print('--target 需要一个 PDF')
+            return 2
+        targets = parse_targets(argv[argv.index('--target') + 1])
+        built = measure(args[0])
+        print(describe(built))
+        print(compare_targets(built, targets))
+        return 0
     if '--compare' in argv:
         if len(args) < 2:
             print('--compare 需要两个 PDF')
