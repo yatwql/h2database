@@ -11,6 +11,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -127,6 +128,16 @@ class ContentVolumeTest(unittest.TestCase):
         self.assertEqual(self.mod.compare(baseline, current), [])
 
     # -- the mutations that survived the first round ----------------------
+    def test_json_output_keeps_chinese_readable(self):
+        target = os.path.join(self.tmp.name, 'zh.json')
+        payload = {'manuscript': {'files': {'中文章节.md': {'bytes': 10, 'lines': 1}},
+                                  'total': {'bytes': 10, 'lines': 1}}}
+        with open(target, 'w', encoding='utf-8') as fh:
+            json.dump(payload, fh, ensure_ascii=False)
+        code, out, _err = self.run_main('--baseline', target, '--json')
+        self.assertEqual(code, 1, out[-300:])
+        self.assertIn('中文章节', out)        # not \u escapes
+
     def test_the_manuscript_list_includes_the_cover(self):
         cover = os.path.join(self.root, 'data', 'manuscript', 'cover.md')
         with open(cover, 'w', encoding='utf-8') as fh:
@@ -247,6 +258,70 @@ class ContentVolumeTest(unittest.TestCase):
             code, out, _err = self.run_main('--baseline', baseline_path)
         self.assertEqual(code, 0, out[-300:])
         self.assertIn('cold-start', out)
+
+
+class ReviewedBaselineTest(unittest.TestCase):
+    """Recording a baseline is a review: it needs a commit and a named reviewer."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.mod = _fixture.load_module(self.root, 'content_volume')
+        os.makedirs(os.path.dirname(self.mod.baseline_path()), exist_ok=True)
+        self.git('init', '-q')
+        self.git('config', 'user.name', '评审人')
+        self.git('config', 'user.email', 'r@example.com')
+        self.commit('初始手稿')
+
+    def git(self, *args: str) -> subprocess.CompletedProcess:
+        return subprocess.run(['git', *args], cwd=self.root, capture_output=True,
+                              text=True, check=False)
+
+    def commit(self, message: str) -> None:
+        self.git('add', '-A')
+        self.git('commit', '-q', '-m', message)
+
+    def current(self, size: int = 1000) -> dict:
+        return {'manuscript': manuscript(size), 'delivered': {}}
+
+    def run_main(self, *args: str) -> tuple[int, str, str]:
+        out, err = io.StringIO(), io.StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            code = self.mod.main(list(args))
+        return code, out.getvalue(), err.getvalue()
+
+    def baseline_file(self) -> dict:
+        with open(self.mod.baseline_path(), encoding='utf-8') as fh:
+            return json.load(fh)
+
+    def test_a_clean_commit_with_a_reviewer_records_the_baseline(self):
+        code, out, _err = self.run_main('--update-baseline', '--reviewed-by', '阿龙',
+                                        '--reason', '定稿')
+        self.assertEqual(code, 0, out[-400:])
+        payload = self.baseline_file()
+        self.assertEqual(payload['reviewed']['by'], '阿龙')
+        self.assertEqual(payload['reviewed']['reason'], '定稿')
+        self.assertIn('commit', payload['reviewed'])
+
+    def test_a_dirty_manuscript_is_refused(self):
+        with open(os.path.join(self.root, 'data', 'manuscript', 'ch1-test.md'), 'a',
+                  encoding='utf-8') as fh:
+            fh.write('未提交的改动\n')
+        code, _out, err = self.run_main('--update-baseline', '--reviewed-by', '阿龙')
+        self.assertEqual(code, 1)
+        self.assertIn('未提交', err)
+
+    def test_a_shrink_is_refused_without_the_flag_and_recorded_with_it(self):
+        big = self.current(1000)
+        small = self.current(100)
+        self.assertEqual(self.mod.update_baseline(big, False, '定稿', '阿龙'), 0)
+        self.assertEqual(self.mod.update_baseline(small, False, '删节', '阿龙'), 1)
+        self.assertEqual(self.mod.update_baseline(small, True, '删节版', '阿龙'), 0)
+        payload = self.baseline_file()
+        self.assertTrue(payload['accepted_shrinks'])
+        self.assertEqual(payload['accepted_shrinks'][0]['reason'], '删节版')
+        self.assertEqual(payload['reviewed']['by'], '阿龙')
 
 
 if __name__ == '__main__':
