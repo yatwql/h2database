@@ -44,6 +44,51 @@ class FixtureCase(unittest.TestCase):
             fh.write(text)
         return path
 
+class GlossaryCandidateRulesTest(unittest.TestCase):
+    """One row per rule in `is_glossary_candidate`, so a rule cannot rot alone."""
+
+    REJECTED = (
+        ('ab', 'too short'),
+        ('页面与索引', 'structural function word'),
+        ('存储层', 'layer reference'),
+        ('第三章设计', 'phase marker'),
+        ('索引详解', 'heading word'),
+        ('CommandContainer.run()', 'method call'),
+        ('读 → 写', 'arrow operator'),
+        ('A -> B', 'code operator'),
+        ('核心设计：', 'trailing colon'),
+        ('数据一致性与隔离级别', 'descriptive heading'),
+        ('mvstore/Chunk', 'file path'),
+        ('MVStore.java', 'source file name'),
+        ('`MVStore`', 'code reference'),
+        ('DML（数据操作语言）', 'parenthesised gloss'),
+        ('a' * 36, 'too long for one term'),
+        ('v1.4.197', 'version string'),
+        ('Snapshot', 'short pure-English word'),
+        ('每次 put() 导致页面超出容量', 'descriptive phrase'),
+    )
+    # `MVStore` on its own is *not* a candidate: the rule skips single English
+    # words shorter than eight letters, and it is one. It is in the glossary, so
+    # nothing is missed today; a bold 7-letter class name outside the glossary
+    # would be. Recorded here so the trade-off is visible rather than surprising.
+    ACCEPTED = ('Write Amplification', '写放大', 'B-Tree', 'PageSplit', 'MVStore 文件')
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.mod = _fixture.load_module(_fixture.build_book(self.tmp.name), 'terms')
+
+    def test_every_rejection_rule_has_a_case(self):
+        for term, why in self.REJECTED:
+            with self.subTest(term=term, why=why):
+                self.assertFalse(self.mod.is_glossary_candidate(term), f'{why}: {term!r}')
+
+    def test_real_terms_are_candidates(self):
+        for term in self.ACCEPTED:
+            with self.subTest(term=term):
+                self.assertTrue(self.mod.is_glossary_candidate(term))
+
+
 class TestAnnotateTermsBranches(FixtureCase):
     def test_annotates_then_is_idempotent(self):
         code, out = self.run_script('terms.py')
