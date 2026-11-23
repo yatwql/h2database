@@ -149,7 +149,7 @@ try:
             const marker = document.createElement('span');
             marker.className = 'content-marker';
             marker.textContent = '__CONTENT__';
-            marker.style.cssText = 'display:inline;font-size:0.1px;color:transparent;pointer-events:none;user-select:none;';
+            marker.style.cssText = 'display:inline;font-size:3px;color:#ffffff;pointer-events:none;user-select:none;';
             content.insertBefore(marker, content.firstChild);
         }''')
 
@@ -163,7 +163,7 @@ try:
                 const marker = document.createElement('span');
                 marker.className = 'hdr-marker';
                 marker.textContent = '__hdr_' + i + '__';
-                marker.style.cssText = 'display:inline;font-size:0.1px;color:transparent;pointer-events:none;user-select:none;';
+                marker.style.cssText = 'display:inline;font-size:3px;color:#ffffff;pointer-events:none;user-select:none;';
                 h.parentNode.insertBefore(marker, h);
                 result.push({
                     index: i,
@@ -181,19 +181,14 @@ try:
         page.pdf(
             path=pdf_path,
             format='A4',
-            margin={
-                'top': '20mm',
-                'bottom': '25mm',
-                'left': '15mm',
-                'right': '15mm',
-            },
+
             print_background=True,
             display_header_footer=True,
             header_template=('<div style="font-size:8px;color:#999;text-align:center;'
                              'width:100%;border-bottom:1px solid #ddd;padding:2px 15mm;">'
                              f'{_config.project("running_head")}</div>'),
             footer_template='<div style="font-size:8px;color:#999;text-align:center;width:100%;border-top:1px solid #ddd;padding:4px 15mm;">第 <span class="pageNumber"></span> 页 / 共 <span class="totalPages"></span> 页</div>',
-            prefer_css_page_size=False,
+            prefer_css_page_size=True,
         )
 
         browser.close()

@@ -290,10 +290,10 @@ li { margin: 0.3em 0; }
   #toc-page { page-break-after: always; }
   #cover { page-break-after: always; }
   #sidebar { display: none; }
-  #content { margin-left: 0; max-width: 100%; padding: 20px 36px; }
+  #content { margin-left: 0; max-width: 760px; width: auto; padding: 0; }
   pre, table { page-break-inside: avoid; }
   h1, h2, h3, h4 { page-break-after: avoid; }
   pre { font-size: 10px; }
-  @page { margin: 15mm 10mm; }
+  @page { size: A4; margin: 26mm 22mm; }
 }
 """
