@@ -30,6 +30,7 @@ DEFAULTS = {
     'layout_heading_gap_after_em': 0.5,
     'layout_list_gap_em': 0.5,
     'layout_table_gap_em': 1.0,
+    'layout_epub_code_em': 0.85,
 }
 
 # field name -> the thresholds key it is read from
@@ -48,7 +49,96 @@ RANGES = {
     'heading_gap_after_em': (0.0, 2.0),
     'list_gap_em': (0.0, 2.0),
     'table_gap_em': (0.0, 3.0),
+    'epub_code_em': (0.4, 1.2),
 }
+
+
+@dataclass(frozen=True)
+class TypeScale:
+    """How text is sized, in units both formats can use.
+
+    PDF and EPUB disagree about almost everything, but not about the type: the
+    ratio between body and code, the heading ladder, the rhythm between blocks.
+    Those live here, expressed in `em` — the one unit that means the same thing on
+    a page and in a reflowable column. Anything in pixels belongs to
+    `PageGeometry`; a fixed pixel size in an EPUB stops the reader from enlarging
+    the text, which is the whole point of the format.
+    """
+
+    body_em: float = 1.0
+    code_em: float = 0.625
+    code_line_height: float = 1.0
+    heading_em: tuple[float, ...] = (1.6, 1.3, 1.1, 1.0)
+    body_line_height: float = 1.55
+    code_block_line_height: float = 1.35
+    spacing_scale: float = 1.0
+    para_gap_em: float = 0.8
+    heading_gap_before_em: float = 1.5
+    heading_gap_after_em: float = 0.5
+    list_gap_em: float = 0.5
+    table_gap_em: float = 1.0
+
+    @classmethod
+    def from_layout(cls, layout: Layout) -> TypeScale:
+        """Derive the shared scale from one validated layout."""
+        return cls(
+            body_em=1.0,
+            code_em=round(float(layout.epub_code_em), 4),
+            code_line_height=layout.code_line_height,
+            spacing_scale=layout.spacing_scale,
+            para_gap_em=layout.para_gap_em,
+            heading_gap_before_em=layout.heading_gap_before_em,
+            heading_gap_after_em=layout.heading_gap_after_em,
+            list_gap_em=layout.list_gap_em,
+            table_gap_em=layout.table_gap_em,
+        )
+
+    def gap(self, name: str) -> str:
+        """One vertical gap, scaled and formatted in em."""
+        return f'{round(float(getattr(self, name)) * self.spacing_scale, 3)}em'
+
+    def css_substitutions(self) -> dict[str, str]:
+        """Replacement pairs for the EPUB stylesheet, all in relative units."""
+        subs = {
+            'body { line-height: 1.55;':
+                f'body {{ line-height: {self.body_line_height};',
+            'font-size: 1.6em;': f'font-size: {self.heading_em[0]}em;',
+            'font-size: 1.3em;': f'font-size: {self.heading_em[1]}em;',
+            'font-size: 1.1em;': f'font-size: {self.heading_em[2]}em;',
+            'font-size: 0.85em;': f'font-size: {self.code_em}em;',
+            'h4 { font-size: 1em;': f'h4 {{ font-size: {self.heading_em[3]}em;',
+            'line-height: 1.35;': f'line-height: {self.code_block_line_height};',
+            'margin: 1em 0;': f'margin: {self.gap("table_gap_em")} 0;',
+        }
+        return subs
+
+    def apply(self, css: str) -> str:
+        """Substitute the shared scale into an EPUB stylesheet."""
+        for literal, replacement in self.css_substitutions().items():
+            css = css.replace(literal, replacement)
+        return css
+
+    def describe(self) -> str:
+        return (f'type: body={self.body_em}em, code={self.code_em}em, '
+                f'headings={"/".join(str(x) for x in self.heading_em)}em, '
+                f'spacing_scale={self.spacing_scale}')
+
+
+@dataclass(frozen=True)
+class PageGeometry:
+    """What only a fixed page can have: a sheet, margins, a column, pixels.
+
+    An EPUB has none of this — the reader owns the viewport — so keeping these
+    fields here rather than in `TypeScale` is what stops paged values from leaking
+    into the reflowable output.
+    """
+
+    page_size: str
+    page_margin: str
+    column_px: int
+    body_px: int
+    code_px: int
+    code_line_height: float
 
 
 @dataclass(frozen=True)
@@ -67,6 +157,9 @@ class Layout:
     heading_gap_after_em: float = DEFAULTS['layout_heading_gap_after_em']
     list_gap_em: float = DEFAULTS['layout_list_gap_em']
     table_gap_em: float = DEFAULTS['layout_table_gap_em']
+    # the EPUB column is narrower and the reader may zoom; its code size is
+    # tuned separately from the page's px ratio, so it is a key of its own
+    epub_code_em: float = DEFAULTS['layout_epub_code_em']
 
     @classmethod
     def from_mapping(cls, mapping) -> tuple[Layout, list[str]]:
@@ -130,6 +223,21 @@ class Layout:
         for literal, replacement in self.css_substitutions().items():
             css = css.replace(literal, replacement)
         return css
+
+    def typescale(self) -> TypeScale:
+        """The part of this layout that EPUB shares."""
+        return TypeScale.from_layout(self)
+
+    def geometry(self) -> PageGeometry:
+        """The part of this layout only a fixed page can use."""
+        return PageGeometry(
+            page_size=self.page_size,
+            page_margin=self.page_margin,
+            column_px=self.column_px,
+            body_px=self.body_px,
+            code_px=self.code_px,
+            code_line_height=self.code_line_height,
+        )
 
     def describe(self) -> str:
         """One line for the build log: what this run used."""

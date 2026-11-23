@@ -75,5 +75,35 @@ class LayoutSpacingTest(unittest.TestCase):
         self.assertIn('spacing_scale=', text)
 
 
+class TypeScaleTest(unittest.TestCase):
+    """The shared half is relative; the paged half stays on the page."""
+
+    def setUp(self):
+        self.layout = Layout.from_mapping({'layout_body_px': 16,
+                                           'layout_epub_code_em': 0.85})[0]
+
+    def test_the_shared_scale_is_expressed_in_em(self):
+        scale = self.layout.typescale()
+        self.assertEqual(scale.css_substitutions()['font-size: 0.85em;'],
+                         'font-size: 0.85em;')
+        self.assertTrue(scale.gap('para_gap_em').endswith('em'))
+
+    def test_page_dimensions_are_kept_out_of_the_shared_scale(self):
+        self.assertFalse(hasattr(self.layout.typescale(), 'page_size'))
+        self.assertEqual(self.layout.geometry().page_size, 'A4')
+
+    def test_spacing_scale_moves_the_gaps_and_nothing_else(self):
+        tight = Layout.from_mapping({'layout_spacing_scale': 0.5})[0]
+        self.assertEqual(tight.typescale().gap('para_gap_em'), '0.4em')
+        self.assertEqual(tight.typescale().heading_em, self.layout.typescale().heading_em)
+
+    def test_the_scale_reaches_the_stylesheet(self):
+        css = 'h1 { font-size: 1.6em; }\npre { font-size: 0.85em; }'
+        scaled = self.layout.typescale().apply(css)
+        self.assertIn('font-size: 1.6em', scaled)
+        self.assertIn('font-size: 0.85em', scaled)
+
+
 if __name__ == '__main__':
     unittest.main()
+

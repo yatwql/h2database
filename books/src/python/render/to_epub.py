@@ -39,6 +39,7 @@ import sys
 import textwrap
 
 from lib import _config, _errors, _fsutil
+from lib import layout as _layout
 
 _fsutil.pin_stdout_utf8()
 
@@ -184,8 +185,14 @@ blockquote {
 strong { font-weight: 600; }
 """
 
+# the shared type scale decides sizes and rhythm; the paged dimensions stay in the
+# PDF renderer, because an EPUB has no page to place them on
+_layout_obj, _layout_problems = _layout.Layout.from_mapping(_config.THRESHOLDS)
+for _problem in _layout_problems:
+    print(f"  layout: {_problem}")
+EPUB_CSS_SCALED = _layout_obj.typescale().apply(EPUB_CSS)
 css_path = os.path.join(dist_dir, '_epub.css')
-_fsutil.write_text(css_path, EPUB_CSS)
+_fsutil.write_text(css_path, EPUB_CSS_SCALED)
 
 
 
