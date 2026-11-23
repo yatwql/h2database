@@ -61,6 +61,7 @@ STANDALONE_ENTRY = frozenset({
     'render/pdf_from_html.py',    # ad-hoc: HTML -> PDF without the book pipeline
     'render/pdf_metrics.py',      # ad-hoc: compare the layout of two built PDFs
     'audit/font_coverage.py',     # ad-hoc: does a candidate font cover this book?
+    'audit/epub_diff.py',         # ad-hoc: compare two EPUB builds, or one against the manuscript
     'audit/book_quality.py',      # metric consumed by the scorecard
     'audit/prose_quality.py',     # metric consumed by the scorecard
     'audit/failure_extract.py',   # diagnostic: pull failures out of a log
