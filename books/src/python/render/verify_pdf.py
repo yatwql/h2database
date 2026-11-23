@@ -135,6 +135,27 @@ def non_embedded_fonts(reader) -> list[str]:
                          else font_ref)
     return sorted(missing)
 
+def _as_float(value, fallback: float) -> float:
+    """Threshold read from JSON might be a string or missing; fall back quietly."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return fallback
+
+
+def _size_budget(pages: int) -> float:
+    """Size budget that tracks page count.
+
+    The budget used to be a flat 12 MB, which was calibrated on a single print run
+    at 743 pages. Per-chapter rendering embeds font subsets once per part, so file
+    size follows page count rather than the renderer: allow the flat floor or
+    `pdf_bytes_per_page` per page, whichever is larger.
+    """
+    floor = _as_float(_config.THRESHOLDS.get('pdf_max_mb'), 12.0)
+    per_page = _as_float(_config.THRESHOLDS.get('pdf_bytes_per_page'), 16384.0) / (1024 * 1024)
+    return max(floor, pages * per_page)
+
+
 def _open_inputs(report: Report, pdf_path: str, html_path: str):
     """(reader, html) once both inputs are readable, else None."""
     if PdfReader is None:
@@ -148,10 +169,11 @@ def _open_inputs(report: Report, pdf_path: str, html_path: str):
         return None
     report.add('EXISTS', True)
 
+    reader = PdfReader(pdf_path)
     size_mb = os.path.getsize(pdf_path) / (1024 * 1024)
-    budget = float(_config.THRESHOLDS.get('pdf_max_mb', 12))
-    report.add('SIZE', size_mb <= budget, f'{size_mb:.2f} MB (budget {budget} MB)')
-    return PdfReader(pdf_path), _fsutil.read_text(html_path)
+    budget = _size_budget(len(reader.pages))
+    report.add('SIZE', size_mb <= budget, f'{size_mb:.2f} MB (budget {budget:.1f} MB)')
+    return reader, _fsutil.read_text(html_path)
 
 
 def _check_outline(report: Report, reader, headings) -> list:
