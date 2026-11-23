@@ -93,20 +93,26 @@ class TypeScale:
             table_gap_em=layout.table_gap_em,
         )
 
+    @staticmethod
+    def _em(value: float) -> str:
+        """Format a multiple without a trailing `.0`: `1em`, not `1.0em`."""
+        text = f'{round(float(value), 3)}'
+        return (text[:-2] if text.endswith('.0') else text) + 'em'
+
     def gap(self, name: str) -> str:
         """One vertical gap, scaled and formatted in em."""
-        return f'{round(float(getattr(self, name)) * self.spacing_scale, 3)}em'
+        return self._em(float(getattr(self, name)) * self.spacing_scale)
 
     def css_substitutions(self) -> dict[str, str]:
         """Replacement pairs for the EPUB stylesheet, all in relative units."""
         subs = {
             'body { line-height: 1.55;':
                 f'body {{ line-height: {self.body_line_height};',
-            'font-size: 1.6em;': f'font-size: {self.heading_em[0]}em;',
-            'font-size: 1.3em;': f'font-size: {self.heading_em[1]}em;',
-            'font-size: 1.1em;': f'font-size: {self.heading_em[2]}em;',
-            'font-size: 0.85em;': f'font-size: {self.code_em}em;',
-            'h4 { font-size: 1em;': f'h4 {{ font-size: {self.heading_em[3]}em;',
+            'font-size: 1.6em;': f'font-size: {self._em(self.heading_em[0])};',
+            'font-size: 1.3em;': f'font-size: {self._em(self.heading_em[1])};',
+            'font-size: 1.1em;': f'font-size: {self._em(self.heading_em[2])};',
+            'font-size: 0.85em;': f'font-size: {self._em(self.code_em)};',
+            'h4 { font-size: 1em;': f'h4 {{ font-size: {self._em(self.heading_em[3])};',
             'line-height: 1.35;': f'line-height: {self.code_block_line_height};',
             'margin: 1em 0;': f'margin: {self.gap("table_gap_em")} 0;',
         }
