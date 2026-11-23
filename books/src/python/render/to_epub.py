@@ -221,17 +221,19 @@ def normalise_headings(text: str) -> tuple[str, dict]:
 
 
 # ── Step 5: Run pandoc ───────────────────────────────────────────────────
+# normalised copy, never the merged artifact: other gates compare that file with
+# the manuscript line count, so it must keep the renderer's own output
 _epub_text, _fixes = normalise_headings(_fsutil.read_text(merged_md))
-if _fixes['spaced'] or _fixes['dropped']:
-    _fsutil.write_text(merged_md, _epub_text)
-    print(f"  Headings normalised: {_fixes['spaced']} missing blank line(s), "
-          f"{_fixes['dropped']} decorative underline(s)")
+epub_src = merged_md + '.epub.md'
+_fsutil.write_text(epub_src, _epub_text)
+print(f"  Headings normalised: {_fixes['spaced']} missing blank line(s), "
+      f"{_fixes['dropped']} decorative underline(s)")
 
 print(f"\n=== Step 2: Converting {merged_md} -> EPUB ===")
 
 cmd = [
     pandoc,
-    merged_md,
+    epub_src,
     '-o', epub_out,
     # Disable yaml_metadata_block in the input reader. The merged doc uses
     # bare `---` thematic-break lines as section separators, and pandoc's
