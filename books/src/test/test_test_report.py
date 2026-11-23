@@ -32,6 +32,23 @@ JUNIT = """<?xml version="1.0" encoding="utf-8"?>
 """
 
 
+class DispatchTableTest(unittest.TestCase):
+    """Every subcommand the parser offers has a handler in the table."""
+
+    def setUp(self):
+        self.mod = _fixture.load_module(_fixture.build_book(tempfile.mkdtemp()), 'test_report')
+
+    def test_the_dispatch_table_covers_every_subcommand(self):
+        parser = self.mod._parser()
+        actions = [action for action in parser._actions if action.dest == 'command']
+        self.assertTrue(actions)
+        offered = set(actions[0].choices)
+        self.assertEqual(offered, set(self.mod.COMMANDS))
+
+    def test_each_handler_answers_with_an_exit_code(self):
+        self.assertEqual(self.mod._cmd_list(), 0)
+
+
 class ReportToolTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()

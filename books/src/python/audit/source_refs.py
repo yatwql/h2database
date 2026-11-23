@@ -361,69 +361,85 @@ def format_rel_path(path: str) -> str:
     """Convert an absolute file path to its source-root relative form."""
     return os.path.relpath(path, source_root()).replace('\\', '/')
 
+def _print_missing(missing: list) -> None:
+    if not missing:
+        return
+    print('MISSING references (file not found):')
+    for v in missing:
+        print(f'  {v.ref.doc_file}:{v.ref.doc_line}'
+              f' -- {v.ref.class_name}.java:{v.ref.lineno}')
+    print()
+
+
+def _print_offset(offset: list) -> None:
+    if not offset:
+        return
+    print('OFFSET references (line beyond file end):')
+    for v in offset:
+        print(f'  {v.ref.doc_file}:{v.ref.doc_line}'
+              f' -- {v.ref.class_name}.java:{v.ref.lineno}'
+              f' ({v.detail})')
+    print()
+
+
+def _print_ambiguous(results: list, class_index: dict) -> None:
+    ambiguous_names = {r.ref.class_name for r in results
+                       if r.ref.class_name in class_index
+                       and len(class_index[r.ref.class_name]) > 1}
+    if not ambiguous_names:
+        return
+    print('AMBIGUOUS class names (advisory -- first file used for check):')
+    for name in sorted(ambiguous_names):
+        paths = class_index[name]
+        print(f'  {name}.java -> {len(paths)} locations:')
+        for path in paths:
+            print(f'    {format_rel_path(path)}')
+    print()
+
+
+def _print_errors(errors: list) -> None:
+    if not errors:
+        return
+    print('ERROR references (file read error):')
+    for v in errors:
+        print(f'  {v.ref.doc_file}:{v.ref.doc_line}'
+              f' -- {v.ref.class_name}.java:{v.ref.lineno}'
+              f' ({v.detail})')
+    print()
+
+
+def _print_summary(results: list, counts: dict[str, int]) -> None:
+    total = counts['total']
+    valid = counts['valid']
+    issues = total - valid
+    print('====== Summary ======')
+    print(f'Total references: {total}')
+    if total > 0:
+        print(f'Valid: {valid} ({(valid / total) * 100:.1f}%)')
+        print(f'Issues: {issues} ({(issues / total) * 100:.1f}%)')
+
+
 def print_report(results: list, class_index: dict,
                  h2_version: str | None = None) -> None:
     """Print the formatted freshness report."""
     h2_version = h2_version or get_project_version()
     today = date.today().isoformat()
 
-    # Categorise
     ok = [r for r in results if r.status == 'OK']
     offset = [r for r in results if r.status == 'OFFSET']
     missing = [r for r in results if r.status == 'MISSING']
     errors = [r for r in results if r.status == 'ERROR']
 
-    total = len(results)
-    valid = len(ok)
-    issues = total - valid
-
-    # -- Header --
     print('====== Source Freshness Report ======')
     print(f'Generated: {today}')
     print(f'Source base: {h2_version}')
     print()
 
-    # -- MISSING --
-    if missing:
-        print('MISSING references (file not found):')
-        for v in missing:
-            print(f'  {v.ref.doc_file}:{v.ref.doc_line}'
-                  f' -- {v.ref.class_name}.java:{v.ref.lineno}')
-        print()
+    _print_missing(missing)
+    _print_offset(offset)
+    _print_ambiguous(results, class_index)
+    _print_errors(errors)
 
-    # -- OFFSET --
-    if offset:
-        print('OFFSET references (line beyond file end):')
-        for v in offset:
-            format_rel_path(v.file_path) if v.file_path else ''
-            print(f'  {v.ref.doc_file}:{v.ref.doc_line}'
-                  f' -- {v.ref.class_name}.java:{v.ref.lineno}'
-                  f' ({v.detail})')
-        print()
-
-    # -- AMBIGUOUS (advisory) --
-    ambiguous_names = {r.ref.class_name for r in results
-                       if r.ref.class_name in class_index
-                       and len(class_index[r.ref.class_name]) > 1}
-    if ambiguous_names:
-        print('AMBIGUOUS class names (advisory -- first file used for check):')
-        for name in sorted(ambiguous_names):
-            paths = class_index[name]
-            print(f'  {name}.java -> {len(paths)} locations:')
-            for p in paths:
-                print(f'    {format_rel_path(p)}')
-        print()
-
-    # -- ERRORS --
-    if errors:
-        print('ERROR references (file read error):')
-        for v in errors:
-            print(f'  {v.ref.doc_file}:{v.ref.doc_line}'
-                  f' -- {v.ref.class_name}.java:{v.ref.lineno}'
-                  f' ({v.detail})')
-        print()
-
-    # -- Counts --
     print(f'OK references: {len(ok)}')
     print(f'OFFSET references: {len(offset)}')
     print(f'MISSING references: {len(missing)}')
@@ -431,14 +447,8 @@ def print_report(results: list, class_index: dict,
         print(f'ERROR references: {len(errors)}')
     print()
 
-    # -- Summary --
-    print('====== Summary ======')
-    print(f'Total references: {total}')
-    if total > 0:
-        pct_valid = (valid / total) * 100
-        pct_issues = (issues / total) * 100
-        print(f'Valid: {valid} ({pct_valid:.1f}%)')
-        print(f'Issues: {issues} ({pct_issues:.1f}%)')
+    _print_summary(results, {'total': len(results), 'valid': len(ok)})
+
 
 # ---------------------------------------------------------------------------
 # Main

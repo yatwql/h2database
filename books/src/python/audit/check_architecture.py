@@ -144,29 +144,29 @@ def write_calls(tree: ast.AST) -> list[int]:
     return lines
 
 
-def check(path: str, root: str | None = None) -> list[str]:
-    problems: list[str] = []
-    rel = os.path.relpath(path, os.path.join(_config.BOOK_ROOT, '..'))
-    layer = layer_of(path, root)
-    name = os.path.basename(path)[:-3]
-    source = _fsutil.read_text(path)
-    tree = ast.parse(source)
-
-    # DOCSTRING: every module says what it is (naming is not documentation)
+def _docstring_problems(tree, rel: str, path: str) -> list[str]:
     if ast.get_docstring(tree) is None and not path.endswith('__init__.py'):
-        problems.append(f'{rel}: missing module docstring')
+        return [f'{rel}: missing module docstring']
+    return []
 
-    # MATRIX: the dependency matrix is authoritative - allowed edges only
+
+def _matrix_problems(path: str, rel: str, layer: str) -> list[str]:
+    """The dependency matrix is authoritative: allowed edges only."""
+    problems: list[str] = []
     allowed = DEPENDENCY_MATRIX.get(layer)
-    if allowed is not None:
-        for module in imports_of(path):
-            head = module.split('.')[0]
-            if head in DEPENDENCY_MATRIX and head != layer and head not in allowed:
-                problems.append(
-                    f'{rel}: layer "{layer}" may not import "{module}" '
-                    f'(allowed: {sorted(allowed) or "none"})')
+    if allowed is None:
+        return problems
+    for module in imports_of(path):
+        head = module.split('.')[0]
+        if head in DEPENDENCY_MATRIX and head != layer and head not in allowed:
+            problems.append(f'{rel}: layer "{layer}" may not import "{module}" '
+                            f'(allowed: {sorted(allowed) or "none"})')
+    return problems
 
-    # LAYER: no sibling imports, no dependencies on render from below
+
+def _layer_problems(path: str, rel: str, layer: str) -> list[str]:
+    """No sibling imports; nothing below render may depend on it."""
+    problems: list[str] = []
     for module in imports_of(path):
         head = module.split('.')[0]
         allowed_up = (layer == 'app' and head == 'core')
@@ -174,41 +174,51 @@ def check(path: str, root: str | None = None) -> list[str]:
             problems.append(f'{rel}: imports sibling layer "{module}"')
         if head == 'render' and layer in ('ingest', 'manuscript', 'audit', 'lib'):
             problems.append(f'{rel}: layer "{layer}" must not depend on render')
+    return problems
 
-    # CHANNEL: channels carry no business logic - no engine imports, no writes,
-    # no process spawning. They render, read keys and call core.actions.
-    if layer == CHANNELS:
-        for module in imports_of(path):
-            head = module.split('.')[0]
-            if head in CHANNEL_FORBIDDEN_LAYERS:
-                problems.append(
-                    f'{rel}: channel imports "{module}"; go through core.actions')
-            if head in ('make',):
-                problems.append(f'{rel}: channel must not drive make.py directly')
-        for call in CHANNEL_FORBIDDEN_CALLS:
-            if call in source:
-                problems.append(f'{rel}: channel contains "{call}" (business logic)')
 
-    # DIRECTION: core is a domain layer, it never depends on the channels
-    if layer == 'core':
-        for module in imports_of(path):
-            if module.split('.')[0] == 'app':
-                problems.append(f'{rel}: core must not depend on the channel layer')
+def _channel_problems(path: str, rel: str, layer: str, source: str) -> list[str]:
+    """Channels render and call core.actions; they carry no business logic."""
+    if layer != CHANNELS:
+        return []
+    problems: list[str] = []
+    for module in imports_of(path):
+        head = module.split('.')[0]
+        if head in CHANNEL_FORBIDDEN_LAYERS:
+            problems.append(f'{rel}: channel imports "{module}"; go through core.actions')
+        if head in ('make',):
+            problems.append(f'{rel}: channel must not drive make.py directly')
+    for call in CHANNEL_FORBIDDEN_CALLS:
+        if call in source:
+            problems.append(f'{rel}: channel contains "{call}" (business logic)')
+    return problems
 
-    # WRITE: gates must not modify the manuscript or artifacts (baselines excepted)
-    if layer == 'audit' and 'baseline' not in source:
-        writers = write_calls(tree)
-        if writers:
-            problems.append(
-                f'{rel}: "{layer}" layer must not write files (line {writers[0]})')
 
-    # CONFIG: no hardcoded repository paths outside lib/ (the gate defines them)
-    if layer != 'lib' and name != 'check_architecture':
-        for literal in PATH_LITERALS:
-            if f'"{literal}' in source or f"'{literal}" in source:
-                problems.append(f'{rel}: hardcodes repository path "{literal}"')
+def _direction_problems(path: str, rel: str, layer: str) -> list[str]:
+    if layer != 'core':
+        return []
+    return [f'{rel}: core must not depend on the channel layer'
+            for module in imports_of(path) if module.split('.')[0] == 'app']
 
-    # NAMING
+
+def _write_problems(tree, rel: str, layer: str, source: str) -> list[str]:
+    """Gates must not modify the manuscript or artifacts (baselines excepted)."""
+    if layer != 'audit' or 'baseline' in source:
+        return []
+    writers = write_calls(tree)
+    return [f'{rel}: "{layer}" layer must not write files (line {writers[0]})'] if writers else []
+
+
+def _path_literal_problems(rel: str, layer: str, name: str, source: str) -> list[str]:
+    if layer == 'lib' or name == 'check_architecture':
+        return []
+    return [f'{rel}: hardcodes repository path "{literal}"'
+            for literal in PATH_LITERALS
+            if f'"{literal}' in source or f"'{literal}" in source]
+
+
+def _naming_problems(path: str, rel: str, layer: str, name: str) -> list[str]:
+    problems: list[str] = []
     if name in STDLIB_CLASH:
         problems.append(f'{rel}: module name "{name}" shadows a stdlib module')
     if layer == 'audit' and name != 'check_architecture' \
@@ -217,10 +227,33 @@ def check(path: str, root: str | None = None) -> list[str]:
     in_library_pkg = (os.sep + 'languages' + os.sep) in path or (os.sep + 'lib' + os.sep) in path
     if name.startswith('_') and not in_library_pkg and not path.endswith('__init__.py'):
         problems.append(f'{rel}: CLI entry point must not start with an underscore')
+    return problems
 
-    # EXIT: report scripts expose --json
-    if layer in ('audit',) and 'argument' in source and '--json' not in source:
-        problems.append(f'{rel}: report script should support --json')
+
+def _exit_problems(rel: str, layer: str, source: str) -> list[str]:
+    if layer == 'audit' and 'argument' in source and '--json' not in source:
+        return [f'{rel}: report script should support --json']
+    return []
+
+
+def check(path: str, root: str | None = None) -> list[str]:
+    """Every architectural rule this file is allowed to break, for one module."""
+    rel = os.path.relpath(path, os.path.join(_config.BOOK_ROOT, '..'))
+    layer = layer_of(path, root)
+    name = os.path.basename(path)[:-3]
+    source = _fsutil.read_text(path)
+    tree = ast.parse(source)
+
+    problems: list[str] = []
+    problems += _docstring_problems(tree, rel, path)
+    problems += _matrix_problems(path, rel, layer)
+    problems += _layer_problems(path, rel, layer)
+    problems += _channel_problems(path, rel, layer, source)
+    problems += _direction_problems(path, rel, layer)
+    problems += _write_problems(tree, rel, layer, source)
+    problems += _path_literal_problems(rel, layer, name, source)
+    problems += _naming_problems(path, rel, layer, name)
+    problems += _exit_problems(rel, layer, source)
     return problems
 
 

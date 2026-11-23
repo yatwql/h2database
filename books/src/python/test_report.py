@@ -430,7 +430,7 @@ def last_failures(report: str | None = None) -> dict:
             'failures': failing, 'rerun': rerun}
 
 
-def main(argv: list[str] | None = None) -> int:
+def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest='command', required=True)
@@ -457,60 +457,66 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser('list', help='report directories, newest first')
     prune_parser = sub.add_parser('prune', help='drop reports past the retention window')
     prune_parser.add_argument('--dry-run', action='store_true')
+    return parser
 
-    args = parser.parse_args(argv)
 
-    if args.command == 'run':
-        summary = run(args.marker, args.timeout, args.tests)
-        if args.coverage:
-            snapshot = coverage_snapshot(args.timeout)
-            if snapshot['path']:
-                print(f"coverage -> {os.path.relpath(snapshot['path'], _config.BOOK_ROOT)}")
-        totals = summary['totals']
-        print(f"report -> {os.path.relpath(summary['dir'], _config.BOOK_ROOT)}"
-              f"  ({totals.get('tests', 0)} cases, {totals.get('failures', 0)} failed,"
-              f" {seconds_text(summary['seconds'])})")
-        return 0 if summary['code'] == 0 else 1
+def _cmd_run(args) -> int:
+    summary = run(args.marker, args.timeout, args.tests)
+    if args.coverage:
+        snapshot = coverage_snapshot(args.timeout)
+        if snapshot['path']:
+            print(f"coverage -> {os.path.relpath(snapshot['path'], _config.BOOK_ROOT)}")
+    totals = summary['totals']
+    print(f"report -> {os.path.relpath(summary['dir'], _config.BOOK_ROOT)}"
+          f"  ({totals.get('tests', 0)} cases, {totals.get('failures', 0)} failed,"
+          f" {seconds_text(summary['seconds'])})")
+    return 0 if summary['code'] == 0 else 1
 
-    if args.command == 'collect':
-        payload = collect()
-        if args.json:
-            print(json.dumps(payload, ensure_ascii=False, indent=2))
-        else:
-            for marker, count in payload['counts'].items():
-                print(f'  {marker:<10} {count} 个用例')
-            print(f"快照 -> {os.path.relpath(payload['path'], _config.BOOK_ROOT)}")
+
+def _cmd_collect(args) -> int:
+    payload = collect()
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 0
+    for marker, count in payload['counts'].items():
+        print(f'  {marker:<10} {count} 个用例')
+    print(f"快照 -> {os.path.relpath(payload['path'], _config.BOOK_ROOT)}")
+    return 0
 
-    if args.command == 'perf':
-        payload = perf_window(args.limit)
-        if args.json:
-            print(json.dumps(payload, ensure_ascii=False, indent=2))
-            return 0
-        if not payload['steps']:
-            print('没有足够的历史数据（perf-history.jsonl 至少需要两次运行）')
-            return 0
-        print(f"最近 {payload['runs']} 次运行；本次总耗时 {payload['total']:.1f}s")
-        for row in payload['steps']:
-            delta = ''
-            if row['median'] is not None:
-                delta = f"{row['seconds'] - row['median']:+.1f}s"
-            flag = ' ⚠ 回退' if row['regressed'] else ''
-            print(f"  {row['step']:<18}{row['seconds']:>7.1f}s  {delta}{flag}")
+
+def _cmd_perf(args) -> int:
+    payload = perf_window(args.limit)
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 0
-
-    if args.command == 'list':
-        for path in report_dirs():
-            print(os.path.relpath(path, _config.BOOK_ROOT))
+    if not payload['steps']:
+        print('没有足够的历史数据（perf-history.jsonl 至少需要两次运行）')
         return 0
+    print(f"最近 {payload['runs']} 次运行；本次总耗时 {payload['total']:.1f}s")
+    for row in payload['steps']:
+        delta = ''
+        if row['median'] is not None:
+            delta = f"{row['seconds'] - row['median']:+.1f}s"
+        flag = ' ⚠ 回退' if row['regressed'] else ''
+        print(f"  {row['step']:<18}{row['seconds']:>7.1f}s  {delta}{flag}")
+    return 0
 
-    if args.command == 'prune':
-        removed = prune(args.dry_run)
-        verb = '将清理' if args.dry_run else '已清理'
-        print(f'{verb} {len(removed)} 份过期报告'
-              f'（保留 {settings()["retention_days"]} 天）')
-        return 0
 
+def _cmd_list() -> int:
+    for path in report_dirs():
+        print(os.path.relpath(path, _config.BOOK_ROOT))
+    return 0
+
+
+def _cmd_prune(args) -> int:
+    removed = prune(args.dry_run)
+    verb = '将清理' if args.dry_run else '已清理'
+    print(f'{verb} {len(removed)} 份过期报告'
+          f'（保留 {settings()["retention_days"]} 天）')
+    return 0
+
+
+def _cmd_last(args) -> int:
     payload = last_failures(args.report)
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
@@ -527,6 +533,22 @@ def main(argv: list[str] | None = None) -> int:
     if payload['rerun']:
         print(f"\n只重跑这些模块：\n  {payload['rerun']}")
     return 1
+
+
+COMMANDS = {
+    'run': _cmd_run,
+    'collect': _cmd_collect,
+    'perf': _cmd_perf,
+    'list': lambda _args: _cmd_list(),
+    'prune': _cmd_prune,
+    'last': _cmd_last,
+}
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Dispatch one subcommand; `last` is the default when none is given."""
+    args = _parser().parse_args(argv)
+    return COMMANDS[args.command](args)
 
 
 def seconds_text(seconds: float) -> str:

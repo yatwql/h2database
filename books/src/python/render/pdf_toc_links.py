@@ -16,11 +16,10 @@ import sys as _sys
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
 import os
-import sys
 from pathlib import Path
 from typing import Any
 
-from lib import _config
+from lib import _config, _errors
 from playwright.sync_api import sync_playwright
 from pypdf import PdfReader, PdfWriter
 from pypdf.annotations import Link
@@ -81,30 +80,80 @@ def get_toc_links(html_path: Path | None = None) -> list[dict]:
         browser.close()
         return links
 
+def _require_inputs(html_path: Path, pdf_path: Path) -> None:
+    """Both inputs must exist: the message says which step to run first."""
+    if not html_path.exists():
+        raise _errors.ToolError(
+            f'error: HTML not found: {html_path} (run to_html.py first)')
+    if not pdf_path.exists():
+        raise _errors.ToolError(
+            f'error: PDF not found: {pdf_path} (run to_pdf.py first)')
+
+
+def _open_reader(pdf_path: Path):
+    try:
+        return PdfReader(str(pdf_path))
+    except Exception as exc:  # noqa: BLE001 - report the file, do not dump a traceback
+        raise _errors.ToolError(f'error: cannot read {pdf_path}: {exc}') from exc
+
+
+def _annotation_box(link: dict, page_number: int, page_width: float,
+                    page_height: float) -> tuple[float, float, float, float]:
+    """The link's rectangle in PDF points, clamped to the page box.
+
+    Links near a printed page boundary can straddle the edge by a few points
+    because browser CSS pixels and PDF points round differently; clamping keeps
+    the annotation on the visible page.
+    """
+    rect = link['rect']
+    y_on_page = rect['y'] - page_number * VIEWPORT_HEIGHT
+    x0 = rect['x'] * page_width / VIEWPORT_WIDTH
+    x1 = (rect['x'] + rect['w']) * page_width / VIEWPORT_WIDTH
+    y0 = page_height - (y_on_page + rect['h']) * page_height / VIEWPORT_HEIGHT
+    y1 = page_height - y_on_page * page_height / VIEWPORT_HEIGHT
+    x0 = max(0.0, min(x0, page_width))
+    x1 = max(0.0, min(x1, page_width))
+    y0 = max(0.0, min(y0, page_height))
+    y1 = max(0.0, min(y1, page_height))
+    if not (x0 < x1 and y0 < y1):
+        raise RuntimeError(
+            f'Invalid TOC link rectangle for {link["text"][:80]}: {(x0, y0, x1, y1)}')
+    return float(x0), float(y0), float(x1), float(y1)
+
+
+def _add_annotations(writer, reader, toc_links, outline_entries) -> int:
+    """One link annotation per printed TOC entry; returns how many were added."""
+    page_width = float(reader.pages[0].mediabox.width)
+    page_height = float(reader.pages[0].mediabox.height)
+    added = 0
+    for link, (_, target_page) in zip(toc_links, outline_entries, strict=False):
+        rect = link['rect']
+        center_y = rect['y'] + rect['h'] / 2
+        page_number = int(center_y // VIEWPORT_HEIGHT)
+        if page_number >= len(reader.pages):
+            raise RuntimeError(f'TOC link outside PDF page range: '
+                               f'{link["text"][:80]} -> page {page_number + 1}')
+        annotation = Link(rect=_annotation_box(link, page_number, page_width, page_height),
+                          target_page_index=int(target_page))
+        annotation[NameObject('/NM')] = TextStringObject(f'toc-link-{link["index"]}')
+        writer.add_annotation(page_number, annotation)
+        added += 1
+    return added
+
+
 def add_links(pdf_path: Path | None = None, html_path: Path | None = None,
               tmp_path: Path | None = None,
               toc_links: list[dict] | None = None) -> None:
     html_path = Path(html_path) if html_path else HTML_PATH
     pdf_path = Path(pdf_path) if pdf_path else PDF_PATH
     tmp_path = Path(tmp_path) if tmp_path else pdf_path.with_suffix('.pdf.tmp')
-    if not html_path.exists():
-        print(f'error: HTML not found: {html_path} (run to_html.py first)',
-              file=sys.stderr)
-        raise SystemExit(1)
-    if not pdf_path.exists():
-        print(f'error: PDF not found: {pdf_path} (run to_pdf.py first)',
-              file=sys.stderr)
-        raise SystemExit(1)
+    _require_inputs(html_path, pdf_path)
 
     if toc_links is None:
         toc_links = get_toc_links(html_path)
     print(f'TOC links in HTML: {len(toc_links)}')
 
-    try:
-        reader = PdfReader(str(pdf_path))
-    except Exception as exc:
-        print(f'error: cannot read {pdf_path}: {exc}', file=sys.stderr)
-        raise SystemExit(1) from exc
+    reader = _open_reader(pdf_path)
     outline_entries = collect_outline(reader)
     print(f'Outline entries in PDF: {len(outline_entries)}')
 
@@ -121,48 +170,14 @@ def add_links(pdf_path: Path | None = None, html_path: Path | None = None,
     writer = PdfWriter()
     # Use append() which preserves outlines (clone_document_from_reader may lose them)
     writer.append(reader)
-
-    page_width = float(reader.pages[0].mediabox.width)
-    page_height = float(reader.pages[0].mediabox.height)
-
-    added = 0
-    for link, (_, target_page) in zip(toc_links, outline_entries, strict=False):
-        rect = link['rect']
-        center_y = rect['y'] + rect['h'] / 2
-        page_number = int(center_y // VIEWPORT_HEIGHT)
-        y_on_page = rect['y'] - page_number * VIEWPORT_HEIGHT
-        if page_number >= len(reader.pages):
-            raise RuntimeError(f'TOC link outside PDF page range: {link["text"][:80]} -> page {page_number + 1}')
-
-        x0 = rect['x'] * page_width / VIEWPORT_WIDTH
-        x1 = (rect['x'] + rect['w']) * page_width / VIEWPORT_WIDTH
-        y0 = page_height - (y_on_page + rect['h']) * page_height / VIEWPORT_HEIGHT
-        y1 = page_height - y_on_page * page_height / VIEWPORT_HEIGHT
-
-        # Links near a printed page boundary can straddle the edge by a few
-        # points because browser CSS pixels and PDF points are rounded
-        # differently. Clamp to the page box; the center-page assignment above
-        # keeps the annotation on the visible page.
-        x0 = max(0.0, min(x0, page_width))
-        x1 = max(0.0, min(x1, page_width))
-        y0 = max(0.0, min(y0, page_height))
-        y1 = max(0.0, min(y1, page_height))
-        if not (x0 < x1 and y0 < y1):
-            raise RuntimeError(f'Invalid TOC link rectangle for {link["text"][:80]}: {(x0, y0, x1, y1)}')
-
-        annotation = Link(
-            rect=(float(x0), float(y0), float(x1), float(y1)),
-            target_page_index=int(target_page),
-        )
-        annotation[NameObject('/NM')] = TextStringObject(f'toc-link-{link["index"]}')
-        writer.add_annotation(page_number, annotation)
-        added += 1
+    added = _add_annotations(writer, reader, toc_links, outline_entries)
 
     writer.write(str(tmp_path))
     # Validate the temporary file is readable before replacing the original.
     PdfReader(str(tmp_path))
     os.replace(tmp_path, pdf_path)
     print(f'TOC links added: {added}')
+
 
 if __name__ == '__main__':
     add_links()

@@ -499,7 +499,7 @@ def _edition_error() -> str:
     return ''
 
 
-def main(argv: list[str] | None = None) -> int:
+def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('command',
@@ -518,21 +518,19 @@ def main(argv: list[str] | None = None) -> int:
                         help='book root for every step (default: BOOK_ROOT, then the '
                              'nearest ancestor holding data/book/book.toml)')
     parser.add_argument('--edition', default='', help='manuscript edition for every step')
+    return parser
 
-    report_extras: list[str] = []
-    if argv and len(argv) > 0 and argv[0] == 'report':
-        args, report_extras = parser.parse_known_args(argv)
-    else:
-        args = parser.parse_args(argv)
 
-    if args.book or args.edition:
-        # the steps are separate processes; they read the selection from the env
-        if args.book:
-            os.environ['BOOK_ROOT'] = os.path.abspath(args.book)
-        if args.edition:
-            os.environ['BOOK_EDITION'] = args.edition
-    if args.command == 'doctor':
-        return doctor()
+def _apply_selection(args) -> None:
+    """Put the selection in the environment: the steps are separate processes."""
+    if args.book:
+        os.environ['BOOK_ROOT'] = os.path.abspath(args.book)
+    if args.edition:
+        os.environ['BOOK_EDITION'] = args.edition
+
+
+def _selection_errors(args) -> int:
+    """Validate an explicit selection; 0 when it is fine, else the exit status."""
     missing = _missing_book_toml()
     if missing:
         print(f'error: 没找到 book.toml，试过 {missing}', file=sys.stderr)
@@ -546,13 +544,11 @@ def main(argv: list[str] | None = None) -> int:
         # parent reads the same book its child steps do
         _config.reset(_config.Config(os.environ['BOOK_ROOT'],
                                      os.environ.get('BOOK_EDITION') or None))
+    return 0
 
-    if args.command == 'cover':
-        return coverage(full=args.full, update_baseline=args.update_baseline)
 
-    if args.command == 'report':
-        return report(report_extras)
-
+def _run_steps(args) -> int:
+    """Walk the selected steps, honouring --keep-going and --timings."""
     if args.full:
         os.environ['BOOK_SLOW'] = '1'
     steps = _select(args)
@@ -585,6 +581,29 @@ def main(argv: list[str] | None = None) -> int:
     LOG.info('make %s done in %.2fs', args.command, total)
     print('OK')
     return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = _parser()
+    # `report` forwards its own flags, so it is parsed leniently
+    report_extras: list[str] = []
+    if argv and argv[0] == 'report':
+        args, report_extras = parser.parse_known_args(argv)
+    else:
+        args = parser.parse_args(argv)
+
+    _apply_selection(args)
+    if args.command == 'doctor':
+        return doctor()
+    invalid = _selection_errors(args)
+    if invalid:
+        return invalid
+
+    if args.command == 'cover':
+        return coverage(full=args.full, update_baseline=args.update_baseline)
+    if args.command == 'report':
+        return report(report_extras)
+    return _run_steps(args)
 
 
 if __name__ == '__main__':

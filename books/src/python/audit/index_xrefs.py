@@ -115,6 +115,31 @@ def _aliases_for(term: str) -> set[str]:
 
     return {a for a in out if a}
 
+def _term_and_refs(stripped: str) -> tuple[str, str, list[int]]:
+    """(term, reference text, chapters) for one `- ...` index line."""
+    match = re.match(r'^- (.+?)\s*(?:——?|—)\s*(.*)$', stripped)
+    term = ''
+    ref_text = ''
+    if match:
+        term = match.group(1).strip()
+        ref_text = match.group(2).strip()
+    else:
+        # An entry without an explicit reference is rare, but allowed.
+        bare = re.match(r'^- (.+?)\s*$', stripped)
+        if bare:
+            term = bare.group(1).strip()
+    chapters = sorted({int(m.group(1)) for m in SECTION_REF_RE.finditer(ref_text)})
+    return term, ref_text, chapters
+
+
+def _see_also_targets(raw: str, current_main: str | None) -> list[str] | None:
+    """The targets of a `see also:` line, or None when it is not one."""
+    match = SEE_ALSO_RE.match(raw.rstrip('\n'))
+    if not match or current_main is None:
+        return None
+    return [_strip_alias(t) for t in re.split(r'[,，、]', match.group(1)) if t.strip()]
+
+
 def parse_index(path: str):
     """Walk the index and emit a structured representation.
 
@@ -128,78 +153,38 @@ def parse_index(path: str):
     sub_entries: list[dict] = []
     see_alsos: list[dict] = []
     sections: list[tuple[str, int]] = []
-
     current_main: str | None = None
 
-    lines = _fsutil.read_lines(path)
-
-    for lineno, raw in enumerate(lines, start=1):
-        # H2 heading
-        hm = HEADING_RE.match(raw)
-        if hm:
-            sections.append((hm.group(1).strip(), lineno))
+    for lineno, raw in enumerate(_fsutil.read_lines(path), start=1):
+        heading = HEADING_RE.match(raw)
+        if heading:
+            sections.append((heading.group(1).strip(), lineno))
             continue
 
-        # see also (must come before generic sub-entry which also matches `- `)
-        sa = SEE_ALSO_RE.match(raw.rstrip('\n'))
-        if sa and current_main is not None:
-            targets = [_strip_alias(t) for t in re.split(r'[,，、]', sa.group(1)) if t.strip()]
-            see_alsos.append({
-                'parent': current_main,
-                'targets': targets,
-                'line': lineno,
-            })
+        # `see also` must come before the generic sub-entry: both match `- `
+        targets = _see_also_targets(raw, current_main)
+        if targets is not None:
+            see_alsos.append({'parent': current_main, 'targets': targets, 'line': lineno})
             continue
 
-        # Sub-entry (2-space indent + bullet)
         if raw.startswith('  - '):
-            stripped = raw[2:].rstrip('\n')
-            sub_match = re.match(r'^- (.+?)\s*(?:——?|—)\s*(.*)$', stripped)
-            term = ''
-            ref_text = ''
-            if sub_match:
-                term = sub_match.group(1).strip()
-                ref_text = sub_match.group(2).strip()
-            else:
-                # Sub-entry without explicit reference (rare but allowed).
-                bare = re.match(r'^- (.+?)\s*$', stripped)
-                if bare:
-                    term = bare.group(1).strip()
+            term, ref_text, chapters = _term_and_refs(raw[2:].rstrip('\n'))
             if current_main is not None:
-                chapters = sorted({int(m.group(1)) for m in SECTION_REF_RE.finditer(ref_text)})
-                sub_entries.append({
-                    'parent': current_main,
-                    'term': term,
-                    'chapters': chapters,
-                    'ref_text': ref_text,
-                    'line': lineno,
-                })
+                sub_entries.append({'parent': current_main, 'term': term,
+                                    'chapters': chapters, 'ref_text': ref_text,
+                                    'line': lineno})
             continue
 
-        # Main entry (must start with `- ` and not be indented)
-        if raw.startswith('- '):
-            stripped = raw.rstrip('\n')
-            main_match = re.match(r'^- (.+?)\s*(?:——?|—)\s*(.*)$', stripped)
-            term = ''
-            ref_text = ''
-            if main_match:
-                term = main_match.group(1).strip()
-                ref_text = main_match.group(2).strip()
-            else:
-                bare = re.match(r'^- (.+?)\s*$', stripped)
-                if bare:
-                    term = bare.group(1).strip()
-            chapters = sorted({int(m.group(1)) for m in SECTION_REF_RE.finditer(ref_text)})
-            normalized = _strip_alias(term)
-            current_main = normalized
-            main_entries[normalized] = {
-                'raw_term': term,
-                'chapters': chapters,
-                'ref_text': ref_text,
-                'line': lineno,
-            }
+        if not raw.startswith('- '):
+            continue
+        term, ref_text, chapters = _term_and_refs(raw.rstrip('\n'))
+        normalized = _strip_alias(term)
+        current_main = normalized
+        main_entries[normalized] = {'raw_term': term, 'chapters': chapters,
+                                    'ref_text': ref_text, 'line': lineno}
 
     return main_entries, sub_entries, see_alsos, sections
+
 
 def declared_chapters() -> set[int]:
     """Chapter numbers the active book declares coverage for.
