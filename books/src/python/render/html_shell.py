@@ -297,3 +297,24 @@ li { margin: 0.3em 0; }
   @page { size: A4; margin: 24mm 20mm; }
 }
 """
+
+# The font stack decides whether Chromium embeds real font programs or falls back
+# to Type3 glyph outlines — one stream per glyph, which inflates a 7 MB book to
+# 19 MB. Name a family the build host actually has, and keep portable names as
+# fallbacks so the same config works on macOS and Windows.
+SANS_STACK = ('"Droid Sans Fallback", "Noto Sans CJK SC", "Source Han Sans SC", '
+              '"Microsoft YaHei", "PingFang SC", sans-serif')
+MONO_STACK = ('"DejaVu Sans Mono", "Noto Sans Mono CJK SC", Consolas, '
+              '"Courier New", monospace')
+
+
+def apply_font_stacks(css: str) -> str:
+    """Replace the hard-coded families in the stylesheet with SANS_STACK/MONO_STACK."""
+    return (css
+            .replace("-apple-system, 'Microsoft YaHei', sans-serif", SANS_STACK)
+            .replace("'Microsoft YaHei', SimSun, -apple-system, sans-serif", SANS_STACK)
+            .replace("Consolas, 'Courier New', monospace", MONO_STACK)
+            .replace("Consolas, 'DengXian', SimSun, monospace", MONO_STACK))
+
+
+STYLE = apply_font_stacks(STYLE)

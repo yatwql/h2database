@@ -19,6 +19,8 @@ import subprocess
 import tempfile
 from typing import Any
 
+from pypdf import PdfReader, PdfWriter
+
 MARKER_RE = re.compile(r'__hdr_(\d+)__')
 
 SPLIT_JS = '''() => {
@@ -93,7 +95,11 @@ def render_parts(page, work_dir: str, pdf_kwargs: dict, headings: list[dict]) ->
 
         for local, text in enumerate(texts):
             for raw in MARKER_RE.findall(text):
-                head = by_index.get(int(raw))
+                try:
+                    index = int(raw)
+                except ValueError:  # a marker split across text runs
+                    continue
+                head = by_index.get(index)
                 if head is not None and head['index'] not in seen:
                     seen.add(head['index'])
                     entries.append({'level': head['level'], 'text': head['text'],
@@ -104,8 +110,6 @@ def render_parts(page, work_dir: str, pdf_kwargs: dict, headings: list[dict]) ->
 
 def merge(paths: list[str], pdf_path: str, entries: list[dict]) -> int:
     """Concatenate the parts and write the outline; returns the page count."""
-    from pypdf import PdfReader, PdfWriter
-
     writer = PdfWriter()
     for part in paths:
         for page_obj in PdfReader(part).pages:
@@ -127,11 +131,14 @@ def merge(paths: list[str], pdf_path: str, entries: list[dict]) -> int:
 
 
 def _optimize(pdf_path: str) -> None:
-    """Recompress with ghostscript when it is available.
+    """Recompress with ghostscript when it is available and the result is sound.
 
-    pypdf's identical-object pass cannot merge font subsets that differ between
-    parts; gs rewrites the whole file and typically saves ~18 MB on the split
-    output. Missing gs is not an error — the file still passes verification.
+    pypdf's merge cannot share font programs between the parts, so the merged file
+    is larger than the sum of its inputs. gs rewrites the whole file and dedupes
+    what it can. The rewrite is accepted only when it is smaller *and* still a
+    complete PDF with the same page count: an interrupted gs run leaves a
+    truncated file that is smaller than the original, and swapping that in
+    corrupts the deliverable.
     """
     gs = shutil.which('gs')
     if not gs:
@@ -140,15 +147,19 @@ def _optimize(pdf_path: str) -> None:
     cmd = [gs, '-sDEVICE=pdfwrite', '-dCompatibilityLevel=1.6', '-dPDFSETTINGS=/printer',
            '-dSubsetFonts=true', '-dCompressFonts=true', '-dDetectDuplicateImages=true',
            '-dNOPAUSE', '-dQUIET', '-dBATCH', f'-sOutputFile={tmp}', pdf_path]
-    with contextlib.suppress(Exception):
+    try:
         subprocess.run(cmd, check=True, timeout=600)
-    # keep the rewrite only when it actually helped; a missing temp file or a
-    # shorter output is not an error, the original PDF is still valid
-    with contextlib.suppress(OSError):
-        if os.path.getsize(tmp) < os.path.getsize(pdf_path):
+        before = len(PdfReader(pdf_path).pages)
+        after = len(PdfReader(tmp).pages)
+        if after == before and os.path.getsize(tmp) < os.path.getsize(pdf_path):
             os.replace(tmp, pdf_path)
-    with contextlib.suppress(OSError):
-        os.remove(tmp)
+    except Exception:  # noqa: BLE001 - a failed optimise pass must not break the build
+        pass
+    finally:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
 
 
 def render(page, pdf_path: str, pdf_kwargs: dict, headings: list[dict]) -> int:
