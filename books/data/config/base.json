@@ -42,7 +42,7 @@
     "test_timeout_s": 300,
     "coverage_min_per_file": 84,
     "function_length_warn": 60,
-    "print_scale": 1.1,
+    "print_scale": 1.12,
     "pdf_split_by_chapter": true,
     "pdf_bytes_per_page": 24576
   },
