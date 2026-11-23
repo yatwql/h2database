@@ -218,70 +218,79 @@ def find_section_end(lines: list[str], start_line: int) -> int:
             return i + 1
     return len(lines) + 1
 
+def _slot_placement(slot: dict) -> bool:
+    """Summary, then exercises, then further reading — in that order."""
+    summary, exercises, further = (slot['summary_line'], slot['exercises_line'],
+                                   slot['further_line'])
+    if summary and exercises and further:
+        return summary < exercises < further
+    if exercises and further:
+        return exercises < further
+    return False
+
+
+def _slot_exercises(lines: list[str], slot: dict, issues: list[str]) -> dict:
+    """Everything one chapter's exercise section contributes to the report."""
+    chapter = slot['chapter']
+    report = {
+        'chapter': chapter,
+        'has_summary': slot['summary_line'] is not None,
+        'has_exercises': slot['exercises_line'] is not None,
+        'has_further': slot['further_line'] is not None,
+        'placement_ok': _slot_placement(slot),
+        'exercise_count': 0,
+        'difficulties': [],
+        'emoji_distribution': {'🟢': 0, '🔵': 0, '🟠': 0},
+        'all_have_hint': True,
+        'all_have_review': True,
+        'all_anchors_present': True,
+        'exercises': [],
+    }
+
+    if slot['exercises_line'] is None:
+        issues.append(f"ch{chapter} 缺少 ## N.X 延伸思考 小节")
+        return report
+
+    end = slot['further_line'] or find_section_end(lines, slot['exercises_line'] + 1)
+    exercises = parse_exercises(lines, slot['exercises_line'], end)
+    report['exercise_count'] = len(exercises)
+    for exercise in exercises:
+        report['difficulties'].append(exercise['difficulty'])
+        report['emoji_distribution'][exercise['emoji']] += 1
+        if not exercise['has_hint']:
+            report['all_have_hint'] = False
+            issues.append(f"ch{chapter} 延伸思考 第{exercise['index']}题 缺少 提示 行 "
+                          f"(L{exercise['line']})")
+        if not exercise['has_review']:
+            report['all_have_review'] = False
+            issues.append(f"ch{chapter} 延伸思考 第{exercise['index']}题 缺少 回顾 行 "
+                          f"(L{exercise['line']})")
+        if not exercise['review_anchors']:
+            report['all_anchors_present'] = False
+            issues.append(f"ch{chapter} 延伸思考 第{exercise['index']}题 回顾行无 §X.Y 锚点 "
+                          f"(L{exercise['line']})")
+        report['exercises'].append({
+            'index': exercise['index'],
+            'difficulty': exercise['difficulty'],
+            'emoji': exercise['emoji'],
+            'has_hint': exercise['has_hint'],
+            'has_review': exercise['has_review'],
+            'anchors': exercise['review_anchors'],
+        })
+    return report
+
+
 def audit_file(path: str) -> dict:
     lines = _fsutil.read_lines(path)
-    slots = parse_chapter_slots(lines)
     file_report = {
         'file': os.path.relpath(path, _config.BOOK_ROOT).replace(os.sep, '/'),
         'slots': [],
         'issues': [],
     }
-    for slot in slots:
-        ch = slot['chapter']
-        report = {
-            'chapter': ch,
-            'has_summary': slot['summary_line'] is not None,
-            'has_exercises': slot['exercises_line'] is not None,
-            'has_further': slot['further_line'] is not None,
-            'placement_ok': False,
-            'exercise_count': 0,
-            'difficulties': [],
-            'emoji_distribution': {'🟢': 0, '🔵': 0, '🟠': 0},
-            'all_have_hint': True,
-            'all_have_review': True,
-            'all_anchors_present': True,
-            'exercises': [],
-        }
-
-        # Placement check: summary < exercises < further
-        s, e, f = slot['summary_line'], slot['exercises_line'], slot['further_line']
-        if s and e and f:
-            report['placement_ok'] = (s < e < f)
-        elif e and f:
-            report['placement_ok'] = (e < f)
-
-        if e is not None:
-            section_end = (f or find_section_end(lines, e + 1))
-            ex_list = parse_exercises(lines, e, section_end)
-            report['exercise_count'] = len(ex_list)
-            for ex in ex_list:
-                report['difficulties'].append(ex['difficulty'])
-                report['emoji_distribution'][ex['emoji']] += 1
-                if not ex['has_hint']:
-                    report['all_have_hint'] = False
-                    file_report['issues'].append(
-                        f"ch{ch} 延伸思考 第{ex['index']}题 缺少 提示 行 (L{ex['line']})")
-                if not ex['has_review']:
-                    report['all_have_review'] = False
-                    file_report['issues'].append(
-                        f"ch{ch} 延伸思考 第{ex['index']}题 缺少 回顾 行 (L{ex['line']})")
-                if not ex['review_anchors']:
-                    report['all_anchors_present'] = False
-                    file_report['issues'].append(
-                        f"ch{ch} 延伸思考 第{ex['index']}题 回顾行无 §X.Y 锚点 (L{ex['line']})")
-                report['exercises'].append({
-                    'index': ex['index'],
-                    'difficulty': ex['difficulty'],
-                    'emoji': ex['emoji'],
-                    'has_hint': ex['has_hint'],
-                    'has_review': ex['has_review'],
-                    'anchors': ex['review_anchors'],
-                })
-        else:
-            file_report['issues'].append(f"ch{ch} 缺少 ## N.X 延伸思考 小节")
-
-        file_report['slots'].append(report)
+    for slot in parse_chapter_slots(lines):
+        file_report['slots'].append(_slot_exercises(lines, slot, file_report['issues']))
     return file_report
+
 
 PER_CHAPTER_FLOOR = int(_config.THRESHOLDS.get('exercises_min_per_chapter', 3))
 

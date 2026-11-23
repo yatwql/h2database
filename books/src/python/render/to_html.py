@@ -114,8 +114,43 @@ toc_page_html += '    </nav>\n'
 toc_page_html += '  </div>\n'
 toc_page_html += '</section>\n'
 
+HEADING_LINE_RE = re.compile(r'^(#{1,4})\s+(.+)$')
+
+
+def _heading_html(stripped: str) -> str | None:
+    """HTML for a markdown heading line, or None when the line is not one."""
+    match = HEADING_LINE_RE.match(stripped)
+    if not match:
+        return None
+    level = len(match.group(1))
+    title = match.group(2).strip()
+    anchor = _mdutil.slugify(title)
+    return f'<h{level} id="{anchor}">{md_to_html(title)}</h{level}>\n'
+
+
+def _escaped_code_line(stripped: str) -> str:
+    """One line inside a code block, escaped for HTML."""
+    return (stripped.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;') + '\n')
+
+
+def _inline_html(stripped: str) -> str:
+    """A prose line: blank, rule, figure caption, or a paragraph."""
+    if stripped == '':
+        return '\n'
+    if stripped == '---':
+        return '<hr>\n'
+    if stripped.startswith('**图 ') and stripped.endswith('**'):
+        inner = stripped[2:-2]
+        return f'<strong class="fig-caption">{md_to_html(inner)}</strong>\n'
+    return f'<p>{md_to_html(stripped)}</p>\n'
+
+
 def render_body(body_lines):
-    """Render body markdown to HTML; returns (html, fence count, unclosed-pre)."""
+    """Render body markdown to HTML; returns (html, fence count, unclosed-pre).
+
+    The fence state machine stays here because it is the one thing the output
+    depends on; heading, escaped line and inline markup are helpers.
+    """
     content_parts: list[str] = []
     in_pre = False
     pre_lang = ''
@@ -123,9 +158,8 @@ def render_body(body_lines):
     fence_lines_found = 0
     for line in body_lines:
         stripped = line.rstrip('\n')
-        is_fence = stripped.startswith('```')
 
-        if is_fence:
+        if stripped.startswith('```'):
             fence_lines_found += 1
             lang = stripped[3:].strip()
             if not in_pre:
@@ -144,37 +178,20 @@ def render_body(body_lines):
             continue
 
         if in_pre:
-            hm = re.match(r'^(#{1,4})\s+(.+)$', stripped)
-            if hm and pre_lang in ('', 'text'):
+            heading = HEADING_LINE_RE.match(stripped)
+            if heading and pre_lang in ('', 'text'):
                 in_pre = False
                 auto_exited = True
                 content_parts.append('</code></pre>\n')
             else:
-                escaped = stripped.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-                content_parts.append(escaped + '\n')
+                content_parts.append(_escaped_code_line(stripped))
                 continue
 
-        m = re.match(r'^(#{1,4})\s+(.+)$', stripped)
-        if m:
-            level = len(m.group(1))
-            title = m.group(2).strip()
-            anchor = _mdutil.slugify(title)
-            content_parts.append(f'<h{level} id="{anchor}">{md_to_html(title)}</h{level}>\n')
+        heading_html = _heading_html(stripped)
+        if heading_html is not None:
+            content_parts.append(heading_html)
             continue
-
-        if stripped == '':
-            content_parts.append('\n')
-            continue
-        if stripped == '---':
-            content_parts.append('<hr>\n')
-            continue
-
-        # Figure caption: detect **图 X-Y: Title** pattern
-        if stripped.startswith('**图 ') and stripped.endswith('**'):
-            inner = stripped[2:-2]
-            content_parts.append(f'<strong class="fig-caption">{md_to_html(inner)}</strong>\n')
-        else:
-            content_parts.append(f'<p>{md_to_html(stripped)}</p>\n')
+        content_parts.append(_inline_html(stripped))
 
     if in_pre:
         content_parts.append('</code></pre>\n')
