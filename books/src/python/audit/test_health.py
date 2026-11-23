@@ -75,7 +75,8 @@ def below_baseline(coverage: dict) -> list[dict]:
         return []
     try:
         recorded = (_fsutil.load_json(path) or {}).get('files') or {}
-    except (OSError, ValueError):
+    except (OSError, ValueError, _errors.ToolError):
+        # a broken baseline is the gate's finding, not the report's crash
         return []
     current = {item['file']: item['percent'] for item in coverage['files']}
     return [{'file': name, 'baseline': float(before), 'now': current[name]}

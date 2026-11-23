@@ -8,7 +8,6 @@ import json
 import os
 import tempfile
 import unittest
-from unittest import mock
 
 import _fixture
 
@@ -22,16 +21,15 @@ class BaselineTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.root = _fixture.build_book(self.tmp.name)
-        # lib/_baseline.py uses relative imports, so load it as part of the package
-        self.mod = importlib.import_module('lib._baseline')
-        # point the module at the fixture book without touching the shared config
-        patches = (mock.patch.object(self.mod._config, 'BOOK_ROOT', self.root),
-                   mock.patch.object(self.mod, 'baseline_dir',
-                                     lambda: os.path.join(self.root,
-                                                          'data', 'baselines')))
-        for patch in patches:
-            patch.start()
-            self.addCleanup(patch.stop)
+        # the module resolves its paths through the active book, so bind that to
+        # the fixture and reload so `lib._baseline` sees the same `lib._config`
+        previous_env = os.environ.get('BOOK_ROOT')
+        _fixture.refresh_config(self.root)
+        if previous_env is None:
+            self.addCleanup(os.environ.pop, 'BOOK_ROOT', None)
+        else:
+            self.addCleanup(os.environ.__setitem__, 'BOOK_ROOT', previous_env)
+        self.mod = importlib.reload(importlib.import_module('lib._baseline'))
 
     def test_a_configured_baseline_wins_over_the_default_name(self):
         path = self.mod.path_for('source_symbol')
