@@ -334,7 +334,16 @@ CONFIG_JSON = {
     },
 }
 
+# A new book copies this file verbatim (`core/scaffold.scaffold`), so a fixture
+# that scaffolds needs one of its own.
+TEMPLATES_TOML = '''# 文体模板：章节骨架的文案
+map_intro = "第{num}章覆盖 {pkgs} 个包（{sig}）、{lines} 行实现。"
+
+types_intro = "下表每包取前 {take} 个类型。"
+'''
+
 FILES = {
+    'data/tmpl/templates.toml': TEMPLATES_TOML,
     'data/manuscript/cover.md': COVER_MD,
     'data/manuscript/front/reading-guide.md': FRONT_MD,
     'data/manuscript/ch1-test.md': CHAPTER_1,

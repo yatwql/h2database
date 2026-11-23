@@ -477,6 +477,7 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **单文件下限 77 → 78**：夹具补上 `data/tmpl/templates.toml`（新书脚手架会逐字复制它，此前夹具缺这一份，用例只能走到「读模板」之前），`core/scaffold.py` 77 → 98%——新增 10 条用例覆盖三种坏配置的具名拒绝、手稿目录不可读、脚手架产出的五份文档侧文件、二次执行不改已写文件、`set_source` 的仓库/目录/空值三种形态、`create_book` 与命令行入口两种收尾。最薄处变成 `audit/content_volume.py`（78.6%），下限随之抬到 78。
 - **导入期读配置的最后一批判改完**：`audit/source_refs.py`、`ingest/chapters.py`、`render/to_html.py`、`ingest/outline.py`、`audit/style_schema.py`、`audit/smart.py` 的路径与策略常量全部改为调用时解析（`_config` 门面 + `suffixes()`/`generation()`/`templates()`/`quality_policy()` 这类小函数；`source_refs` 的引用正则按后缀元组缓存）。一个进程换书后不再沿用上一本的路径。
   顺带修两处测试隔离：`_fixture.refresh_config` 现在也丢弃 `lib._baseline`/`_fsutil`/`_errors`（它们各自持有 `_config` 引用，不丢弃就会绑在上一本书上），新增的两组用例退出时恢复 `BOOK_ROOT` 与活动书。
 - **测试用例核查与整改**：`test_redundancy`（重复体、空断言、松散断言）、`test_no_network`/`test_isolation`（零出站）、`test_meta_taxonomy`（层标签与文件名）全绿；人工扫描后修四处：① 真跑 pandoc 的 EPUB 用例从 `tier:fast` 的 `test_render_script_branches.py` 移出，新建 `test_render_epub_pandoc.py`（`tier:slow`）——快档不得依赖 pandoc；② `test_healthy_fixture_passes` 改为 `test_the_fixture_reports_the_gaps_it_has`（夹具本就有缺口，名不副实）；③ `test_repeated_gate_runs_agree` 改为真的比对三次运行的退出码与结论，而不是三次断言同一个值；④ `test_missing_glossary_exits_cleanly` 改为 `test_a_missing_glossary_is_regenerated`（该用例断言的是重新生成）。
