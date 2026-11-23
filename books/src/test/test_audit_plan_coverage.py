@@ -98,6 +98,12 @@ class PlanCoverageTest(unittest.TestCase):
                                      '| `docs/plan/multi-book/` | `rf-35` |', 1))
         self.assertTrue(any('同时认领' in p for p in self.check()))
 
+    def test_a_completed_item_keeps_the_numbering_baseline(self):
+        """A finished item leaves the todo table but its number is never reused."""
+        self.write_plan(PLAN.replace('| `docs/plan/figure-chapter-plumbing/` | `rf-35` |',
+                                     '| `docs/plan/figure-chapter-plumbing/` | 已完成（plan-9） |', 1))
+        self.assertEqual([p for p in self.check() if 'plan-next' in p], [])
+
     def test_a_reference_to_a_missing_directory_is_reported(self):
         shutil.rmtree(os.path.join(self.tmp, 'plan', 'language-pack'))
         self.assertTrue(any('不存在的目录' in p for p in self.check()))

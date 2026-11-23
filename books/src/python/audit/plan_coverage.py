@@ -145,6 +145,10 @@ def check(docs: str | None = None) -> list[str]:
 
     raw = own_section(text, '## 当前迭代待办')
     numbers = [as_int(number) for number, _title in ITEM_RE.findall(raw)]
+    # A completed item leaves the todo table but keeps its number: the identifier
+    # is never reused, so the 待归档 rows that cite it still count for the baseline.
+    numbers += [as_int(number) for number in
+                re.findall(r'plan-(\d+)', own_section(text, PENDING_HEADING))]
     if len(set(numbers)) != len(numbers):
         problems.append('plan-N 编号重复')
     nexts = NEXT_RE.search(text)

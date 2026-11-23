@@ -4,7 +4,7 @@
 > 版本：v0.1-dev
 > 定位：在办事项的**时机档与逐项验收**——每项现状 / 动作 / 验收 / 事实位只在这里；
 > 不记设计细节（看 `technical.md`），也不存问题台账（看 `review-findings.md`）。
-> **编号源**：`plan-next = 12`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-10，
+> **编号源**：`plan-next = 12`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-11，
 > 递增保证唯一，归档不回收。编号与 `review-findings.md` 的 `rf-*` 是两套，互不占用）
 
 ---
@@ -75,6 +75,7 @@
 | 迭代目录 | 结论出处 |
 | --- | --- |
 | `docs/plan/figure-chapter-plumbing/` | `rf-35`、`changelog.md` 的 6.5 段 |
+| `docs/plan/multi-book/` | `plan-11` 多书并行维护：步骤与设计在该目录，结论见 `changelog.md` 同段与 `technical.md` §3.1 |
 
 ## 归档
 
