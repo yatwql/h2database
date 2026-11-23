@@ -65,6 +65,11 @@ def resolve(candidates: tuple[str, ...], generic: str) -> str:
     return ', '.join(quoted + [generic])
 
 
+def default_sans() -> list[str]:
+    """The default sans candidates, for callers that only want to inspect them."""
+    return list(DEFAULT_SANS)
+
+
 def sans_stack(candidates: list[str] | None = None) -> str:
     return resolve(tuple(candidates or DEFAULT_SANS), 'sans-serif')
 

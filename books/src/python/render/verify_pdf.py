@@ -143,6 +143,32 @@ def _as_float(value, fallback: float) -> float:
         return fallback
 
 
+def _type3_fonts(reader) -> set[int]:
+    """Object ids of Type3 fonts in use.
+
+    A Type3 font is a set of glyph procedures, not an embedded font program, and
+    Chromium only produces one when it cannot embed the face: a `.ttc` collection,
+    a synthesised bold, or a missing glyph. A handful is tolerable; thousands mean
+    the font stack resolved to something unembeddable and the file is bloated.
+    """
+    seen: set[int] = set()
+    for page in reader.pages:
+        resources = page.get('/Resources')
+        if not resources:
+            continue
+        fonts = resources.get_object().get('/Font')
+        if not fonts:
+            continue
+        for ref in fonts.get_object().values():
+            try:
+                if ref.get_object().get('/Subtype') == '/Type3':
+                    seen.add(getattr(ref, 'idnum', id(ref)))
+            except (AttributeError, KeyError, TypeError):
+                # a malformed font resource cannot be classified; skip it
+                continue
+    return seen
+
+
 def _size_budget(pages: int) -> float:
     """Size budget that tracks page count.
 
@@ -170,6 +196,11 @@ def _open_inputs(report: Report, pdf_path: str, html_path: str):
     report.add('EXISTS', True)
 
     reader = PdfReader(pdf_path)
+    type3 = _type3_fonts(reader)
+    limit = _as_float(_config.THRESHOLDS.get('pdf_type3_max'), 50.0)
+    report.add('FONTS', len(type3) <= limit,
+               f'{len(type3)} Type3 font(s) (limit {int(limit)}) — a high count means '
+               'the font stack resolved to something Chromium cannot embed')
     size_mb = os.path.getsize(pdf_path) / (1024 * 1024)
     budget = _size_budget(len(reader.pages))
     report.add('SIZE', size_mb <= budget, f'{size_mb:.2f} MB (budget {budget:.1f} MB)')
