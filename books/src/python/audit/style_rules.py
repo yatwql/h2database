@@ -43,6 +43,46 @@ def files() -> list[str]:
     return _config.chapter_files(include_cover=False)
 
 
+def _heading_findings(lineno: int, title: str, heading_rule: dict) -> list[tuple[str, str]]:
+    """Trailing punctuation and bare-label headings, as (kind, detail) pairs."""
+    found: list[tuple[str, str]] = []
+    if heading_rule.get('no_trailing_punctuation') and re.search(r'[。：:，,；;]$', title):
+        found.append(('HEADING', f'trailing punctuation: {title[:40]}'))
+    if title in (heading_rule.get('forbid_bare') or []):
+        found.append(('HEADING', f'bare label heading: {title}'))
+    return found
+
+
+def _line_findings(stripped: str, terminology: dict, banned_links: set | list) -> list[tuple[str, str]]:
+    """Link text, mixed spellings and CJK/Latin spacing for one prose line."""
+    found: list[tuple[str, str]] = []
+    for label in LINK_RE.findall(stripped):
+        if label.strip() in banned_links:
+            found.append(('LINK', f'non-descriptive link text: {label}'))
+    for group in terminology:
+        hits = [variant for variant in group if variant in stripped]
+        if len(hits) > 1:
+            found.append(('TERM', f'mixed spellings: {hits}'))
+    if RULES.get('cjk_latin_spacing'):
+        candidate = CJK_IDIOM_RE.sub('', stripped)
+        if CJK_LATIN_RE.search(candidate):
+            found.append(('CJK_SPACE', 'missing space between CJK and Latin'))
+    return found
+
+
+def _paragraph_findings(lines: list[str]) -> list[str]:
+    """Paragraphs past the configured character limit."""
+    limit = RULES.get('max_paragraph_chars')
+    if not limit:
+        return []
+    problems = []
+    for block in re.split(r'\n\s*\n', '\n'.join(lines)):
+        text = block.strip()
+        if text and not text.startswith(('#', '|', '```', '>')) and len(text) > int(limit):
+            problems.append(f'paragraph {len(text)} chars > {limit}')
+    return problems
+
+
 def check_file(path: str) -> list[dict]:
     findings: list[dict] = []
     name = os.path.basename(path)
@@ -58,7 +98,7 @@ def check_file(path: str) -> list[dict]:
     banned_links = RULES.get('banned_link_text') or []
     heading_rule = RULES.get('heading') or {}
 
-    for i, raw in enumerate(lines, 1):
+    for lineno, raw in enumerate(lines, 1):
         stripped = raw.rstrip('\n')
         if FENCE_RE.match(stripped):
             in_fence = not in_fence
@@ -68,26 +108,12 @@ def check_file(path: str) -> list[dict]:
 
         heading = HEADING_RE.match(stripped)
         if heading:
-            title = heading.group(2).strip()
-            if heading_rule.get('no_trailing_punctuation') and re.search(r'[。：:，,；;]$', title):
-                note(i, 'HEADING', f'trailing punctuation: {title[:40]}')
-            if title in (heading_rule.get('forbid_bare') or []):
-                note(i, 'HEADING', f'bare label heading: {title}')
+            for kind, detail in _heading_findings(lineno, heading.group(2).strip(), heading_rule):
+                note(lineno, kind, detail)
             continue
 
-        for label in LINK_RE.findall(stripped):
-            if label.strip() in banned_links:
-                note(i, 'LINK', f'non-descriptive link text: {label}')
-
-        for group in terminology:
-            hits = [variant for variant in group if variant in stripped]
-            if len(hits) > 1:
-                note(i, 'TERM', f'mixed spellings: {hits}')
-
-        if RULES.get('cjk_latin_spacing'):
-            candidate = CJK_IDIOM_RE.sub('', stripped)
-            if CJK_LATIN_RE.search(candidate):
-                note(i, 'CJK_SPACE', 'missing space between CJK and Latin')
+        for kind, detail in _line_findings(stripped, terminology, banned_links):
+            note(lineno, kind, detail)
 
         item = LIST_ITEM_RE.match(stripped)
         if item:
@@ -103,13 +129,8 @@ def check_file(path: str) -> list[dict]:
         findings.append({'file': name, 'line': 0, 'kind': 'LIST',
                          'detail': f'{len(list_blocks)} list(s) mix ending punctuation'})
 
-    limit = RULES.get('max_paragraph_chars')
-    if limit:
-        for block in re.split(r'\n\s*\n', '\n'.join(lines)):
-            text = block.strip()
-            if text and not text.startswith(('#', '|', '```', '>')) and len(text) > int(limit):
-                findings.append({'file': name, 'line': 0, 'kind': 'PARA',
-                                 'detail': f'paragraph {len(text)} chars > {limit}'})
+    for detail in _paragraph_findings(lines):
+        findings.append({'file': name, 'line': 0, 'kind': 'PARA', 'detail': detail})
     return findings
 
 
