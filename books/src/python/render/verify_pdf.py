@@ -135,35 +135,30 @@ def non_embedded_fonts(reader) -> list[str]:
                          else font_ref)
     return sorted(missing)
 
-def verify(pdf_path: str, html_path: str, require_toc_links: bool = False) -> Report:
-    report = Report()
-
+def _open_inputs(report: Report, pdf_path: str, html_path: str):
+    """(reader, html) once both inputs are readable, else None."""
     if PdfReader is None:
         report.add('PYPDF', False, 'pypdf not installed (pip install pypdf)')
-        return report
-
+        return None
     if not os.path.isfile(pdf_path):
         report.add('EXISTS', False, f'missing {pdf_path}')
-        return report
+        return None
     if not os.path.isfile(html_path):
         report.add('SOURCE_HTML', False, f'missing {html_path}')
-        return report
+        return None
     report.add('EXISTS', True)
 
     size_mb = os.path.getsize(pdf_path) / (1024 * 1024)
     budget = float(_config.THRESHOLDS.get('pdf_max_mb', 12))
     report.add('SIZE', size_mb <= budget, f'{size_mb:.2f} MB (budget {budget} MB)')
+    return PdfReader(pdf_path), _fsutil.read_text(html_path)
 
-    reader = PdfReader(pdf_path)
-    html = _fsutil.read_text(html_path)
 
-    report.add('PAGES', len(reader.pages) > 0, f'{len(reader.pages)} pages')
-
-    headings = html_headings(html)
+def _check_outline(report: Report, reader, headings) -> list:
+    """PAGES, OUTLINE and OUTLINE_LEV against the HTML headings."""
     outline = outline_entries(reader)
     outline_titles = [title for title, _page, _depth in outline]
     heading_titles = [title for _level, title in headings]
-
     report.add('OUTLINE', outline_titles == heading_titles,
                f'{len(outline_titles)} outline entries vs {len(heading_titles)} headings')
 
@@ -176,22 +171,14 @@ def verify(pdf_path: str, html_path: str, require_toc_links: bool = False) -> Re
                'outline depth follows heading levels'
                if len(actual_depths) == len(expected_depths)
                else 'outline/heading count differ')
+    return outline
 
-    toc_match = re.search(r'<nav id="toc-page-nav">([\s\S]*?)</nav>', html)
-    toc_count = len(re.findall(r'<a\b', toc_match.group(1))) if toc_match else 0
-    report.add('TOC_COUNT', toc_count == len(heading_titles),
-               f'{toc_count} printed TOC entries vs {len(heading_titles)} headings')
 
-    annots = toc_link_annotations(reader)
-    if toc_count and not annots and not require_toc_links:
-        report.add('TOC_LINKS', True,
-                   'printed TOC not enhanced yet (run pdf_toc_links.py)')
-        annots = None
+def _check_toc_links(reader, annots, outline) -> list[str]:
+    """Problems with the printed-TOC link annotations, one per kind."""
     problems: list[str] = []
     outline_pages = [page for _t, page, _d in outline]
-    if annots is not None and len(annots) != toc_count:
-        problems.append(f'link annotations {len(annots)} vs TOC entries {toc_count}')
-    for expected_index, (index, page_index, annot) in enumerate(annots or []):
+    for expected_index, (index, page_index, annot) in enumerate(annots):
         if index != expected_index:
             problems.append(f'annotation order gap at {expected_index}')
             break
@@ -211,11 +198,11 @@ def verify(pdf_path: str, html_path: str, require_toc_links: bool = False) -> Re
             problems.append(f'annotation {index} targets page {target + 1}, '
                             f'expected {outline_pages[expected_index] + 1}')
             break
-    if annots is not None:
-        report.add('TOC_LINKS', not problems,
-                   'printed TOC links resolve to outline pages' if not problems
-                   else '; '.join(problems[:2]))
+    return problems
 
+
+def _check_geometry(report: Report, reader) -> None:
+    """PAGE_SIZE and ROTATION: a delivery PDF is A4 and upright."""
     sizes = {(round(float(page.mediabox.width), 1), round(float(page.mediabox.height), 1))
              for page in reader.pages}
     width = float(_config.THRESHOLDS.get('pdf_page_width', 595))
@@ -227,12 +214,49 @@ def verify(pdf_path: str, html_path: str, require_toc_links: bool = False) -> Re
     rotations = {int(page.get('/Rotate') or 0) for page in reader.pages}
     report.add('ROTATION', rotations <= {0}, f'rotations={sorted(rotations)}')
 
+
+def _check_fonts(report: Report, reader) -> None:
     missing_fonts = non_embedded_fonts(reader)
     report.add('FONTS', not missing_fonts,
                'all fonts embedded' if not missing_fonts
                else f'not embedded: {", ".join(missing_fonts[:5])}')
 
+
+def verify(pdf_path: str, html_path: str, require_toc_links: bool = False) -> Report:
+    report = Report()
+    opened = _open_inputs(report, pdf_path, html_path)
+    if opened is None:
+        return report
+    reader, html = opened
+
+    report.add('PAGES', len(reader.pages) > 0, f'{len(reader.pages)} pages')
+    headings = html_headings(html)
+    outline = _check_outline(report, reader, headings)  # its pages drive the TOC check
+    heading_titles = [title for _level, title in headings]
+
+    toc_match = re.search(r'<nav id="toc-page-nav">([\s\S]*?)</nav>', html)
+    toc_count = len(re.findall(r'<a\b', toc_match.group(1))) if toc_match else 0
+    report.add('TOC_COUNT', toc_count == len(heading_titles),
+               f'{toc_count} printed TOC entries vs {len(heading_titles)} headings')
+
+    annots = toc_link_annotations(reader)
+    if toc_count and not annots and not require_toc_links:
+        report.add('TOC_LINKS', True,
+                   'printed TOC not enhanced yet (run pdf_toc_links.py)')
+        annots = None
+    problems: list[str] = []
+    if annots is not None and len(annots) != toc_count:
+        problems.append(f'link annotations {len(annots)} vs TOC entries {toc_count}')
+    problems += _check_toc_links(reader, annots or [], outline)
+    if annots is not None:
+        report.add('TOC_LINKS', not problems,
+                   'printed TOC links resolve to outline pages' if not problems
+                   else '; '.join(problems[:2]))
+
+    _check_geometry(report, reader)
+    _check_fonts(report, reader)
     return report
+
 
 def _annotation_rect(annot) -> list[float]:
     """Return the annotation rectangle as floats (empty when absent/malformed)."""

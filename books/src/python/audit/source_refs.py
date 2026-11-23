@@ -443,7 +443,7 @@ def print_report(results: list, class_index: dict,
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
-def main(argv: list[str] | None = None) -> int:
+def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--update-baseline', action='store_true',
                         help='record current symbol drift as accepted')
@@ -457,93 +457,124 @@ def main(argv: list[str] | None = None) -> int:
                         help='treat known (baselined) drift as a failure too')
     parser.add_argument('--baseline', metavar='PATH',
                         help='alternate drift baseline file')
-    args = parser.parse_args(argv)
+    return parser.parse_args(argv)
+
+
+def _index_or_skip():
+    """The class index, or None when the book has no source tree to read."""
+    print(f'Building class index from the configured source tree: {source_root()}')
+    class_index = build_class_index()
+    if not class_index:
+        print(f'  [skip] H2 source tree not found at {source_root()}; '
+              f'set [sources].src_main in data/config/config.json', file=sys.stderr)
+        return None
+    print(f'Indexed {len(class_index)} unique class names')
+    print()
+    return class_index
+
+
+def _scan(class_index):
+    """Reference checks that do not depend on the drift baseline."""
+    print('Extracting references from chapter files...')
+    refs = extract_references()
+    print(f'Found {len(refs)} references (outside code fences)')
+    print()
+
+    print('Resolving references to source files...')
+    resolved = resolve_references(refs, class_index)
+    print(f'Resolved: {sum(1 for r in resolved if r.status == "FOUND")} found, '
+          f'{sum(1 for r in resolved if r.status == "AMBIGUOUS")} ambiguous, '
+          f'{sum(1 for r in resolved if r.status == "MISSING")} missing')
+    print()
+
+    print('Verifying line numbers...')
+    results = verify_line_numbers(resolved)
+
+    print('Verifying Class.method claims against the source tree...')
+    claims = verify_symbol_claims(extract_symbol_claims(), class_index)
+    return results, claims
+
+
+def _prune(baseline_path: str, claims, version: str) -> int:
+    """Drop accepted entries that resolve again; the rest stay."""
+    accepted = set(load_baseline(baseline_path).get('accepted', []))
+    kept = [(claim, rel) for claim, rel in claims
+            if _claim_key(claim.doc_file, claim.class_name, claim.method) in accepted]
+    dropped = len(accepted) - len(kept)
+    save_baseline(kept, version, baseline_path)
+    print(f'  baseline pruned: {dropped} resolved entr(ies) removed, {len(kept)} kept')
+    return 0
+
+
+def _record_baseline(baseline_path: str, claims, version: str) -> int:
+    save_baseline(claims, version, baseline_path)
+    print(f'  baseline updated: {len(claims)} accepted claim(s) '
+          f'-> {os.path.relpath(baseline_file(), REPO_ROOT)}')
+    return 0
+
+
+def _print_drift(claims, new_drift, known_drift, args, class_index) -> None:
+    if not claims:
+        return
+    print(f'  {len(claims)} symbol claim(s) not found in source: '
+          f'{len(new_drift)} new, {len(known_drift)} known')
+    for claim, rel in new_drift[:20]:
+        print(f'    NEW  {claim.doc_file}:{claim.doc_line}  '
+              f'{claim.class_name}.{claim.method}(  -> {rel}')
+        if args.suggest:
+            hints = suggest_renames(claim, class_index)
+            print(f'         maybe: {", ".join(hints) or "(no close match)"}')
+    for claim, _rel in known_drift[:5]:
+        print(f'    known {claim.doc_file}:{claim.doc_line}  '
+              f'{claim.class_name}.{claim.method}(')
+    if known_drift:
+        print('    (refresh baseline: --update-baseline)')
+
+
+def _json_summary(results, new_drift, known_drift, failures: int) -> int:
+    print(json.dumps({
+        'references': len(results),
+        'ok': sum(1 for r in results if r.status == 'OK'),
+        'offset': sum(1 for r in results if r.status == 'OFFSET'),
+        'missing': sum(1 for r in results if r.status == 'MISSING'),
+        'symbol_new': len(new_drift),
+        'symbol_known': len(known_drift),
+    }, ensure_ascii=False, indent=2))
+    return 1 if failures else 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parse_args(argv)
     baseline_path = args.baseline or baseline_file()
-
-    h2_version = get_project_version()
+    version = get_project_version()
     try:
-        print(f'Building class index from the configured source tree: {source_root()}')
-        class_index = build_class_index()
-        if not class_index:
-            print(f'  [skip] H2 source tree not found at {source_root()}; '
-                  f'set [sources].src_main in data/config/config.json', file=sys.stderr)
+        class_index = _index_or_skip()
+        if class_index is None:
             return 0
-        print(f'Indexed {len(class_index)} unique class names')
-        print()
-
-        print('Extracting references from chapter files...')
-        refs = extract_references()
-        print(f'Found {len(refs)} references (outside code fences)')
-        print()
-
-        print('Resolving references to source files...')
-        resolved = resolve_references(refs, class_index)
-        print(f'Resolved: {sum(1 for r in resolved if r.status == "FOUND")} found, '
-              f'{sum(1 for r in resolved if r.status == "AMBIGUOUS")} ambiguous, '
-              f'{sum(1 for r in resolved if r.status == "MISSING")} missing')
-        print()
-
-        print('Verifying line numbers...')
-        results = verify_line_numbers(resolved)
-
-        print('Verifying Class.method claims against the source tree...')
-        broken_symbols = verify_symbol_claims(extract_symbol_claims(), class_index)
-        baseline = load_baseline(baseline_path)
-        new_drift, known_drift = split_drift(broken_symbols, baseline)
+        results, claims = _scan(class_index)
+        new_drift, known_drift = split_drift(claims, load_baseline(baseline_path))
 
         if args.prune:
-            remaining = [(claim, rel) for claim, rel in broken_symbols]
-            accepted = set(load_baseline(baseline_path).get('accepted', []))
-            kept = [(c, r) for c, r in remaining
-                    if _claim_key(c.doc_file, c.class_name, c.method) in accepted]
-            dropped = len(accepted) - len(kept)
-            save_baseline(kept, h2_version, baseline_path)
-            print(f'  baseline pruned: {dropped} resolved entr(ies) removed, '
-                  f'{len(kept)} kept')
-            return 0
+            return _prune(baseline_path, claims, version)
         if args.update_baseline:
-            save_baseline(broken_symbols, h2_version, baseline_path)
-            print(f'  baseline updated: {len(broken_symbols)} accepted claim(s) '
-                  f'-> {os.path.relpath(baseline_file(), REPO_ROOT)}')
-            new_drift = []
-        elif broken_symbols:
-            print(f'  {len(broken_symbols)} symbol claim(s) not found in source: '
-                  f'{len(new_drift)} new, {len(known_drift)} known')
-            for claim, rel in new_drift[:20]:
-                print(f'    NEW  {claim.doc_file}:{claim.doc_line}  '
-                      f'{claim.class_name}.{claim.method}(  -> {rel}')
-                if args.suggest:
-                    hints = suggest_renames(claim, class_index)
-                    print(f'         maybe: {", ".join(hints) or "(no close match)"}')
-            for claim, _rel in known_drift[:5]:
-                print(f'    known {claim.doc_file}:{claim.doc_line}  '
-                      f'{claim.class_name}.{claim.method}(')
-            if known_drift:
-                print('    (refresh baseline: --update-baseline)')
-        symbol_failures = len(new_drift) + (len(known_drift) if args.strict_symbols else 0)
+            return _record_baseline(baseline_path, claims, version)
+        _print_drift(claims, new_drift, known_drift, args, class_index)
 
+        failures = len(new_drift) + (len(known_drift) if args.strict_symbols else 0)
         if args.json:
-            print(json.dumps({
-                'references': len(results),
-                'ok': sum(1 for r in results if r.status == 'OK'),
-                'offset': sum(1 for r in results if r.status == 'OFFSET'),
-                'missing': sum(1 for r in results if r.status == 'MISSING'),
-                'symbol_new': len(new_drift),
-                'symbol_known': len(known_drift),
-            }, ensure_ascii=False, indent=2))
-            return symbol_failures and 0 or (1 if symbol_failures else 0)
+            return _json_summary(results, new_drift, known_drift, failures)
         print()
         print()
         print_report(results, class_index)
-        if symbol_failures:
-            print(f'Symbol drift: {symbol_failures} claim(s) need review '
+        if failures:
+            print(f'Symbol drift: {failures} claim(s) need review '
                   f'(run with --suggest for rename hints)')
             return 1
         return 0
-
     except Exception as e:  # noqa: BLE001 - top-level guard must report, not abort
         print(f'ERROR: {e}', file=sys.stderr)
         return 1
+
 
 if __name__ == '__main__':
     sys.exit(_errors.run(main))

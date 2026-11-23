@@ -27,7 +27,7 @@ _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)
 
 import os
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from typing import TypedDict
 
 from lib import _config, _fsutil
@@ -71,129 +71,101 @@ def warn(fname, line, msg, level='WARN'):
     else:
         chapter_stats[fname]['infos'].append((line, msg))
 
+def _paragraph_line_groups(lines) -> list[list[int]]:
+    """Line indices grouped into prose paragraphs, skipping fences, headings and tables."""
+    in_fence = False
+    paragraphs: list[list[int]] = []
+    current: list[int] = []
+
+    def flush() -> None:
+        if current:
+            paragraphs.append(list(current))
+            current.clear()
+
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped.startswith('```'):
+            if not in_fence:
+                flush()
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if re.match(r'^#{1,4}\s', stripped) or not stripped or stripped == '---':
+            flush()
+            continue
+        if re.match(r'^\|.*\|$', stripped) or stripped.startswith(('>', '```')):
+            continue
+        current.append(i)
+    flush()
+    return paragraphs
+
+
+def _sentence_starts(lines, para_lines) -> list[str]:
+    """First word of each sentence in one paragraph, in reading order."""
+    para_text = ' '.join(lines[idx].strip() for idx in para_lines)
+    if not para_text.strip():
+        return []
+
+    # Periods inside code spans and file extensions are not sentence boundaries
+    protected = re.sub(r'`([^`]+)`',
+                       lambda m: '`' + m.group(1).replace('.', chr(0)) + '`',
+                       para_text.strip())
+    protected = re.sub(
+        r'\b(\w+)\.(java|html?|md|py|xml|json|txt|sql|php|css|js|ts)\b',
+        lambda m: m.group(1) + chr(0) + m.group(2),
+        protected)
+
+    endings = re.escape(_config.sentence_endings()) + r'.!?'
+    sentences = [s.strip().replace(chr(0), '.')
+                 for s in re.split(rf'(?<=[{endings}])\s*', protected)]
+    sentences = [s for s in sentences if len(s) > 5]
+
+    starts = []
+    for sentence in sentences:
+        clean = re.sub(r'^[（(]?', '', sentence)
+        match = re.search(r'([一-鿿]|[a-zA-Z]\w*)', clean)
+        if match:
+            starts.append(match.group(1))
+    return starts
+
+
+def _warn_monotony(starts, line_number: int, fname) -> None:
+    """One warning per paragraph: three in a row, or two thirds of it the same."""
+    for i in range(len(starts) - 2):
+        if starts[i] == starts[i + 1] == starts[i + 2]:
+            warn(fname, line_number,
+                 f'句式单调：连续 3 句以"{starts[i]}"开头，建议变换句式结构',
+                 level='INFO')
+            break
+
+    if len(starts) >= 4:
+        start_counts = Counter(starts)
+        word, count = start_counts.most_common(1)[0]
+        ratio = count / len(starts)
+        if ratio > 0.6 and count >= 3:
+            warn(fname, line_number,
+                 f'句式单调：段落内 {int(ratio * 100)}% 句子以"{word}"开头'
+                 f'（{count}/{len(starts)}句），建议调整',
+                 level='INFO')
+
+
 def detect_sentence_monotony(lines, fname):
     """Detect consecutive sentences starting with the same word.
 
     Works by collecting paragraph-level text outside fences, splitting
     into sentences, and tracking first-word patterns.
     """
-    in_fence = False
-    paragraphs = []
-    current_para = []
-
-    for i, line in enumerate(lines):
-        stripped = line.strip()
-        if stripped.startswith('```'):
-            if not in_fence and current_para:
-                paragraphs.append(current_para)
-                current_para = []
-            in_fence = not in_fence
-            continue
-        if in_fence:
-            continue
-        if re.match(r'^#{1,4}\s', stripped):
-            if current_para:
-                paragraphs.append(current_para)
-                current_para = []
-            continue
-        if not stripped:
-            if current_para:
-                paragraphs.append(current_para)
-                current_para = []
-            continue
-        if stripped == '---':
-            if current_para:
-                paragraphs.append(current_para)
-                current_para = []
-            continue
-        if re.match(r'^\|.*\|$', stripped) or stripped.startswith(('>', '```')):
-            continue
-        current_para.append(i)
-
-    if current_para:
-        paragraphs.append(current_para)
-
+    paragraphs = _paragraph_line_groups(lines)
     chapter_stats[fname]['paragraph_count'] += len(paragraphs)
 
-    # For each paragraph, collect sentence starts
     for para_lines in paragraphs:
-        # Join paragraph text
-        para_text = ''
-        para_line_ranges = []
-        for idx in para_lines:
-            stripped = lines[idx].strip()
-            para_text += stripped + ' '
-            para_line_ranges.append(idx)
-
-        if not para_text.strip():
-            continue
-
-        # Protect periods inside backtick code spans from false sentence splitting
-        # e.g., `Tokenizer.java` should not cause a sentence boundary
-        protected_text = re.sub(
-            r'`([^`]+)`',
-            lambda m: '`' + m.group(1).replace('.', chr(0)) + '`',
-            para_text.strip()
-        )
-        # Also protect periods in bare file extensions outside backticks
-        protected_text = re.sub(
-            '\b(\\w+)\\.(java|html?|md|py|xml|json|txt|sql|php|css|js|ts)\\b',
-            lambda m: m.group(1) + chr(0) + m.group(2),
-            protected_text
-        )
-
-        # Split into sentences by Chinese/English punctuation
-        endings = re.escape(_config.sentence_endings()) + r'.!?'
-        sentences = re.split(rf'(?<=[{endings}])\s*', protected_text)
-        sentences = [s.strip() for s in sentences if len(s.strip()) > 5]
-
-        # Restore protected periods
-        sentences = [s.replace(chr(0), '.') for s in sentences]
-
-        if len(sentences) < 3:
-            continue  # Need at least 3 sentences to detect monotony
-
-        # Extract first real word of each sentence (skip parentheticals)
-        starts = []
-        for s in sentences:
-            # Remove leading brackets/parentheses
-            s_clean = re.sub(r'^[（(]?', '', s)
-            # Get first Chinese or English word
-            m = re.search(r'([一-鿿]|[a-zA-Z]\w*)', s_clean)
-            if m:
-                starts.append(m.group(1))
-
+        starts = _sentence_starts(lines, para_lines)
         if len(starts) < 3:
-            continue
-
+            continue  # fewer than three sentences cannot be monotonous
         chapter_stats[fname]['sentence_starts'].extend(starts)
+        _warn_monotony(starts, (para_lines[0] if para_lines else 0) + 1, fname)
 
-        # Check for repeated starts (3+ sentences with same start word)
-        for i in range(len(starts) - 2):
-            if starts[i] == starts[i+1] == starts[i+2]:
-                # Map back to approximate line number
-                approx_line = para_line_ranges[0] if para_line_ranges else 0
-                warn(
-                    fname, approx_line + 1,
-                    f'句式单调：连续 3 句以"{starts[i]}"开头，建议变换句式结构',
-                    level='INFO'
-                )
-                break  # One warning per paragraph
-
-        # Check for high same-start ratio (60%+ sentences same start)
-        if len(starts) >= 4:
-            from collections import Counter
-            start_counts = Counter(starts)
-            most_common_word, most_common_count = start_counts.most_common(1)[0]
-            ratio = most_common_count / len(starts)
-            if ratio > 0.6 and most_common_count >= 3:
-                approx_line = para_line_ranges[0] if para_line_ranges else 0
-                warn(
-                    fname, approx_line + 1,
-                    f'句式单调：段落内 {int(ratio*100)}% 句子以"{most_common_word}"开头'
-                    f'（{most_common_count}/{len(starts)}句），建议调整',
-                    level='INFO'
-                )
 
 def detect_repeated_connectors(lines, fname):
     """Detect repeated use of same connector within adjacent sentences."""
