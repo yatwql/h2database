@@ -208,6 +208,13 @@ _fsutil.write_text(css_path, EPUB_CSS_SCALED)
 ATX_HEADING = re.compile(r'^#{1,6}[ \t]+')
 UNDERLINE = re.compile(r'^[ \t]*={3,}[ \t]*$')
 SHORT_BOLD = re.compile(r'^[ \t]*(?:\*\*|__)[^*_]{1,120}(?:\*\*|__)[ \t]*$')
+# a caption names a numbered figure or table — the same convention in every book
+CAPTION_TEXT = re.compile(
+    r'^[ \t]*\**\s*(?:图|表|Figure|Fig\.|Table)[ \t]*[\dA-Za-z]+[ \t]*[-–—.:：]', re.I)
+
+
+def _is_caption(line: str) -> bool:
+    return bool(SHORT_BOLD.match(line) or CAPTION_TEXT.match(line))
 
 
 def normalise_headings(text: str) -> tuple[str, dict]:
@@ -215,7 +222,7 @@ def normalise_headings(text: str) -> tuple[str, dict]:
     out: list[str] = []
     spaced = dropped = 0
     for line in text.splitlines():
-        if UNDERLINE.match(line) and out and SHORT_BOLD.match(out[-1]):
+        if UNDERLINE.match(line) and out and _is_caption(out[-1]):
             # the caption stays as a bold paragraph; only its underline goes, so
             # pandoc stops reading it as a setext H1
             dropped += 1
