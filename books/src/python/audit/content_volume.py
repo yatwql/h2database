@@ -37,13 +37,25 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from lib import _config, _errors, _fsutil, _log
 
-BASELINE_PATH = os.path.join(_config.BOOK_ROOT, 'data', 'baselines', 'content-volume.json')
 LOG = _log.get_logger('content_volume')
 # Ratios come from data/config/base.json [toolchain]: policy is configuration,
 # never a constant buried in a gate.
 FLOOR_RATIO = float(_config.THRESHOLDS.get('content_floor_ratio', 0.95))
 PAGE_RATIO = float(_config.THRESHOLDS.get('pdf_page_ratio', 0.90))
 SIZE_RATIO = float(_config.THRESHOLDS.get('epub_size_ratio', 0.85))
+
+
+def baseline_path() -> str:
+    """This edition's volume baseline (the configured file, scoped by edition).
+
+    Each edition is its own manuscript with its own floor: comparing an abridged
+    edition against the full one would report the abridgement as shrinkage. A book
+    that declares no ``[baselines]`` table still gets the default location.
+    """
+    try:
+        return _config.baseline_path('content_volume')
+    except _config.ConfigError:
+        return os.path.join(_config.baseline_dir(), 'content-volume.json')
 # Which starting point the book is in (docs/managements/quality-model.md §2):
 #   baseline    — an accepted manuscript that must not shrink (strict)
 #   rewrite     — the prose is being replaced wholesale: the floor still holds,
@@ -111,10 +123,10 @@ def delivered_snapshot() -> dict[str, int]:
 
 
 def load_baseline(path: str | None = None) -> dict:
-    target = path or BASELINE_PATH
+    target = path or baseline_path()
     if not os.path.exists(target):
         return {}
-    raw = _fsutil.read_text(BASELINE_PATH)
+    raw = _fsutil.read_text(baseline_path())
     try:
         return json.loads(raw)
     except json.JSONDecodeError as exc:
@@ -305,7 +317,7 @@ def update_baseline(current: dict, accept_shrink: bool = False,
         'commit': info['commit'],
         'reason': reason or '(未填写理由)',
     }
-    _fsutil.write_text(BASELINE_PATH,
+    _fsutil.write_text(baseline_path(),
                        json.dumps(current, ensure_ascii=False, indent=2) + '\n')
     total = current['manuscript']['total']
     print(f'content-volume baseline updated: {len(current["manuscript"]["files"])} files, '
@@ -351,7 +363,7 @@ def main(argv: list[str] | None = None) -> int:
         # A fresh book (or an unfamiliar project's first pass) has nothing to
         # regress against: the floor only protects an established manuscript.
         print('内容体积基线尚未建立（首次分析与新书正常）：'
-              f'{os.path.relpath(BASELINE_PATH, _config.BOOK_ROOT)}')
+              f'{os.path.relpath(baseline_path(), _config.BOOK_ROOT)}')
         print('   定稿后执行：python books/src/python/audit/content_volume.py --update-baseline')
         return 0
 

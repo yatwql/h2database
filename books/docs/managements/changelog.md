@@ -477,6 +477,7 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **版本轴验收补齐，基线按版本隔离**：`Config.baseline_path()` 现在把配置里的基线文件落到 `baselines/<edition>/`，`content_volume.baseline_path()` 改为调用时解析（未声明 `[baselines]` 时退回落默认位置）——两个版本各比自己的下限，删节版不再被判成缩水。`make.py` 对未声明的 `--edition` 与缺失的 `book.toml` 一样先报错退 2。新增 11 条用例覆盖版本轴的验收：`state/`、`baselines/` 与产物按版本分目录，`renumber.json` 写在 `state/<edition>/`，归档目录名带版本，未声明版本按名拒绝并列出已声明项，cli/tui/web 三处都能选版本。（plan-11）
 - **多书的三个渠道与改动分档补齐**：Web 页标题现在写出当前书与版本（`_book_banner`），`/api/run` 的动作在 `ACTION_LOCK` 内执行——活动书是进程级状态，两个并发请求各点一本书时不再互相串；`check_runner.domain_of()` 把「改动落在邻书里」判成 `other-book` 而不是 `infra`，提交只碰另一本书时不会把本书的全部门禁拉起来跑。新增用例：`/api/books` 列出邻书、带 `book` 参数的请求不改活动书、非书目录请求 400、页面含书名与版本、两个并发请求各得其所、邻书改动分档、三渠道（cli/web/tui）对 `status` 与未知动作给出一致结论。（plan-11）
 - **`--book` 指向没有 `book.toml` 的书根时先报错再跑**：原先这道检查要等子步骤起来才炸，`make.py check --book <空目录>` 会逐个步骤打出 traceback 片段；现在入口在跑任何步骤前就校验，输出一行「没找到 book.toml，试过 <路径>」并退 2。同时显式 `--book` 会在父进程里重绑活动书，父进程与子步骤读的是同一本书（此前父进程仍停在导入时那本）。新增 2 条用例。（plan-11）
 - **改配置不再重导入模块**：`core/settings.py::_reload()` 原先每次写配置都重新导入 `lib._config` 并手工重绑活动书；现在 `Config` 把派生值的计算收进 `_derive()`，新增 `refresh()` 就地重读（书对象与其引用不变），`_reload()` 只剩一行。顺带删掉 `settings.py` 的 `_read_json`/`_write_json`，改用 `lib/_fsutil` 的 `load_json`/`dump_json`——同一件事原本两份实现。

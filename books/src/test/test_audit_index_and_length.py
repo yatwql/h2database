@@ -197,7 +197,7 @@ class ContentVolumeBaselineTest(unittest.TestCase):
         return info
 
     def run_main(self, *args: str, info: dict | None = None) -> int:
-        with mock.patch.object(self.mod, 'BASELINE_PATH', self.path), \
+        with mock.patch.object(self.mod, 'baseline_path', lambda: self.path), \
                 mock.patch.object(self.mod, 'provenance', lambda: info or self.clean()), \
                 mock.patch('sys.stdout', new=io.StringIO()), \
                 mock.patch('sys.stderr', new=io.StringIO()):

@@ -274,11 +274,11 @@ class Config:
         self.version = self.cfg.get('book', {}).get('version', '')
 
     def refresh(self) -> Config:
-        """Re-read this book's files, keeping the same object and root.
+        """Re-read this book's files in place: same object, same root, new values.
 
-        A settings change must be visible to the running session without
-        re-importing the module: the identity of the book (and everything
-        holding a reference to it) stays, only what was read from disk moves.
+        A settings change must reach a running session without re-importing the
+        module, so the identity of the book survives and only what was read from
+        disk moves.
         """
         self._derive()
         return self
@@ -571,11 +571,13 @@ class Config:
     # ---- source tree -------------------------------------------------------
 
     def baseline_path(self, name: str) -> str:
-        """Absolute path of a configured baseline file."""
+        """A configured baseline file, scoped to this edition: two floors, two texts."""
         rel = self.baselines.get(name)
         if not rel:
             raise ConfigError(f'config.json: missing [baselines].{name}')
-        return os.path.join(self.root, rel)
+        folder, leaf = os.path.split(os.path.join(self.root, rel))
+        return os.path.join(folder, self.edition, leaf) if self.edition \
+            else os.path.join(folder, leaf)
 
     def source_roots(self) -> list[dict[str, str]]:
         """Every source tree this book digests, in declaration order.

@@ -483,6 +483,22 @@ def _missing_book_toml() -> str:
     return '' if os.path.isfile(expected) else root
 
 
+def _edition_error() -> str:
+    """The message when ``--edition`` names a version the book does not declare.
+
+    Same contract as a missing book.toml: one message and status 2 before any step
+    runs, rather than the same complaint repeated by every child process.
+    """
+    edition = os.environ.get('BOOK_EDITION')
+    if not edition:
+        return ''
+    try:
+        _config.Config(os.environ.get('BOOK_ROOT') or None, edition)
+    except _config.ConfigError as exc:
+        return str(exc)
+    return ''
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -521,10 +537,15 @@ def main(argv: list[str] | None = None) -> int:
     if missing:
         print(f'error: 没找到 book.toml，试过 {missing}', file=sys.stderr)
         return 2
+    edition_error = _edition_error()
+    if edition_error:
+        print(f'error: {edition_error}', file=sys.stderr)
+        return 2
     if args.book:
         # this module bound a book at import; an explicit --book rebinds it so the
         # parent reads the same book its child steps do
-        _config.reset(_config.Config(os.environ['BOOK_ROOT']))
+        _config.reset(_config.Config(os.environ['BOOK_ROOT'],
+                                     os.environ.get('BOOK_EDITION') or None))
 
     if args.command == 'cover':
         return coverage(full=args.full, update_baseline=args.update_baseline)
