@@ -1,14 +1,5 @@
 {
   "updated": "2026-11-22",
   "note": "Exit-code assertions that accept both success and failure. A case qualifies only when the code is its sole outcome check; the rest pin an exact code plus an output assertion.",
-  "accepted": [
-    "books/src/test/test_pipeline_delivery.py::test_pdf_from_html",
-    "books/src/test/test_pipeline_delivery.py::test_pdf_from_html_smoke",
-    "books/src/test/test_pipeline_delivery.py::test_pdf_render_verify_and_toc_links",
-    "books/src/test/test_pipeline_delivery.py::test_print_grade_pdf",
-    "books/src/test/test_pipeline_delivery.py::test_to_epub_smoke",
-    "books/src/test/test_render_pdf_toolchain.py::test_add_pdf_toc_links_runs",
-    "books/src/test/test_render_pdf_toolchain.py::test_pdf_print_grade_runs",
-    "books/src/test/test_render_pdf_toolchain.py::test_to_pdf_then_verify"
-  ]
+  "accepted": []
 }

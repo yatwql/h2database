@@ -39,7 +39,7 @@
     "books/src/python/audit/style_rules.py": 90.3,
     "books/src/python/audit/style_schema.py": 93.0,
     "books/src/python/audit/test_health.py": 84.8,
-    "books/src/python/audit/test_redundancy.py": 95.1,
+    "books/src/python/audit/test_redundancy.py": 94.4,
     "books/src/python/audit/traces.py": 92.8,
     "books/src/python/audit/version_consistency.py": 84.0,
     "books/src/python/check_runner.py": 96.7,

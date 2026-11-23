@@ -477,6 +477,13 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **rf-39 收尾：松散断言清零**。此前 8 条被判为「只能接受 0 或 1」的用例都在交付链里，
+而本机其实装着 pandoc 3.5 与 playwright + chromium——默认快档只是按 marker 跳过它们，不是缺工具。
+开启慢档实跑后逐条定值：`to_pdf`/`verify_pdf`/`pdf_toc_links`/`print_pdf`/`pdf_from_html`/`to_epub`
+在夹具书上全部退出 0，并各带一句结论（`PDF 交付校验通过`、`TOC links added`、`Print-grade PDF`、
+`PDF saved`、`epubcheck`）。松散断言基线由 8 条清空，门禁从此零容忍。
+- **顺带删掉一处重复用例**：`test_pdf_from_html_smoke` 与 `TestFullDeliveryPipeline.test_pdf_from_html`
+在定值后函数体完全相同，保留后者（它跑完整前序再断言），前者删除并留一行注释指明去处。
 - **rf-40 完成：不再有 ≥60 行的函数**。最后一批把 `ingest/chapters.py::_api_sections`（74 →
 §3 整段移到新模块 `ingest/api_sections.py`，chapters.py 889 → 835 行）、`manuscript/snapshot.py::import_snapshot`
 （71 → 目录/压缩包两条复制路径 + 清单构造）、`exercises.parse_chapter_slots`（67 → 头部事件生成器）、

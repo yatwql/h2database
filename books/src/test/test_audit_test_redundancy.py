@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import shutil
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -16,6 +17,40 @@ _fixture.ensure_tools_path()
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
 
 TAGS = ('layer:audit', 'tier:fast')
+
+
+class LooseBaselineTest(unittest.TestCase):
+    """The accepted backlog shrinks visibly instead of rotting silently."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.mod = _fixture.load_module(_fixture.build_book(self.tmp), 'test_redundancy')
+
+    def write_case(self, body: str) -> None:
+        path = os.path.join(self.tmp, 'src', 'test', 'test_loose.py')
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as fh:
+            fh.write(body)
+
+    def test_a_case_with_only_an_exit_code_check_is_a_candidate(self):
+        self.write_case('import unittest\n\n'
+                        'class T(unittest.TestCase):\n'
+                        '    def test_x(self):\n'
+                        '        code = 1\n'
+                        '        self.assertIn(code, (0, 1))\n')
+        found = self.mod.loose_candidates(os.path.join(self.tmp, 'src', 'test'))
+        self.assertEqual([item['detail'].split(':')[0] for item in found], ['test_x'])
+
+    def test_a_baseline_entry_that_stopped_matching_is_reported_as_stale(self):
+        baseline = os.path.join(self.tmp, 'data', 'baselines', 'loose-assertions.json')
+        os.makedirs(os.path.dirname(baseline), exist_ok=True)
+        with open(baseline, 'w', encoding='utf-8') as fh:
+            json.dump({'accepted': ['books/src/test/test_gone.py::test_gone']}, fh)
+        self.assertEqual(self.mod._loose_baseline(),
+                         {'books/src/test/test_gone.py::test_gone'})
+        self.assertEqual(self.mod._loose_key({'file': 'a.py', 'detail': 'name: x'}),
+                         'a.py::name')
 
 
 class TestRedundancyTest(unittest.TestCase):

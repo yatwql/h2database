@@ -88,24 +88,26 @@ class TestPdfToolchain(ScriptTestBase):
     @unittest.skipUnless(SLOW and HAS_PLAYWRIGHT, 'slow suite: set BOOK_SLOW=1')
     def test_to_pdf_then_verify(self):
         code, out = self.run_script('to_pdf.py')
-        self.assertIn(code, (0, 1), out)
+        self.assertEqual(code, 0, out[-400:])
         self.assertNotIn('Traceback', out)
-        if code == 0:
-            code2, out2 = self.run_script('verify_pdf.py')
-            self.assertIn(code2, (0, 1), out2)
-            self.assertNotIn('Traceback', out2)
+        code2, out2 = self.run_script('verify_pdf.py')
+        self.assertEqual(code2, 0, out2[-400:])
+        self.assertIn('PDF 交付校验通过', out2)
+        self.assertNotIn('Traceback', out2)
 
     @unittest.skipUnless(SLOW and HAS_PLAYWRIGHT, 'slow suite: set BOOK_SLOW=1')
     def test_add_pdf_toc_links_runs(self):
         self.run_script('to_pdf.py')
         code, out = self.run_script('pdf_toc_links.py')
-        self.assertIn(code, (0, 1), out)
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('TOC links added', out)
         self.assertNotIn('Traceback', out)
 
     @unittest.skipUnless(SLOW and HAS_PLAYWRIGHT, 'slow suite: set BOOK_SLOW=1')
     def test_pdf_print_grade_runs(self):
         code, out = self.run_script('print_pdf.py')
-        self.assertIn(code, (0, 1), out)
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('Print-grade PDF', out)
         self.assertNotIn('Traceback', out)
 
 if __name__ == '__main__':

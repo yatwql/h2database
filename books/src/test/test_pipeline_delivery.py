@@ -90,23 +90,28 @@ class TestFullDeliveryPipeline(ScriptTestBase):
         code, out = self.run_script('to_pdf.py')
         self.assertEqual(code, 0, out[-400:])
         code, out = self.run_script('verify_pdf.py')
-        self.assertIn(code, (0, 1), out[-400:])
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('PDF 交付校验通过', out)
         code, out = self.run_script('pdf_toc_links.py')
-        self.assertIn(code, (0, 1), out[-400:])
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('TOC links added', out)
         code, out = self.run_script('verify_pdf.py', '--require-toc-links')
-        self.assertIn(code, (0, 1), out[-400:])
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('PDF 交付校验通过', out)
 
     @unittest.skipUnless(SLOW and HAS_PLAYWRIGHT, 'slow suite: set BOOK_SLOW=1')
     def test_print_grade_pdf(self):
         self.run_script('to_pdf.py')
         code, out = self.run_script('print_pdf.py')
-        self.assertIn(code, (0, 1), out[-400:])
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('Print-grade PDF', out)
         self.assertNotIn('Traceback', out)
 
     @unittest.skipUnless(SLOW and HAS_PLAYWRIGHT, 'slow suite: set BOOK_SLOW=1')
     def test_pdf_from_html(self):
         code, out = self.run_script('pdf_from_html.py')
-        self.assertIn(code, (0, 1), out[-400:])
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('PDF saved', out)
         self.assertNotIn('Traceback', out)
 
     @unittest.skipUnless(SLOW and HAS_PANDOC, 'slow suite: set BOOK_SLOW=1')
@@ -140,11 +145,9 @@ class TestDeliveryScripts(ScriptTestBase):
     @unittest.skipUnless(SLOW and HAS_PANDOC, 'slow suite: set BOOK_SLOW=1')
     def test_to_epub_smoke(self):
         code, out = self.run_script('to_epub.py')
-        self.assertIn(code, (0, 1), out)
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('epubcheck', out)
         self.assertNotIn('Traceback', out)
 
-    @unittest.skipUnless(SLOW and HAS_PLAYWRIGHT, 'slow suite: set BOOK_SLOW=1')
-    def test_pdf_from_html_smoke(self):
-        code, out = self.run_script('pdf_from_html.py')
-        self.assertIn(code, (0, 1), out)
-        self.assertNotIn('Traceback', out)
+    # `pdf_from_html` is covered by TestFullDeliveryPipeline.test_pdf_from_html:
+    # the same script, the same two assertions after the full prelude.
