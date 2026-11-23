@@ -477,6 +477,10 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **文档核查后的三处对齐**：`technical.md` §4.1 补上 `lib/_errors` 一行、`_fsutil` 的约定由「失败即退出」
+改为「失败抛 `ToolError`」；§9 增一行说明工具层失败的统一载体与判据；§4.6 把「领域与门禁的映射由配置推导」
+改写成 `path_scopes()` 一张表的实际形态。另修好 §4.4 表格里一处缺表头收尾符的行，
+`testplan.md` 增一行「失败语义」判据（载体 `test_lib_errors.py` 与 `script_contract.py`）。
 - **代码与配置核查后的三处整改**：① 删掉五个无人引用的函数（`core/settings.py` 的 `base_json`/
 `settings_json`、`lib/_config.for_root`、`audit/plan_coverage.plan_path`、`core/docs_archive.topic_dirs`）——
 都是重构后的残留；② `check_runner` 的 `domain_rows()` 与 `gates_for_table()` 原本各写一张同构表，

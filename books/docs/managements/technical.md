@@ -186,7 +186,8 @@ books/
 | 模块 | 职责 | 关键约定 |
 | --- | --- | --- |
 | `_config` | 每本书一个 `Config`：TOML/JSON 三层配置、路径解析、章节清单、语言与模板读取 | `Config(root)` 解析一本书；模块属性转发到活动书（`use()` 切换）；`excluded_dirs()` 给出产物与快照目录 |
-| `_fsutil` | 读写原语：`read_text`、`read_lines`、`write_text`、`load_json`、`ensure_dir`、`pin_stdout_utf8` | 统一 UTF-8；失败即退出并说明动作 |
+| `_fsutil` | 读写原语：`read_text`、`read_lines`、`write_text`、`load_json`、`ensure_dir`、`pin_stdout_utf8` | 统一 UTF-8；失败抛 `ToolError`（消息与退出码同源） |
+| `_errors` | 失败的唯一载体：`ToolError`（派生 `SystemExit`，`str(exc)` 是消息、`exit_code` 是状态）与入口处的 `run()` | 内层只管抛，转换只在入口发生一次；`raise … from` 保留原始异常 |
 | `_log` | 按天滚动的文件日志 + 控制台摘要 | 级别取 `BOOK_LOG_LEVEL` > 配置 > INFO |
 | `_mdutil` | Markdown 结构解析：标题、围栏、图注 | 围栏内的内容不参与结构判定 |
 | `core/docs_archive.py` | 把已发布版本的台账与完成的迭代设计移入 `docs/archive/` | 纯文本变换 + 目录搬迁；幂等，`--dry-run` 只打印动作 |
@@ -244,7 +245,7 @@ books/
 | 步骤 | 输入 → 输出 | 设计要点 |
 | --- | --- | --- |
 | `merge.py` | 手稿 → `dist/<book>.md` | 顺序来自 `book.toml`；前件、后件按 glob 展开 |
-| `to_html.py` | 合并稿 → `dist/<book>.html` | 单一 HTML：侧边栏目录 + 印刷目录 + 锚点；正文按章缓存
+| `to_html.py` | 合并稿 → `dist/<book>.html` | 单一 HTML：侧边栏目录 + 印刷目录 + 锚点；正文按章缓存 |
 | `html_shell.py` | `to_html.py` 的样式表 | CSS 单列一份；搬动它不得改动产物一个字节（以构建哈希为验收） |
 | `to_pdf.py` | HTML → PDF | 无头浏览器渲染；随后用 pypdf 写入大纲 |
 | `pdf_toc_links.py` | PDF | 按目录条目与大纲的**位置对应关系**补链接注释，不靠标题文本匹配 |
@@ -317,8 +318,9 @@ GROUPS = {build, verify, deliver, check, test, cover, report}
 | `p1` | 合并前 | lint + 全部门禁 + 测试 |
 | `p2` | 发布 | p1 + 慢档 + 顺序依赖 + 交付 |
 
-领域与门禁的映射由配置推导，不用字面量；`p0` 及以上的档位始终跑全集，分档只节省
-本地的等待时间，不改变通过标准。
+领域与门禁的映射塌在一张表里：`path_scopes()` 给出「路径片段 → 域 → 门禁」，分类器与
+门禁选择从同一份数据派生（两张表会在目录搬迁时失配），路径片段由配置推导，不用字面量。
+`p0` 及以上的档位始终跑全集，分档只节省本地的等待时间，不改变通过标准。
 
 ### 4.7 渠道层
 
@@ -392,6 +394,7 @@ GROUPS = {build, verify, deliver, check, test, cover, report}
 | --- | --- |
 | 门禁失败 | 输出给出文件与行号，或给出可执行待办；完整输出落 `logs/` |
 | 交付失败 | 编排层打印失败步骤的输出末 30 行；报告文件包含每步退出码与耗时 |
+| 任何工具层失败 | 一律抛 `lib/_errors.ToolError`（消息 + 退出码），由入口的 `_errors.run()` 打印并返回；判据是「仓库内不再有『先打印再 `sys.exit(1)`』的失败路径」 |
 | 版本不一致 | `version_consistency` 列出工具、源码、文档三处版本与不一致项 |
 | 依赖漂移 | `make.py doctor` 报告解释器、pin 漂移与可选工具可用性 |
 | 测试顺序依赖 | `order_dependence.py` 以正序/逆序两轮比对，`--bisect` 收缩到最小污染前缀 |
