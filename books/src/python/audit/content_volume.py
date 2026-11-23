@@ -126,7 +126,7 @@ def load_baseline(path: str | None = None) -> dict:
     target = path or baseline_path()
     if not os.path.exists(target):
         return {}
-    raw = _fsutil.read_text(baseline_path())
+    raw = _fsutil.read_text(target)
     try:
         return json.loads(raw)
     except json.JSONDecodeError as exc:

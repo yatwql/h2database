@@ -60,7 +60,9 @@ def git(*args: str) -> str:
                                 text=True, timeout=20, check=False)
     except (OSError, subprocess.SubprocessError):
         return ''
-    return (result.stdout or '').strip()
+    # a failed command's stdout is not an answer: `git status` failing must not
+    # read as a dirty tree, and `rev-parse` failing must not yield garbage
+    return (result.stdout or '').strip() if result.returncode == 0 else ''
 
 
 def tree_is_dirty() -> bool:

@@ -477,6 +477,12 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **单文件下限 78 → 83，两处真 bug 被测试逼出来**：`audit/content_volume.py` 79 → 86%
+（交付产物页数/字节、基线解析失败、源指纹不一致、PDF/EPUB 缩水、cold-start 档五条路径），
+`release.py` 81 → 94%（四个子命令、脏树拒绝、门禁失败即停、`--allow-dirty`）。过程中发现并修好：
+① `content_volume.load_baseline(path)` 读了默认路径而不是传入的 `path`——`--baseline <文件>` 一直读错文件；
+② `release.git()` 不看出码——`git status` 失败会被读成「工作区脏」，`rev-parse` 失败会返回垃圾。
+总覆盖 89.8 → **90.1%**，最薄处变为 `audit/readability.py`（83.2%）。
 - **文档核查后的三处对齐**：`technical.md` §4.1 补上 `lib/_errors` 一行、`_fsutil` 的约定由「失败即退出」
 改为「失败抛 `ToolError`」；§9 增一行说明工具层失败的统一载体与判据；§4.6 把「领域与门禁的映射由配置推导」
 改写成 `path_scopes()` 一张表的实际形态。另修好 §4.4 表格里一处缺表头收尾符的行，

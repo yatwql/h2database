@@ -50,6 +50,41 @@ class ActionDispatchTest(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn('down', text)
 
+    def test_the_child_environment_carries_the_selection(self):
+        with mock.patch.dict(self.actions._SELECTION, {'book': '/b', 'edition': 'abridged'}):
+            env = self.actions.child_env()
+        self.assertEqual(env['BOOK_ROOT'], '/b')
+        self.assertEqual(env['BOOK_EDITION'], 'abridged')
+
+    def test_an_empty_selection_leaves_the_environment_alone(self):
+        with mock.patch.dict(self.actions._SELECTION, {'book': '', 'edition': ''}):
+            env = self.actions.child_env()
+        self.assertNotIn('BOOK_ROOT', env)
+        self.assertNotIn('BOOK_EDITION', env)
+
+    def test_a_run_collects_both_streams(self):
+        done = mock.Mock(returncode=1, stdout='out\n', stderr='err\n')
+        with mock.patch.object(self.actions.subprocess, 'run', return_value=done):
+            code, text = self.actions._run('merge.py')
+        self.assertEqual(code, 1)
+        self.assertEqual(text, 'out\nerr\n')
+
+    def test_make_is_called_through_the_same_helper(self):
+        done = mock.Mock(returncode=0, stdout='ok\n', stderr='')
+        with mock.patch.object(self.actions.subprocess, 'run', return_value=done) as run:
+            code, text = self.actions._make('check', '--only', 'lint')
+        self.assertEqual((code, text), (0, 'ok\n'))
+        self.assertIn('make.py', run.call_args[0][0][1])
+
+    def test_the_llm_usage_lines_name_a_failed_ledger(self):
+        class Boom(Exception):
+            pass
+
+        with mock.patch.object(self.actions._llm, 'budget_line', side_effect=Boom('磁盘满')):
+            self.actions._llm.LLMError = Boom
+            line = self.actions._llm_lines()
+        self.assertIn('用量记账不可用', line)
+
     def test_status_survives_an_llm_layer_that_cannot_answer(self):
         class Boom(Exception):
             pass
