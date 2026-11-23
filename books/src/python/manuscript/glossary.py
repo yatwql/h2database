@@ -26,7 +26,7 @@ import os
 import re
 import sys
 
-from lib import _config, _fsutil
+from lib import _config, _errors, _fsutil
 
 _fsutil.pin_stdout_utf8()
 
@@ -100,11 +100,10 @@ if '--coverage' in sys.argv:
     # Determine expected chapters from doc file set
     expected_chapters = set()
     for fpath in chapter_files:
-        with open(fpath, 'r', encoding='utf-8') as f:
-            for line in f:
-                m = re.match(r'^# 第(\d+)章', line)
-                if m:
-                    expected_chapters.add(int(m.group(1)))
+        for line in _fsutil.read_lines(fpath):
+            m = re.match(r'^# 第(\d+)章', line)
+            if m:
+                expected_chapters.add(int(m.group(1)))
 
     print('=== 术语表章节覆盖率 ===')
     print(f'总条目数: {total}')
@@ -138,11 +137,10 @@ if '--validate' in sys.argv:
     # Collect available chapter numbers from filesystem
     available_chapters: set[int] = set()
     for fpath in chapter_files:
-        with open(fpath, 'r', encoding='utf-8') as f:
-            for line in f:
-                m = re.match(r'^# 第(\d+)章', line)
-                if m:
-                    available_chapters.add(int(m.group(1)))
+        for line in _fsutil.read_lines(fpath):
+            m = re.match(r'^# 第(\d+)章', line)
+            if m:
+                available_chapters.add(int(m.group(1)))
 
     invalid = 0
     no_chapter = 0
@@ -160,7 +158,8 @@ if '--validate' in sys.argv:
     print(f"Entries without chapter ref: {no_chapter}")
     print(f"Entries with invalid chapter ref: {invalid}")
     if invalid > 0 or no_chapter > 0:
-        sys.exit(1)
+        raise _errors.ToolError(f'{invalid} invalid chapter reference(s), '
+                                f'{no_chapter} without one')
     print("All chapter references resolve correctly.")
     sys.exit(0)
 
@@ -174,12 +173,11 @@ for fpath in chapter_files:
     fname = os.path.basename(fpath)
     # Extract chapter number from filename or content
     ch_num = None
-    with open(fpath, 'r', encoding='utf-8') as f:
-        for line in f:
-            m = re.match(r'^# 第(\d+)章', line)
-            if m:
-                ch_num = int(m.group(1))
-                break
+    for line in _fsutil.read_lines(fpath):
+        m = re.match(r'^# 第(\d+)章', line)
+        if m:
+            ch_num = int(m.group(1))
+            break
 
     lines = _fsutil.read_lines(fpath)
 

@@ -411,8 +411,8 @@ def report_missing(check_mode: bool = False) -> int:
                     missing_count += 1
 
     if check_mode and missing_count > 0:
-        print(f"\nFound {missing_count} missing term(s). Use --report-missing for details.")
-        sys.exit(1)
+        raise _errors.ToolError(
+            f'Found {missing_count} missing term(s). Use --report-missing for details.')
 
     return missing_count
 

@@ -63,14 +63,12 @@ if os.path.exists(generate_script):
     )
     print(result.stdout)
     if result.returncode != 0:
-        print("HTML generation FAILED:", result.stderr, file=sys.stderr)
-        sys.exit(1)
+        raise _errors.ToolError(f"HTML generation FAILED: {result.stderr}")
 else:
     print(f"Using existing HTML at {html_path}")
 
 if not os.path.exists(html_path):
-    print(f"HTML file not found: {html_path}", file=sys.stderr)
-    sys.exit(1)
+    raise _errors.ToolError(f"HTML file not found: {html_path}")
 
 html_size = os.path.getsize(html_path)
 print("\n=== Step 2: Converting HTML to PDF ===")
@@ -108,8 +106,9 @@ print(f"  Parsed {len(headings)} headings from HTML")
 try:
     from playwright.sync_api import sync_playwright
 except ImportError:
-    print("Playwright not installed. Run: pip install playwright && python3 -m playwright install chromium", file=sys.stderr)
-    sys.exit(1)
+    raise _errors.ToolError(
+        "Playwright not installed. Run: pip install playwright && "
+        "python3 -m playwright install chromium") from None
 
 print("Launching Chromium via Playwright...")
 headings_json = []
@@ -201,9 +200,9 @@ try:
     generated_with_markers = True
     print("  PDF rendered via Playwright successfully")
 except Exception as e:  # noqa: BLE001 - top-level guard must report, not abort
-    print(f"  Playwright rendering FAILED: {e}", file=sys.stderr)
-    print("  Refusing to reuse an existing PDF because it may be stale.", file=sys.stderr)
-    sys.exit(1)
+    raise _errors.ToolError(
+        f"  Playwright rendering FAILED: {e}\n"
+        "  Refusing to reuse an existing PDF because it may be stale.") from e
 
 # ══════════════════════════════════════════════════════════════════════════
 # Step 3: Post-process with pypdf to add PDF outlines (bookmarks)
@@ -419,13 +418,10 @@ try:
     print("  Outlines written OK")
 
 except ImportError:
-    print("  pypdf not installed — outlines skipped (pip install pypdf)")
-    sys.exit(1)
+    raise _errors.ToolError(
+        "  pypdf not installed — outlines skipped (pip install pypdf)") from None
 except Exception as e:  # noqa: BLE001 - top-level guard must report, not abort
-    print(f"  Outline generation FAILED: {e}", file=sys.stderr)
-    import traceback
-    traceback.print_exc()
-    sys.exit(1)
+    raise _errors.ToolError(f"  Outline generation FAILED: {e}") from e
 
 file_size = os.path.getsize(pdf_path)
 print("\n=== PDF Generated Successfully ===")

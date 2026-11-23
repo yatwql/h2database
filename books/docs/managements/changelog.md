@@ -477,6 +477,7 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **最后 10 处 `sys.exit(1)` 收口（rf-41 完成）**：`manuscript/glossary.py`、`manuscript/index.py`(2)、`manuscript/terms.py`、`render/to_pdf.py`(6) 的失败点全部改为抛 `ToolError`，消息与退出码同源；顺带把这几处直接 `open()` 的读取换成 `_fsutil.read_lines()`（缺文件时给的是同一套 `ToolError` 消息，而不是裸 `OSError`）。至此仓库里不再有「先打印再 `sys.exit(1)`」的失败路径。
 - **`render/to_epub.py` 的六个失败点统一走 `ToolError`**：缺 pandoc、`merge.py` 失败、缺合并稿、pandoc 退出码非零、pandoc 消失、没产出 EPUB——都从「先打印再 `sys.exit(1)`」改为一个带消息与退出码的异常，由入口统一转换，消息不再分两处维护。（rf-41）
 - **`audit/style_schema.py::validate`（100 行）按检查组拆开**：顶层键、图注预设、体量阈值、文风目标、规则与深度、模板、文件预算各一个 `_check_*` 助手，`validate` 只负责拼接。十二种被改坏的 style.json 上输出逐字节相同；≥60 行函数 27 → 26。（rf-40）
 - **单文件下限 77 → 78**：夹具补上 `data/tmpl/templates.toml`（新书脚手架会逐字复制它，此前夹具缺这一份，用例只能走到「读模板」之前），`core/scaffold.py` 77 → 98%——新增 10 条用例覆盖三种坏配置的具名拒绝、手稿目录不可读、脚手架产出的五份文档侧文件、二次执行不改已写文件、`set_source` 的仓库/目录/空值三种形态、`create_book` 与命令行入口两种收尾。最薄处变成 `audit/content_volume.py`（78.6%），下限随之抬到 78。

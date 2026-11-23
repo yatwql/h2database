@@ -28,7 +28,7 @@ import os
 import re
 import sys
 
-from lib import _config, _fsutil
+from lib import _config, _errors, _fsutil
 
 _fsutil.pin_stdout_utf8()
 
@@ -46,8 +46,7 @@ hierarchy_check = '--hierarchy-check' in sys.argv
 if hierarchy_check:
     index_path = os.path.join(src_dir, 'back', 'index.md')
     if not os.path.exists(index_path):
-        print(f'ERROR: index not found at {index_path}')
-        sys.exit(1)
+        raise _errors.ToolError(f'ERROR: index not found at {index_path}')
 
     main_count = 0
     sub_count = 0
@@ -56,24 +55,23 @@ if hierarchy_check:
     main_with_subs = 0
     last_main_had_sub = False
 
-    with open(index_path, 'r', encoding='utf-8') as fh:
-        for raw in fh:
-            if raw.startswith('## '):
-                section_count += 1
-                continue
-            if raw.startswith('  see also:'):
-                see_also_count += 1
-                continue
-            if raw.startswith('  - '):
-                sub_count += 1
-                if not last_main_had_sub:
-                    main_with_subs += 1
-                    last_main_had_sub = True
-                continue
-            if raw.startswith('- '):
-                main_count += 1
-                last_main_had_sub = False
-                continue
+    for raw in _fsutil.read_lines(index_path):
+        if raw.startswith('## '):
+            section_count += 1
+            continue
+        if raw.startswith('  see also:'):
+            see_also_count += 1
+            continue
+        if raw.startswith('  - '):
+            sub_count += 1
+            if not last_main_had_sub:
+                main_with_subs += 1
+                last_main_had_sub = True
+            continue
+        if raw.startswith('- '):
+            main_count += 1
+            last_main_had_sub = False
+            continue
 
     print('=== Index Hierarchy Report ===')
     print(f'  sections (## headings):  {section_count}')
@@ -97,8 +95,8 @@ if hierarchy_check:
         fails.append(f"total {main_count + sub_count} < {floors['total']}")
 
     if fails:
-        print(f'\nFAIL: hierarchy below the configured floor ({"; ".join(fails)})')
-        sys.exit(1)
+        raise _errors.ToolError(
+            f'FAIL: hierarchy below the configured floor ({"; ".join(fails)})')
     print('\nOK: hierarchy meets the configured floor '
           f'(main>={floors["main"]}, sub>={floors["sub"]}, '
           f'see_also>={floors["see_also"]}, total>={floors["total"]})')
@@ -112,8 +110,7 @@ entries = []  # (term, chapter, section_ref, type)
 
 for fpath in chapter_files:
     fname = os.path.basename(fpath)
-    with open(fpath, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
+    lines = _fsutil.read_lines(fpath)
 
     # Track section numbers per file
     section_counters = [0, 0, 0, 0]  # H1, H2, H3, H4
