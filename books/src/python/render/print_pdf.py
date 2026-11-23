@@ -106,12 +106,14 @@ def render_pdf(html_path: str, pdf_path: str, engine: Any = None,
                 h.parentNode.insertBefore(m, h);
             });
         }""")
+        scale = float(_config.THRESHOLDS.get('print_scale', 1.0) or 1.0)
         page.pdf(
             path=pdf_path,
             format='A4',
-            margin={'top': '22mm', 'bottom': '22mm', 'left': '18mm', 'right': '18mm'},
+            scale=scale,
+            margin={'top': '20mm', 'bottom': '25mm', 'left': '15mm', 'right': '15mm'},
             print_background=True,
-            display_header_footer=True,
+            display_header_footer=False,
             header_template=header_template(running_head, label),
             footer_template=footer_template(),
             prefer_css_page_size=False,

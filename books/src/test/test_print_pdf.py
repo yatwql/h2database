@@ -128,8 +128,12 @@ class PrintGradePdfTest(unittest.TestCase):
         self.module.render_pdf(self.html, self.pdf, engine=fake_engine(page),
                                running_head='书', label='印刷版 v0.1')
         self.assertEqual(page.pdf_kwargs['format'], 'A4')
-        self.assertTrue(page.pdf_kwargs['display_header_footer'])
-        self.assertIn('书', page.pdf_kwargs['header_template'])
+        # the printed look matches the reference edition: no running header or
+        # footer band, and the body is scaled by the configured print_scale
+        self.assertFalse(page.pdf_kwargs['display_header_footer'])
+        self.assertEqual(page.pdf_kwargs['margin']['left'], '15mm')
+        self.assertEqual(page.pdf_kwargs['margin']['bottom'], '25mm')
+        self.assertGreaterEqual(float(page.pdf_kwargs['scale']), 1.0)
         self.assertTrue(os.path.exists(self.pdf))
 
     def test_page_texts_and_content_start(self):
