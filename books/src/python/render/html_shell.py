@@ -16,6 +16,7 @@ STYLE = r"""
 html, body { min-height: 100vh; }
 body {
     font-family: -apple-system, 'Microsoft YaHei', sans-serif;
+    font-synthesis: none;   /* fake bold cannot be embedded: Chromium writes Type3 glyphs */
     line-height: 1.8; color: #333; background: #fafafa;
     display: flex; flex-direction: column;
 }
@@ -304,7 +305,7 @@ li { margin: 0.3em 0; }
 # fallbacks so the same config works on macOS and Windows.
 SANS_STACK = ('"Droid Sans Fallback", "Noto Sans CJK SC", "Source Han Sans SC", '
               '"Microsoft YaHei", "PingFang SC", sans-serif')
-MONO_STACK = ('"DejaVu Sans Mono", "Noto Sans Mono CJK SC", Consolas, '
+MONO_STACK = ('"DejaVu Sans Mono", "Droid Sans Fallback", Consolas, '
               '"Courier New", monospace')
 
 
