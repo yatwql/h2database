@@ -421,6 +421,12 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     if args.book:
         os.environ['BOOK_ROOT'] = os.path.abspath(args.book)
+        marker = os.path.join(os.environ['BOOK_ROOT'], 'data', 'book', 'book.toml')
+        if not os.path.isfile(marker):
+            # same contract as the CLI and make.py: one message, status 2
+            print(f'error: 没找到 book.toml，试过 {os.environ["BOOK_ROOT"]}',
+                  file=sys.stderr)
+            return 2
     if args.edition:
         os.environ['BOOK_EDITION'] = args.edition
     if args.once:

@@ -14,6 +14,7 @@ import pathlib
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 
 import _fixture
 
@@ -137,6 +138,34 @@ class TwoBooksTest(unittest.TestCase):
         roots = _config.candidate_books(self.one, start=self.tmp)
         self.assertEqual(roots[0], self.one)
         self.assertIn(os.path.abspath(self.two), roots)
+
+    def test_a_library_that_cannot_be_listed_still_yields_itself(self):
+        self.assertEqual(_config.books_in(os.path.join(self.tmp, 'nope')), [])
+        self.assertEqual(_config.books_in(self.one), [self.one])
+
+    def test_an_invalid_policy_file_names_the_file(self):
+        path = os.path.join(self.one, 'data', 'config', 'broken.json')
+        with open(path, 'w', encoding='utf-8') as fh:
+            fh.write('{broken')
+        with self.assertRaises(_config.ConfigError) as caught:
+            _config._read_policy(path)
+        self.assertIn('invalid JSON', str(caught.exception))
+
+    def test_without_split_policies_the_legacy_file_is_used(self):
+        legacy = os.path.join(self.tmp, 'config.json')
+        with open(legacy, 'w', encoding='utf-8') as fh:
+            json.dump({'thresholds': {'custom': 1}}, fh)
+        merged = _config._merge_policy({}, {}, legacy)
+        self.assertEqual(merged['thresholds']['custom'], 1)
+
+    def test_toolchain_budgets_are_reachable_as_thresholds(self):
+        merged = _config._merge_policy({'toolchain': {'coverage_fail_under': 88}}, {}, '')
+        self.assertEqual(merged['thresholds']['coverage_fail_under'], 88)
+
+    def test_candidates_survive_a_parent_that_cannot_be_listed(self):
+        with mock.patch.object(_config.os, 'listdir', side_effect=OSError('denied')):
+            roots = _config.candidate_books(self.one)
+        self.assertIn(self.one, roots)
 
     def test_a_path_that_escapes_the_book_root_is_refused(self):
         book = os.path.join(self.one, 'data', 'book', 'book.toml')
