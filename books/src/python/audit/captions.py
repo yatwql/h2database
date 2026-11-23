@@ -195,7 +195,7 @@ def render_report(violations: Iterable[Violation], threshold: dict) -> int:
     print(f'  {"TOTAL":<10}: {total:>4}')
     return total
 
-def main(argv: list[str]) -> int:
+def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--threshold', choices=list(THRESHOLDS), default='normal',
                         help='violation threshold preset (default: normal)')
@@ -207,61 +207,74 @@ def main(argv: list[str]) -> int:
                         help='restrict scan to files matching GLOB under books/')
     parser.add_argument('--update-baseline', action='store_true',
                         help='accept the current violations as the reviewed backlog')
-    args = parser.parse_args(argv)
+    return parser
 
+
+def _violation_keys(violations) -> set[str]:
+    return {f'{os.path.relpath(v.file, _config.BOOK_ROOT)}:{v.fig_id}' for v in violations}
+
+
+def _json_report(args, threshold: dict, violations) -> int:
+    payload = {
+        'threshold': args.threshold,
+        'min_chars': threshold['min_chars'],
+        'max_chars': threshold['max_chars'],
+        'count': len(violations),
+        'violations': [v.to_record() for v in violations],
+    }
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    return 0 if len(violations) <= threshold['fail_at'] else 1
+
+
+def _diff_report(args, violations) -> int:
+    """Compare the current run against a saved JSON baseline."""
+    try:
+        with open(args.diff, encoding='utf-8') as fh:
+            baseline = json.load(fh)
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f'error: cannot read baseline {args.diff}: {exc}', file=sys.stderr)
+        return 2
+    baseline_keys = {(v['file'], v['fig_id']) for v in baseline['violations']}
+    current_keys = {(v.to_record()['file'], v.fig_id) for v in violations}
+    fixed = baseline_keys - current_keys
+    new = current_keys - baseline_keys
+    print('与基线比较：')
+    print(f'  基线违规：{baseline["count"]}')
+    print(f'  当前违规：{len(violations)}')
+    print(f'  已修复  ：{len(fixed)}')
+    print(f'  新引入  ：{len(new)}')
+    if new:
+        print('  新引入的违规：')
+        for name, fig_id in sorted(new):
+            print(f'    {name} 图 {fig_id}')
+    return 0
+
+
+def main(argv: list[str]) -> int:
+    args = _parser().parse_args(argv)
     threshold = THRESHOLDS[args.threshold]
     violations = scan(threshold, args.target)
+    keys = _violation_keys(violations)
 
-    keys = {f'{os.path.relpath(v.file, _config.BOOK_ROOT)}:{v.fig_id}' for v in violations}
     if args.update_baseline:
         path = _baseline.save('captions', keys,
                               'Reviewed caption backlog: figures written before the verb rule.')
         print(f'图注基线已更新：{len(keys)} 项 → {os.path.relpath(path, _config.BOOK_ROOT)}')
         return 0
-    if not args.diff:
-        new, stale = _baseline.split('captions', keys)
-        violations = [v for v in violations
-                      if f'{os.path.relpath(v.file, _config.BOOK_ROOT)}:{v.fig_id}' in new]
-    else:
-        new, stale = set(), set()
 
     if args.json:
-        payload = {
-            'threshold': args.threshold,
-            'min_chars': threshold['min_chars'],
-            'max_chars': threshold['max_chars'],
-            'count': len(violations),
-            'violations': [v.to_record() for v in violations],
-        }
-        print(json.dumps(payload, ensure_ascii=False, indent=2))
-        return 0 if len(violations) <= threshold['fail_at'] else 1
-
+        return _json_report(args, threshold, violations)
     if args.diff:
-        try:
-            with open(args.diff, encoding='utf-8') as fh:
-                baseline = json.load(fh)
-        except (OSError, json.JSONDecodeError) as exc:
-            print(f'error: cannot read baseline {args.diff}: {exc}', file=sys.stderr)
-            return 2
-        baseline_keys = {(v['file'], v['fig_id']) for v in baseline['violations']}
-        current_keys = {(v.to_record()['file'], v.fig_id) for v in violations}
-        fixed = baseline_keys - current_keys
-        new = current_keys - baseline_keys
-        print('与基线比较：')
-        print(f'  基线违规：{baseline["count"]}')
-        print(f'  当前违规：{len(violations)}')
-        print(f'  已修复  ：{len(fixed)}')
-        print(f'  新引入  ：{len(new)}')
-        if new:
-            print('  新引入的违规：')
-            for f, fid in sorted(new):
-                print(f'    {f} 图 {fid}')
-        return 0
+        return _diff_report(args, violations)
 
+    new, stale = _baseline.split('captions', keys)
+    violations = [v for v in violations
+                  if f'{os.path.relpath(v.file, _config.BOOK_ROOT)}:{v.fig_id}' in new]
     total = render_report(violations, threshold)
     if stale:
         print(f'  基线中有 {len(stale)} 项已不再出现（可用 --update-baseline 收缩）')
     return 0 if total <= threshold['fail_at'] else 1
+
 
 if __name__ == '__main__':
     sys.exit(_errors.run(main, sys.argv[1:]))

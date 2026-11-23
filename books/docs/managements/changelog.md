@@ -477,6 +477,7 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **四个审计脚本的 `main()` 拆开（rf-40 第五批）**：`audit/captions.py`（图注基线/JSON/与基线对比三路各自成函数）、`audit/readability.py`（围栏扫描、HTML 越界检查、报告三段）、`audit/figure_clusters.py`（参数、扫描、汇总、两种输出）、`audit/smart.py::check_figure_refs`（图注提取、引用判定、逐文件报告）。真实书目上的输出与判定不变（图注覆盖 599 张 / 597 引用，仍 PASS）。≥60 行函数 16 → 12。
 - **六个长函数按职责拆开（rf-40 第三/四批）**：`test_report.py::main`（96 → 解析器 + 每个子命令一个处理函数 + 分发表）、`make.py::main`（85 → 解析器、选择落地、选择校验、步骤执行四段）、`audit/index_xrefs.py::parse_index`（84 → 行分类三助手）、`render/pdf_toc_links.py::add_links`（81 → 输入校验/读 PDF/矩形换算是三个助手，且失败改抛 `ToolError`）、`audit/source_refs.py::print_report`（77 → 每个报告段落一个打印函数）、`audit/check_architecture.py::check`（77 → 每条规则一个 `_*_problems`）。六处都用同一批输入比对过输出：`test_report` 的子命令、`make` 的 26 条用例、真实索引的解析结果、架构门禁的整树报告、坐标报告全文——逐字节相同。≥60 行函数 22 → 16。
 - **三个长函数按职责拆开（rf-40 第二批）**：`audit/style.py::detect_sentence_monotony`（122 行）拆成「分段 / 句首提取 / 单调判定」三步，`audit/source_refs.py::main`（100 行）拆成参数、建索引、扫描、基线维护与两种输出，`render/verify_pdf.py::verify`（97 行）拆成输入、大纲、TOC 链接、版面与字体五组。三处都用「改动前后同一批输入产出逐字节相同」验证：样式用九种段落形态、坐标用真实书目三种调用、PDF 校验用合成 PDF 的六种情形。≥60 行函数 26 → 23。
 - **最后 10 处 `sys.exit(1)` 收口（rf-41 完成）**：`manuscript/glossary.py`、`manuscript/index.py`(2)、`manuscript/terms.py`、`render/to_pdf.py`(6) 的失败点全部改为抛 `ToolError`，消息与退出码同源；顺带把这几处直接 `open()` 的读取换成 `_fsutil.read_lines()`（缺文件时给的是同一套 `ToolError` 消息，而不是裸 `OSError`）。至此仓库里不再有「先打印再 `sys.exit(1)`」的失败路径。

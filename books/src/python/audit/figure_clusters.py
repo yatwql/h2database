@@ -143,7 +143,7 @@ def find_clusters(path: str, min_figs: int, window: int) -> list[dict]:
         })
     return out
 
-def main(argv: list[str]) -> int:
+def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     clusters = _config.STYLE_POLICY.get('clusters') or {}
     parser.add_argument('--min', type=int, default=int(clusters.get('min_figures', 3)),
@@ -155,57 +155,74 @@ def main(argv: list[str]) -> int:
                         help='only print clusters that already have a bridge')
     parser.add_argument('--needs-bridge', action='store_true',
                         help='only print clusters lacking a bridge')
-    args = parser.parse_args(argv)
+    return parser
 
+
+def _scan(min_figs: int, window: int) -> dict[str, list[dict]]:
+    """Clusters per file, for the chapters and appendices this book declares."""
     paths = sorted(glob(os.path.join(_config.MANUSCRIPT_DIR, 'ch*.md')))
     paths.extend(sorted(glob(os.path.join(_config.MANUSCRIPT_DIR, 'appendix-*.md'))))
-
-    total_clusters = 0
-    total_bridged = 0
     by_file: dict[str, list[dict]] = {}
-    for p in paths:
-        cl = find_clusters(p, args.min, args.window)
-        if cl:
-            by_file[p] = cl
-            total_clusters += len(cl)
-            total_bridged += sum(1 for c in cl if c['bridged'])
+    for path in paths:
+        found = find_clusters(path, min_figs, window)
+        if found:
+            by_file[path] = found
+    return by_file
 
-    if args.json:
-        payload = {
-            'min_figs': args.min,
-            'window_lines': args.window,
-            'total_clusters': total_clusters,
-            'bridged': total_bridged,
-            'unbridged': total_clusters - total_bridged,
-            'files': {os.path.relpath(p, _config.BOOK_ROOT).replace(os.sep, '/'): cl
-                      for p, cl in by_file.items()},
-        }
-        print(json.dumps(payload, ensure_ascii=False, indent=2))
-        return 0
 
+def _totals(by_file: dict[str, list[dict]]) -> tuple[int, int]:
+    total = sum(len(clusters) for clusters in by_file.values())
+    bridged = sum(1 for clusters in by_file.values()
+                  for cluster in clusters if cluster['bridged'])
+    return total, bridged
+
+
+def _json_report(args, by_file: dict[str, list[dict]], total: int, bridged: int) -> int:
+    payload = {
+        'min_figs': args.min,
+        'window_lines': args.window,
+        'total_clusters': total,
+        'bridged': bridged,
+        'unbridged': total - bridged,
+        'files': {os.path.relpath(path, _config.BOOK_ROOT).replace(os.sep, '/'): clusters
+                  for path, clusters in by_file.items()},
+    }
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    return 0
+
+
+def _print_clusters(args, by_file: dict[str, list[dict]], total: int, bridged: int) -> None:
     print('=' * 72)
     print(f'图簇检测  min={args.min}  window={args.window}  '
-          f'总数={total_clusters}  已桥接={total_bridged}  '
-          f'待桥接={total_clusters - total_bridged}')
+          f'总数={total}  已桥接={bridged}  待桥接={total - bridged}')
     print('=' * 72)
-    for path, cl in sorted(by_file.items()):
+    for path, clusters in sorted(by_file.items()):
         rel = os.path.relpath(path, _config.BOOK_ROOT).replace(os.sep, '/')
-        items = cl
+        items = clusters
         if args.has_bridge:
-            items = [c for c in cl if c['bridged']]
+            items = [c for c in clusters if c['bridged']]
         if args.needs_bridge:
-            items = [c for c in cl if not c['bridged']]
+            items = [c for c in clusters if not c['bridged']]
         if not items:
             continue
         print(f'\n## {rel}  ({len(items)} 处)')
-        for c in items:
-            tag = '✓ 已桥接' if c['bridged'] else '○ 待桥接'
-            ids = ', '.join(c['fig_ids'])
-            hint = f"  hint=「{c['bridge_hint']}」" if c['bridged'] else ''
-            print(f"  L{c['first_line']:>5}-L{c['last_line']:<5} "
-                  f"{c['count']} 张  span={c['span']:>3}行  {tag}{hint}")
-            print(f"           figs: {ids}")
+        for cluster in items:
+            tag = '✓ 已桥接' if cluster['bridged'] else '○ 待桥接'
+            hint = f"  hint=「{cluster['bridge_hint']}」" if cluster['bridged'] else ''
+            print(f"  L{cluster['first_line']:>5}-L{cluster['last_line']:<5} "
+                  f"{cluster['count']} 张  span={cluster['span']:>3}行  {tag}{hint}")
+            print(f"           figs: {', '.join(cluster['fig_ids'])}")
+
+
+def main(argv: list[str]) -> int:
+    args = _parser().parse_args(argv)
+    by_file = _scan(args.min, args.window)
+    total, bridged = _totals(by_file)
+    if args.json:
+        return _json_report(args, by_file, total, bridged)
+    _print_clusters(args, by_file, total, bridged)
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(_errors.run(main, sys.argv[1:]))

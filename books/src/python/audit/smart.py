@@ -29,10 +29,40 @@ dist_dir = _config.DIST_DIR
 DIAGRAM_MARKERS = ['┌', '└', '├', '│', '▼', '▲', '→']
 
 # --- Figure reference check (--fig-refs) ---
+def _figures_in(lines: list[str]) -> list[tuple[int, str, str]]:
+    """(1-based line, figure id, caption) for every caption line."""
+    caption_re = _mdutil.FIGURE_CAPTION_RE
+    figures = []
+    for index, line in enumerate(lines):
+        match = caption_re.match(line.strip())
+        if match:
+            figures.append((index + 1, match.group(1), match.group(2).strip()))
+    return figures
+
+
+def _is_referenced(lines: list[str], line_number: int, fig_id: str,
+                   before: int = 101, after: int = 30) -> bool:
+    """Whether the text around a caption refers to it.
+
+    Prose points at a figure in several shapes (如图 X-Y 所示, 图 X-Y，, 图 X-Y 和 Z);
+    all of them count, and the window is asymmetric because a reference usually
+    precedes the caption.
+    """
+    start = max(0, line_number - before)
+    end = min(len(lines), line_number + after)
+    patterns = (f'如图 {fig_id} 所示', f'图 {fig_id} ', f'图 {fig_id}。', f'图 {fig_id}）',
+                f' 和 {fig_id} ', f' 与 {fig_id} ', f'、{fig_id} ')
+    for index in range(start, end):
+        if index + 1 == line_number:
+            continue
+        line = lines[index]
+        if any(pattern in line for pattern in patterns):
+            return True
+    return False
+
+
 def check_figure_refs():
     """Scan all figures, count references, report coverage per file."""
-    # Accepts both numeric (7-3) and appendix-style (A-1) figure IDs.
-    CAPTION_RE = _mdutil.FIGURE_CAPTION_RE
     total_figs = 0
     total_refd = 0
 
@@ -43,47 +73,18 @@ def check_figure_refs():
     for filepath in _config.chapter_files(include_cover=False):
         short = os.path.basename(filepath)
         lines = _fsutil.read_lines(filepath)
-
-        figures = []  # (line_num_1idx, fig_id, caption)
-        for i, line in enumerate(lines):
-            m = CAPTION_RE.match(line.strip())
-            if m:
-                figures.append((i + 1, m.group(1), m.group(2).strip()))
+        figures = _figures_in(lines)
 
         if not figures:
             print(f"  {short}: 0 figures")
             continue
 
-        refd_count = 0
-        unreferenced = []
-
-        for ln, fid, cap in figures:
-            found = False
-            start = max(0, ln - 101)
-            end = min(len(lines), ln + 30)
-            for j in range(start, end):
-                if j + 1 == ln:
-                    continue
-                line = lines[j]
-                # Check various reference patterns
-                if f'如图 {fid} 所示' in line:
-                    found = True
-                    break
-                # Check "图 X-Y " (with any trailing context: space, 和, 与, 、, etc.)
-                if ('图 ' + fid + ' ') in line or ('图 ' + fid + '。') in line or ('图 ' + fid + '）') in line:
-                    found = True
-                    break
-                # Check combined refs: "图 X-Y 和 Z", "X-Y 与 Z" (fig ID after 和/与)
-                if (' 和 ' + fid + ' ') in line or (' 与 ' + fid + ' ') in line or ('、' + fid + ' ') in line:
-                    found = True
-                    break
-            if found:
-                refd_count += 1
-            else:
-                unreferenced.append((ln, fid, cap))
-
+        unreferenced = [(ln, fid, cap) for ln, fid, cap in figures
+                        if not _is_referenced(lines, ln, fid)]
+        refd_count = len(figures) - len(unreferenced)
         total_figs += len(figures)
         total_refd += refd_count
+
         pct = refd_count / len(figures) * 100 if figures else 0
         print(f"  {short}: {len(figures)} figures, {refd_count} referenced ({pct:.0f}%)")
         for ln, fid, cap in unreferenced:
@@ -96,6 +97,7 @@ def check_figure_refs():
     print(f"  TOTAL: {total_figs} figures, {total_refd} referenced ({overall_pct:.1f}%)")
     verdict = 'PASS' if overall_pct >= target_pct else 'NEEDS IMPROVEMENT'
     print(f"  COVERAGE: {verdict} (target >= {target_pct}%)")
+
 
 # --- Diagram counting ---
 def count_diagrams(text):
