@@ -24,7 +24,7 @@ _HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
 
-from lib import _fsutil  # noqa: E402
+from lib import _config, _fsutil, frontmatter  # noqa: E402
 
 # a line may sit a hair outside the column: justifier rounding, not a layout error
 EDGE_TOLERANCE_PT = 2.0
@@ -106,8 +106,14 @@ def check(pdf_path: str, merged: str | None) -> dict:
     headings = None
     if merged and os.path.exists(merged):
         text = _fsutil.read_text(merged)
-        headings = sum(1 for line in text.splitlines()
-                       if (m := HEADING_LINE.match(line)) and len(m.group(1)) <= depth)
+        lines = text.splitlines()
+        # the cover block is not part of the body, so its headings never reach the
+        # outline; counting them was what made this check report a phantom gap
+        _cover, body = frontmatter.split(
+            lines, [_config.TITLE,
+                    _config.project('display_title_en', _config.TITLE),
+                    _config.project('display_title_zh', _config.TITLE)])
+        headings = frontmatter.count_headings(body, depth)
     spills, unreadable = _outside_column(reader)
     report = {
         'pages': len(reader.pages),

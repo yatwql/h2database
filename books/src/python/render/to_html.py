@@ -12,6 +12,7 @@ import re
 import html_cache
 from html_shell import STYLE
 from lib import _config, _fsutil, _mdutil
+from lib import frontmatter as _frontmatter
 
 _fsutil.pin_stdout_utf8()
 
@@ -28,36 +29,10 @@ lines = _fsutil.read_lines(_config.merged_md())
 # `# 第N章`, which silently swallowed everything the front matter holds besides the
 # title — the reading guide and the preface never reached the document, and no gate
 # noticed because the outline simply had fewer entries than the manuscript.
-CHAPTER_LINE = re.compile(r'^# 第[\d一二三四五六七八九十百]+章')
-
-
-def _split_front_matter(lines: list[str], title: str) -> tuple[str, list[str]]:
-    """Separate the cover block from the front matter that must be rendered.
-
-    The cover is the book title heading and the meta lines beneath it, up to the
-    first chapter. Anything before it belongs to the body: the reading guide and
-    the preface used to be swallowed here, and the built PDF simply did not contain
-    them. When the file has no title heading at all, everything before the first
-    chapter is cover, which is what a minimal book looks like.
-    """
-    chapter_start = next((i for i, line in enumerate(lines) if CHAPTER_LINE.match(line)),
-                         len(lines))
-    # the title heading may be written in either language the book configures
-    titles = {'# ' + title,
-              '# ' + _config.project('display_title_en', title),
-              '# ' + _config.project('display_title_zh', title)}
-    cover_start = next((i for i, line in enumerate(lines[:chapter_start])
-                        if line.strip() in titles), None)
-    if cover_start is None:
-        return ''.join(lines[:chapter_start]), lines[chapter_start:]
-    body_start = next((i for i, line in enumerate(lines[:cover_start])
-                       if line.startswith('# ')), cover_start)
-    # the cover block keeps every line before the first chapter: the meta lines the
-    # cover renders (author, version, source table) sit under the title heading
-    return ''.join(lines[:chapter_start]), lines[body_start:cover_start] + lines[chapter_start:]
-
-
-cover_text, content_lines = _split_front_matter(lines, _config.TITLE)
+cover_text, content_lines = _frontmatter.split(
+    lines, [_config.TITLE,
+            _config.project('display_title_en', _config.TITLE),
+            _config.project('display_title_zh', _config.TITLE)])
 
 # Build TOC from main content only, tracking fence state
 toc_entries = []
