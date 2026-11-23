@@ -91,7 +91,7 @@ def render_pdf(html_path: str, pdf_path: str, engine: Any = None,
             const m = document.createElement('span');
             m.className = 'content-marker';
             m.textContent = '__CONTENT__';
-            m.style.cssText = 'display:inline;font-size:0.1px;color:transparent;';
+            m.style.cssText = 'display:inline;font-size:3px;color:#ffffff;';
             content.insertBefore(m, content.firstChild);
         }""")
         page.evaluate("""() => {
@@ -102,7 +102,7 @@ def render_pdf(html_path: str, pdf_path: str, engine: Any = None,
                 const m = document.createElement('span');
                 m.className = 'hdr-marker';
                 m.textContent = '__hdr_' + i + '__';
-                m.style.cssText = 'display:inline;font-size:0.1px;color:transparent;';
+                m.style.cssText = 'display:inline;font-size:3px;color:#ffffff;';
                 h.parentNode.insertBefore(m, h);
             });
         }""")
