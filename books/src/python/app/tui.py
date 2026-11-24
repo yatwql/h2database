@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import sys
 import unicodedata
 
@@ -270,11 +271,44 @@ def run_entry(action: str, label: str, force: bool = False) -> str:
         return _c('已取消', PALETTE['hint'])
     sys.stdout.write(_c(f'⠿ 正在执行 {label}（{action}）…', PALETTE['hint']) + '\n')
     sys.stdout.flush()
-    outcome = menu.run_report(action, label, force=force)
+    outcome = _run_with_progress(action, label, force)
     summary = status.render(outcome.ok, outcome.label + ('  --force' if force else ''),
                             outcome.elapsed, outcome.code)
     return (f'\n{outcome.tail}\n{summary}\n'
             f'{_c("详情见 " + menu.log_location() + "/", PALETTE["hint"])}')
+
+
+# A stage line in the log is the only honest progress an action can report; showing
+# it beats a spinner that says nothing for two minutes.
+LOG_LINE = re.compile(r'^\S+ \S+ \w+\s+[\w.]+\s+(.*)$')
+
+
+def _stage_text(line: str) -> str:
+    """The message part of a log line, without the timestamp and level."""
+    match = LOG_LINE.match(line)
+    return (match.group(1) if match else line).strip()
+
+
+def _run_with_progress(action: str, label: str, force: bool) -> menu.Outcome:
+    """Run the action and print the child's own output as it happens.
+
+    The log tail was a proxy; the child's lines are the real thing and they arrive
+    without polling. Consecutive repeats are collapsed so a spinner-free progress
+    list stays readable.
+    """
+    seen: set[str] = set()
+    last = ['']
+
+    def show(line: str) -> None:
+        text = _stage_text(line)
+        if not text or text == last[0] or text in seen:
+            return
+        seen.add(text)
+        last[0] = text
+        sys.stdout.write(f'   {_c(text[:100], PALETTE["hint"])}\n')
+        sys.stdout.flush()
+
+    return menu.run_report(action, label, force=force, on_progress=show)
 
 
 def edit_setting(key: str, reader=input) -> str:

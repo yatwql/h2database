@@ -820,6 +820,18 @@ def main(argv: list[str] | None = None) -> int:
                     or os.environ.get('BOOK_LLM_INGEST') == '1'
                     or _config.llm_ingest_prose())
 
+    # Nothing to polish is knowable before the source scan, which is what makes the
+    # wait long. Saying it up front costs milliseconds; saying it after two minutes
+    # of scanning is how a run feels like it did nothing.
+    if _USE_LLM and not (args.force or args.refresh_facts or args.only):
+        targets = list(CHAPTER_SPEC) + list(APPENDIX_SPEC)
+        if all(os.path.isfile(_config.manuscript(name)) for name in targets):
+            print('本轮不会生成或重写任何章节：正文文件都在，没有需要润色的新正文。')
+            print('LLM 不介入：导读/小结只在新生成或整篇重写的章节上润色。')
+            print('要润色已有正文：加 --force（整篇重写，旧文件先备份），'
+                  '或用 --only <章文件名> 只重写一章。')
+            return 0
+
     state = _load_state()
     if state is None:
         return 2

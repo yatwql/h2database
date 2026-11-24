@@ -38,6 +38,33 @@ def _settings() -> dict:
     }
 
 
+def log_file() -> str:
+    """The rotating log file this process writes (empty when logging is off)."""
+    folder = log_dir()
+    return os.path.join(folder, f'{_config.app_name()}.log') if folder else ''
+
+
+def tail_since(path: str, offset: int) -> tuple[list[str], int]:
+    """Lines written since `offset`, with the new offset.
+
+    A long action only tells its story through the log, so a UI that wants to say
+    more than "still running" reads it here instead of inventing its own progress
+    channel that would then disagree with the log.
+    """
+    if not path or not os.path.exists(path):
+        return [], offset
+    try:
+        size = os.path.getsize(path)
+        if size <= offset:
+            return [], offset
+        with open(path, encoding='utf-8', errors='replace') as handle:
+            handle.seek(offset)
+            text = handle.read()
+    except OSError:
+        return [], offset
+    return [line for line in text.splitlines() if line.strip()], size
+
+
 def retention_days() -> int:
     """How long any log survives; one policy for the rotating file and the reports."""
     return _settings()['retention_days']

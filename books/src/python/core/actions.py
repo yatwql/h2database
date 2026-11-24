@@ -6,6 +6,7 @@ regardless of how the toolchain is started.
 """
 from __future__ import annotations
 
+import contextlib
 import os
 import sys
 
@@ -66,17 +67,39 @@ def child_env() -> dict[str, str]:
     return env
 
 
-def _run(script: str, *args: str) -> tuple[int, str]:
-    proc = subprocess.run([sys.executable, os.path.join(PY_ROOT, script), *args],
-                          capture_output=True, text=True, cwd=repo_root(), check=False,
-                          env=child_env())
-    return proc.returncode, (proc.stdout or '') + (proc.stderr or '')
+def _invoke(command: list[str], on_line=None) -> tuple[int, str]:
+    """Run a child process, optionally reporting its output as it arrives.
+
+    A build or a delivery can take minutes; a UI that only learns the outcome at the
+    end can show nothing but a spinner. Streaming the child's own lines is the one
+    honest progress signal — it is the same text that ends up in the report.
+    """
+    if on_line is None:
+        proc = subprocess.run(command, capture_output=True, text=True,
+                              cwd=repo_root(), check=False, env=child_env())
+        return proc.returncode, (proc.stdout or '') + (proc.stderr or '')
+    chunks: list[str] = []
+    process = subprocess.Popen(command, stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT, text=True,
+                               cwd=repo_root(), env=child_env())
+    stream = process.stdout
+    if stream is None:  # pragma: no cover - PIPE was requested just above
+        return process.wait(), ''
+    for line in stream:
+        chunks.append(line)
+        # a UI callback must never break the run it is reporting on
+        with contextlib.suppress(Exception):
+            on_line(line.rstrip())
+    return process.wait(), ''.join(chunks)
 
 
-def _make(*args: str) -> tuple[int, str]:
-    proc = subprocess.run([sys.executable, MAKE, *args], capture_output=True, text=True,
-                          cwd=repo_root(), check=False, env=child_env())
-    return proc.returncode, (proc.stdout or '') + (proc.stderr or '')
+def _run(script: str, *args: str, on_line=None) -> tuple[int, str]:
+    command = [sys.executable, os.path.join(PY_ROOT, script), *args]
+    return _invoke(command, on_line)
+
+
+def _make(*args: str, on_line=None) -> tuple[int, str]:
+    return _invoke([sys.executable, MAKE, *args], on_line)
 
 
 def status() -> tuple[int, str]:
@@ -174,20 +197,20 @@ def analyze(use_llm: bool = False, force: bool = False,
     return volume_code, '\n'.join(out)
 
 
-def build() -> tuple[int, str]:
-    return _make('build')
+def build(on_line=None) -> tuple[int, str]:
+    return _make('build', on_line=on_line)
 
 
-def check() -> tuple[int, str]:
-    return _make('check')
+def check(on_line=None) -> tuple[int, str]:
+    return _make('check', on_line=on_line)
 
 
-def test() -> tuple[int, str]:
-    return _make('test')
+def test(on_line=None) -> tuple[int, str]:
+    return _make('test', on_line=on_line)
 
 
-def deliver() -> tuple[int, str]:
-    return _make('deliver')
+def deliver(on_line=None) -> tuple[int, str]:
+    return _make('deliver', on_line=on_line)
 
 
 def estimate_line(prompt: str, scenario: str = 'summary') -> str:
@@ -263,9 +286,22 @@ def run(action: str, **kwargs) -> tuple[int, str]:
     return _dispatch(action, **kwargs)
 
 
+def _dispatch_build(action: str, on_line) -> tuple[int, str]:
+    """The four report-producing actions, run so a caller can follow along."""
+    if action == 'build':
+        return build(on_line)
+    if action == 'check':
+        return check(on_line)
+    if action == 'test':
+        return test(on_line)
+    return deliver(on_line)
+
+
 def _dispatch(action: str, **kwargs) -> tuple[int, str]:
     if action == 'llm-ask':
         return llm_ask(kwargs.get('prompt', ''), kwargs.get('scenario', 'summary'))
+    if action in ('build', 'check', 'test', 'deliver'):
+        return _dispatch_build(action, kwargs.get('on_progress'))
     if action in ANALYZE_ACTIONS:
         LOG.info('action %s start', action)
         code, text = analyze(use_llm=action == 'analyze-llm' or bool(kwargs.get('use_llm')),

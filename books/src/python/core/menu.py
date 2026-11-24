@@ -186,11 +186,13 @@ def tail_of(text: str, limit: int = TAIL_LINES) -> str:
     return prefix + '\n'.join(shown)
 
 
-def run_report(action: str, label: str, **kwargs) -> Outcome:
+def run_report(action: str, label: str, on_progress=None, **kwargs) -> Outcome:
     """Run one action and summarise it (timing, exit code, output size, tail)."""
     from core import actions  # resolved per call: channels patch this module
 
     started = time.perf_counter()
+    if on_progress is not None:
+        kwargs['on_progress'] = on_progress
     code, text = actions.run(action, **kwargs)
     elapsed = time.perf_counter() - started
     counted = len([line for line in (text or '').splitlines() if line.strip()])
