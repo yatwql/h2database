@@ -62,6 +62,7 @@ python books/src/python/ingest/chapters.py   # 渲染章节
 books/
   data/      # 输入与状态：tmpl/（书与章节组织）、config/（基础与风格）、
              # language/（语言包）、manuscript/（手稿）、baselines/、state/
+             # cache/（缓存：字体索引、HTML 分片）、tmp/（一次性产物）
   src/
     python/  # lib/ 公共库、ingest/ 源码抽取（languages/ 分语言分析器）、
              # manuscript/ 手稿维护、audit/ 门禁、render/ 交付、app/ 入口
@@ -78,14 +79,14 @@ books/
 
 | 文档 | 内容 |
 | ------ | ------ |
+| [how-to-use.md](docs/manuals/how-to-use.md) | 日常怎么干：改正文、加章节、交付一版、提交前的顺序 |
 | [how-to-new-book.md](docs/manuals/how-to-new-book.md) | 新建/翻译一本书：四份文件的职责与脚手架 |
-| [how-to-config.md](docs/manuals/how-to-config.md) | 如何配置：数据组织、基础、风格、语言包、LLM |
+| [how-to-config.md](docs/manuals/how-to-config.md) | 如何配置：数据组织、版式与字体、风格、语言包、LLM |
 | [how-to-use-cli.md](docs/manuals/how-to-use-cli.md) | CLI 用法、动作、退出码 |
 | [how-to-use-tui.md](docs/manuals/how-to-use-tui.md) | TUI 菜单与 `--once` 脚本化 |
 | [how-to-use-web.md](docs/manuals/how-to-use-web.md) | Web 控制台与 JSON API |
-| [faq.md](docs/manuals/faq.md) | 常见问题（环境、配置、门禁、交付、日志、LLM） |
-| [how-to-use.md](docs/manuals/how-to-use.md) | 门禁与脚本速查（面向开发者） |
 | [scripts-and-reference.md](docs/manuals/scripts-and-reference.md) | 全部脚本清单：命名约定、日常封装、各层入口、门禁→脚本对照 |
+| [faq.md](docs/manuals/faq.md) | 常见问题（环境、配置、门禁、交付、字体与密度、日志、LLM） |
 
 **规范与设计（`docs/managements/`）**
 
@@ -102,6 +103,8 @@ books/
 | [requirements.md](docs/managements/requirements.md) | 范围与交付物 |
 | [plan.md](docs/managements/plan.md) | 工作流、维护策略、在建项、风险 |
 | [testplan.md](docs/managements/testplan.md) | 质量门禁与验证命令（验证唯一权威） |
+| [quality-model.md](docs/managements/quality-model.md) | 质量策略：谁做判断、什么时候做、代价多少（判据清单在 testplan） |
+| [review-findings.md](docs/managements/review-findings.md) | 未闭合问题台账（rf-N 编号的唯一归属） |
 | [changelog.md](docs/managements/changelog.md) | 版本历史 |
 | [style-guide.md](docs/managements/style-guide.md) | 写作与格式规范 |
 | [DESIGN.md](docs/managements/DESIGN.md) | 设计契约总纲（三界面共有规则） |

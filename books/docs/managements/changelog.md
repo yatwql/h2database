@@ -477,6 +477,7 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **用户文档补齐与重排**：`README.md` 的用户文档表按「先日常、后接口、参考、问答」重排并更正描述，目录图补 `data/cache`，管理文档索引补 `quality-model.md`、`review-findings.md`；`how-to-use.md` 的交付一节写明 `FONTS`/`DENSITY`/`CHAPTERS` 三个判据与页面松紧的标定命令；`faq.md` 增加三条实战问答（Type3 字体失败、密度失败或换机后页数变化、EPUB 章节失败）。
 - **需求与技术设计同步**：`requirements.md` 的 FR-13/14/15 补上「字体按角色声明、不得回落 Type3、密度区间、每章恰好一个一级标题」，并新增 FR-19（换书/换系统/换字体只改配置，字号行距由栏宽推导）；`technical.md` 的分层表补 `fonts`/`layout`/`frontmatter`，临时目录与缓存目录分开描述；`testplan.md` 补 FR-19 判据行并点名 `to_epub.py`，使 `requirement_trace` 与 `gate_trace` 同时通过。
 - **文档跟随实现更新**：`scripts-and-reference.md` 补齐 `pdf_metrics.py`、`audit/pdf_invariants.py`、`audit/epub_diff.py`、`audit/font_coverage.py`，`verify_pdf`/`verify_epub` 的说明加上 `FONTS`/`DENSITY`/`CHAPTERS`，公共库加上 `fonts`/`layout`/`frontmatter`；`how-to-config.md` 新增「版式与字体」键表（`layout_*`、`font_stack_*`、PDF 判据四项）并在 `[paths]` 增加 `cache`；`testplan.md` 的交付两行补上新判据；`folder.md` 说明 `data/tmp/` 与 `data/cache/` 的承诺差异。
 - **临时文件与缓存分开**：新增 `Config.cache_dir()`（`data/cache/`，按需创建，不可写时退回 `data/tmp/`），字体索引与 HTML 分片缓存都迁过去——它们可重建但有重建成本，`tmp/` 却随时可能被清空。`data/cache/` 同时加入 `.gitignore` 与 `excluded_dirs()`，避免被门禁当作正文。另加「默认值恒等」用例：`TypeScale.from_layout(Layout())` 必须等于 `TypeScale()` 的默认值，当场抓出两处漂移（`code_em` 0.625 vs 0.85、代码行距 1.0 vs 1.23），已统一取自 `DEFAULTS`。
