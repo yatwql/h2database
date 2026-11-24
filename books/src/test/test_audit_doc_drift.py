@@ -358,5 +358,45 @@ class ProjectNameTest(unittest.TestCase):
         with mock.patch.dict(self.drift._config.SOURCES, {'package_prefix': 'org.h2'}):
             self.assertEqual(self.drift.check_project_names([path]), [])
 
+
+
+class ManualScopeTest(unittest.TestCase):
+    """Manuals declare one dimension each, and never quote the design documents."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.drift = _fixture.load_module(self.root, 'doc_drift')
+        self.directory = os.path.join(self.tmp.name, 'manuals')
+        os.makedirs(self.directory, exist_ok=True)
+
+    def manual(self, name: str, body: str) -> str:
+        path = os.path.join(self.directory, name)
+        with open(path, 'w', encoding='utf-8') as handle:
+            handle.write(body)
+        return path
+
+    def test_a_manual_without_a_dimension_is_reported(self):
+        self.manual('a.md', '# 无维度\n正文。\n')
+        details = [f['detail'] for f in self.drift.check_manual_scope(self.directory)]
+        self.assertTrue(any('维度' in detail for detail in details))
+
+    def test_two_manuals_sharing_a_dimension_are_reported(self):
+        self.manual('a.md', '# A\n\n> 维度：配置\n')
+        self.manual('b.md', '# B\n\n> 维度：配置\n')
+        details = [f['detail'] for f in self.drift.check_manual_scope(self.directory)]
+        self.assertTrue(any('duplicates' in detail for detail in details))
+
+    def test_a_manual_quoting_a_management_document_is_reported(self):
+        self.manual('a.md', '# A\n\n> 维度：配置\n\n见 ../managements/testplan.md\n')
+        details = [f['detail'] for f in self.drift.check_manual_scope(self.directory)]
+        self.assertTrue(any('design docs' in detail for detail in details))
+
+    def test_a_clean_manual_passes(self):
+        self.manual('a.md', '# A\n\n> 维度：配置\n\n只看本文。\n')
+        self.assertEqual(self.drift.check_manual_scope(self.directory), [])
+
+
 if __name__ == '__main__':
     unittest.main()

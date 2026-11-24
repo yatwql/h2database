@@ -13,6 +13,9 @@
 
 ### 变更
 
+- **rf-63 收口**：`doc_drift.py` 85.8% → **89%**（手册维度缺失、维度重复、引用管理文档三条 + 干净手册）、
+  `app/tui.py` 86% → **88%**（改配置的非法序号、越界、空值、写入失败、成功回报；进度行的去重、空行、去时间戳）。
+
 - **`structure.py` 的 CSS/构建脚本检查一直静默跳过（rf-69）**：样式表拆到 `html_shell.py`、构建脚本移到
   `manuscript/` 后，检查仍读 `audit/to_html.py` 与 `audit/glossary.py`，于是常年走「跳过」「未找到」分支。
   现在两个检查抽成 `css_style_missing()` 与 `builder_script_problems()`，路径指向真实位置并同时扫

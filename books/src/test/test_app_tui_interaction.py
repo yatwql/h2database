@@ -444,5 +444,100 @@ def menu_estimate(action: str) -> tuple[int, int]:
             text = self.tui.run_entry('print', '印刷版 PDF')
         self.assertIn('用时 0:43', text)
         self.assertIn('预计', text)
+
+
+class EditSettingTest(unittest.TestCase):
+    """The settings prompt refuses anything it cannot apply, without raising."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.tui = _fixture.load_module(self.root, 'tui')
+
+    def answer(self, *replies: str):
+        queue = list(replies)
+        return lambda _prompt='': queue.pop(0) if queue else ''
+
+    def settings_row(self):
+        return [{'key': 'k', 'value': 'v', 'description': '说明'}]
+
+    def test_a_non_numeric_choice_changes_nothing(self):
+        with mock.patch.object(self.tui.settings, 'list_settings',
+                               return_value=self.settings_row()), \
+                redirect_stdout(io.StringIO()):
+            text = self.tui.configure(reader=self.answer('abc'))
+        self.assertEqual(text, '未修改')
+
+    def test_an_out_of_range_choice_changes_nothing(self):
+        with mock.patch.object(self.tui.settings, 'list_settings',
+                               return_value=self.settings_row()), \
+                redirect_stdout(io.StringIO()):
+            text = self.tui.configure(reader=self.answer('99'))
+        self.assertEqual(text, '未修改')
+
+    def test_an_empty_value_changes_nothing(self):
+        with mock.patch.object(self.tui.settings, 'list_settings',
+                               return_value=self.settings_row()):
+            text = self.tui.edit_setting('k', reader=self.answer(''))
+        self.assertEqual(text, '未修改')
+
+    def test_a_rejected_value_is_reported_as_a_failure(self):
+        with mock.patch.object(self.tui.settings, 'list_settings',
+                               return_value=[{'key': 'k', 'value': 'v'}]), \
+                mock.patch.object(self.tui.settings, 'set_value',
+                                  side_effect=ValueError('not allowed')):
+            text = self.tui.edit_setting('k', reader=self.answer('new'))
+        self.assertIn('修改失败', text)
+
+    def test_an_accepted_value_is_confirmed(self):
+        with mock.patch.object(self.tui.settings, 'list_settings',
+                               return_value=[{'key': 'k', 'value': 'v'}]), \
+                mock.patch.object(self.tui.settings, 'set_value', return_value='nv'):
+            text = self.tui.edit_setting('k', reader=self.answer('new'))
+        self.assertIn('已更新 k = nv', text)
+
+
+class ProgressLinesTest(unittest.TestCase):
+    """Progress lines drop repeats and keep the stamp; a joined line is unwrapped."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.tui = _fixture.load_module(self.root, 'tui')
+
+    def outcome(self):
+        return self.tui.menu.Outcome(action='build', label='构建', code=0,
+                                     output_lines=1, tail='', elapsed=1.0)
+
+    def run_with(self, lines: list[str]):
+        def fake(action, label, force=False, on_progress=None):
+            progress = on_progress or (lambda _line: None)
+            for line in lines:
+                progress(line)
+            return self.outcome()
+
+        buffer = io.StringIO()
+        with mock.patch.object(self.tui.menu, 'run_report', side_effect=fake), \
+                redirect_stdout(buffer):
+            self.tui._run_with_progress('build', '构建', False)
+        return buffer.getvalue()
+
+    def test_a_repeated_stage_is_printed_once(self):
+        out = self.run_with(['2026-01-01 00:00:00 INFO x 阶段一',
+                             '2026-01-01 00:00:01 INFO x 阶段一'])
+        self.assertEqual(out.count('阶段一'), 1)
+
+    def test_a_blank_line_is_ignored(self):
+        out = self.run_with(['   ', '阶段二'])
+        self.assertEqual(out.strip().count('阶段二'), 1)
+
+    def test_a_log_line_loses_its_timestamp(self):
+        out = self.run_with(['2026-01-01 00:00:00 INFO x 阶段三'])
+        self.assertNotIn('2026-01-01', out)
+        self.assertIn('阶段三', out)
+
+
 if __name__ == '__main__':
     unittest.main()
