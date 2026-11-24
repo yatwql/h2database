@@ -5,6 +5,7 @@ The renderer is a flat script; its long literal blocks live here so the logic
 stays readable. Moving text out must not change a byte of the output — the
 build hash is the acceptance check.
 """
+import functools
 import os as _os
 import sys as _sys
 
@@ -320,8 +321,16 @@ def _configured_families(key: str) -> list[str] | None:
     return None
 
 
-SANS_STACK = fonts.sans_stack(_configured_families('font_stack_sans'))
-MONO_STACK = fonts.mono_stack(_configured_families('font_stack_mono'))
+@functools.lru_cache(maxsize=1)
+def sans_stack() -> str:
+    """The sans stack for this host, resolved once per process."""
+    return fonts.sans_stack(_configured_families('font_stack_sans'))
+
+
+@functools.lru_cache(maxsize=1)
+def mono_stack() -> str:
+    """The mono stack for this host, resolved once per process."""
+    return fonts.mono_stack(_configured_families('font_stack_mono'))
 
 
 def apply_font_stacks(css: str) -> str:
@@ -332,9 +341,9 @@ def apply_font_stacks(css: str) -> str:
     Windows-only list and silently lost the cross-platform fallback; a role can only
     be bound in one place.
     """
-    root = (f':root {{ --font-sans: {SANS_STACK}; --font-mono: {MONO_STACK}; }}')
+    root = f':root {{ --font-sans: {sans_stack()}; --font-mono: {mono_stack()}; }}'
     return root + '\n' + css if ':root' not in css else css.replace(
-        ':root {', f':root {{ --font-sans: {SANS_STACK}; --font-mono: {MONO_STACK};', 1)
+        ':root {', f':root {{ --font-sans: {sans_stack()}; --font-mono: {mono_stack()};', 1)
 
 
 
@@ -363,33 +372,13 @@ def apply_layout(css: str) -> str:
     diagram row into three text rows — measured at +164 pages on this book, so it
     stays opt-out by default and a book that needs it sets the knob.
     """
-    code = _layout_value('layout_code_px')
-    try:
-        lead = float(_layout_value('layout_code_line_height'))
-    except (TypeError, ValueError):
-        lead = 0.0
-    if not lead:
-        # 0 means "the prose leading": code set tighter than the text around it is
-        # what makes a source-code page feel cramped
-        try:
-            lead = round(1.0 + float(_layout_value('layout_lead_ratio')), 3)
-        except (TypeError, ValueError):
-            lead = 1.23
-    # 0 means "derive it": the size that makes a line hold `layout_body_chars_per_line`
-    # characters, which is the one property of the type that must not depend on the book
-    try:
-        _body_raw = float(_layout_value('layout_body_px'))
-    except (TypeError, ValueError):
-        _body_raw = 16.0
-    def _num(key: str, fallback: float) -> float:
-        try:
-            return float(_layout_value(key))
-        except (TypeError, ValueError):
-            return fallback
-
-    _column_raw = _num('layout_column_px', 960)
-    _chars = _num('layout_body_chars_per_line', 40) or 40
-    body = _body_raw if _body_raw else max(8, min(24, round(_column_raw / _chars)))
+    # one source for the derived numbers: the layout object owns the rules, so the
+    # stylesheet cannot drift from what the PDF and EPUB renderers compute
+    layout, _problems = _layout_lib.Layout.from_mapping(
+        _config.THRESHOLDS if _config else {})
+    code = layout.code_px
+    lead = layout.code_line_height_value()
+    body = layout.body_size_px()
     column = _layout_value('layout_column_px')
     page_size = _layout_value('layout_page_size')
     margin = _layout_value('layout_page_margin')
@@ -430,4 +419,12 @@ def apply_layout(css: str) -> str:
                      f'table {{ border-collapse: collapse; width: 100%; margin: {table_gap} 0; }}'))
 
 
-STYLE = apply_layout(apply_font_stacks(STYLE))
+@functools.lru_cache(maxsize=1)
+def style() -> str:
+    """The finished stylesheet, built on first use.
+
+    Reading configuration and scanning font directories at import time made every
+    importer pay for it, including the ones that never build a page, and it froze the
+    settings of whichever process imported first.
+    """
+    return apply_layout(apply_font_stacks(STYLE))

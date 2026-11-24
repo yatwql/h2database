@@ -17,7 +17,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
 import sys
 
 _HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -29,10 +28,6 @@ from lib import _config, _fsutil, frontmatter  # noqa: E402
 # a line may sit a hair outside the column: justifier rounding, not a layout error
 EDGE_TOLERANCE_PT = 2.0
 MAX_TYPE3 = 50
-# how deep the outline goes is decided when it is written, so the comparison must
-# read that depth off the outline itself rather than assume one
-HEADING_LINE = re.compile(r'^(#{1,6}) \S')
-
 
 def _outline_shape(reader) -> tuple[int, int]:
     """Entry count and the deepest nesting level the outline uses."""

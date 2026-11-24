@@ -10,7 +10,7 @@ _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)
 import re
 
 import html_cache
-from html_shell import STYLE
+import html_shell
 from lib import _config, _fsutil, _mdutil
 from lib import frontmatter as _frontmatter
 
@@ -320,7 +320,7 @@ HTML = f"""<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{_config.project('display_title_en', _config.TITLE)}</title>
-<style>{STYLE}</style>
+<style>{html_shell.style()}</style>
 </head>
 <body>
 <section id="cover">

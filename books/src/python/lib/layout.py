@@ -75,7 +75,7 @@ class TypeScale:
     code_em: float = 0.625
     code_line_height: float = 1.0
     heading_em: tuple[float, ...] = (1.6, 1.3, 1.1, 1.0)
-    body_line_height: float = 1.55
+    body_line_height: float = DEFAULTS['layout_epub_line_height']
     code_block_line_height: float = 1.35
     spacing_scale: float = 1.0
     para_gap_em: float = 0.8

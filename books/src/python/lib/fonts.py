@@ -272,23 +272,6 @@ def default_sans() -> list[str]:
     return list(DEFAULT_SANS)
 
 
-def default_cjk() -> list[str]:
-    """The default CJK candidates, appended after the Latin ones."""
-    return list(DEFAULT_CJK)
-
-
-def script_stack(latin: list[str], cjk: list[str] | None = None,
-                 generic: str = 'sans-serif') -> str:
-    """CSS stack for mixed scripts: Latin candidates, then CJK, then the generic.
-
-    One list cannot serve both scripts well: a Latin face has no CJK glyphs and a
-    CJK face typesets Latin wider, which changes every paragraph's metrics. The
-    cascade is the mechanism for "use this for these characters".
-    """
-    combined = list(latin) + [name for name in (cjk or []) if name not in latin]
-    return resolve(tuple(combined), generic)
-
-
 PORTABLE = {'serif': (PORTABLE_SERIF, 'serif'),
             'sans': (PORTABLE_SANS, 'sans-serif'),
             'mono': (PORTABLE_MONO, 'monospace')}

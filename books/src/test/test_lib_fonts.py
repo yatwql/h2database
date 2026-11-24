@@ -11,9 +11,9 @@ TAGS = ('layer:lib', 'tier:fast')
 
 _fixture.ensure_tools_path()
 
-_fonts = __import__('lib.fonts', fromlist=['is_collection_file', 'script_stack'])
+_fonts = __import__('lib.fonts', fromlist=['is_collection_file', 'portable_stack'])
 is_collection_file = _fonts.is_collection_file
-script_stack = _fonts.script_stack
+portable_stack = _fonts.portable_stack
 
 
 class CollectionDetectionTest(unittest.TestCase):
@@ -37,19 +37,23 @@ class CollectionDetectionTest(unittest.TestCase):
                                                          'no-such-font.ttf')))
 
 
-class ScriptStackTest(unittest.TestCase):
-    def test_cjk_families_are_appended_after_the_latin_ones(self):
-        stack = script_stack(['DejaVu Sans'], ['Droid Sans Fallback'])
-        self.assertLess(stack.index('DejaVu Sans'), stack.index('Droid Sans Fallback'))
-        self.assertTrue(stack.endswith('sans-serif'))
+class PortableStackTest(unittest.TestCase):
+    """A viewer-side stack must describe the reader's device, not this machine."""
 
-    def test_a_family_listed_twice_appears_once(self):
-        stack = script_stack(['DejaVu Sans'], ['DejaVu Sans', 'Droid Sans Fallback'])
-        self.assertEqual(stack.count('DejaVu Sans'), 1)
+    def test_the_latin_face_comes_before_the_cjk_one(self):
+        stack = portable_stack('mono')
+        self.assertLess(stack.index('Consolas'), stack.index('Source Han Mono'))
 
-    def test_multiple_families_are_quoted(self):
-        stack = script_stack(['DejaVu Sans'], None)
-        self.assertIn('"DejaVu Sans"', stack)
+    def test_the_roles_end_in_their_generic_family(self):
+        self.assertTrue(portable_stack('serif').endswith('serif'))
+        self.assertTrue(portable_stack('mono').endswith('monospace'))
+        self.assertTrue(portable_stack('sans').endswith('sans-serif'))
+
+    def test_an_unknown_role_falls_back_to_sans(self):
+        self.assertEqual(portable_stack('nonsense'), portable_stack('sans'))
+
+    def test_families_with_spaces_are_quoted(self):
+        self.assertIn('"Source Han Serif"', portable_stack('serif'))
 
 
 if __name__ == '__main__':
