@@ -290,6 +290,27 @@ def run_step(step: Step) -> tuple[str, int, float]:
     return name, proc.returncode, elapsed
 
 
+def mutation(limit: int = 6, strict: bool = False) -> int:
+    """Assertion-strength check: mutate a few rules, expect the tests to notice.
+
+    Advisory by default, like the perf gate: a survivor may be an equivalent mutant
+    (a default argument, a boundary the fixtures cannot express), and a gate that is
+    red for reasons nobody must fix stops being read. `--mutation-strict` makes any
+    survivor beyond the per-target tolerance a failure.
+    """
+    script = os.path.join(TOOLS_DIR, 'mutation_smoke.py')
+    proc = subprocess.run([PY, script, '--all', '--limit', str(limit)],
+                          cwd=os.path.dirname(TOOLS_DIR), capture_output=True,
+                          text=True, check=False)
+    print(proc.stdout)
+    if proc.returncode != 0:
+        print(proc.stderr, file=sys.stderr)
+        if not strict:
+            print('  (advisory: inspect the survivors, or pass --mutation-strict)')
+            return 0
+    return proc.returncode
+
+
 def doctor() -> int:
     print('=== toolchain doctor ===')
     print(f'  python      : {sys.version.split()[0]}')
@@ -507,7 +528,7 @@ def _parser() -> argparse.ArgumentParser:
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('command',
                         choices=['check', 'build', 'verify', 'test', 'cover',
-                                 'report', 'deliver', 'doctor'])
+                                 'report', 'deliver', 'doctor', 'mutation'])
     parser.add_argument('--only', help='comma-separated step names')
     parser.add_argument('--skip', help='comma-separated step names to skip')
     parser.add_argument('--timings', action='store_true', help='print per-step wall time')
@@ -521,6 +542,10 @@ def _parser() -> argparse.ArgumentParser:
                         help='book root for every step (default: BOOK_ROOT, then the '
                              'nearest ancestor holding data/book/book.toml)')
     parser.add_argument('--edition', default='', help='manuscript edition for every step')
+    parser.add_argument('--mutation-limit', type=int, default=6,
+                        help='mutations per module for `make.py mutation`')
+    parser.add_argument('--mutation-strict', action='store_true',
+                        help='let `make.py mutation` fail on an unexpected survivor')
     return parser
 
 
@@ -604,6 +629,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == 'cover':
         return coverage(full=args.full, update_baseline=args.update_baseline)
+    if args.command == 'mutation':
+        return mutation(limit=args.mutation_limit, strict=args.mutation_strict)
     if args.command == 'report':
         return report(report_extras)
     return _run_steps(args)

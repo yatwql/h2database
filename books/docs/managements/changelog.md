@@ -13,6 +13,12 @@
 
 ### 变更
 
+- **变异冒烟成为可运行的一步（rf-68）**：`mutation_smoke.py` 增加 `--all` 与 `TARGETS`（模块 → 测试文件 +
+  允许的等价变异数），候选变异改为按行排序的固定顺序（原先每次抽样不同，无法当判据）；`make.py mutation`
+  接入，默认 advisory、`--mutation-strict` 可当硬门禁。实测 `epub_source`/`_perfhistory`/`menu` 全部杀死，
+  `pdf_metrics` 剩余 4 个均登记为等价变异。
+- **rf-69 加固**：CSS 与构建脚本检查的路径修正后，补一条用例钉住那四个源文件确实存在，路径再漂移即失败。
+
 - **rf-64 / rf-65 / rf-66 收口**：`actions` 的 `_invoke` 拆出 `_unbuffered()`/`_stream()`/`_heartbeat()`
   （各有用例，`actions` 97%）；`verify_pdf` 的字体判定早已抽成 `font_is_embedded()`；探测类失败路径
   （字体命令、`doctor` 的可选工具）都不再只能靠真机触发；`calibrate()`/`figure_caption()` 的 docstring

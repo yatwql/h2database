@@ -72,7 +72,9 @@ def candidates(text: str) -> list[tuple[str, int, str]]:
             line_number = text.count('\n', 0, match.start()) + 1
             mutated = text[:match.start()] + replacement + text[match.end():]
             out.append((label, line_number, mutated))
-    return out
+    # a fixed order, so the same source always yields the same sample: an acceptance
+    # step that picks different mutants each run cannot be a gate
+    return sorted(out, key=lambda item: (item[1], item[0]))
 
 
 def run_case(tree: str, module: str, tests: str) -> bool:
@@ -137,17 +139,50 @@ def _write(path: str, text: str) -> None:
     _fsutil.write_text(path, text)
 
 
+# The pairs worth mutating: pure logic with a tight unit suite. A larger list would
+# only add runtime; these cover the rules that decide column width, page budget, the
+# EPUB boundary fixes and the coordinate parser.
+# module -> (test file, tolerated survivors). A tolerance is only for a mutation that
+# cannot change behaviour (e.g. `x or 1` in a branch the fixtures never reach), and it
+# is number, not a blanket pass.
+TARGETS: dict[str, tuple[str, int]] = {
+    'render/epub_source.py': ('test_render_epub_source.py', 0),
+    # four survivors, all equivalent: the sample-window `<=`, the `<= 3` flag (a delta
+    # of exactly three percent is float-identical), and two `or` defaults inside the
+    # PDF text visitor that only real text layers reach
+    'render/pdf_metrics.py': ('test_render_pdf_metrics_units.py', 4),
+    'lib/_perfhistory.py': ('test_lib_perfhistory.py', 0),
+    'core/menu.py': ('test_core_menu.py', 0),
+}
+
+
+def run_all(limit: int = 6, max_survivors: int = 0) -> int:
+    """Mutate every registered target; the report names the module per survivor."""
+    worst = 0
+    for module, (tests, tolerance) in TARGETS.items():
+        print(f'--- {module}')
+        code = smoke(module, tests, limit, max(max_survivors, tolerance))
+        worst = max(worst, code)
+    return worst
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--module', required=True,
+    parser.add_argument('--module',
                         help='module under src/python, e.g. audit/content_volume.py')
-    parser.add_argument('--tests', required=True, help='test file under src/test')
+    parser.add_argument('--tests', help='test file under src/test')
+    parser.add_argument('--all', action='store_true',
+                        help='mutate every target in TARGETS')
     parser.add_argument('--limit', type=int, default=10, help='mutations to try')
     parser.add_argument('--max-survivors', type=int, default=0,
                         help='how many survivors are tolerated')
     parser.add_argument('--json', action='store_true', help='machine-readable summary')
     args = parser.parse_args(argv)
+    if args.all:
+        return run_all(args.limit, args.max_survivors)
+    if not args.module or not args.tests:
+        parser.error('give --all, or --module with --tests')
     return smoke(args.module, args.tests, args.limit, args.max_survivors,
                  as_json=args.json)
 

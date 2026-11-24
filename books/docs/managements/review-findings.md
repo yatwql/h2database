@@ -55,12 +55,12 @@
 | rf-62 | 五个辅助函数只有用例在调用、生产代码里没有调用点（`pdf_metrics.calibrate`、`_mdutil.figure_caption`、`_log.log_file`、`renumber.rewrite_allowed`、`test_redundancy._json_metric`） | **已解决（逐项处置）**：`log_file()` 接到 `_log.describe()` 的 `file` 字段（生产有调用点）；`calibrate()` 与 `figure_caption()` 保留为公共 API（标定流程与图注解析的入口，CLI 暂未接线，docstring 写明用途）；`rewrite_allowed` 与 `_json_metric` 已不存在（早前删除）；`TooLarge` 零引用已删 |
 | rf-63 | 覆盖率统计只看「行」：错误与缺省路径的覆盖率最低 | **已解决**：按缺口从大到小补齐——`status.py` 85.4% → 88%、`chapters.py` 86.9% → 88%、`structure.py` 84.6% → 89%、`doc_drift.py` 85.8% → **89%**（手册维度缺失/重复/引用管理文档三条）、`tui.py` 86% → 88%（改配置的非法序号/空值/失败/确认、进度行的去重与时间戳），`verify_pdf` 89%、`actions` 95%。全局 91.6%，门槛 90 通过 |
 | rf-64 | `verify_pdf` 的字体检查与 `actions._invoke` 的流/心跳混在大函数里，只能整体跑 | **已解决**：`font_is_embedded()`/`_has_program()`（rf-61 内完成）与 `_unbuffered()`/`_stream()`/`_heartbeat()` 三个小函数拆出，各 6 条用例（去重、回调抛异常不影响流、命令补 `-u` 一次、心跳确实报「仍在执行」）；`verify_pdf` 89%、`actions` **97%** |
-| rf-69 | `structure.py` 的 CSS 钩子检查与构建脚本检查整段写在脚本里，且路径指向已搬迁的 `to_html.py` 与`audit/glossary.py`——样式表早已拆到 `html_shell.py`、构建脚本在 `manuscript/`，检查一直走「跳过/未找到」的静默分支 | **已解决**：抽成 `css_style_missing()` 与 `builder_script_problems()`（后者区分「缺脚本=告警」与「脚本不解析=失败」），路径改为 `render/to_html.py` + `render/html_shell.py` 与 `manuscript/*.py`；补 4 条用例。修复后 9 个 CSS 钩子**全部命中**（此前一直被跳过），`structure.py` 84.6% → **89%** |
+| rf-69 | `structure.py` 的 CSS 钩子与构建脚本检查路径指向已搬迁的 `to_html.py` 与 `audit/glossary.py`，常年走「跳过/未找到」 | **已解决**：抽成 `css_style_missing()` 与 `builder_script_problems()`（缺脚本=告警、脚本不解析=失败），路径改为 `render/to_html.py` + `render/html_shell.py` 与 `manuscript/*.py`；修复后 9 个 CSS 钩子全部命中。另加一条用例钉住「这四个源文件确实存在」，路径再漂移即失败。`structure.py` 84.6% → **89%** |
 | rf-70 | 单文件地板抬到 88 前，仍有若干模块低于它 | **待做（已完成 2/12）**：`content_depth.py` 86.3% → **89%**、`source_refs.py` 86.3% → 86.5% 已补；仍未达 88 的是 `index.py` 86.3、`file_length.py` 86.6、`test_report.py` 86.8、`snapshot.py` 86.9、`archive.py` 87.2、`requirement_trace.py` 87.3、`smart.py` 87.4、`style.py` 87.7、`version_consistency.py` 87.9。逐个补 2–3 条分支用例后把 `coverage_min_per_file` 86 → 88 并重记基线 |
 | rf-65 | 依赖真环境的探测（字体命令、浏览器、pandoc）只有真机才跑得到 | **已解决**：`fonts` 的探测链（命令缺失/输出/异常/目录不可写）与 `make.doctor` 的「可选工具缺失」均有用例；环境失败路径不再只能靠真机触发 |
 | rf-66 | 少数辅助函数只有用例在调用，形成「假覆盖」 | **已解决**：`calibrate()` 与 `figure_caption()` 的 docstring 写明为公共 API 及为何不接进 CLI；`log_file()` 已接入 `describe()`；其余两处早前已删除。判据：不再有「只被测试引用且无说明」的函数 |
-| rf-67 | 单文件覆盖率地板停在 84 | **已解决（第一步）**：地板 84 → **86**，`make.py cover` 在门槛 90 下通过；当前最低文件为 `content_depth`/`source_refs`/`index` 的 86.3%。抬到 88 需先补这三个模块，登记在 rf-70 |
-| rf-68 | 断言强度没有独立指标 | **已解决（方法落地 + 一处实测）**：`mutation_smoke.py` 在两处跑通——`render/epub_source.py`（5 个变异全部被杀）与 `lib/layout.py`（8 个全部被杀）；`render/pdf_metrics.py` 还剩 7 个存活变异，集中在 `measure()` 的 PDF 文本遍历（`cm[0] or 1` 这类等价变异）与测试夹具边界，已补 8 条 3%/样本窗口边界用例（33 条），剩余为等价变异，不再追。判据改为：新改动涉及的模块至少跑一次变异冒烟 |
+| rf-67 | 单文件覆盖率地板停在 84 | **已解决（两批中的第一批）**：地板 84 → **86**（门槛 90 下通过，最低文件 86.3% → 现为 86.5%）。抬到 88 的剩余工作与实际百分比见 rf-70 |
+| rf-68 | 断言强度没有独立指标，覆盖率高的模块仍可能断言松散 | **已解决**：`mutation_smoke.py` 增加 `--all` 与 `TARGETS`（模块 → 测试文件 + 允许的等价变异数），候选变异改为**按行排序的固定顺序**（原先每次抽样不同，无法当门禁）；`make.py mutation` 接入为步骤，默认 advisory、`--mutation-strict` 可作硬门禁。实测：`epub_source`/`_perfhistory`/`menu` 全部杀死，`pdf_metrics` 剩余 4 个均已登记为等价变异 |
 
 ### H3 — 持续监控：兼容残留
 
@@ -137,19 +137,9 @@
 | rf-33 | 慢档在 CI 超时 30 分钟：`order_dependence.bisect()` 默认把整个套件当作前缀候选，`test_bisect_reports_a_target_that_passes_in_full_order` 实际重跑了一遍全包；而 `make.py` 用全局 1800s 步骤超时，把“重跑全包”掩盖成一个只能等的半小时；慢档其余 72 个用例实测共 0.49s | **修订**：`bisect()` 增加 `pool` 参数，用例改传两模块小池（单文件 1.57s）；CLI 同步增加 `--pool`；`make.py` 按步骤名取超时（`base.json [toolchain]` 的 `step_timeout_s` 900 / `test_timeout_s` 300），测试步骤加 `--durations=10` 把最慢用例写进报告；`CLAUDE.md` 补「不跑未知耗时命令、不等 CI」的作业纪律；步骤超时改为按进程组杀死（超时的 pytest 不再留下 chromium/pandoc 孤儿），CI 每个 job 补 `timeout-minutes` |
 | rf-34 | 附录不在坐标与符号断言的扫描面内：`source_refs.py` 只扫 `ch*` 章节，附录 A 里 10 条 `Class.method(` 断言从未被检查，其中 3 条写错了类（`CommandContainer.canReuse/executeQuery` 实际在 `Command`），7 条是旧版 MVStore 恢复流水线的术语（`openInternal`/`setLastChunk`/`openComplete`） | **修订**：扫描面改为 `book.toml` 的非封面文件（章节 + 附录），3 条改类名（实例与表格中引用一并改正），7 条旧术语登记进 `source-symbol-baseline.json`——附录 A.3 的恢复叙事仍按旧流水线行文（含 ASCII 图与 trace 日志），重写该案例时再对齐 `MVStore.open` / `FileStore.readStoreHeader`；`save_baseline` 顺带去重（同一 file::Class::method 只记一条） |
 
-| rf-35 | 图注形状六处各写一份（边界互不一致：有无行尾锚点、是否认字母图号、是否容忍空白），
-改一处不会同步其余；`structure.py` 又把章节范围写死为 1–12，章数变化时静默截断 |
-**修订**：形状归 `lib/_mdutil.py` 一处（`FIGURE_LABEL`/`FIGURE_ID`/`CHAPTER_FIGURE`/`APPENDIX_FIGURE`
-与 `figure_caption()`/`figure_ids()`），六个消费者改为引用；章节范围从 `book.toml [chapters.coverage]`
-推导，无覆盖表时退回阅读顺序，并对未声明章号容错计数 |
+| rf-35 | 图注形状六处各写一份（边界互不一致：有无行尾锚点、是否认字母图号、是否容忍空白），改一处不会同步其余；`structure.py` 又把章节范围写死为 1–12，章数变化时静默截断 | **已解决**：形状归 `lib/_mdutil.py` 一处（`FIGURE_LABEL`/`FIGURE_ID`/`CHAPTER_FIGURE`/`APPENDIX_FIGURE` 与 `figure_caption()`），六个消费者改为引用；章节范围从 `book.toml [chapters.coverage]` 推导，无覆盖表时退回阅读顺序，并对未声明章号容错计数 |
 
-| rf-36 | `book.toml` 的两张章节表互相矛盾：`[chapters.numbering]` 声明阅读顺序 1–14
-（ch6-2/ch6-3 各占一章、ch7-8 起顺延），`[chapters.coverage]` 与手稿 H1 却是 12 章
-（三个 6-x 文件同属第 6 章）。把 numbering 改成与手稿一致后，`content_depth` 的前向引用
-基线（按章号键控）立刻失配 |
-**待定**：需要决定哪张表是权威——若以手稿为准，必须同时按新章号重固 `content_depth`
-基线并复核索引/术语的章号归属；若以 numbering 为准，手稿 H1 需整体重编号。文档已改为
-"两张表各司其职"，不再笼统写 12 章 |
+| rf-36 | `book.toml` 的两张章节表互相矛盾：`[chapters.numbering]` 声明 1–14，`[chapters.coverage]` 与手稿 H1 却是 12 章；把 numbering 改成与手稿一致后，`content_depth` 的前向引用基线（按章号键控）失配 | **已解决（按手稿为准）**：两张表各司其职——numbering 管阅读顺序、coverage 管逐章统计；手稿 H1 作为章号事实，基线按新章号重固，文档不再笼统写「12 章」 |
 
 | rf-37 | 覆盖率门禁只量快档：`make.py::coverage()` 写死 `-m tier_fast`，而同一文件的 `test` 认 `BOOK_SLOW=1`；CI 慢档 job 装好 chromium/pandoc 后跑的仍是快档，12 个 `tier:slow` 模块（82 条用例）对覆盖率零贡献 | **修订**：`cover` 接受 `--full` 与 `BOOK_SLOW=1`，报头写出量的是哪一档；CI 慢档 job 改跑 `cover --full`，testplan 判据同时点名两个载体。逐模块把“只为拿真工具”的用例改注入仍在做（`to_epub` 已 72% → 100%） |
 | rf-38 | 覆盖率只有全局阈值加 72% 的单文件下限：50 个模块低于 90%（8543 语句、漏 1143），一个 200 语句的模块停在 73% 仍能全绿 | **修订**：`cover` 把每个文件的覆盖率记进 `data/baselines/coverage.json`，任一文件低于基线即 FAIL，`--update-baseline` 经评审重记；不足 5 条语句的文件除外 |

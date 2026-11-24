@@ -106,3 +106,13 @@ class ExtractedChecksTest(unittest.TestCase):
                 {'glossary.py': os.path.join(directory, 'gone.py')})
         self.assertEqual(broken, [])
         self.assertEqual(missing, ['glossary.py not found'])
+
+    def test_the_sources_it_reads_are_the_real_ones(self):
+        """The check used to read audit/to_html.py and audit/glossary.py after both
+        moved, so it silently took the "skipped" branch for months."""
+        src = __import__('pathlib').Path(self.structure.__file__).resolve()
+        python_root = src.parent.parent
+        self.assertTrue((python_root / 'render' / 'to_html.py').is_file())
+        self.assertTrue((python_root / 'render' / 'html_shell.py').is_file())
+        self.assertTrue((python_root / 'manuscript' / 'glossary.py').is_file())
+        self.assertTrue((python_root / 'manuscript' / 'index.py').is_file())
