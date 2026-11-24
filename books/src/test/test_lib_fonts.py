@@ -1,9 +1,12 @@
 """Font resolution judges files by their content and stacks by script."""
 from __future__ import annotations
 
+import json
 import os
+import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
 import _fixture
 
@@ -54,6 +57,229 @@ class PortableStackTest(unittest.TestCase):
 
     def test_families_with_spaces_are_quoted(self):
         self.assertIn('"Source Han Serif"', portable_stack('serif'))
+
+
+
+
+def _reset_caches() -> None:
+    for name in ('index', 'resolve'):
+        getattr(_fonts, name).cache_clear()
+
+
+class FontDirsTest(unittest.TestCase):
+    """The candidate list follows the platform, and only existing dirs survive."""
+
+    def test_linux_candidates_include_the_user_directories(self):
+        with mock.patch.object(_fonts.os, 'name', 'posix'), \
+                mock.patch.object(_fonts.os.path, 'isdir', return_value=True):
+            dirs = _fonts.font_dirs()
+        self.assertIn('/usr/share/fonts', dirs)
+        self.assertTrue(any('.local/share/fonts' in path for path in dirs))
+
+    def test_windows_candidates_come_from_the_windows_directory(self):
+        windir = os.path.join('C:' + os.sep, 'Windows')
+        with mock.patch.object(_fonts.os, 'name', 'nt'), \
+                mock.patch.dict(os.environ, {'WINDIR': windir}), \
+                mock.patch.object(_fonts.os.path, 'isdir', return_value=True):
+            self.assertIn(os.path.join(windir, 'Fonts'), _fonts.font_dirs())
+
+    def test_missing_directories_are_dropped(self):
+        with mock.patch.object(_fonts.os.path, 'isdir', return_value=False):
+            self.assertEqual(_fonts.font_dirs(), [])
+
+
+class FontFilesTest(unittest.TestCase):
+    def test_only_font_suffixes_are_collected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for name in ('a.ttf', 'b.otf', 'notes.txt'):
+                with open(os.path.join(directory, name), 'w', encoding='utf-8') as handle:
+                    handle.write('x')
+            with mock.patch.object(_fonts, 'font_dirs', return_value=[directory]):
+                files = _fonts._font_files()
+        self.assertTrue(any(path.endswith('a.ttf') for path in files))
+        self.assertTrue(any(path.endswith('b.otf') for path in files))
+        self.assertFalse(any(path.endswith('notes.txt') for path in files))
+
+
+class StampTest(unittest.TestCase):
+    def test_a_missing_file_does_not_break_the_stamp(self):
+        with tempfile.TemporaryDirectory() as directory:
+            real = os.path.join(directory, 'a.ttf')
+            with open(real, 'w', encoding='utf-8') as handle:
+                handle.write('x')
+            missing = os.path.join(directory, 'gone.ttf')
+            self.assertTrue(_fonts._stamp([real, missing]))
+            self.assertEqual(_fonts._stamp([missing]), _fonts._stamp([missing]))
+
+
+class IndexTest(unittest.TestCase):
+    """The family index is cached on disk, keyed by path/size/mtime."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.cache = os.path.join(self.tmp.name, 'font-index.json')
+        _reset_caches()
+        patcher = mock.patch.object(_fonts, '_cache_path', return_value=self.cache)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.addCleanup(_reset_caches)
+
+    def build(self, rows):
+        patcher = mock.patch.object(_fonts, '_font_files', return_value=['/fonts/a.ttf'])
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        reader = mock.patch.object(_fonts, '_read_families', return_value=rows)
+        reader.start()
+        self.addCleanup(reader.stop)
+
+    def test_a_fresh_scan_writes_the_cache(self):
+        self.build([('Book Sans', 0, False)])
+        self.assertEqual(_fonts.index(), {'Book Sans': [
+            {'path': '/fonts/a.ttf', 'face': 0, 'collection': False}]})
+        with open(self.cache, encoding='utf-8') as handle:
+            self.assertEqual(json.load(handle)['families'], _fonts.index())
+
+    def test_a_matching_stamp_reuses_the_cache(self):
+        self.build([('Book Sans', 0, False)])
+        _fonts.index()
+        _reset_caches()
+        with mock.patch.object(_fonts, '_read_families') as reader:
+            self.assertEqual(list(_fonts.index()), ['Book Sans'])
+        reader.assert_not_called()
+
+    def test_a_newer_file_invalidates_the_cache(self):
+        self.build([('Old', 0, False)])
+        _fonts.index()
+        _reset_caches()
+        self.build([('New', 0, False)])
+        with mock.patch.object(_fonts, '_stamp', side_effect=['older', 'newer']):
+            self.assertEqual(list(_fonts.index()), ['New'])
+
+    def test_an_unwritable_cache_still_returns_the_index(self):
+        self.build([('Book Sans', 0, False)])
+        with mock.patch.object(_fonts.os, 'makedirs', side_effect=OSError('read-only')):
+            self.assertEqual(list(_fonts.index()), ['Book Sans'])
+
+
+class FamilyLookupTest(unittest.TestCase):
+    def setUp(self):
+        _reset_caches()
+        self.addCleanup(_reset_caches)
+
+    def test_a_single_face_file_is_preferred(self):
+        index = {'F': [{'path': '/c.ttc', 'face': 0, 'collection': True},
+                       {'path': '/f.ttf', 'face': 0, 'collection': False}]}
+        with mock.patch.object(_fonts, 'index', return_value=index):
+            self.assertEqual(_fonts._font_file('F'), '/f.ttf')
+            self.assertTrue(_fonts.is_embeddable('F'))
+
+    def test_only_a_collection_leaves_nothing_embeddable(self):
+        index = {'F': [{'path': '/c.ttc', 'face': 1, 'collection': True}]}
+        with mock.patch.object(_fonts, 'index', return_value=index):
+            self.assertEqual(_fonts._font_file('F'), '/c.ttc')
+            self.assertFalse(_fonts.is_embeddable('F'))
+
+    def test_an_unknown_family_has_no_file(self):
+        with mock.patch.object(_fonts, 'index', return_value={}):
+            self.assertEqual(_fonts._font_file('Nope'), '')
+            self.assertFalse(_fonts.is_embeddable('Nope'))
+
+
+class CoverageTest(unittest.TestCase):
+    def setUp(self):
+        _reset_caches()
+        self.addCleanup(_reset_caches)
+
+    def test_an_unknown_family_reports_every_character_missing(self):
+        with mock.patch.object(_fonts, 'index', return_value={}):
+            drawn, missing = _fonts.coverage('Nope', 'abc ')
+        self.assertEqual(drawn, 0)
+        self.assertEqual(missing, ['a', 'b', 'c'])
+
+    def test_faces_are_merged_to_cover_the_requested_characters(self):
+        faces = [mock.Mock(getBestCmap=lambda: {ord('a'): 1}),
+                 mock.Mock(getBestCmap=lambda: {ord('b'): 2})]
+        with mock.patch.object(_fonts, 'index',
+                               return_value={'F': [{'path': '/a'}, {'path': '/b'}]}), \
+                mock.patch.object(_fonts, '_open_face', side_effect=faces):
+            drawn, missing = _fonts.coverage('F', 'abz')
+        self.assertEqual((drawn, missing), (2, ['z']))
+
+    def test_an_unreadable_face_is_skipped(self):
+        with mock.patch.object(_fonts, 'index', return_value={'F': [{'path': '/a'}]}), \
+                mock.patch.object(_fonts, '_open_face', return_value=None):
+            self.assertEqual(_fonts.coverage('F', 'a'), (0, ['a']))
+
+
+class FontconfigTest(unittest.TestCase):
+    def test_a_missing_fc_list_yields_no_names(self):
+        with mock.patch.object(_fonts.shutil, 'which', return_value=None):
+            self.assertEqual(_fonts._fontconfig_names(), set())
+
+    def test_names_are_split_on_commas(self):
+        done = subprocess.CompletedProcess(['fc-list'], 0,
+                                          stdout='Book Sans,Book Sans Bold\nOther\n')
+        with mock.patch.object(_fonts.shutil, 'which', return_value='/usr/bin/fc-list'), \
+                mock.patch.object(_fonts.subprocess, 'run', return_value=done):
+            self.assertEqual(_fonts._fontconfig_names(), {'Book Sans', 'Book Sans Bold', 'Other'})
+
+    def test_a_failing_command_yields_no_names(self):
+        with mock.patch.object(_fonts.shutil, 'which', return_value='/usr/bin/fc-list'), \
+                mock.patch.object(_fonts.subprocess, 'run', side_effect=OSError('boom')):
+            self.assertEqual(_fonts._fontconfig_names(), set())
+
+
+class ResolveTest(unittest.TestCase):
+    def setUp(self):
+        _reset_caches()
+        self.addCleanup(_reset_caches)
+
+    def test_installed_families_come_first_and_unknown_ones_are_kept(self):
+        index = {'Known': [{'path': '/k.ttf', 'face': 0, 'collection': False}]}
+        with mock.patch.object(_fonts, 'index', return_value=index):
+            stack = _fonts.resolve(('Unknown', 'Known'), 'sans-serif')
+        self.assertTrue(stack.startswith('Known'))
+        self.assertIn('Unknown', stack)
+        self.assertTrue(stack.endswith('sans-serif'))
+
+    def test_a_collection_only_family_comes_after_an_embeddable_one(self):
+        index = {'Loose': [{'path': '/l.ttf', 'face': 0, 'collection': False}],
+                 'Tight': [{'path': '/t.ttc', 'face': 0, 'collection': True}]}
+        with mock.patch.object(_fonts, 'index', return_value=index):
+            stack = _fonts.resolve(('Tight', 'Loose'), 'sans-serif')
+        self.assertLess(stack.index('Loose'), stack.index('Tight'))
+
+    def test_without_an_index_the_fontconfig_list_decides(self):
+        with mock.patch.object(_fonts, 'index', return_value={}), \
+                mock.patch.object(_fonts, '_fontconfig_names', return_value={'Present'}):
+            stack = _fonts.resolve(('Present', 'Absent'), 'sans-serif')
+        self.assertIn('Present', stack)
+        self.assertIn('Absent', stack)
+
+    def test_without_any_probe_every_candidate_is_kept(self):
+        with mock.patch.object(_fonts, 'index', return_value={}), \
+                mock.patch.object(_fonts, '_fontconfig_names', return_value=set()):
+            stack = _fonts.resolve(('A', 'B'), 'serif')
+        self.assertTrue(stack.startswith('A, B'))
+
+    def test_spaces_are_quoted(self):
+        index = {'Book Sans': [{'path': '/b.ttf', 'face': 0, 'collection': False}]}
+        with mock.patch.object(_fonts, 'index', return_value=index):
+            self.assertIn('"Book Sans"', _fonts.resolve(('Book Sans',), 'sans-serif'))
+
+    def test_the_default_candidates_reach_the_stack(self):
+        with mock.patch.object(_fonts, 'index', return_value={}), \
+                mock.patch.object(_fonts, '_fontconfig_names', return_value=set()):
+            sans = _fonts.sans_stack()
+            mono = _fonts.mono_stack()
+        self.assertIn(_fonts.DEFAULT_SANS[0].strip('"'), sans)
+        self.assertIn(_fonts.DEFAULT_MONO[0].strip('"'), mono)
+
+    def test_the_default_sans_list_is_a_copy(self):
+        first = _fonts.default_sans()
+        first.append('Mutated')
+        self.assertNotIn('Mutated', _fonts.default_sans())
 
 
 if __name__ == '__main__':

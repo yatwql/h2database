@@ -227,16 +227,22 @@ def coverage(family: str, characters) -> tuple[int, list[str]]:
         return 0, ['fonttools 未安装，无法校验覆盖']
     drawn: set[str] = set()
     missing: set[str] = set()
+    readable = 0
     for entry in entries:
         font = _open_face(entry)
         if font is None:
             continue
+        readable += 1
         cmap = font.getBestCmap() or {}
         for char in wanted - drawn:
             if ord(char) in cmap:
                 drawn.add(char)
             else:
                 missing.add(char)
+    if not readable:
+        # every face failed to load: nothing was verified, so nothing may be reported
+        # as covered
+        return 0, sorted(wanted)
     missing -= drawn
     return len(drawn), sorted(missing)
 
