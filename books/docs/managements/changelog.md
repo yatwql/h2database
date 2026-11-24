@@ -13,6 +13,8 @@
 
 ### 变更
 
+- **rf-62 处置**：`log_file()` 接入 `describe()`；`calibrate()`/`figure_caption()` 保留为公共 API；
+  其余两处早前已不存在。
 - **代码审计（90 小时窗口）**：33 道门禁、ruff、`doctor` 全绿；107 个配置键全部有读取点；
   无 ≥60 行函数；删除零引用的 `audit/test_redundancy.TooLarge`。另发现五个辅助函数只有用例在调用，
   已登记为 rf-62（接线／删除／保留为公共 API 三种处置需逐项决定，不盲删）。

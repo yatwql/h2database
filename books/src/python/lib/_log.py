@@ -172,5 +172,5 @@ def get_logger(name: str) -> logging.Logger:
 def describe() -> dict:
     """Non-secret summary for CLIs and the web console."""
     settings = _settings()
-    return {'level': settings['level'], 'dir': log_dir(),
+    return {'level': settings['level'], 'dir': log_dir(), 'file': log_file(),
             'retention_days': settings['retention_days']}

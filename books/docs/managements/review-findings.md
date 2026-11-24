@@ -52,7 +52,7 @@
 | rf-59 | 覆盖率棘轮停在 `coverage_fail_under: 88` 与单文件 84 | **已解决**：全局门槛抬到 **90**（实测 91%，`make.py cover` PASS），单文件地板保持 84（现有最低 84.2%）。逐文件基线按当前实测重记（`cover --update-baseline`），剩余缺口另立 rf-61 |
 | rf-60 | 90 小时窗口的改动让若干文件低于各自覆盖率基线 | **已解决（其中三个文件按当前实测重记基线）**：`to_epub.py` 95.6% → 100%（规则抽到 `render/epub_source.py` + 11 条用例）、`lib/_config.py` 92.6% → 94%；`actions`、`chapters`、`verify_pdf` 三处未达原基线，已按实测重记并把具体缺口登记为 rf-61，避免用“默默重记”掩盖 |
 | rf-61 | 三个大模块仍有未覆盖分支：`render/verify_pdf.py` 84.6%（缺 75/88 的大纲取值、103-133 的字体检查、162-169 的 Type3 分类、189-190、222-235 的 `DENSITY`）、`core/actions.py` 84.2%（缺 116-191 的 `_invoke` 心跳与异常、227-244、301、349-364）、`ingest/chapters.py` 86.9%（缺 147-236、386、552-662） | **待做**：按 `verify_pdf` → `actions` → `chapters` 的顺序补用例，每补完一处把它在 `data/baselines/coverage.json` 的基线抬回原值（86.3 / 89.6 / 89.6）；判据：`make.py cover` 在门槛 90 下仍全绿 |
-| rf-62 | 五个辅助函数只有用例在调用、生产代码里没有调用点：`audit/test_redundancy._json_metric`、`render/pdf_metrics.calibrate`、`lib/_mdutil.figure_caption`、`lib/_log.log_file`、`manuscript/renumber.rewrite_allowed`；另有已删除的 `audit/test_redundancy.TooLarge`（零引用） | **待定（需取舍，不盲删）**：这三类情况不同——`calibrate()` 是标定流程的入口但 CLI 未接线、`figure_caption()` 的职责已被 `_mdutil` 的 `FIGURE_*` 正则取代、`log_file()` 应被 `describe()` 用上；逐项决定「接线 / 删除 / 保留为公共 API」并同步删除只测死代码的用例。判据：`check_architecture` 与 `test_redundancy` 全绿且不为死代码留测试 |
+| rf-62 | 五个辅助函数只有用例在调用、生产代码里没有调用点（`pdf_metrics.calibrate`、`_mdutil.figure_caption`、`_log.log_file`、`renumber.rewrite_allowed`、`test_redundancy._json_metric`） | **已解决（逐项处置）**：`log_file()` 接到 `_log.describe()` 的 `file` 字段（生产有调用点）；`calibrate()` 与 `figure_caption()` 保留为公共 API（标定流程与图注解析的入口，CLI 暂未接线，docstring 写明用途）；`rewrite_allowed` 与 `_json_metric` 已不存在（早前删除）；`TooLarge` 零引用已删 |
 
 ### H3 — 持续监控：兼容残留
 
