@@ -120,6 +120,24 @@ LLM_ACTIONS = frozenset({'analyze-llm', 'llm-ask'})
 # Actions that rewrite many artifacts and take minutes.
 CONFIRM_ACTIONS = frozenset({'deliver', 'deliver-all', 'print'})
 
+# What each action rewrites, in the words the prompts use. The menu labels stay short;
+# a confirmation and a progress line have to say exactly which artifacts are about to
+# be replaced, otherwise "重建产物" leaves the user guessing what will change.
+ARTIFACTS: dict[str, str] = {
+    'analyze': '手稿（data/manuscript 的章节骨架）',
+    'analyze-llm': '手稿（导读/小结的措辞）',
+    'analyze-refresh': '手稿里的事实块（包表、类型表、源码坐标）',
+    'build': '合并 Markdown 与 HTML（dist/<book>.md、dist/<book>.html）',
+    'deliver': 'EPUB 与标准版 PDF（dist/<book>.epub、dist/<book>.pdf）',
+    'deliver-all': 'Markdown、HTML、EPUB、标准版 PDF、印刷版 PDF（dist/ 下五份产物）',
+    'print': '印刷版 PDF（dist/<book>-print.pdf）',
+}
+
+
+def artifacts(action: str) -> str:
+    """What an action rewrites, for confirmations and progress lines."""
+    return ARTIFACTS.get(action, '')
+
 # Where the cursor starts on each screen: the everyday next step, not ingest.
 DEFAULT_ENTRY_KEY = {'main': '3', 'quality': '1', 'config': '1'}
 

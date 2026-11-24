@@ -265,17 +265,33 @@ def confirm(question: str, reader=input) -> bool:
 
 
 def run_entry(action: str, label: str, force: bool = False) -> str:
-    """Run one action and render the outcome core.menu reports."""
+    """Run one action and render the outcome core.menu reports.
+
+    Every line names the artifacts: a confirmation says what is about to be
+    overwritten, the progress line says what is being rebuilt, and the outcome says
+    whether those files changed. "重建产物" is precise for nobody.
+    """
     if action == 'settings':
         return configure()
-    if menu.needs_confirmation(action) and not confirm(f'{label} 会重建全部产物，继续？'):
-        return _c('已取消', PALETTE['hint'])
-    sys.stdout.write(_c(f'⠿ 正在执行 {label}（{action}）…', PALETTE['hint']) + '\n')
+    rewritten = menu.artifacts(action)
+    if menu.needs_confirmation(action):
+        question = (f'{label}：将重建 {rewritten}；同名文件会被覆盖，继续？'
+                    if rewritten else f'{label} 会重写产物，继续？')
+        if not confirm(question):
+            return _c(f'已取消，{rewritten or "产物"}未改动', PALETTE['hint'])
+    progress = (f'⠿ 正在重建 {rewritten}（{label}）…' if rewritten
+                else f'⠿ 正在执行 {label}（{action}）…')
+    sys.stdout.write(_c(progress, PALETTE['hint']) + '\n')
     sys.stdout.flush()
     outcome = _run_with_progress(action, label, force)
     summary = status.render(outcome.ok, outcome.label + ('  --force' if force else ''),
                             outcome.elapsed, outcome.code)
-    return (f'\n{outcome.tail}\n{summary}\n'
+    if not rewritten:
+        verdict = '已完成' if outcome.ok else f'失败（退出码 {outcome.code}）'
+    else:
+        verdict = (f'已重建：{rewritten}' if outcome.ok
+                   else f'失败（退出码 {outcome.code}）：{rewritten} 未更新')
+    return (f'\n{outcome.tail}\n{verdict}\n{summary}\n'
             f'{_c("详情见 " + menu.log_location() + "/", PALETTE["hint"])}')
 
 

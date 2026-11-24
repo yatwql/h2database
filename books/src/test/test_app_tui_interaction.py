@@ -382,5 +382,42 @@ class TuiInteractionTest(unittest.TestCase):
         self.press('a')
         self.assertEqual(self.calls, ['analyze'])
 
+
+    def test_the_confirmation_says_which_artifacts_will_be_rewritten(self):
+        asked: list[str] = []
+
+        def fake_confirm(question, reader=None):
+            asked.append(question)
+            return False
+
+        with mock.patch.object(self.tui, 'confirm', side_effect=fake_confirm), \
+                redirect_stdout(io.StringIO()):
+            text = self.tui.run_entry('deliver-all', '手稿 → 全量交付')
+        self.assertEqual(len(asked), 1)
+        self.assertIn('Markdown', asked[0])
+        self.assertIn('印刷版 PDF', asked[0])
+        self.assertIn('覆盖', asked[0])
+        self.assertIn('未改动', text)
+
+    def test_the_progress_and_outcome_name_the_artifacts(self):
+        outcome = self.menu.Outcome(action='build', label='构建', code=0,
+                                    output_lines=1, tail='done', elapsed=1.0)
+        buffer = io.StringIO()
+        with mock.patch.object(self.tui.menu, 'run_report', return_value=outcome), \
+                redirect_stdout(buffer):
+            text = self.tui.run_entry('build', '手稿 → Markdown + HTML')
+        self.assertIn('正在重建 合并 Markdown 与 HTML', buffer.getvalue())
+        self.assertIn('已重建：合并 Markdown 与 HTML', text)
+
+    def test_a_failed_run_says_the_artifacts_were_not_updated(self):
+        outcome = self.menu.Outcome(action='deliver', label='交付', code=1,
+                                    output_lines=1, tail='step failed', elapsed=1.0)
+        buffer = io.StringIO()
+        with mock.patch.object(self.tui.menu, 'run_report', return_value=outcome), \
+                mock.patch.object(self.tui, 'confirm', return_value=True), \
+                redirect_stdout(buffer):
+            text = self.tui.run_entry('deliver', 'EPUB + PDF')
+        self.assertIn('未更新', text)
+
 if __name__ == '__main__':
     unittest.main()

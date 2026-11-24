@@ -13,9 +13,16 @@
 
 ### 变更
 
+- **按快捷键后的提示语点名产物**：确认、进度与结果三行不再说"重建产物"，而是列出将被写的
+  文件类型与位置——`deliver` 写 EPUB 与标准版 PDF（`dist/<book>.epub`、`.pdf`），`print` 写
+  `dist/<book>-print.pdf`，`build` 写 `.md` 与 `.html`，`deliver-all` 列全五份，`analyze*`
+  写 `data/manuscript` 的骨架或事实块；确认行同时说明"同名文件会被覆盖"，失败行说明"哪几份
+  产物未更新"。产物清单只在 `core/menu.py::ARTIFACTS` 声明一次，菜单标签保持原样。新增 3 条
+  用例（确认文案、进度与结果文案、失败文案）。
+
 - **README 成为项目首页与总索引，`folder.md` 只留目录结构**：`books/README.md` 重写为
   「这是什么、能做什么、怎么开始、文档总索引」——索引按要求/判定/做法三轴排成一张表，
-  每份文档一行职责；删掉 `docs/managements/README.md`（它的索引职能被上面那张表吸收），
+  每份文档一行职责；删掉管理文档目录里的那份索引（职能被上面那张表吸收），
   `doc_drift` 的 `INDEX` 面改为只校验 `folder.md` 的目录树与目录本身一致。`folder.md` 同步
   校正：`data/archive/` 归到 `data/` 下、补 `state/file-length.json`、新增一条「怎么用/怎么写
   只在 `docs/manuals/`」的归属规则、常用入口指向 README 的总索引。
