@@ -43,8 +43,11 @@ DEFAULTS = {
     'layout_print_code_min_px': 6,
     # wrap long code lines rather than shrinking them; costs pages
     'layout_print_wrap': 0,
-    # printed column width; 0 = as wide as the sheet's margins leave
-    'layout_print_column_px': 760,
+    # printed column width; 0 = derive it from the reading measure below
+    'layout_print_column_px': 0,
+    # characters a printed line should hold, and the smallest margin paper gets
+    'layout_print_chars_per_line': 42,
+    'layout_print_margin_min_mm': 16.0,
 }
 
 # field name -> the thresholds key it is read from
@@ -71,7 +74,9 @@ RANGES = {
     'print_mono_advance': (0.3, 1.2),
     'print_code_min_px': (4, 14),
     'print_wrap': (0, 1),
-    'print_column_px': (0, 1600),     # 0 means 'the printable width'
+    'print_column_px': (0, 1600),     # 0 means 'derive it'
+    'print_chars_per_line': (20, 90),
+    'print_margin_min_mm': (5.0, 40.0),
 }
 
 # sheet sizes in millimetres; an unknown name falls back to A4 rather than guessing
@@ -221,8 +226,10 @@ class Layout:
     print_code_min_px: int = DEFAULTS['layout_print_code_min_px']
     # wrap instead of shrinking: one diagram row becomes several text rows
     print_wrap: int = DEFAULTS['layout_print_wrap']
-    # printed column; 0 means 'as wide as the sheet's margins leave'
+    # printed column; 0 means 'derive it from the reading measure below'
     print_column_px: int = DEFAULTS['layout_print_column_px']
+    print_chars_per_line: int = DEFAULTS['layout_print_chars_per_line']
+    print_margin_min_mm: float = DEFAULTS['layout_print_margin_min_mm']
 
     @classmethod
     def from_mapping(cls, mapping) -> tuple[Layout, list[str]]:
@@ -333,10 +340,34 @@ class Layout:
         A column wider than this prints outside the margins, and a column that only
         fits because the renderer clips the overflow loses the end of every long
         line. Both are the same defect, so the printable width is the budget every
-        printed column is measured against.
+        printed column is measured against. On a derived layout the horizontal margin
+        is what the column does not use, so this is the column.
         """
-        left, right = self.margins_mm()
-        return max(0.0, (self.page_size_mm()[0] - left - right) * PX_PER_MM)
+        _top_bottom, horizontal = self.print_margins_mm()
+        return max(0.0, (self.page_size_mm()[0] - 2 * horizontal) * PX_PER_MM)
+
+    def print_margins_mm(self) -> tuple[float, float]:
+        """Vertical and horizontal margin for paper, in millimetres.
+
+        The horizontal margin is what the column does not use, never less than the
+        configured floor: the reading measure decides how wide the text is, and the
+        sheet then has to carry it. A column that does not fit at the floor is
+        clipped by `print_column` instead of eating into the edge.
+        """
+        tokens = [t for t in re.split(r'\s+', str(self.page_margin).strip()) if t]
+        try:
+            vertical = _mm(tokens[0]) if tokens else 0.0
+        except ValueError:
+            vertical = 0.0
+        requested = self.print_chars_per_line * self.body_size_px() / PX_PER_MM
+        horizontal = max(float(self.print_margin_min_mm),
+                         (self.page_size_mm()[0] - requested) / 2)
+        return vertical, round(horizontal, 2)
+
+    def print_page_margin(self) -> str:
+        """The `@page` margin for paper, as a CSS shorthand."""
+        vertical, horizontal = self.print_margins_mm()
+        return f'{round(vertical, 2)}mm {horizontal}mm'
 
     def printable_width_pt(self) -> float:
         """The same width in points, which is what a built page is measured in."""
@@ -345,15 +376,18 @@ class Layout:
     def print_column(self) -> int:
         """The printed column, in CSS pixels.
 
-        The default keeps the screen column: replacing it with the frame width looked
-        principled and cost 88 pages on this book (877 -> 965) without moving a line
-        inside the margins — the overflow it was meant to fix happens where the page
-        box is built, not where the column is declared . A book that
-        wants the frame instead sets this to 0.
+        Derived from the reading measure (`print_chars_per_line` x body size), then
+        clipped to what the sheet leaves at the configured minimum margin. The literal
+        it replaces was the viewport minus its padding (794 minus a bit = 760px, which
+        leaves 4.5mm of paper margin): the column was never derived from the paper, so
+        the text ended up in the margin. An explicit `layout_print_column_px` wins.
         """
         if self.print_column_px:
             return int(self.print_column_px)
-        return max(1, int(round(self.printable_width_px())))
+        _top_bottom, horizontal = self.print_margins_mm()
+        available = (self.page_size_mm()[0] - 2 * horizontal) * PX_PER_MM
+        return max(1, int(min(self.print_chars_per_line * self.body_size_px(),
+                              available)))
 
     def _print_fit_px(self, columns: int) -> float:
         """Code size at which `columns` characters exactly fill the printable width."""

@@ -18,17 +18,19 @@
   同日多次运行不再各占一对文件，通过/失败都在同一份里，`check-latest.json` 仍指向最后一次。
   按秒命名留下的一天十来个小文件没有了；清理仍按 `logging.retention_days` 按日进行。
 
-- **印刷版栏宽与代码字号改为推导，并给出可印宽度判据**：`lib/layout.py` 新增
-  `printable_width_px/pt`（按纸张与页边距算）、`print_column()`、`print_code_px(列数)`、
-  `print_wraps(列数)`；印刷 CSS 的 `#content` / `#toc-page` 栏宽与 `pre` 字号不再手写，
-  而由布局给出，代码字号按「宽度预算内的行必须落在可印宽度里」反推。超长行有两条路：
-  字号随行收缩到可读下限（`layout_print_code_min_px`，默认 6px），再不行就换行
-  （`layout_print_wrap`，默认关，实测整本开启多 164 页）；打印时行号列隐藏，避免与
-  换行错位。判据落在 `audit/pdf_invariants.py`：按基线聚合每条文本的起止，超出
-  「左边距 + 可印宽度」即判失败（同一份 PDF 上印刷版 16 页超宽，标准版 0 页）。
-  实测：把印刷栏宽直接压到纸张可印宽度（643px）在标准版上**多 88 页**（877 → 965）、
-  印刷版宽度 778 → 694.5pt 仍越界，因此默认保留 760px（`layout_print_column_px`，
-  0 表示「跟着纸走」），并把越界的真正来源另记一条问题。
+- **印刷栏宽改为按阅读度量推导，页边距跟着栏宽走**：760px 从来不是设计值，而是 A4@96dpi
+  视口（794px）减内边距的剩余量；它对应的可印宽度只有 642px，即每一条满行都被页框截掉
+  约 118px（或溢出到页边距）。现在 `lib/layout.py` 由「每行字数 × 正文字号」得栏宽
+  （`layout_print_chars_per_line`，默认 42 → 42×16 = 672px），再由栏宽反推左右页边距
+  （`print_margins_mm()`，下限 `layout_print_margin_min_mm`，默认 16mm），A4 + 42 字 得到
+  672px 栏宽 / 16.1mm 边距；`pre` 字号按「宽度预算内的行必须落在栏宽内」反推，
+  `layout_print_column_px` 仍可显式覆盖。浏览器实测（打印媒体、794px 视口）：
+  `#content` 宽 672px、`scrollWidth` 672px，没有任何块元素的右边界超出栏宽，即栏宽与
+  可印宽度现已重合。判据为一条与书无关的不变量「栏宽 ≤ 可印宽度」，由 `verify_pdf` 的
+  `COLUMN` 项断言（不靠 PDF 文本宽度估计：那里只能估，估不出宽栏与宽字形）。
+  超长行先缩字号到可读下限（6px），再不行就换行（`layout_print_wrap`，默认关，实测整本
+  开启多 164 页），印刷时隐行号列避免与换行错位。实测标准版 **958 页 / 7.52 MB**
+  （前一版 877 页 / 8.15 MB；页数上升是因为不再靠截掉行尾换密度）。
 
 - **文件长度台账不再靠手抄**：`audit/file_length.py` 把台账上一次的实测行数记进
   `data/state/file-length.json`，门禁只在「较登记时增长超过 `style.json thresholds.ledger_growth`

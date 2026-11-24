@@ -397,7 +397,7 @@ def apply_layout(css: str) -> str:
     body = layout.body_size_px()
     column = _layout_value('layout_column_px')
     page_size = _layout_value('layout_page_size')
-    margin = _layout_value('layout_page_margin')
+    margin = layout.print_page_margin()
 
     def number(key: str, fallback: float) -> float:
         """Threshold read from JSON may be a string or missing; never crash on it."""

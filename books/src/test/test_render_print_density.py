@@ -144,11 +144,11 @@ class PrintStylesheetTest(unittest.TestCase):
         self.assertIn('margin-left: 0 !important', css)
         self.assertIn(f'#toc-page {{ max-width: {self.layout().print_column()}px; }}', css)
 
-    def test_the_page_rule_keeps_the_configured_sheet_and_margin(self):
+    def test_the_page_rule_names_the_sheet_and_the_derived_margin(self):
         css = _shell.apply_layout(_shell.STYLE)
         layout = self.layout()
-        self.assertIn(f'  @page {{ size: {layout.page_size}; margin: {layout.page_margin}; }}',
-                      css)
+        self.assertIn(f'  @page {{ size: {layout.page_size}; '
+                      f'margin: {layout.print_page_margin()}; }}', css)
 
 
 if __name__ == '__main__':

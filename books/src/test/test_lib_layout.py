@@ -140,18 +140,58 @@ class BodySizeDerivationTest(unittest.TestCase):
 class PrintColumnTest(unittest.TestCase):
     """The printed column is measured against the sheet, not chosen by hand."""
 
-    def test_the_printable_width_is_the_sheet_minus_its_margins(self):
+    def test_the_column_is_the_reading_measure_times_the_body_size(self):
         layout = Layout.from_mapping({'layout_page_size': 'A4',
-                                      'layout_page_margin': '24mm 20mm'})[0]
-        # 210mm - 2 x 20mm = 170mm; 170 / 25.4 * 96
-        self.assertAlmostEqual(layout.printable_width_px(), 642.5, delta=0.5)
-        self.assertAlmostEqual(layout.printable_width_pt(), 481.9, delta=0.5)
+                                      'layout_body_px': 16,
+                                      'layout_print_chars_per_line': 42})[0]
+        self.assertEqual(layout.print_column(), 42 * 16)
 
-    def test_four_margin_values_take_the_left_and_right_edge(self):
+    def test_the_margin_is_what_the_column_leaves(self):
+        layout = Layout.from_mapping({'layout_page_size': 'A4',
+                                      'layout_body_px': 16,
+                                      'layout_print_chars_per_line': 42,
+                                      'layout_page_margin': '24mm 20mm'})[0]
+        _vertical, horizontal = layout.print_margins_mm()
+        # 210mm - 42 x 16px / 96dpi = 210 - 177.8 = 32.2mm, so 16.1mm each side
+        self.assertAlmostEqual(horizontal, 16.1, delta=0.1)
+        self.assertAlmostEqual(layout.printable_width_px(), 672, delta=1)
+        self.assertAlmostEqual(layout.printable_width_pt(), 504, delta=1)
+
+    def test_a_narrower_measure_widens_the_margins(self):
+        layout = Layout.from_mapping({'layout_page_size': 'A4',
+                                      'layout_body_px': 16,
+                                      'layout_print_chars_per_line': 30})[0]
+        self.assertEqual(layout.print_column(), 480)
+        self.assertAlmostEqual(layout.print_margins_mm()[1], (210 - 127) / 2, delta=0.1)
+
+    def test_a_measure_wider_than_the_floor_shrinks_to_the_floor(self):
+        layout = Layout.from_mapping({'layout_page_size': 'A4',
+                                      'layout_body_px': 16,
+                                      'layout_print_chars_per_line': 60,
+                                      'layout_print_margin_min_mm': 16})[0]
+        # 60 x 16 = 960px does not fit A4 at 16mm margins, so the column gives way
+        self.assertLess(layout.print_column(), 960)
+        self.assertEqual(layout.print_margins_mm()[1], 16.0)
+        self.assertLessEqual(layout.print_column(), layout.printable_width_px() + 1)
+
+    def test_an_explicit_column_overrides_the_measure(self):
+        layout = Layout.from_mapping({'layout_print_column_px': 720})[0]
+        self.assertEqual(layout.print_column(), 720)
+
+    def test_the_page_margin_names_what_the_column_leaves(self):
+        layout = Layout.from_mapping({'layout_page_size': 'A4',
+                                      'layout_body_px': 16,
+                                      'layout_print_chars_per_line': 42})[0]
+        self.assertEqual(layout.print_page_margin(), '24.0mm 16.1mm')
+
+    def test_the_vertical_margin_is_the_configured_one(self):
+        layout = Layout.from_mapping({'layout_page_margin': '30mm 20mm'})[0]
+        self.assertEqual(layout.print_margins_mm()[0], 30.0)
+
+    def test_four_configured_margins_still_only_lend_the_vertical_one(self):
         layout = Layout.from_mapping({'layout_page_margin': '10mm 12mm 14mm 16mm'})[0]
         self.assertEqual(layout.margins_mm(), (16.0, 12.0))
-        self.assertAlmostEqual(layout.printable_width_px(),
-                               (210.0 - 28.0) * 96 / 25.4, delta=0.5)
+        self.assertEqual(layout.print_margins_mm()[0], 10.0)
 
     def test_a_named_size_or_an_explicit_one_both_resolve(self):
         self.assertEqual(Layout.from_mapping({'layout_page_size': 'B5'})[0].page_size_mm(),
@@ -168,16 +208,10 @@ class PrintColumnTest(unittest.TestCase):
         self.assertEqual(layout.margins_mm(), (0.0, 0.0))
         self.assertGreater(layout.printable_width_px(), 0)
 
-    def test_the_column_is_the_configured_one_by_default(self):
-        layout = Layout.from_mapping({'layout_page_size': 'A4',
-                                      'layout_page_margin': '20mm'})[0]
-        self.assertEqual(layout.print_column(), layout.print_column_px)
-
-    def test_zero_makes_the_column_as_wide_as_the_sheet_leaves(self):
-        layout = Layout.from_mapping({'layout_print_column_px': 0,
-                                      'layout_page_size': 'A4',
-                                      'layout_page_margin': '20mm'})[0]
-        self.assertEqual(layout.print_column(), int(round(layout.printable_width_px())))
+    def test_the_column_is_derived_unless_configured(self):
+        derived = Layout.from_mapping({'layout_page_size': 'A4'})[0]
+        self.assertEqual(derived.print_column(),
+                         derived.print_chars_per_line * derived.body_size_px())
 
     def test_the_code_size_shrinks_until_the_widest_line_fits(self):
         layout = Layout.from_mapping({'layout_page_size': 'A4',
@@ -189,7 +223,7 @@ class PrintColumnTest(unittest.TestCase):
         narrow = layout.print_code_px(150)
         self.assertLess(narrow, 10)
         self.assertLessEqual(150 * layout.print_mono_advance * narrow,
-                             layout.printable_width_px() + 0.1)
+                             layout.printable_width_px() + 1.0)
 
     def test_the_code_size_never_drops_below_the_readable_floor(self):
         layout = Layout.from_mapping({'layout_print_code_min_px': 8})[0]

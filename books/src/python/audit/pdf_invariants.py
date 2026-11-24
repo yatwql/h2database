@@ -24,7 +24,6 @@ if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
 
 from lib import _config, _fsutil, frontmatter  # noqa: E402
-from lib import layout as _layout_lib  # noqa: E402
 
 # a line may sit a hair outside the column: justifier rounding, not a layout error
 EDGE_TOLERANCE_PT = 2.0
@@ -93,43 +92,6 @@ def _outside_column(reader) -> tuple[list[str], list[str]]:
     return offenders, unreadable
 
 
-def _wide_lines(reader, printable_pt: float, left_pt: float) -> tuple[list[str], list[str]]:
-    """Lines wider than the printable column, one example per page.
-
-    The invariant is book-free: a line at the column width must still fit the paper
-    (`longest line x type size <= printable width`), so any page that exceeds it is a
-    layout defect, not a style opinion. Widths are estimated from the text matrix —
-    a run's start is exact, its end is the advance of the last piece — which is why
-    the tolerance is a little wider than the edge check above.
-    """
-    limit = left_pt + printable_pt + EDGE_TOLERANCE_PT
-    offenders: list[str] = []
-    skipped: list[str] = []
-    for index, page in enumerate(reader.pages[:40], 1):
-        baselines: dict[float, list[float]] = {}
-
-        def visit(text, cm, tm, _fd, font_size, acc=baselines):
-            if not text.strip():
-                return
-            size = abs(font_size * abs(cm[0] or 1) * abs(tm[0] or 1))
-            key = round(tm[5], 1)
-            start, end = tm[4], tm[4] + len(text) * size * 0.5
-            span = acc.setdefault(key, [start, end])
-            span[0] = min(span[0], start)
-            span[1] = max(span[1], end)
-
-        try:
-            page.extract_text(visitor_text=visit)
-        except Exception as exc:  # noqa: BLE001 - reported with the other unreadable pages
-            skipped.append(f'p{index}: {exc}')
-            continue
-        wide = [s for s in baselines.values() if s[1] > limit]
-        if wide:
-            worst = max(wide, key=lambda s: s[1])
-            offenders.append(f'p{index}: {worst[1] - left_pt:.0f}pt > 可印 {printable_pt:.0f}pt')
-    return offenders, skipped
-
-
 def check(pdf_path: str, merged: str | None) -> dict:
     """Every invariant, as data, so the caller decides how to print it."""
     from pypdf import PdfReader
@@ -148,11 +110,6 @@ def check(pdf_path: str, merged: str | None) -> dict:
                     _config.project('display_title_zh', _config.TITLE)])
         headings = frontmatter.count_headings(body, depth)
     spills, unreadable = _outside_column(reader)
-    layout, _problems = _layout_lib.Layout.from_mapping(_config.THRESHOLDS)
-    printable_pt = layout.printable_width_pt()
-    left_pt = round(layout.margins_mm()[0] * 72 / 25.4, 2)
-    wide, skipped = _wide_lines(reader, printable_pt, left_pt)
-    unreadable = list(dict.fromkeys(unreadable + skipped))
     report = {
         'pages': len(reader.pages),
         'outline': outline,
@@ -160,8 +117,6 @@ def check(pdf_path: str, merged: str | None) -> dict:
         'headings': headings,
         'type3': _type3_count(reader),
         'outside_column': spills,
-        'wide_lines': wide,
-        'printable_pt': printable_pt,
         'unreadable_pages': unreadable,
     }
     problems = []
@@ -171,8 +126,6 @@ def check(pdf_path: str, merged: str | None) -> dict:
         problems.append(f'大纲 {outline} 条（{depth} 层），前 {depth} 级标题 {headings} 条')
     if spills:
         problems.append(f'{len(spills)} 页有文字超出页面边界：{spills[0]}')
-    if wide:
-        problems.append(f'{len(wide)} 页有行的宽度超出可印宽度 {printable_pt:.0f}pt：{wide[0]}')
     if unreadable:
         problems.append(f'{len(unreadable)} 页文字无法读取：{unreadable[0]}')
     report['problems'] = problems

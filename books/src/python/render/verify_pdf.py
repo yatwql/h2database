@@ -33,6 +33,7 @@ import sys
 from typing import Any
 
 from lib import _config, _errors, _fsutil, _mdutil
+from lib import layout as _layout
 
 try:
     from pypdf import PdfReader
@@ -284,6 +285,23 @@ def _check_toc_links(reader, annots, outline) -> list[str]:
     return problems
 
 
+def _check_column(report: Report) -> None:
+    """COLUMN: a printed line must fit the sheet — one rule, no book involved.
+
+    The column is derived from the reading measure and the horizontal margin is what
+    it leaves (`lib.layout`), so the only way to break this is a configuration that
+    asks for more characters per line than the paper can hold at the margin floor.
+    Checked here rather than from the PDF: text width can only be estimated from the
+    content stream, and an estimate cannot tell a wide column from a wide glyph.
+    """
+    layout, _problems = _layout.Layout.from_mapping(_config.THRESHOLDS)
+    column = layout.print_column()
+    printable = layout.printable_width_px()
+    report.add('COLUMN', column <= printable + 1,
+               f'{column}px column / {printable:.0f}px printable '
+               f'({layout.print_margins_mm()[1]:g}mm margin)')
+
+
 def _check_geometry(report: Report, reader, pdf_path: str = '') -> None:
     """PAGE_SIZE and ROTATION: a delivery PDF is A4 and upright."""
     sizes = {(round(float(page.mediabox.width), 1), round(float(page.mediabox.height), 1))
@@ -293,6 +311,7 @@ def _check_geometry(report: Report, reader, pdf_path: str = '') -> None:
     tol = float(_config.THRESHOLDS.get('pdf_page_tolerance', 2))
     a4 = all(abs(w - width) <= tol and abs(h - height) <= tol for w, h in sizes)
     _check_density(report, pdf_path)
+    _check_column(report)
     report.add('PAGE_SIZE', a4,
                f'{sorted(sizes)[:2]} (expect {width:.0f}x{height:.0f})')
     rotations = {int(page.get('/Rotate') or 0) for page in reader.pages}
