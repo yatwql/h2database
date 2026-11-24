@@ -57,7 +57,7 @@
 
 | 层 | 职责 | 可写 | 可导入 |
 | --- | --- | --- | --- |
-| `lib/` | 配置读取、文件读写原语、日志、版本、LLM 客户端、基线存储 | 由调用方决定 | 仅标准库 |
+| `lib/` | 配置读取、文件读写原语、日志、版本、LLM 客户端、基线存储、字体解析（`fonts`）、版式参数（`layout`）、封面与正文切分（`frontmatter`） | 由调用方决定 | 仅标准库 |
 | `core/` | 领域动作：`actions`、可改配置 `settings`、菜单模型 `menu`、新书脚手架 `scaffold` | 经由 `actions` | `lib` |
 | `ingest/` | 源码 → 手稿：扫描源码树、切分章节、语言适配 | `data/state`、手稿 | `lib` |
 | `manuscript/` | 手稿维护：封面统计、术语、索引、案例、快照 | 手稿、`data/state`、`data/snapshots` | `lib` |
@@ -161,8 +161,11 @@ books/
 - 书目目录：`--books-dir`／`BOOKS_DIR` > `book.toml [paths] library` > 书的父目录；
   `books_in()` 列出该目录下的书，`candidate_books()` 在其下找
   `data/book/book.toml`——「其他书放在哪」是配置事实，不是目录约定；
-- 临时目录：`book.toml [paths] tmp`（缺省 `data/tmp`，读 `_config.tmp_dir()`）；
-  HTML 片段缓存与 `--force` 备份都在它下面，已 gitignore。
+- 临时目录：`book.toml [paths] tmp`（缺省 `data/tmp`，读 `_config.tmp_dir()`），
+  放一次性脚本与 `--force` 备份，随时可清空；
+- 缓存目录：`book.toml [paths] cache`（缺省 `data/cache`，读 `_config.cache_dir()`），
+  放字体索引与 HTML 分片缓存——可重建但有重建成本；不可写时退回临时目录。
+  两者都 gitignore，并由 `_config.excluded_dirs()` 从门禁扫描中排除。
 - 派生状态：`book.toml [paths] state`（缺省 `data/state`，读 `_config.state_dir()` /
   `state_path(name)`）；ingest 每次重建，不入库。
 - 归档与报告：`base.json [archive]` 的 `dir`、`retention_days`（默认 45 天，读 `archive.settings()`）；
@@ -260,7 +263,7 @@ books/
 
 正文渲染按 H1 章节切片缓存（`render/html_cache.py`）：目录、锚点与章编号在切片前已定稿，
 一片只依赖自己的 markdown 与渲染器源码，所以复用旧片不会改一个字节（缓存键就是内容哈希，
-`--full` 可强制全量）。缓存落在 `data/tmp/html-cache/`（已 gitignore），被删或损坏只是
+`--full` 可强制全量）。缓存落在 `data/cache/html-cache/`（已 gitignore），被删或损坏只是
 重新渲染，不会影响产物。合并步不缓存——它只是纯拼接。
 
 ### 4.5 `audit/` 门禁层

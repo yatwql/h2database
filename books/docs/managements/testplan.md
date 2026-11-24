@@ -99,7 +99,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | PDF 渲染与 TOC 链接注入 | HTML → PDF 成功、页面数据可读；每个印刷 TOC 条目在对应页上加一条 link annotation，目标页按 outline 位置映射 | `render/to_pdf.py`、`render/pdf_toc_links.py` | P1 |
 | PDF 交付 | PDF 重新生成自当前 HTML；页面为 A4（尺寸与容差取配置）、无旋转；字体全部嵌入且 Type3 不超过 `pdf_type3_max`（`FONTS`）；outline 与 HTML 标题逐一对应；印刷 TOC 链接按序且在页内；体积不超过配置的 PDF 预算（随页数增长）；行距÷字号与文字占可印高度落在配置区间（`DENSITY`） | `render/verify_pdf.py`（`--require-toc-links`） | P1 |
 | EPUB 结构 | mimetype 首条且未压缩；container/OPF/manifest/spine/nav 全部可解析、导航链接全部命中；元数据齐备；每个正文文件恰好一个 `h1`（`CHAPTERS`，图注被当成标题时当场报警）；体积不超过配置的 EPUB 预算 | `render/verify_epub.py` | P1 |
-| EPUB 生成 | pandoc 可用时生成 EPUB（在 `deliver` 组内，生成后由 `verify_epub.py` 校验） | `render/to_epub.py` | P1 |
+| EPUB 生成 | pandoc 可用时由 `to_epub.py` 生成 EPUB（在 `deliver` 组内，生成后由 `verify_epub.py` 校验） |
 | 可读性 | 长句、宽 ASCII 图、框线闭合、图注质量 | `readability.py` | P1 |
 | 术语与排版规则 | 同一概念不混用两种写法；标题无尾标点；链接文字可读；中英之间留空格；列表标点一致；段落 ≤ 上限（已知项走基线） | `style_rules.py` | P1 |
 | 内容深度 | 前向引用须点名主责章节；高频类型须入术语表；练习题须指向本章类型或 §锚点 | `content_depth.py` | P1 |
@@ -199,6 +199,7 @@ report` / `eval-score.sh`）、`balance` 的计量输出（`--json`），以及�
 | FR-16 | 封面统计与正文实际内容一致 | `cover.py`、`structure.py` |
 | FR-17 | 术语与排版统一，无新增违规 | `style_rules.py` |
 | FR-18 | 代码摘录与源码当前版本一致 | `content_depth.py`、`source_refs.py` |
+| FR-19 | 换书、换系统、换字体只改配置：字号与行距由栏宽与每行字数推导；纸面字体须存在且可嵌入、屏幕字体只声明不嵌入；判据取 `DENSITY` 与 `CHAPTERS` | `verify_pdf.py`、`verify_epub.py` |
 | IR-01 | 单一入口跑完一次完整检查 | `make.py` |
 | IR-02 | 按改动域分档，编辑期单次检查 ≤ 5 秒 | `src/python/check_runner.py`、`perf_baseline.py` |
 | IR-10 | 换一本书只换书根：路径、派生状态、基线、产物随之改变，互不覆盖 | `src/test/test_lib_config_books.py` |
