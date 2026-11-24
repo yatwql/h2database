@@ -10,6 +10,7 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 import _fixture
 
@@ -89,3 +90,18 @@ class TestSourceFreshnessHelpers(FixtureCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class PrefixFallbackTest(unittest.TestCase):
+    """An unconfigured package prefix is named as unknown, not left empty."""
+
+    def setUp(self):
+        self.mod = _fixture.load_module(_fixture.build_book(tempfile.mkdtemp()), 'source_refs')
+
+    def test_a_missing_prefix_reads_as_unknown(self):
+        with mock.patch.dict(self.mod._config.SOURCES, {}, clear=True):
+            self.assertEqual(self.mod.package_prefix(), 'unknown')
+
+    def test_a_configured_prefix_is_returned(self):
+        with mock.patch.dict(self.mod._config.SOURCES, {'package_prefix': 'org.x'}):
+            self.assertEqual(self.mod.package_prefix(), 'org.x')

@@ -70,3 +70,25 @@ class ExcerptFreshnessTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class InventoryFallbackTest(unittest.TestCase):
+    """A missing or unreadable inventory degrades to {} instead of raising."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.depth = _fixture.load_module(self.root, 'content_depth')
+        self.path = os.path.join(self.root, 'data', 'state', 'source-inventory.json')
+
+    def test_a_missing_inventory_reads_as_empty(self):
+        if os.path.exists(self.path):
+            os.remove(self.path)
+        self.assertEqual(self.depth.inventory(), {})
+
+    def test_a_corrupt_inventory_reads_as_empty(self):
+        os.makedirs(os.path.dirname(self.path), exist_ok=True)
+        with open(self.path, 'w', encoding='utf-8') as handle:
+            handle.write('{not json')
+        self.assertEqual(self.depth.inventory(), {})
