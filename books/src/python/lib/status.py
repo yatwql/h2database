@@ -45,7 +45,7 @@ def _pages_cached(path: str, _mtime: float) -> str:
         return ''
     try:
         return f'{len(PdfReader(path).pages)} 页'
-    except Exception:  # noqa: BLE001 - a broken PDF is reported elsewhere
+    except Exception:
         return ''
 
 

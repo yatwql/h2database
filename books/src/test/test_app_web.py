@@ -12,9 +12,9 @@ import sys
 import tempfile
 import threading
 import unittest
-from unittest import mock
 from contextlib import redirect_stdout
 from http import server
+from unittest import mock
 
 import _fixture
 

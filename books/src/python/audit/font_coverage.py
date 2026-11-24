@@ -24,8 +24,10 @@ _HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
 
-from lib import _config  # noqa: E402
-from lib import fonts  # noqa: E402
+from lib import (  # noqa: E402 - after the sys.path insert above
+    _config,
+    fonts,
+)
 
 SKIP_EXT = ('.png', '.jpg', '.pdf', '.epub')
 
@@ -55,7 +57,7 @@ def coverage(font_path: str, counts: collections.Counter) -> tuple[int, list[str
     try:
         font = TTFont(font_path, lazy=True, fontNumber=0)
         cmap = font.getBestCmap() or {}
-    except Exception as exc:  # noqa: BLE001 - a broken font file is a finding, not a crash
+    except Exception as exc:
         return 0, [f'无法读取字体: {exc}']
     missing = [char for char in counts if char.strip() and ord(char) not in cmap]
     return len(counts) - len(missing), sorted(missing, key=lambda c: -counts[c])
@@ -80,7 +82,7 @@ def main(argv: list[str]) -> int:
     rows = []
     ok = True
     for family in families:
-        path = fonts._font_file(family)  # noqa: SLF001 - the resolver lives there
+        path = fonts._font_file(family)
         if not path:
             rows.append({'family': family, 'file': '', 'embeddable': False,
                          'covered': 0, 'missing': []})

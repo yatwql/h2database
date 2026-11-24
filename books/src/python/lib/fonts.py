@@ -124,7 +124,7 @@ def _open_face(entry: dict):
             faces = TTCollection(entry['path'], lazy=True).fonts
             return faces[entry['face']] if entry['face'] < len(faces) else faces[0]
         return TTFont(entry['path'], lazy=True)
-    except Exception:  # noqa: BLE001 - a broken face contributes no coverage
+    except Exception:
         return None
 
 
@@ -151,7 +151,7 @@ def _read_families(path: str) -> list[tuple[str, int, bool]]:
     rows: list[tuple[str, int, bool]] = []
     try:
         faces = TTCollection(path, lazy=True).fonts if collection else [TTFont(path, lazy=True)]
-    except Exception:  # noqa: BLE001 - a broken font file is skipped, not fatal
+    except Exception:
         return []
     for index, face in enumerate(faces):
         names = _name_table(face)

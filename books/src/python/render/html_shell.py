@@ -12,12 +12,12 @@ import sys as _sys
 # importable from the renderer whether it runs as a script or as a module
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
-from lib import fonts  # noqa: E402 - after the path insert above
-from lib import layout as _layout_lib  # noqa: E402
+from lib import fonts
+from lib import layout as _layout_lib
 
 try:
-    from lib import _config  # noqa: E402
-except Exception:  # noqa: BLE001 - the shell must import even without config
+    from lib import _config
+except Exception:
     _config = None
 
 # The printed column: the sheet decides its width, and a code line wider than the

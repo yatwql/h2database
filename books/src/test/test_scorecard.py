@@ -45,15 +45,29 @@ class ScorecardDimensionsTest(unittest.TestCase):
 
     # -- 稳定 ------------------------------------------------------------
     def test_stability_score_with_a_green_suite(self):
-        with mock.patch.object(self.card, '_run', return_value=(0, 'Ran 250 tests in 9s')):
+        with mock.patch.object(self.card, '_run',
+                               return_value=(0, '250 passed in 9.02s')):
             self.assertEqual(self.card.stability_score(), (100, []))
 
     def test_stability_score_flags_a_failing_or_small_suite(self):
-        with mock.patch.object(self.card, '_run', return_value=(1, 'Ran 5 tests')):
+        with mock.patch.object(self.card, '_run',
+                               return_value=(1, '5 passed, 2 failed in 3.10s')):
             score, notes = self.card.stability_score()
         self.assertEqual(score, 40)
-        self.assertIn('test suite failing', notes)
+        self.assertIn('test suite failing (2 failed)', notes)
         self.assertTrue(any('only 5 tests' in note for note in notes))
+
+    def test_stability_score_runs_the_same_suite_as_the_gate(self):
+        seen = {}
+
+        def fake_run(command):
+            seen['command'] = command
+            return 0, '120 passed in 4s'
+
+        with mock.patch.object(self.card, '_run', side_effect=fake_run):
+            self.card.stability_score()
+        self.assertIn('pytest', seen['command'])
+        self.assertIn('tier_fast', seen['command'])
 
     def test_stability_score_without_a_test_count(self):
         with mock.patch.object(self.card, '_run', return_value=(0, 'no output')):

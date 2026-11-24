@@ -78,7 +78,7 @@ def main(argv: list[str] | None = None, engine: Any = None) -> int:
             return 1
     try:
         build(args.html, args.pdf, engine)
-    except Exception as exc:  # noqa: BLE001 - report, do not dump a traceback
+    except Exception as exc:
         print(f'  print-grade PDF FAILED: {exc}', file=_sys.stderr)
         return 1
     print(f'Print-grade PDF: {args.pdf or _config.merged_print_pdf()}')

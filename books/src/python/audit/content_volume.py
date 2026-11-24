@@ -115,7 +115,7 @@ def delivered_snapshot() -> dict[str, int]:
 
             out['pdf_pages'] = len(PdfReader(pdf).pages)
             out['pdf_bytes'] = os.path.getsize(pdf)
-        except Exception as exc:  # noqa: BLE001 - unreadable artifact is not this gate's finding
+        except Exception as exc:
             LOG.debug('cannot read %s: %s', pdf, exc)
     if os.path.exists(epub):
         out['epub_bytes'] = os.path.getsize(epub)

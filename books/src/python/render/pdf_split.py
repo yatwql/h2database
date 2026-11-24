@@ -201,7 +201,7 @@ def _optimize(pdf_path: str) -> None:
                  '已采用' if accepted else '不采用（须同页数且更小）')
         if accepted:
             os.replace(tmp, pdf_path)
-    except Exception as exc:  # noqa: BLE001 - a failed optimise pass must not break the build
+    except Exception as exc:
         log.warning('gs 压缩失败，保留合并结果 %s：%s', os.path.basename(pdf_path), exc)
     finally:
         try:
@@ -223,11 +223,8 @@ def _scratch_path(pdf_path: str) -> str:
     and dot-prefixed, so `dist/*` and the archive step cannot pick it up, and it stays
     beside the target because `os.replace` is only atomic within one filesystem.
     """
-    directory = os.path.dirname(pdf_path) or '.'
-    stale = os.path.join(directory, '.' + os.path.basename(pdf_path) + '.gs.tmp')
-    with contextlib.suppress(OSError):
-        os.remove(stale)   # a killed run leaves it behind; this one starts clean
-    return stale
+    return os.path.join(os.path.dirname(pdf_path) or '.',
+                        '.' + os.path.basename(pdf_path) + '.gs.tmp')
 
 
 def optimize(pdf_path: str) -> None:
@@ -245,7 +242,7 @@ def render_html(html_path: str, pdf_path: str, engine: Any = None,
     makes the column and the margins agree.
     """
     if engine is None:
-        from playwright.sync_api import sync_playwright as engine  # noqa: PLC0415
+        from playwright.sync_api import sync_playwright as engine
     kwargs = pdf_kwargs or {'format': 'A4', 'print_background': True,
                             'display_header_footer': False,
                             'prefer_css_page_size': True}

@@ -219,7 +219,7 @@ def _check_density(report: Report, pdf_path: str) -> None:
     """
     try:
         from render import pdf_metrics  # noqa: PLC0415 - only needed for this check
-    except Exception:  # noqa: BLE001 - a missing helper must not fail the whole build
+    except Exception:
         report.add('DENSITY', True, 'pdf_metrics unavailable, skipped')
         return
     metrics = pdf_metrics.measure(pdf_path)

@@ -446,7 +446,7 @@ if os.path.exists(index_path):
                      f"sub>={_config.THRESHOLDS.get('index_sub_min', 50)}, "
                      f"see-also>={_config.THRESHOLDS.get('index_see_also_min', 30)}")
             check(res.returncode == 0, f'Index hierarchy floor ({floor})')
-        except Exception as exc:  # noqa: BLE001 - each sub-check reports failure instead of aborting the run
+        except Exception as exc:
             check(False, f'Index hierarchy check failed to run: {exc}')
 
     xref_tool = os.path.join(script_dir, 'index_xrefs.py')
@@ -458,7 +458,7 @@ if os.path.exists(index_path):
             check=False
             )
             check(res.returncode == 0, 'Index see-also targets resolve and sub-entries reference valid chapters')
-        except Exception as exc:  # noqa: BLE001 - each sub-check reports failure instead of aborting the run
+        except Exception as exc:
             check(False, f'Index xref audit failed to run: {exc}')
 else:
     check(False, 'Index file not found')
@@ -480,7 +480,7 @@ if os.path.exists(caption_tool):
         # _audit_captions exits 0 when violations <= fail_at; strict has
         # fail_at=0, so exit 0 ⇔ zero violations.
         check(res.returncode == 0, 'Figure captions: strict 0 violations (verb-leading, 8-30 chars)')
-    except Exception as exc:  # noqa: BLE001 - each sub-check reports failure instead of aborting the run
+    except Exception as exc:
         check(False, f'Caption audit failed to run: {exc}')
 else:
     check(False, 'Caption audit tool missing')
@@ -504,7 +504,7 @@ if os.path.exists(cluster_tool):
         total = payload.get('total_clusters', 0)
         check(unbridged == 0,
               f'Figure clusters: {total} clusters, {unbridged} without bridge sentence')
-    except Exception as exc:  # noqa: BLE001 - each sub-check reports failure instead of aborting the run
+    except Exception as exc:
         check(False, f'Cluster audit failed to run: {exc}')
 else:
     check(False, 'Cluster audit tool missing')
@@ -530,7 +530,7 @@ if os.path.exists(exercises_tool):
         check(ok == all_ch and total >= exercises_floor,
               f'延伸思考: {ok}/{all_ch} chapters pass; total exercises {total} '
               f'(floor {exercises_floor})')
-    except Exception as exc:  # noqa: BLE001 - each sub-check reports failure instead of aborting the run
+    except Exception as exc:
         check(False, f'Exercise audit failed to run: {exc}')
 else:
     check(False, 'Exercise audit tool missing')

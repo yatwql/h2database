@@ -140,8 +140,7 @@ class VerifyPdfTest(PdfFixtureCase):
     def test_a_link_annotation_outside_the_page_is_rejected(self):
         from pypdf import PdfReader, PdfWriter
         from pypdf.annotations import Link
-        from pypdf.generic import (ArrayObject, FloatObject, NameObject,
-                                   TextStringObject)
+        from pypdf.generic import ArrayObject, FloatObject, NameObject, TextStringObject
         self.build()
         writer = PdfWriter()
         writer.append(PdfReader(self.pdf))

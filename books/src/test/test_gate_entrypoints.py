@@ -81,7 +81,7 @@ class GateEntrypointsTest(unittest.TestCase):
     def run_gate(self, name: str, *args: str):
         try:
             module = _fixture.load_module(self.root, name)
-        except BaseException as exc:  # noqa: BLE001 - a gate may refuse to import
+        except BaseException as exc:
             return None, '', f'{type(exc).__name__}: {exc}'
         if not hasattr(module, 'main'):
             # script-style module: importing it already ran the whole gate
@@ -93,7 +93,7 @@ class GateEntrypointsTest(unittest.TestCase):
                 code = module.main(list(args)) if takes_argv else module.main()
             except SystemExit as exc:
                 code = exc.code if isinstance(exc.code, int) else 0
-            except Exception as exc:  # noqa: BLE001 - a gate may bail out early
+            except Exception as exc:
                 err.write(f'{type(exc).__name__}: {exc}')
                 code = 1
         return code, out.getvalue(), err.getvalue()
@@ -133,7 +133,7 @@ class GateEntrypointsTest(unittest.TestCase):
             with self.subTest(gate=name):
                 try:
                     module = _fixture.load_module(empty, name)
-                except Exception:  # noqa: BLE001 - config is intentionally absent
+                except Exception:
                     module = None
                 if module is None:
                     continue
@@ -143,7 +143,7 @@ class GateEntrypointsTest(unittest.TestCase):
                         code = module.main([])
                     except SystemExit as exc:
                         code = exc.code if isinstance(exc.code, int) else 0
-                    except Exception as exc:  # noqa: BLE001 - the gate may bail out
+                    except Exception as exc:
                         code = 1 if exc else 0
                 self.assertIn(name, EMPTY_GATE_CODES, 'every gate needs a recorded verdict')
                 self.assertEqual(code, EMPTY_GATE_CODES[name],

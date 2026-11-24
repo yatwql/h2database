@@ -271,20 +271,24 @@ def _command(step: str, marker: str = '',
     if step == 'lint':
         # The pinned ruff in books/.venv is the authority; a ruff from PATH may be
         # a different version with different rules (same reason the toolchain runs
-        # on .venv only).
+        # on .venv only). The config is passed explicitly: ruff discovers it from the
+        # working directory, and this runs from the repository root, so without it
+        # the gate silently linted with ruff's defaults instead of the book's rules.
+        config = ['--config', os.path.join(book_root(), 'pyproject.toml')]
         if importlib.util.find_spec('ruff') is not None:
-            return [PY, '-m', 'ruff', 'check', src_rel(), test_rel()]
+            return [PY, '-m', 'ruff', 'check', *config, src_rel(), test_rel()]
         if shutil.which('ruff'):
-            return ['ruff', 'check', src_rel(), test_rel()]
+            return ['ruff', 'check', *config, src_rel(), test_rel()]
         if shutil.which('uvx'):
-            return ['uvx', 'ruff', 'check', src_rel(), test_rel()]
+            return ['uvx', 'ruff', 'check', *config, src_rel(), test_rel()]
         return None
     if step == 'lint-changed':
         files = [path for path in scoped_changes(domains) if path.endswith('.py')]
         if not files:
             return None
         if importlib.util.find_spec('ruff') is not None:
-            return [PY, '-m', 'ruff', 'check', *files]
+            config = ['--config', os.path.join(book_root(), 'pyproject.toml')]
+            return [PY, '-m', 'ruff', 'check', *config, *files]
         return None
     if step == 'gates-changed':
         gates = gates_for_change(scoped_changes(domains))

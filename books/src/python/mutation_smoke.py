@@ -27,7 +27,7 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from lib import _config, _errors  # noqa: E402
+from lib import _config, _errors
 
 SRC = os.path.join(_config.BOOK_ROOT, 'src')
 

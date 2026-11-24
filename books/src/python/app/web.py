@@ -167,7 +167,7 @@ class Handler(server.BaseHTTPRequestHandler):
                 code, text = actions.run(
                     action, book=book,
                     edition=str(payload.get('edition', '') or ''), **kwargs)
-        except Exception as exc:  # noqa: BLE001 - the page relays failures, it does not raise
+        except Exception as exc:
             code, text = 1, f'{type(exc).__name__}: {exc}'
         # the same block the log and the TUI show: what was read, what came out
         elapsed = time.perf_counter() - started

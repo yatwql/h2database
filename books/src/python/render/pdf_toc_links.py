@@ -93,7 +93,7 @@ def _require_inputs(html_path: Path, pdf_path: Path) -> None:
 def _open_reader(pdf_path: Path):
     try:
         return PdfReader(str(pdf_path))
-    except Exception as exc:  # noqa: BLE001 - report the file, do not dump a traceback
+    except Exception as exc:
         raise _errors.ToolError(f'error: cannot read {pdf_path}: {exc}') from exc
 
 

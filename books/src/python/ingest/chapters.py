@@ -103,7 +103,7 @@ def prose(kind: str, fallback: str, enabled: bool | None = None, **facts) -> str
         from lib import _llm  # lazy: the offline path stays stdlib-only
         scenario = 'chapter-draft' if kind == 'lead' else 'summary'
         text = _llm.complete(_prose_prompt(kind, facts), scenario=scenario)
-    except Exception as exc:  # noqa: BLE001 - a provider hiccup must not break ingest
+    except Exception as exc:
         print(f'  [warn] LLM prose unavailable ({exc}); using deterministic text',
               file=sys.stderr)
         return fallback

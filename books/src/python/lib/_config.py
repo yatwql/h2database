@@ -26,9 +26,8 @@ import glob
 import json
 import os
 import subprocess
-from collections.abc import Iterator
-
 import tomllib
+from collections.abc import Iterator
 
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 

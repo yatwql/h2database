@@ -13,6 +13,23 @@
 
 ### 变更
 
+- **lint 从「跟着 ruff 版本走」变成一条可复现的门禁**：此前 `check_runner` 从仓库根调用
+  `python -m ruff check books/src/...`，而 `books/pyproject.toml` 里没有 `[tool.ruff]`——规则集
+  就是 ruff 的默认值，换版本即换判据（venv 里是 0.15.20、PATH 上的 `uvx ruff` 是 0.17.6，同一棵树
+  一个报 0 处、一个报 160 处）。现在 `books/pyproject.toml` 声明 `line-length`、`select`
+  （E4/E7/E9/F + I/B/UP/RUF100）与 `external`（`PLC0415` 等只在编辑器里生效的规则，其 `# noqa`
+  不算过期），门禁显式传 `--config`，`requirements-dev.txt` 的 ruff 同步升到 0.17.6。收起
+  45 处机械问题（导入顺序、pyupgrade、未使用的 `# noqa`）与 3 处手工问题（两处未用的循环变量、
+  一处 `_sys` 别名下的 E402）。
+
+- **评分卡的「稳定」维度改为跑门禁同一套用例**：`scorecard.stability_score()` 原本用
+  `unittest discover`，它导入全部测试模块、让模块级代码真的执行（交付脚本被跑起来、
+  还往 `dist/` 写文件），再把「2 failed」当成整棵树红了。现在跑 `pytest -m tier_fast`
+  并读 `N passed / N failed`，另加一条用例钉住「与门禁同一套对象」。
+
+- **删除死配置 `style.json [diagrams].markers`**：全库无任何读取，且与 `ascii_max_cols`
+  的分工容易误解——ASCII 宽度预算只有 `base.json [toolchain].ascii_max_cols` 一处。
+
 - **压缩只做一次，且由最后一个写盘者负责**：`to_pdf` 原本压两遍（合并后、写大纲后），
   而随后 `pdf_toc_links` 用 pypdf 重写又把它抹掉——本次构建 7.54 MB 被拉回 8.61 MB（+14%），
   还白花一次 gs。现在 `pdf_split.merge()` 不再压缩，`render()/render_html()` 用 `optimize`

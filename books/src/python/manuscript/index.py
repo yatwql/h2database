@@ -220,7 +220,7 @@ print('> **注意**: 本文件由 index.py 自动生成，需要人工审核和�
 print()
 
 current_letter = ''
-for term, ch, sec, etype in sorted_entries:
+for term, _ch, sec, etype in sorted_entries:
     first_letter = term[0].upper()
     if first_letter != current_letter:
         current_letter = first_letter

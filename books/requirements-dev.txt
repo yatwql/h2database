@@ -4,7 +4,7 @@
 # (books/.venv) shared by the local gates, the git hooks and CI. Bump a pin only
 # together with the code that needs it.
 -r requirements.txt
-ruff==0.15.20         # lint gate
+ruff==0.17.6         # lint gate
 coverage==7.11.1      # coverage ratchet (make.py cover)
 pytest==9.1.1         # marker-based tier selection (pytest -m tier_fast)
 pyright==1.1.380      # audit/typecheck.py (optional; CI installs it)

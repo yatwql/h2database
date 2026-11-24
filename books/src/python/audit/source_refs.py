@@ -581,7 +581,7 @@ def main(argv: list[str] | None = None) -> int:
                   f'(run with --suggest for rename hints)')
             return 1
         return 0
-    except Exception as e:  # noqa: BLE001 - top-level guard must report, not abort
+    except Exception as e:
         print(f'ERROR: {e}', file=sys.stderr)
         return 1
 

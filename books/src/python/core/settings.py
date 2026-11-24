@@ -259,7 +259,7 @@ def _source_dir() -> str:
     """Configured source tree (empty when not configured)."""
     try:
         return _config.source_tree('src_main')
-    except Exception:  # noqa: BLE001 - a missing source tree is not fatal here
+    except Exception:
         return ''
 
 

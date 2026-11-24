@@ -55,17 +55,6 @@
       }
     }
   },
-  "diagrams": {
-    "markers": [
-      "┌",
-      "└",
-      "├",
-      "│",
-      "▼",
-      "▲",
-      "→"
-    ]
-  },
   "clusters": {
     "min_figures": 3,
     "window_lines": 40

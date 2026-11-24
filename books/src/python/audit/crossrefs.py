@@ -55,7 +55,7 @@ for fname, ref_ch, ref_title, pos in cross_refs:
 
 if errors:
     print(f'\n=== MISMATCHES: {len(errors)} ===')
-    for fname, ref_ch, ref_title, actual_title, pos in errors:
+    for fname, ref_ch, ref_title, actual_title, _pos in errors:
         print(f'  {fname}: ch{ref_ch} ref "{ref_title}" -> actual "{actual_title}"')
 else:
     print('\n=== All cross-references match! ===')

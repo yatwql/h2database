@@ -67,18 +67,24 @@ def feature_score() -> tuple[int, list[str]]:
 
 
 def stability_score() -> tuple[int, list[str]]:
+    """The result of the suite the gates actually run.
+
+    It used to invoke `unittest discover`, which imports every test module and lets
+    whatever sits at module scope run: the deliver scripts executed, wrote into
+    `dist/`, and the suite still reported a failure the real gate did not have.
+    """
     notes: list[str] = []
-    code, out = _run([sys.executable, '-m', 'unittest', 'discover',
-                      '-s', os.path.join(_config.BOOK_ROOT, 'src', 'test'),
-                      '-t', os.path.join(_config.BOOK_ROOT, 'src', 'test')])
-    match = re.search(r'Ran (\d+) tests?', out)
-    total = int(match.group(1)) if match else 0
-    score = 100 if code == 0 else 40
-    if total < 100:
+    code, out = _run([sys.executable, '-m', 'pytest', '-m', 'tier_fast', '-q',
+                      os.path.join(_config.BOOK_ROOT, 'src', 'test')])
+    passed = int(match.group(1)) if (match := re.search(r'(\d+) passed', out)) else 0
+    failed = int(match.group(1)) if (match := re.search(r'(\d+) failed', out)) else 0
+    score = 100 if code == 0 and not failed else 40
+    if passed < 100:
         score = min(score, 70)
-        notes.append(f'only {total} tests')
+        notes.append(f'only {passed} tests')
     if code != 0:
-        notes.append('test suite failing')
+        notes.append(f'test suite failing ({failed} failed)' if failed
+                     else 'test suite failing')
     return _pct(score), notes
 
 

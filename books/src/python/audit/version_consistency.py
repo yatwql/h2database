@@ -159,7 +159,7 @@ def artifact_text(path: str) -> str | None:
             from pypdf import PdfReader
 
             reader = PdfReader(path)
-        except Exception:  # noqa: BLE001 - unreadable PDF is verify_pdf's finding
+        except Exception:
             return None
         return ''.join((page.extract_text() or '') for page in reader.pages[:5])
     try:

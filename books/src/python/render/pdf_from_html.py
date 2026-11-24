@@ -196,7 +196,7 @@ def main(argv: list[str] | None = None, engine: Any = None) -> int:
     args = parser.parse_args(argv)
     try:
         build(args.html, args.pdf, engine)
-    except Exception as exc:  # noqa: BLE001 - report, do not dump a traceback
+    except Exception as exc:
         print(f'error: chromium unavailable ({exc}); '
               'run: python -m playwright install chromium', file=_sys.stderr)
         return 2

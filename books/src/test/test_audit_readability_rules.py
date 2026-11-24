@@ -70,11 +70,11 @@ class ReadabilityRulesTest(unittest.TestCase):
         with open(path, 'a', encoding='utf-8') as fh:
             fh.write('\n**图 9-9: 架构**\n')
         self.mod.warnings.clear()
-        setattr(self.mod, 'RUN_FIGURE_CHECKS', False)
+        setattr(self.mod, 'RUN_FIGURE_CHECKS', False)  # noqa: B010 - module switch
         self.mod.main([])
         self.assertFalse(any('caption too short' in w for w in self.mod.warnings))
         self.mod.warnings.clear()
-        setattr(self.mod, 'RUN_FIGURE_CHECKS', True)
+        setattr(self.mod, 'RUN_FIGURE_CHECKS', True)  # noqa: B010 - module switch
         self.mod.main(['--figures'])
         self.assertTrue(any('caption too short' in w for w in self.mod.warnings))
 

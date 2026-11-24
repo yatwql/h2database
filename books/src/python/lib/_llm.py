@@ -24,6 +24,7 @@ import http.client
 import json
 import os
 import time
+from datetime import UTC
 from urllib.parse import urlsplit
 
 from lib import _config, _fsutil, _log
@@ -447,8 +448,8 @@ def _record(provider: str, model: str, scenario: str, prompt_tokens: int,
 
 
 def _utcnow() -> str:
-    from datetime import datetime, timezone
-    return datetime.now(timezone.utc).isoformat(timespec='seconds')
+    from datetime import datetime
+    return datetime.now(UTC).isoformat(timespec='seconds')
 
 
 def usage_line() -> str:

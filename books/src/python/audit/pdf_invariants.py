@@ -45,7 +45,7 @@ def _outline_shape(reader) -> tuple[int, int]:
 
     try:
         return walk(reader.outline, 1)
-    except Exception:  # noqa: BLE001 - a broken outline is a finding, not a crash
+    except Exception:
         return 0, 1
 
 
@@ -85,7 +85,7 @@ def _outside_column(reader) -> tuple[list[str], list[str]]:
 
         try:
             page.extract_text(visitor_text=visit)
-        except Exception as exc:  # noqa: BLE001 - reported, not swallowed
+        except Exception as exc:
             unreadable.append(f'p{index}: {exc}')
         if spills:
             offenders.append(f'p{index}: {spills[0]}')

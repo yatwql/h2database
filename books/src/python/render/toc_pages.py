@@ -23,7 +23,7 @@ import sys as _sys
 
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
-from lib import _errors, _fsutil  # noqa: E402
+from lib import _errors, _fsutil
 
 NAV_OPEN = '<nav id="toc-page-nav">'
 NAV_CLOSE = '</nav>'

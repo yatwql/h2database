@@ -132,7 +132,7 @@ try:
         try:
             page.wait_for_selector('.mermaid svg', timeout=15000)
             print("  Mermaid diagrams rendered successfully")
-        except Exception as e:  # noqa: BLE001 - playwright timeout class is not importable here
+        except Exception as e:
             print(f"  Mermaid rendering note: {e}")
 
         # ── Inject invisible ASCII markers for PDF outline detection ───────────
@@ -171,7 +171,7 @@ try:
         browser.close()
     generated_with_markers = True
     print("  PDF rendered via Playwright successfully")
-except Exception as e:  # noqa: BLE001 - top-level guard must report, not abort
+except Exception as e:
     raise _errors.ToolError(
         f"  Playwright rendering FAILED: {e}\n"
         "  Refusing to reuse an existing PDF because it may be stale.") from e
@@ -367,7 +367,7 @@ try:
 except ImportError:
     raise _errors.ToolError(
         "  pypdf not installed — outlines skipped (pip install pypdf)") from None
-except Exception as e:  # noqa: BLE001 - top-level guard must report, not abort
+except Exception as e:
     raise _errors.ToolError(f"  Outline generation FAILED: {e}") from e
 
 file_size = os.path.getsize(pdf_path)
