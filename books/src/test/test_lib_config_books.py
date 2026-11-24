@@ -317,3 +317,48 @@ class TwoBooksTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+class ConfigFallbackTest(unittest.TestCase):
+    """The paths a book takes when its files are missing, odd or unwritable."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+
+    def config(self):
+        return _config.Config(self.root)
+
+    def test_an_unwritable_cache_falls_back_to_scratch(self):
+        book = self.config()
+        with mock.patch.object(_config.os, 'makedirs', side_effect=OSError('read-only')):
+            self.assertEqual(book.cache_dir(), book.tmp_dir())
+
+    def test_a_missing_template_file_falls_back_to_the_style_policy(self):
+        style = pathlib.Path(self.root, 'data', 'config', 'style.json')
+        payload = json.loads(style.read_text(encoding='utf-8'))
+        payload['generation']['templates'] = {'map_intro': '来自样式表的旧书模板 {x}'}
+        style.write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8')
+        os.remove(os.path.join(self.root, 'data', 'tmpl', 'templates.toml'))
+        self.assertEqual(self.config().templates(),
+                         {'map_intro': '来自样式表的旧书模板 {x}'})
+
+    def test_a_broken_template_file_is_a_config_error(self):
+        path = pathlib.Path(self.root, 'data', 'tmpl', 'templates.toml')
+        path.write_text('not = [valid', encoding='utf-8')
+        with self.assertRaises(_config.ConfigError):
+            self.config().templates()
+
+    def test_an_empty_glob_pattern_lists_nothing(self):
+        book = self.config()
+        with mock.patch.object(book, 'chapters_spec', return_value={}):
+            self.assertEqual(book._glob_matter('front_matter'), [])
+
+    def test_a_source_root_that_is_not_an_object_is_a_config_error(self):
+        path = pathlib.Path(self.root, 'data', 'config', 'base.json')
+        payload = json.loads(path.read_text(encoding='utf-8'))
+        payload.setdefault('sources', {})['roots'] = ['not-an-object']
+        path.write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8')
+        with self.assertRaises(_config.ConfigError):
+            self.config().source_roots()
+
