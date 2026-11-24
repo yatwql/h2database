@@ -13,6 +13,11 @@
 
 ### 变更
 
+- **覆盖率第六项登记、门槛抬升暂缓（rf-59 / rf-60）**：`core/menu.py` 80% → 99%、`lib/_log.py` 78% → 96%、
+  `lib/_perfhistory.py` 81% → 100%、`render/print_pdf.py` 91% → 100%；但逐文件棘轮当前在 5 个文件上失败
+  （`actions`、`chapters`、`_config`、`to_epub`、`verify_pdf` 较各自基线回落），故 `coverage_fail_under`
+  88 → 90 推迟，另记 rf-60 处理这批回落（含 `to_epub.normalise_headings()` 这类纯函数没有可测入口的问题）。
+
 - **覆盖率第五项（rf-58）完成**：`core/menu.py` **80% → 99%**、`lib/_log.py` **78% → 96%**。新增
   `test_core_menu.py`（预估的中位数收敛、别名/分组/父级、`tail_of` 截断、`run_report` 透传），
   `test_logging.py` 补 12 条（策略不可解析、测试日志目录的两条分支、覆写与书目录不可写、

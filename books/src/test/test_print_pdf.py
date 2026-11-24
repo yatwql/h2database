@@ -195,5 +195,21 @@ class PrintEditionTest(unittest.TestCase):
         self.assertEqual(code, 0)
 
 
+
+    def test_a_failed_html_regeneration_is_reported(self):
+        failure = mock.Mock(returncode=1, stdout='', stderr='pandoc missing')
+        with mock.patch.object(self.module.subprocess, 'run', return_value=failure), \
+                redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            code = self.module.main(['--html', self.html, '--pdf', self.pdf])
+        self.assertEqual(code, 1)
+
+    def test_a_broken_build_is_reported_not_raised(self):
+        with mock.patch.object(self.module, 'build', side_effect=RuntimeError('boom')), \
+                redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            code = self.module.main(['--skip-html', '--html', self.html,
+                                     '--pdf', self.pdf])
+        self.assertEqual(code, 1)
+
+
 if __name__ == '__main__':
     unittest.main()
