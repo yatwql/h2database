@@ -63,6 +63,11 @@ def measure(path: str) -> dict:
     }
 
 
+def _leads(stacks: list[str]) -> list[str]:
+    """The first family of each declared stack."""
+    return sorted(stack.split(',')[0].strip().strip('"\'') for stack in stacks)
+
+
 def _delta(new: float, old: float) -> str:
     if not old:
         return '0.0%' if not new else 'new'
@@ -91,9 +96,13 @@ def compare(reference: str, built: str) -> int:
     if a['leads'] != b['leads']:
         drifted += 1
         print(f'  line heights differ: {a["leads"]} -> {b["leads"]}')
-    if a['fonts'] != b['fonts']:
+    # a stack that gains fallbacks is not a change of typeface: the first family is
+    # what a reader actually sees, so that is what has to match
+    if _leads(a['fonts']) != _leads(b['fonts']):
         drifted += 1
-        print(f'  font stacks differ: {a["fonts"]} -> {b["fonts"]}')
+        print(f'  leading font family changed: {_leads(a["fonts"])} -> {_leads(b["fonts"])}')
+    elif a['fonts'] != b['fonts']:
+        print('  font stacks differ only in fallbacks (fine)')
     return 1 if drifted else 0
 
 

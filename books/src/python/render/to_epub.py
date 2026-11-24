@@ -38,7 +38,7 @@ import subprocess
 import sys
 import textwrap
 
-from lib import _config, _errors, _fsutil
+from lib import _config, _errors, _fsutil, fonts
 from lib import layout as _layout
 
 _fsutil.pin_stdout_utf8()
@@ -144,14 +144,14 @@ _fsutil.write_text(metadata_path, metadata_yaml)
 # Reading apps already render their own fonts, so we keep this minimal:
 # tighter ASCII art, sensible heading rhythm, code-block contrast.
 EPUB_CSS = '/* ' + _config.project('running_head', _config.TITLE) + ' — EPUB stylesheet */' + """
-body { line-height: 1.55; font-family: "Source Han Serif", "Noto Serif CJK SC", serif; }
+body { line-height: 1.55; font-family: __FONT_SERIF__; }
 h1 { font-size: 1.6em; margin-top: 1.2em; page-break-before: always; color: #1565C0; }
 h2 { font-size: 1.3em; margin-top: 1em; color: #1565C0; }
 h3 { font-size: 1.1em; margin-top: 0.8em; color: #1976D2; }
 h4 { font-size: 1em; margin-top: 0.6em; color: #455A64; }
 
 pre, code {
-    font-family: "Consolas", "DejaVu Sans Mono", "Source Han Mono SC", monospace;
+    font-family: __FONT_MONO__;
 }
 pre {
     background: #f5f7fa;
@@ -190,7 +190,11 @@ strong { font-weight: 600; }
 _layout_obj, _layout_problems = _layout.Layout.from_mapping(_config.THRESHOLDS)
 for _problem in _layout_problems:
     print(f"  layout: {_problem}")
-EPUB_CSS_SCALED = _layout_obj.typescale().apply(EPUB_CSS)
+# the reader's device renders this, not this machine: the stylesheet declares
+# portable families and embeds nothing, which is the opposite rule from the PDF
+EPUB_CSS_SCALED = (_layout_obj.typescale().apply(EPUB_CSS)
+                   .replace('__FONT_SERIF__', fonts.portable_stack('serif'))
+                   .replace('__FONT_MONO__', fonts.portable_stack('mono')))
 css_path = os.path.join(dist_dir, '_epub.css')
 _fsutil.write_text(css_path, EPUB_CSS_SCALED)
 

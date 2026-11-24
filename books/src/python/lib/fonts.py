@@ -39,6 +39,19 @@ DEFAULT_MONO = ['DejaVu Sans Mono', 'Droid Sans Fallback', 'Consolas',
 DEFAULT_CJK = ['Droid Sans Fallback', 'Source Han Sans SC', 'Noto Sans CJK SC',
                'Microsoft YaHei', 'PingFang SC', 'WenQuanYi Micro Hei']
 
+# Viewer-side roles (HTML and EPUB) are *declared*, never embedded: the device that
+# renders them is not the machine that built them, so a stack resolved from this
+# host's font directory would describe the wrong computer. The list is ordered by
+# how widely the family is installed, so every reader falls back to something it has.
+PORTABLE_SERIF = ['Source Han Serif', 'Noto Serif CJK SC', 'Songti SC', 'SimSun',
+                  'DejaVu Serif']
+PORTABLE_SANS = ['Source Han Sans', 'Noto Sans CJK SC', 'PingFang SC',
+                 'Microsoft YaHei', 'DejaVu Sans']
+# Latin mono first: it is installed almost everywhere, while a CJK mono face is
+# not, and the cascade still picks the CJK face for the characters it needs
+PORTABLE_MONO = ['Consolas', 'DejaVu Sans Mono', 'Menlo', 'Source Han Mono',
+                 'Noto Sans Mono CJK SC']
+
 COLLECTION_SUFFIXES = ('.ttc', '.otc')
 FONT_SUFFIXES = ('.ttf', '.otf', '.ttc', '.otc')
 
@@ -274,6 +287,28 @@ def script_stack(latin: list[str], cjk: list[str] | None = None,
     """
     combined = list(latin) + [name for name in (cjk or []) if name not in latin]
     return resolve(tuple(combined), generic)
+
+
+PORTABLE = {'serif': (PORTABLE_SERIF, 'serif'),
+            'sans': (PORTABLE_SANS, 'sans-serif'),
+            'mono': (PORTABLE_MONO, 'monospace')}
+
+
+def portable_stack(role: str = 'sans') -> str:
+    """A stack for a document the reader renders, not this machine.
+
+    The two rules pull in opposite directions: a PDF must name a font the build
+    machine actually has, because the file embeds it; an HTML file or an EPUB must
+    name fonts the *reader's* device is likely to have, because nothing is embedded.
+    Both live here so a book has one place to look, and the difference is stated
+    rather than repeated in two stylesheets.
+    """
+    families, generic = PORTABLE.get(role, PORTABLE['sans'])
+    # the lists already interleave Latin and CJK in the order they should be tried,
+    # so they are not re-sorted: a serif book must not fall back to a sans CJK face
+    # before its own serif one
+    quoted = ', '.join(f'"{name}"' if ' ' in name else name for name in families)
+    return f'{quoted}, {generic}'
 
 
 def sans_stack(candidates: list[str] | None = None) -> str:
