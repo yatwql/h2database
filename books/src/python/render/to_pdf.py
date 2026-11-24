@@ -352,40 +352,12 @@ try:
         heading_pages_found.append(pn)
 
     # ── Inject page numbers into the HTML TOC page ───────────────────────
-    # This adds [page N] labels after each TOC entry so they show up in
-    # future PDF renders (when Chromium is available).
-    try:
-        with open(html_path, encoding='utf-8') as f:
-            html = f.read()
-        nav_marker = '<nav id="toc-page-nav">'
-        nav_start = html.find(nav_marker)
-        if nav_start > 0:
-            nav_end = html.find('</nav>', nav_start)
-            toc_section = html[nav_start:nav_end]
-
-            def inject_page_no(m):
-                full = m.group(0)
-                # full = <a href="..." style="...">INNER_HTML</a>
-                inner = m.group(2)
-                # Strip HTML tags from inner to get plain text
-                inner_plain = re.sub(r'<[^>]+>', '', inner).strip()
-                inner_norm = strip_ws(inner_plain)
-                for (_lvl, txt, _sk), pn in zip(search_keys, heading_pages_found, strict=False):
-                    if pn is not None and strip_ws(txt) == inner_norm:
-                        page_num_span = f'<span style="font-size:11px;color:#999;font-weight:normal;"> [{pn+1}]</span>'
-                        # Insert the page number span before the closing </a>
-                        new_full = full.rstrip('</a>')
-                        new_full += page_num_span + '</a>'
-                        return new_full
-                return full
-
-            updated = re.sub(r'<a([^>]*)>(.*?)</a>', inject_page_no, toc_section)
-            html = html[:nav_start] + updated + html[nav_end:]
-            with open(html_path, 'w', encoding='utf-8') as f:
-                f.write(html)
-            print("  Page numbers added to HTML TOC")
-    except Exception as e:  # noqa: BLE001 - TOC injection is best-effort
-        print(f"  TOC page number injection: {e}")
+    # Stamped for the next render and the screen edition; the module refuses the
+    # rewrite when it cannot prove the markup survived (see render/toc_pages.py).
+    from render import toc_pages  # noqa: PLC0415 - printed-TOC bookkeeping only
+    stamps = toc_pages.apply(html_path, search_keys, heading_pages_found)
+    if stamps:
+        print(f"  Page numbers added to HTML TOC ({stamps} entries)")
 
     # Overwrite the PDF with the outline-enhanced version
     writer.write(pdf_path)
