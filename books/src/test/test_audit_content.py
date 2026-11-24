@@ -40,13 +40,13 @@ class FixtureTest(unittest.TestCase):
             return fh.read()
 
 class TestContentAudits(FixtureTest):
-    def test_figures_audit_passes(self):
-        result = _fixture.run(self.root, 'figures.py')
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-
-    def test_captions_audit_passes(self):
-        result = _fixture.run(self.root, 'captions.py')
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+    def test_each_content_audit_passes_on_the_fixture(self):
+        # one case per script rather than one test per script: the assertion is the
+        # same, and subTest still names the script that failed
+        for script in ('figures.py', 'captions.py', 'crossrefs.py'):
+            with self.subTest(script=script):
+                result = _fixture.run(self.root, script)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_captions_audit_flags_bare_noun(self):
         path = os.path.join(self.root, 'data', 'manuscript', 'ch1-test.md')
@@ -55,10 +55,6 @@ class TestContentAudits(FixtureTest):
         result = _fixture.run(self.root, 'captions.py', '--threshold', 'strict')
         self.assertEqual(result.returncode, 1)
         self.assertIn('NO_VERB', result.stdout)
-
-    def test_crossrefs_audit_passes(self):
-        result = _fixture.run(self.root, 'crossrefs.py')
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_style_audit_reports_count(self):
         result = _fixture.run(self.root, 'style.py')
