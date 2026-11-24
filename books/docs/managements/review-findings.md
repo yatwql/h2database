@@ -4,7 +4,7 @@
 > 版本：v0.1-dev
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
-> **编号源**：`rf-next = 53`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-52，
+> **编号源**：`rf-next = 54`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-53，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -148,8 +148,9 @@
 | rf-49 | 标准版每页字节 9.5 KB，六月参照 8.5 KB；分章渲染路径里 ghostscript 压缩是否真正执行、输出是否被接受，日志中没有记录 | **已解决**：`render/pdf_split._optimize()` 记录 gs 是否可用、调用命令（DEBUG）、压缩前后页数与体积、判定结果（已采用 / 不采用），失败降为 WARNING 并保留合并结果；判定抽成 `accept_optimised()` 并有单测。日志已确认压缩确实生效：标准版 877 页 / 8.58 MB → 7.49 MB（每页 8.8 KB，六月 8.5 KB） |
 
 | rf-50 | 印刷版页框与页边距没生效：`render/print_pdf.py` 产出的 PDF 正文从 `x=0` 起排，行宽 642pt 超过 A4 的 595pt 纸宽（可印 482pt），`pdf_invariants` 报 40 页文字出界 | **已解决（改为共用渲染器）**：`print_pdf.py` 不再自己调 `page.pdf()`，改为「`print_profile` 注入 + `pdf_split.render_html`」——与标准版同一视口（A4@96dpi）、同一 `@page` 页框、同一栏宽与字号；`scale` 随之删除（`layout_print_body_pt`、`base.json print_scale` 一并去掉，它与页框耦合正是不知不觉越界的来源）。印刷版专属排版单列 `render/print_profile.py`：长度全用 `em`、主色取书目（`accent_color`，缺省中性色）、只作用于 `@media print`，故不绑定本书；`marker` 注入收到 `pdf_split.inject_markers()`，`to_pdf` 与印刷版共用。实测：越界页 **40 → 0**、大纲 644 条不变、`verify_pdf` 的 `COLUMN`/`PAGE_SIZE`/`FONTS` 全 ok；印刷版 905 页 |
-| rf-51 | 印刷版 905 页 vs 标准版 958 页，而正文文本完全相同（914,823 vs 914,703 字符）、页框与纵向填充相同（文本 y 跨度均约 658pt）、字号与行距相同。逐章对比显示 `print_profile` 只影响 ±2 页，但第 3 章 51 vs 58 页、每页行数 74.0 vs 69.4、少于 15 行的页 45 vs 26 | **待定位**。已排除：配置（两者同一 `@page`/栏宽/字号）、正文字体（同一 HTML 的 body 节点数与字符数一致）、`scale`（已删除）。方向：`pre, table { page-break-inside: avoid }` 与每章起始位置相互作用造成的分页级联——同一份 body、同一边界条件会因起点偏移几行而在后续页面上放大为“半空页”；判据应是「同一 body 的正文页数差 ≤ 2%」，而不是两版页数相等。复现：`print_pdf.py --html <同一份 html>` 与 `to_pdf.py` 各渲一次，比较 `pdf_metrics` 的每页行数 |
-| rf-52 | `logs/perf-history.jsonl` 只增不减（当前 1.58 MB，今天一天就在里面），每行含每一步的明细；它是性能基线而不是运行日志，却和日志放在一起按天清理——一旦按保留窗口删除，耗时回退就失去比较基准 | **待修**。方向：拆成「基线文件（评审后固化、进版本库）+ 滚动窗口明细（按条数或体积封顶，如最近 200 次/2 MB）」；`audit/perf_baseline.py::record` 写窗口，`compare` 读基线；`test_report.py perf` 只读窗口内的样本。判据：文件体积有上限、基线文件有 review 记录（沿用 `content_volume` 的 `reviewed{by,at,commit}` 口径） |
+| rf-51 | 印刷版 905 页 vs 标准版 958 页，而正文文本完全相同、页框与字号相同 | **已解决（是输入不同，不是版式）**：同一份 HTML 分别经 `to_pdf` 与 `print_pdf` 渲染得 967 与 975 页，差额 8 页正是印刷 profile 的章首横幅；正文文本量一致（90.9 万 vs 91.5 万字符）。此前的 905/958 是「`to_pdf` 第 3 步写回 TOC 页码后的 HTML」与「写回前」两代输入对比所致。写回为何改分页另记 `rf-53` |
+| rf-52 | `logs/perf-history.jsonl` 只增不减（1.58 MB / 11,725 行），且同时充当判据——按保留窗口清理就会移动基准 | **已解决**：窗口按 `style.json [quality].perf_history_runs`（默认 200）封顶、超出后原子重写保留最新段；评审下限另存 `data/baselines/perf-baseline.json`（`reviewed{by,at,commit,reason,runs}` + 逐步/总计中位数），`compare()` 优先比基线并报 `source`，无基线时退回窗口中位数；新增 `--update-baseline --reviewed-by --reason`。首次运行把历史 11,725 行收敛到 200 行（1.58 MB → 30 KB） |
+| rf-53 | `to_pdf` 第 3 步把 TOC 页码写回 HTML 后，同一份正文的重渲页数从 975 变成 905（正文文本量基本不变，90.9 万 vs 91.5 万字符），即一次「标注页码」的写回改变了后续渲染的分页，原因未定位 | **待定位**。复现：`to_html.py` → 复制 HTML → `print_pdf.py --html <复制>` 得 975 页；让 `to_pdf` 跑完（它会写回页码）→ 用同一路径渲得 905 页。方向：比对两次 HTML 的 `<a>` 结构与 `#content` 内的空白/换行差异，怀疑写回时重排了锚点内部空白，影响 `justify` 的行末断行；判据为「同一正文、同一页框，写回前后页数差 ≤ 1%」 |
 
 ### 归档
 
