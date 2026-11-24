@@ -92,38 +92,41 @@ def toc_link_annotations(reader) -> list[tuple[int, int, Any]]:
     annots.sort(key=lambda item: item[0])
     return annots
 
+FONT_PROGRAM_KEYS = ('/FontFile', '/FontFile2', '/FontFile3')
+
+
+def _has_program(font) -> bool:
+    """True when this font dictionary declares an embedded program."""
+    descriptor = font.get('/FontDescriptor')
+    if descriptor and any(key in descriptor for key in FONT_PROGRAM_KEYS):
+        return True
+    for child in font.get('/DescendantFonts') or []:
+        # a composite face keeps its program on the descendant, not on the parent
+        child_obj = child.get_object() if hasattr(child, 'get_object') else child
+        child_descriptor = child_obj.get('/FontDescriptor')
+        if child_descriptor and any(key in child_descriptor for key in FONT_PROGRAM_KEYS):
+            return True
+    return False
+
+
+def font_is_embedded(font) -> bool | None:
+    """Whether one font dictionary carries its glyphs; None when unreadable.
+
+    Type3 glyphs are drawn as procedures, which *is* embedding; a dictionary that
+    cannot be read is unclassifiable, and the caller skips it rather than guessing.
+    """
+    try:
+        if str(font.get('/Subtype', '')) == '/Type3':
+            return True
+        return _has_program(font)
+    except (AttributeError, TypeError):
+        return None
+
+
 def non_embedded_fonts(reader) -> list[str]:
     """Names of fonts without an embedded font program."""
     seen: set[str] = set()
     missing: set[str] = set()
-
-    def inspect_font(font, inherited_name: str = '') -> None:
-        try:
-            name = str(font.get('/BaseFont', inherited_name))
-        except (AttributeError, TypeError):
-            return
-        if not name.strip() or name in seen:
-            return
-        seen.add(name)
-        if str(font.get('/Subtype', '')) == '/Type3':
-            return  # Type3 glyphs are embedded by definition
-        embedded = False
-        descriptor = font.get('/FontDescriptor')
-        if descriptor:
-            embedded = any(key in descriptor for key in
-                           ('/FontFile', '/FontFile2', '/FontFile3'))
-        descendants = font.get('/DescendantFonts')
-        if not embedded and descendants:
-            for child in descendants:
-                child_obj = child.get_object() if hasattr(child, 'get_object') else child
-                child_descriptor = child_obj.get('/FontDescriptor')
-                if child_descriptor and any(key in child_descriptor for key in
-                                            ('/FontFile', '/FontFile2', '/FontFile3')):
-                    embedded = True
-                    break
-        if not embedded:
-            missing.add(name)
-
     for page in reader.pages:
         resources = page.get('/Resources') or {}
         fonts = resources.get('/Font') or {}
@@ -132,9 +135,19 @@ def non_embedded_fonts(reader) -> list[str]:
         except AttributeError:
             items = []
         for font_ref in items:
-            inspect_font(font_ref.get_object() if hasattr(font_ref, 'get_object')
-                         else font_ref)
+            font = (font_ref.get_object() if hasattr(font_ref, 'get_object')
+                    else font_ref)
+            try:
+                name = str(font.get('/BaseFont', '')).strip()
+            except (AttributeError, TypeError):
+                continue
+            if not name or name in seen:
+                continue
+            seen.add(name)
+            if font_is_embedded(font) is False:
+                missing.add(name)
     return sorted(missing)
+
 
 def _as_float(value, fallback: float) -> float:
     """Threshold read from JSON might be a string or missing; fall back quietly."""

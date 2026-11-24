@@ -13,6 +13,7 @@ import os
 import pathlib
 import sys
 import tempfile
+import types
 import unittest
 
 import _fixture
@@ -246,6 +247,53 @@ class TocLinkInjectionTest(PdfFixtureCase):
         links = [{**self.link(0, 200.0), 'text': '别的标题'}, self.link(1, 240.0)]
         self.inject(links)
         self.assertEqual(len(self.verify_pdf.toc_link_annotations(PdfReader(self.pdf))), 2)
+
+
+
+
+class FontEmbeddingTest(unittest.TestCase):
+    """One font dictionary decides embedded-or-not; no PDF needed."""
+
+    def setUp(self):
+        self.verify = importlib.import_module('render.verify_pdf')
+
+    def test_a_font_with_a_direct_program_is_embedded(self):
+        font = {'/Subtype': '/TrueType', '/FontDescriptor': {'/FontFile2': object()}}
+        self.assertTrue(self.verify.font_is_embedded(font))
+
+    def test_a_composite_face_keeps_its_program_on_the_descendant(self):
+        child = {'/FontDescriptor': {'/FontFile3': object()}}
+        self.assertTrue(self.verify.font_is_embedded({'/DescendantFonts': [child]}))
+
+    def test_a_type3_font_counts_as_embedded(self):
+        self.assertTrue(self.verify.font_is_embedded({'/Subtype': '/Type3'}))
+
+    def test_a_font_without_any_program_is_not_embedded(self):
+        self.assertFalse(self.verify.font_is_embedded(
+            {'/Subtype': '/TrueType', '/FontDescriptor': {}}))
+
+    def test_an_unreadable_dictionary_is_unclassifiable(self):
+        class Blind:
+            def get(self, *_args):
+                raise AttributeError('no dictionary')
+
+        self.assertIsNone(self.verify.font_is_embedded(Blind()))
+
+    def test_the_reader_walk_reports_each_missing_family_once(self):
+        font = {'/BaseFont': '/Loose', '/FontDescriptor': {}}
+        page = types.SimpleNamespace()
+        page.get = lambda key: {'/Font': {'/F1': font}} if key == '/Resources' else None
+        reader = types.SimpleNamespace(pages=[page, page])
+        self.assertEqual(self.verify.non_embedded_fonts(reader), ['/Loose'])
+
+    def test_a_font_map_that_is_not_a_mapping_is_skipped(self):
+        class OddMap:
+            def values(self):
+                raise AttributeError('not a mapping')
+
+        page = types.SimpleNamespace()
+        page.get = lambda key: {'/Font': OddMap()} if key == '/Resources' else None
+        self.assertEqual(self.verify.non_embedded_fonts(types.SimpleNamespace(pages=[page])), [])
 
 
 if __name__ == '__main__':
