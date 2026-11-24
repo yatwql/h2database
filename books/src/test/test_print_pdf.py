@@ -133,7 +133,10 @@ class PrintGradePdfTest(unittest.TestCase):
         self.assertFalse(page.pdf_kwargs['display_header_footer'])
         self.assertEqual(page.pdf_kwargs['margin']['left'], '15mm')
         self.assertEqual(page.pdf_kwargs['margin']['bottom'], '25mm')
-        self.assertGreaterEqual(float(page.pdf_kwargs['scale']), 1.0)
+        # the scale is derived from the printable width and the column width, so it
+        # is a fit factor rather than a hand-picked enlargement
+        self.assertGreater(float(page.pdf_kwargs['scale']), 0.0)
+        self.assertLess(float(page.pdf_kwargs['scale']), 1.5)
         self.assertTrue(os.path.exists(self.pdf))
 
     def test_page_texts_and_content_start(self):

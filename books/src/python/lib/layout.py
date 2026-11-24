@@ -243,6 +243,20 @@ class Layout:
             css = css.replace(literal, replacement)
         return css
 
+    def print_scale(self, page_width_mm: float = 210.0,
+                    side_margin_mm: float = 15.0) -> float:
+        """Scale that fits the on-screen column exactly into the printable width.
+
+        A hand-picked scale only suits the column it was picked for: change the
+        column, the paper or the margin and the same number either wastes a third of
+        the sheet or clips the text. Deriving it from the two widths keeps the line
+        length -- and therefore the number of characters per line -- the same as the
+        screen edition, on any book and any paper.
+        """
+        printable_pt = (page_width_mm - 2 * side_margin_mm) * 72 / 25.4
+        column_pt = max(1.0, float(self.column_px) * 0.75)
+        return round(printable_pt / column_pt, 4)
+
     def body_size_px(self) -> int:
         """The body size: explicit when configured, else derived from the column.
 

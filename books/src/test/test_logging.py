@@ -8,6 +8,7 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 import _fixture
 
@@ -37,9 +38,19 @@ class TestLogging(unittest.TestCase):
             os.environ.pop('BOOK_LOG_LEVEL', None)
 
     def module(self):
+        # handlers live on the named logger, so a reloaded module would keep writing
+        # to the previous test's file: drop them before each load
+        logger = logging.getLogger(_config.app_name())
+        for handler in list(logger.handlers):
+            logger.removeHandler(handler)
+            handler.close()
         return _fixture.load_module(self.root, '_log')
 
     def log_file(self) -> str:
+        for handler in logging.getLogger(_config.app_name()).handlers:
+            name = getattr(handler, 'baseFilename', '')
+            if name:
+                return name
         name = _config.app_name()
         return os.path.join(self.root, 'logs', f'{name}.log')
 
@@ -106,6 +117,30 @@ class TestLogging(unittest.TestCase):
                 break
             time.sleep(0.05)
         self.assertIn(f'{_config.app_name()}.make', text)
+
+
+class TestIsolationTest(unittest.TestCase):
+    """A test run must never write into the book's own log."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.log_module = _fixture.load_module(self.root, '_log')
+
+    def test_a_test_process_never_writes_the_repository_log(self):
+        with mock.patch.dict(os.environ, {'PYTEST_CURRENT_TEST': 'test_x'}):
+            path = self.log_module.log_dir()
+        repo_logs = os.path.join(os.path.dirname(self.root), 'logs')
+        self.assertFalse(os.path.abspath(path).startswith(os.path.abspath(repo_logs)))
+        # a fixture book is a throwaway directory, so its own log is fine
+        self.assertTrue(path.startswith(os.path.abspath(self.root)), path)
+
+    def test_an_explicit_log_dir_wins(self):
+        target = os.path.join(self.tmp.name, 'logs')
+        with mock.patch.dict(os.environ, {'BOOK_LOG_DIR': target}):
+            self.assertEqual(os.path.abspath(self.log_module.log_dir()),
+                             os.path.abspath(target))
 
 if __name__ == '__main__':
     unittest.main()

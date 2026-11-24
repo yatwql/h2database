@@ -27,6 +27,7 @@ import subprocess
 from typing import Any
 
 from lib import _config, _errors, _fsutil, _mdutil
+from lib import layout as _layout
 
 _fsutil.pin_stdout_utf8()
 
@@ -106,7 +107,13 @@ def render_pdf(html_path: str, pdf_path: str, engine: Any = None,
                 h.parentNode.insertBefore(m, h);
             });
         }""")
-        scale = float(_config.THRESHOLDS.get('print_scale', 1.0) or 1.0)
+        scale = float(_config.THRESHOLDS.get('print_scale', 0) or 0)
+        if not scale:
+            # 0 means "derive it": fit the column into the printable width, so the
+            # paper edition keeps the screen edition's characters per line
+            layout, _problems = _layout.Layout.from_mapping(_config.THRESHOLDS)
+            scale = layout.print_scale()
+            print(f'  缩放 {scale:.3f}（由栏宽与可印宽度推出）')
         page.pdf(
             path=pdf_path,
             format='A4',

@@ -413,9 +413,20 @@ def build_book(root: str, *, extra: dict[str, str] | None = None) -> str:
     return root
 
 
+def test_env(root: str) -> dict:
+    """Environment for a fixture run: its own book, its own log directory.
+
+    Tests exercise error paths, and those paths write to the log. Pointing the log at
+    the fixture book keeps the repository's log file to what production runs wrote,
+    while still letting a test assert that a line was written at all.
+    """
+    return {**os.environ, 'BOOK_ROOT': root,
+            'BOOK_LOG_DIR': os.path.join(root, 'logs')}
+
+
 def run(root: str, script: str, *args: str) -> subprocess.CompletedProcess:
     """Run a delivery script against the fixture book."""
-    env = {**os.environ, 'BOOK_ROOT': root}
+    env = test_env(root)
     return subprocess.run(
         [sys.executable, resolve_script(script), *args],
         capture_output=True, text=True, env=env, cwd=root, check=False,
@@ -435,6 +446,10 @@ def run_inproc(root: str, script: str, *args: str) -> tuple[int, str]:
     ensure_tools_path()
 
     previous_root = os.environ.get('BOOK_ROOT')
+    previous_log = os.environ.get('BOOK_LOG_DIR')
+    # in-process runs share this process's log settings, so point them at the
+    # fixture book as well or the case writes into the repository's log
+    os.environ['BOOK_LOG_DIR'] = os.path.join(root, 'logs')
     previous_argv = sys.argv[:]
     refresh_config(root)
     sys.argv = [script, *args]
@@ -456,6 +471,10 @@ def run_inproc(root: str, script: str, *args: str) -> tuple[int, str]:
             os.environ.pop('BOOK_ROOT', None)
         else:
             os.environ['BOOK_ROOT'] = previous_root
+        if previous_log is None:
+            os.environ.pop('BOOK_LOG_DIR', None)
+        else:
+            os.environ['BOOK_LOG_DIR'] = previous_log
         for key in ('_config', 'lib._config', 'lib._log', '_log',
                 'app', 'app.cli', 'app.tui', 'app.web', 'app.keys',
                 'core', 'core.actions', 'core.settings'):
@@ -470,6 +489,8 @@ def load_module(root: str, name: str):
     """Import (or re-import) a delivery module with BOOK_ROOT pointed at root."""
     ensure_tools_path()
     previous_root = os.environ.get('BOOK_ROOT')
+    previous_log = os.environ.get('BOOK_LOG_DIR')
+    os.environ['BOOK_LOG_DIR'] = os.path.join(root, 'logs')
     refresh_config(root)
     try:
         sys.modules.pop(name, None)
@@ -486,6 +507,10 @@ def load_module(root: str, name: str):
             os.environ.pop('BOOK_ROOT', None)
         else:
             os.environ['BOOK_ROOT'] = previous_root
+        if previous_log is None:
+            os.environ.pop('BOOK_LOG_DIR', None)
+        else:
+            os.environ['BOOK_LOG_DIR'] = previous_log
 
 
 def cleanup(root: str) -> None:

@@ -17,6 +17,7 @@ import logging
 import logging.handlers
 import os
 import sys
+import tempfile
 
 from lib import _config
 
@@ -36,6 +37,26 @@ def _settings() -> dict:
         'dir': policy.get('dir') or 'logs',
         'retention_days': int(policy.get('retention_days') or 14),
     }
+
+
+def _is_test_process() -> bool:
+    """True inside a test run: pytest sets this for every test it executes."""
+    return bool(os.environ.get('PYTEST_CURRENT_TEST') or os.environ.get('BOOK_TEST_MODE'))
+
+
+def _test_log_dir() -> str:
+    """Where a test run keeps its logs, so the book's own log stays untouched.
+
+    A test that exercises an error path writes words like `unknown action 'nope'` into
+    whatever log the process has — and for months those lines sat in the production
+    log next to the real failures. Tests get their own directory; production keeps the
+    file an operator reads.
+    """
+    try:
+        name = _config.app_name()
+    except _config.ConfigError:
+        name = 'tests'
+    return os.path.join(tempfile.gettempdir(), f'{name}-tests-{os.getpid()}', 'logs')
 
 
 def log_file() -> str:
@@ -73,6 +94,33 @@ def retention_days() -> int:
 def log_dir() -> str:
     """Absolute path of the log directory (created on demand)."""
     settings = _settings()
+    override = os.environ.get('BOOK_LOG_DIR')
+    if override:
+        path = override
+        try:
+            os.makedirs(path, exist_ok=True)
+        except OSError:
+            return ''  # console only
+        return path
+    if _is_test_process():
+        # a test pointed at a fixture book logs inside that book: it is already a
+        # throwaway directory, and the case can still assert what was written. A test
+        # that never selected a book must not touch the repository's log at all.
+        path = ''
+        try:
+            root = _config.current().root
+        except _config.ConfigError:
+            root = ''
+        if root and os.path.abspath(root).startswith(tempfile.gettempdir()):
+            path = os.path.join(root, settings['dir'])
+        else:
+            path = _test_log_dir()
+        try:
+            os.makedirs(path, exist_ok=True)
+        except OSError as exc:
+            sys.stderr.write(f'warning: cannot create log directory {path}: {exc}\n')
+            return ''
+        return path
     try:
         path = os.path.join(_config.current().root, settings['dir'])
     except _config.ConfigError:
