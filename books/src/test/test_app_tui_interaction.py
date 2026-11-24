@@ -85,12 +85,25 @@ class TuiInteractionTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(self.calls, [])
 
-    def test_zero_collapses_a_finished_result_instead_of_quitting(self):
+    def test_any_key_collapses_a_finished_result_instead_of_quitting(self):
         code, out = self.press('3', '0', '3', 'q')
         self.assertEqual(code, 0)
-        # the action ran twice: `0` returned to the menu, it did not exit
+        # the action ran twice: the first key returned to the menu, it did not exit
         self.assertEqual(self.calls, ['build', 'build'])
-        self.assertIn('按任意键继续', out)
+        self.assertIn('按任意键回到菜单', out)
+
+    def test_a_digit_under_a_finished_result_only_returns_to_the_menu(self):
+        code, out = self.press('3', '3', 'q')
+        self.assertEqual(code, 0)
+        # `3` dismissed the result instead of starting a second build under it
+        self.assertEqual(self.calls, ['build'])
+        self.assertIn('按任意键回到菜单', out)
+
+    def test_escape_under_a_finished_result_does_not_leave_the_screen(self):
+        code, out = self.press('8', '1', self.keys.KEY_ESC, '0', 'q')
+        self.assertEqual(code, 0)
+        self.assertEqual(self.calls, ['check'])   # the second `0` left the category
+        self.assertIn('质量', out)
 
     def test_the_main_screen_reads_as_three_groups(self):
         text = self.tui.menu_text('main')

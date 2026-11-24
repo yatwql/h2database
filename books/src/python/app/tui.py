@@ -5,7 +5,8 @@
   python app/tui.py --once status  # one action, then exit (scriptable)
 
 Keys: number = run action, 0/Esc = back (quit on the main screen), c = settings,
-r = reload config, ? = help, q = quit. The screen tree lives in core.menu.
+r = reload config, ? = help, q = quit. After a run its result stays on screen and any
+key returns to the menu — except q, which quits. The screen tree lives in core.menu.
 Colour is used only on a real terminal and can be disabled with NO_COLOR=1.
 """
 from __future__ import annotations
@@ -431,8 +432,7 @@ def _draw(screen: str, cursors: dict[str, int], status: str) -> bool:
     cursor = cursors.get(screen, 0) % len(rows) if rows else 0
     lines = ['\n' + header(), '', screen_title(screen), '', menu_text(screen, cursor)]
     if status:
-        lines += ['', status,
-                  _c(' 按任意键继续 · 0 收起结果回到菜单', PALETTE['hint'])]
+        lines += ['', status, _c(' 按任意键回到菜单', PALETTE['hint'])]
     clear_screen()
     sys.stdout.write('\n'.join(lines))
     sys.stdout.flush()
@@ -488,11 +488,13 @@ def main(argv: list[str] | None = None) -> int:
 
         if pressed in ('q', keys.KEY_CTRL_C):
             return 0
+        if shown_result:
+            # A finished run leaves its result on screen, and any key puts the menu
+            # back: the result is the last thing a run says, so the next intent is
+            # always the menu it came from. Nothing else fires while it is up —
+            # pressing `3` again must not start a second build under the old output.
+            continue
         if pressed in (menu.BACK_KEY, keys.KEY_ESC):
-            # A finished run leaves its result on screen: the first `0` puts the
-            # menu back, and only the next one leaves the level (or the program).
-            if shown_result:
-                continue
             if screen == 'main':
                 return 0
             screen = menu.parent_of(screen)
