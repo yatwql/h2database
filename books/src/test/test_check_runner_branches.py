@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import glob
 import io
 import os
 import subprocess
@@ -266,15 +267,26 @@ class ModesAndSummaryTest(unittest.TestCase):
         self.assertFalse(summary['ok'])
         self.assertEqual(summary['failed_step'], 'gates')
 
-    def test_an_archived_run_writes_log_and_json(self):
+    def test_a_passing_run_leaves_a_rollup_line_not_a_file_per_run(self):
         ok = {'step': 'lint', 'code': 0, 'seconds': 0.1}
         with mock.patch.object(self.runner, 'run_step', return_value=ok), \
                 mock.patch.object(self.runner, '_record_perf') as record, \
                 redirect_stdout(io.StringIO()):
             summary = self.runner.run('p0', archive=True, only='lint')
+        logs = os.path.join(self.runner.book_root(), 'logs')
+        self.assertFalse(os.path.isfile(summary['json']))
+        self.assertFalse(os.path.isfile(summary['log']))
+        self.assertTrue(glob.glob(os.path.join(logs, 'check-*.jsonl')))
+        record.assert_called_once()
+
+    def test_a_failing_run_keeps_its_own_report(self):
+        bad = {'step': 'lint', 'code': 1, 'seconds': 0.1}
+        with mock.patch.object(self.runner, 'run_step', return_value=bad), \
+                mock.patch.object(self.runner, '_record_perf'), \
+                redirect_stdout(io.StringIO()):
+            summary = self.runner.run('p0', archive=True, only='lint')
         self.assertTrue(os.path.isfile(summary['json']))
         self.assertTrue(os.path.isfile(summary['log']))
-        record.assert_called_once()
 
     def test_the_json_flag_prints_the_summary(self):
         ok = {'step': 'lint', 'code': 0, 'seconds': 0.1}

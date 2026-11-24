@@ -27,6 +27,7 @@ import importlib.util
 import json
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -367,6 +368,59 @@ def _record_perf(summary: dict) -> None:
                  'steps': summary.get('steps', [])})
 
 
+# One folder of one file per run is thousands of files a week, and the one that
+# matters is the failing run. Passing runs therefore leave a single line in the
+# day's rollup; a failure keeps its own log and json for forensics.
+def _roll_up(now: datetime.datetime, summary: dict, log_path: str,
+             json_path: str) -> str:
+    """Returns the file a human should open for this run."""
+    """Append the day's one-line record and drop what a passing run does not need."""
+    logs = os.path.join(book_root(), 'logs')
+    _fsutil.ensure_dir(logs)
+    line = json.dumps({'ts': now.isoformat(timespec='seconds'),
+                       'mode': summary.get('mode', ''),
+                       'ok': summary.get('ok', False),
+                       'seconds': summary.get('seconds', 0.0),
+                       'steps': len(summary.get('steps', [])),
+                       'failed_step': summary.get('failed_step', '')},
+                      ensure_ascii=False) + '\n'
+    rollup = os.path.join(logs, f'check-{now:%Y%m%d}.jsonl')
+    _append_log(rollup, line)
+    if summary.get('ok'):
+        for path in (log_path, json_path):
+            try:
+                os.remove(path)  # the record is already in the rollup
+            except OSError as exc:  # pragma: no cover - already gone
+                LOG.debug('could not remove %s: %s', path, exc)
+    _prune_logs(logs, now)
+    return rollup if summary.get('ok') else json_path
+
+
+def _prune_logs(logs: str, now: datetime.datetime) -> None:
+    """Delete run reports and rollups older than the configured retention."""
+    days = int(_config.THRESHOLDS.get('log_retention_days', 14) or 14)
+    cutoff = (now - datetime.timedelta(days=days)).date()
+    try:
+        names = os.listdir(logs)
+    except OSError:
+        return  # no directory, nothing to prune
+    for name in names:
+        # `check-<mode>-<date>-<time>.<ext>` and the day rollup `check-<date>.jsonl`
+        match = re.match(r'check-(?:[a-z0-9-]*?-)?(\d{8})(?:-|\.)', name)
+        if match is None:
+            continue
+        try:
+            stamp = datetime.datetime.strptime(match.group(1), '%Y%m%d').date()
+        except ValueError:
+            continue
+        if stamp >= cutoff:
+            continue
+        try:
+            os.remove(os.path.join(logs, name))
+        except OSError as exc:  # pragma: no cover - already gone
+            LOG.debug('could not prune %s: %s', name, exc)
+
+
 def report_paths(mode: str, stamp: str) -> tuple[str, str]:
     directory = os.path.join(book_root(), 'logs')
     _fsutil.ensure_dir(directory)
@@ -397,7 +451,8 @@ def run(mode: str, *, archive: bool = True, as_json: bool = False,
     if key == 'quick':
         timeout = min(timeout, 300.0)
     steps = select_steps(all_steps, only, skip)
-    stamp = datetime.datetime.now().strftime('%Y-%m-%d_%H%M%S')
+    now = datetime.datetime.now()
+    stamp = now.strftime('%Y%m%d-%H%M%S')
     log_path, json_path = report_paths(key, stamp)
     if archive:
         _fsutil.write_text(log_path, f'# check mode={key} ({label}) {stamp}\n')
@@ -417,13 +472,18 @@ def run(mode: str, *, archive: bool = True, as_json: bool = False,
                'seconds': elapsed, 'steps': results, 'marker': active_marker,
                'machine': machine_info(),
                'log': log_path if archive else '', 'json': json_path if archive else ''}
+    report = ''
     if failed:
         summary['failed_step'] = failed[0]['step']
     if archive:
         payload = json.dumps(summary, ensure_ascii=False, indent=2) + '\n'
         _record_perf(summary)
         _fsutil.write_text(json_path, payload)
-        _fsutil.write_text(os.path.join(book_root(), 'logs', 'check-latest.json'), payload)
+        logs = os.path.join(book_root(), 'logs')
+        _fsutil.write_text(os.path.join(logs, 'check-latest.json'), payload)
+        report = _roll_up(now, summary, log_path, json_path)
+    else:
+        report = ''
     LOG.info('check %s -> %s (%.2fs, %d steps)',
              key, 'pass' if not failed else 'fail', elapsed, len(results))
     if as_json:
@@ -431,8 +491,8 @@ def run(mode: str, *, archive: bool = True, as_json: bool = False,
     else:
         verdict = '✅ pass' if not failed else f"❌ fail at {failed[0]['step']}"
         print(f'{verdict}  ({elapsed}s)', end='')
-        if archive:
-            print(f'  → {os.path.relpath(json_path, repo_root())}')
+        if archive and report:
+            print(f'  → {os.path.relpath(report, repo_root())}')
         else:
             print()
     return summary
