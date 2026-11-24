@@ -54,7 +54,15 @@ class TuiInteractionTest(unittest.TestCase):
     def test_the_main_screen_carries_the_frequent_actions(self):
         keys = [row[0] for row in self.tui.screen_rows('main')]
         self.assertEqual(keys, ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'])
-        self.assertIn('@open:books', [row[1] for row in self.tui.screen_rows('main')])
+        actions = [row[1] for row in self.tui.screen_rows('main')]
+        self.assertIn('deliver-all', actions)
+        self.assertIn('@open:library', actions)
+
+    def test_the_books_screen_is_reached_through_its_category(self):
+        rows = self.tui.screen_rows('library')
+        self.assertEqual([row[0] for row in rows], ['1', '2', '0'])
+        self.assertIn('@open:books', [row[1] for row in rows])
+        self.assertEqual(self.tui.menu.parent_of('books'), 'library')
 
     def test_the_main_screen_runs_actions_without_a_category(self):
         actions = [row[1] for row in self.tui.screen_rows('main')]
@@ -110,7 +118,7 @@ class TuiInteractionTest(unittest.TestCase):
         order = [name for name in ('源码成书', '书籍管理', '配置与管理') if name in text]
         self.assertEqual(order, ['源码成书', '书籍管理', '配置与管理'], text)
         self.assertLess(text.index('源码成书'), text.index('1/A'))
-        self.assertLess(text.index('书籍管理'), text.index('6/S'))
+        self.assertLess(text.index('书籍管理'), text.index('7/B'))
         self.assertLess(text.index('配置与管理'), text.index('8/T'))
 
     def test_every_main_row_sits_inside_a_group_except_exit(self):
@@ -338,19 +346,26 @@ class TuiInteractionTest(unittest.TestCase):
     def test_letter_shortcuts_alias_the_digits(self):
         self.assertEqual(self.tui.menu.resolve('main', 'A'), '1')
         self.assertEqual(self.tui.menu.resolve('main', 'l'), '2')
-        self.assertEqual(self.tui.menu.resolve('main', 's'), '6')
-        self.assertEqual(self.tui.menu.resolve('main', 'N'), '7')
+        self.assertEqual(self.tui.menu.resolve('main', 'm'), '3')
+        self.assertEqual(self.tui.menu.resolve('main', 'F'), '6')
+        self.assertEqual(self.tui.menu.resolve('main', 'B'), '7')
         self.assertEqual(self.tui.menu.resolve('main', 't'), '8')
         self.assertEqual(self.tui.menu.resolve('main', 'c'), '9')
-        self.assertEqual(self.tui.menu.resolve('config', 's'), 's')   # only main has letters
+        self.assertEqual(self.tui.menu.resolve('library', 's'), '1')
+        self.assertEqual(self.tui.menu.resolve('library', 'N'), '2')
+        self.assertEqual(self.tui.menu.resolve('config', 's'), 's')   # only main/library have letters
 
     def test_a_row_shows_its_letter_beside_the_digit(self):
         self.assertEqual(self.tui.menu.display_key('main', '1'), '1/A')
         self.assertEqual(self.tui.menu.display_key('main', '2'), '2/L')
-        self.assertEqual(self.tui.menu.display_key('main', '7'), '7/N')
+        self.assertEqual(self.tui.menu.display_key('main', '3'), '3/M')
+        self.assertEqual(self.tui.menu.display_key('main', '6'), '6/F')
+        self.assertEqual(self.tui.menu.display_key('main', '7'), '7/B')
         self.assertEqual(self.tui.menu.display_key('main', '4'), '4/E')
         self.assertEqual(self.tui.menu.display_key('main', '5'), '5/P')
         self.assertEqual(self.tui.menu.display_key('main', '9'), '9/C')
+        self.assertEqual(self.tui.menu.display_key('library', '1'), '1/S')
+        self.assertEqual(self.tui.menu.display_key('library', '2'), '2/N')
         self.assertEqual(self.tui.menu.display_key('main', '0'), '0/Q')
         self.assertIn('2/L', [self.tui.menu.display_key('main', key)
                               for key in ('1', '2', '3', '4', '5', '6', '7', '8', '9')])

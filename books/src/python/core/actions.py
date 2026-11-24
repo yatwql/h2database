@@ -39,6 +39,7 @@ ACTIONS = {
     'check': '运行全部质量门禁',
     'test': '运行测试套件',
     'deliver': '构建 PDF 与 EPUB（按需）',
+    'deliver-all': '书稿 → Markdown + HTML + EPUB + 标准版与印刷版 PDF',
     'print': '生成印刷版 PDF（章封面、点线目录、页眉页脚）',
     'llm-ask': '用配置的 provider 回答一个问题',
     'doctor': '依赖与环境自检',
@@ -225,6 +226,22 @@ def print_edition(on_line=None) -> tuple[int, str]:
     return _run('render/print_pdf.py', on_line=on_line)
 
 
+def deliver_all(on_line=None) -> tuple[int, str]:
+    """Every artifact in one run: Markdown + HTML, EPUB + PDF, then the print edition.
+
+    Three steps in the order the dependencies force (a PDF renders from the HTML,
+    the print edition renders from the same HTML), stopping at the first failure so
+    a broken build cannot leave a half-updated `dist/` looking complete.
+    """
+    output = []
+    for step in (build, deliver, print_edition):
+        code, text = step(on_line=on_line)
+        output.append(text)
+        if code != 0:
+            return code, ''.join(output)
+    return 0, ''.join(output)
+
+
 def estimate_line(prompt: str, scenario: str = 'summary') -> str:
     """What one call is expected to cost, shown before the call is made."""
     guess = _llm.estimate(prompt, scenario)
@@ -277,6 +294,7 @@ DISPATCH = {
     'check': check,
     'test': test,
     'deliver': deliver,
+    'deliver-all': deliver_all,
     'print': print_edition,
 }
 

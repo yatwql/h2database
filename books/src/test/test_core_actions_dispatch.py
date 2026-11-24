@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import tempfile
 import unittest
 from unittest import mock
 
@@ -238,6 +239,50 @@ class ActionDispatchTest(unittest.TestCase):
             code, text = self.actions.settings_table()
         self.assertEqual(code, 0)
         self.assertIn('book.title', text)
+
+
+class DeliverAllTest(unittest.TestCase):
+    """The full-delivery action: every artifact, in dependency order, stop on failure."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.actions = _fixture.load_module(self.root, 'actions')
+
+    def test_it_builds_then_delivers_then_prints(self):
+        calls = []
+
+        def fake_make(mode, on_line=None):
+            calls.append(('make', mode))
+            return 0, f'{mode} ok\n'
+
+        def fake_run(script, *args, on_line=None):
+            calls.append(('run', script))
+            return 0, f'{script} ok\n'
+
+        with mock.patch.object(self.actions, '_make', side_effect=fake_make), \
+                mock.patch.object(self.actions, '_run', side_effect=fake_run):
+            code, text = self.actions.deliver_all()
+        self.assertEqual(code, 0)
+        self.assertEqual([call[1] for call in calls],
+                         ['build', 'deliver', 'render/print_pdf.py'])
+        self.assertIn('print_pdf.py ok', text)
+
+    def test_a_failed_step_stops_the_run(self):
+        calls = []
+
+        def fake_make(mode, on_line=None):
+            calls.append(mode)
+            return (0, 'build ok\n') if mode == 'build' else (1, 'deliver failed\n')
+
+        with mock.patch.object(self.actions, '_make', side_effect=fake_make), \
+                mock.patch.object(self.actions, '_run') as run:
+            code, text = self.actions.deliver_all()
+        self.assertEqual(code, 1)
+        self.assertEqual(calls, ['build', 'deliver'])
+        run.assert_not_called()
+        self.assertIn('deliver failed', text)
 
 if __name__ == '__main__':
     unittest.main()

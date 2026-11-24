@@ -32,8 +32,9 @@ NEW_BOOK_ACTION = '@new-book'
 # Letter shortcut -> the row key it stands for, per screen. Matching is
 # case-insensitive, so S and s both run "1 源码 → 手稿".
 LETTER_ALIASES: dict[str, dict[str, str]] = {
-    'main': {'a': '1', 'l': '2', 'b': '3', 'e': '4', 'p': '5', 's': '6',
-             'n': '7', 't': '8', 'c': '9', 'q': '0'},
+    'main': {'a': '1', 'l': '2', 'm': '3', 'e': '4', 'p': '5', 'f': '6',
+             'b': '7', 't': '8', 'c': '9', 'q': '0'},
+    'library': {'s': '1', 'n': '2'},
 }
 
 
@@ -60,11 +61,14 @@ SCREENS: dict[str, list[tuple[str, str, str]]] = {
              ('3', 'build', '手稿 → Markdown + HTML'),
              ('4', 'deliver', 'EPUB + PDF（按需）'),
              ('5', 'print', '印刷版 PDF（按需）'),
-             ('6', OPEN_PREFIX + BOOKS_SCREEN, '切换书籍'),
-             ('7', NEW_BOOK_ACTION, '新增书籍'),
+             ('6', 'deliver-all', '书稿 → Markdown + HTML + EPUB + 全版 PDF'),
+             ('7', OPEN_PREFIX + 'library', '书籍管理：切换 / 新增'),
              ('8', OPEN_PREFIX + 'quality', '质量：门禁与测试'),
              ('9', OPEN_PREFIX + 'config', '配置：状态、配置项与 LLM'),
              (BACK_KEY, QUIT_ACTION, '退出')],
+    'library': [('1', OPEN_PREFIX + BOOKS_SCREEN, '切换书籍'),
+                ('2', NEW_BOOK_ACTION, '新增书籍'),
+                (BACK_KEY, BACK_ACTION, '返回主菜单')],
     'quality': [('1', 'check', '全部质量门禁'),
                 ('2', 'test', '测试套件（快档）'),
                 (BACK_KEY, BACK_ACTION, '返回主菜单')],
@@ -82,8 +86,8 @@ SCREENS: dict[str, list[tuple[str, str, str]]] = {
 # order; rows keep the order they have in SCREENS. Rows not named here (退出)
 # render after the last group, so the exit key never sits inside a group.
 MENU_GROUPS: list[tuple[str, tuple[str, ...]]] = [
-    ('源码成书', ('1', '2', '3', '4', '5')),
-    ('书籍管理', ('6', '7')),
+    ('源码成书', ('1', '2', '3', '4', '5', '6')),
+    ('书籍管理', ('7',)),
     ('配置与管理', ('8', '9')),
 ]
 
@@ -96,14 +100,15 @@ def groups_for(screen: str) -> list[tuple[str, tuple[str, ...]]]:
 # screens whose rows come from live data instead of SCREENS
 DYNAMIC_SCREENS = (SETTINGS_SCREEN, PROVIDERS_SCREEN, BOOKS_SCREEN)
 
-PARENT: dict[str, str] = dict.fromkeys(('quality', 'config'), 'main')
+PARENT: dict[str, str] = dict.fromkeys(('quality', 'config', 'library'), 'main')
 PARENT.update({SETTINGS_SCREEN: 'config', PROVIDERS_SCREEN: 'config',
-               BOOKS_SCREEN: 'config'})
+               BOOKS_SCREEN: 'library'})
 
 TITLES: dict[str, str] = {
     'main': '主菜单',
     'quality': '质量',
     'config': '配置与状态',
+    'library': '书籍管理',
     'books': '书籍',
     SETTINGS_SCREEN: '配置项',
     PROVIDERS_SCREEN: 'LLM provider 优先级',
@@ -113,7 +118,7 @@ TITLES: dict[str, str] = {
 LLM_ACTIONS = frozenset({'analyze-llm', 'llm-ask'})
 
 # Actions that rewrite many artifacts and take minutes.
-CONFIRM_ACTIONS = frozenset({'deliver', 'print'})
+CONFIRM_ACTIONS = frozenset({'deliver', 'deliver-all', 'print'})
 
 # Where the cursor starts on each screen: the everyday next step, not ingest.
 DEFAULT_ENTRY_KEY = {'main': '3', 'quality': '1', 'config': '1'}
