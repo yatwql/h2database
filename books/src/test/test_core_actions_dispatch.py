@@ -6,6 +6,7 @@ from __future__ import annotations
 import os
 import sys
 import tempfile
+import time
 import unittest
 from unittest import mock
 
@@ -425,3 +426,48 @@ class DispatchRoutingTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class StreamHelpersTest(unittest.TestCase):
+    """Streaming, unbuffering and the heartbeat, each callable on its own."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.actions = _fixture.load_module(self.root, 'actions')
+
+    def test_a_command_gains_unbuffered_mode_once(self):
+        env = {}
+        self.assertEqual(self.actions._unbuffered(['python', 'x.py'], env),
+                         ['python', '-u', 'x.py'])
+        self.assertEqual(env['PYTHONUNBUFFERED'], '1')
+        self.assertEqual(self.actions._unbuffered(['python', '-u', 'x.py'], env),
+                         ['python', '-u', 'x.py'])
+
+    def test_a_bare_command_is_left_alone(self):
+        self.assertEqual(self.actions._unbuffered(['tool'], {}), ['tool'])
+
+    def test_every_line_is_collected_and_forwarded(self):
+        seen: list[str] = []
+        chunks = self.actions._stream(iter(['one\n', 'two\n']), seen.append)
+        self.assertEqual(chunks, ['one\n', 'two\n'])
+        self.assertEqual(seen, ['one', 'two'])
+
+    def test_a_raising_callback_does_not_stop_the_stream(self):
+        def explode(_line: str) -> None:
+            raise RuntimeError('ui gone')
+
+        chunks = self.actions._stream(iter(['one\n', 'two\n']), explode)
+        self.assertEqual(len(chunks), 2)
+
+    def test_without_a_callback_the_lines_are_still_collected(self):
+        self.assertEqual(self.actions._stream(iter(['only\n']), None), ['only\n'])
+
+    def test_the_heartbeat_reports_while_the_child_is_silent(self):
+        seen: list[str] = []
+        with mock.patch.object(self.actions, 'HEARTBEAT_S', 0.02):
+            finished, _thread = self.actions._heartbeat(seen.append, 0.0)
+            time.sleep(0.08)
+            finished.set()
+        self.assertTrue(any('仍在执行' in line for line in seen))

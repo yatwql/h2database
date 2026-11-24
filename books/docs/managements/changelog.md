@@ -13,6 +13,11 @@
 
 ### 变更
 
+- **rf-64 / rf-65 / rf-66 收口**：`actions` 的 `_invoke` 拆出 `_unbuffered()`/`_stream()`/`_heartbeat()`
+  （各有用例，`actions` 97%）；`verify_pdf` 的字体判定早已抽成 `font_is_embedded()`；探测类失败路径
+  （字体命令、`doctor` 的可选工具）都不再只能靠真机触发；`calibrate()`/`figure_caption()` 的 docstring
+  写明公共 API 定位。
+
 - **rf-70 量化**：`source_refs.py` 86.3% → 86.5%、`content_depth.py` 86.3% → **89%**（缺/坏清单降级）；
   抬到 88 仍需补的十个模块与各自百分比已写进台账。全局 91.7%。
 

@@ -75,6 +75,47 @@ def child_env() -> dict[str, str]:
     return env
 
 
+def _unbuffered(command: list[str], env: dict) -> list[str]:
+    """Put `-u` on the child and ask it for unbuffered output.
+
+    A pipe makes the child block-buffer its own prints, so a three-minute render
+    arrives in one lump at the end; both halves of the fix are needed.
+    """
+    env['PYTHONUNBUFFERED'] = '1'
+    if len(command) > 1 and command[1] != '-u':
+        return command[:1] + ['-u'] + command[1:]
+    return command
+
+
+def _stream(stream, on_line, clock=None) -> list[str]:
+    """Forward the child's lines as they arrive; returns them all.
+
+    A UI callback must never break the run it is reporting on, so a raising callback
+    is suppressed instead of aborting the child.
+    """
+    chunks: list[str] = []
+    for line in stream:
+        chunks.append(line)
+        if on_line is not None:
+            with contextlib.suppress(Exception):
+                on_line(line.rstrip())
+    return chunks
+
+
+def _heartbeat(on_line, started: float) -> tuple[threading.Event, threading.Thread]:
+    """Start a thread that says 'still working' while the child is silent."""
+    finished = threading.Event()
+
+    def beat() -> None:
+        while not finished.wait(HEARTBEAT_S):
+            with contextlib.suppress(Exception):
+                on_line(f'… 已用 {_clock(time.perf_counter() - started)}，仍在执行')
+
+    thread = threading.Thread(target=beat, daemon=True)
+    thread.start()
+    return finished, thread
+
+
 def _invoke(command: list[str], on_line=None) -> tuple[int, str]:
     """Run a child process, optionally reporting its output as it arrives.
 
@@ -86,37 +127,17 @@ def _invoke(command: list[str], on_line=None) -> tuple[int, str]:
         proc = subprocess.run(command, capture_output=True, text=True,
                               cwd=repo_root(), check=False, env=child_env())
         return proc.returncode, (proc.stdout or '') + (proc.stderr or '')
-    # a pipe makes the child block-buffer its own prints, so a three-minute render
-    # arrives in one lump at the end: force unbuffered output
     env = child_env()
-    env['PYTHONUNBUFFERED'] = '1'
-    if len(command) > 1 and command[1] != '-u':
-        command = command[:1] + ['-u'] + command[1:]
-    chunks: list[str] = []
+    command = _unbuffered(command, env)
     process = subprocess.Popen(command, stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT, text=True,
                                cwd=repo_root(), env=env)
     stream = process.stdout
     if stream is None:  # pragma: no cover - PIPE was requested just above
         return process.wait(), ''
-    # A step can be silent for a minute (a render, a ghostscript pass). A heartbeat
-    # line every ten seconds keeps the operator oriented while the child works.
-    finished = threading.Event()
-    started = time.perf_counter()
-
-    def heartbeat() -> None:
-        while not finished.wait(HEARTBEAT_S):
-            with contextlib.suppress(Exception):
-                on_line(f'… 已用 {_clock(time.perf_counter() - started)}，仍在执行')
-
-    beater = threading.Thread(target=heartbeat, daemon=True)
-    beater.start()
+    finished, _beater = _heartbeat(on_line, time.perf_counter())
     try:
-        for line in stream:
-            chunks.append(line)
-            # a UI callback must never break the run it is reporting on
-            with contextlib.suppress(Exception):
-                on_line(line.rstrip())
+        chunks = _stream(stream, on_line)
         return process.wait(), ''.join(chunks)
     finally:
         finished.set()

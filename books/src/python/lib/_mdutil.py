@@ -40,7 +40,12 @@ def table(headers: list[str], rows: list[list[str]], cap: int = 20) -> list[str]
 
 
 def figure_caption(line: str) -> tuple[str, str] | None:
-    """(figure id, title) for a caption line, or None when it is not one."""
+    """(figure id, title) for a caption line, or None when it is not one.
+
+    Public API: the gates parse captions with `FIGURE_*` shapes directly for speed,
+    but any caller that wants the id and the title in one step comes here — so the
+    rule about what counts as a caption stays in one place.
+    """
     match = FIGURE_CAPTION_RE.match(line.strip())
     return (match.group(1), match.group(2).strip()) if match else None
 

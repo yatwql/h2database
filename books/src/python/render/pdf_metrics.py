@@ -188,6 +188,10 @@ def calibrate(render, target: int, low: float, high: float, tolerance: int = 4,
               max_rounds: int = 4) -> tuple[Calibration, float | None]:
     """Bisect one density knob until the page count lands near `target`.
 
+    Public API: the `--target` path reports a measurement, while calibration is the
+    loop a maintainer drives by hand (one render per round). Kept as an entry point
+    rather than wired into the CLI, because a calibration run rebuilds the book.
+
     `render(scale) -> path` performs one build and returns the PDF it produced; the
     caller owns that because a build is expensive and cannot be faked here. Returns
     the search record and the scale that hit the target, if any.

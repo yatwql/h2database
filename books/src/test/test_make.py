@@ -279,5 +279,16 @@ class MakeDriverTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn('nothing to do', buffer.getvalue())
 
+
+
+    def test_a_missing_optional_tool_is_reported_not_fatal(self):
+        with mock.patch.object(self.make.importlib.util, 'find_spec', return_value=None):
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                code = self.make.doctor()
+        self.assertIn('pandoc', buffer.getvalue())
+        self.assertIn(code, (0, 1))
+
+
 if __name__ == '__main__':
     unittest.main()
