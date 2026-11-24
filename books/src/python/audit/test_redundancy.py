@@ -54,10 +54,6 @@ class Case(NamedTuple):
     body: str
 
 
-class TooLarge(Exception):
-    """Raised when a file is not a test module (kept for the AST helpers)."""
-
-
 def test_files(root: str | None = None) -> list[str]:
     base = root or TEST_ROOT
     return sorted(p for p in glob.glob(os.path.join(base, '**', '*.py'), recursive=True)
