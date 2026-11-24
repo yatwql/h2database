@@ -69,7 +69,7 @@ books/
     test/    # 单元 + 集成 + 通用性回归
   scripts/   # launch.sh/.ps1（启动）、bootstrap.sh/.ps1（环境）
   dist/      # 产物（gitignored）
-  logs/      # 运行日志（gitignored）：check-<日期>.jsonl 按日汇总，失败跑另存单文件
+  logs/      # 运行日志（gitignored）：check-<档位>-<YYYY-MM-DD>.{log,jsonl} 按天追加
   docs/      # 用户文档 / 管理文档 / 规范 / 设计
 ```
 

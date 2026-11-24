@@ -113,10 +113,14 @@ display = "删节版"
 
 | 键 | 作用 |
 | --- | --- |
-| `layout_page_size` / `layout_page_margin` | 纸面尺寸与页边距（只影响 PDF） |
-| `layout_column_px` | 正文栏宽；HTML 与 PDF 同宽 |
-| `layout_body_px` | 正文字号；写 `0` 表示「按每行字数推导」 |
-| `layout_body_chars_per_line` | 推导字号时每行应容纳的字数（默认 40） |
+| `layout_chars_per_line` | 每行容纳的 `em` 数（阅读度量，默认 40）；栏宽由它 × 正文字号得出 |
+| `layout_chars_per_line_min` / `_max` | 阅读区间（默认 36–46）；栏宽或度量落在区间外，`verify_pdf` 的 `COLUMN` 项判失败 |
+| `layout_column_px` | 栏宽覆盖；写 `0`（默认）表示由度量推导，屏幕与纸面同一规则 |
+| `layout_body_px` | 正文字号；写 `0` 表示「按栏宽 ÷ 度量推导」 |
+| `layout_page_size` / `layout_page_margin` | 纸面尺寸与页边距：竖边距用于 `@page`，左右边距由栏宽反推 |
+| `layout_print_margin_min_mm` | 纸面最小左右边距（默认 16mm）；栏宽放不下时裁到它，不侵占页边 |
+| `layout_print_code_min_px` / `layout_print_mono_advance` | 代码可读下限与等宽字符步距（按 `ascii_max_cols` 反推印刷代码字号） |
+| `layout_print_wrap` | 超长代码行换行（默认 `0` 关）；开启后用换行而非继续缩字号 |
 | `layout_code_px` / `layout_code_line_height` | 代码块字号与行距；行距写 `0` 表示「与正文一致」 |
 | `layout_lead_ratio` | 正文行距增量（`1 + ratio`，默认 0.23）；`DENSITY` 门禁据此判松紧 |
 | `layout_epub_code_em` / `layout_epub_line_height` | 重排版面的相对字号与行高（`em`，读者可缩放） |

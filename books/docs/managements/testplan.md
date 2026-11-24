@@ -99,7 +99,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | PDF 渲染与 TOC 链接注入 | HTML → PDF 成功、页面数据可读；每个印刷 TOC 条目在对应页上加一条 link annotation，目标页按 outline 位置映射 | `render/to_pdf.py`、`render/pdf_toc_links.py` | P1 |
 | PDF 交付 | PDF 重新生成自当前 HTML；页面为 A4（尺寸与容差取配置）、无旋转；字体全部嵌入且 Type3 不超过 `pdf_type3_max`（`FONTS`）；outline 与 HTML 标题逐一对应；印刷 TOC 链接按序且在页内；体积不超过配置的 PDF 预算（随页数增长）；行距÷字号与文字占可印高度落在配置区间（`DENSITY`） | `render/verify_pdf.py`（`--require-toc-links`） | P1 |
 | EPUB 结构 | mimetype 首条且未压缩；container/OPF/manifest/spine/nav 全部可解析、导航链接全部命中；元数据齐备；每个正文文件恰好一个 `h1`（`CHAPTERS`，图注被当成标题时当场报警）；体积不超过配置的 EPUB 预算 | `render/verify_epub.py` | P1 |
-| EPUB 生成 | pandoc 可用时由 `to_epub.py` 生成 EPUB（在 `deliver` 组内，生成后由 `verify_epub.py` 校验） |
+| EPUB 生成 | pandoc 可用时由 `to_epub.py` 生成 EPUB（在 `deliver` 组内，生成后由 `verify_epub.py` 校验） | `render/to_epub.py` | P1 |
 | 可读性 | 长句、宽 ASCII 图、框线闭合、图注质量 | `readability.py` | P1 |
 | 术语与排版规则 | 同一概念不混用两种写法；标题无尾标点；链接文字可读；中英之间留空格；列表标点一致；段落 ≤ 上限（已知项走基线） | `style_rules.py` | P1 |
 | 内容深度 | 前向引用须点名主责章节；高频类型须入术语表；练习题须指向本章类型或 §锚点 | `content_depth.py` | P1 |
@@ -161,7 +161,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | `requirement_trace.py` | 每条需求是否有判据载体 | 只管追溯，不评判据本身是否够强 |
 | `portability.py` | 移植性：文本 `open()` 均显式 encoding；ASCII locale 下入口可运行 | 只管环境适配，不评判内容 |
 | `test_redundancy.py` | 测试套件卫生：重复用例体、无断言用例、非 TestCase 内的 test_*、同名遮蔽；松散断言（`assertIn(code, (0, 1))`）只登记存量、新增即失败 | 只管测试代码，不判业务 |
-| `perf_baseline.py` | 交付速度：各步骤耗时与历史中位数对比，超阈值提示（默认 advisory） | 只管速度退化，不判正确性 |
+| `perf_baseline.py` | 交付速度：各步骤耗时对比评审基线（`data/baselines/perf-baseline.json`；无基线时退回滚动窗口中位数），超阈值提示（默认 advisory） | 只管速度退化，不判正确性 |
 | 顺序依赖探测（order_dependence，人工触发） | 正序/逆序各跑一次，结果不同即报；不进 `check`，慢档执行 | 只管顺序敏感性，不判正确性 |
 | `typecheck.py` | pyright 静态类型检查 | 只管类型 |
 
@@ -217,7 +217,7 @@ report` / `eval-score.sh`）、`balance` 的计量输出（`--json`），以及�
 | NFR-02 | 连续两次构建的 HTML 逐字节一致 | `.github/workflows/book.yml` |
 | NFR-03 | 依赖版本固定，交付只用项目解释器 | `make.py`、`bootstrap.sh` |
 | NFR-04 | 存量入基线，新增同类问题失败 | `src/python/lib/_baseline.py` |
-| NFR-05 | 四档耗时在预算内（性能门禁为 advisory：对比历史中位数给提示，硬预算由 CI 墙钟记录） | `perf_baseline.py` |
+| NFR-05 | 四档耗时在预算内（性能门禁为 advisory：对比评审基线给提示，硬预算由 CI 墙钟记录） | `perf_baseline.py` |
 | NFR-06 | PDF ≤ 12 MB、EPUB ≤ 10 MB | `verify_pdf.py`、`verify_epub.py` |
 | NFR-07 | 历史稿只读，不入构建与扫描 | `src/python/manuscript/snapshot.py` |
 | NFR-08 | 阈值与路径全部读配置，不内联 | `check_architecture.py`、`style_schema.py` |

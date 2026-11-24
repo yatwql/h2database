@@ -76,7 +76,7 @@
 ```bash
 # 先量当前版式，与参照 PDF 或数字目标比
 python books/src/python/render/pdf_metrics.py --compare 参照.pdf dist/书.pdf
-python books/src/python/render/pdf_metrics.py --target pages=843,chars_per_page=1905 dist/书.pdf
+python books/src/python/render/pdf_metrics.py --target pages=<目标页数>,chars_per_page=<目标字符数> dist/书.pdf
 
 # 标定结果写回 base.json 的 [toolchain]（只替换那一个数）
 python books/src/python/render/pdf_metrics.py --write-back layout_spacing_scale=0.7

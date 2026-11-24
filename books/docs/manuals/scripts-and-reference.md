@@ -194,7 +194,7 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `typecheck.py` | pyright 静态检查（可选依赖，缺失时跳过） | ● |
 | `portability.py` | 移植性：`open()` 必须显式 encoding；`LC_ALL=C` + ASCII 输出下入口不得崩 | ● |
 | `test_redundancy.py` | 测试卫生：重复用例体 / 无断言 / 非 TestCase 的 test_* / 同名遮蔽 | ● |
-| `perf_baseline.py` | 交付速度：每步耗时对比历史中位数，超阈值提示；`--strict` 变成失败 | ● |
+| `perf_baseline.py` | 交付速度：每步耗时对比评审基线，超阈值提示；`--update-baseline --reviewed-by --reason` 固化基线，`--strict` 变成失败 | ● |
 | `order_dependence.py` | 顺序依赖：正序/逆序两跑对比（P2 档自动执行，也可用 `test-eval-order.sh` 单独跑） | ● |
 
 报告类不是门禁，不进 `make.py check`：`scorecard.py`（六维评分汇总）、
@@ -212,7 +212,7 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `print_pdf.py` | 印刷版 PDF：与标准版同一分章渲染（同一页框/栏宽/字号），只额外注入 `print_profile` 的章首横幅与点线目录；`--html`、`--pdf`、`--skip-html` |
 | `pdf_from_html.py` | 不重建 HTML，直接出 PDF；`--html`、`--pdf` |
 | `to_epub.py` | HTML → EPUB（pandoc） |
-| `pdf_metrics.py` | 版式测量与比对：`--compare 参照.pdf 构建.pdf` 逐项列差异；`--target pages=843,chars_per_page=1905` 与数字比；`--write-back knob=value` 把标定结果写回 `base.json` |
+| `pdf_metrics.py` | 版式测量与比对：`--compare 参照.pdf 构建.pdf` 逐项列差异；`--target pages=<目标页数>,chars_per_page=<目标字符数>` 与数字比；`--write-back knob=value` 把标定结果写回 `base.json` |
 | `verify_pdf.py` | PDF 交付校验：页数、大纲、目录链接、A4、旋转、字体嵌入（`FONTS`，Type3 上限）、密度（`DENSITY`：行距÷字号、文字占可印高度）（`--json`） |
 | `verify_epub.py` | EPUB 结构校验，含 `CHAPTERS`（每个正文文件恰好一个 `h1`）（`--json`） |
 

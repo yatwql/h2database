@@ -152,7 +152,7 @@ books/
 阈值只允许出现在配置里，代码里不得内联。已知归属：
 
 - 内容体量与交付下限：`base.json [toolchain]` 的 `content_floor_ratio`、`pdf_page_ratio`、`epub_size_ratio`、`pdf_max_mb`、`epub_max_mb`、`ascii_max_cols`。
-- 质量下限：`style.json [thresholds]`（练习题量、索引总数与每章条数、索引主/子/see-also 条数、术语条数、每章跨章引用数）——这些值以前硬编码在 `structure.py`，现均从此处读取。
+- 质量下限：`style.json [thresholds]`（练习题量、索引总数与每章条数、索引主/子/see-also 条数、术语条数、每章跨章引用数）。
 - 写作规则：`style.json [content_depth]`（如 `glossary_min_uses`、`excerpt_lines`）、`[captions]`、`[style_rules]`、`[limits]`。
 - 篇幅预算：`style.json [limits]` 的 `sources`/`tests`/`docs`/`manuscript` 四档；`file_length` 要求四档都显式声明，不靠默认值。
 - 图表与图簇：`style.json [quality]` 的 `min_figures_per_section`、`min_figure_coverage_pct`，`[clusters]` 的 `min_figures`、`window_lines`——`smart.py`、`figure_clusters.py`、`structure.py` 共用这一处，不再各自内联。
@@ -251,11 +251,14 @@ books/
 | `to_html.py` | 合并稿 → `dist/<book>.html` | 单一 HTML：侧边栏目录 + 印刷目录 + 锚点；正文按章缓存 |
 | `html_shell.py` | `to_html.py` 的样式表 | CSS 单列一份；搬动它不得改动产物一个字节（以构建哈希为验收） |
 | `to_pdf.py` | HTML → PDF | 无头浏览器渲染；随后用 pypdf 写入大纲 |
-| `pdf_toc_links.py` | PDF | 按目录条目与大纲的**位置对应关系**补链接注释，不靠标题文本匹配 |
+| `pdf_split.py` | HTML → PDF | 按 H1 逐章渲染再合并（每章 1:1，不受整页 fit-to-scale 影响）；marker 注入、大纲条目与 gs 压缩的唯一入口 |
+| `pdf_metrics.py` | PDF | 版式测量：正文字号、行距、每页行数/字符数（ 80 页抽样，不做全本提取）、比对与标定 |
+| `pdf_toc_links.py` | PDF | 按目录条目与大纲的**位置对应关系**补链接注释，不靠标题文本匹配；它是交付链的最后一个写入者，压缩在这里收尾 |
+| `toc_pages.py` | HTML | 把印刷目录的页码写回 `#toc-page-nav`：按锚点精确替换，写盘前自检 `#content` 不变、标签成对，不满足即放弃 |
 | `print_pdf.py` | HTML → 印刷版 PDF | 与标准版同一分章渲染器与同一页框，只额外注入 `print_profile`（章首横幅、点线目录）；不带自己的边距/缩放 |
 | `print_profile.py` | 印刷版专属样式 | 全部长度用 `em`、颜色取书目的主色；只影响 `@media print`，不改磁盘上供屏幕阅读的那份 HTML |
 | `pdf_from_html.py` | 现成 HTML → PDF | 不重建 HTML 的旁路；独立工具，不进 `deliver` 组 |
-| `verify_pdf.py` | PDF + HTML | 校验页数、A4、旋转、字体嵌入、体积、大纲与标题一一对应、目录链接落点 |
+| `verify_pdf.py` | PDF + HTML | 校验页数、A4、旋转、字体嵌入、体积、大纲与标题一一对应、目录链接落点、以及 `COLUMN`（每行 em 数在阅读区间内、栏宽 ≤ 可印宽度） |
 | `to_epub.py` | 合并稿 → EPUB | pandoc 生成，元数据经 `--metadata-file` 传入 |
 | `archive.py` | 手稿 + `dist/` → `data/archive/<书>/<日期>/` | 只进不出、不入构建；保留窗口取 `base.json [archive] retention_days`（默认 45 天） |
 | `verify_epub.py` | EPUB | 校验 mimetype 首条未压缩、容器与 OPF 可解析、清单与阅读顺序、导航可达、体积 |
@@ -311,6 +314,10 @@ GROUPS = {build, verify, deliver, check, test, cover, report}
 - 入口先校验解释器：不是项目虚拟环境即拒绝执行（`BOOK_ALLOW_SYSTEM_PYTHON=1` 可临时放行，交付流程不使用）。
 
 `check_runner.py` 负责"什么时候跑什么"：
+
+lint 的规则集只在书的 `pyproject.toml` 声明（`line-length`、`select`、`external`），编排器显式传
+`--config`：ruff 默认从工作目录找配置，而编排器在仓库根执行，不传就会静默回退到 ruff 的默认规则，
+让判据随安装的版本漂。
 
 | 模式 | 场景 | 步骤 |
 | --- | --- | --- |
@@ -376,7 +383,8 @@ GROUPS = {build, verify, deliver, check, test, cover, report}
 | `data/baselines/content-volume.json` | 逐章字节/行数、手稿总量、交付页数与体积；`reviewed` 记评审人 / 提交 / 时间 / 理由，`source.snapshot` 记它取自哪份历史快照，`accepted_shrinks` 记每次经批准的收缩 | 定稿评审后重设；要求稿子已提交、有人具名、不降低下限 |
 | `data/baselines/snapshot-<标签>.json` | 某个历史快照的体积事实 | 导入快照时生成 |
 | `data/snapshots/<日期>-<标签>/` | `manifest.json`（压缩包哈希、逐文件字节/行数/哈希）+ 只读正文 | 只读；`snapshot.py verify` 校验 |
-| `logs/check-<档位>-<时间戳>.{log,json}` | 每次检查的完整输出与摘要 | 保留最近若干次 |
+| `logs/check-<档位>-<YYYY-MM-DD>.{log,jsonl}` | 当天的运行日记（每次追加一段带表头的输出）与同名摘要行（`git{commit,dirty}`、每步 `argv`、pytest 计数、`log_offset/log_len`） | 按 `logging.retention_days` 整日清理 |
+| `data/baselines/perf-baseline.json` | 评审过的耗时下限：逐步与总计中位数 + `reviewed{by,at,commit,reason,runs}`；`logs/perf-history.jsonl` 只做滚动窗口（`style.json [quality].perf_history_runs`，默认 200） | `perf_baseline.py --update-baseline` 固化 |
 
 体积基线的严格度由 `base.json [toolchain] content_profile` 决定：`baseline` 严格、
 `rewrite` 严格但允许评审后重设、`cold-start` 仅提示（尚无存量可保护）。

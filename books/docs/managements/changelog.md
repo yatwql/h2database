@@ -13,6 +13,16 @@
 
 ### 变更
 
+- **文档与代码对齐一轮**：日志命名（`check-<档位>-<YYYY-MM-DD>.{log,jsonl}`、`perf-baseline.json`
+  与滚动窗口）、`render/` 模块表（补 `pdf_split.py`、`pdf_metrics.py`、`toc_pages.py`）、
+  `verify_pdf` 的 `COLUMN` 判据、基线清单（`coverage.json`、`perf-baseline.json`、
+  `loose-assertions.json`、`state/file-length.json`）、`how-to-config` 的版式键（`layout_chars_per_line`
+  与其区间、`layout_column_px=0` 推导、印刷侧三个新键）全部改写为当前事实；`DESIGN-TUI` 与
+  `how-to-use-tui` 按「结果在屏时任意键回菜单」重写；性能基线表述从「历史中位数」改为「评审基线
+  （无则退回窗口中位数）」。同时按文档规范删掉「以前…现…」这类过程叙述，修 3 处 Markdown 表格
+  列数不一致（`testplan` 的 EPUB 行、两处 `\|` 转义）。`technical.md` 补一条：lint 规则集只在
+  书的 `pyproject.toml` 声明，编排器显式传 `--config`。
+
 - **lint 从「跟着 ruff 版本走」变成一条可复现的门禁**：此前 `check_runner` 从仓库根调用
   `python -m ruff check books/src/...`，而 `books/pyproject.toml` 里没有 `[tool.ruff]`——规则集
   就是 ruff 的默认值，换版本即换判据（venv 里是 0.15.20、PATH 上的 `uvx ruff` 是 0.17.6，同一棵树

@@ -28,10 +28,14 @@ books/
     baselines/                 # 机器维护的已知问题账本（非人写文档）
       *-baseline.json          # 各类已评审存量：ASCII 图、符号漂移、风格、体积
       *-findings.json          # 已评审的图注与深度存量
+      coverage.json            # 逐文件覆盖率下限（只升不降，除非评审后重记）
+      perf-baseline.json       # 已评审的耗时下限：逐步/总计中位数 + reviewed{by,at,commit,reason}
+      loose-assertions.json    # 松散断言存量（目标为零，残留即登记）
       snapshot-<快照>.json     # 历史快照的体积基线（比对用）
     state/                     # 机器维护的派生状态：ingest 重建，人别手改
       source-inventory.json    # 被分析源码的快照事实；事实类门禁与渲染都读它
       outline.json             # 章节与主题的派生大纲；只有渲染器读它
+      file-length.json         # 文件长度台账的上次实测值（file_length 只报超阈值的增长）
       source-inventory.prev.json  # 上一次清单（只为告知“源码是否变化”，不入库）
     tmp/                       # 一次性脚本与临时文件（不入库）
     snapshots/                 # 只读历史快照：人工挑选的对照点（可来自 zip 或 data/archive 的日期目录），入库
