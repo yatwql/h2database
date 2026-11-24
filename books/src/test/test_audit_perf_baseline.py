@@ -30,9 +30,12 @@ class PerfBaselineTest(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.history = os.path.join(self.tmp.name, 'perf.jsonl')
         self.mod = _fixture.load_module(BOOK_ROOT, 'perf_baseline')
-        patcher = mock.patch.object(self.mod, 'HISTORY', self.history)
-        patcher.start()
-        self.addCleanup(patcher.stop)
+        # no reviewed floor: this class is about the window-median fallback
+        for name, value in (('HISTORY', self.history),
+                            ('BASELINE', os.path.join(self.tmp.name, 'absent.json'))):
+            patcher = mock.patch.object(self.mod, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
     def write_history(self, *runs: dict) -> None:
         lines = [json.dumps(item) + '\n' for item in runs]
