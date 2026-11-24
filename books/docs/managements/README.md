@@ -6,7 +6,15 @@
 > 任何文档的内容。
 目录结构与归属规则见 [`folder.md`](folder.md)。
 
-按"要什么 → 怎么做 → 谁判、何时判 → 写成什么样 → 目录归属 → 计划 → 变更记录"排列：
+三轴分工，读任何一份之前先确定自己在问哪一轴：
+
+| 轴 | 问题 | 文档 |
+| --- | --- | --- |
+| 要求 | 要交付什么、内容必须有什么 | `requirements.md`（本项目）、`content-standard.md`（跨项目内容标准） |
+| 判定 | 谁判、判在几级、怎么跑、基线怎么记 | `testplan.md`（判据与级别）、`content-quality-policy.md`（分工、起点与基线） |
+| 做法 | 系统怎么实现、写到哪些文件、怎么用 | `technical.md`、`folder.md`、`DESIGN*.md`；用过工具看 `docs/manuals/` |
+
+按"要什么 → 怎么做 → 谁判、何时判 → 目录归属 → 计划 → 变更记录"排列：
 
 | 文档 | 职责 |
 | --- | --- |
@@ -18,7 +26,6 @@
 | `plan.md` | 计划项清单：`plan-N` 编号、按**时机**分 P1–P4、每项的现状 / 动作 / 验收 / 事实位 |
 | `technical.md` | 第二步：技术设计——总体架构、分项设计、架构约束与扩展点 |
 | `content-standard.md` | 内容标准（跨项目复用）：信息阶梯、事实要求、章节骨架、图示与练习 |
-| `style-guide.md` | 写作规则与检查机制（取值在 `data/config/style.json`） |
 | `DESIGN.md` | 设计契约总纲：三界面共有的身份、状态、颜色分工与文案基调 |
 | `DESIGN-TUI.md` | 终端交互契约：屏幕分区、键位、反馈四段、确认、光标 |
 | `DESIGN-WEB.md` | 网页控制台契约：路由、JSON 形状、页面结构、允许与禁止 |
@@ -29,7 +36,7 @@
 
 - **同一事实只有一个权威位置**：需求看 `requirements.md`，设计看 `technical.md`，
   判据与级别看 `testplan.md`，判定分工与基线流程看 `content-quality-policy.md`，结构看 `folder.md`，写作看
-  `style-guide.md`，界面看 `DESIGN*.md`；其余文档只做引用。
+  界面看 `DESIGN*.md`；**写法与配置属于使用手册**（`docs/manuals/`），其余文档只做引用。
 - **不重复统计数字**：统计以封面文件为准，任何文档不再抄一份。
 - **不重复命令清单**：使用看 [`books/README.md`](../../README.md)，验证命令看
   `testplan.md` §1。

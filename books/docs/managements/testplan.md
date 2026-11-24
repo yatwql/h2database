@@ -3,7 +3,7 @@
 > 软件：bookwright — 源码分析成书工具 v0.1
 > 版本：v0.1-dev
 > 定位：**判据与验证命令的唯一权威**——每道门禁判什么、到什么级别、怎么跑；
-> 不写实现结构（看 `technical.md`），也不写写作规则（看 `style-guide.md`）。
+> 不写实现结构（看 `technical.md`），也不写写作规则（看 `../manuals/how-to-write.md`）。
 
 ## 1. 权威验证流程
 
@@ -116,7 +116,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 内容体积 | 每个章节的字节数与行数不低于基线比例、手稿总量不缩水、交付页数与 EPUB 体积不低于基线比例（比例取值见配置）；新增文件允许，删除须同步 `book.toml` 并重设基线；重设基线须稿子已提交、评审人具名、不得降低下限，收缩须显式接受并记理由 | `content_volume.py`、`books/data/baselines/content-volume.json` | P0 |
 | 文件长度 | 源码/测试/文档/手稿四档行数均不超过各自预算；四档预算须在配置里显式声明（不靠默认值）；手稿正文与附录同档 | `file_length.py` | P0 |
 | 脚本契约 | 每个入口脚本有模块说明、可执行入口、必要时说明退出码与 `--json` | `script_contract.py` | P0 |
-| 文档一致性 | 文档与配置的引用对象存在（路径、脚本、章节名、管理目录与索引/目录树、编号源）；同一事实只声明一次（章节键、门禁级别）；管理文档头部必须有一行 `> 定位：`；跨项目的内容标准只能指向 `style-guide.md`；引用的交付链路与脚本名前缀清单等于 `make.py` / `check_architecture.py` 里的声明 | `doc_drift.py` | P0 |
+| 文档一致性 | 文档与配置的引用对象存在（路径、脚本、章节名、管理目录与索引/目录树、编号源）；同一事实只声明一次（章节键、门禁级别）；管理文档头部必须有一行 `> 定位：`；跨项目的内容标准只能指向 `../manuals/how-to-write.md`；引用的交付链路与脚本名前缀清单等于 `make.py` / `check_architecture.py` 里的声明 | `doc_drift.py` | P0 |
 | 测试隔离 | 全程零出站：`_netguard` 只允许回环，任何真实建连（含 LLM provider）立即失败；写入真实 `data/manuscript` 被守卫拒绝（`BOOK_TEST_GUARD`）；夹具书自建在临时目录，日志与用量账本只落在其中；LLM 用例一律 mock，Playwright 用假引擎 | `src/test/_netguard.py`、`src/test/test_no_network.py`、`src/test/test_isolation.py` | P0 |
 | 失败语义 | 工具层失败一律抛同一类异常并携带消息与退出码，入口只做一次转换；仓库内不存在“先打印再 `sys.exit(1)`”的失败路径，退出码与消息由用例成对断言 | `src/test/test_lib_errors.py`、`audit/script_contract.py` | P1 |
 | 覆盖率 | 分支覆盖率不低于配置的红线，且每个文件的覆盖率不低于自己的基线；每次提交量快档，带 chromium/pandoc 的完整档另量一次，避免“只有慢档才走到的路径”被当成无人可达 | `make.py cover`（快档）、`make.py cover --full`（含慢档） | P1 |
@@ -228,7 +228,7 @@ report` / `eval-score.sh`）、`balance` 的计量输出（`--json`），以及�
 
 ## 3. 格式的判法
 
-体例（怎么写）只归 `style-guide.md`：图注 §6.2/§14、围栏与源码引用 §4.2/§4.3、跨章引用 §5。
+体例（怎么写）只归 `../manuals/how-to-write.md`：图注 §6.2/§14、围栏与源码引用 §4.2/§4.3、跨章引用 §5。
 本节只登记「格式由谁判、判在什么级别」——级别与判据名称见 §2.2 的对应行：
 
 | 格式面 | 判据载体 |
@@ -242,7 +242,7 @@ report` / `eval-score.sh`）、`balance` 的计量输出（`--json`），以及�
 ## 4. 交付形态专项验收
 
 日常交付只跑 §1 的命令；本节只列「非日常形态」验收什么、谁判。**怎么做不在本文**：命令与流程见
-`scripts-and-reference.md`，成书排版规格见 `style-guide.md`，渲染实现见 `technical.md` §4.4。
+`scripts-and-reference.md`，成书排版规格见 `../manuals/how-to-write.md`，渲染实现见 `technical.md` §4.4。
 
 | 形态 | 验收项 | 载体 |
 | --- | --- | --- |

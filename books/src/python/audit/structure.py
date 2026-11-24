@@ -468,7 +468,7 @@ else:
 # Run them as separate checks so authors see the diagnostic at the same
 # place as other quality gates. Failure does not regress index_ok; only
 # missing tools count as hard failures.
-section('p2', 'Figure Caption Quality (style-guide §14)')
+section('p2', 'Figure Caption Quality (how-to-write §14)')
 caption_tool = os.path.join(script_dir, 'captions.py')
 if os.path.exists(caption_tool):
     try:
@@ -485,7 +485,7 @@ if os.path.exists(caption_tool):
 else:
     check(False, 'Caption audit tool missing')
 
-section('p2', 'Figure Cluster Bridges (style-guide §13.6)')
+section('p2', 'Figure Cluster Bridges (how-to-write §13.6)')
 cluster_tool = os.path.join(script_dir, 'figure_clusters.py')
 if os.path.exists(cluster_tool):
     try:
@@ -509,10 +509,10 @@ if os.path.exists(cluster_tool):
 else:
     check(False, 'Cluster audit tool missing')
 
-# 11c. v5.6 chapter exercises (style-guide §12). Each chapter must end with
+# 11c. v5.6 chapter exercises (how-to-write §12). Each chapter must end with
 # a 延伸思考 section containing >= 3 well-formed exercises; the book total
 # must be >= 50 across all 14 chapter slots.
-section('p2', 'Chapter Exercises (style-guide §12)')
+section('p2', 'Chapter Exercises (how-to-write §12)')
 exercises_tool = os.path.join(script_dir, 'exercises.py')
 if os.path.exists(exercises_tool):
     try:

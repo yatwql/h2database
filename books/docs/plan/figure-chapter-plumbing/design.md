@@ -44,7 +44,7 @@
 - 改：`lib/_mdutil.py`（新增形状与解析助手）、`audit/structure.py`、`audit/figures.py`、
   `audit/captions.py`、`audit/figure_clusters.py`、`audit/smart.py`、`audit/readability.py`。
 - 不做：不改任何门禁的**判据**（阈值、词表、桥接规则、编号规则都不动），只把"形状"搬到一处；
-  不改图注体例（`style-guide.md` §14）；不做多语种（那是语言包扩展项，需要第二阶段）。
+  不改图注体例（`how-to-write.md` §14）；不做多语种（那是语言包扩展项，需要第二阶段）。
 - 不改输出文案：门禁的提示与 JSON 字段保持原样，避免下游消费方被迫同步。
 
 ---

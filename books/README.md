@@ -106,7 +106,7 @@ books/
 | [content-quality-policy.md](docs/managements/content-quality-policy.md) | 内容质量方针：谁做判断、基线怎么记、代价多少（判据清单在 testplan） |
 | [review-findings.md](docs/managements/review-findings.md) | 未闭合问题台账（rf-N 编号的唯一归属） |
 | [changelog.md](docs/managements/changelog.md) | 版本历史 |
-| [style-guide.md](docs/managements/style-guide.md) | 写作与格式规范 |
+| [how-to-write.md](docs/manuals/how-to-write.md) | 写作与格式规范 |
 | [DESIGN.md](docs/managements/DESIGN.md) | 设计契约总纲（三界面共有规则） |
 | [DESIGN-TUI.md](docs/managements/DESIGN-TUI.md) | 终端交互契约 |
 | [DESIGN-WEB.md](docs/managements/DESIGN-WEB.md) | 网页控制台契约 |

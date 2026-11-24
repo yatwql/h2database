@@ -3,7 +3,7 @@
 > 软件：bookwright — 源码分析成书工具 v0.1
 > 版本：v0.1-dev
 > 定位：**系统怎么划分与约束**——分层、依赖矩阵、配置合并、关键决策、扩展点；
-> 不写使用步骤（看 `docs/manuals/`），也不写写作规则（看 `style-guide.md`）。
+> 不写使用步骤（看 `docs/manuals/`），也不写写作规则（看 `../manuals/how-to-write.md`）。
 
 本文件是工程的第二步：由需求文档推出**技术设计**——系统怎么划分、各部件承担什么、
 彼此如何依赖、哪些约束不可违反。它自成体系：读完即可理解实现结构，不需要参考其他
@@ -90,24 +90,9 @@
 
 ### 2.4 目录与数据布局
 
-```text
-books/
-  data/
-    config/       base.json（基础设施策略）、style.json（写作与形态规则）
-      book/       book.toml（身份/章节/包归属）、case-studies.toml（案例）
-    tmpl/         templates.toml（四段引言与深读要点模板）
-    language/     章节骨架名、练习提示语等语言资源
-    manuscript/   手稿：封面、前件、章节、附录、后件
-    state/        机器维护的派生状态：outline、source-inventory
-    baselines/    已评审问题清单与体积基线（可 diff）
-    snapshots/    只读历史快照：别的书的稿子，仅供比对
-    tmp/          一次性脚本与临时文件（不入库）
-  dist/           交付产物（可再生，不入库）
-  docs/           工程文档：需求、技术、规范、计划、质量
-  src/python/     工具链七个层
-  src/test/       测试：与工具链同构的分层测试
-  logs/           运行报告：门禁与检查的完整输出与摘要
-```
+目录树、文件归属与清理规则只有一处：`folder.md`。本节只说明设计上依赖它的两个事实——
+`data/` 下同名文件按书解析（`_config` 的路径层），`dist/` 与 `data/cache/` 可再生、
+`data/manuscript/` 与 `data/baselines/` 不可再生。
 
 ### 2.5 两段式流水线
 

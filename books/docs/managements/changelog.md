@@ -13,6 +13,15 @@
 
 ### 变更
 
+- **文档体系按"要求 / 判定 / 做法"三轴归位**：写作手法是给写作者的指南，不是管理要求，
+  所以原写作规范（`style-guide.md`）移至 **`docs/manuals/how-to-write.md`**（声明自己的
+  「维度」，不再引用管理文档）。管理索引 `docs/managements/README.md` 顶部新增三轴表——要求
+  （`requirements.md`、`content-standard.md`）、判定（`testplan.md`、`content-quality-policy.md`）、
+  做法（`technical.md`、`folder.md`、`DESIGN*.md` 与 `docs/manuals/`）；`technical.md` §2.4 的
+  目录树删掉，改为一句话指向 `folder.md`（结构只有一处权威）。全部引用同步：管理文档、计划、
+  `README.md`、仓库根的 `CLAUDE.md`、以及 `audit/*.py` 的 docstring；`doc_drift` 的
+  `STANDARD_ALLOWED_REF` 跟着改名。
+
 - **TUI 增加「一次出全部产物」，书籍管理收进二级**：主菜单第 6 项（`6`/`F`）新动作
   `deliver-all`——按依赖顺序跑构建（Markdown + HTML）→ 交付（EPUB + 标准版 PDF + 校验）→
   印刷版 PDF，任一步失败即停，不会留下半套产物；原 6–9 依次后移，其中「切换书籍 / 新增书籍」
@@ -21,7 +30,7 @@
   `9` 为质量（`T`）。
 
 - **文档与具体项目解耦，配置说明归用户文档**：管理文档与使用手册不再点名被分析的项目
-  （`style-guide.md` 的示例、`requirements.md` 的目标、`folder.md` 的目录树、`how-to-use.md`
+  （`../manuals/how-to-write.md` 的示例、`requirements.md` 的目标、`folder.md` 的目录树、`how-to-use.md`
   的产物名、`how-to-config.md` 的包前缀示例全部改成占位或用例无关的表述）；唯一的范例
   放在 `how-to-manual` 的「范例：本仓库里的那份分析」一节，指向 H2 分析作为对照。
   `style.json` 的键语义只在 `docs/manuals/how-to-config.md` §3 解释（补齐 `prose`/`quality`/
@@ -30,7 +39,7 @@
   与 `STYLE_KEY`（`style.json` 的每个段与键都必须在手册里被解释）。
 - **文档按体例归位，质量策略更名**：`requirements.md` 去掉当前分析对象的专属名词（分析对象由书的
   配置声明，目标、章节槽、内容范围都改写成与项目无关的表述）；`testplan.md` §3/§4 只保留「判什么、
-  谁判」（格式体例移入 `style-guide.md` §4.2/§4.3，命令与人工验收步骤不再重复手册）；`technical.md`
+  谁判」（格式体例移入 `../manuals/how-to-write.md` §4.2/§4.3，命令与人工验收步骤不再重复手册）；`technical.md`
   补六张结构图与两个推导小节（PDF 交付链的写入者与压缩时机、版式由阅读度量推导、门禁执行模型、
   可再生/需评审/不可再生的分界），并把本轮确立的四条设计决策登记为 D-07～D-10。原
   `quality-model.md` 更名为 **`content-quality-policy.md`（质量保障流程）**：它与内容标准
@@ -287,7 +296,7 @@
   `folder.md` 新增 §3.1 讲清 `data/archive/` 与 `data/snapshots/` 的分界（谁写、存什么、留多久、
   入不入库、谁读、怎么提为对照点）。
 - **去掉文档与注释里的时间性措辞**：`requirements.md` 的"上一版已认可基线"改为"已认可的体量基线"，
-  `plan.md`/`testplan.md`/`style-guide.md` 里"不再…"的表述改为直接陈述当前规则；
+  `plan.md`/`testplan.md`/`../manuals/how-to-write.md` 里"不再…"的表述改为直接陈述当前规则；
   `doc_drift.py` 两处 `used to be compared` / `no longer exist`、`source_refs.py` 一处同类注释、
   `content_volume.py` 的"原来的下限"一并改成现在时——文档只描述当前状态，历史留在 git 与本文件。
 - **结构门与坐标门的配置型分支**：新增 `test_gate_structural_branches.py`——无覆盖表时按阅读顺序
@@ -855,7 +864,7 @@ HTML 里逃出 `<pre>` 的图注串、`--figures` 开关、以及 JSON 两种列
   `script_contract.py` 新增 `check_dispatcher_help`，帮助里点名的动作必须在 `core/actions.py`
   的 ACTIONS 表里（或为包装脚本自有动词）。（rf-17）
 - 文档跟随配置同步：`how-to-config` 的键一览补 `clusters` 与 `thresholds` 两段、并写明页面几何在
-  `toolchain`；`style-guide` §13.6 与 `scripts-and-reference` 的图簇说明改为“取值见配置”。（rf-16）
+  `toolchain`；`how-to-write` §13.6 与 `scripts-and-reference` 的图簇说明改为“取值见配置”。（rf-16）
 
 - `doc_drift.py` 新增两项检查：`CONFIG`（`book.toml` 各章节表的键必须都在阅读顺序里）、
   `LEVEL`（门禁级别只在 `testplan.md` §2.1/§2.2 的表格里声明）；章节名检查不再要求
@@ -873,9 +882,9 @@ HTML 里逃出 `<pre>` 的图注串、`--figures` 开关、以及 JSON 两种列
 - **管理文档角色归一**：14 份统一在头部写一行 `> 定位：负责什么 / 不负责什么 / 权威在哪`
   （`doc_drift` 新增 `LOCUS` 检查）；问题台账改 H1–H3 + 登记档，与 `plan.md` 的时机档
   P1–P4 分开命名；`folder.md` 只留归属，合并规则指向 `technical.md` §3.1；练习与跨章引用
-  细则只在 `style-guide.md`。（rf-11）
+  细则只在 `../manuals/how-to-write.md`。（rf-11）
 - **内容标准与写作规则分轴**：`content-standard.md` 只回答“必须有什么”（章节骨架、
-  阶梯、事实、图示、术语、练习、四项人工自查），写法一律指向 `style-guide.md`；
+  阶梯、事实、图示、术语、练习、四项人工自查），写法一律指向 `../manuals/how-to-write.md`；
   判据、级别与门禁改由项目单向登记，标准不再引用任何项目的门禁表、脚本或配置（rf-12）。
 - `file_length.py` 兼校「文件膨胀登记」：`review-findings.md` P4 表里的行数与实测不符即失败。
   四档预算还必须在 `style.json [limits]` 里显式声明（`BUDGET`），不再隐式靠默认值。
@@ -886,7 +895,7 @@ HTML 里逃出 `<pre>` 的图注串、`--figures` 开关、以及 JSON 两种列
 - 新增 `requirement_trace.py`：`requirements.md` 的 FR/IR/NFR 与 testplan 新增的
   §2.4 需求判据对照表双向一致，每行点名的载体必须存在；`make.py check` 由 30 步变 31 步。
 - **`testplan` 只留判据**：§4 交付形态收缩为按需验收项与命令（渲染参数、版式规格与两个
-  写死的阈值移出，分别指向 `technical.md` §4.4 与 `style-guide.md` §6）；§2.2 的「9 项
+  写死的阈值移出，分别指向 `technical.md` §4.4 与 `../manuals/how-to-write.md` §6）；§2.2 的「9 项
   CSS 标记」改为「样式与锚点钩子齐备」，删除「脚本语法有效」这条弱判据；§5 不再复述
   §2.2；§6 指向 `content-quality-policy.md` §4 与使用手册。（rf-15）
 - 判据只写性质：`testplan` §2.2 的阈值列改为“不低于配置下限”这类表述，键名与取值集中到
@@ -898,12 +907,12 @@ HTML 里逃出 `<pre>` 的图注串、`--figures` 开关、以及 JSON 两种列
 
 - 命令清单只留两处：`books/README.md`（使用）与 `testplan.md` §1（验证）；
   `folder.md` §4、`plan.md` 不再抄一份。
-- 格式约定只在 `testplan.md` §3；`style-guide.md` 末尾的复制块删掉并改为引用。
-- 跨章引用只认 `详见第X章《标题》`（与 `crossrefs.py` 一致），`style-guide.md` 不再
+- 格式约定只在 `testplan.md` §3；`../manuals/how-to-write.md` 末尾的复制块删掉并改为引用。
+- 跨章引用只认 `详见第X章《标题》`（与 `crossrefs.py` 一致），`../manuals/how-to-write.md` 不再
   给"参见 / 参考 / 见"的变体。
-- 段落长度规则合并到 `style-guide.md` §3.1；终端调色板角色表只在 `DESIGN-TUI.md` §8；
-  图注句式只在 `style-guide.md` §14。
-- `style-guide.md` §7 明确区分章首引导块（引用块四行）与章末必备段落（H2 小节，
+- 段落长度规则合并到 `../manuals/how-to-write.md` §3.1；终端调色板角色表只在 `DESIGN-TUI.md` §8；
+  图注句式只在 `../manuals/how-to-write.md` §14。
+- `../manuals/how-to-write.md` §7 明确区分章首引导块（引用块四行）与章末必备段落（H2 小节，
   由 `book.toml [sections]` 给出）。
 
 - **ingest 不再吃掉正文**：`chapters.py` 只在目标文件为空、内容相同或 `--force` 时写入，否则跳过并报出行数；`actions.analyze` 在三阶段后跑一次 `content_volume.py`，把「内容体积：与基线一致 / N 项低于基线」写进同一份运行结果（后者判失败并给 `--update-baseline` 指引）。（rf-21）

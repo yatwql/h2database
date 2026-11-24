@@ -3,7 +3,7 @@
 延伸思考 / chapter exercises audit (v5.6 / U17).
 
 Verifies every chapter ends with a `## N.X 延伸思考` sub-section that meets
-style-guide §12 minimums:
+how-to-write §12 minimums:
 
   R1. The section exists once per chapter (or once per chapter-pair for files
       that combine two chapters such as `ch1-2-architecture.md`).
@@ -300,7 +300,7 @@ def render_report(reports: list[dict], total_floor: int) -> int:
     chapters_pass = 0
 
     print('=' * 72)
-    print(f'章末延伸思考审计 (style-guide §12)  阈值：每章 ≥ {PER_CHAPTER_FLOOR} 题，'
+    print(f'章末延伸思考审计 (how-to-write §12)  阈值：每章 ≥ {PER_CHAPTER_FLOOR} 题，'
           f'全书 ≥ {total_floor} 题')
     print('=' * 72)
 

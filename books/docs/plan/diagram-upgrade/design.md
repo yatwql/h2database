@@ -267,7 +267,7 @@
 | 渲染链与门禁职责 | `technical.md` §4.4（渲染）、§4.5（门禁） |
 | 新增配置键 `[paths] diagrams` | `technical.md` §3.2（路径与阈值归属） |
 | 判据与门禁级别 | `testplan.md`（只说性质，不引用键名） |
-| 图注体例 | `style-guide.md` §14 |
+| 图注体例 | `how-to-write.md` §14 |
 | 目录与资产归属 | `folder.md`（新增文档目录与资产目录两项） |
 | 图资产本体 | 手稿目录下的 `assets/diagrams/`（含命名说明 `README.md`） |
 

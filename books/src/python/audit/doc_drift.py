@@ -379,7 +379,7 @@ def check_numbering(files: list[str] | None = None) -> list[dict]:
 # the content standard travels between projects, so it may not name this project's
 # scripts, configuration files or gate tables; only its writing-style twin is fair
 STANDARD_DOC = 'content-standard.md'
-STANDARD_ALLOWED_REF = 'style-guide'
+STANDARD_ALLOWED_REF = 'how-to-write'
 PROJECT_REF_RE = re.compile(r'`([\w-]+\.(?:py|toml|json|yml))`|\b([\w-]+)\.md\b')
 
 

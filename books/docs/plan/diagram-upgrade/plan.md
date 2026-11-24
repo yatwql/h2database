@@ -164,7 +164,7 @@
 - 不新建绘图工具或模板工程；作图在仓库外完成，只交 SVG。
 - 不为图片新建一套图号体系，也不允许一图多用（图号与文件名一一对应）。
 - 不引入新的体积阈值键；用既有 `pdf_max_mb` / `epub_max_mb` 与人工核查。
-- 不在本项同时改图注体例（`style-guide.md` §14 不动）。
+- 不在本项同时改图注体例（`how-to-write.md` §14 不动）。
 - 不改 ASCII 图的既有判据（宽度、围栏配对照旧）。
 
 ## 9. 文档同步清单
@@ -173,8 +173,8 @@
 | --- | --- |
 | `technical.md` §4.4 / §4.5 | 渲染链新增图片分支与内联；门禁新增图片类判据 |
 | `technical.md` §3.2 | 新增 `[paths] diagrams`，并在同一变更里补 `style_schema` 的键声明 |
-| `testplan.md` | 图注与图源的判据（性质层面）改成形态无关的说法；体例本身仍归 `style-guide.md` §14 |
-| `style-guide.md` §14 | 补充图片型图源的图注与 alt 写法 |
+| `testplan.md` | 图注与图源的判据（性质层面）改成形态无关的说法；体例本身仍归 `how-to-write.md` §14 |
+| `how-to-write.md` §14 | 补充图片型图源的图注与 alt 写法 |
 | `folder.md` | 新增 `docs/plan/diagram-upgrade/` 与图目录两项 |
 | `plan.md` | `plan-6` 完成后移除，摘要进 `changelog.md` |
 
@@ -211,5 +211,5 @@
 - **失败登记**：实现中发现的真实缺陷按 `review-findings.md` 编号登记；本计划只留“做完没做完”。
 - **完成时**：删 `plan.md` 的 `plan-6` 段，在 `changelog.md` 写一条完成为止；两份 plan 文件留作设计与判据的依据，不归档。
 - **不铺开的判决**：阶段 5 完成后若三项增量不可接受（例如 PDF 页数或 HTML 体积超过人工阀值），
-  就把试点图退回 ASCII，并把结论写成“哪些图适合 ASCII”写回 `style-guide.md` §14；
+  就把试点图退回 ASCII，并把结论写成“哪些图适合 ASCII”写回 `how-to-write.md` §14；
   它比“不了了之”更有价值。

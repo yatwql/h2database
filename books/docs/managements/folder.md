@@ -60,7 +60,8 @@ books/
     <book>-print.pdf         # 印刷版（按需）
   docs/
     managements/             # 全部管理与规范文档（见 §2）
-    manuals/                 # 使用手册（scripts-and-reference.md：全部脚本清单）
+    manuals/                 # 使用手册：任务流水线、CLI/TUI/Web、配置、新建书、写作手法、
+                             #   脚本与参数清单、FAQ（每份声明自己的「维度」）
     plan/                    # 单项迭代的设计与计划（<主题>/design.md 与 <主题>/plan.md，见 §2）
 ```
 
@@ -78,7 +79,6 @@ books/docs/managements/
   folder.md                  # 本文件：目录结构
   technical.md               # 工具链架构约束（可机检部分由 check_architecture 守卫）
   content-standard.md        # 内容标准（跨项目复用）
-  style-guide.md             # 写作规则与检查机制（取值在 data/config/style.json）
   DESIGN.md                  # 设计契约总纲（三处呈现面共有规则）
   DESIGN-TUI.md              # 终端交互契约
   DESIGN-WEB.md              # 网页控制台契约

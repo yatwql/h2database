@@ -3,7 +3,7 @@
 Figure caption audit.
 
 Validates `**图 X-Y: Title**` lines against the verb-object structure spec
-in `books/docs/managements/style-guide.md` §14.
+in `books/docs/manuals/how-to-write.md` §14.
 
 Three flavours of violation are reported:
 
@@ -175,7 +175,7 @@ def render_report(violations: Iterable[Violation], threshold: dict) -> int:
 
     total = sum(counts.values())
     print('=' * 72)
-    print(f'图注质量审计 (style-guide §14)  总违规：{total}  阈值：'
+    print(f'图注质量审计 (how-to-write §14)  总违规：{total}  阈值：'
           f'min={threshold["min_chars"]}  max={threshold["max_chars"]}')
     print('=' * 72)
 
