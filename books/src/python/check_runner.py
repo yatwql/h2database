@@ -35,7 +35,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from lib import _config, _errors, _fsutil, _log
+from lib import _config, _errors, _fsutil, _log, status
 
 PY = sys.executable
 PY_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -398,7 +398,13 @@ def _roll_up(now: datetime.datetime, summary: dict, log_path: str,
 
 def _prune_logs(logs: str, now: datetime.datetime) -> None:
     """Delete run reports and rollups older than the configured retention."""
-    days = int(_config.THRESHOLDS.get('log_retention_days', 14) or 14)
+    # the same policy `_log` rotates its own file with: one retention, not two
+    days = 14
+    try:
+        policy = _config.BASE_POLICY.get('logging') or {}
+        days = int(policy.get('retention_days') or 14)
+    except (_config.ConfigError, TypeError, ValueError):
+        pass
     cutoff = (now - datetime.timedelta(days=days)).date()
     try:
         names = os.listdir(logs)
@@ -486,6 +492,9 @@ def run(mode: str, *, archive: bool = True, as_json: bool = False,
         report = ''
     LOG.info('check %s -> %s (%.2fs, %d steps)',
              key, 'pass' if not failed else 'fail', elapsed, len(results))
+    for line in status.render(not failed, f'check {key}（{label}）', elapsed,
+                              results[-1]['code'] if results else 0).splitlines():
+        LOG.info('  %s', line)
     if as_json:
         print(json.dumps(summary, ensure_ascii=False, indent=2))
     else:

@@ -18,7 +18,7 @@ import unicodedata
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core import actions, menu, settings
-from lib import _config, _errors, _fsutil
+from lib import _config, _errors, _fsutil, status
 
 from app import keys
 
@@ -271,11 +271,8 @@ def run_entry(action: str, label: str, force: bool = False) -> str:
     sys.stdout.write(_c(f'⠿ 正在执行 {label}（{action}）…', PALETTE['hint']) + '\n')
     sys.stdout.flush()
     outcome = menu.run_report(action, label, force=force)
-    verdict = (_c('✓ 完成', PALETTE['value_ok']) if outcome.ok
-               else _c('✗ 失败', PALETTE['error']))
-    mode = '  --force' if force else ''
-    summary = (f'{verdict}  {outcome.label}{mode}  用时 {outcome.elapsed:.1f}s  '
-               f'退出码 {outcome.code}  输出 {outcome.output_lines} 行')
+    summary = status.render(outcome.ok, outcome.label + ('  --force' if force else ''),
+                            outcome.elapsed, outcome.code)
     return (f'\n{outcome.tail}\n{summary}\n'
             f'{_c("详情见 " + menu.log_location() + "/", PALETTE["hint"])}')
 
