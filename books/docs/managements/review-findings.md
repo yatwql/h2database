@@ -4,7 +4,7 @@
 > 版本：v0.1-dev
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
-> **编号源**：`rf-next = 69`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-68，
+> **编号源**：`rf-next = 70`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-69，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -55,6 +55,7 @@
 | rf-62 | 五个辅助函数只有用例在调用、生产代码里没有调用点（`pdf_metrics.calibrate`、`_mdutil.figure_caption`、`_log.log_file`、`renumber.rewrite_allowed`、`test_redundancy._json_metric`） | **已解决（逐项处置）**：`log_file()` 接到 `_log.describe()` 的 `file` 字段（生产有调用点）；`calibrate()` 与 `figure_caption()` 保留为公共 API（标定流程与图注解析的入口，CLI 暂未接线，docstring 写明用途）；`rewrite_allowed` 与 `_json_metric` 已不存在（早前删除）；`TooLarge` 零引用已删 |
 | rf-63 | 覆盖率统计只看「行」：仍剩约 1,240 个半分支，错误与缺省路径占比最高 | **进行中**：已按缺口大小推进——`lib/status.py` **85.4% → 88%**（缺失产物的时间戳/体积/页数降级、非 PDF 与缺 pypdf、坏 PDF）、`ingest/chapters.py` 88%；`verify_pdf` 89%、`actions` 95% 在 rf-61 内完成。**剩余**：`structure.py` 84.6% 与 `doc_drift.py` 85.8% 的规则分支、`tui.py` 86% 的渲染分支。判据：半分支下降且门槛 90 不破 |
 | rf-64 | `verify_pdf` 的字体检查与 `actions._invoke` 的流/心跳混在大函数里，只能整体跑 | **待做**：像 `epub_source` 那样抽成小函数或注入 `runner`/`clock`；判据：抽出的函数单独可测，`verify_pdf`/`actions` 分支覆盖 ≥88% |
+| rf-69 | `structure.py` 的 CSS 钩子检查与构建脚本检查整段写在脚本里，且路径指向已搬迁的 `to_html.py` 与`audit/glossary.py`——样式表早已拆到 `html_shell.py`、构建脚本在 `manuscript/`，检查一直走「跳过/未找到」的静默分支 | **已解决**：抽成 `css_style_missing()` 与 `builder_script_problems()`（后者区分「缺脚本=告警」与「脚本不解析=失败」），路径改为 `render/to_html.py` + `render/html_shell.py` 与 `manuscript/*.py`；补 4 条用例。修复后 9 个 CSS 钩子**全部命中**（此前一直被跳过），`structure.py` 84.6% → **89%** |
 | rf-65 | 依赖真环境的探测（字体命令、浏览器、pandoc）只有真机才跑得到 | **待做**：把命令/目录/时钟做成参数（`fonts` 已是这个形状），环境失败路径用替身覆盖；判据：每个探测模块含一条「命令缺失/目录不可写」用例 |
 | rf-66 | 少数辅助函数只有用例在调用，形成「假覆盖」 | **待做**：每发现一处按「接线 / 删除 / 保留为公共 API（docstring 写明）」三选一；rf-62 已按此处置完一批 |
 | rf-67 | 单文件覆盖率地板停在 84，离质量线还有距离 | **待做**：先把 `actions`/`structure`/`verify_pdf` 拉到 ≥88%，再把地板 84 → 88（分两批抬，避免一次抬红） |

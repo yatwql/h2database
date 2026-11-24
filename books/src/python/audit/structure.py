@@ -324,48 +324,78 @@ try:
 except FileNotFoundError:
     check(False, 'Merged doc not found')
 
+# ── CSS / builder checks, extracted so they can be judged without the script ──
+# The stylesheet lives inside to_html.py; these are the hooks the renderer relies on.
+CSS_HINTS = {
+    'h1 decorator': 'h1::before',
+    'fig-caption style': 'fig-caption',
+    'zebra table': 'nth-child(even)',
+    'copy button': 'copy-btn',
+    'line numbers': 'line-nums',
+    'breadcrumb': 'breadcrumb',
+    'chapter nav': 'chapter-nav',
+    'print styles': '@media print',
+    'print page-break': 'page-break-inside',
+}
+
+
+def css_style_missing(source: str) -> list[str]:
+    """Hooks named in CSS_HINTS that the renderer source does not contain."""
+    return [f'{name} ({hint})' for name, hint in CSS_HINTS.items() if hint not in source]
+
+
+def builder_script_problems(paths: dict[str, str]) -> tuple[list[str], list[str]]:
+    """(unparsable, missing) builder scripts, as messages the report can print.
+
+    A missing script is a warning — a book may hold its glossary elsewhere — while a
+    script that does not parse is a defect, because the pipeline would run it.
+    """
+    broken: list[str] = []
+    missing: list[str] = []
+    for name, path in paths.items():
+        if not os.path.exists(path):
+            missing.append(f'{name} not found')
+            continue
+        try:
+            ast.parse(_fsutil.read_text_raw(path), filename=path)
+        except SyntaxError as exc:
+            broken.append(f'{name} — syntax error: {exc}')
+    return broken, missing
+
+
 # 8. CSS style checks (non-blocking, warning only)
 section('p0', 'CSS Style Checks')
 try:
-    gen_content = _fsutil.read_text_raw(os.path.join(script_dir, 'to_html.py'))
-    css_hints = {
-        'h1 decorator': 'h1::before',
-        'fig-caption style': 'fig-caption',
-        'zebra table': 'nth-child(even)',
-        'copy button': 'copy-btn',
-        'line numbers': 'line-nums',
-        'breadcrumb': 'breadcrumb',
-        'chapter nav': 'chapter-nav',
-        'print styles': '@media print',
-        'print page-break': 'page-break-inside',
-    }
-    all_found = True
-    for name, hint in css_hints.items():
-        if hint not in gen_content:
-            print(f'  [WARN]  Missing: {name} ({hint})')
-            all_found = False
-    if all_found:
-        print(f'  All {len(css_hints)} CSS features present')
-    check(all_found, f'CSS style integrity: {len(css_hints)} checks')
+    # the stylesheet lives beside the renderer since html_shell.py was split out, so
+    # both sources are scanned: a hook may be declared in either
+    render_dir = os.path.join(os.path.dirname(script_dir), 'render')
+    gen_content = '\n'.join(
+        _fsutil.read_text_raw(os.path.join(render_dir, name))
+        for name in ('to_html.py', 'html_shell.py'))
+    missing = css_style_missing(gen_content)
+    for name in missing:
+        print(f'  [WARN]  Missing: {name}')
+    if not missing:
+        print(f'  All {len(CSS_HINTS)} CSS features present')
+    check(not missing, f'CSS style integrity: {len(CSS_HINTS)} checks')
 except FileNotFoundError:
     check(True, 'CSS check skipped (to_html.py not found)')
 
 # 9. Check: glossary builder scripts exist
 section('p1', 'Glossary Builder Checks')
-glossary_script = os.path.join(script_dir, 'glossary.py')
-index_script = os.path.join(script_dir, 'index.py')
-scripts_ok = True
-for s_name, s_path in [('glossary.py', glossary_script), ('index.py', index_script)]:
-    if os.path.exists(s_path):
-        # Verify it can at least import without error
-        try:
-            ast.parse(_fsutil.read_text_raw(s_path), filename=s_path)
-            print(f'  OK: {s_name} — syntax valid')
-        except SyntaxError as e:
-            print(f'  FAIL: {s_name} — syntax error: {e}')
-            scripts_ok = False
-    else:
-        print(f'  [WARN]  {s_name} not found')
+broken, missing_scripts = builder_script_problems({
+    'glossary.py': os.path.join(src_dir, 'glossary.py') if False else
+                   os.path.join(os.path.dirname(script_dir), 'manuscript', 'glossary.py'),
+    'index.py': os.path.join(os.path.dirname(script_dir), 'manuscript', 'index.py'),
+})
+for problem in broken:
+    print(f'  FAIL: {problem}')
+for problem in missing_scripts:
+    print(f'  [WARN]  {problem}')
+scripts_ok = not broken
+for name in ('glossary.py', 'index.py'):
+    if not any(name in problem for problem in broken):
+        print(f'  OK: {name} — syntax valid')
 check(scripts_ok, 'Glossary builder scripts available')
 
 # 11. Index integrity check

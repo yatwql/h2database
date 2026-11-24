@@ -74,3 +74,35 @@ class StructureBranchesTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ExtractedChecksTest(unittest.TestCase):
+    """The CSS-hook and builder-script checks, judged without running the script."""
+
+    def setUp(self):
+        self.structure = __import__('audit.structure', fromlist=['css_style_missing'])
+
+    def test_every_hook_present_reports_nothing(self):
+        source = '\n'.join(self.structure.CSS_HINTS.values())
+        self.assertEqual(self.structure.css_style_missing(source), [])
+
+    def test_a_missing_hook_is_named_with_its_selector(self):
+        missing = self.structure.css_style_missing('h1::before')
+        self.assertTrue(missing)
+        self.assertIn('print styles (@media print)', missing)
+
+    def test_a_broken_builder_script_is_reported(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, 'glossary.py')
+            with open(path, 'w', encoding='utf-8') as handle:
+                handle.write('def broken(:\n')
+            broken, missing = self.structure.builder_script_problems({'glossary.py': path})
+        self.assertEqual(missing, [])
+        self.assertIn('syntax error', broken[0])
+
+    def test_a_missing_builder_script_is_only_a_warning(self):
+        with tempfile.TemporaryDirectory() as directory:
+            broken, missing = self.structure.builder_script_problems(
+                {'glossary.py': os.path.join(directory, 'gone.py')})
+        self.assertEqual(broken, [])
+        self.assertEqual(missing, ['glossary.py not found'])

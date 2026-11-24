@@ -13,6 +13,11 @@
 
 ### 变更
 
+- **`structure.py` 的 CSS/构建脚本检查一直静默跳过（rf-69）**：样式表拆到 `html_shell.py`、构建脚本移到
+  `manuscript/` 后，检查仍读 `audit/to_html.py` 与 `audit/glossary.py`，于是常年走「跳过」「未找到」分支。
+  现在两个检查抽成 `css_style_missing()` 与 `builder_script_problems()`，路径指向真实位置并同时扫
+  `to_html.py`+`html_shell.py`；修复后 **9 个 CSS 钩子全部命中**。`structure.py` 84.6% → 89%。
+
 - **rf-63 第一步**：`lib/status.py` **85.4% → 88%**——缺失产物的时间戳/体积/页数各降级为空或占位、
   非 PDF 不回落到阅读器、缺 `pypdf` 与坏 PDF 都不抛异常、三页 PDF 报「3 页」。
 
