@@ -72,14 +72,16 @@ class MakeDriverTest(unittest.TestCase):
         self.assertGreaterEqual(elapsed, 0.0)
         self.assertIn('FAIL demo', buffer.getvalue())
 
-    def test_run_step_success_prints_nothing(self):
+    def test_a_started_step_announces_the_phase_and_nothing_else_on_success(self):
+        # the start line is the only output a successful step produces: it tells the
+        # operator which phase is running while the child may still be silent
         step = ('demo', 'render/to_html.py', (), 'build')
         with mock.patch.object(self.make, '_step_process', return_value=completed(0)):
             buffer = io.StringIO()
             with redirect_stdout(buffer):
                 _name, code, _elapsed = self.make.run_step(step)
         self.assertEqual(code, 0)
-        self.assertEqual(buffer.getvalue(), '')
+        self.assertEqual(buffer.getvalue().strip(), '.. demo')
 
     def test_doctor_reports_missing_tools(self):
         # doctor probes optional tools through find_spec and shutil.which, so both

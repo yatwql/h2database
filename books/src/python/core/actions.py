@@ -14,10 +14,16 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import json
 import subprocess
+import threading
+import time
 
 from lib import _config, _llm, _log
 
 PY_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# How often a silent child reports that it is still working. Ten seconds is short
+# enough to feel alive and long enough not to flood a two-minute render.
+HEARTBEAT_S = 10.0
 
 
 def repo_root() -> str:
@@ -93,12 +99,33 @@ def _invoke(command: list[str], on_line=None) -> tuple[int, str]:
     stream = process.stdout
     if stream is None:  # pragma: no cover - PIPE was requested just above
         return process.wait(), ''
-    for line in stream:
-        chunks.append(line)
-        # a UI callback must never break the run it is reporting on
-        with contextlib.suppress(Exception):
-            on_line(line.rstrip())
-    return process.wait(), ''.join(chunks)
+    # A step can be silent for a minute (a render, a ghostscript pass). A heartbeat
+    # line every ten seconds keeps the operator oriented while the child works.
+    finished = threading.Event()
+    started = time.perf_counter()
+
+    def heartbeat() -> None:
+        while not finished.wait(HEARTBEAT_S):
+            with contextlib.suppress(Exception):
+                on_line(f'… 已用 {_clock(time.perf_counter() - started)}，仍在执行')
+
+    beater = threading.Thread(target=heartbeat, daemon=True)
+    beater.start()
+    try:
+        for line in stream:
+            chunks.append(line)
+            # a UI callback must never break the run it is reporting on
+            with contextlib.suppress(Exception):
+                on_line(line.rstrip())
+        return process.wait(), ''.join(chunks)
+    finally:
+        finished.set()
+
+
+def _clock(seconds: float) -> str:
+    """`m:ss` for the progress lines."""
+    total = int(seconds)
+    return f'{total // 60}:{total % 60:02d}'
 
 
 def _run(script: str, *args: str, on_line=None) -> tuple[int, str]:
@@ -340,13 +367,15 @@ def _dispatch(action: str, **kwargs) -> tuple[int, str]:
         code, text = analyze(use_llm=action == 'analyze-llm' or bool(kwargs.get('use_llm')),
                              refresh=action == 'analyze-refresh' or bool(kwargs.get('refresh')),
                              force=bool(kwargs.get('force')))
-        LOG.info('action %s done rc=%s (%d chars)', action, code, len(text))
+        LOG.info('action %s done rc=%s (%d chars, pid=%d)', action, code, len(text),
+                 os.getpid())
         return code, text
     handler = DISPATCH.get(action)
     if handler is None:
         LOG.warning('unknown action %r', action)
         return 2, f'error: unknown action {action!r}; known: {", ".join(sorted(DISPATCH))}\n'
-    LOG.info('action %s start', action)
+    LOG.info('action %s start (pid=%d, parent=%d)', action, os.getpid(), os.getppid())
     code, text = handler()
-    LOG.info('action %s done rc=%s (%d chars)', action, code, len(text))
+    LOG.info('action %s done rc=%s (%d chars, pid=%d)', action, code, len(text),
+             os.getpid())
     return code, text

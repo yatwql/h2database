@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -283,6 +284,24 @@ class DeliverAllTest(unittest.TestCase):
         self.assertEqual(calls, ['build', 'deliver'])
         run.assert_not_called()
         self.assertIn('deliver failed', text)
+
+
+class HeartbeatTest(unittest.TestCase):
+    """A silent child still reports that it is working."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.actions = _fixture.load_module(self.root, 'actions')
+
+    def test_a_quiet_child_gets_a_heartbeat_line(self):
+        lines = []
+        command = [sys.executable, '-c', 'import time; time.sleep(0.4)']
+        with mock.patch.object(self.actions, 'HEARTBEAT_S', 0.05):
+            code, _text = self.actions._invoke(command, on_line=lines.append)
+        self.assertEqual(code, 0)
+        self.assertTrue(any('仍在执行' in line for line in lines), lines)
 
 if __name__ == '__main__':
     unittest.main()

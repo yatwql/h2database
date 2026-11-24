@@ -15,6 +15,7 @@ import argparse
 import os
 import re
 import sys
+import time
 import unicodedata
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -258,6 +259,12 @@ def configure(reader=input) -> str:
 
 
 
+def _duration(seconds: float) -> str:
+    """`m:ss` for the estimates and the progress stamps."""
+    total = int(seconds)
+    return f'{total // 60}:{total % 60:02d}'
+
+
 def confirm(question: str, reader=input) -> bool:
     """y/N prompt for actions worth a second look."""
     answer = (reader(f'{question} [y/N] ') or '').strip().lower()
@@ -281,16 +288,24 @@ def run_entry(action: str, label: str, force: bool = False) -> str:
             return _c(f'已取消，{rewritten or "产物"}未改动', PALETTE['hint'])
     progress = (f'⠿ 正在重建 {rewritten}（{label}）…' if rewritten
                 else f'⠿ 正在执行 {label}（{action}）…')
+    estimate = menu.estimate(action)
+    if estimate:
+        sys.stdout.write(_c(f'  预计 {_duration(estimate[0])}–{_duration(estimate[1])}'
+                            '（据最近几次同类运行；每步开始与每 10 秒会有进展）',
+                            PALETTE['hint']) + '\n')
     sys.stdout.write(_c(progress, PALETTE['hint']) + '\n')
     sys.stdout.flush()
     outcome = _run_with_progress(action, label, force)
     summary = status.render(outcome.ok, outcome.label + ('  --force' if force else ''),
                             outcome.elapsed, outcome.code)
+    spent = f'用时 {_duration(outcome.elapsed)}'
+    if estimate:
+        spent += f'（预计 {_duration(estimate[0])}–{_duration(estimate[1])}）'
     if not rewritten:
-        verdict = '已完成' if outcome.ok else f'失败（退出码 {outcome.code}）'
+        verdict = ('已完成' if outcome.ok else f'失败（退出码 {outcome.code}）') + f'，{spent}'
     else:
-        verdict = (f'已重建：{rewritten}' if outcome.ok
-                   else f'失败（退出码 {outcome.code}）：{rewritten} 未更新')
+        verdict = ((f'已重建：{rewritten}' if outcome.ok
+                    else f'失败（退出码 {outcome.code}）：{rewritten} 未更新') + f'，{spent}')
     return (f'\n{outcome.tail}\n{verdict}\n{summary}\n'
             f'{_c("详情见 " + menu.log_location() + "/", PALETTE["hint"])}')
 
@@ -315,6 +330,7 @@ def _run_with_progress(action: str, label: str, force: bool) -> menu.Outcome:
     """
     seen: set[str] = set()
     last = ['']
+    began = [time.perf_counter()]
 
     def show(line: str) -> None:
         text = _stage_text(line)
@@ -322,7 +338,8 @@ def _run_with_progress(action: str, label: str, force: bool) -> menu.Outcome:
             return
         seen.add(text)
         last[0] = text
-        sys.stdout.write(f'   {_c(text[:100], PALETTE["hint"])}\n')
+        stamp = _duration(time.perf_counter() - began[0])
+        sys.stdout.write(f'   [{stamp:>5}] {_c(text[:100], PALETTE["hint"])}\n')
         sys.stdout.flush()
 
     return menu.run_report(action, label, force=force, on_progress=show)

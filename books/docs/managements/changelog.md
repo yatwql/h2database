@@ -13,6 +13,13 @@
 
 ### 变更
 
+- **预估收紧、并发日志可归因**：动作预估按实测重设（build 2–15s、deliver 60–150s、
+  deliver-all 100–240s、print 30–90s，实测全链 135s），有历史时按 `mode` 中位数收敛，结果行
+  追加「用时 m:ss（预计 a–b）」；`core/menu` 读历史改走新增的 `lib/_perfhistory.py`（`core`
+  不得导入 `audit`，架构门禁据此通过）。日志里 `action … start/done` 与 `make … start` 都带
+  `pid`/`parent`，两个进程同时写同一个日志时可按 pid 切开（本次交付窗口内混入的两次 `make check`
+  就是这样定位的）。`make.py` 每个步骤开始即打印 `.. <step>`，长时间静默的阶段也有进展。
+
 - **按快捷键后的提示语点名产物**：确认、进度与结果三行不再说"重建产物"，而是列出将被写的
   文件类型与位置——`deliver` 写 EPUB 与标准版 PDF（`dist/<book>.epub`、`.pdf`），`print` 写
   `dist/<book>-print.pdf`，`build` 写 `.md` 与 `.html`，`deliver-all` 列全五份，`analyze*`

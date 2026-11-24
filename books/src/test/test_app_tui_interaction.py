@@ -419,5 +419,30 @@ class TuiInteractionTest(unittest.TestCase):
             text = self.tui.run_entry('deliver', 'EPUB + PDF')
         self.assertIn('未更新', text)
 
+def menu_estimate(action: str) -> tuple[int, int]:
+    """The estimate as the menu module computes it (no book needed for defaults)."""
+    module = importlib.import_module('core.menu')
+    return module.estimate(action) or (0, 0)
+
+
+
+    def test_the_estimate_is_a_short_range_not_a_guess(self):
+        # measured: build ~0.3 s, deliver ~92 s, print ~43 s, all-in ~135 s
+        self.assertLessEqual(menu_estimate('build')[1], 30)
+        self.assertLessEqual(menu_estimate('print')[1], 120)
+        self.assertLessEqual(menu_estimate('deliver-all')[1], 300)
+        for action in ('build', 'deliver', 'print', 'deliver-all'):
+            low, high = menu_estimate(action)
+            self.assertLess(low, high)
+
+    def test_the_outcome_compares_the_actual_time_with_the_estimate(self):
+        outcome = self.menu.Outcome(action='print', label='印刷版', code=0,
+                                    output_lines=1, tail='done', elapsed=43.0)
+        buffer = io.StringIO()
+        with mock.patch.object(self.tui.menu, 'run_report', return_value=outcome), \
+                redirect_stdout(buffer):
+            text = self.tui.run_entry('print', '印刷版 PDF')
+        self.assertIn('用时 0:43', text)
+        self.assertIn('预计', text)
 if __name__ == '__main__':
     unittest.main()

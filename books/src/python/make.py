@@ -266,6 +266,9 @@ def run_step(step: Step) -> tuple[str, int, float]:
     else:
         cmd = [PY, os.path.join(TOOLS_DIR, script), *extra]
     LOG.debug('run step %s: %s', name, ' '.join(cmd))
+    # a streamed start line is the difference between "nothing is happening" and
+    # "to_pdf is running": the step's own output may only come at the end
+    print(f'  .. {name}', flush=True)
     # A gate that deadlocks must fail the run, not hang it: without a bound the
     # whole command waits forever and no step ever reports.
     limit = step_timeout(name)
@@ -558,7 +561,7 @@ def _run_steps(args) -> int:
 
     failures: list[str] = []
     total = 0.0
-    LOG.info('make %s start (%d step(s))', args.command, len(steps))
+    LOG.info('make %s start (%d step(s), pid=%d)', args.command, len(steps), os.getpid())
     print(f'=== make {args.command}: {len(steps)} step(s) ===')
     for step in steps:
         name, code, elapsed = run_step(step)

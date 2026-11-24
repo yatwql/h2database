@@ -27,7 +27,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _errors, _fsutil
+from lib import _config, _errors, _fsutil, _perfhistory
 
 HISTORY = os.path.join(_config.BOOK_ROOT, 'logs', 'perf-history.jsonl')
 # The reviewed floor lives with the other baselines and is versioned; the rolling
@@ -99,22 +99,8 @@ def record(summary: dict) -> str:
 
 
 def history(window: int = DEFAULT_WINDOW) -> list[dict]:
-    if not os.path.isfile(HISTORY):
-        return []
-    runs = []
-    try:
-        with open(HISTORY, encoding='utf-8') as fh:
-            for line in fh:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    runs.append(json.loads(line))
-                except json.JSONDecodeError:
-                    continue
-    except OSError:
-        return []
-    return runs[-window:]
+    """Newest runs from the rolling window (format owned by `lib._perfhistory`)."""
+    return _perfhistory.history(window, HISTORY)
 
 
 def _medians(runs: list[dict]) -> dict:
