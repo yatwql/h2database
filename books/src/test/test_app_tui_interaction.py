@@ -53,7 +53,7 @@ class TuiInteractionTest(unittest.TestCase):
     # -- two-level structure ---------------------------------------------
     def test_the_main_screen_carries_the_frequent_actions(self):
         keys = [row[0] for row in self.tui.screen_rows('main')]
-        self.assertEqual(keys, ['1', '2', '3', '4', '5', '6', '7', '8', '0'])
+        self.assertEqual(keys, ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'])
         self.assertIn('@open:books', [row[1] for row in self.tui.screen_rows('main')])
 
     def test_the_main_screen_runs_actions_without_a_category(self):
@@ -97,8 +97,8 @@ class TuiInteractionTest(unittest.TestCase):
         order = [name for name in ('源码成书', '书籍管理', '配置与管理') if name in text]
         self.assertEqual(order, ['源码成书', '书籍管理', '配置与管理'], text)
         self.assertLess(text.index('源码成书'), text.index('1/A'))
-        self.assertLess(text.index('书籍管理'), text.index('5/S'))
-        self.assertLess(text.index('配置与管理'), text.index('7/T'))
+        self.assertLess(text.index('书籍管理'), text.index('6/S'))
+        self.assertLess(text.index('配置与管理'), text.index('8/T'))
 
     def test_every_main_row_sits_inside_a_group_except_exit(self):
         groups = self.tui.menu.groups_for('main')
@@ -117,12 +117,12 @@ class TuiInteractionTest(unittest.TestCase):
         self.assertFalse(any(line.strip() == '❯' for line in tail), tail)
 
     def test_escape_at_a_sub_level_goes_back_and_at_main_quits(self):
-        code, out = self.press('8', self.keys.KEY_ESC, 'q')
+        code, out = self.press('9', self.keys.KEY_ESC, 'q')
         self.assertEqual(code, 0)
         self.assertIn('主菜单', out)
 
     def test_q_quits_from_a_sub_level(self):
-        code, _out = self.press('5', 'q')
+        code, _out = self.press('6', 'q')
         self.assertEqual(code, 0)
 
     def test_the_cursor_starts_on_the_everyday_action(self):
@@ -130,19 +130,19 @@ class TuiInteractionTest(unittest.TestCase):
                          self.menu.index_of('main', '3'))
 
     def test_enter_inside_a_category_runs_its_default_entry(self):
-        code, out = self.press('7', self.keys.KEY_ENTER, 'q')
+        code, out = self.press('8', self.keys.KEY_ENTER, 'q')
         self.assertEqual(code, 0)
         self.assertEqual(self.calls, ['check'])
         self.assertIn('正在执行 全部质量门禁', out)
 
     def test_digit_key_runs_immediately_without_enter(self):
-        self.press('7', '1')
+        self.press('8', '1')
         self.assertEqual(self.calls, ['check'])
 
     def test_the_config_screen_offers_the_fact_refresh(self):
         keys = [row[0] for row in self.tui.screen_rows('config')]
         self.assertEqual(keys, ['1', '2', '3', '4', '5', '6', '0'])
-        self.press('8', '6')
+        self.press('9', '6')
         self.assertEqual(self.calls, ['analyze-refresh'])
 
     def test_the_llm_ingest_asks_before_overwriting_written_prose(self):
@@ -210,7 +210,7 @@ class TuiInteractionTest(unittest.TestCase):
 
     # -- reporting --------------------------------------------------------
     def test_each_run_reports_timing_exit_code_and_output_tail(self):
-        _code, out = self.press('7', '1')
+        _code, out = self.press('8', '1')
         self.assertIn('输出-check-第二行', out)
         self.assertIn('退出码 0', out)
         self.assertIn('用时', out)
@@ -325,20 +325,22 @@ class TuiInteractionTest(unittest.TestCase):
     def test_letter_shortcuts_alias_the_digits(self):
         self.assertEqual(self.tui.menu.resolve('main', 'A'), '1')
         self.assertEqual(self.tui.menu.resolve('main', 'l'), '2')
-        self.assertEqual(self.tui.menu.resolve('main', 's'), '5')
-        self.assertEqual(self.tui.menu.resolve('main', 'N'), '6')
-        self.assertEqual(self.tui.menu.resolve('main', 't'), '7')
-        self.assertEqual(self.tui.menu.resolve('main', 'c'), '8')
+        self.assertEqual(self.tui.menu.resolve('main', 's'), '6')
+        self.assertEqual(self.tui.menu.resolve('main', 'N'), '7')
+        self.assertEqual(self.tui.menu.resolve('main', 't'), '8')
+        self.assertEqual(self.tui.menu.resolve('main', 'c'), '9')
         self.assertEqual(self.tui.menu.resolve('config', 's'), 's')   # only main has letters
 
     def test_a_row_shows_its_letter_beside_the_digit(self):
         self.assertEqual(self.tui.menu.display_key('main', '1'), '1/A')
         self.assertEqual(self.tui.menu.display_key('main', '2'), '2/L')
-        self.assertEqual(self.tui.menu.display_key('main', '6'), '6/N')
-        self.assertEqual(self.tui.menu.display_key('main', '8'), '8/C')
+        self.assertEqual(self.tui.menu.display_key('main', '7'), '7/N')
+        self.assertEqual(self.tui.menu.display_key('main', '4'), '4/E')
+        self.assertEqual(self.tui.menu.display_key('main', '5'), '5/P')
+        self.assertEqual(self.tui.menu.display_key('main', '9'), '9/C')
         self.assertEqual(self.tui.menu.display_key('main', '0'), '0/Q')
         self.assertIn('2/L', [self.tui.menu.display_key('main', key)
-                              for key in ('1', '2', '3', '4', '5', '6', '7', '8')])
+                              for key in ('1', '2', '3', '4', '5', '6', '7', '8', '9')])
 
     def test_the_letter_is_drawn_in_its_own_colour(self):
         with mock.patch.object(self.tui, 'USE_COLOR', True):

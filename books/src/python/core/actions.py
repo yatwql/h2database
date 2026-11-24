@@ -39,6 +39,7 @@ ACTIONS = {
     'check': '运行全部质量门禁',
     'test': '运行测试套件',
     'deliver': '构建 PDF 与 EPUB（按需）',
+    'print': '生成印刷版 PDF（章封面、点线目录、页眉页脚）',
     'llm-ask': '用配置的 provider 回答一个问题',
     'doctor': '依赖与环境自检',
     'settings': '查看可修改的配置项',
@@ -213,6 +214,11 @@ def deliver(on_line=None) -> tuple[int, str]:
     return _make('deliver', on_line=on_line)
 
 
+def print_edition(on_line=None) -> tuple[int, str]:
+    """The print-grade PDF: its own renderer, not a flag on the standard one."""
+    return _run('render/print_pdf.py', on_line=on_line)
+
+
 def estimate_line(prompt: str, scenario: str = 'summary') -> str:
     """What one call is expected to cost, shown before the call is made."""
     guess = _llm.estimate(prompt, scenario)
@@ -265,6 +271,7 @@ DISPATCH = {
     'check': check,
     'test': test,
     'deliver': deliver,
+    'print': print_edition,
 }
 
 # Actions whose renderer step takes switches; forwarded to `analyze` as-is.
@@ -294,13 +301,15 @@ def _dispatch_build(action: str, on_line) -> tuple[int, str]:
         return check(on_line)
     if action == 'test':
         return test(on_line)
+    if action == 'print':
+        return print_edition(on_line)
     return deliver(on_line)
 
 
 def _dispatch(action: str, **kwargs) -> tuple[int, str]:
     if action == 'llm-ask':
         return llm_ask(kwargs.get('prompt', ''), kwargs.get('scenario', 'summary'))
-    if action in ('build', 'check', 'test', 'deliver'):
+    if action in ('build', 'check', 'test', 'deliver', 'print'):
         return _dispatch_build(action, kwargs.get('on_progress'))
     if action in ANALYZE_ACTIONS:
         LOG.info('action %s start', action)

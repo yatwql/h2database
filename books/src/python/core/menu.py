@@ -32,8 +32,8 @@ NEW_BOOK_ACTION = '@new-book'
 # Letter shortcut -> the row key it stands for, per screen. Matching is
 # case-insensitive, so S and s both run "1 源码 → 手稿".
 LETTER_ALIASES: dict[str, dict[str, str]] = {
-    'main': {'a': '1', 'l': '2', 'b': '3', 'p': '4', 's': '5', 'n': '6',
-             't': '7', 'c': '8', 'q': '0'},
+    'main': {'a': '1', 'l': '2', 'b': '3', 'e': '4', 'p': '5', 's': '6',
+             'n': '7', 't': '8', 'c': '9', 'q': '0'},
 }
 
 
@@ -58,11 +58,12 @@ SCREENS: dict[str, list[tuple[str, str, str]]] = {
     'main': [('1', 'analyze', '源码 → 手稿'),
              ('2', 'analyze-llm', '源码 → 手稿（LLM 润色导读/小结）'),
              ('3', 'build', '手稿 → Markdown + HTML'),
-             ('4', 'deliver', 'PDF + EPUB（按需）'),
-             ('5', OPEN_PREFIX + BOOKS_SCREEN, '切换书籍'),
-             ('6', NEW_BOOK_ACTION, '新增书籍'),
-             ('7', OPEN_PREFIX + 'quality', '质量：门禁与测试'),
-             ('8', OPEN_PREFIX + 'config', '配置：状态、配置项与 LLM'),
+             ('4', 'deliver', 'EPUB + PDF（按需）'),
+             ('5', 'print', '印刷版 PDF（按需）'),
+             ('6', OPEN_PREFIX + BOOKS_SCREEN, '切换书籍'),
+             ('7', NEW_BOOK_ACTION, '新增书籍'),
+             ('8', OPEN_PREFIX + 'quality', '质量：门禁与测试'),
+             ('9', OPEN_PREFIX + 'config', '配置：状态、配置项与 LLM'),
              (BACK_KEY, QUIT_ACTION, '退出')],
     'quality': [('1', 'check', '全部质量门禁'),
                 ('2', 'test', '测试套件（快档）'),
@@ -81,9 +82,9 @@ SCREENS: dict[str, list[tuple[str, str, str]]] = {
 # order; rows keep the order they have in SCREENS. Rows not named here (退出)
 # render after the last group, so the exit key never sits inside a group.
 MENU_GROUPS: list[tuple[str, tuple[str, ...]]] = [
-    ('源码成书', ('1', '2', '3', '4')),
-    ('书籍管理', ('5', '6')),
-    ('配置与管理', ('7', '8')),
+    ('源码成书', ('1', '2', '3', '4', '5')),
+    ('书籍管理', ('6', '7')),
+    ('配置与管理', ('8', '9')),
 ]
 
 
@@ -112,7 +113,7 @@ TITLES: dict[str, str] = {
 LLM_ACTIONS = frozenset({'analyze-llm', 'llm-ask'})
 
 # Actions that rewrite many artifacts and take minutes.
-CONFIRM_ACTIONS = frozenset({'deliver'})
+CONFIRM_ACTIONS = frozenset({'deliver', 'print'})
 
 # Where the cursor starts on each screen: the everyday next step, not ingest.
 DEFAULT_ENTRY_KEY = {'main': '3', 'quality': '1', 'config': '1'}
