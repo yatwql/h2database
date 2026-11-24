@@ -232,18 +232,7 @@ def main(argv: list[str]) -> int:
     if not args:
         print(__doc__)
         return 2
-    if '--write-back' in argv:
-        index = argv.index('--write-back')
-        spec = parse_targets(argv[index + 1])
-        knob, value = next(iter(spec.items()))
-        config = _config.current().base_policy_path
-        write_back(config, knob, value)
-        print(f'  {knob} = {value} 已写入 {config}')
-        return 0
     if '--target' in argv:
-        if not args:
-            print('--target 需要一个 PDF')
-            return 2
         targets = parse_targets(argv[argv.index('--target') + 1])
         built = measure(args[0])
         print(describe(built))

@@ -13,6 +13,12 @@
 
 ### 变更
 
+- **覆盖率提升按台账推进（rf-54～rf-59）**：先把六条路径在 `review-findings.md` 立项（最薄的
+  `pdf_metrics` 55%、`fonts` 58%、`pdf_invariants` 61%、`epub_diff` 71%、`_log`/`menu` 78–80%、
+  最后是棘轮），再按优先级实施。第一项完成：新增 `test_render_pdf_metrics_units.py`（25 条）覆盖
+  解析/比较/夹逼/收敛/写回/CLI，`pdf_metrics.py` 分支覆盖 **55% → 87%**；同时删除 `main()` 里
+  一段不可达的重复 `--write-back` 分支。
+
 - **90 小时变更的债清理：三处超长函数归零**：`tui.header()`（60 行）拆成
   `_header_facts()`/`_header_titles()` 并删掉一行永不生效的 `replace(..., 0)`；
   `html_shell.apply_layout()`（72 行）把替换链抽成模块级 `_style_rules(**values)` 表，新增一个维度

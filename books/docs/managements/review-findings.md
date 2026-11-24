@@ -4,7 +4,7 @@
 > 版本：v0.1-dev
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
-> **编号源**：`rf-next = 54`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-53，
+> **编号源**：`rf-next = 60`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-59，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -43,6 +43,13 @@
 
 | # | 问题 | 修复方向 |
 | --- | --- | --- |
+
+| rf-54 | `render/pdf_metrics.py` 分支覆盖 55%：`Calibration`（夹逼与收敛）、`compare()`/`describe()` 的格式化、`parse_targets`/`compare_targets`/`calibrate`/`write_back` 与 CLI 分支基本只有成功路径 | **已解决**：新增 `test_render_pdf_metrics_units.py`（25 条）覆盖解析、比较与标志、夹逼的上下界与收敛、区间坍缩、报告文案、假 render 驱动的 `calibrate()`、`write_back` 写回与缺键拒绝、CLI 四条分支；顺手删掉 `main()` 里一整段不可达的重复 `--write-back` 分支。分支覆盖 **55% → 87%**（判据 ≥80%） |
+| rf-55 | `lib/fonts.py` 分支覆盖 58%：字体探测（`fc-list` 输出、目录扫描、.ttc 集合、缺失族回退）全靠真机环境，换机才暴露 | **优先 2**：把探测命令与目录做成可注入参数，用例喂「有 CJK / 无 CJK / 只有 .ttc / 命令缺失」四种环境；判据：分支覆盖 ≥ 80% |
+| rf-56 | `audit/pdf_invariants.py` 分支覆盖 61%：`_outside_column`、`_type3_count`、`_outline_shape` 的异常与空输入分支未测 | **优先 3**：用 pypdf 合成 PDF 覆盖越界文字、Type3 字体、空页/坏页、空大纲；判据：分支覆盖 ≥ 80% |
+| rf-57 | `audit/epub_diff.py` 分支覆盖 71%：EPUB 对比的增删改三类差异只在手工验证里跑过 | **优先 4**：用最小 zip 构造两份 EPUB（增/删/改各一章、清单变化），断言差异条目；判据：分支覆盖 ≥ 85% |
+| rf-58 | `lib/_log.py`（78%）与 `core/menu.py`（80%）的分支缺口集中在「无书/不可写目录」「无历史刷新/确认取消/别名解析」 | **优先 5**：`log_dir()` 三分支与 `setup()` 幂等；`estimate()` 有/无历史、`artifacts()` 缺省、`resolve()` 别名与未知键；判据：两文件分支覆盖 ≥ 85% |
+| rf-59 | 覆盖率棘轮停在 `coverage_fail_under: 88` 与单文件 84：覆盖率提升后若不抬门槛，额度会被后续改动占用 | **最后**：前三项落地后把全局门槛抬到 90、单文件下限抬到 86，并用 `cover --update-baseline` 重设 `data/baselines/coverage.json`；判据：`make.py cover` 在 90/86 下通过 |
 
 ### H3 — 持续监控：兼容残留
 
