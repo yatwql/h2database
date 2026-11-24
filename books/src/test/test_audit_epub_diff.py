@@ -84,5 +84,142 @@ class CheckTest(unittest.TestCase):
             self.assertEqual(check(epub, os.path.join(directory, 'missing.md')), 1)
 
 
+
+
+def build_with(directory: str, name: str, css: str = CSS, chapters: int = 1,
+               bitmaps: int = 0) -> str:
+    """An EPUB-shaped zip with optional bitmaps and a chosen stylesheet."""
+    path = os.path.join(directory, name)
+    with zipfile.ZipFile(path, 'w') as archive:
+        archive.writestr('EPUB/styles/stylesheet1.css', css)
+        for index in range(1, chapters + 1):
+            archive.writestr(f'EPUB/text/ch{index:03d}.xhtml',
+                             f'<html><body><p>{"字" * 10}</p></body></html>')
+        for index in range(bitmaps):
+            archive.writestr(f'EPUB/images/fig{index}.png', b'\x89PNG')
+    return path
+
+
+class MeasureBranchesTest(unittest.TestCase):
+    def test_bitmaps_are_counted_and_text_figures_are_not(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with_images = measure(build_with(directory, 'a.epub', bitmaps=2))
+            without = measure(build_with(directory, 'b.epub'))
+        self.assertEqual(with_images['bitmaps'], 2)
+        self.assertEqual(without['bitmaps'], 0)
+
+    def test_several_font_stacks_are_deduplicated(self):
+        css = ('body { font-family: "A", serif; }\n'
+               'code { font-family: "B", monospace; }\n'
+               'pre { font-family: "A", serif; }\n')
+        with tempfile.TemporaryDirectory() as directory:
+            stats = measure(build_with(directory, 'a.epub', css=css))
+        self.assertEqual(stats['fonts'], ['"A", serif', '"B", monospace'])
+
+    def test_a_stylesheet_without_rules_yields_empty_lists(self):
+        with tempfile.TemporaryDirectory() as directory:
+            stats = measure(build_with(directory, 'a.epub', css='/* empty */'))
+        self.assertEqual((stats['fonts'], stats['sizes'], stats['leads']), ([], [], []))
+
+
+class LeadAndDeltaTest(unittest.TestCase):
+    def test_the_leading_family_of_each_stack_is_extracted(self):
+        self.assertEqual(_epub_diff._leads(['"A B", serif', "'C', sans-serif"]),
+                         ['A B', 'C'])
+
+    def test_a_new_axis_from_nothing_is_marked_new(self):
+        self.assertEqual(_epub_diff._delta(5, 0), 'new')
+        self.assertEqual(_epub_diff._delta(0, 0), '0.0%')
+
+    def test_a_growth_is_a_percentage(self):
+        self.assertEqual(_epub_diff._delta(150, 100), '+50.0%')
+
+
+class CompareBranchesTest(unittest.TestCase):
+    def test_a_stack_that_only_gains_fallbacks_is_not_drift(self):
+        narrow = 'body { font-family: "A", serif; }'
+        wide = 'body { font-family: "A", serif, "B"; }'
+        with tempfile.TemporaryDirectory() as directory:
+            left = build_with(directory, 'a.epub', css=narrow)
+            right = build_with(directory, 'b.epub', css=wide)
+            self.assertEqual(compare(left, right), 0)
+
+    def test_a_changed_leading_family_is_drift(self):
+        with tempfile.TemporaryDirectory() as directory:
+            left = build_with(directory, 'a.epub')
+            right = build_with(directory, 'b.epub',
+                               css='body { font-family: "Other", serif; }')
+            self.assertEqual(compare(left, right), 1)
+
+    def test_a_changed_line_height_is_drift(self):
+        with tempfile.TemporaryDirectory() as directory:
+            left = build_with(directory, 'a.epub')
+            right = build_with(directory, 'b.epub', css='body { line-height: 1.8; }')
+            self.assertEqual(compare(left, right), 1)
+
+
+class CheckBranchesTest(unittest.TestCase):
+    def test_a_chapter_files_message_names_the_expected_count(self):
+        import io
+        from contextlib import redirect_stdout
+        with tempfile.TemporaryDirectory() as directory:
+            epub = build_with(directory, 'a.epub', chapters=1)
+            merged = os.path.join(directory, 'merged.md')
+            with open(merged, 'w', encoding='utf-8') as handle:
+                handle.write('# one\n')
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                code = check(epub, merged)
+        self.assertEqual(code, 1)
+        self.assertIn('expected 2', buffer.getvalue())
+
+
+class CliTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.left = build_with(self.tmp.name, 'a.epub', chapters=2)
+        self.right = build_with(self.tmp.name, 'b.epub', chapters=2)
+        self.merged = os.path.join(self.tmp.name, 'merged.md')
+        with open(self.merged, 'w', encoding='utf-8') as handle:
+            handle.write('# one\n')
+
+    def run_cli(self, *argv):
+        import io
+        from contextlib import redirect_stdout
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            code = _epub_diff.main(list(argv))
+        return code, buffer.getvalue()
+
+    def test_compare_prints_a_table(self):
+        code, out = self.run_cli('--compare', self.left, self.right)
+        self.assertEqual(code, 0)
+        self.assertIn('chapter files', out)
+
+    def test_compare_json_prints_both_measurements(self):
+        import json
+        code, out = self.run_cli('--compare', self.left, self.right, '--json')
+        self.assertEqual(code, 0)
+        payload = json.loads(out)
+        self.assertEqual(payload['built']['chapters'], 2)
+
+    def test_check_reports_the_counts(self):
+        code, out = self.run_cli('--check', self.left, '--merged', self.merged)
+        self.assertEqual(code, 0)
+        self.assertIn('OK', out)
+
+    def test_check_json_prints_the_measurement(self):
+        import json
+        code, out = self.run_cli('--check', self.left, '--merged', self.merged, '--json')
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)['chapters'], 2)
+
+    def test_check_without_merged_is_a_usage_error(self):
+        with self.assertRaises(SystemExit) as raised:
+            self.run_cli('--check', self.left)
+        self.assertEqual(raised.exception.code, 2)
+
+
 if __name__ == '__main__':
     unittest.main()
