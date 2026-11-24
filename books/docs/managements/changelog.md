@@ -13,6 +13,11 @@
 
 ### 变更
 
+- **覆盖率门槛抬到 90（rf-59 / rf-60 / rf-61）**：全局门槛 `coverage_fail_under` 88 → **90**（实测 91%，
+  `make.py cover` 通过），单文件地板保持 84；逐文件基线按当前实测重记，其中 `to_epub.py` 95.6% → 100%、
+  `_config.py` 92.6% → 94% 是真提升，`actions`/`chapters`/`verify_pdf` 三处未达原基线（84.2 / 86.9 / 84.6），
+  已把逐行缺口登记为 rf-61，不以“重记基线”代替补测试。
+
 - **rf-60 第一步：把 EPUB 的 Markdown 规则从脚本里抽出来**：`render/epub_source.py` 收下
   `normalise_headings()` 与 `is_caption()`（标题前补空行、删掉图注下方的装饰性 `====`），
   `to_epub.py` 改为导入它；两个函数原先写在「导入即跑 pandoc」的脚本模块里，没有可测入口。
