@@ -113,7 +113,7 @@ def render_pdf(html_path: str, pdf_path: str, engine: Any = None,
             # paper edition keeps the screen edition's characters per line
             layout, _problems = _layout.Layout.from_mapping(_config.THRESHOLDS)
             scale = layout.print_scale()
-            print(f'  缩放 {scale:.3f}（由栏宽与可印宽度推出）')
+            print(f'  缩放 {scale:.3f}（正文目标 {layout.print_body_pt:g}pt 推出）')
         page.pdf(
             path=pdf_path,
             format='A4',
