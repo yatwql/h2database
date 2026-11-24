@@ -13,11 +13,18 @@
 
 ### 变更
 
+- **README 成为项目首页与总索引，`folder.md` 只留目录结构**：`books/README.md` 重写为
+  「这是什么、能做什么、怎么开始、文档总索引」——索引按要求/判定/做法三轴排成一张表，
+  每份文档一行职责；删掉 `docs/managements/README.md`（它的索引职能被上面那张表吸收），
+  `doc_drift` 的 `INDEX` 面改为只校验 `folder.md` 的目录树与目录本身一致。`folder.md` 同步
+  校正：`data/archive/` 归到 `data/` 下、补 `state/file-length.json`、新增一条「怎么用/怎么写
+  只在 `docs/manuals/`」的归属规则、常用入口指向 README 的总索引。
+
 - **文档体系按"要求 / 判定 / 做法"三轴归位**：写作手法是给写作者的指南，不是管理要求，
   所以原写作规范（`style-guide.md`）移至 **`docs/manuals/how-to-write.md`**（声明自己的
-  「维度」，不再引用管理文档）。管理索引 `docs/managements/README.md` 顶部新增三轴表——要求
-  （`requirements.md`、`content-standard.md`）、判定（`testplan.md`、`content-quality-policy.md`）、
-  做法（`technical.md`、`folder.md`、`DESIGN*.md` 与 `docs/manuals/`）；`technical.md` §2.4 的
+  「维度」，不再引用管理文档）。**总索引收归 `books/README.md`**：按「要求 / 判定 / 做法」三轴
+  排成一张表，每份文档一行职责；原先散在管理文档目录里的那份索引表随之删除，
+  `doc_drift` 的 `INDEX` 面改为只校验 `folder.md` 的目录树与目录本身一致。`technical.md` §2.4 的
   目录树删掉，改为一句话指向 `folder.md`（结构只有一处权威）。全部引用同步：管理文档、计划、
   `README.md`、仓库根的 `CLAUDE.md`、以及 `audit/*.py` 的 docstring；`doc_drift` 的
   `STANDARD_ALLOWED_REF` 跟着改名。

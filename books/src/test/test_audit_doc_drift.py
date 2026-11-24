@@ -140,25 +140,22 @@ class DocDriftTest(unittest.TestCase):
                 fh.write(body)
         return directory
 
-    def test_a_document_missing_from_both_registries_is_reported(self):
+    def test_a_document_missing_from_the_tree_is_reported(self):
         directory = self.management_dir(
-            README='| `README.md` | 索引 |\n',
-            folder='  README.md   # 索引\n',
+            folder='  folder.py   # 树\n',
             changelog='# 变更日志\n')
         details = [f['detail'] for f in self.drift.check_managements(directory)]
         self.assertTrue(any('changelog.md' in d for d in details))
 
-    def test_a_row_registered_twice_is_reported(self):
+    def test_a_tree_row_registered_twice_is_reported(self):
         directory = self.management_dir(
-            README='| `README.md` | 索引 |\n| `README.md` | 又一遍 |\n',
-            folder='  README.md   # 索引\n')
+            folder='  folder.md   # 树\n  folder.md   # 又一遍\n')
         kinds = [f['kind'] for f in self.drift.check_managements(directory)]
         self.assertIn('INDEX', kinds)
 
-    def test_a_registry_naming_a_missing_document_is_reported(self):
+    def test_a_tree_naming_a_missing_document_is_reported(self):
         directory = self.management_dir(
-            README='| `README.md` | 索引 |\n| `gone.md` | 已删 |\n',
-            folder='  README.md   # 索引\n')
+            folder='  folder.md   # 树\n  gone.md     # 已删\n')
         details = [f['detail'] for f in self.drift.check_managements(directory)]
         self.assertTrue(any('gone.md' in d for d in details))
 
@@ -235,7 +232,7 @@ class DocDriftTest(unittest.TestCase):
                          ['STANDARD'])
 
     def test_a_standard_pointing_at_its_writing_twin_passes(self):
-        path = self.doc('写法见 style-guide.md §12。\n')
+        path = self.doc('写法见 how-to-write.md §12。\n')
         self.assertEqual(self.drift.check_standard(path), [])
 
     # -- criteria cite properties ----------------------------------------

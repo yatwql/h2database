@@ -1,113 +1,85 @@
 # bookwright v0.1 — 源码分析成书工具
 
-把一个源码仓库变成一本可交付的技术书：读源码 → 生成手稿 → 出 Markdown/HTML/PDF/EPUB，
-全程由门禁把关（结构、事实、文风、交付）。
+> **一套源码树，换来一本读得下去的技术书。**
 
-书名与章节映射都来自 `books/data/book/book.toml`；工具链与具体项目无关，换一份源码树与章节映射
-即可生成另一本书。支持 Java / Python / Rust / Kotlin / Go 源码（可多语言混跑）。
+bookwright（源码分析成书工具）是一套本地工具链：把它指向一个源码仓库，它交回一本书。
+
+面向「读懂别人的代码」的本地工具链：吃进一个源码仓库，吐出包与模块的版图、核心类型、
+公开入口、依赖方向与阅读路径，再把它们做成一本 Markdown → HTML → PDF → EPUB 的书。
+全程跑在自己的机器上，源码不出本机；换一份源码树，就是换一本书。
+
+**为什么是「书」而不是文档站点？** 因为读源码的人要的不是接口清单，而是一条能走完的路线：
+先看版图知道有哪些组件，再看类型知道谁在干活，再顺着入口走到关键路径，最后沿依赖方向判断
+「改这里会碰到谁」。书是按这个顺序写的，章节之间靠跨章引用接起来，每一步都能回到源码坐标。
 
 ## 能做什么
 
 | 能力 | 说明 |
-| ------ | ------ |
-| 源码 → 手稿 | 抽取包/模块版图、核心类型、公开 API、依赖方向，按章节映射生成手稿 |
-| 手稿 → 文档 | 合并 Markdown、HTML（侧边栏 TOC）、PDF（大纲/页内目录）、EPUB |
-| 质量门禁 | 全部门禁（清单见 [`scripts-and-reference.md`](docs/manuals/scripts-and-reference.md) §8）：结构完整性、源码坐标可核验、链接锚点、图注、术语/索引、文风评分、交付校验 |
-| 多入口 | CLI、TUI、Web 控制台共用同一套动作 |
-| 可配置 | 数据组织 / 基础 / 风格三层加语言包（共四层，见 `docs/managements/technical.md` §3.1）+ LLM provider 路由 |
+| --- | --- |
+| 源码 → 手稿 | 抽取包/模块版图、核心类型、公开 API、依赖方向，按 `book.toml` 的章节映射生成手稿骨架 |
+| 手稿 → 交付 | 合并 Markdown、单页 HTML（侧边栏目录 + 印刷目录）、PDF（大纲 + 页内目录 + 印刷版）、EPUB |
+| 质量门禁 | 结构完整性、源码坐标可核验、链接与锚点、图注与图簇、术语与索引、文风评分、交付校验（33 道门禁，见 `testplan.md`） |
+| 判定与生成分离 | 脚本判定可枚举的部分，模型只做语义与措辞；模型产出必须再过一遍脚本 |
+| 三个入口一套动作 | CLI、TUI、Web 控制台共用同一份动作与状态，结果一致 |
+| 换书只换配置 | 书的身份、章节、包归属在 `data/book/book.toml`，分析口径与预算在 `data/config/`，代码不动 |
+
+支持 Java / Python / Rust / Kotlin / Go 源码，可多语言混跑。
 
 ## 快速开始
 
 ```bash
-books/scripts/bootstrap.sh     # 创建 books/.venv 并装依赖（Windows: bootstrap.ps1）
+books/scripts/bootstrap.sh          # 建 books/.venv 并装依赖；Windows 用 bootstrap.ps1
 
-books/scripts/bookctl status        # 最短路径：cloak 掉 python 路径，直接跑动作
-books/scripts/bookctl check         # 全部门禁
+books/scripts/bookctl status        # 现在是什么状态
+books/scripts/bookctl check         # 全部门禁（只读）
 books/scripts/bookctl build         # 手稿 → 合并 Markdown + HTML
+books/scripts/bookctl deliver       # 按需：PDF + EPUB + 校验
 books/scripts/bookctl test          # 测试（--full 含 chromium/pandoc 档）
-python books/src/python/test_report.py run   # 跑测试并留报告（books/test-reports/），last 解出失败用例
 books/scripts/bookctl doctor        # 依赖与环境
 
-books/scripts/launch.sh        # TUI 菜单
-books/scripts/launch.sh cli    # CLI（与 bookctl 等价，可带子命令）
-books/scripts/launch.sh web    # Web 控制台
+books/scripts/launch.sh             # TUI：1 源码→手稿 · 3 手稿→文档 · 6 一次出全部产物
+books/scripts/launch.sh web         # Web 控制台
 ```
+
+`bookctl` 只是薄封装：解析解释器（`books/.venv` → `$PYTHON` → `python3`）后转发到
+`app/cli.py`；`bookctl make <args>` 直接透传 `make.py`。不用启动脚本时：
+
+```bash
+python books/src/python/make.py check     # 全部门禁（只读）
+python books/src/python/make.py build     # 手稿 → 合并 Markdown + HTML
+python books/src/python/make.py deliver   # 交付：PDF + EPUB + 校验
+```
+
+源码更新后重生成手稿：`ingest/digest.py` → `ingest/outline.py` → `ingest/chapters.py`
+（默认只刷新事实块，正文不动；`--force` 才整篇重写）。
+
+## 文档总索引
+
+目录结构、文件归属与清理规则只看 [`folder.md`](docs/managements/folder.md)；本节只登记"哪份文档负责什么"。
+
+文档按三个轴分工：**要求**（要交付什么、内容必须有什么）、**判定**（谁判、判在几级、基线怎么记）、
+**做法**（系统怎么实现、怎么写、怎么用）。同一件事只在一份文档里定义。
+
+| 类别 | 文档 | 职责 |
+| --- | --- | --- |
+| 要求 | [requirements.md](docs/managements/requirements.md) | 本项目的需求与验收：FR / IR / NFR |
+| 要求 | [content-standard.md](docs/managements/content-standard.md) | 内容标准（跨项目复用）：信息阶梯、事实要求、章节骨架、图示与练习 |
+| 判定 | [testplan.md](docs/managements/testplan.md) | 判据与级别：每道门禁判什么、几级、怎么跑（验证的唯一权威） |
+| 判定 | [content-quality-policy.md](docs/managements/content-quality-policy.md) | 内容质量方针：谁判、什么时候判、基线怎么记、代价多少 |
+| 做法 | [technical.md](docs/managements/technical.md) | 技术设计：分层、依赖矩阵、配置合并、关键决策、扩展点 |
+| 做法 | [folder.md](docs/managements/folder.md) | 目录与文件归属（结构只有这一处权威） |
+| 做法 | [DESIGN.md](docs/managements/DESIGN.md) · [DESIGN-TUI.md](docs/managements/DESIGN-TUI.md) · [DESIGN-WEB.md](docs/managements/DESIGN-WEB.md) | 三个界面的呈现契约与键位 |
+| 做法 | [how-to-use.md](docs/manuals/how-to-use.md) | 日常怎么干：改正文、加章节、交付一版、提交前的顺序 |
+| 做法 | [how-to-new-book.md](docs/manuals/how-to-new-book.md) | 换项目：新建或翻译一本书，四份配置的职责 |
+| 做法 | [how-to-config.md](docs/manuals/how-to-config.md) | 配置：改哪个文件、每个键是什么意思、改错会怎样 |
+| 做法 | [how-to-write.md](docs/manuals/how-to-write.md) | 写作手法：句式、段落、图注、题目、引用、标点 |
+| 做法 | [how-to-use-cli.md](docs/manuals/how-to-use-cli.md) · [how-to-use-tui.md](docs/manuals/how-to-use-tui.md) · [how-to-use-web.md](docs/manuals/how-to-use-web.md) | 三个入口怎么用、退出码、键位、JSON 接口 |
+| 参考 | [scripts-and-reference.md](docs/manuals/scripts-and-reference.md) | 全部可执行入口与参数的唯一清单 |
+| 参考 | [faq.md](docs/manuals/faq.md) | 排障：按症状查原因与处理动作 |
+| 记录 | [plan.md](docs/managements/plan.md) | 在办事项：时机档、逐项验收 |
+| 记录 | [review-findings.md](docs/managements/review-findings.md) | 问题台账：`rf-N` 编号与修复结论 |
+| 记录 | [changelog.md](docs/managements/changelog.md) | 版本变更记录 |
+| 记录 | [docs/plan/](docs/plan/) | 单项迭代的设计与实施计划（一个主题一个目录） |
 
 `build` 与 `deliver` 结束时会把手稿与产物各存一份到 `books/data/archive/<书>/<日期>/`
 （保留窗口取配置，缺省 45 天）。
-
-`bookctl` 是薄封装：解析解释器（`books/.venv` → `$PYTHON` → `python3`）后转发到
-`app/cli.py`；`bookctl make <args>` 直接透传 `make.py`。Windows 用 `bookctl.ps1`。
-
-不用启动脚本时：
-
-```bash
-python books/src/python/make.py check   # 全部门禁（只读）
-python books/src/python/make.py build   # 手稿 → 合并 Markdown + HTML
-python books/src/python/make.py test    # 测试（快档；--full 含 chromium/pandoc 档）
-python books/src/python/make.py deliver # 按需：PDF + EPUB + 校验
-```
-
-源码更新后重生成手稿：
-
-```bash
-python books/src/python/ingest/digest.py     # 源码 → data/state/source-inventory.json
-python books/src/python/ingest/outline.py    # 章节大纲 + 覆盖矩阵
-python books/src/python/ingest/chapters.py   # 渲染章节
-```
-
-## 目录
-
-```text
-books/
-  data/      # 输入与状态：tmpl/（书与章节组织）、config/（基础与风格）、
-             # language/（语言包）、manuscript/（手稿）、baselines/、state/
-             # cache/（缓存：字体索引、HTML 分片）、tmp/（一次性产物）
-  src/
-    python/  # lib/ 公共库、ingest/ 源码抽取（languages/ 分语言分析器）、
-             # manuscript/ 手稿维护、audit/ 门禁、render/ 交付、app/ 入口
-    test/    # 单元 + 集成 + 通用性回归
-  scripts/   # launch.sh/.ps1（启动）、bootstrap.sh/.ps1（环境）
-  dist/      # 产物（gitignored）
-  logs/      # 运行日志（gitignored）：check-<档位>-<YYYY-MM-DD>.{log,jsonl} 按天追加
-  docs/      # 用户文档 / 管理文档 / 规范 / 设计
-```
-
-## 文档索引
-
-**用户文档（`docs/manuals/`）**
-
-| 文档 | 内容 |
-| ------ | ------ |
-| [how-to-use.md](docs/manuals/how-to-use.md) | 日常怎么干：改正文、加章节、交付一版、提交前的顺序 |
-| [how-to-new-book.md](docs/manuals/how-to-new-book.md) | 新建/翻译一本书：四份文件的职责与脚手架 |
-| [how-to-config.md](docs/manuals/how-to-config.md) | 如何配置：数据组织、版式与字体、风格、语言包、LLM |
-| [how-to-use-cli.md](docs/manuals/how-to-use-cli.md) | CLI 用法、动作、退出码 |
-| [how-to-use-tui.md](docs/manuals/how-to-use-tui.md) | TUI 菜单与 `--once` 脚本化 |
-| [how-to-use-web.md](docs/manuals/how-to-use-web.md) | Web 控制台与 JSON API |
-| [scripts-and-reference.md](docs/manuals/scripts-and-reference.md) | 全部脚本清单：命名约定、日常封装、各层入口、门禁→脚本对照 |
-| [faq.md](docs/manuals/faq.md) | 常见问题（环境、配置、门禁、交付、字体与密度、日志、LLM） |
-
-**规范与设计（`docs/managements/`）**
-
-| 文档 | 内容 |
-| ------ | ------ |
-| [content-standard.md](docs/managements/content-standard.md) | 内容标准（跨项目复用） |
-| [technical.md](docs/managements/technical.md) | 工具链架构约束；§13 是文件职责分类的权威定义（结构/表述/名词 vs 规则/基础/外部服务） |
-
-**管理文档（`docs/managements/`）**
-
-| 文档 | 内容 |
-| ------ | ------ |
-| [folder.md](docs/managements/folder.md) | 目录结构与文件归属 |
-| [requirements.md](docs/managements/requirements.md) | 范围与交付物 |
-| [plan.md](docs/managements/plan.md) | 工作流、维护策略、在建项、风险 |
-| [testplan.md](docs/managements/testplan.md) | 质量门禁与验证命令（验证唯一权威） |
-| [content-quality-policy.md](docs/managements/content-quality-policy.md) | 内容质量方针：谁做判断、基线怎么记、代价多少（判据清单在 testplan） |
-| [review-findings.md](docs/managements/review-findings.md) | 未闭合问题台账（rf-N 编号的唯一归属） |
-| [changelog.md](docs/managements/changelog.md) | 版本历史 |
-| [how-to-write.md](docs/manuals/how-to-write.md) | 写作与格式规范 |
-| [DESIGN.md](docs/managements/DESIGN.md) | 设计契约总纲（三界面共有规则） |
-| [DESIGN-TUI.md](docs/managements/DESIGN-TUI.md) | 终端交互契约 |
-| [DESIGN-WEB.md](docs/managements/DESIGN-WEB.md) | 网页控制台契约 |
-| [README.md](docs/managements/README.md) | 管理文档索引 |

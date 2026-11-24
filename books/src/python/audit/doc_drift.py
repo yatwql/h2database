@@ -327,24 +327,21 @@ def check_locus(directory: str | None = None) -> list[dict]:
 
 
 def check_managements(directory: str | None = None) -> list[dict]:
-    """The management directory and its two registries name the same set.
+    """The management directory and the tree that describes it name the same set.
 
-    Two surfaces claim to describe the same directory: the index table in
-    README.md and the tree in folder.md. Both are compared with the directory
-    itself, so a document cannot exist unlisted, be listed twice, or stay listed
-    after it is gone.
+    The tree in folder.md is the file-level authority; the reader-facing index is a
+    table in the book's README.md, whose rows are prose links and are not compared
+    here. A document may therefore not exist unlisted, be listed twice, or stay
+    listed after it is gone.
     """
     base = directory or os.path.join(_config.BOOK_ROOT, 'docs', 'managements')
     actual = management_files(base)
     out: list[dict] = []
-    for label, filename in (('index', 'README.md'), ('tree', 'folder.md')):
-        path = os.path.join(base, filename)
-        if not os.path.isfile(path):
-            continue
-        pattern = INDEX_ROW_RE if label == 'index' else TREE_ROW_RE
-        registered, duplicate_rows = _registered(path, pattern)
+    path = os.path.join(base, 'folder.md')
+    if os.path.isfile(path):
+        registered, duplicate_rows = _registered(path, TREE_ROW_RE)
         out += duplicate_rows
-        _surface_findings(f'{filename} {label}', path, registered, actual, out)
+        _surface_findings('folder.md tree', path, registered, actual, out)
     return out
 
 

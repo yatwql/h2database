@@ -37,6 +37,7 @@ books/
       outline.json             # 章节与主题的派生大纲；只有渲染器读它
       file-length.json         # 文件长度台账的上次实测值（file_length 只报超阈值的增长）
       source-inventory.prev.json  # 上一次清单（只为告知“源码是否变化”，不入库）
+    archive/                   # 本书手稿与产物的滚动副本（自动、保留窗口取配置、gitignored）
     tmp/                       # 一次性脚本与临时文件（不入库）
     snapshots/                 # 只读历史快照：人工挑选的对照点（可来自 zip 或 data/archive 的日期目录），入库
       <日期>-<标签>/
@@ -54,7 +55,6 @@ books/
     test/                    # unittest 测试套件（单元 + 集成 + 真实书稿回归）
   logs/                      # 运行日志（按天回滚，gitignored）
   test-reports/              # 测试报告（每次一份日期目录 + latest.json，gitignored）
-  data/archive/              # 本书手稿与产物的滚动副本（自动、保留窗口取配置、gitignored）
   dist/                      # 交付产物（生成物，gitignored）
     <book>.md / .html / .pdf / .epub
     <book>-print.pdf         # 印刷版（按需）
@@ -68,8 +68,7 @@ books/
 ## 2. 管理文档
 
 ```text
-books/docs/managements/
-  README.md                  # 索引与职责说明
+books/docs/managements/        # 管理文档；总索引在 books/README.md「文档总索引」
   requirements.md            # 当前范围与交付物
   plan.md                    # 计划项清单（plan-N，按 P1–P4 分档，每项现状/动作/验收/事实位）
   review-findings.md         # 问题记录（rf-N，待处理 / 已修摘要 / 文件膨胀登记）
@@ -110,7 +109,10 @@ books/docs/managements/
   书级覆盖共享合并。源码本身仍在书根之外，仓库里不需要它。
 - **工具链只在 `src/python/`**：正式交付脚本；临时脚本不得入库。
 - **测试只在 `src/test/`**：`make.py test` 跑全部；`make.py cover` 带覆盖率棘轮。
-- **管理文档只在 `docs/managements/`**：需求、计划、测试、变更各一份，互不重复。
+- **管理文档只在 `docs/managements/`**：要求、判定、做法各一份，互不重复；总索引在
+  `books/README.md` 的「文档总索引」，本文只管位置。
+- **怎么用、怎么写只在 `docs/manuals/`**：每份手册声明自己的「维度」，不引用管理文档；
+  配置键的含义也在这边（`how-to-config.md` §3），管理文档只写"归属哪个文件"。
 - **单项迭代的设计与计划只在 `docs/plan/<主题>/`**：一个主题一个目录，里面放
   `design.md`（迭代设计）与 `plan.md`（实施计划），可附 `README.md`。目录名与文件名
   一律用小写连字符的语义名（如 `diagram-upgrade/`），**不得把 `plan-N`、`rf-N` 等编号
@@ -145,8 +147,8 @@ books/docs/managements/
 
 ## 4. 常用入口
 
-入口清单只有两份：使用者看 [`books/README.md`](../../README.md) 的快速开始，验证命令
-看 [`testplan.md`](testplan.md) §1。本文不重复命令。
+入口清单只有两份：使用者看 [`books/README.md`](../../README.md) 的「快速开始」与「文档总索引」，
+验证命令看 [`testplan.md`](testplan.md) §1。本文不重复命令。
 
 ## 5. 不入库的临时产物
 
