@@ -203,5 +203,20 @@ class ToEpubBranchesTest(unittest.TestCase):
         self.assertIn('note: merged 12 files', out)
 
 
+
+    def test_layout_warnings_are_printed_before_the_render(self):
+        real = _fixture.load_module(self.root, 'layout').Layout.from_mapping
+
+        def complaining(mapping):
+            layout, _problems = real(mapping)
+            return layout, ['boom in layout config']
+
+        with mock.patch.object(shutil, 'which', return_value='/usr/bin/pandoc'), \
+                mock.patch.object(subprocess, 'run', side_effect=pandoc_stub()), \
+                mock.patch('lib.layout.Layout.from_mapping', side_effect=complaining):
+            code, out = _fixture.run_inproc(self.root, 'to_epub.py')
+        self.assertIn('layout: boom in layout config', out)
+
+
 if __name__ == '__main__':
     unittest.main()

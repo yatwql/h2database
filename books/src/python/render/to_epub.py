@@ -219,7 +219,7 @@ _epub_text, _fixes = epub_source.normalise_headings(_fsutil.read_text(merged_md)
 epub_src = os.path.join(_config.tmp_dir(), 'epub-source.md')
 try:
     os.makedirs(_config.tmp_dir(), exist_ok=True)  # a minimal book need not have one
-except OSError as exc:
+except OSError as exc:  # pragma: no cover - an unwritable tree, reported then exited
     raise _errors.ToolError(f'error: cannot create {_config.tmp_dir()}: {exc}') from exc
 _fsutil.write_text(epub_src, _epub_text)
 print(f"  Headings normalised: {_fixes['spaced']} missing blank line(s), "

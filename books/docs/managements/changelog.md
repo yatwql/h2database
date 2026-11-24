@@ -17,7 +17,7 @@
   `normalise_headings()` 与 `is_caption()`（标题前补空行、删掉图注下方的装饰性 `====`），
   `to_epub.py` 改为导入它；两个函数原先写在「导入即跑 pandoc」的脚本模块里，没有可测入口。
   新增 11 条用例（图注判定、setext 标题保留、多处修复的计数、文本不被顺带改写），
-  `epub_source.py` 100%、`to_epub.py` **95.6% → 97%**。
+  `epub_source.py` 100%、`to_epub.py` **95.6% → 100%**（布局告警用补丁重载；`makedirs` 失败按惯例标 pragma）。
 
 - **覆盖率第六项登记、门槛抬升暂缓（rf-59 / rf-60）**：`core/menu.py` 80% → 99%、`lib/_log.py` 78% → 96%、
   `lib/_perfhistory.py` 81% → 100%、`render/print_pdf.py` 91% → 100%；但逐文件棘轮当前在 5 个文件上失败
