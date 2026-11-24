@@ -20,6 +20,17 @@ try:
 except Exception:  # noqa: BLE001 - the shell must import even without config
     _config = None
 
+# The printed column: the sheet decides its width, and a code line wider than the
+# book's width budget decides the code size. Wrapping is the alternative to
+# shrinking, and it is measured in pages -- so it is only used when the type would
+# otherwise fall below the readable minimum (see `Layout.print_wraps`).
+PRINT_WRAP_CSS = (
+    '  /* a code line wider than the printed column wraps: overflow-x would clip it,\n'
+    '     and paper cannot scroll. The wrap width is the column, so the two agree. */\n'
+    '  pre, pre code, .code-content { white-space: pre-wrap; '
+    'overflow-wrap: anywhere; overflow: visible; }\n'
+    '  .line-nums { display: none; }\n')
+
 STYLE = r"""
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { min-height: 100vh; }
@@ -301,6 +312,10 @@ li { margin: 0.3em 0; }
   #cover { page-break-after: always; }
   #sidebar { display: none; }
   #content { margin-left: 0; max-width: 760px; width: auto; padding: 0; }
+  /* the printed TOC obeys the same column as the body: a 280px sidebar offset
+     would push its dot leaders past the sheet edge */
+  #toc-page { max-width: 760px; }
+  #toc-page > div { margin-left: 0 !important; }
   pre, table { page-break-inside: avoid; }
   h1, h2, h3, h4 { page-break-after: avoid; }
   pre { font-size: 10px; }
@@ -367,16 +382,17 @@ def _layout_value(key):
 def apply_layout(css: str) -> str:
     """Substitute the configured dimensions into the stylesheet.
 
-    The code block takes its size and leading from configuration: wrapping long
-    lines (`pre-wrap`) keeps every block inside the column, but it also turns one
-    diagram row into three text rows — measured at +164 pages on this book, so it
-    stays opt-out by default and a book that needs it sets the knob.
+    Density is set by the column and the type size, not by the renderer's scale: the
+    printed column is the printable width, and the code size is whatever keeps a line
+    at the book's width budget inside it. Wrapping long lines (`pre-wrap`) keeps every
+    block inside the column too, but it turns one diagram row into three text rows —
+    measured at +164 pages on this book — so it is only used when the type would
+    otherwise fall below the readable minimum, or when `layout_print_wrap` asks for it.
     """
     # one source for the derived numbers: the layout object owns the rules, so the
     # stylesheet cannot drift from what the PDF and EPUB renderers compute
     layout, _problems = _layout_lib.Layout.from_mapping(
         _config.THRESHOLDS if _config else {})
-    code = layout.code_px
     lead = layout.code_line_height_value()
     body = layout.body_size_px()
     column = _layout_value('layout_column_px')
@@ -385,11 +401,20 @@ def apply_layout(css: str) -> str:
 
     def number(key: str, fallback: float) -> float:
         """Threshold read from JSON may be a string or missing; never crash on it."""
-        raw = _layout_value(key)
+        raw = _config.THRESHOLDS.get(key) if _config else None
         try:
-            return float(raw)
+            return float(str(raw))
         except (TypeError, ValueError):
             return fallback
+
+    # print-only: the column cannot exceed the sheet, and the book's own width budget
+    # decides the printed code size. The widest line the build produced is
+    # not the right input: extraction joins table cells into one baseline, so a wide
+    # table would shrink every code block in the book.
+    columns = int(number('ascii_max_cols', 100))
+    print_column = layout.print_column()
+    print_code = layout.print_code_px(columns)
+    wrap_css = PRINT_WRAP_CSS if layout.print_wraps(columns) else ''
 
     def gap(key: str) -> str:
         """One spacing value, scaled by the global multiplier and printed in em."""
@@ -404,9 +429,15 @@ def apply_layout(css: str) -> str:
     table_gap = gap('layout_table_gap_em')
     return (css
             .replace('  pre { font-size: 10px; }',
-                     f'  pre {{ font-size: {code}px; line-height: {lead}; }}')
+                     f'  pre {{ font-size: {print_code:g}px; line-height: {lead}; }}')
+            .replace('  #content { margin-left: 0; max-width: 760px; width: auto; padding: 0; }',
+                     f'  #content {{ margin-left: 0; max-width: {print_column}px; '
+                     'width: auto; padding: 0; }')
+            .replace('  #toc-page { max-width: 760px; }',
+                     f'  #toc-page {{ max-width: {print_column}px; }}')
             .replace('  @page { size: A4; margin: 24mm 20mm; }',
-                     f'  @page {{ size: {page_size}; margin: {margin}; }}')
+                     wrap_css
+                     + f'  @page {{ size: {page_size}; margin: {margin}; }}')
             .replace('flex: 1; max-width: 960px;', f'flex: 1; max-width: {column}px;')
             .replace('body {\n    font-size: 16px;', f'body {{\n    font-size: {body}px;')
             .replace('p { margin: 0.8em 0; text-align: justify; }',

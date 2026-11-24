@@ -98,7 +98,8 @@
     "index_sub_min": 50,
     "index_see_also_min": 30,
     "glossary_min_entries": 60,
-    "exercises_min_per_chapter": 3
+    "exercises_min_per_chapter": 3,
+    "ledger_growth": 10
   },
   "prose": {
     "avg_sentence_good": 28,

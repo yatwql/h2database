@@ -1,0 +1,155 @@
+"""The printed edition is fitted to the sheet, and the fit is decided by numbers.
+
+Two questions, one file: does the print CSS derive its column and code size from the
+paper, and does the merge log what the compression pass decided. Both were invisible
+before — the column was a literal and a skipped gs pass read like a pass that bought
+nothing.
+"""
+from __future__ import annotations
+
+import os
+import tempfile
+import unittest
+from unittest import mock
+
+import _fixture
+
+TAGS = ('layer:render', 'tier:fast')
+
+_fixture.ensure_tools_path()
+
+_split = __import__('render.pdf_split', fromlist=['accept_optimised', '_optimize'])
+_shell = __import__('render.html_shell', fromlist=['apply_layout', 'STYLE'])
+_layout = __import__('lib.layout', fromlist=['Layout'])
+_config = __import__('lib._config', fromlist=['THRESHOLDS'])
+
+accept_optimised = _split.accept_optimised
+
+
+def _blank_pdf(path: str, pages: int = 1) -> None:
+    from pypdf import PdfWriter
+
+    writer = PdfWriter()
+    for _ in range(pages):
+        writer.add_blank_page(width=595, height=842)
+    with open(path, 'wb') as handle:
+        writer.write(handle)
+
+
+class OptimiseDecisionTest(unittest.TestCase):
+    """The rewrite replaces the merge only when it is smaller and still complete."""
+
+    def test_a_smaller_complete_file_is_accepted(self):
+        self.assertTrue(accept_optimised(621, 6_000_000, 621, 5_000_000))
+
+    def test_a_smaller_truncated_file_is_rejected(self):
+        self.assertFalse(accept_optimised(621, 6_000_000, 600, 5_000_000))
+
+    def test_a_larger_file_is_rejected(self):
+        self.assertFalse(accept_optimised(621, 5_000_000, 621, 6_000_000))
+
+
+class OptimiseRunTest(unittest.TestCase):
+    """Every run says what it did: skipped, failed, accepted or refused."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.pdf = os.path.join(self.tmp.name, 'merged.pdf')
+        _blank_pdf(self.pdf, pages=1)
+        self.log = mock.MagicMock()
+        patcher = mock.patch.object(_split._log, 'get_logger', return_value=self.log)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def fake_gs(self, pages: int = 2):
+        """A gs stub that writes a valid PDF to the path the command names."""
+        def run(cmd, **_kwargs):
+            target = next(part for part in cmd if part.startswith('-sOutputFile='))
+            _blank_pdf(target.split('=', 1)[1], pages=pages)
+        return run
+
+    def test_a_missing_gs_is_logged_and_the_file_is_left_alone(self):
+        with mock.patch.object(_split.shutil, 'which', return_value=None):
+            _split._optimize(self.pdf)
+        self.log.info.assert_called()
+        self.assertIn('gs', self.log.info.call_args[0][0])
+        self.assertEqual(len(_split.PdfReader(self.pdf).pages), 1)
+
+    def test_an_accepted_rewrite_replaces_the_file(self):
+        with mock.patch.object(_split.shutil, 'which', return_value='/usr/bin/gs'), \
+                mock.patch.object(_split.subprocess, 'run', side_effect=self.fake_gs()), \
+                mock.patch.object(_split, 'accept_optimised', return_value=True):
+            _split._optimize(self.pdf)
+        self.assertEqual(len(_split.PdfReader(self.pdf).pages), 2)
+        self.assertIn('已采用', self.log.info.call_args[0])
+
+    def test_a_refused_rewrite_keeps_the_merge(self):
+        with mock.patch.object(_split.shutil, 'which', return_value='/usr/bin/gs'), \
+                mock.patch.object(_split.subprocess, 'run', side_effect=self.fake_gs()), \
+                mock.patch.object(_split, 'accept_optimised', return_value=False):
+            _split._optimize(self.pdf)
+        self.assertEqual(len(_split.PdfReader(self.pdf).pages), 1)
+        self.assertIn('不采用（须同页数且更小）', self.log.info.call_args[0])
+
+    def test_a_failed_gs_run_is_a_warning_not_a_broken_build(self):
+        with mock.patch.object(_split.shutil, 'which', return_value='/usr/bin/gs'), \
+                mock.patch.object(_split.subprocess, 'run',
+                                  side_effect=OSError('boom')):
+            _split._optimize(self.pdf)
+        self.log.warning.assert_called()
+        self.assertEqual(len(_split.PdfReader(self.pdf).pages), 1)
+
+    def test_the_temporary_file_never_survives_the_run(self):
+        with mock.patch.object(_split.shutil, 'which', return_value=None):
+            _split._optimize(self.pdf)
+        self.assertEqual(sorted(os.listdir(self.tmp.name)), ['merged.pdf'])
+
+
+class PrintStylesheetTest(unittest.TestCase):
+    """The stylesheet takes the printed column and code size from the layout."""
+
+    def layout(self):
+        return _layout.Layout.from_mapping(_config.THRESHOLDS)[0]
+
+    def test_the_printed_column_comes_from_the_layout(self):
+        with mock.patch.dict(_config.THRESHOLDS, {'layout_print_column_px': 512}):
+            css = _shell.apply_layout(_shell.STYLE)
+        self.assertIn('max-width: 512px', css)
+
+    def test_the_printed_code_size_follows_the_width_budget(self):
+        columns = int(_config.THRESHOLDS.get('ascii_max_cols', 100))
+        css = _shell.apply_layout(_shell.STYLE)
+        self.assertIn(f'font-size: {self.layout().print_code_px(columns):g}px', css)
+
+    def test_the_code_size_keeps_a_budget_line_inside_the_sheet(self):
+        columns = int(_config.THRESHOLDS.get('ascii_max_cols', 100))
+        layout = self.layout()
+        self.assertLessEqual(columns * layout.print_mono_advance
+                             * layout.print_code_px(columns),
+                             layout.printable_width_px() + 0.5)
+
+    def test_the_budget_line_fits_so_wrapping_stays_off(self):
+        columns = int(_config.THRESHOLDS.get('ascii_max_cols', 100))
+        self.assertNotIn('white-space: pre-wrap', _shell.STYLE)
+        self.assertFalse(self.layout().print_wraps(columns))
+
+    def test_a_budget_wider_than_the_sheet_turns_on_wrapping(self):
+        with mock.patch.dict(_config.THRESHOLDS, {'ascii_max_cols': 4000}):
+            css = _shell.apply_layout(_shell.STYLE)
+        self.assertIn('white-space: pre-wrap', css)
+
+    def test_the_printed_toc_is_confined_to_the_column(self):
+        css = _shell.apply_layout(_shell.STYLE)
+        self.assertIn('margin-left: 0 !important', css)
+        self.assertIn(f'#toc-page {{ max-width: {self.layout().print_column()}px; }}', css)
+
+    def test_the_page_rule_keeps_the_configured_sheet_and_margin(self):
+        css = _shell.apply_layout(_shell.STYLE)
+        layout = self.layout()
+        self.assertIn(f'  @page {{ size: {layout.page_size}; margin: {layout.page_margin}; }}',
+                      css)
+
+
+if __name__ == '__main__':
+    unittest.main()

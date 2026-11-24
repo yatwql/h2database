@@ -114,12 +114,51 @@ class FileLengthUnitTest(unittest.TestCase):
             fh.write(body)
         return root
 
-    def test_a_registered_length_that_disagrees_is_reported(self):
+    def test_a_registered_length_that_drifted_slightly_is_not_reported(self):
         root = self.ledger_book('| `src/python/a.py` 9 行 | 占比 1%，拆法 |\n',
                                 {'src/python/a.py': 'x = 1\n'})
+        self.assertEqual(self.mod.check_ledger(root), [])
+
+    def test_growth_past_the_threshold_since_the_ledger_is_reported(self):
+        body = 'x\n' * 30
+        root = self.ledger_book('| `src/python/a.py` 10 行 | 占比 1%，拆法 |\n',
+                                {'src/python/a.py': body})
+        self.write_state(root, {'src/python/a.py': 10})
         findings = self.mod.check_ledger(root)
         self.assertEqual([f['kind'] for f in findings], ['LEDGER'])
-        self.assertIn('measured 1', findings[0]['detail'])
+        self.assertIn('增长 20 行', findings[0]['detail'])
+
+    def test_growth_inside_the_threshold_is_tolerated(self):
+        body = 'x\n' * 14
+        root = self.ledger_book('| `src/python/a.py` 10 行 | 占比 1%，拆法 |\n',
+                                {'src/python/a.py': body})
+        self.write_state(root, {'src/python/a.py': 10})
+        self.assertEqual(self.mod.check_ledger(root), [])
+
+    def test_update_ledger_writes_the_measurement_and_the_baseline(self):
+        body = 'x\n' * 30
+        root = self.ledger_book('| `src/python/a.py` 10 行 | 占比 1%，拆法 |\n',
+                                {'src/python/a.py': body})
+        self.write_state(root, {'src/python/a.py': 10})
+        self.assertEqual(self.mod.update_ledger(root), 1)
+        ledger = os.path.join(root, 'docs', 'managements', 'review-findings.md')
+        with open(ledger, encoding='utf-8') as handle:
+            self.assertIn('`src/python/a.py` 30 行', handle.read())
+        self.assertEqual(self.mod.check_ledger(root), [])
+        self.assertEqual(self.mod.read_state(self.mod._state_path(root)),
+                         {'src/python/a.py': 30})
+
+    def test_the_growth_threshold_comes_from_the_config(self):
+        with mock.patch.dict(self.mod._config.STYLE_POLICY, {'thresholds': {'ledger_growth': 3}}):
+            self.assertEqual(self.mod.growth_limit(), 3)
+        with mock.patch.dict(self.mod._config.STYLE_POLICY, {'thresholds': {}}):
+            self.assertEqual(self.mod.growth_limit(), self.mod.GROWTH_DEFAULT)
+
+    def write_state(self, root: str, files: dict[str, int]) -> None:
+        path = self.mod._state_path(root)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as handle:
+            json.dump({'files': files}, handle)
 
     def test_a_registered_file_that_is_gone_is_reported(self):
         root = self.ledger_book('| `src/python/gone.py` 3 行 | 占比 1%，拆法 |\n', {})

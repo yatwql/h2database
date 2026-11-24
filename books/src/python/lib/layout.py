@@ -13,6 +13,7 @@ follows the type size automatically, and a calibration run only ever moves
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, fields
 from typing import Any
 
@@ -35,6 +36,15 @@ DEFAULTS = {
     'layout_lead_ratio': 0.23,
     'layout_epub_line_height': 1.55,
     'layout_print_body_pt': 8.0,
+    # advance of one monospace character, in em: the width a printed code line
+    # occupies is `columns * advance * size`, which is what the sheet must hold
+    'layout_print_mono_advance': 0.6,
+    # below this the code is unreadable on paper, so the column wraps instead
+    'layout_print_code_min_px': 6,
+    # wrap long code lines rather than shrinking them; costs pages
+    'layout_print_wrap': 0,
+    # printed column width; 0 = as wide as the sheet's margins leave
+    'layout_print_column_px': 760,
 }
 
 # field name -> the thresholds key it is read from
@@ -58,7 +68,30 @@ RANGES = {
     'list_gap_em': (0.0, 2.0),
     'table_gap_em': (0.0, 3.0),
     'epub_code_em': (0.4, 1.2),
+    'print_mono_advance': (0.3, 1.2),
+    'print_code_min_px': (4, 14),
+    'print_wrap': (0, 1),
+    'print_column_px': (0, 1600),     # 0 means 'the printable width'
 }
+
+# sheet sizes in millimetres; an unknown name falls back to A4 rather than guessing
+PAGE_SIZES_MM = {
+    'A3': (297.0, 420.0), 'A4': (210.0, 297.0), 'A5': (148.0, 210.0),
+    'B4': (250.0, 353.0), 'B5': (176.0, 250.0),
+    'LETTER': (215.9, 279.4), 'LEGAL': (215.9, 355.6),
+}
+PX_PER_MM = 96 / 25.4
+PT_PER_MM = 72 / 25.4
+_UNIT_MM = {'mm': 1.0, 'cm': 10.0, 'in': 25.4, 'pt': 25.4 / 72, 'px': 25.4 / 96}
+
+
+def _mm(token: str) -> float:
+    """One CSS length in millimetres; a bare number is millimetres."""
+    text = str(token).strip().lower()
+    for unit, factor in _UNIT_MM.items():
+        if text.endswith(unit):
+            return float(text[:-len(unit)]) * factor
+    return float(text)
 
 
 @dataclass(frozen=True)
@@ -183,6 +216,13 @@ class Layout:
     epub_line_height: float = DEFAULTS['layout_epub_line_height']
     # what a printed body line should measure on paper; the scale follows
     print_body_pt: float = DEFAULTS['layout_print_body_pt']
+    # width of one monospace character in em, for fitting a printed code column
+    print_mono_advance: float = DEFAULTS['layout_print_mono_advance']
+    print_code_min_px: int = DEFAULTS['layout_print_code_min_px']
+    # wrap instead of shrinking: one diagram row becomes several text rows
+    print_wrap: int = DEFAULTS['layout_print_wrap']
+    # printed column; 0 means 'as wide as the sheet's margins leave'
+    print_column_px: int = DEFAULTS['layout_print_column_px']
 
     @classmethod
     def from_mapping(cls, mapping) -> tuple[Layout, list[str]]:
@@ -258,6 +298,85 @@ class Layout:
         """
         body_pt = max(0.5, float(self.body_size_px()) * 0.75)
         return round(float(self.print_body_pt) / body_pt, 4)
+
+    def page_size_mm(self) -> tuple[float, float]:
+        """The sheet in millimetres, by name or as `WxH` lengths."""
+        key = str(self.page_size).strip().upper()
+        if key in PAGE_SIZES_MM:
+            return PAGE_SIZES_MM[key]
+        parts = [p for p in re.split(r'[xX×\s]+', key) if p]
+        if len(parts) == 2:
+            try:
+                return _mm(parts[0]), _mm(parts[1])
+            except ValueError:
+                pass
+        return PAGE_SIZES_MM['A4']
+
+    def margins_mm(self) -> tuple[float, float]:
+        """Left and right margin, from the CSS shorthand in `page_margin`."""
+        tokens = [t for t in re.split(r'\s+', str(self.page_margin).strip()) if t]
+        try:
+            values = [_mm(t) for t in tokens] or [0.0]
+        except ValueError:
+            values = [0.0]
+        if len(values) == 1:
+            return values[0], values[0]
+        if len(values) == 3:
+            return values[1], values[1]
+        if len(values) >= 4:
+            return values[3], values[1]
+        return values[1], values[1]
+
+    def printable_width_px(self) -> float:
+        """What the sheet leaves for text, in CSS pixels.
+
+        A column wider than this prints outside the margins, and a column that only
+        fits because the renderer clips the overflow loses the end of every long
+        line. Both are the same defect, so the printable width is the budget every
+        printed column is measured against.
+        """
+        left, right = self.margins_mm()
+        return max(0.0, (self.page_size_mm()[0] - left - right) * PX_PER_MM)
+
+    def printable_width_pt(self) -> float:
+        """The same width in points, which is what a built page is measured in."""
+        return round(self.printable_width_px() / PX_PER_MM * PT_PER_MM, 2)
+
+    def print_column(self) -> int:
+        """The printed column, in CSS pixels.
+
+        The default keeps the screen column: replacing it with the frame width looked
+        principled and cost 88 pages on this book (877 -> 965) without moving a line
+        inside the margins — the overflow it was meant to fix happens where the page
+        box is built, not where the column is declared . A book that
+        wants the frame instead sets this to 0.
+        """
+        if self.print_column_px:
+            return int(self.print_column_px)
+        return max(1, int(round(self.printable_width_px())))
+
+    def _print_fit_px(self, columns: int) -> float:
+        """Code size at which `columns` characters exactly fill the printable width."""
+        return (self.printable_width_px() / max(1, int(columns))
+                / max(0.1, self.print_mono_advance))
+
+    def print_code_px(self, columns: int) -> float:
+        """Largest code type that keeps `columns` characters inside the sheet.
+
+        Capped by the screen size: printing code larger than the screen edition was
+        never the intent, and the cap keeps this a pure fit calculation.
+        """
+        return round(max(float(self.print_code_min_px),
+                         min(float(self.code_px), self._print_fit_px(columns))), 2)
+
+    def print_wraps(self, columns: int) -> bool:
+        """Whether the printed code column wraps instead of shrinking further.
+
+        Wrapping keeps every line inside the sheet but turns one diagram row into
+        several text rows, so it is a decision with a page cost — taken only when
+        the alternative is type too small to read.
+        """
+        return bool(self.print_wrap) or self._print_fit_px(columns) < self.print_code_min_px
 
     def body_size_px(self) -> int:
         """The body size: explicit when configured, else derived from the column.

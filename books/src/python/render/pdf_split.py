@@ -19,6 +19,7 @@ import subprocess
 import tempfile
 from typing import Any
 
+from lib import _log
 from pypdf import PdfReader, PdfWriter
 
 MARKER_RE = re.compile(r'__hdr_(\d+)__')
@@ -130,6 +131,17 @@ def merge(paths: list[str], pdf_path: str, entries: list[dict]) -> int:
     return len(writer.pages)
 
 
+def accept_optimised(before_pages: int, before_bytes: int,
+                    after_pages: int, after_bytes: int) -> bool:
+    """Whether the gs rewrite may replace the merged file.
+
+    Two conditions, both needed: the page count must survive (a truncated file is
+    also a smaller file) and the file must actually be smaller (otherwise the pass
+    bought nothing and only risked the merge).
+    """
+    return after_pages == before_pages and after_bytes < before_bytes
+
+
 def _optimize(pdf_path: str) -> None:
     """Recompress with ghostscript when it is available and the result is sound.
 
@@ -139,22 +151,37 @@ def _optimize(pdf_path: str) -> None:
     complete PDF with the same page count: an interrupted gs run leaves a
     truncated file that is smaller than the original, and swapping that in
     corrupts the deliverable.
+
+    Every run is logged (command, both sizes, the decision): whether the pass
+    actually fires cannot be told from the output file alone, and a silent skip
+    reads exactly like a pass that bought nothing.
     """
+    log = _log.get_logger('render.pdf_split')
+    before_bytes = os.path.getsize(pdf_path)
+    before_pages = len(PdfReader(pdf_path).pages)
     gs = shutil.which('gs')
     if not gs:
+        log.info('gs 未安装，跳过分章合并后的压缩：%s %d 页 %.2f MB',
+                 os.path.basename(pdf_path), before_pages, before_bytes / 1048576)
         return
     tmp = pdf_path + '.gs.pdf'
     cmd = [gs, '-sDEVICE=pdfwrite', '-dCompatibilityLevel=1.6', '-dPDFSETTINGS=/printer',
            '-dSubsetFonts=true', '-dCompressFonts=true', '-dDetectDuplicateImages=true',
            '-dNOPAUSE', '-dQUIET', '-dBATCH', f'-sOutputFile={tmp}', pdf_path]
+    log.debug('gs 压缩：%s', ' '.join(cmd))
     try:
         subprocess.run(cmd, check=True, timeout=600)
-        before = len(PdfReader(pdf_path).pages)
-        after = len(PdfReader(tmp).pages)
-        if after == before and os.path.getsize(tmp) < os.path.getsize(pdf_path):
+        after_bytes = os.path.getsize(tmp)
+        after_pages = len(PdfReader(tmp).pages)
+        accepted = accept_optimised(before_pages, before_bytes, after_pages, after_bytes)
+        log.info('gs 压缩 %s：%d 页 %.2f MB → %d 页 %.2f MB，%s',
+                 os.path.basename(pdf_path), before_pages, before_bytes / 1048576,
+                 after_pages, after_bytes / 1048576,
+                 '已采用' if accepted else '不采用（须同页数且更小）')
+        if accepted:
             os.replace(tmp, pdf_path)
-    except Exception:  # noqa: BLE001 - a failed optimise pass must not break the build
-        pass
+    except Exception as exc:  # noqa: BLE001 - a failed optimise pass must not break the build
+        log.warning('gs 压缩失败，保留合并结果 %s：%s', os.path.basename(pdf_path), exc)
     finally:
         try:
             os.remove(tmp)

@@ -137,6 +137,74 @@ class BodySizeDerivationTest(unittest.TestCase):
         self.assertEqual(layout.body_line_height(), 1.4)
 
 
+class PrintColumnTest(unittest.TestCase):
+    """The printed column is measured against the sheet, not chosen by hand."""
+
+    def test_the_printable_width_is_the_sheet_minus_its_margins(self):
+        layout = Layout.from_mapping({'layout_page_size': 'A4',
+                                      'layout_page_margin': '24mm 20mm'})[0]
+        # 210mm - 2 x 20mm = 170mm; 170 / 25.4 * 96
+        self.assertAlmostEqual(layout.printable_width_px(), 642.5, delta=0.5)
+        self.assertAlmostEqual(layout.printable_width_pt(), 481.9, delta=0.5)
+
+    def test_four_margin_values_take_the_left_and_right_edge(self):
+        layout = Layout.from_mapping({'layout_page_margin': '10mm 12mm 14mm 16mm'})[0]
+        self.assertEqual(layout.margins_mm(), (16.0, 12.0))
+        self.assertAlmostEqual(layout.printable_width_px(),
+                               (210.0 - 28.0) * 96 / 25.4, delta=0.5)
+
+    def test_a_named_size_or_an_explicit_one_both_resolve(self):
+        self.assertEqual(Layout.from_mapping({'layout_page_size': 'B5'})[0].page_size_mm(),
+                         (176.0, 250.0))
+        explicit = Layout.from_mapping({'layout_page_size': '200mmx300mm'})[0]
+        self.assertEqual(explicit.page_size_mm(), (200.0, 300.0))
+
+    def test_an_unknown_size_falls_back_to_a4(self):
+        self.assertEqual(Layout.from_mapping({'layout_page_size': 'tabloid-ish'})[0]
+                         .page_size_mm(), (210.0, 297.0))
+
+    def test_a_broken_margin_does_not_break_the_fit(self):
+        layout = Layout.from_mapping({'layout_page_margin': 'wide'})[0]
+        self.assertEqual(layout.margins_mm(), (0.0, 0.0))
+        self.assertGreater(layout.printable_width_px(), 0)
+
+    def test_the_column_is_the_configured_one_by_default(self):
+        layout = Layout.from_mapping({'layout_page_size': 'A4',
+                                      'layout_page_margin': '20mm'})[0]
+        self.assertEqual(layout.print_column(), layout.print_column_px)
+
+    def test_zero_makes_the_column_as_wide_as_the_sheet_leaves(self):
+        layout = Layout.from_mapping({'layout_print_column_px': 0,
+                                      'layout_page_size': 'A4',
+                                      'layout_page_margin': '20mm'})[0]
+        self.assertEqual(layout.print_column(), int(round(layout.printable_width_px())))
+
+    def test_the_code_size_shrinks_until_the_widest_line_fits(self):
+        layout = Layout.from_mapping({'layout_page_size': 'A4',
+                                      'layout_page_margin': '24mm 20mm',
+                                      'layout_code_px': 10})[0]
+        # 100 columns at the screen size need 600px and the sheet has 642px
+        self.assertEqual(layout.print_code_px(100), 10)
+        # a long line cannot fit at the screen size, so the type follows it down
+        narrow = layout.print_code_px(150)
+        self.assertLess(narrow, 10)
+        self.assertLessEqual(150 * layout.print_mono_advance * narrow,
+                             layout.printable_width_px() + 0.1)
+
+    def test_the_code_size_never_drops_below_the_readable_floor(self):
+        layout = Layout.from_mapping({'layout_print_code_min_px': 8})[0]
+        self.assertEqual(layout.print_code_px(400), 8.0)
+
+    def test_below_the_floor_the_column_wraps_instead(self):
+        layout = Layout.from_mapping({'layout_print_code_min_px': 8})[0]
+        self.assertTrue(layout.print_wraps(400))
+        self.assertFalse(Layout().print_wraps(100))
+
+    def test_the_wrap_knob_forces_wrapping(self):
+        layout = Layout.from_mapping({'layout_print_wrap': 1})[0]
+        self.assertTrue(layout.print_wraps(10))
+
+
 class DefaultsIdentityTest(unittest.TestCase):
     """A default layout must derive the default scale: identity, not a second copy.
 

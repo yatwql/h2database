@@ -13,6 +13,28 @@
 
 ### 变更
 
+- **印刷版栏宽与代码字号改为推导，并给出可印宽度判据**：`lib/layout.py` 新增
+  `printable_width_px/pt`（按纸张与页边距算）、`print_column()`、`print_code_px(列数)`、
+  `print_wraps(列数)`；印刷 CSS 的 `#content` / `#toc-page` 栏宽与 `pre` 字号不再手写，
+  而由布局给出，代码字号按「宽度预算内的行必须落在可印宽度里」反推。超长行有两条路：
+  字号随行收缩到可读下限（`layout_print_code_min_px`，默认 6px），再不行就换行
+  （`layout_print_wrap`，默认关，实测整本开启多 164 页）；打印时行号列隐藏，避免与
+  换行错位。判据落在 `audit/pdf_invariants.py`：按基线聚合每条文本的起止，超出
+  「左边距 + 可印宽度」即判失败（同一份 PDF 上印刷版 16 页超宽，标准版 0 页）。
+  实测：把印刷栏宽直接压到纸张可印宽度（643px）在标准版上**多 88 页**（877 → 965）、
+  印刷版宽度 778 → 694.5pt 仍越界，因此默认保留 760px（`layout_print_column_px`，
+  0 表示「跟着纸走」），并把越界的真正来源另记一条问题。
+
+- **文件长度台账不再靠手抄**：`audit/file_length.py` 把台账上一次的实测行数记进
+  `data/state/file-length.json`，门禁只在「较登记时增长超过 `style.json thresholds.ledger_growth`
+  （默认 10 行）且台账未更新」时报错，小幅漂移不再刷屏；`--update-ledger` 一次写回所有
+  登记行并刷新基线。台账仍是人工可读的清单，但数字由工具维护。
+
+- **ghostscript 压缩登记**：`render/pdf_split._optimize()` 每次运行写一条日志——
+  gs 是否可用、调用命令（DEBUG）、原始/压缩后的页数与体积、「同页数且更小」的判定结果
+  （采用 / 不采用），失败时降为 WARNING 并保留合并结果；判定抽成 `accept_optimised()`
+  便于单测。
+
 - **测试用例审计**：1102 个用例逐项核查——冗余/空断言/遮蔽由 `test_redundancy` 判定通过，
   layer 标签与导入层 0 处不一致，tier 分类已由 `HAS_PANDOC`/`SLOW` 守卫正确表达；
   命名与内容不符的 10 处改名（如 `test_basic` → `test_slugify_keeps_the_chapter_heading`、
