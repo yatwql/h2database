@@ -303,5 +303,125 @@ class HeartbeatTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertTrue(any('仍在执行' in line for line in lines), lines)
 
+
+
+class ReportingHelpersTest(unittest.TestCase):
+    """The one-line reports compose the action output; each verdict has a branch."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.actions = _fixture.load_module(self.root, 'actions')
+
+    # -- 体积结论 ---------------------------------------------------------
+
+    def test_zero_findings_means_the_baseline_holds(self):
+        code, line = self.actions._volume_line('{"count": 0}')
+        self.assertEqual(code, 0)
+        self.assertIn('与基线一致', line)
+
+    def test_findings_name_the_update_command(self):
+        code, line = self.actions._volume_line('{"count": 3}')
+        self.assertEqual(code, 1)
+        self.assertIn('3 项低于基线', line)
+        self.assertIn(self.actions.VOLUME_SCRIPT, line)
+
+    # -- LLM 记账 ---------------------------------------------------------
+    def test_a_broken_ledger_does_not_break_the_report(self):
+        failure = self.actions._llm.LLMError('no ledger')
+        with mock.patch.object(self.actions._llm, 'usage_line', side_effect=failure), \
+                mock.patch.object(self.actions._llm, 'summary_line', side_effect=failure):
+            self.assertIn('用量记账不可用', self.actions._llm_lines())
+            self.assertIn('用量记账不可用', self.actions._llm_lines({'calls': 1}))
+
+    def test_the_budget_warning_is_appended_when_present(self):
+        with mock.patch.object(self.actions._llm, 'usage_line', return_value='用量：1 次'), \
+                mock.patch.object(self.actions._llm, 'budget_line', return_value='⚠ 超出日限额'):
+            text = self.actions._llm_lines()
+        self.assertIn('用量：1 次', text)
+        self.assertIn('⚠ 超出日限额', text)
+
+    # -- 状态 -------------------------------------------------------------
+    def test_a_provider_failure_is_reported_as_a_line(self):
+        with mock.patch.object(self.actions._llm, 'status',
+                               side_effect=self.actions._llm.LLMError('provider down')):
+            code, text = self.actions.status()
+        self.assertEqual(code, 0)
+        self.assertIn('provider down', text)
+
+
+
+
+class AnalyzeReportTest(unittest.TestCase):
+    """The ingest run ends with the volume verdict, and says what the LLM did."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.actions = _fixture.load_module(self.root, 'actions')
+
+    def run_analyze(self, *, volume='{"count": 0}', use_llm=True, fail_at=''):
+        calls = []
+
+        def fake_run(script, *args):
+            calls.append((script, args))
+            if script == fail_at:
+                return 1, f'{script} failed'
+            if script == self.actions.VOLUME_SCRIPT:
+                return 0, volume
+            return 0, f'{script} ok'
+
+        with mock.patch.object(self.actions, '_run', side_effect=fake_run), \
+                mock.patch.object(self.actions._llm, 'take_totals', return_value={}), \
+                mock.patch.object(self.actions._llm, 'since', return_value={'calls': 0}), \
+                mock.patch.object(self.actions._llm, 'summary_line', return_value=''), \
+                mock.patch.object(self.actions._llm, 'budget_line', return_value=''):
+            code, text = self.actions.analyze(use_llm=use_llm)
+        return code, text, calls
+
+    def test_the_volume_verdict_is_part_of_the_report(self):
+        code, text, _calls = self.run_analyze(volume='{"count": 2}', use_llm=False)
+        self.assertEqual(code, 1)
+        self.assertIn('2 项低于基线', text)
+
+    def test_the_llm_run_explains_that_nothing_was_rewritten(self):
+        code, text, _calls = self.run_analyze()
+        self.assertEqual(code, 0)
+        self.assertIn('本轮没有生成或重写的章节', text)
+
+    def test_a_failing_script_stops_before_the_volume_check(self):
+        code, text, calls = self.run_analyze(fail_at='ingest/outline.py', use_llm=False)
+        self.assertEqual(code, 1)
+        self.assertNotIn(self.actions.VOLUME_SCRIPT, [call[0] for call in calls])
+
+
+
+
+class DispatchRoutingTest(unittest.TestCase):
+    """Every action name reaches its handler; the report actions share one path."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.actions = _fixture.load_module(self.root, 'actions')
+
+    def test_every_report_action_reaches_its_own_handler(self):
+        seen = []
+        for name in ('build', 'check', 'test', 'print', 'deliver'):
+            with mock.patch.object(self.actions, name if name != 'print' else 'print_edition',
+                                   side_effect=lambda on_line=None, n=name: (seen.append(n), (0, n))[1]):
+                code, text = self.actions._dispatch(name, on_progress=None)
+            self.assertEqual((code, text), (0, name))
+        self.assertEqual(seen, ['build', 'check', 'test', 'print', 'deliver'])
+
+    def test_an_unknown_action_is_refused_with_the_known_list(self):
+        code, text = self.actions._dispatch('nope')
+        self.assertEqual(code, 2)
+        self.assertIn('unknown action', text)
+
+
 if __name__ == '__main__':
     unittest.main()
