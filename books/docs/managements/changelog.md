@@ -13,6 +13,17 @@
 
 ### 变更
 
+- **印刷版改走同一条渲染链**：`render/print_pdf.py` 不再自己调 `page.pdf()`，改为
+  「`print_profile` 注入 + `pdf_split.render_html`」，与标准版同一视口（A4@96dpi）、同一
+  `@page` 页框、同一栏宽与字号——这就是 `rf-50` 里「正文从 x=0 起排、行宽 642pt 超过 595pt
+  纸宽」的解法。**`scale` 随之删除**（`layout_print_body_pt` 与 `base.json` 的 `print_scale`
+  一并去掉）：它与页框耦合，正是不知不觉越界的来源；印刷版要的纸上字号现在由栏宽/字号推导
+  给出，不再靠整页缩放。印刷版专属排版单列 `render/print_profile.py`：长度全用 `em`、
+  主色取书目（`accent_color`，缺省中性色）、只作用于 `@media print`，因此通用、不绑定本书。
+  marker 注入收到 `pdf_split.inject_markers()`，`to_pdf` 与印刷版共用一份。实测：印刷版
+  越界页 **40 → 0**、大纲 644 条不变、`verify_pdf` 三项全 ok；印刷版 905 页。与标准版
+  958 页的差额（同一份正文、同一页框、逐章对比 profile 仅 ±2 页）另记 `rf-51` 继续定位。
+
 - **check 日志按日归档**：`logs/check-<模式>-<YYYYMMDD>.log` 是当天的运行日记（每次运行
   追加一段带时间的表头），`check-<模式>-<YYYYMMDD>.jsonl` 每行一次运行的完整摘要；
   同日多次运行不再各占一对文件，通过/失败都在同一份里，`check-latest.json` 仍指向最后一次。

@@ -35,7 +35,6 @@ DEFAULTS = {
     'layout_body_chars_per_line': 40,
     'layout_lead_ratio': 0.23,
     'layout_epub_line_height': 1.55,
-    'layout_print_body_pt': 8.0,
     # advance of one monospace character, in em: the width a printed code line
     # occupies is `columns * advance * size`, which is what the sheet must hold
     'layout_print_mono_advance': 0.6,
@@ -60,7 +59,6 @@ RANGES = {
     'body_chars_per_line': (20, 80),
     'lead_ratio': (0.05, 0.6),
     'epub_line_height': (1.0, 2.4),
-    'print_body_pt': (4.0, 14.0),
     'code_px': (5, 18),
     'code_line_height': (0, 2.4),   # 0 means 'derive it'
     'column_px': (480, 1600),
@@ -219,8 +217,6 @@ class Layout:
     # the reflowable column sets its own leading: a reader may zoom, and the
     # page's 1 + lead_ratio would look cramped there
     epub_line_height: float = DEFAULTS['layout_epub_line_height']
-    # what a printed body line should measure on paper; the scale follows
-    print_body_pt: float = DEFAULTS['layout_print_body_pt']
     # width of one monospace character in em, for fitting a printed code column
     print_mono_advance: float = DEFAULTS['layout_print_mono_advance']
     print_code_min_px: int = DEFAULTS['layout_print_code_min_px']
@@ -293,18 +289,6 @@ class Layout:
         for literal, replacement in self.css_substitutions().items():
             css = css.replace(literal, replacement)
         return css
-
-    def print_scale(self) -> float:
-        """Scale that puts the body text at its intended size on paper.
-
-        Fitting the column into the printable width sounds principled but chooses the
-        type size as a side effect: a wide column paired with a narrow sheet produces
-        text too small to read. The size a printed line should measure is a design
-        decision (`print_body_pt`), so the scale is whatever delivers it -- on any
-        paper and for any book.
-        """
-        body_pt = max(0.5, float(self.body_size_px()) * 0.75)
-        return round(float(self.print_body_pt) / body_pt, 4)
 
     def page_size_mm(self) -> tuple[float, float]:
         """The sheet in millimetres, by name or as `WxH` lengths."""

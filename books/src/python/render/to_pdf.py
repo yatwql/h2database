@@ -139,48 +139,16 @@ try:
         # Each heading gets a unique marker like __HDR_0__, __HDR_1__, ...
         # These are searchable in the PDF text layer (ASCII text is extracted
         # reliably by pypdf, unlike CJK text which can be garbled).
-        # font-size:0.1px + color:transparent keeps them invisible while still
-        # rendering into the PDF text layer.
-
-        # Content marker: placed at the very start of #content
-        page.evaluate('''() => {
-            const content = document.getElementById('content');
-            if (!content) return;
-            const marker = document.createElement('span');
-            marker.className = 'content-marker';
-            marker.textContent = '__CONTENT__';
-            marker.style.cssText = 'display:inline;font-size:3px;color:#ffffff;pointer-events:none;user-select:none;';
-            content.insertBefore(marker, content.firstChild);
-        }''')
-
-        # Heading markers: one before each heading
-        headings_json = page.evaluate('''() => {
-            const content = document.getElementById('content');
-            if (!content) return [];
-            const els = content.querySelectorAll('h1[id], h2[id], h3[id], h4[id]');
-            const result = [];
-            els.forEach((h, i) => {
-                const marker = document.createElement('span');
-                marker.className = 'hdr-marker';
-                marker.textContent = '__hdr_' + i + '__';
-                marker.style.cssText = 'display:inline;font-size:3px;color:#ffffff;pointer-events:none;user-select:none;';
-                h.parentNode.insertBefore(marker, h);
-                result.push({
-                    index: i,
-                    id: h.id,
-                    text: h.textContent.trim(),
-                    level: parseInt(h.tagName.substring(1)),
-                });
-            });
-            return result;
-        }''')
+        # font-size:3px + white text keeps them invisible while still rendering into
+        # the PDF text layer; the same injection serves every entry point.
+        from render import pdf_split  # noqa: PLC0415 - optional path
+        headings_json = pdf_split.inject_markers(page)
 
         print(f"  Injected {len(headings_json)} heading markers")
 
         # Print to PDF
         optimize_after_outline = False
         if bool(_config.THRESHOLDS.get('pdf_split_by_chapter', False)):
-            from render import pdf_split  # noqa: PLC0415 - optional path
             pdf_split.render(page, pdf_path, {
                 'format': 'A4',
                 'print_background': True,

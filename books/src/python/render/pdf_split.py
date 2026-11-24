@@ -24,6 +24,28 @@ from pypdf import PdfReader, PdfWriter
 
 MARKER_RE = re.compile(r'__hdr_(\d+)__')
 
+# One injection for every entry point that renders this book: a content marker at the
+# top of #content and a `__hdr_<n>__` before each heading. The marker survives to the
+# text layer (3px, white), so the outline maps straight back to the heading list.
+INJECT_JS = '''() => {
+    const content = document.getElementById('content');
+    if (!content) return [];
+    const mark = (text, before) => {
+        const span = document.createElement('span');
+        span.textContent = text;
+        span.style.cssText = 'display:inline;font-size:3px;color:#ffffff;'
+            + 'pointer-events:none;user-select:none;';
+        before.parentNode.insertBefore(span, before);
+    };
+    mark('__CONTENT__', content.firstChild);
+    const els = content.querySelectorAll('h1[id], h2[id], h3[id], h4[id]');
+    return [...els].map((h, i) => {
+        mark('__hdr_' + i + '__', h);
+        return {index: i, id: h.id, text: h.textContent.trim(),
+                level: parseInt(h.tagName.substring(1))};
+    });
+}'''
+
 SPLIT_JS = '''() => {
     const content = document.getElementById('content');
     if (!content) return [];
@@ -187,6 +209,38 @@ def _optimize(pdf_path: str) -> None:
             os.remove(tmp)
         except OSError:
             pass
+
+
+def inject_markers(page) -> list[dict]:
+    """Add the content and heading markers; returns the heading records."""
+    return page.evaluate(INJECT_JS) or []
+
+
+def render_html(html_path: str, pdf_path: str, engine: Any = None,
+                pdf_kwargs: dict | None = None) -> int:
+    """Split-render an HTML file with the layout's own page box; returns pages.
+
+    Every edition goes through here so a printed page is laid out and paginated by
+    the same rules whatever the entry point: the viewport is the sheet at 96dpi and
+    the page box comes from the stylesheet (`prefer_css_page_size`), which is what
+    makes the column and the margins agree.
+    """
+    if engine is None:
+        from playwright.sync_api import sync_playwright as engine  # noqa: PLC0415
+    kwargs = pdf_kwargs or {'format': 'A4', 'print_background': True,
+                            'display_header_footer': False,
+                            'prefer_css_page_size': True}
+    with engine() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
+        try:
+            page = browser.new_page()
+            page.goto('file:///' + str(html_path).replace('\\', '/'),
+                      wait_until='networkidle', timeout=60000)
+            page.wait_for_timeout(2000)
+            return render(page, pdf_path, kwargs, inject_markers(page))
+        finally:
+            browser.close()
 
 
 def render(page, pdf_path: str, pdf_kwargs: dict, headings: list[dict]) -> int:

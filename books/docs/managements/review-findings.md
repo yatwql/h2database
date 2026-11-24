@@ -4,7 +4,7 @@
 > 版本：v0.1-dev
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
-> **编号源**：`rf-next = 51`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-50，
+> **编号源**：`rf-next = 52`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-51，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -147,7 +147,8 @@
 | rf-48 | 文件长度门禁靠人工台账：`review-findings.md` 里登记的行数一过时，门禁只报「登记 853 / 实测 881」，数字过时后必须手工抄写，容易漏改 | **已解决**：`audit/file_length.py` 把上次实测行数记进 `data/state/file-length.json`，只在「较登记时增长 > `style.json thresholds.ledger_growth`（默认 10 行）且台账未更新」时报错；`--update-ledger` 写回全部登记行并刷新基线（本次运行 3 行，无需改动）。台账仍人工可读，数字由工具维护 |
 | rf-49 | 标准版每页字节 9.5 KB，六月参照 8.5 KB；分章渲染路径里 ghostscript 压缩是否真正执行、输出是否被接受，日志中没有记录 | **已解决**：`render/pdf_split._optimize()` 记录 gs 是否可用、调用命令（DEBUG）、压缩前后页数与体积、判定结果（已采用 / 不采用），失败降为 WARNING 并保留合并结果；判定抽成 `accept_optimised()` 并有单测。日志已确认压缩确实生效：标准版 877 页 / 8.58 MB → 7.49 MB（每页 8.8 KB，六月 8.5 KB） |
 
-| rf-50 | 印刷版页框与页边距没生效：`render/print_pdf.py` 产出的 PDF 正文从 `x=0` 起排，行宽 642pt 远超 A4 的 595pt 纸宽（可印 482pt），即纸张左侧页边距丢失、右侧被裁；`pdf_invariants` 同时报 40 页文字出界。栏宽改小只能把溢出从 778pt 降到 694.5pt，治不了根 | **待修**。方向：印刷版走与标准版同一条分章渲染路径（`pdf_split` 已用 `set_viewport_size` + CSS `@page` 让 Chromium 按页框排版），或给 `print_pdf` 也先设视口并按 `prefer_css_page_size=True` 分页；判据沿用 rf-47 新增的「行宽 ≤ 可印宽度」不变量，并要求印刷版同一页上 0 页超宽 |
+| rf-50 | 印刷版页框与页边距没生效：`render/print_pdf.py` 产出的 PDF 正文从 `x=0` 起排，行宽 642pt 超过 A4 的 595pt 纸宽（可印 482pt），`pdf_invariants` 报 40 页文字出界 | **已解决（改为共用渲染器）**：`print_pdf.py` 不再自己调 `page.pdf()`，改为「`print_profile` 注入 + `pdf_split.render_html`」——与标准版同一视口（A4@96dpi）、同一 `@page` 页框、同一栏宽与字号；`scale` 随之删除（`layout_print_body_pt`、`base.json print_scale` 一并去掉，它与页框耦合正是不知不觉越界的来源）。印刷版专属排版单列 `render/print_profile.py`：长度全用 `em`、主色取书目（`accent_color`，缺省中性色）、只作用于 `@media print`，故不绑定本书；`marker` 注入收到 `pdf_split.inject_markers()`，`to_pdf` 与印刷版共用。实测：越界页 **40 → 0**、大纲 644 条不变、`verify_pdf` 的 `COLUMN`/`PAGE_SIZE`/`FONTS` 全 ok；印刷版 905 页 |
+| rf-51 | 印刷版 905 页 vs 标准版 958 页，而正文文本完全相同（914,823 vs 914,703 字符）、页框与纵向填充相同（文本 y 跨度均约 658pt）、字号与行距相同。逐章对比显示 `print_profile` 只影响 ±2 页，但第 3 章 51 vs 58 页、每页行数 74.0 vs 69.4、少于 15 行的页 45 vs 26 | **待定位**。已排除：配置（两者同一 `@page`/栏宽/字号）、正文字体（同一 HTML 的 body 节点数与字符数一致）、`scale`（已删除）。方向：`pre, table { page-break-inside: avoid }` 与每章起始位置相互作用造成的分页级联——同一份 body、同一边界条件会因起点偏移几行而在后续页面上放大为“半空页”；判据应是「同一 body 的正文页数差 ≤ 2%」，而不是两版页数相等。复现：`print_pdf.py --html <同一份 html>` 与 `to_pdf.py` 各渲一次，比较 `pdf_metrics` 的每页行数 |
 
 ### 归档
 

@@ -252,7 +252,8 @@ books/
 | `html_shell.py` | `to_html.py` 的样式表 | CSS 单列一份；搬动它不得改动产物一个字节（以构建哈希为验收） |
 | `to_pdf.py` | HTML → PDF | 无头浏览器渲染；随后用 pypdf 写入大纲 |
 | `pdf_toc_links.py` | PDF | 按目录条目与大纲的**位置对应关系**补链接注释，不靠标题文本匹配 |
-| `print_pdf.py` | HTML → 印刷级 PDF | 章首装饰页、点线目录、页眉页脚；独立工具，不进 `deliver` 组 |
+| `print_pdf.py` | HTML → 印刷版 PDF | 与标准版同一分章渲染器与同一页框，只额外注入 `print_profile`（章首横幅、点线目录）；不带自己的边距/缩放 |
+| `print_profile.py` | 印刷版专属样式 | 全部长度用 `em`、颜色取书目的主色；只影响 `@media print`，不改磁盘上供屏幕阅读的那份 HTML |
 | `pdf_from_html.py` | 现成 HTML → PDF | 不重建 HTML 的旁路；独立工具，不进 `deliver` 组 |
 | `verify_pdf.py` | PDF + HTML | 校验页数、A4、旋转、字体嵌入、体积、大纲与标题一一对应、目录链接落点 |
 | `to_epub.py` | 合并稿 → EPUB | pandoc 生成，元数据经 `--metadata-file` 传入 |

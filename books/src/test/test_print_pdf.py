@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Tests for the print-grade PDF pipeline (fake Chromium engine)."""
+"""The print edition is the delivery renderer plus one print-only stylesheet.
+
+What this pins down: the print edition goes through the split renderer (one page box,
+one column, no scale of its own), the profile is injected into a staging file and
+removed afterwards, and nothing in the pipeline decides a margin or a size on its own.
+"""
 
 from __future__ import annotations
 
@@ -8,10 +13,11 @@ import os
 import sys
 import tempfile
 import unittest
-from contextlib import contextmanager, redirect_stdout
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
+from unittest import mock
 
 import _fixture
-from pypdf import PdfReader, PdfWriter
+from pypdf import PdfWriter
 from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
 
 TAGS = ('layer:infra', 'tier:fast')  # fake chromium engine: no browser
@@ -22,7 +28,8 @@ TOOLS_DIR = os.path.join(
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
 
-def write_text_pdf(path: str, pages: list[list[str]]) -> str:
+
+def write_text_pdf(path: str, pages: list[list[str]]) -> None:
     """A4 pages carrying the given ASCII text lines."""
     writer = PdfWriter()
     font_ref = writer._add_object(DictionaryObject({
@@ -42,49 +49,66 @@ def write_text_pdf(path: str, pages: list[list[str]]) -> str:
         body.append('ET')
         stream.set_data('\n'.join(body).encode('utf-8'))
         page[NameObject('/Contents')] = writer._add_object(stream)
-    with open(path, 'wb') as fh:
-        writer.write(fh)
-    return path
+    with open(path, 'wb') as handle:
+        writer.write(handle)
 
-class RecordingPage:
-    def __init__(self, target: str, pages: list[list[str]]):
+
+class SplitPage:
+    """A browser page that answers the two scripts the splitter runs."""
+
+    def __init__(self, target: str, parts: list[dict], headings: list[dict]):
         self.target = target
-        self.pages = pages
+        self.parts = parts
+        self.headings = headings
+        self.viewport: dict = {}
         self.pdf_kwargs: dict = {}
+        self.urls: list[str] = []
 
-    def goto(self, url: str, **kwargs) -> None:
+    def goto(self, url: str, **_kwargs) -> None:
+        self.urls.append(url)
+
+    def wait_for_timeout(self, _ms: int) -> None:
         return None
 
-    def wait_for_timeout(self, ms: int) -> None:
+    def set_viewport_size(self, size: dict) -> None:
+        self.viewport = size
+
+    def evaluate(self, script: str, _payload=None):
+        if 'holder' in script:          # the splitter's chapter split
+            return self.parts
+        if '__CONTENT__' in script:     # the marker injection
+            return self.headings
         return None
 
-    def evaluate(self, script: str):
-        return None
-
-    def pdf(self, path: str, **kwargs) -> None:
+    def pdf(self, path: str | None = None, **kwargs) -> None:
         self.pdf_kwargs = kwargs
-        write_text_pdf(path or self.target, self.pages)
+        write_text_pdf(path or self.target, [['__CONTENT__', '__hdr_0__Chapter One']])
+
 
 class FakeBrowser:
     def __init__(self, page):
         self._page = page
+        self.closed = False
 
     def new_page(self):
         return self._page
 
     def close(self) -> None:
-        return None
+        self.closed = True
+
 
 class FakeChromium:
     def __init__(self, page):
         self._page = page
 
-    def launch(self, **kwargs):
+    def launch(self, **_kwargs):
         return FakeBrowser(self._page)
+
 
 class FakePlaywright:
     def __init__(self, page):
         self.chromium = FakeChromium(page)
+
 
 def fake_engine(page):
     @contextmanager
@@ -93,94 +117,83 @@ def fake_engine(page):
 
     return engine
 
-class PrintGradePdfTest(unittest.TestCase):
+
+class PrintEditionTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.root = _fixture.build_book(self.tmp.name)
         self.module = _fixture.load_module(self.root, 'print_pdf')
+        self.profile = _fixture.load_module(self.root, 'print_profile')
         self.html = os.path.join(self.tmp.name, 'book.html')
         self.pdf = os.path.join(self.tmp.name, 'print.pdf')
-        with open(self.html, 'w', encoding='utf-8') as fh:
-            fh.write('<html><head></head><body><h1 id="a">Chapter One</h1>'
-                     '<h2 id="b">Section</h2></body></html>')
+        with open(self.html, 'w', encoding='utf-8') as handle:
+            handle.write('<html><head></head><body><div id="content">'
+                         '<h1 id="a">Chapter One</h1><p>text</p>'
+                         '<h1 id="b">Chapter Two</h1></div></body></html>')
+        self.parts = [{'html': '<h1 id="a">Chapter One</h1>',
+                       'headings': [{'level': 1, 'text': 'Chapter One'}]},
+                      {'html': '<h1 id="b">Chapter Two</h1>',
+                       'headings': [{'level': 1, 'text': 'Chapter Two'}]}]
+        self.headings = [{'index': 0, 'id': 'a', 'level': 1, 'text': 'Chapter One'}]
 
-    def test_parse_headings_matches_the_pdf_step(self):
-        found = self.module.parse_headings('<h1 id="a">T <b>x</b></h1><h3 id="b">Deep</h3>')
-        self.assertEqual([(h['level'], h['text'], h['id']) for h in found],
-                         [(1, 'T x', 'a'), (3, 'Deep', 'b')])
-
-    def test_inject_css_is_idempotent(self):
-        once = self.module.inject_css('<head></head>')
+    def test_the_profile_is_injected_once_before_the_head_closes(self):
+        once = self.profile.inject('<head></head>')
         self.assertIn('print-grade-css', once)
-        self.assertEqual(self.module.inject_css(once), once)
+        self.assertIn('@media print', once)
+        self.assertEqual(self.profile.inject(once), once)
 
-    def test_templates_carry_title_and_page_numbers(self):
-        header = self.module.header_template('我的书', '印刷版 v0.1')
-        self.assertIn('我的书', header)
-        self.assertIn('印刷版 v0.1', header)
-        footer = self.module.footer_template()
-        self.assertIn('pageNumber', footer)
-        self.assertIn('totalPages', footer)
+    def test_the_profile_does_not_fix_type_in_pixels(self):
+        block = self.profile.style_block()
+        self.assertNotRegex(block, r'font-size:\s*[\d.]+px')
+        self.assertNotRegex(block, r'(padding|margin)[^;]*\d+px')
+        self.assertIn('em', block)
 
-    def test_render_pdf_passes_print_options(self):
-        page = RecordingPage(self.pdf, [['cover']])
-        self.module.render_pdf(self.html, self.pdf, engine=fake_engine(page),
-                               running_head='书', label='印刷版 v0.1')
-        self.assertEqual(page.pdf_kwargs['format'], 'A4')
-        # the printed look matches the reference edition: no running header or
-        # footer band, and the body is scaled by the configured print_scale
-        self.assertFalse(page.pdf_kwargs['display_header_footer'])
-        self.assertEqual(page.pdf_kwargs['margin']['left'], '15mm')
-        self.assertEqual(page.pdf_kwargs['margin']['bottom'], '25mm')
-        # the scale is derived from the printable width and the column width, so it
-        # is a fit factor rather than a hand-picked enlargement
-        self.assertGreater(float(page.pdf_kwargs['scale']), 0.0)
-        self.assertLess(float(page.pdf_kwargs['scale']), 1.5)
+    def test_the_accent_comes_from_the_books_display_copy(self):
+        # accent() resolves the config at call time, so patch the module it imports
+        with mock.patch('lib._config.project', return_value='#123456'):
+            self.assertIn('#123456', self.profile.style_block())
+
+    def test_build_renders_through_the_splitter(self):
+        page = SplitPage(self.pdf, self.parts, self.headings)
+        with redirect_stdout(io.StringIO()):
+            count = self.module.build(self.html, self.pdf, fake_engine(page))
+        self.assertEqual(count, 3)   # front matter + one page per chapter part
+        self.assertEqual(page.viewport, {'width': 794, 'height': 1123})
+        self.assertTrue(page.pdf_kwargs['prefer_css_page_size'])
+        self.assertNotIn('scale', page.pdf_kwargs)     # no per-edition magnification
         self.assertTrue(os.path.exists(self.pdf))
 
-    def test_page_texts_and_content_start(self):
-        write_text_pdf(self.pdf, [['cover'], ['__CONTENT__body']])
-        texts = self.module.page_texts(self.pdf)
-        self.assertEqual(self.module.content_start(texts), 1)
-        self.assertEqual(self.module.content_start(['a', 'b']), 0)
+    def test_the_staged_html_carries_the_profile_and_is_removed(self):
+        seen: dict[str, str] = {}
 
-    def test_add_outlines_writes_entries_and_reports_missing(self):
-        write_text_pdf(self.pdf, [['cover'], ['__CONTENT__', '__hdr_0__Chapter One']])
-        found, missing = self.module.add_outlines(self.pdf, [
-            {'index': 0, 'level': 1, 'id': 'a', 'text': 'Chapter One'},
-            {'index': 9, 'level': 2, 'id': 'z', 'text': 'Missing'},
-        ])
-        self.assertEqual((found, missing), (1, ['Missing']))
-        self.assertTrue(PdfReader(self.pdf).outline)
+        def capture(path: str, _target: str, **_kwargs) -> int:
+            with open(path, encoding='utf-8') as handle:
+                seen['html'] = handle.read()
+            seen['path'] = path
+            return 3
 
-    def test_build_runs_the_whole_pipeline(self):
-        page = RecordingPage(self.pdf, [['cover'], ['__CONTENT__', '__hdr_0__Chapter One'],
-                                        ['__hdr_1__Section']])
-        buffer = io.StringIO()
-        with redirect_stdout(buffer):
-            found, missing = self.module.build(self.html, self.pdf, fake_engine(page))
-        self.assertEqual((found, missing), (2, []))
-        self.assertIn('Created 2', buffer.getvalue())
-        self.assertFalse(os.path.exists(
-            os.path.join(self.root, 'dist', f'_{self.module._config.MERGED_NAME}-print.html')))
+        with mock.patch.object(self.module.pdf_split, 'render_html', side_effect=capture), \
+                redirect_stdout(io.StringIO()):
+            count = self.module.build(self.html, self.pdf)
+        self.assertEqual(count, 3)
+        self.assertIn('print-grade-css', seen['html'])
+        self.assertFalse(os.path.exists(seen['path']))
 
-    def test_main_skips_html_regeneration_and_reports_failure(self):
-        def broken():
-            raise RuntimeError('no chromium')
-
-        with redirect_stdout(io.StringIO()), \
-                __import__('contextlib').redirect_stderr(io.StringIO()):
-            code = self.module.main(['--skip-html', '--html', self.html,
-                                     '--pdf', self.pdf], engine=broken)
+    def test_a_missing_source_is_reported_not_raised(self):
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            code = self.module._errors.run(self.module.main, [
+                '--skip-html', '--html', os.path.join(self.tmp.name, 'nope.html'),
+                '--pdf', self.pdf])
         self.assertEqual(code, 1)
 
     def test_main_returns_zero_on_success(self):
-        page = RecordingPage(self.pdf, [['cover'], ['__CONTENT__', '__hdr_0__Chapter One']])
+        page = SplitPage(self.pdf, self.parts, self.headings)
         with redirect_stdout(io.StringIO()):
-            code = self.module.main(['--skip-html', '--html', self.html, '--pdf', self.pdf],
-                                    engine=fake_engine(page))
+            code = self.module.main(['--skip-html', '--html', self.html,
+                                     '--pdf', self.pdf], engine=fake_engine(page))
         self.assertEqual(code, 0)
+
 
 if __name__ == '__main__':
     unittest.main()
