@@ -48,7 +48,7 @@
 | rf-55 | `lib/fonts.py` 分支覆盖 58%：字体探测（`fc-list` 输出、目录扫描、.ttc 集合、缺失族回退）全靠真机环境，换机才暴露 | **已解决**：`test_lib_fonts.py` 扩到 32 条——平台目录三态、后缀过滤、缺失文件不影响戳记、索引的写缓存/命中/失效/不可写、单面优先与集合不可嵌入、`coverage()` 的合并与不可读面、`fc-list` 的缺失/输出/异常、`resolve()` 的已知族排序/仅集合/无索引/全未知/引号。顺带修一处行为：所有面都读不出时 `coverage()` 原先把「未验证」当成「已覆盖」返回空缺失，现在返回全部缺失。分支覆盖 **58% → 90%**（判据 ≥80%） |
 | rf-56 | `audit/pdf_invariants.py` 分支覆盖 61%：`_outside_column`、`_type3_count`、`_outline_shape` 的异常与空输入分支未测 | **已解决**：`test_audit_pdf_invariants.py` 扩到 24 条——大纲嵌套/空/抛异常、Type3 跨页去重与非 Type3、越界与容差边界、负坐标、空白文本、坏页转 `unreadable`；`check()` 的四条问题分支与「无 merged 不判标题」；CLI 的干净/JSON/有问题三条。分支覆盖 **61% → 97%**（判据 ≥80%） |
 | rf-57 | `audit/epub_diff.py` 分支覆盖 71%：EPUB 对比的增删改三类差异只在手工验证里跑过 | **已解决**：`test_audit_epub_diff.py` 扩到 22 条——位图计数与纯文本图、多字体栈去重、空样式表、`_leads` 取首族、`_delta` 的新增/零/百分比、**「只加回退族不算漂移」与「首族变化算漂移」**、行高变化、章节数与期望值的报错文案、CLI 的表格/JSON/缺 `--merged` 用法错误。分支覆盖 **71% → 94%**（判据 ≥85%） |
-| rf-58 | `lib/_log.py`（78%）与 `core/menu.py`（80%）的分支缺口集中在「无书/不可写目录」「无历史刷新/确认取消/别名解析」 | **优先 5**：`log_dir()` 三分支与 `setup()` 幂等；`estimate()` 有/无历史、`artifacts()` 缺省、`resolve()` 别名与未知键；判据：两文件分支覆盖 ≥ 85% |
+| rf-58 | `lib/_log.py`（78%）与 `core/menu.py`（80%）的分支缺口集中在「无书/不可写目录」「无历史刷新/确认取消/别名解析」 | **已解决**：新增 `test_core_menu.py`（25 条：中位数过滤/排序、预估的默认与历史收敛与 deliver-all 叠加、别名与 display_key、分组/父级/游标/instrument 谓词、`tail_of` 截断、`run_report` 透传）；`test_logging.py` 增 12 条（策略不可解析、测试日志目录、覆写与书目录不可写、二次 `setup` 只改级别、文件 handler 打不开仍留控制台）。分支覆盖 **menu 80% → 99%、_log 78% → 96%**（判据 ≥85%） |
 | rf-59 | 覆盖率棘轮停在 `coverage_fail_under: 88` 与单文件 84：覆盖率提升后若不抬门槛，额度会被后续改动占用 | **最后**：前三项落地后把全局门槛抬到 90、单文件下限抬到 86，并用 `cover --update-baseline` 重设 `data/baselines/coverage.json`；判据：`make.py cover` 在 90/86 下通过 |
 
 ### H3 — 持续监控：兼容残留
