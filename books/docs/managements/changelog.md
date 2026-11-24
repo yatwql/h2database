@@ -13,6 +13,14 @@
 
 ### 变更
 
+- **check 日志只留一份真值，并补上「判的是哪棵树」**：删掉 `logs/check-latest.json`
+  （无人读取）与跨档位的 `logs/check-<日期>.jsonl`（与 per-mode 文件字段重复），
+  每次运行只写当日一份 `check-<模式>-<YYYY-MM-DD>.log` 与同名 `.jsonl`。摘要新增
+  `git{commit,dirty}`、`started_at`、每步 `argv`、pytest 的 `counts`
+  （passed/failed/skipped/deselected）、以及 `log_offset/log_len`——最后一项让一条摘要
+  能直接定位到当日日记里的对应段。文件名日期改为 ISO（`2026-11-24`），与归档/快照一致；
+  清理正则同时认旧名，历史文件按保留窗口自然淘汰。
+
 - **印刷版改走同一条渲染链**：`render/print_pdf.py` 不再自己调 `page.pdf()`，改为
   「`print_profile` 注入 + `pdf_split.render_html`」，与标准版同一视口（A4@96dpi）、同一
   `@page` 页框、同一栏宽与字号——这就是 `rf-50` 里「正文从 x=0 起排、行宽 642pt 超过 595pt

@@ -330,7 +330,8 @@ def run_step(step: str, log_path: str, timeout: float = 1800.0,
     command = _command(step, marker, domains)
     started = time.perf_counter()
     if command is None:
-        return {'step': step, 'code': 0, 'seconds': 0.0, 'skipped': 'tool not available'}
+        return {'step': step, 'code': 0, 'seconds': 0.0, 'argv': [],
+                'skipped': 'tool not available'}
     env = dict(os.environ)
     if step == 'slow':
         env['BOOK_SLOW'] = '1'
@@ -355,7 +356,45 @@ def run_step(step: str, log_path: str, timeout: float = 1800.0,
             print(f'    {line}')
     else:
         print(f'  ok   {step} ({elapsed}s)')
-    return {'step': step, 'code': proc.returncode, 'seconds': elapsed}
+    result = {'step': step, 'code': proc.returncode, 'seconds': elapsed,
+              'argv': command}
+    counts = pytest_counts(f'{proc.stdout or ""}{proc.stderr or ""}')
+    if counts:
+        result['counts'] = counts
+    return result
+
+
+def pytest_counts(output: str) -> dict:
+    """Passed/failed/skipped the suite reported, so a run is readable as numbers.
+
+    The summary says a step failed; how much of the suite ran is only in the log
+    text. These counts make "the gate caught one failure out of 1100" visible from
+    the record alone.
+    """
+    counts = {}
+    for name in ('passed', 'failed', 'skipped', 'errors', 'deselected'):
+        match = re.search(r'(\d+)\s+' + name + r'\b', output)
+        if match:
+            counts[name.rstrip('s')] = int(match.group(1))
+    return counts
+
+
+def git_state(root: str) -> dict:
+    """The revision the gate judged, and whether the tree was dirty.
+
+    A gate run answers "is this tree good"; without the revision the record cannot
+    say which tree it meant, and a later reader has no way to reproduce it.
+    """
+    def run(*args: str) -> str:
+        try:
+            proc = subprocess.run(['git', *args], cwd=root, capture_output=True,
+                                  text=True, encoding='utf-8', check=False, timeout=10)
+        except (OSError, subprocess.SubprocessError):  # pragma: no cover - no git
+            return ''
+        return proc.stdout.strip() if proc.returncode == 0 else ''
+
+    return {'commit': run('rev-parse', '--short', 'HEAD'),
+            'dirty': bool(run('status', '--porcelain'))}
 
 
 def _record_perf(summary: dict) -> None:
@@ -374,23 +413,6 @@ def _record_perf(summary: dict) -> None:
 # appended to, and each run's summary is one line in the jsonl beside it. There is
 # nothing to delete when a run passes — and nothing to lose when one fails: the
 # failing run keeps its own section inside the same day's log.
-def _roll_up(now: datetime.datetime, summary: dict, log_path: str) -> str:
-    """Append the day's one-line record; returns the file a human should open."""
-    logs = os.path.join(book_root(), 'logs')
-    _fsutil.ensure_dir(logs)
-    line = json.dumps({'ts': now.isoformat(timespec='seconds'),
-                       'mode': summary.get('mode', ''),
-                       'ok': summary.get('ok', False),
-                       'seconds': summary.get('seconds', 0.0),
-                       'steps': len(summary.get('steps', [])),
-                       'failed_step': summary.get('failed_step', '')},
-                      ensure_ascii=False) + '\n'
-    rollup = os.path.join(logs, f'check-{now:%Y%m%d}.jsonl')
-    _append_log(rollup, line)
-    _prune_logs(logs, now)
-    return log_path
-
-
 def _prune_logs(logs: str, now: datetime.datetime) -> None:
     """Delete run reports and rollups older than the configured retention."""
     # one retention governs every log: the rotating file and these reports
@@ -401,12 +423,13 @@ def _prune_logs(logs: str, now: datetime.datetime) -> None:
     except OSError:
         return  # no directory, nothing to prune
     for name in names:
-        # `check-<mode>-<date>.<ext>` and the day rollup `check-<date>.jsonl`
-        match = re.match(r'check-(?:[a-z0-9-]*?-)?(\d{8})(?:-|\.)', name)
+        # `check-<mode>-<date>.<ext>`: ISO today, the compact form from older runs
+        match = re.match(r'check-(?:[a-z0-9-]*?-)?(\d{4}-\d{2}-\d{2}|\d{8})(?:-|\.)', name)
         if match is None:
             continue
+        token, fmt = match.group(1), ('%Y-%m-%d' if '-' in match.group(1) else '%Y%m%d')
         try:
-            stamp = datetime.datetime.strptime(match.group(1), '%Y%m%d').date()
+            stamp = datetime.datetime.strptime(token, fmt).date()
         except ValueError:
             continue
         if stamp >= cutoff:
@@ -418,11 +441,23 @@ def _prune_logs(logs: str, now: datetime.datetime) -> None:
 
 
 def report_paths(mode: str, when: datetime.datetime) -> tuple[str, str]:
-    """The day's journal for this mode: one log and one jsonl, appended per run."""
+    """The day's journal for this mode: one log and one jsonl, appended per run.
+
+    The date is ISO (`2026-11-24`), as in the archive and the snapshots: a filename a
+    person can read, and a lexicographic order that is still chronological.
+    """
     directory = os.path.join(book_root(), 'logs')
     _fsutil.ensure_dir(directory)
-    base = os.path.join(directory, f'check-{mode}-{when:%Y%m%d}')
+    base = os.path.join(directory, f'check-{mode}-{when:%Y-%m-%d}')
     return base + '.log', base + '.jsonl'
+
+
+def _log_size(path: str) -> int:
+    """Bytes already in the journal; 0 when it does not exist yet."""
+    try:
+        return os.path.getsize(path)
+    except OSError:
+        return 0
 
 
 def _append_log(path: str, text: str) -> None:
@@ -450,6 +485,7 @@ def run(mode: str, *, archive: bool = True, as_json: bool = False,
     steps = select_steps(all_steps, only, skip)
     now = datetime.datetime.now()
     log_path, jsonl_path = report_paths(key, now)
+    log_offset = _log_size(log_path) if archive else 0
     if archive:
         _append_log(log_path, f'\n# ===== {now:%Y-%m-%d %H:%M:%S} mode={key} ({label}) '
                               f'{len(steps)} step(s) =====\n')
@@ -466,19 +502,20 @@ def run(mode: str, *, archive: bool = True, as_json: bool = False,
     elapsed = round(time.perf_counter() - started, 2)
     failed = [r for r in results if r['code'] != 0]
     summary = {'mode': key, 'label': label, 'ok': not failed,
+               'started_at': now.isoformat(timespec='seconds'),
                'seconds': elapsed, 'steps': results, 'marker': active_marker,
-               'machine': machine_info(),
+               'machine': machine_info(), 'git': git_state(repo_root()),
                'log': log_path if archive else '', 'json': jsonl_path if archive else ''}
     report = ''
     if failed:
         summary['failed_step'] = failed[0]['step']
     if archive:
+        summary['log_offset'] = log_offset
+        summary['log_len'] = max(0, _log_size(log_path) - log_offset)
         _record_perf(summary)
         _append_log(jsonl_path, json.dumps(summary, ensure_ascii=False) + '\n')
-        logs = os.path.join(book_root(), 'logs')
-        _fsutil.write_text(os.path.join(logs, 'check-latest.json'),
-                           json.dumps(summary, ensure_ascii=False, indent=2) + '\n')
-        report = _roll_up(now, summary, log_path)
+        _prune_logs(os.path.join(book_root(), 'logs'), now)
+        report = log_path
     else:
         report = ''
     LOG.info('check %s -> %s (%.2fs, %d steps)',

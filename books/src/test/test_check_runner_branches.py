@@ -277,8 +277,8 @@ class ModesAndSummaryTest(unittest.TestCase):
         logs = os.path.join(self.runner.book_root(), 'logs')
         self.assertTrue(os.path.isfile(summary['json']))
         self.assertTrue(os.path.isfile(summary['log']))
-        self.assertRegex(summary['json'], r'check-p0-\d{8}\.jsonl$')
-        self.assertRegex(summary['log'], r'check-p0-\d{8}\.log$')
+        self.assertRegex(summary['json'], r'check-p0-\d{4}-\d{2}-\d{2}\.jsonl$')
+        self.assertRegex(summary['log'], r'check-p0-\d{4}-\d{2}-\d{2}\.log$')
         self.assertTrue(glob.glob(os.path.join(logs, 'check-*.jsonl')))
         record.assert_called_once()
 
@@ -305,8 +305,8 @@ class ModesAndSummaryTest(unittest.TestCase):
     def test_report_paths_live_under_logs(self):
         log, payload = self.runner.report_paths(
             'p0', datetime.datetime(2026, 11, 24, 11, 13, 22))
-        self.assertTrue(log.endswith('check-p0-20261124.log'))
-        self.assertTrue(payload.endswith('check-p0-20261124.jsonl'))
+        self.assertTrue(log.endswith('check-p0-2026-11-24.log'))
+        self.assertTrue(payload.endswith('check-p0-2026-11-24.jsonl'))
 
     def test_perf_recording_survives_a_missing_module(self):
         with mock.patch.object(self.runner.importlib, 'import_module',

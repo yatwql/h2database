@@ -60,9 +60,10 @@ python books/src/python/check_runner.py --mode p2 --only gates,tests
 python books/src/python/check_runner.py --mode p0 --skip slow --timeout 600
 ```
 
-- 每次运行追加到当天的日记：`books/logs/check-<模式>-<YYYYMMDD>.log`（全文输出与摘要行）
-  与 `check-<模式>-<YYYYMMDD>.jsonl`（每行一次运行的完整摘要），并刷新
-  `books/logs/check-latest.json`（失败可直接回看，不必重跑）
+- 每次运行追加到当天的日记：`books/logs/check-<模式>-<YYYY-MM-DD>.log`（各步完整输出）
+  与同名的 `.jsonl`（每行一次运行）。摘要里除退出码与耗时外还有：`git{commit,dirty}`
+  （判的是哪棵树）、`started_at`、每步 `argv`、pytest 的 `counts`（passed/failed/skipped）、
+  以及 `log_offset/log_len`（直接跳到该次运行在日记里的那一段）
 - `.json` 里带 `machine` 段（python/平台/CPU/locale/仓库路径），排查"本机能过 CI 不能过"先看它
 - `--only` / `--skip` 选步骤，`--timeout` 是每步超时（默认 1800 秒，超时记为 124）
 - 测试步骤按档位自动带 marker：P0=`tier_fast`、P1=`not tier_slow`、P2=全量；

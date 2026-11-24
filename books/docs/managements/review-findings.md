@@ -4,7 +4,7 @@
 > 版本：v0.1-dev
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
-> **编号源**：`rf-next = 52`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-51，
+> **编号源**：`rf-next = 53`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-52，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -149,6 +149,7 @@
 
 | rf-50 | 印刷版页框与页边距没生效：`render/print_pdf.py` 产出的 PDF 正文从 `x=0` 起排，行宽 642pt 超过 A4 的 595pt 纸宽（可印 482pt），`pdf_invariants` 报 40 页文字出界 | **已解决（改为共用渲染器）**：`print_pdf.py` 不再自己调 `page.pdf()`，改为「`print_profile` 注入 + `pdf_split.render_html`」——与标准版同一视口（A4@96dpi）、同一 `@page` 页框、同一栏宽与字号；`scale` 随之删除（`layout_print_body_pt`、`base.json print_scale` 一并去掉，它与页框耦合正是不知不觉越界的来源）。印刷版专属排版单列 `render/print_profile.py`：长度全用 `em`、主色取书目（`accent_color`，缺省中性色）、只作用于 `@media print`，故不绑定本书；`marker` 注入收到 `pdf_split.inject_markers()`，`to_pdf` 与印刷版共用。实测：越界页 **40 → 0**、大纲 644 条不变、`verify_pdf` 的 `COLUMN`/`PAGE_SIZE`/`FONTS` 全 ok；印刷版 905 页 |
 | rf-51 | 印刷版 905 页 vs 标准版 958 页，而正文文本完全相同（914,823 vs 914,703 字符）、页框与纵向填充相同（文本 y 跨度均约 658pt）、字号与行距相同。逐章对比显示 `print_profile` 只影响 ±2 页，但第 3 章 51 vs 58 页、每页行数 74.0 vs 69.4、少于 15 行的页 45 vs 26 | **待定位**。已排除：配置（两者同一 `@page`/栏宽/字号）、正文字体（同一 HTML 的 body 节点数与字符数一致）、`scale`（已删除）。方向：`pre, table { page-break-inside: avoid }` 与每章起始位置相互作用造成的分页级联——同一份 body、同一边界条件会因起点偏移几行而在后续页面上放大为“半空页”；判据应是「同一 body 的正文页数差 ≤ 2%」，而不是两版页数相等。复现：`print_pdf.py --html <同一份 html>` 与 `to_pdf.py` 各渲一次，比较 `pdf_metrics` 的每页行数 |
+| rf-52 | `logs/perf-history.jsonl` 只增不减（当前 1.58 MB，今天一天就在里面），每行含每一步的明细；它是性能基线而不是运行日志，却和日志放在一起按天清理——一旦按保留窗口删除，耗时回退就失去比较基准 | **待修**。方向：拆成「基线文件（评审后固化、进版本库）+ 滚动窗口明细（按条数或体积封顶，如最近 200 次/2 MB）」；`audit/perf_baseline.py::record` 写窗口，`compare` 读基线；`test_report.py perf` 只读窗口内的样本。判据：文件体积有上限、基线文件有 review 记录（沿用 `content_volume` 的 `reviewed{by,at,commit}` 口径） |
 
 ### 归档
 
