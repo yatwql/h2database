@@ -24,7 +24,7 @@ DEFAULTS = {
     'layout_body_px': 16,           # 0 = derive from the column and the reading density
     'layout_code_px': 10,
     'layout_code_line_height': 0,   # 0 = derive: the same leading as prose
-    'layout_column_px': 960,
+    'layout_column_px': 0,          # 0 = derive from the reading measure below
     'layout_spacing_scale': 1.0,
     'layout_para_gap_em': 0.8,
     'layout_heading_gap_before_em': 1.5,
@@ -32,7 +32,7 @@ DEFAULTS = {
     'layout_list_gap_em': 0.5,
     'layout_table_gap_em': 1.0,
     'layout_epub_code_em': 0.85,
-    'layout_body_chars_per_line': 40,
+    'layout_chars_per_line': 40,
     'layout_lead_ratio': 0.23,
     'layout_epub_line_height': 1.55,
     # advance of one monospace character, in em: the width a printed code line
@@ -42,11 +42,11 @@ DEFAULTS = {
     'layout_print_code_min_px': 6,
     # wrap long code lines rather than shrinking them; costs pages
     'layout_print_wrap': 0,
-    # printed column width; 0 = derive it from the reading measure below
-    'layout_print_column_px': 0,
-    # characters a printed line should hold, and the smallest margin paper gets
-    'layout_print_chars_per_line': 42,
+    # the smallest margin paper gets; the column gives way if it would go below
     'layout_print_margin_min_mm': 16.0,
+    # the band the reading measure must land in, in em; outside it the gate fails
+    'layout_chars_per_line_min': 36,
+    'layout_chars_per_line_max': 46,
 }
 
 # field name -> the thresholds key it is read from
@@ -56,12 +56,14 @@ _FIELD_KEYS = {name[len('layout_'):]: name for name in DEFAULTS}
 # silently different page count
 RANGES = {
     'body_px': (0, 24),          # 0 means 'derive it'
-    'body_chars_per_line': (20, 80),
+    'chars_per_line': (20, 80),
+    'chars_per_line_min': (10, 60),
+    'chars_per_line_max': (20, 90),
     'lead_ratio': (0.05, 0.6),
     'epub_line_height': (1.0, 2.4),
     'code_px': (5, 18),
     'code_line_height': (0, 2.4),   # 0 means 'derive it'
-    'column_px': (480, 1600),
+    'column_px': (0, 1600),          # 0 = derive it
     'spacing_scale': (0.3, 2.0),
     'para_gap_em': (0.0, 3.0),
     'heading_gap_before_em': (0.0, 4.0),
@@ -72,8 +74,6 @@ RANGES = {
     'print_mono_advance': (0.3, 1.2),
     'print_code_min_px': (4, 14),
     'print_wrap': (0, 1),
-    'print_column_px': (0, 1600),     # 0 means 'derive it'
-    'print_chars_per_line': (20, 90),
     'print_margin_min_mm': (5.0, 40.0),
 }
 
@@ -212,7 +212,7 @@ class Layout:
     # the EPUB column is narrower and the reader may zoom; its code size is
     # tuned separately from the page's px ratio, so it is a key of its own
     epub_code_em: float = DEFAULTS['layout_epub_code_em']
-    body_chars_per_line: int = DEFAULTS['layout_body_chars_per_line']
+    chars_per_line: int = DEFAULTS['layout_chars_per_line']
     lead_ratio: float = DEFAULTS['layout_lead_ratio']
     # the reflowable column sets its own leading: a reader may zoom, and the
     # page's 1 + lead_ratio would look cramped there
@@ -222,10 +222,9 @@ class Layout:
     print_code_min_px: int = DEFAULTS['layout_print_code_min_px']
     # wrap instead of shrinking: one diagram row becomes several text rows
     print_wrap: int = DEFAULTS['layout_print_wrap']
-    # printed column; 0 means 'derive it from the reading measure below'
-    print_column_px: int = DEFAULTS['layout_print_column_px']
-    print_chars_per_line: int = DEFAULTS['layout_print_chars_per_line']
     print_margin_min_mm: float = DEFAULTS['layout_print_margin_min_mm']
+    chars_per_line_min: int = DEFAULTS['layout_chars_per_line_min']
+    chars_per_line_max: int = DEFAULTS['layout_chars_per_line_max']
 
     @classmethod
     def from_mapping(cls, mapping) -> tuple[Layout, list[str]]:
@@ -269,7 +268,7 @@ class Layout:
         return {
             '  @page { size: A4; margin: 24mm 20mm; }':
                 f'  @page {{ size: {self.page_size}; margin: {self.page_margin}; }}',
-            'flex: 1; max-width: 960px;': f'flex: 1; max-width: {self.column_px}px;',
+            'flex: 1; max-width: 960px;': f'flex: 1; max-width: {self.column()}px;',
             'body {\n    font-size: 16px;': f'body {{\n    font-size: {self.body_px}px;',
             '  pre { font-size: 10px; }':
                 f'  pre {{ font-size: {self.code_px}px; line-height: {self.code_line_height}; }}',
@@ -343,7 +342,7 @@ class Layout:
             vertical = _mm(tokens[0]) if tokens else 0.0
         except ValueError:
             vertical = 0.0
-        requested = self.print_chars_per_line * self.body_size_px() / PX_PER_MM
+        requested = self.column() / PX_PER_MM
         horizontal = max(float(self.print_margin_min_mm),
                          (self.page_size_mm()[0] - requested) / 2)
         return vertical, round(horizontal, 2)
@@ -357,21 +356,58 @@ class Layout:
         """The same width in points, which is what a built page is measured in."""
         return round(self.printable_width_px() / PX_PER_MM * PT_PER_MM, 2)
 
-    def print_column(self) -> int:
-        """The printed column, in CSS pixels.
+    def column(self) -> int:
+        """The column, in CSS pixels — the same rule on screen and on paper.
 
-        Derived from the reading measure (`print_chars_per_line` x body size), then
-        clipped to what the sheet leaves at the configured minimum margin. The literal
-        it replaces was the viewport minus its padding (794 minus a bit = 760px, which
-        leaves 4.5mm of paper margin): the column was never derived from the paper, so
-        the text ended up in the margin. An explicit `layout_print_column_px` wins.
+        A line holds a fixed number of `em`, so the column is the reading measure
+        times the type size. `em` is the one unit that means the same thing in another
+        font, on another OS and in another book: 40em is 40 CJK characters and about
+        80 Latin ones, whichever face is installed. `layout_column_px` still overrides
+        it for a screen that wants a fixed width.
         """
-        if self.print_column_px:
-            return int(self.print_column_px)
-        _top_bottom, horizontal = self.print_margins_mm()
+        if self.column_px:
+            return int(self.column_px)
+        return max(1, int(round(self.chars_per_line * self.body_size_px())))
+
+    def print_column(self) -> int:
+        """The printed column: the same measure, clipped to the sheet at the margin floor.
+
+        The literal this replaces was the viewport minus its padding (794 minus a bit
+        = 760px, leaving 4.5mm of paper margin), so the column was never derived from
+        anything and the text sat in the margin.
+        """
+        requested = self.column() / PX_PER_MM
+        floor = float(self.print_margin_min_mm)
+        horizontal = max(floor, (self.page_size_mm()[0] - requested) / 2)
         available = (self.page_size_mm()[0] - 2 * horizontal) * PX_PER_MM
-        return max(1, int(min(self.print_chars_per_line * self.body_size_px(),
-                              available)))
+        return max(1, int(min(self.column(), round(available))))
+
+    def measure_em(self) -> float:
+        """`em` per printed line: the reading measure, measured rather than assumed."""
+        return round(self.print_column() / max(1, self.body_size_px()), 2)
+
+    def measure_problems(self) -> list[str]:
+        """The reading measure and the sheet, judged by one book-free invariant.
+
+        `chars_per_line_min <= column / body <= chars_per_line_max`: a line too long
+        tires the eye and a line too short breaks the rhythm, and both are properties
+        of the text, not of the page it lands on. The second half is the sheet: the
+        column must still fit what the margins leave, or the print clips it.
+        """
+        problems: list[str] = []
+        band = f'[{self.chars_per_line_min}, {self.chars_per_line_max}]'
+        if not self.chars_per_line_min <= self.chars_per_line <= self.chars_per_line_max:
+            problems.append(f'阅读度量 {self.chars_per_line}em 超出阅读区间 {band}')
+        measure = self.measure_em()
+        if not self.chars_per_line_min <= measure <= self.chars_per_line_max:
+            problems.append(f'实际每行 {measure:g}em 超出阅读区间 {band}')
+
+        printable = self.printable_width_px()
+        if self.column() > printable + 1:
+            problems.append(f'栏宽 {self.column()}px 超出这张纸的可印宽度 '
+                            f'{printable:.0f}px（左右各 {self.print_margins_mm()[1]:g}mm，'
+                            f'实际落到 {self.print_column()}px）')
+        return problems
 
     def _print_fit_px(self, columns: int) -> float:
         """Code size at which `columns` characters exactly fill the printable width."""
@@ -406,7 +442,7 @@ class Layout:
         """
         if self.body_px:
             return int(self.body_px)
-        derived = round(self.column_px / max(1, self.body_chars_per_line))
+        derived = round(self.column() / max(1, self.chars_per_line))
         return max(8, min(24, int(derived)))
 
     def code_line_height_value(self) -> float:
@@ -432,7 +468,7 @@ class Layout:
         return PageGeometry(
             page_size=self.page_size,
             page_margin=self.page_margin,
-            column_px=self.column_px,
+            column_px=self.column(),
             body_px=self.body_size_px(),
             body_line_height=self.body_line_height(),
             code_px=self.code_px,

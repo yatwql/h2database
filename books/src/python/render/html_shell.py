@@ -395,7 +395,7 @@ def apply_layout(css: str) -> str:
         _config.THRESHOLDS if _config else {})
     lead = layout.code_line_height_value()
     body = layout.body_size_px()
-    column = _layout_value('layout_column_px')
+    column = layout.column()
     page_size = _layout_value('layout_page_size')
     margin = layout.print_page_margin()
 

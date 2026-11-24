@@ -286,20 +286,21 @@ def _check_toc_links(reader, annots, outline) -> list[str]:
 
 
 def _check_column(report: Report) -> None:
-    """COLUMN: a printed line must fit the sheet — one rule, no book involved.
+    """COLUMN: the reading measure and the sheet — two rules, neither book-specific.
 
-    The column is derived from the reading measure and the horizontal margin is what
-    it leaves (`lib.layout`), so the only way to break this is a configuration that
-    asks for more characters per line than the paper can hold at the margin floor.
-    Checked here rather than from the PDF: text width can only be estimated from the
-    content stream, and an estimate cannot tell a wide column from a wide glyph.
+    `chars_per_line_min <= column / body <= chars_per_line_max` keeps a line inside the
+    legible range whatever font is installed (`em` is the face's own unit), and the
+    column must still fit what the margins leave, or the print clips it. Both are
+    properties of the text, so they are checked from the layout rather than the PDF:
+    text width can only be estimated from the content stream, and an estimate cannot
+    tell a wide column from a wide glyph.
     """
     layout, _problems = _layout.Layout.from_mapping(_config.THRESHOLDS)
-    column = layout.print_column()
-    printable = layout.printable_width_px()
-    report.add('COLUMN', column <= printable + 1,
-               f'{column}px column / {printable:.0f}px printable '
-               f'({layout.print_margins_mm()[1]:g}mm margin)')
+    problems = layout.measure_problems()
+    report.add('COLUMN', not problems,
+               f'{layout.measure_em():g}em/line, column {layout.print_column()}px, '
+               f'margins {layout.print_margins_mm()[1]:g}mm'
+               + (f' — {problems[0]}' if problems else ''))
 
 
 def _check_geometry(report: Report, reader, pdf_path: str = '') -> None:

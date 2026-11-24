@@ -27,7 +27,7 @@ accept_optimised = _split.accept_optimised
 
 
 def _blank_pdf(path: str, pages: int = 1) -> None:
-    from pypdf import PdfWriter
+    from pypdf import PdfWriter  # noqa: PLC0415 - after the fixture selected a book
 
     writer = PdfWriter()
     for _ in range(pages):
@@ -49,6 +49,13 @@ class OptimiseDecisionTest(unittest.TestCase):
         self.assertFalse(accept_optimised(621, 5_000_000, 621, 6_000_000))
 
 
+class _FakeReader:
+    """Stands in for pypdf: the run only needs the page count."""
+
+    def __init__(self, pages: int):
+        self.pages = list(range(pages))
+
+
 class OptimiseRunTest(unittest.TestCase):
     """Every run says what it did: skipped, failed, accepted or refused."""
 
@@ -56,17 +63,24 @@ class OptimiseRunTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.pdf = os.path.join(self.tmp.name, 'merged.pdf')
-        _blank_pdf(self.pdf, pages=1)
+        with open(self.pdf, 'wb') as handle:
+            handle.write(b'%PDF-1.4 original payload')
         self.log = mock.MagicMock()
         patcher = mock.patch.object(_split._log, 'get_logger', return_value=self.log)
         patcher.start()
         self.addCleanup(patcher.stop)
+        reader = mock.patch.object(_split, 'PdfReader',
+                                   side_effect=lambda path: _FakeReader(
+                                       1 if path == self.pdf else 2))
+        reader.start()
+        self.addCleanup(reader.stop)
 
-    def fake_gs(self, pages: int = 2):
-        """A gs stub that writes a valid PDF to the path the command names."""
+    def fake_gs(self):
+        """A gs stub that writes the path the command names."""
         def run(cmd, **_kwargs):
             target = next(part for part in cmd if part.startswith('-sOutputFile='))
-            _blank_pdf(target.split('=', 1)[1], pages=pages)
+            with open(target.split('=', 1)[1], 'wb') as handle:
+                handle.write(b'%PDF-1.4 compressed')
         return run
 
     def test_a_missing_gs_is_logged_and_the_file_is_left_alone(self):
@@ -74,14 +88,16 @@ class OptimiseRunTest(unittest.TestCase):
             _split._optimize(self.pdf)
         self.log.info.assert_called()
         self.assertIn('gs', self.log.info.call_args[0][0])
-        self.assertEqual(len(_split.PdfReader(self.pdf).pages), 1)
+        with open(self.pdf, 'rb') as handle:
+            self.assertIn(b'original payload', handle.read())
 
     def test_an_accepted_rewrite_replaces_the_file(self):
         with mock.patch.object(_split.shutil, 'which', return_value='/usr/bin/gs'), \
                 mock.patch.object(_split.subprocess, 'run', side_effect=self.fake_gs()), \
                 mock.patch.object(_split, 'accept_optimised', return_value=True):
             _split._optimize(self.pdf)
-        self.assertEqual(len(_split.PdfReader(self.pdf).pages), 2)
+        with open(self.pdf, 'rb') as handle:
+            self.assertIn(b'compressed', handle.read())
         self.assertIn('已采用', self.log.info.call_args[0])
 
     def test_a_refused_rewrite_keeps_the_merge(self):
@@ -89,19 +105,22 @@ class OptimiseRunTest(unittest.TestCase):
                 mock.patch.object(_split.subprocess, 'run', side_effect=self.fake_gs()), \
                 mock.patch.object(_split, 'accept_optimised', return_value=False):
             _split._optimize(self.pdf)
-        self.assertEqual(len(_split.PdfReader(self.pdf).pages), 1)
+        with open(self.pdf, 'rb') as handle:
+            self.assertIn(b'original payload', handle.read())
         self.assertIn('不采用（须同页数且更小）', self.log.info.call_args[0])
 
     def test_a_failed_gs_run_is_a_warning_not_a_broken_build(self):
         with mock.patch.object(_split.shutil, 'which', return_value='/usr/bin/gs'), \
-                mock.patch.object(_split.subprocess, 'run',
-                                  side_effect=OSError('boom')):
+                mock.patch.object(_split.subprocess, 'run', side_effect=OSError('boom')):
             _split._optimize(self.pdf)
         self.log.warning.assert_called()
-        self.assertEqual(len(_split.PdfReader(self.pdf).pages), 1)
+        with open(self.pdf, 'rb') as handle:
+            self.assertIn(b'original payload', handle.read())
 
     def test_the_temporary_file_never_survives_the_run(self):
-        with mock.patch.object(_split.shutil, 'which', return_value=None):
+        with mock.patch.object(_split.shutil, 'which', return_value='/usr/bin/gs'), \
+                mock.patch.object(_split.subprocess, 'run', side_effect=self.fake_gs()), \
+                mock.patch.object(_split, 'accept_optimised', return_value=True):
             _split._optimize(self.pdf)
         self.assertEqual(sorted(os.listdir(self.tmp.name)), ['merged.pdf'])
 
@@ -113,7 +132,7 @@ class PrintStylesheetTest(unittest.TestCase):
         return _layout.Layout.from_mapping(_config.THRESHOLDS)[0]
 
     def test_the_printed_column_comes_from_the_layout(self):
-        with mock.patch.dict(_config.THRESHOLDS, {'layout_print_column_px': 512}):
+        with mock.patch.dict(_config.THRESHOLDS, {'layout_column_px': 512}):
             css = _shell.apply_layout(_shell.STYLE)
         self.assertIn('max-width: 512px', css)
 
