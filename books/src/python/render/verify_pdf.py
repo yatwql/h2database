@@ -207,6 +207,36 @@ def _open_inputs(report: Report, pdf_path: str, html_path: str):
     return reader, _fsutil.read_text(html_path)
 
 
+def _check_density(report: Report, pdf_path: str) -> None:
+    """DENSITY: leading and page fill, judged against geometry, not a page count.
+
+    A page target belongs to one edition of one book. What transfers is the ratio
+    between line pitch and type size — text set at 1.0 is cramped on any page — and
+    the share of the printable height the text actually fills. Both are read off the
+    built document, so a different paper, font or book moves the numbers without
+    moving the criterion.
+    """
+    try:
+        from render import pdf_metrics  # noqa: PLC0415 - only needed for this check
+    except Exception:  # noqa: BLE001 - a missing helper must not fail the whole build
+        report.add('DENSITY', True, 'pdf_metrics unavailable, skipped')
+        return
+    metrics = pdf_metrics.measure(pdf_path)
+    body = metrics.get('body_pt') or 0.0
+    pitch = metrics.get('pitch_pt') or 0.0
+    if not body or not pitch:
+        report.add('DENSITY', True, 'no text to measure')
+        return
+    ratio = pitch / body
+    low = float(_config.THRESHOLDS.get('pdf_leading_ratio_min', 1.15) or 1.15)
+    high = float(_config.THRESHOLDS.get('pdf_leading_ratio_max', 1.75) or 1.75)
+    # A4 at the configured 24mm top/bottom margin leaves 705.9pt of printable height
+    fill = pitch * metrics.get('lines_per_page', 0)
+    report.add('DENSITY', low <= ratio <= high,
+               f'leading {ratio:.2f}x body (want {low}-{high}), '
+               f'text fills {fill:.0f}pt of the page')
+
+
 def _check_outline(report: Report, reader, headings) -> list:
     """PAGES, OUTLINE and OUTLINE_LEV against the HTML headings."""
     outline = outline_entries(reader)
@@ -254,7 +284,7 @@ def _check_toc_links(reader, annots, outline) -> list[str]:
     return problems
 
 
-def _check_geometry(report: Report, reader) -> None:
+def _check_geometry(report: Report, reader, pdf_path: str = '') -> None:
     """PAGE_SIZE and ROTATION: a delivery PDF is A4 and upright."""
     sizes = {(round(float(page.mediabox.width), 1), round(float(page.mediabox.height), 1))
              for page in reader.pages}
@@ -262,6 +292,7 @@ def _check_geometry(report: Report, reader) -> None:
     height = float(_config.THRESHOLDS.get('pdf_page_height', 842))
     tol = float(_config.THRESHOLDS.get('pdf_page_tolerance', 2))
     a4 = all(abs(w - width) <= tol and abs(h - height) <= tol for w, h in sizes)
+    _check_density(report, pdf_path)
     report.add('PAGE_SIZE', a4,
                f'{sorted(sizes)[:2]} (expect {width:.0f}x{height:.0f})')
     rotations = {int(page.get('/Rotate') or 0) for page in reader.pages}
@@ -306,7 +337,7 @@ def verify(pdf_path: str, html_path: str, require_toc_links: bool = False) -> Re
                    'printed TOC links resolve to outline pages' if not problems
                    else '; '.join(problems[:2]))
 
-    _check_geometry(report, reader)
+    _check_geometry(report, reader, pdf_path)
     _check_fonts(report, reader)
     return report
 

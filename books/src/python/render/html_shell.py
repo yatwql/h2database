@@ -12,6 +12,7 @@ import sys as _sys
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
 from lib import fonts  # noqa: E402 - after the path insert above
+from lib import layout as _layout_lib  # noqa: E402
 
 try:
     from lib import _config  # noqa: E402
@@ -336,23 +337,8 @@ def apply_font_stacks(css: str) -> str:
 # ── Layout knobs ────────────────────────────────────────────────────────────
 # Every dimension that decides density lives here, read from `[toolchain]`, so a
 # different book (or a different reference edition) changes numbers, not code.
-LAYOUT_DEFAULTS = {
-    'layout_page_size': 'A4',
-    'layout_page_margin': '24mm 20mm',
-    'layout_body_px': 16,
-    'layout_code_px': 10,
-    'layout_code_line_height': 1.0,
-    'layout_column_px': 960,
-    # Vertical rhythm, in em: relative values follow the type scale, so a book that
-    # changes its body size keeps its proportions. `layout_spacing_scale` multiplies
-    # all of them at once — the single knob a calibration run is allowed to move.
-    'layout_spacing_scale': 1.0,
-    'layout_para_gap_em': 0.8,
-    'layout_heading_gap_before_em': 1.5,
-    'layout_heading_gap_after_em': 0.5,
-    'layout_list_gap_em': 0.5,
-    'layout_table_gap_em': 1.0,
-}
+# one source of truth: a key added to the layout belongs to both sides
+LAYOUT_DEFAULTS = dict(_layout_lib.DEFAULTS)
 
 
 # numeric defaults, so a malformed config value still yields a usable number
@@ -374,8 +360,32 @@ def apply_layout(css: str) -> str:
     stays opt-out by default and a book that needs it sets the knob.
     """
     code = _layout_value('layout_code_px')
-    lead = _layout_value('layout_code_line_height')
-    body = _layout_value('layout_body_px')
+    try:
+        lead = float(_layout_value('layout_code_line_height'))
+    except (TypeError, ValueError):
+        lead = 0.0
+    if not lead:
+        # 0 means "the prose leading": code set tighter than the text around it is
+        # what makes a source-code page feel cramped
+        try:
+            lead = round(1.0 + float(_layout_value('layout_lead_ratio')), 3)
+        except (TypeError, ValueError):
+            lead = 1.23
+    # 0 means "derive it": the size that makes a line hold `layout_body_chars_per_line`
+    # characters, which is the one property of the type that must not depend on the book
+    try:
+        _body_raw = float(_layout_value('layout_body_px'))
+    except (TypeError, ValueError):
+        _body_raw = 16.0
+    def _num(key: str, fallback: float) -> float:
+        try:
+            return float(_layout_value(key))
+        except (TypeError, ValueError):
+            return fallback
+
+    _column_raw = _num('layout_column_px', 960)
+    _chars = _num('layout_body_chars_per_line', 40) or 40
+    body = _body_raw if _body_raw else max(8, min(24, round(_column_raw / _chars)))
     column = _layout_value('layout_column_px')
     page_size = _layout_value('layout_page_size')
     margin = _layout_value('layout_page_margin')

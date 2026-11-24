@@ -104,6 +104,38 @@ class TypeScaleTest(unittest.TestCase):
         self.assertIn('font-size: 0.85em', scaled)
 
 
+class BodySizeDerivationTest(unittest.TestCase):
+    """The body size follows the reading density, not a hard-coded pixel count."""
+
+    def test_an_explicit_size_wins(self):
+        layout = Layout.from_mapping({'layout_body_px': 15})[0]
+        self.assertEqual(layout.body_size_px(), 15)
+
+    def test_zero_derives_the_size_from_the_column_and_the_line_length(self):
+        layout = Layout.from_mapping({'layout_body_px': 0, 'layout_column_px': 800,
+                                      'layout_body_chars_per_line': 40})[0]
+        self.assertEqual(layout.body_size_px(), 20)
+
+    def test_a_derived_size_stays_inside_the_readable_range(self):
+        wide = Layout.from_mapping({'layout_body_px': 0, 'layout_column_px': 1600,
+                                    'layout_body_chars_per_line': 20})[0]
+        self.assertLessEqual(wide.body_size_px(), 24)
+        narrow = Layout.from_mapping({'layout_body_px': 0, 'layout_column_px': 480,
+                                      'layout_body_chars_per_line': 80})[0]
+        self.assertGreaterEqual(narrow.body_size_px(), 8)
+
+    def test_the_page_leading_comes_from_the_lead_ratio(self):
+        layout = Layout.from_mapping({'layout_lead_ratio': 0.4})[0]
+        self.assertEqual(layout.body_line_height(), 1.4)
+
+    def test_the_reflowable_leading_is_its_own_value(self):
+        # a reader may zoom, so the EPUB keeps a roomier leading than the page
+        layout = Layout.from_mapping({'layout_lead_ratio': 0.4,
+                                      'layout_epub_line_height': 1.6})[0]
+        self.assertEqual(layout.typescale().body_line_height, 1.6)
+        self.assertEqual(layout.body_line_height(), 1.4)
+
+
 if __name__ == '__main__':
     unittest.main()
 

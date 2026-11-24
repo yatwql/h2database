@@ -20,9 +20,9 @@ from typing import Any
 DEFAULTS = {
     'layout_page_size': 'A4',
     'layout_page_margin': '24mm 20mm',
-    'layout_body_px': 16,
+    'layout_body_px': 16,           # 0 = derive from the column and the reading density
     'layout_code_px': 10,
-    'layout_code_line_height': 1.0,
+    'layout_code_line_height': 0,   # 0 = derive: the same leading as prose
     'layout_column_px': 960,
     'layout_spacing_scale': 1.0,
     'layout_para_gap_em': 0.8,
@@ -31,6 +31,9 @@ DEFAULTS = {
     'layout_list_gap_em': 0.5,
     'layout_table_gap_em': 1.0,
     'layout_epub_code_em': 0.85,
+    'layout_body_chars_per_line': 40,
+    'layout_lead_ratio': 0.23,
+    'layout_epub_line_height': 1.55,
 }
 
 # field name -> the thresholds key it is read from
@@ -39,9 +42,12 @@ _FIELD_KEYS = {name[len('layout_'):]: name for name in DEFAULTS}
 # field -> (minimum, maximum); anything outside is a configuration error, not a
 # silently different page count
 RANGES = {
-    'body_px': (8, 24),
+    'body_px': (0, 24),          # 0 means 'derive it'
+    'body_chars_per_line': (20, 80),
+    'lead_ratio': (0.05, 0.6),
+    'epub_line_height': (1.0, 2.4),
     'code_px': (5, 18),
-    'code_line_height': (0.8, 2.4),
+    'code_line_height': (0, 2.4),   # 0 means 'derive it'
     'column_px': (480, 1600),
     'spacing_scale': (0.3, 2.0),
     'para_gap_em': (0.0, 3.0),
@@ -83,8 +89,9 @@ class TypeScale:
         """Derive the shared scale from one validated layout."""
         return cls(
             body_em=1.0,
+            body_line_height=round(float(layout.epub_line_height), 3),
             code_em=round(float(layout.epub_code_em), 4),
-            code_line_height=layout.code_line_height,
+            code_line_height=layout.code_line_height_value(),
             spacing_scale=layout.spacing_scale,
             para_gap_em=layout.para_gap_em,
             heading_gap_before_em=layout.heading_gap_before_em,
@@ -143,6 +150,7 @@ class PageGeometry:
     page_margin: str
     column_px: int
     body_px: int
+    body_line_height: float
     code_px: int
     code_line_height: float
 
@@ -166,6 +174,11 @@ class Layout:
     # the EPUB column is narrower and the reader may zoom; its code size is
     # tuned separately from the page's px ratio, so it is a key of its own
     epub_code_em: float = DEFAULTS['layout_epub_code_em']
+    body_chars_per_line: int = DEFAULTS['layout_body_chars_per_line']
+    lead_ratio: float = DEFAULTS['layout_lead_ratio']
+    # the reflowable column sets its own leading: a reader may zoom, and the
+    # page's 1 + lead_ratio would look cramped there
+    epub_line_height: float = DEFAULTS['layout_epub_line_height']
 
     @classmethod
     def from_mapping(cls, mapping) -> tuple[Layout, list[str]]:
@@ -230,6 +243,33 @@ class Layout:
             css = css.replace(literal, replacement)
         return css
 
+    def body_size_px(self) -> int:
+        """The body size: explicit when configured, else derived from the column.
+
+        A fixed pixel size is a decision that only suits one column width: widen the
+        column and the same 16px gives longer lines, narrower and it gives more of
+        them. Deriving from "how many characters a line should hold" is the invariant
+        that survives a different page, a different font and a different book.
+        """
+        if self.body_px:
+            return int(self.body_px)
+        derived = round(self.column_px / max(1, self.body_chars_per_line))
+        return max(8, min(24, int(derived)))
+
+    def code_line_height_value(self) -> float:
+        """Leading inside a code block: explicit, or the prose leading.
+
+        A block of code set at 1.0 is cramped, and in a source-code book the blocks
+        dominate the page — which is exactly what a density check sees.
+        """
+        if self.code_line_height:
+            return float(self.code_line_height)
+        return self.body_line_height()
+
+    def body_line_height(self) -> float:
+        """Leading as a multiple of the body size, from the configured lead ratio."""
+        return round(1.0 + float(self.lead_ratio), 3)
+
     def typescale(self) -> TypeScale:
         """The part of this layout that EPUB shares."""
         return TypeScale.from_layout(self)
@@ -240,9 +280,10 @@ class Layout:
             page_size=self.page_size,
             page_margin=self.page_margin,
             column_px=self.column_px,
-            body_px=self.body_px,
+            body_px=self.body_size_px(),
+            body_line_height=self.body_line_height(),
             code_px=self.code_px,
-            code_line_height=self.code_line_height,
+            code_line_height=self.code_line_height_value(),
         )
 
     def describe(self) -> str:
