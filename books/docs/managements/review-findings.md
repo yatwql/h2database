@@ -53,7 +53,7 @@
 | rf-60 | 90 小时窗口的改动让若干文件低于各自覆盖率基线 | **已解决（其中三个文件按当前实测重记基线）**：`to_epub.py` 95.6% → 100%（规则抽到 `render/epub_source.py` + 11 条用例）、`lib/_config.py` 92.6% → 94%；`actions`、`chapters`、`verify_pdf` 三处未达原基线，已按实测重记并把具体缺口登记为 rf-61，避免用“默默重记”掩盖 |
 | rf-61 | 三个大模块仍有未覆盖分支 | **已解决（3/3）**：`render/verify_pdf.py` 84.6% → **89%**、`core/actions.py` 84.2% → **95%**、`ingest/chapters.py` 86.9% → **88%**（模板填充失败回落、CJK 间距对围栏/标题例外、跨章标题回退、体积结论与路由等）。注：`chapters` 仍低于改动前的 89.6%，其剩余缺口在 552-662 的整章渲染分支，由 rf-63/64 继续消化 |
 | rf-62 | 五个辅助函数只有用例在调用、生产代码里没有调用点（`pdf_metrics.calibrate`、`_mdutil.figure_caption`、`_log.log_file`、`renumber.rewrite_allowed`、`test_redundancy._json_metric`） | **已解决（逐项处置）**：`log_file()` 接到 `_log.describe()` 的 `file` 字段（生产有调用点）；`calibrate()` 与 `figure_caption()` 保留为公共 API（标定流程与图注解析的入口，CLI 暂未接线，docstring 写明用途）；`rewrite_allowed` 与 `_json_metric` 已不存在（早前删除）；`TooLarge` 零引用已删 |
-| rf-63 | 覆盖率统计只看「行」：当前仍剩 **1,252 个半分支**，错误与缺省路径（`-> exit`、`-> else`）占比最高 | **待做**：`coverage report --show-missing` 按半分支排序，优先消错误/缺省路径；判据：半分支数下降且门槛 90 不破 |
+| rf-63 | 覆盖率统计只看「行」：仍剩约 1,240 个半分支，错误与缺省路径占比最高 | **进行中**：已按缺口大小推进——`lib/status.py` **85.4% → 88%**（缺失产物的时间戳/体积/页数降级、非 PDF 与缺 pypdf、坏 PDF）、`ingest/chapters.py` 88%；`verify_pdf` 89%、`actions` 95% 在 rf-61 内完成。**剩余**：`structure.py` 84.6% 与 `doc_drift.py` 85.8% 的规则分支、`tui.py` 86% 的渲染分支。判据：半分支下降且门槛 90 不破 |
 | rf-64 | `verify_pdf` 的字体检查与 `actions._invoke` 的流/心跳混在大函数里，只能整体跑 | **待做**：像 `epub_source` 那样抽成小函数或注入 `runner`/`clock`；判据：抽出的函数单独可测，`verify_pdf`/`actions` 分支覆盖 ≥88% |
 | rf-65 | 依赖真环境的探测（字体命令、浏览器、pandoc）只有真机才跑得到 | **待做**：把命令/目录/时钟做成参数（`fonts` 已是这个形状），环境失败路径用替身覆盖；判据：每个探测模块含一条「命令缺失/目录不可写」用例 |
 | rf-66 | 少数辅助函数只有用例在调用，形成「假覆盖」 | **待做**：每发现一处按「接线 / 删除 / 保留为公共 API（docstring 写明）」三选一；rf-62 已按此处置完一批 |

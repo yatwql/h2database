@@ -1,9 +1,14 @@
-"""The run summary is one text, used by the log and the TUI alike."""
+"""Status lines degrade instead of raising: a missing file must never break a report.
+
+The web console and the TUI both print these, so a deleted artifact or a missing
+optional reader has to produce an empty or placeholder string, not an exception.
+"""
 from __future__ import annotations
 
 import os
 import tempfile
 import unittest
+from unittest import mock
 
 import _fixture
 
@@ -11,50 +16,56 @@ TAGS = ('layer:lib', 'tier:fast')
 
 _fixture.ensure_tools_path()
 
-_status = __import__('lib.status', fromlist=['artifact_facts', 'render'])
-render = _status.render
-artifact_facts = _status.artifact_facts
+_status = __import__('lib.status', fromlist=['_mb', '_pages', '_pages_cached', '_stamp'])
 
 
-class RenderTest(unittest.TestCase):
-    def test_the_verdict_and_the_time_are_readable(self):
-        text = render(True, 'build', 12.3, 0, source={'root': '/src', 'version': '1.0',
-                                                      'changed': ''}, artifacts=[])
-        self.assertIn('✓ 完成', text)
-        self.assertIn('12.3s', text)
-        self.assertIn('/src', text)
+class ArtifactLineTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.missing = os.path.join(self.tmp.name, 'gone.pdf')
 
-    def test_a_failure_says_so_and_carries_the_exit_code(self):
-        text = render(False, 'deliver', 3.0, 2, source={}, artifacts=[])
-        self.assertIn('✗ 失败', text)
-        self.assertIn('退出码 2', text)
+    def test_a_missing_file_has_no_stamp(self):
+        self.assertEqual(_status._stamp(self.missing), '')
 
-    def test_artifacts_are_listed_with_their_numbers(self):
-        text = render(True, 'build', 1.0, artifacts=[
-            {'name': 'a.pdf', 'size': '8.00 MB', 'pages': '877 页', 'changed': '2026-11-24'}])
-        self.assertIn('a.pdf', text)
-        self.assertIn('877 页', text)
+    def test_a_present_file_has_a_minute_stamp(self):
+        path = os.path.join(self.tmp.name, 'there.pdf')
+        with open(path, 'wb') as handle:
+            handle.write(b'%PDF')
+        self.assertRegex(_status._stamp(path), r'^\d{4}-\d\d-\d\d \d\d:\d\d$')
 
+    def test_a_missing_file_has_no_size(self):
+        self.assertEqual(_status._mb(self.missing), '?')
 
-class ArtifactFactsTest(unittest.TestCase):
-    def test_only_delivery_suffixes_are_listed(self):
-        with tempfile.TemporaryDirectory() as directory:
-            for name in ('a.html', 'b.pdf', 'notes.txt'):
-                with open(os.path.join(directory, name), 'w', encoding='utf-8') as handle:
-                    handle.write('x')
-            names = [item['name'] for item in artifact_facts(directory)]
-        self.assertEqual(sorted(names), ['a.html', 'b.pdf'])
+    def test_a_present_file_reports_megabytes(self):
+        path = os.path.join(self.tmp.name, 'there.pdf')
+        with open(path, 'wb') as handle:
+            handle.write(b'x' * 2048)
+        self.assertEqual(_status._mb(path), '0.00 MB')
 
-    def test_a_missing_directory_is_empty_not_an_error(self):
-        self.assertEqual(artifact_facts(os.path.join(tempfile.gettempdir(), 'nope-dir')), [])
+    def test_a_missing_file_has_no_page_count(self):
+        self.assertEqual(_status._pages(self.missing), '')
 
-    def test_a_non_pdf_gets_no_page_count(self):
-        with tempfile.TemporaryDirectory() as directory:
-            path = os.path.join(directory, 'a.epub')
-            with open(path, 'wb') as handle:
-                handle.write(b'PK\x03\x04 not a pdf')
-            facts = artifact_facts(directory)
-        self.assertEqual(facts[0]['pages'], '')
+    def test_a_page_count_skips_everything_that_is_not_a_pdf(self):
+        self.assertEqual(_status._pages_cached('book.epub', 1.0), '')
+        self.assertEqual(_status._pages_cached('book.html', 1.0), '')
+
+    def test_a_missing_reader_is_not_an_error(self):
+        with mock.patch.dict('sys.modules', {'pypdf': None}):
+            self.assertEqual(_status._pages_cached('book.pdf', 1.0), '')
+
+    def test_an_unreadable_pdf_has_no_page_count(self):
+        reader = mock.Mock(side_effect=RuntimeError('broken'))
+        module = mock.Mock(PdfReader=reader)
+        with mock.patch.dict('sys.modules', {'pypdf': module}):
+            self.assertEqual(_status._pages_cached('/tmp/broken.pdf', 2.0), '')
+
+    def test_a_pdf_reports_its_page_count(self):
+        reader = mock.Mock()
+        reader.return_value.pages = [1, 2, 3]
+        module = mock.Mock(PdfReader=reader)
+        with mock.patch.dict('sys.modules', {'pypdf': module}):
+            self.assertEqual(_status._pages_cached('/tmp/three.pdf', 3.0), '3 页')
 
 
 if __name__ == '__main__':
