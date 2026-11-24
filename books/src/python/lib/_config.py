@@ -370,6 +370,14 @@ class Config:
         """Scratch directory under the book root (gitignored, regenerated)."""
         return self._rel('tmp', 'data/tmp')
 
+    def cache_dir(self) -> str:
+        """Derived data that outlives a build; scratch when it cannot be written."""
+        try:
+            os.makedirs(path := self._rel('cache', 'data/cache'), exist_ok=True)
+        except OSError:
+            return self.tmp_dir()
+        return path
+
     def state_dir(self) -> str:
         """Directory for the derived state ingest rebuilds on every run."""
         base = self._rel('state', 'data/state')
@@ -409,13 +417,7 @@ class Config:
         return os.path.join(self.dist_dir, name)
 
     def excluded_dirs(self) -> tuple[str, ...]:
-        """Directories that hold artifacts or read-only history, never live content.
-
-        `dist/` is regenerated output; `data/snapshots/` is a frozen copy of
-        another book kept for comparison; `data/archive/` and the report
-        directory are dated evidence copies. Gates judge the manuscript and the
-        authored documents only, so none of these may be scanned as content.
-        """
+        """Artifacts and read-only history: gates judge the manuscript, not these."""
         snapshots = str((self.base_policy.get('paths') or {}).get('snapshots', 'data/snapshots'))
         archive = str((self.base_policy.get('archive') or {}).get('dir') or 'data/archive')
         reports = str((self.base_policy.get('reports') or {}).get('dir') or 'test-reports')
@@ -423,6 +425,7 @@ class Config:
                 os.path.join(self.root, snapshots),
                 os.path.join(self.root, archive),
                 os.path.join(self.root, reports),
+                self.cache_dir(),
                 self.tmp_dir())
 
     # ---- policy values (read once, shared like the dicts callers patch) -----

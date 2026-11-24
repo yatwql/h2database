@@ -28,8 +28,12 @@ FENCE = '```'
 
 
 def cache_root() -> str:
-    """Directory holding cached fragments, under the book's scratch directory."""
-    return os.path.join(_config.tmp_dir(), CACHE_SUBDIR)
+    """Directory holding cached fragments, under the book's cache directory.
+
+    Fragments stay valid until the renderer source or the chunk changes, which is
+    the definition of a cache rather than of scratch space.
+    """
+    return os.path.join(_config.cache_dir(), CACHE_SUBDIR)
 
 
 def fingerprint(*functions) -> str:

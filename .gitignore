@@ -46,6 +46,7 @@ books/data/config/llm_key.json
 .coverage
 .coverage.*
 books/data/tmp/
+books/data/cache/
 # packaging artifacts (pip install -e . / build)
 books/build/
 books/*.egg-info/

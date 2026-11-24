@@ -13,6 +13,7 @@ _fixture.ensure_tools_path()
 _layout = __import__('lib.layout', fromlist=['DEFAULTS', 'Layout'])
 DEFAULTS = _layout.DEFAULTS
 Layout = _layout.Layout
+_layout_typescale = _layout.TypeScale
 
 
 class LayoutDefaultsTest(unittest.TestCase):
@@ -134,6 +135,28 @@ class BodySizeDerivationTest(unittest.TestCase):
                                       'layout_epub_line_height': 1.6})[0]
         self.assertEqual(layout.typescale().body_line_height, 1.6)
         self.assertEqual(layout.body_line_height(), 1.4)
+
+
+class DefaultsIdentityTest(unittest.TestCase):
+    """A default layout must derive the default scale: identity, not a second copy.
+
+    Two tables of defaults drift apart silently. Asserting that the derived object
+    equals the dataclass's own defaults turns any second copy into a failing test
+    instead of a slow divergence nobody notices.
+    """
+
+    def test_the_default_layout_derives_the_default_scale(self):
+        self.assertEqual(_layout_typescale.from_layout(Layout()), _layout_typescale())
+
+    def test_the_default_layout_derives_the_default_geometry(self):
+        geometry = Layout().geometry()
+        self.assertEqual(geometry.page_size, DEFAULTS['layout_page_size'])
+        self.assertEqual(geometry.body_px, Layout().body_size_px())
+        self.assertEqual(geometry.code_px, DEFAULTS['layout_code_px'])
+
+    def test_the_scale_and_geometry_do_not_share_paged_fields(self):
+        self.assertFalse(hasattr(_layout_typescale(), 'page_size'))
+        self.assertFalse(hasattr(Layout().geometry(), 'heading_em'))
 
 
 if __name__ == '__main__':

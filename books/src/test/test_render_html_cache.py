@@ -116,9 +116,9 @@ class FragmentReuseTest(unittest.TestCase):
         self.assertGreater(self.counts(out)[0], 0)
         self.assertNotEqual(self.html(), before)
 
-    def test_the_cache_lives_under_the_gitignored_tmp(self):
+    def test_the_cache_lives_under_the_gitignored_cache_directory(self):
         self.build()
-        folder = os.path.join(self.root, 'data', 'tmp', 'html-cache')
+        folder = os.path.join(self.root, 'data', 'cache', 'html-cache')
         entries = [name for name in os.listdir(folder) if name.endswith('.json')]
         self.assertTrue(entries)
         with open(os.path.join(folder, entries[0]), encoding='utf-8') as fh:

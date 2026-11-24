@@ -87,8 +87,14 @@ def _font_files() -> list[str]:
 
 
 def _cache_path() -> str:
-    root = os.environ.get('BOOK_ROOT') or os.getcwd()
-    return os.path.join(root, 'data', 'tmp', 'font-index.json')
+    """Where the font index lives: the book's cache, not its scratch directory.
+
+    The index is derived data that costs a full scan of every installed face to
+    rebuild, so it may outlive a build; `tmp/` carries no such promise.
+    """
+    from lib import _config  # noqa: PLC0415 - imported here to avoid an import cycle
+
+    return os.path.join(_config.current().cache_dir(), 'font-index.json')
 
 
 def _stamp(files: list[str]) -> str:
