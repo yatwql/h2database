@@ -18,12 +18,13 @@ import json
 import os
 import sys
 import threading
+import time
 from http import server
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core import actions
-from lib import _config, _errors, _fsutil
+from lib import _config, _errors, _fsutil, status
 
 _fsutil.pin_stdout_utf8()
 
@@ -160,6 +161,7 @@ class Handler(server.BaseHTTPRequestHandler):
             kwargs = {}
         # The active book is process state, so two requests that pick different
         # books must not interleave: one action runs to completion first.
+        started = time.perf_counter()
         try:
             with ACTION_LOCK:
                 code, text = actions.run(
@@ -167,6 +169,10 @@ class Handler(server.BaseHTTPRequestHandler):
                     edition=str(payload.get('edition', '') or ''), **kwargs)
         except Exception as exc:  # noqa: BLE001 - the page relays failures, it does not raise
             code, text = 1, f'{type(exc).__name__}: {exc}'
+        # the same block the log and the TUI show: what was read, what came out
+        elapsed = time.perf_counter() - started
+        block = status.render(code == 0, action, elapsed, code)
+        text = f'{text}\n{block}' if text.strip() else block
         self._send(200, json.dumps({'code': code, 'output': text}, ensure_ascii=False),
                    'application/json; charset=utf-8')
 

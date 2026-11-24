@@ -477,6 +477,8 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **三种界面同源输出**：Web 的 `/api/run` 返回里也附上 `lib/status.py` 生成的状态块，与 CLI 日志、TUI 显示同一段文本；页面无需改动即可展示。
+- **审计中修复的两处**：日志保留策略原先在 `check_runner` 里重复读 `BASE_POLICY`，改为 `_log.retention_days()` 唯一入口；`status` 的页数统计按「路径 + mtime」缓存，避免每次 Web 请求重新打开 877 页的 PDF。
 - **日志与 TUI 同源**：新增 `lib/status.py`，把「源码目录/版本/清单时间 + 产物页数、体积、时间 + 用时/退出码」渲染成一段可读文本；`check_runner` 写进 `bookwright.log`，TUI 跑完一个动作后显示同一段，不再是两处各自拼一句话。
 - **门禁日志按日汇总**：通过的一次运行只在 `logs/check-<YYYYMMDD>.jsonl` 留一行（时间、模式、耗时、步数），只有失败才保留独立的 `.log`/`.json` 供排查；文件名改为 `check-<mode>-<YYYYMMDD-HHMMSS>`（不再混用 `-` 与 `_`），并新增按 `base.json [logging] retention_days`（与 `bookwright.log` 轮转同一项策略，默认 14 天）的清理。通过时控制台给出的路径改指向当日汇总文件，不再指向随后即被删除的单次报告。
 - **`data/` 归位**：快照目录名去掉冗余标签（`2026-06-11-june-2026` → `2026-06-11`、`2026-06-15-june-2026-edition` → `2026-06-15`）；`data/snapshots/*/artifacts/` 里的成品（PDF/EPUB/HTML，20 MB）改为只留本地、不入库（manifest 入库说明它们曾存在）；`data/state/` 是每次重建的派生状态、且含本机绝对路径，一并从版本库移除并 gitignore；清掉 `data/tmp/type3/` 实验残留；`to_epub.py` 的规范化副本改写到 `data/tmp/` 并在结束时清理，`dist/` 里不再出现 `*.md.epub.md`。

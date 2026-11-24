@@ -10,6 +10,7 @@ two paraphrases that drift apart.
 from __future__ import annotations
 
 import datetime
+import functools
 import os
 
 from lib import _config
@@ -33,7 +34,8 @@ def _mb(path: str) -> str:
         return '?'
 
 
-def _pages(path: str) -> str:
+@functools.lru_cache(maxsize=32)
+def _pages_cached(path: str, _mtime: float) -> str:
     """Page count, when the reader is installed; a PDF is the only paged output."""
     if not path.lower().endswith('.pdf'):
         return ''  # an EPUB or an HTML has no pages, and the reader would complain
@@ -45,6 +47,15 @@ def _pages(path: str) -> str:
         return f'{len(PdfReader(path).pages)} 页'
     except Exception:  # noqa: BLE001 - a broken PDF is reported elsewhere
         return ''
+
+
+def _pages(path: str) -> str:
+    """Page count, cached by modification time: a web request must not re-read a PDF."""
+    try:
+        mtime = os.path.getmtime(path)
+    except OSError:
+        return ''
+    return _pages_cached(path, mtime)
 
 
 def source_facts() -> dict:

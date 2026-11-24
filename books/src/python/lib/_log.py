@@ -38,6 +38,11 @@ def _settings() -> dict:
     }
 
 
+def retention_days() -> int:
+    """How long any log survives; one policy for the rotating file and the reports."""
+    return _settings()['retention_days']
+
+
 def log_dir() -> str:
     """Absolute path of the log directory (created on demand)."""
     settings = _settings()

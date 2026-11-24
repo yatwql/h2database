@@ -398,13 +398,8 @@ def _roll_up(now: datetime.datetime, summary: dict, log_path: str,
 
 def _prune_logs(logs: str, now: datetime.datetime) -> None:
     """Delete run reports and rollups older than the configured retention."""
-    # the same policy `_log` rotates its own file with: one retention, not two
-    days = 14
-    try:
-        policy = _config.BASE_POLICY.get('logging') or {}
-        days = int(policy.get('retention_days') or 14)
-    except (_config.ConfigError, TypeError, ValueError):
-        pass
+    # one retention governs every log: the rotating file and these reports
+    days = _log.retention_days()
     cutoff = (now - datetime.timedelta(days=days)).date()
     try:
         names = os.listdir(logs)
