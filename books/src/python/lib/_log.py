@@ -40,8 +40,16 @@ def _settings() -> dict:
 
 
 def _is_test_process() -> bool:
-    """True inside a test run: pytest sets this for every test it executes."""
-    return bool(os.environ.get('PYTEST_CURRENT_TEST') or os.environ.get('BOOK_TEST_MODE'))
+    """True inside a test run, including at import time.
+
+    `PYTEST_CURRENT_TEST` only exists *during* a test call, and a module that builds
+    its logger at import (the action layer does) is configured before that — those
+    lines went to the book's own log, which is how `unknown action 'nope'` from a
+    negative-path case ended up in a production log 232 times.
+    """
+    if os.environ.get('PYTEST_CURRENT_TEST') or os.environ.get('BOOK_TEST_MODE'):
+        return True
+    return bool(os.environ.get('PYTEST_VERSION')) or 'pytest' in sys.modules
 
 
 def _test_log_dir() -> str:

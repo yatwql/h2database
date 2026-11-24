@@ -177,6 +177,10 @@ def add_links(pdf_path: Path | None = None, html_path: Path | None = None,
     PdfReader(str(tmp_path))
     os.replace(tmp_path, pdf_path)
     print(f'TOC links added: {added}')
+    # the last writer compresses: this rewrite inflated the file gs had already
+    # shrunk, and compressing before it meant paying twice for one result
+    from render import pdf_split  # noqa: PLC0415 - keeps the pdf renderer optional
+    pdf_split.optimize(str(pdf_path))
 
 
 if __name__ == '__main__':

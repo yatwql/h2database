@@ -149,7 +149,6 @@ def merge(paths: list[str], pdf_path: str, entries: list[dict]) -> int:
         for level in [lvl for lvl in stack if lvl > entry['level']]:
             del stack[level]
     writer.write(pdf_path)
-    _optimize(pdf_path)
     return len(writer.pages)
 
 
@@ -186,7 +185,7 @@ def _optimize(pdf_path: str) -> None:
         log.info('gs 未安装，跳过分章合并后的压缩：%s %d 页 %.2f MB',
                  os.path.basename(pdf_path), before_pages, before_bytes / 1048576)
         return
-    tmp = pdf_path + '.gs.pdf'
+    tmp = _scratch_path(pdf_path)
     cmd = [gs, '-sDEVICE=pdfwrite', '-dCompatibilityLevel=1.6', '-dPDFSETTINGS=/printer',
            '-dSubsetFonts=true', '-dCompressFonts=true', '-dDetectDuplicateImages=true',
            '-dNOPAUSE', '-dQUIET', '-dBATCH', f'-sOutputFile={tmp}', pdf_path]
@@ -216,8 +215,28 @@ def inject_markers(page) -> list[dict]:
     return page.evaluate(INJECT_JS) or []
 
 
+def _scratch_path(pdf_path: str) -> str:
+    """A hidden sibling for the gs rewrite, on the same filesystem.
+
+    It used to be `<pdf>.gs.pdf`, which reads as a deliverable: a build killed between
+    the gs run and the replace left a truncated PDF in `dist/`. The name is now hidden
+    and dot-prefixed, so `dist/*` and the archive step cannot pick it up, and it stays
+    beside the target because `os.replace` is only atomic within one filesystem.
+    """
+    directory = os.path.dirname(pdf_path) or '.'
+    stale = os.path.join(directory, '.' + os.path.basename(pdf_path) + '.gs.tmp')
+    with contextlib.suppress(OSError):
+        os.remove(stale)   # a killed run leaves it behind; this one starts clean
+    return stale
+
+
+def optimize(pdf_path: str) -> None:
+    """Compress a finished PDF; the last writer in a pipeline calls this once."""
+    _optimize(pdf_path)
+
+
 def render_html(html_path: str, pdf_path: str, engine: Any = None,
-                pdf_kwargs: dict | None = None) -> int:
+                pdf_kwargs: dict | None = None, optimize: bool = True) -> int:
     """Split-render an HTML file with the layout's own page box; returns pages.
 
     Every edition goes through here so a printed page is laid out and paginated by
@@ -238,17 +257,21 @@ def render_html(html_path: str, pdf_path: str, engine: Any = None,
             page.goto('file:///' + str(html_path).replace('\\', '/'),
                       wait_until='networkidle', timeout=60000)
             page.wait_for_timeout(2000)
-            return render(page, pdf_path, kwargs, inject_markers(page))
+            return render(page, pdf_path, kwargs, inject_markers(page),
+                          optimize=optimize)
         finally:
             browser.close()
 
 
-def render(page, pdf_path: str, pdf_kwargs: dict, headings: list[dict]) -> int:
+def render(page, pdf_path: str, pdf_kwargs: dict, headings: list[dict],
+           optimize: bool = True) -> int:
     """Split-render into a temporary directory, merge, and report the page count."""
     work = tempfile.mkdtemp(prefix='pdf-split-')
     try:
         paths, entries = render_parts(page, work, pdf_kwargs, headings)
         count = merge(paths, pdf_path, entries)
+        if optimize:
+            _optimize(pdf_path)
         print(f'  Rendered {len(paths) - 1} chapter part(s) + front matter: {count} pages')
         print(f'  Outline entries: {len(entries)}')
         return count

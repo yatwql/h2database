@@ -71,13 +71,16 @@ def measure(path: str) -> dict:
             widths.append(max(xs) - min(xs))
 
     total = sum(sizes.values()) or 1
-    full_text = sum(len(p.extract_text() or '') for p in reader.pages)
+    # the sample decides the density: reading all 900+ pages for one average cost
+    # 14 of the 17 seconds `verify_pdf` spent, and the answer did not change
+    sample = _sample(reader)
+    sample_chars = sum(len(p.extract_text() or '') for p in sample)
     body = sizes.most_common(1)[0][0] if sizes else 0.0
     return {
         'path': path,
         'pages': len(reader.pages),
         'mb': os.path.getsize(path) / (1024 * 1024),
-        'chars_per_page': round(full_text / len(reader.pages)),
+        'chars_per_page': round(sample_chars / len(sample)) if sample else 0,
         'body_pt': body,
         'heading_pt': max(sizes) if sizes else 0.0,
         'body_share': round(sizes.get(body, 0) * 100 / total),

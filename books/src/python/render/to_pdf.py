@@ -147,15 +147,13 @@ try:
         print(f"  Injected {len(headings_json)} heading markers")
 
         # Print to PDF
-        optimize_after_outline = False
         if bool(_config.THRESHOLDS.get('pdf_split_by_chapter', False)):
             pdf_split.render(page, pdf_path, {
                 'format': 'A4',
                 'print_background': True,
                 'display_header_footer': False,
                 'prefer_css_page_size': True,
-            }, headings_json)
-            optimize_after_outline = True
+            }, headings_json, optimize=False)
         else:
                 page.pdf(
                 path=pdf_path,
@@ -362,10 +360,9 @@ try:
     # Overwrite the PDF with the outline-enhanced version
     writer.write(pdf_path)
     print("  Outlines written OK")
-    if globals().get('optimize_after_outline'):
-        # this rewrite dropped the gs compression the split path applied
-        from render import pdf_split  # noqa: PLC0415 - split path only
-        pdf_split._optimize(pdf_path)  # noqa: SLF001
+    # No compression here: this step rewrites the PDF to add the outline, and every
+    # rewrite undoes the previous one. `pdf_toc_links` is the last writer in the
+    # delivery chain and compresses there (one pass, not three).
 
 except ImportError:
     raise _errors.ToolError(
