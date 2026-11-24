@@ -48,10 +48,10 @@ python books/src/python/app/tui.py
  ❯ [3/M]  手稿 → Markdown + HTML
    [4/E]  EPUB + PDF（按需）
    [5/P]  印刷版 PDF（按需）
-   [6/F]  书稿 → Markdown + HTML + EPUB + 全版 PDF
+   [6/F]  手稿 → Markdown + HTML + EPUB + 全版 PDF
    [7/B]  书籍管理：切换 / 新增
-   [8/T]  质量：门禁与测试
-   [9/C]  配置：状态、配置项与 LLM
+   [8/C]  配置：状态、配置项与 LLM
+   [9/T]  质量：门禁与测试
    [0/Q]  退出
 
    [0] 返回上一级  [q] / [Ctrl+C] 退出
@@ -66,7 +66,7 @@ python books/src/python/app/tui.py
 主菜单   源码成书    1 analyze  2 analyze-llm  3 build  4 deliver  5 print
                     6 deliver-all   （6 = 构建 + 交付 + 印刷版，一次出全部产物）
          书籍管理    7 书籍管理  →  1 切换书籍  2 新增书籍
-         配置与管理  8 质量  9 配置与状态
+         配置与管理  8 配置与状态  9 质量
          0 退出
           两者默认只刷新事实块（正文不动）；按 l 时先问是否整篇重写并用 LLM 润色（默认否）
 书籍管理 1 切换书籍  2 新增书籍  0 返回
@@ -87,10 +87,10 @@ python books/src/python/app/tui.py
 | `3` | `M` | 手稿 → Markdown + HTML |
 | `4` | `E` | EPUB + PDF（按需） |
 | `5` | `P` | 印刷版 PDF（按需） |
-| `6` | `F` | 书稿 → Markdown + HTML + EPUB + 全版 PDF |
+| `6` | `F` | 手稿 → Markdown + HTML + EPUB + 全版 PDF |
 | `7` | `B` | 书籍管理（二级：`1/S` 切换、`2/N` 新增） |
-| `8` | `T` | 质量：门禁与测试 |
-| `9` | `C` | 配置：状态、配置项与 LLM |
+| `8` | `C` | 配置：状态、配置项与 LLM |
+| `9` | `T` | 质量：门禁与测试 |
 | `0` | `Q` | 退出 |
 
 一次按键一次响应，不需要回车：按下的键立即生效，界面立刻回音；回车只表示
@@ -156,7 +156,7 @@ python books/src/python/app/tui.py
 
 ## 在界面里改配置
 
-按 `9` → `3`（或直接按 `c`）进入「配置项」，列出可写项，输入序号再输入新值；`0` 返回。
+按 `8` → `3`（或直接按 `c`）进入「配置项」，列出可写项，输入序号再输入新值；`0` 返回。
 每一项都写回它所属的配置文件，写后立即重载，头部随之更新：
 
 ```text

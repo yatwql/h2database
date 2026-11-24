@@ -33,7 +33,7 @@ NEW_BOOK_ACTION = '@new-book'
 # case-insensitive, so S and s both run "1 源码 → 手稿".
 LETTER_ALIASES: dict[str, dict[str, str]] = {
     'main': {'a': '1', 'l': '2', 'm': '3', 'e': '4', 'p': '5', 'f': '6',
-             'b': '7', 't': '8', 'c': '9', 'q': '0'},
+             'b': '7', 'c': '8', 't': '9', 'q': '0'},
     'library': {'s': '1', 'n': '2'},
 }
 
@@ -61,10 +61,10 @@ SCREENS: dict[str, list[tuple[str, str, str]]] = {
              ('3', 'build', '手稿 → Markdown + HTML'),
              ('4', 'deliver', 'EPUB + PDF（按需）'),
              ('5', 'print', '印刷版 PDF（按需）'),
-             ('6', 'deliver-all', '书稿 → Markdown + HTML + EPUB + 全版 PDF'),
+             ('6', 'deliver-all', '手稿 → Markdown + HTML + EPUB + 全版 PDF'),
              ('7', OPEN_PREFIX + 'library', '书籍管理：切换 / 新增'),
-             ('8', OPEN_PREFIX + 'quality', '质量：门禁与测试'),
-             ('9', OPEN_PREFIX + 'config', '配置：状态、配置项与 LLM'),
+             ('8', OPEN_PREFIX + 'config', '配置：状态、配置项与 LLM'),
+             ('9', OPEN_PREFIX + 'quality', '质量：门禁与测试'),
              (BACK_KEY, QUIT_ACTION, '退出')],
     'library': [('1', OPEN_PREFIX + BOOKS_SCREEN, '切换书籍'),
                 ('2', NEW_BOOK_ACTION, '新增书籍'),

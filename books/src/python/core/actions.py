@@ -39,7 +39,7 @@ ACTIONS = {
     'check': '运行全部质量门禁',
     'test': '运行测试套件',
     'deliver': '构建 PDF 与 EPUB（按需）',
-    'deliver-all': '书稿 → Markdown + HTML + EPUB + 标准版与印刷版 PDF',
+    'deliver-all': '手稿 → Markdown + HTML + EPUB + 标准版与印刷版 PDF',
     'print': '生成印刷版 PDF（章封面、点线目录、页眉页脚）',
     'llm-ask': '用配置的 provider 回答一个问题',
     'doctor': '依赖与环境自检',
