@@ -148,6 +148,8 @@ books/docs/managements/
   `python books/src/python/manuscript/snapshot.py import data/archive/<书>/<日期>/manuscript <标签>`
   固化进 `snapshots/`。`import` 同时接受 zip 与目录，目录来源不必重新打包（manifest 用内容摘要代替 zip 哈希）。
 - 快照只读：`verify` 只比对哈希不改文件；过期快照由人删除，没有自动清理。
+- 两种快照：`import` 存手稿（后续构建的来源），`import-artifacts` 存**成品**（HTML/Markdown/EPUB/PDF）。
+  只剩成品、手稿已丢的版本也能留下对照：成品只按哈希校验，不解码文本，`kind: "artifacts"` 标明其身份。
 
 ## 4. 常用入口
 

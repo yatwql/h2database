@@ -243,6 +243,8 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | 脚本 | 何时用 |
 | --- | --- |
 | `core/docs_archive.py --version X.Y [--topic <迭代目录>] [--dry-run]` | 发布一个版本后，把该版本台账与已完成的迭代设计移入 `docs/archive/` 下以版本命名的目录；`--dry-run` 先看动作，重复执行无副作用 |
+| `manuscript/snapshot.py import <zip或目录> <标签> --date YYYY-MM-DD` | 把历史手稿冻结为只读快照，供体量基线与对照使用 |
+| `manuscript/snapshot.py import-artifacts <目录> <标签> --date YYYY-MM-DD` | 手稿已丢失时冻结**成品**（HTML/Markdown/EPUB/PDF）；只按哈希校验，不解码二进制 |
 | `manuscript/renumber.py --write/--apply` | 声明了 `[editions]` 且章号有变化时，算映射并改写 `详见第X章《…》` 一类引用 |
 | `audit/doc_archive.py`、`audit/plan_coverage.py` | 归档布局与计划覆盖的门禁，已包含在 `make.py check` 里，可单独运行排查 |
 | `audit/pdf_invariants.py --pdf <文件> --merged <合并稿>` | 不依赖参照版本的 PDF 不变量：文字越界、Type3 超限、大纲条目与前 N 级标题数是否相等（`--json`） |

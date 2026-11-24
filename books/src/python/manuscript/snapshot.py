@@ -166,7 +166,7 @@ def _manifest(label: str, date: str, source_name: str, source_hash: str,
         'totals': {
             'files': len(files),
             'bytes': sum(item['bytes'] for item in files.values()),
-            'lines': sum(item['lines'] for item in files.values()),
+            'lines': sum(item.get('lines', 0) for item in files.values()),
         },
     }
 
@@ -198,6 +198,58 @@ def import_snapshot(archive_path: str, label: str, date: str) -> int:
     _fsutil.dump_json(os.path.join(target, 'manifest.json'), manifest)
     print(f'snapshot imported: {os.path.relpath(target, _config.BOOK_ROOT)} '
           f'({manifest["totals"]["files"]} files, {manifest["totals"]["bytes"]} bytes)')
+    return 0
+
+
+def _artifact_files(root: str) -> dict[str, dict]:
+    """Hash every file under `root`, keeping the relative name as the key."""
+    files: dict[str, dict] = {}
+    for current, _dirs, names in os.walk(root):
+        for name in sorted(names):
+            path = os.path.join(current, name)
+            rel = os.path.relpath(path, root).replace(os.sep, '/')
+            files[rel] = {'sha256': sha256_file(path),
+                          'bytes': os.path.getsize(path)}
+    return files
+
+
+def import_artifacts(source: str, label: str, date: str) -> int:
+    """Freeze built artifacts as a reference edition.
+
+    A snapshot normally holds the manuscript, because a manuscript is what a later
+    build reproduces from. When only the *outputs* survive — an HTML, an EPUB, two
+    PDFs and the merged markdown of an edition — those are still worth keeping: they
+    are the only thing a new build can be compared against, and they are read-only
+    evidence rather than something to rebuild from.
+    """
+    if not os.path.isdir(source):
+        print(f'error: not a directory: {source}', file=sys.stderr)
+        return 2
+    target = os.path.join(SNAPSHOT_ROOT, f'{date}-{label}')
+    if os.path.exists(target):
+        print(f'error: snapshot already exists: {target}', file=sys.stderr)
+        return 2
+    artifacts_dir = os.path.join(target, 'artifacts')
+    make_dir(artifacts_dir)
+    try:
+        names = sorted(os.listdir(source))
+    except OSError as exc:
+        print(f'error: cannot read {source}: {exc}', file=sys.stderr)
+        return 2
+    for name in names:
+        src = os.path.join(source, name)
+        if os.path.isfile(src):
+            shutil.copy2(src, os.path.join(artifacts_dir, name))
+
+    files = _artifact_files(artifacts_dir)
+    manifest = _manifest(label, date, os.path.basename(source.rstrip(os.sep)), '', files)
+    manifest['kind'] = 'artifacts'
+    manifest['totals'] = {'files': len(files),
+                          'bytes': sum(item['bytes'] for item in files.values()),
+                          'lines': 0}
+    _fsutil.dump_json(os.path.join(target, 'manifest.json'), manifest)
+    print(f'artifact snapshot imported: {os.path.relpath(target, _config.BOOK_ROOT)} '
+          f'({len(files)} files, {manifest["totals"]["bytes"]} bytes)')
     return 0
 
 
@@ -263,14 +315,19 @@ def verify(label: str) -> int:
         print(f'error: no manifest at {manifest_path}', file=sys.stderr)
         return 2
     manifest = _fsutil.load_json(manifest_path)
+    # an artifact snapshot has no manuscript: its evidence is the built files
+    kind = manifest.get('kind', 'manuscript')
+    base = 'artifacts' if kind == 'artifacts' else 'manuscript'
     problems: list[str] = []
     for rel, recorded in manifest.get('files', {}).items():
-        path = os.path.join(target, 'manuscript', rel)
+        path = os.path.join(target, base, rel)
         if not os.path.exists(path):
             problems.append(f'{rel}: missing')
             continue
-        current = facts(path)
-        if current['sha256'] != recorded['sha256']:
+        # artifacts include PDFs and EPUBs: hash them, never decode them
+        digest = (sha256_file(path) if kind == 'artifacts'
+                  else facts(path)['sha256'])
+        if digest != recorded['sha256']:
             problems.append(f'{rel}: content changed since the snapshot')
     if problems:
         print(f'snapshot {label} FAILED verification:')
@@ -319,6 +376,11 @@ def main(argv: list[str] | None = None) -> int:
     importer.add_argument('archive')
     importer.add_argument('label')
     importer.add_argument('--date', default=None)
+    artifacts = sub.add_parser('import-artifacts',
+                               help='freeze built artifacts as a reference edition')
+    artifacts.add_argument('source')
+    artifacts.add_argument('label')
+    artifacts.add_argument('--date', default=None)
     sub.add_parser('list', help='list snapshots')
     verifier = sub.add_parser('verify', help='check a snapshot against its manifest')
     verifier.add_argument('label')
@@ -329,6 +391,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == 'import':
         date = args.date or '0000-00-00'
         code = import_snapshot(args.archive, args.label, date)
+    elif args.command == 'import-artifacts':
+        date = args.date or '0000-00-00'
+        code = import_artifacts(args.source, args.label, date)
     elif args.command == 'list':
         code = list_snapshots()
     elif args.command == 'verify':
