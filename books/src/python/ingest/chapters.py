@@ -825,12 +825,18 @@ def main(argv: list[str] | None = None) -> int:
     # of scanning is how a run feels like it did nothing.
     if _USE_LLM and not (args.force or args.refresh_facts or args.only):
         targets = list(CHAPTER_SPEC) + list(APPENDIX_SPEC)
-        if all(os.path.isfile(_config.manuscript(name)) for name in targets):
+        missing = [name for name in targets if not os.path.isfile(_config.manuscript(name))]
+        if not missing:
             print('本轮不会生成或重写任何章节：正文文件都在，没有需要润色的新正文。')
             print('LLM 不介入：导读/小结只在新生成或整篇重写的章节上润色。')
             print('要润色已有正文：加 --force（整篇重写，旧文件先备份），'
                   '或用 --only <章文件名> 只重写一章。')
             return 0
+        # a first build is what the LLM is actually for: every chapter is new, so
+        # every lead-in and summary is drafted, while facts and structure stay
+        # deterministic -- say so before the scan, not after it
+        print(f'本轮将生成 {len(missing)} 章；LLM 只为这些章的导读/小结起草文字，'
+              '事实、结构、代码摘录仍由确定性流程生成。')
 
     state = _load_state()
     if state is None:
