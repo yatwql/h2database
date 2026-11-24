@@ -150,16 +150,16 @@ class SnapshotLabelTest(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.mod = _fixture.load_module(BOOK_ROOT, 'snapshot')
         self.snapshots = os.path.join(self.tmp.name, 'snapshots')
-        os.makedirs(os.path.join(self.snapshots, '2026-06-11-june-2026', 'manuscript'))
+        os.makedirs(os.path.join(self.snapshots, '2026-06-11', 'manuscript'))
         self.patch = mock.patch.object(self.mod, 'SNAPSHOT_ROOT', self.snapshots)
         self.patch.start()
         self.addCleanup(self.patch.stop)
 
     def test_the_bare_label_resolves_to_the_dated_directory(self):
-        self.assertTrue(self.mod.resolve('june-2026').endswith('2026-06-11-june-2026'))
+        self.assertTrue(self.mod.resolve('06-11').endswith('2026-06-11'))
 
     def test_the_dated_name_still_resolves(self):
-        self.assertTrue(self.mod.resolve('2026-06-11-june-2026'))
+        self.assertTrue(self.mod.resolve('2026-06-11'))
 
     def test_an_unknown_label_is_reported_with_the_known_ones(self):
         path, code = self.mod.require('missing')

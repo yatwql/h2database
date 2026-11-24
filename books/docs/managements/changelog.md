@@ -477,6 +477,7 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **`data/` 归位**：快照目录名去掉冗余标签（`2026-06-11-june-2026` → `2026-06-11`、`2026-06-15-june-2026-edition` → `2026-06-15`）；`data/snapshots/*/artifacts/` 里的成品（PDF/EPUB/HTML，20 MB）改为只留本地、不入库（manifest 入库说明它们曾存在）；`data/state/` 是每次重建的派生状态、且含本机绝对路径，一并从版本库移除并 gitignore；清掉 `data/tmp/type3/` 实验残留；`to_epub.py` 的规范化副本改写到 `data/tmp/` 并在结束时清理，`dist/` 里不再出现 `*.md.epub.md`。
 - **快照目录去重**：`2026-06-11-docs-stm` 与 `2026-06-11-june-2026` 内容完全相同（同一份 `docs-stm.zip`、同一 SHA、16 个文件、36 893 行），保留被基线与变更日志引用的 `june-2026`，删除重复目录及其账本文件。
 - **成品快照**：新增 `snapshot.py import-artifacts`，手稿已丢失时冻结**产出物**（HTML/Markdown/EPUB/标准版与印刷版 PDF），`kind: "artifacts"` 标明身份，`verify` 只按 SHA 校验、不解码二进制。2026-06-15 的五份成品已迁入 `data/snapshots/2026-06-15-june-2026-edition/artifacts/`，`data/tmp/` 下原文件移除。
 - **用户文档补齐与重排**：`README.md` 的用户文档表按「先日常、后接口、参考、问答」重排并更正描述，目录图补 `data/cache`，管理文档索引补 `quality-model.md`、`review-findings.md`；`how-to-use.md` 的交付一节写明 `FONTS`/`DENSITY`/`CHAPTERS` 三个判据与页面松紧的标定命令；`faq.md` 增加三条实战问答（Type3 字体失败、密度失败或换机后页数变化、EPUB 章节失败）。

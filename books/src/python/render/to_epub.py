@@ -242,7 +242,13 @@ def normalise_headings(text: str) -> tuple[str, dict]:
 # normalised copy, never the merged artifact: other gates compare that file with
 # the manuscript line count, so it must keep the renderer's own output
 _epub_text, _fixes = normalise_headings(_fsutil.read_text(merged_md))
-epub_src = merged_md + '.epub.md'
+# scratch, not dist: the normalised copy is an input to pandoc, not a deliverable,
+# and a name derived from the merged file left a second .md in dist/
+epub_src = os.path.join(_config.tmp_dir(), 'epub-source.md')
+try:
+    os.makedirs(_config.tmp_dir(), exist_ok=True)  # a minimal book need not have one
+except OSError as exc:
+    raise _errors.ToolError(f'error: cannot create {_config.tmp_dir()}: {exc}') from exc
 _fsutil.write_text(epub_src, _epub_text)
 print(f"  Headings normalised: {_fixes['spaced']} missing blank line(s), "
       f"{_fixes['dropped']} decorative underline(s)")
@@ -289,7 +295,7 @@ except FileNotFoundError:
         "pandoc executable disappeared between detection and invocation.") from None
 finally:
     # Tidy up the staging files; pandoc has already consumed them.
-    for p in (metadata_path, css_path):
+    for p in (metadata_path, css_path, epub_src):
         with contextlib.suppress(OSError):
             os.remove(p)
 

@@ -285,9 +285,10 @@ def list_snapshots() -> int:
 def resolve(label: str) -> str | None:
     """Directory of a snapshot by label or by label suffix.
 
-    ``import`` stores ``<date>-<label>``, so the same snapshot answers to both
-    "june-2026" and "2026-06-11-june-2026"; requiring one spelling in the CLI and
-    the other in the human's head is how a working snapshot looks missing.
+    ``import`` stores ``<date>-<label>``; when the label adds nothing to the date the
+    directory is just the date, so the same snapshot answers to both. Requiring one
+    spelling in the CLI and another in the human's head is how a working snapshot
+    looks missing.
     """
     direct = os.path.join(SNAPSHOT_ROOT, label)
     if os.path.isdir(direct):

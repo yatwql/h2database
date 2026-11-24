@@ -31,7 +31,8 @@ __pycache__/
 .claude/scratch/
 books/logs/
 books/data/archive/
-books/data/state/source-inventory.prev.json
+# 派生状态：ingest 每次重建，且含本机绝对路径
+books/data/state/
 books/test-reports/
 .venv/
 
@@ -54,3 +55,5 @@ books/src/python/*.egg-info/
 # cloned sources (fetch_source.py); only the README is tracked
 books/data/srcref/*
 !books/data/srcref/README.md
+# 成品快照的二进制只留在本地，manifest 入库
+books/data/snapshots/*/artifacts/
