@@ -28,7 +28,8 @@ merged_name = "code-analysis"      # 产物文件名前缀
 manuscript = "data/manuscript"     # 手稿目录
 dist = "dist"                      # 产物目录
 docs = "docs"
-tmp = "data/tmp"                   # 临时目录：HTML 片段缓存与 --force 备份（已 gitignore）
+tmp = "data/tmp"                   # 临时目录：一次性脚本、--force 备份（随时可清空）
+cache = "data/cache"               # 缓存：字体索引、HTML 分片（可重建但有成本）
 state = "data/state"               # 派生状态：ingest 每次重建（已 gitignore）
 templates = "data/tmpl"            # 叙述模板（templates.toml）
 book = "data/book"                 # 本书专属文件（book.toml / case-studies.toml）
@@ -105,6 +106,25 @@ display = "删节版"
   "logging": {"level": "INFO", "dir": "logs", "retention_days": 14}
 }
 ```
+
+### 版式与字体（`toolchain.layout_*`、`font_stack_*`）
+
+密度只在一处配置，PDF、HTML、EPUB 共用同一套解析：
+
+| 键 | 作用 |
+| --- | --- |
+| `layout_page_size` / `layout_page_margin` | 纸面尺寸与页边距（只影响 PDF） |
+| `layout_column_px` | 正文栏宽；HTML 与 PDF 同宽 |
+| `layout_body_px` | 正文字号；写 `0` 表示「按每行字数推导」 |
+| `layout_body_chars_per_line` | 推导字号时每行应容纳的字数（默认 40） |
+| `layout_code_px` / `layout_code_line_height` | 代码块字号与行距；行距写 `0` 表示「与正文一致」 |
+| `layout_lead_ratio` | 正文行距增量（`1 + ratio`，默认 0.23）；`DENSITY` 门禁据此判松紧 |
+| `layout_epub_code_em` / `layout_epub_line_height` | 重排版面的相对字号与行高（`em`，读者可缩放） |
+| `layout_spacing_scale` + `layout_*_gap_em` | 段距/标题距/表距等，全部相对行高，由一个倍数统一缩放 |
+| `font_stack_sans` / `font_stack_mono` | 候选字体族（逗号分隔或数组）；按本机可用性排序，缺字体时逐级回退 |
+
+`pdf_split_by_chapter`、`pdf_bytes_per_page`、`pdf_type3_max`、`pdf_leading_ratio_min/max`
+控制 PDF 侧判据：按章分页渲染、体积预算随页数增长、Type3 字体上限、行距松紧区间。
 
 多语言时 `languages` 写多个，inventory 的包键会加语言前缀（`java:org.h2`、`python:pkg`）。
 `toolchain` 段里另有页面几何（`pdf_page_width`/`pdf_page_height`/`pdf_page_tolerance`），

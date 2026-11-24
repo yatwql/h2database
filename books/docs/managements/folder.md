@@ -159,6 +159,16 @@ books/docs/managements/
 临时修复脚本、压缩包、`__pycache__`、过程性产物一律不入库：正式脚本只进
 `src/python/`，一次性脚本与会话产物只进 `data/tmp/`（已 gitignore）。
 
+`data/tmp/` 与 `data/cache/` 是两种不同的承诺，不要混放：
+
+| 目录 | 承诺 | 放什么 |
+| --- | --- | --- |
+| `data/tmp/` | 随时可被清空 | 一次性脚本、会话产物、临时对照文件 |
+| `data/cache/` | 可重建但有重建成本 | 字体索引（扫描全机字体）、HTML 分片缓存 |
+
+两者都由 `_config.excluded_dirs()` 排除、都在 `.gitignore` 里；`cache` 不可写时自动退回 `tmp`，
+只读检出也能构建。
+
 历史手稿不进 `data/manuscript/`：用 `src/python/manuscript/snapshot.py` 导入到
 `data/snapshots/<日期>-<标签>/`，生成 manifest 后即可用
 `snapshot.py baseline` 出体积基线。快照只读，门禁不扫描它。

@@ -477,6 +477,7 @@
   正常输出分别转述。未覆盖语句 1294 → 1272、半分支 593 → 578，总覆盖 87% → **88%**，
   门禁（阈值 88）由 FAIL 转 PASS；`to_epub.py` 114 语句 / 42 分支全部走到。
 ### 门禁
+- **文档跟随实现更新**：`scripts-and-reference.md` 补齐 `pdf_metrics.py`、`audit/pdf_invariants.py`、`audit/epub_diff.py`、`audit/font_coverage.py`，`verify_pdf`/`verify_epub` 的说明加上 `FONTS`/`DENSITY`/`CHAPTERS`，公共库加上 `fonts`/`layout`/`frontmatter`；`how-to-config.md` 新增「版式与字体」键表（`layout_*`、`font_stack_*`、PDF 判据四项）并在 `[paths]` 增加 `cache`；`testplan.md` 的交付两行补上新判据；`folder.md` 说明 `data/tmp/` 与 `data/cache/` 的承诺差异。
 - **临时文件与缓存分开**：新增 `Config.cache_dir()`（`data/cache/`，按需创建，不可写时退回 `data/tmp/`），字体索引与 HTML 分片缓存都迁过去——它们可重建但有重建成本，`tmp/` 却随时可能被清空。`data/cache/` 同时加入 `.gitignore` 与 `excluded_dirs()`，避免被门禁当作正文。另加「默认值恒等」用例：`TypeScale.from_layout(Layout())` 必须等于 `TypeScale()` 的默认值，当场抓出两处漂移（`code_em` 0.625 vs 0.85、代码行距 1.0 vs 1.23），已统一取自 `DEFAULTS`。
 - **偿还本轮引入的技术债**：① `html_shell` 原先在 import 时读取配置并扫描字体目录（`STYLE = apply_layout(...)`），任何导入者都要付这笔开销，且会把「先导入的那个配置」冻结进模块——改为 `style()` 惰性构建并缓存；② 字号/行距的推导规则原本在 `html_shell` 里重写了一遍，现统一走 `Layout.body_size_px()` / `code_line_height_value()`，渲染器与版式对象不会再各算各的；③ `fonts.script_stack()` / `default_cjk()` 在改为按角色声明后已无调用方，删除；④ `pdf_invariants` 里改用 `frontmatter.count_headings()` 后遗留的 `HEADING_LINE` 常量一并删除。输出 HTML 与重构前逐字节一致。
 - **三种格式共用一条字体解析路径，但规则按格式分开**：`lib/fonts` 同时提供 `resolve()`/`sans_stack()`（纸面用：必须本机存在、可嵌入、覆盖本书字符）与新的 `portable_stack(role)`（屏幕用：只声明不嵌入，按「读者设备更可能装了什么」排序，拉丁在前、CJK 在后由级联逐字选择）。EPUB 的样式表改为按角色取值，不再写死 `Consolas, 'DengXian', SimSun` 这类平台专名单。与六月 EPUB 比对：字形阶梯、行高一致，字体族首位一致（Consolas / Source Han Serif），仅回退候选增多。

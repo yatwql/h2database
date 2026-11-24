@@ -210,13 +210,17 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `print_pdf.py` | 印刷级 PDF：章封面横幅、点线目录、页眉页脚；`--html`、`--pdf`、`--skip-html` |
 | `pdf_from_html.py` | 不重建 HTML，直接出 PDF；`--html`、`--pdf` |
 | `to_epub.py` | HTML → EPUB（pandoc） |
-| `verify_pdf.py` | PDF 交付校验：页数、大纲、目录链接、A4、旋转、字体嵌入（`--json`） |
-| `verify_epub.py` | EPUB 结构校验（`--json`） |
+| `pdf_metrics.py` | 版式测量与比对：`--compare 参照.pdf 构建.pdf` 逐项列差异；`--target pages=843,chars_per_page=1905` 与数字比；`--write-back knob=value` 把标定结果写回 `base.json` |
+| `verify_pdf.py` | PDF 交付校验：页数、大纲、目录链接、A4、旋转、字体嵌入（`FONTS`，Type3 上限）、密度（`DENSITY`：行距÷字号、文字占可印高度）（`--json`） |
+| `verify_epub.py` | EPUB 结构校验，含 `CHAPTERS`（每个正文文件恰好一个 `h1`）（`--json`） |
 
 ## 10. 公共库 `src/python/lib/`（不是入口）
 
 `_config`（配置与路径）、`_fsutil`（读写原语）、`_mdutil`（Markdown/HTML 工具）、
-`_llm`（provider 路由与客户端）、`_log`（日志）、`_version`（产品名与版本）。
+`_llm`（provider 路由与客户端）、`_log`（日志）、`_version`（产品名与版本）、
+`fonts`（字体解析：纸面用 `resolve()`，必须本机存在且可嵌入；屏幕用 `portable_stack()`，只声明不嵌入）、
+`layout`（版式参数：`TypeScale` 共用字号/行距，`PageGeometry` 只属于纸面）、
+`frontmatter`（封面块与正文的切分，渲染器与大纲审计共用）。
 脚本一律经 `_config` 取路径，不写死仓库路径。
 
 ## 11. 该用哪个
@@ -241,4 +245,7 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `core/docs_archive.py --version X.Y [--topic <迭代目录>] [--dry-run]` | 发布一个版本后，把该版本台账与已完成的迭代设计移入 `docs/archive/` 下以版本命名的目录；`--dry-run` 先看动作，重复执行无副作用 |
 | `manuscript/renumber.py --write/--apply` | 声明了 `[editions]` 且章号有变化时，算映射并改写 `详见第X章《…》` 一类引用 |
 | `audit/doc_archive.py`、`audit/plan_coverage.py` | 归档布局与计划覆盖的门禁，已包含在 `make.py check` 里，可单独运行排查 |
+| `audit/pdf_invariants.py --pdf <文件> --merged <合并稿>` | 不依赖参照版本的 PDF 不变量：文字越界、Type3 超限、大纲条目与前 N 级标题数是否相等（`--json`） |
+| `audit/epub_diff.py --compare 旧.epub 新.epub` / `--check 新.epub --merged 合并稿` | EPUB 比对与自检：体积、章节文件数、字符数、位图、字体栈/字号/行高；只比「首位字体族」，回退候选增加不算漂移 |
+| `audit/font_coverage.py` | 候选字体是否覆盖本书字符（缺哪些字），换字体前先问它 |
 
