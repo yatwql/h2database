@@ -205,5 +205,46 @@ class CliTest(unittest.TestCase):
         self.assertIn('pages', out)
 
 
+
+
+class BoundaryTest(unittest.TestCase):
+    """The comparisons at exactly 3% and exactly the sample size decide the outcome."""
+
+    def test_exactly_three_percent_is_not_flagged(self):
+        text = _metrics.compare(measured(), measured(pages=927))   # +3.0%
+        self.assertNotIn('←', text)
+
+    def test_just_over_three_percent_is_flagged(self):
+        text = _metrics.compare(measured(), measured(pages=930))
+        self.assertIn('←', text)
+
+    def test_a_target_that_matches_exactly_is_not_flagged(self):
+        text = _metrics.compare_targets(measured(), {'pages': 900})
+        self.assertNotIn('←', text)
+
+    def test_a_target_off_by_exactly_three_percent_is_not_flagged(self):
+        text = _metrics.compare_targets(measured(), {'pages': 927})
+        self.assertNotIn('←', text)
+
+    def test_a_page_count_at_the_sample_size_is_returned_whole(self):
+        reader = mock.Mock()
+        reader.pages = list(range(_metrics.SAMPLE_PAGES))
+        self.assertEqual(len(_metrics._sample(reader)), _metrics.SAMPLE_PAGES)
+
+    def test_one_page_over_the_sample_is_windowed(self):
+        reader = mock.Mock()
+        reader.pages = list(range(_metrics.SAMPLE_PAGES + 10))
+        self.assertEqual(len(_metrics._sample(reader)), _metrics.SAMPLE_PAGES)
+
+    def test_landing_exactly_at_the_tolerance_converges(self):
+        search = _metrics.Calibration(target=100, low=0.5, high=1.5, tolerance=4)
+        search.record(1.0, 104)
+        self.assertTrue(search.converged)
+
+    def test_an_interval_at_the_floor_stops(self):
+        search = _metrics.Calibration(target=100, low=1.000, high=1.005)
+        self.assertIsNone(search.suggest())
+
+
 if __name__ == '__main__':
     unittest.main()
