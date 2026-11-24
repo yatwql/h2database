@@ -13,6 +13,14 @@
 
 ### 变更
 
+- **文档与具体项目解耦，配置说明归用户文档**：管理文档与使用手册不再点名被分析的项目
+  （`style-guide.md` 的示例、`requirements.md` 的目标、`folder.md` 的目录树、`how-to-use.md`
+  的产物名、`how-to-config.md` 的包前缀示例全部改成占位或用例无关的表述）；唯一的范例
+  放在 `how-to-manual` 的「范例：本仓库里的那份分析」一节，指向 H2 分析作为对照。
+  `style.json` 的键语义只在 `docs/manuals/how-to-config.md` §3 解释（补齐 `prose`/`quality`/
+  `thresholds` 等全部键，去掉 `project`/`diagrams.markers` 两条已作废的行）。新增两条门禁：
+  `doc_drift` 的 `PROJECT`（管理文档与手册不得出现配置里的包前缀或书名，两个台账与范例节豁免）
+  与 `STYLE_KEY`（`style.json` 的每个段与键都必须在手册里被解释）。
 - **文档按体例归位，质量策略更名**：`requirements.md` 去掉当前分析对象的专属名词（分析对象由书的
   配置声明，目标、章节槽、内容范围都改写成与项目无关的表述）；`testplan.md` §3/§4 只保留「判什么、
   谁判」（格式体例移入 `style-guide.md` §4.2/§4.3，命令与人工验收步骤不再重复手册）；`technical.md`

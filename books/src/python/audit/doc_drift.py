@@ -491,6 +491,87 @@ def check_manual_scope(manual_dir: str | None = None) -> list[dict]:
     return out
 
 
+# The toolchain is generic: the docs describe how it works, not which project is being
+# analysed. Two ledgers record actual work on this book and one user manual carries the
+# worked example, so those three may name the analysed project; nothing else may.
+PROJECT_NAMES_EXEMPT = ('changelog.md', 'review-findings.md', 'how-to-new-book.md')
+
+
+def _project_names() -> list[str]:
+    """Names of the analysed project, taken from configuration rather than typed in."""
+    names = []
+    prefix = str(_config.SOURCES.get('package_prefix') or '').strip()
+    if prefix:
+        names.append(prefix)
+    for key in ('display_title_zh', 'display_title_en', 'title'):
+        value = _config.project(key, '')
+        if value:
+            names.append(value)
+    return sorted({name for name in names if len(name) > 2}, key=len, reverse=True)
+
+
+def check_project_names(files: list[str]) -> list[dict]:
+    """Management and user documents stay independent of the analysed project.
+
+    Reading the docs of *another* book must not require knowing this one: if a
+    requirement or a manual names the project it happens to analyse, it stops
+    describing the tool and starts describing one instance of its output. The names
+    come from configuration, so this check travels to any book.
+    """
+    names = _project_names()
+    if not names:
+        return []
+    out: list[dict] = []
+    for path in files:
+        if os.path.basename(path) in PROJECT_NAMES_EXEMPT:
+            continue
+        if '/managements/' not in path and '/manuals/' not in path:
+            continue
+        for lineno, line in enumerate(_fsutil.read_lines(path), start=1):
+            hit = next((name for name in names if name in line), '')
+            if hit:
+                out.append({'kind': 'PROJECT', 'file': os.path.relpath(path, REPO_ROOT),
+                            'line': lineno,
+                            'detail': f'names the analysed project ({hit!r}); the docs '
+                                      'describe the tool, and the example lives in '
+                                      'how-to-new-book.md'})
+    return out
+
+
+STYLE_MANUAL = os.path.join('docs', 'manuals', 'how-to-config.md')
+
+
+def check_style_keys(book_root: str | None = None) -> list[dict]:
+    """Every style.json key is explained in the user manual, and nowhere else.
+
+    The configuration is the single source of values; what those values *mean* is
+    user documentation, not a management document. So the manual must mention every
+    section and key — a key nobody explains is a knob only the code knows about, and
+    an explanation in the wrong document splits the reference in two.
+    """
+    root = book_root or _config.BOOK_ROOT
+    style_path = os.path.join(root, 'data', 'config', 'style.json')
+    manual_path = os.path.join(root, STYLE_MANUAL)
+    if not os.path.isfile(style_path) or not os.path.isfile(manual_path):
+        return []
+    try:
+        payload = json.loads(_fsutil.read_text(style_path))
+    except (OSError, ValueError):
+        return []
+    manual = _fsutil.read_text(manual_path)
+    out: list[dict] = []
+    for section, value in (payload or {}).items():
+        if section.startswith('_'):
+            continue
+        missing = [] if section in manual else [section]
+        if isinstance(value, dict):
+            missing += [key for key in value if not key.startswith('_') and key not in manual]
+        for key in missing:
+            out.append({'kind': 'STYLE_KEY', 'file': STYLE_MANUAL, 'line': 1,
+                        'detail': f'style.json key {key!r} is not explained in the manual'})
+    return out
+
+
 def check_paths(files: list[str], repo_root: str | None = None) -> list[dict]:
     out = []
     for path in files:
@@ -604,7 +685,8 @@ def main(argv: list[str] | None = None) -> int:
                 + check_config() + check_levels(files) + check_manual_scope()
                 + check_managements() + check_numbering(files)
                 + check_deliver(files) + check_prefixes(files) + check_locus()
-                + check_standard() + check_threshold_keys(files) + check_plan_tree())
+                + check_standard() + check_threshold_keys(files) + check_plan_tree()
+                + check_project_names(files) + check_style_keys())
 
     if args.json:
         print(json.dumps({'count': len(findings), 'findings': findings},

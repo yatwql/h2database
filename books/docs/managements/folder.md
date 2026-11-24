@@ -45,17 +45,8 @@ books/
     manuscript/              # 手稿（唯一可编辑的内容源）
       cover.md
       front/                 # 前件：序、版权、阅读指南
-      ch1-2-architecture.md
-      ch3-packages.md
-      ch4-5-modules-processes.md
-      ch6-1-data-structures.md
-      ch6-2-storage-algorithms.md
-      ch6-3-query-algorithms.md
-      ch7-8-sql-optimizer.md
-      ch9-10-persistence-locking.md
-      ch11-12-guide-summary.md
-      appendix-a-case-studies.md
-      appendix-b-version-changes.md
+      ch<章号>-<主题>.md     # 章节：文件名与顺序由 book.toml [chapters.files] 给出
+      appendix-<字母>-<主题>.md
       back/                  # 后件：glossary.md / references.md / index.md
   src/
     python/                  # 工具链：lib/ core/ ingest/ manuscript/ audit/ render/ app/
@@ -65,11 +56,8 @@ books/
   test-reports/              # 测试报告（每次一份日期目录 + latest.json，gitignored）
   data/archive/              # 本书手稿与产物的滚动副本（自动、保留窗口取配置、gitignored）
   dist/                      # 交付产物（生成物，gitignored）
-    h2-source-code-analysis.md
-    h2-source-code-analysis.html
-    h2-source-code-analysis.pdf
-    h2-source-code-analysis-print.pdf
-    h2-source-code-analysis.epub
+    <book>.md / .html / .pdf / .epub
+    <book>-print.pdf         # 印刷版（按需）
   docs/
     managements/             # 全部管理与规范文档（见 §2）
     manuals/                 # 使用手册（scripts-and-reference.md：全部脚本清单）

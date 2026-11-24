@@ -323,5 +323,43 @@ class PlanTreeNamingTest(unittest.TestCase):
         self.assertTrue(any('只允许' in detail for detail in self.details()))
 
 
+
+class ProjectNameTest(unittest.TestCase):
+    """The docs describe the tool, not the project it happens to analyse."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.drift = _fixture.load_module(self.root, 'doc_drift')
+
+    def doc(self, name: str, text: str) -> str:
+        path = os.path.join(self.root, 'docs', 'managements', name)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as handle:
+            handle.write(text)
+        return path
+
+    def test_the_package_prefix_in_a_management_doc_is_reported(self):
+        path = self.doc('requirements.md', '包前缀 `org.h2` 不得出现在管理文档里。\n')
+        with mock.patch.dict(self.drift._config.SOURCES, {'package_prefix': 'org.h2'}):
+            findings = self.drift.check_project_names([path])
+        self.assertEqual([f['kind'] for f in findings], ['PROJECT'])
+        self.assertIn('org.h2', findings[0]['detail'])
+
+    def test_the_ledgers_and_the_worked_example_may_name_the_project(self):
+        files = [self.doc(name, 'org.h2 是本次分析的对象。\n')
+                 for name in ('changelog.md', 'review-findings.md', 'how-to-new-book.md')]
+        with mock.patch.dict(self.drift._config.SOURCES, {'package_prefix': 'org.h2'}):
+            self.assertEqual(self.drift.check_project_names(files), [])
+
+    def test_a_manual_page_without_the_name_is_clean(self):
+        path = os.path.join(self.root, 'docs', 'manuals', 'how-to-use.md')
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as handle:
+            handle.write('运行 `make.py check`，产物在 `dist/<book>.pdf`。\n')
+        with mock.patch.dict(self.drift._config.SOURCES, {'package_prefix': 'org.h2'}):
+            self.assertEqual(self.drift.check_project_names([path]), [])
+
 if __name__ == '__main__':
     unittest.main()
