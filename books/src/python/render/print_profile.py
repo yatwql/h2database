@@ -37,14 +37,11 @@ def accent() -> str:
     return _config.project('accent_color', DEFAULT_ACCENT) or DEFAULT_ACCENT
 
 
-def style_block() -> str:
-    """The print-only rules, sized in `em` so they follow the layout's type scale."""
-    colour = accent()
-    return f'''<style id="{STYLE_ID}">
-@media print {{
+PRINT_CSS = '''<style id="__STYLE_ID__">
+@media print {
     /* === H1 chapter cover === */
     /* Each chapter starts on a fresh page, under a banner that scales with the type. */
-    #content h1 {{
+    #content h1 {
         page-break-before: always;
         margin-top: 0;
         padding-top: 6em;
@@ -52,35 +49,35 @@ def style_block() -> str:
         text-align: center;
         border: none;
         position: relative;
-    }}
-    #content h1::before {{
+    }
+    #content h1::before {
         content: '';
         display: block;
         width: 6em;
         height: 0.25em;
         margin: 0 auto 1.5em;
-        background: linear-gradient(90deg, {colour}, rgba(21, 101, 192, 0.35));
+        background: linear-gradient(90deg, __ACCENT__, rgba(21, 101, 192, 0.35));
         border-radius: 0.125em;
-    }}
-    #content h1::after {{
+    }
+    #content h1::after {
         content: '';
         display: block;
         width: 60%;
         height: 1px;
         margin: 1.5em auto 0;
         background: #ddd;
-    }}
+    }
 
     /* === TOC dot leaders === */
     /* Title and page number sit at the flex extremes and the leader fills the gap. */
-    #toc-page-nav a {{
+    #toc-page-nav a {
         display: flex !important;
         align-items: baseline;
         gap: 0.4em;
         padding: 0.2em 0.5em !important;
         text-decoration: none;
-    }}
-    #toc-page-nav a::after {{
+    }
+    #toc-page-nav a::after {
         content: '........................................'
                  '........................................';
         flex: 1 0 auto;
@@ -91,19 +88,28 @@ def style_block() -> str:
         color: #ccc;
         white-space: nowrap;
         order: 2;
-    }}
+    }
     #toc-page-nav a > span:first-child,
-    #toc-page-nav a > div {{
+    #toc-page-nav a > div {
         order: 1;
         flex: 1 1 auto;
-    }}
-    #toc-page-nav a > span:last-child {{
+    }
+    #toc-page-nav a > span:last-child {
         order: 3;
         flex: 0 0 auto;
         font-variant-numeric: tabular-nums;
-    }}
-}}
+    }
+}
 </style>'''
+
+
+def style_block() -> str:
+    """The print-only rules, sized in `em` so they follow the layout's type scale.
+
+    Plain text substitution, not `str.format`: the rules are full of CSS braces, and
+    escaping every one of them would be a second place to keep correct.
+    """
+    return PRINT_CSS.replace('__ACCENT__', accent()).replace('__STYLE_ID__', STYLE_ID)
 
 
 def inject(html: str) -> str:

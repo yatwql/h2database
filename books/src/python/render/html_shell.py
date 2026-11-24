@@ -379,6 +379,37 @@ def _layout_value(key):
     return LAYOUT_DEFAULTS[key] if raw in (None, '') else raw
 
 
+def _style_rules(*, print_code, lead, print_column, wrap_css, page_size, margin,
+                 column, body, para, head_before, head_after, list_gap,
+                 table_gap) -> dict[str, str]:
+    """Stylesheet literal -> its configured value, in one table.
+
+    Kept apart from `apply_layout` so the numbers are computed in one readable block
+    and the substitutions stay a table: a new dimension is one row, not one more link
+    in a method chain.
+    """
+    return {
+        '  pre { font-size: 10px; }':
+            f'  pre {{ font-size: {print_code:g}px; line-height: {lead}; }}',
+        '  #content { margin-left: 0; max-width: 760px; width: auto; padding: 0; }':
+            f'  #content {{ margin-left: 0; max-width: {print_column}px; '
+            'width: auto; padding: 0; }',
+        '  #toc-page { max-width: 760px; }': f'  #toc-page {{ max-width: {print_column}px; }}',
+        '  @page { size: A4; margin: 24mm 20mm; }':
+            wrap_css + f'  @page {{ size: {page_size}; margin: {margin}; }}',
+        'flex: 1; max-width: 960px;': f'flex: 1; max-width: {column}px;',
+        'body {\n    font-size: 16px;': f'body {{\n    font-size: {body}px;',
+        'p { margin: 0.8em 0; text-align: justify; }':
+            f'p {{ margin: {para} 0; text-align: justify; }}',
+        'margin-top: 1.5em; margin-bottom: 0.5em; font-family:':
+            f'margin-top: {head_before}; margin-bottom: {head_after}; font-family:',
+        'ul, ol { margin: 0.5em 0; padding-left: 2em; }':
+            f'ul, ol {{ margin: {list_gap} 0; padding-left: 2em; }}',
+        'table { border-collapse: collapse; width: 100%; margin: 1em 0; }':
+            f'table {{ border-collapse: collapse; width: 100%; margin: {table_gap} 0; }}',
+    }
+
+
 def apply_layout(css: str) -> str:
     """Substitute the configured dimensions into the stylesheet.
 
@@ -427,27 +458,13 @@ def apply_layout(css: str) -> str:
     head_after = gap('layout_heading_gap_after_em')
     list_gap = gap('layout_list_gap_em')
     table_gap = gap('layout_table_gap_em')
-    return (css
-            .replace('  pre { font-size: 10px; }',
-                     f'  pre {{ font-size: {print_code:g}px; line-height: {lead}; }}')
-            .replace('  #content { margin-left: 0; max-width: 760px; width: auto; padding: 0; }',
-                     f'  #content {{ margin-left: 0; max-width: {print_column}px; '
-                     'width: auto; padding: 0; }')
-            .replace('  #toc-page { max-width: 760px; }',
-                     f'  #toc-page {{ max-width: {print_column}px; }}')
-            .replace('  @page { size: A4; margin: 24mm 20mm; }',
-                     wrap_css
-                     + f'  @page {{ size: {page_size}; margin: {margin}; }}')
-            .replace('flex: 1; max-width: 960px;', f'flex: 1; max-width: {column}px;')
-            .replace('body {\n    font-size: 16px;', f'body {{\n    font-size: {body}px;')
-            .replace('p { margin: 0.8em 0; text-align: justify; }',
-                     f'p {{ margin: {para} 0; text-align: justify; }}')
-            .replace('margin-top: 1.5em; margin-bottom: 0.5em; font-family:',
-                     f'margin-top: {head_before}; margin-bottom: {head_after}; font-family:')
-            .replace('ul, ol { margin: 0.5em 0; padding-left: 2em; }',
-                     f'ul, ol {{ margin: {list_gap} 0; padding-left: 2em; }}')
-            .replace('table { border-collapse: collapse; width: 100%; margin: 1em 0; }',
-                     f'table {{ border-collapse: collapse; width: 100%; margin: {table_gap} 0; }}'))
+    values = {'print_code': print_code, 'lead': lead, 'print_column': print_column,
+              'wrap_css': wrap_css, 'page_size': page_size, 'margin': margin,
+              'column': column, 'body': body, 'para': para, 'head_before': head_before,
+              'head_after': head_after, 'list_gap': list_gap, 'table_gap': table_gap}
+    for literal, replacement in _style_rules(**values).items():
+        css = css.replace(literal, replacement)
+    return css
 
 
 @functools.lru_cache(maxsize=1)

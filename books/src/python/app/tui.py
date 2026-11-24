@@ -78,12 +78,10 @@ def _c(text: str, code: str) -> str:
     return f'\033[{code}m{text}\033[0m' if USE_COLOR else text
 
 
-def header() -> str:
-    """Identity on top, operational facts below, chrome kept quiet."""
-    info = settings.summary()
+def _header_facts(info: dict) -> list[tuple[str, str]]:
+    """Label/value pairs: labels are muted, values near-white."""
     source = info['source_dir'] or '(未配置)'
-    # (label, value) pairs: labels are muted, values near-white.
-    facts = [
+    return [
         ('源码', f"{source}  {_c('(' + info['source_version'] + ')', PALETTE['hint'])}"),
         ('手稿', info['manuscript']),
         ('产物', info['dist']),
@@ -93,52 +91,56 @@ def header() -> str:
         ('用量', f"{_c('LLM 今日', PALETTE['label'])} {info['llm_spend']}   "
                  f"{_c('手稿', PALETTE['label'])} {info['volume_margin']}"),
     ]
-    label_width = max(_width(label) for label, _value in facts) + 1
 
-    title_left = _c(_config.app_name(), PALETTE['product_accent'])
+
+def _header_titles(info: dict) -> tuple[str, str, str, str]:
+    """(rendered product, plain product, rendered book, plain book) lines."""
     updated = _config.tool_updated()
-    title_rest = (f" · {_config.app_name_zh()}  "
-                  f"{_c('v' + info['tool_version'], PALETTE['hint'])}"
-                  + (f"  {_c('更新 ' + updated, PALETTE['hint'])}" if updated else ''))
-    product_plain = (f' {_config.app_name()} · {_config.app_name_zh()}  '
-                     f'v{info["tool_version"]}'
-                     + (f'  更新 {updated}' if updated else ''))
+    title = (_c(_config.app_name(), PALETTE['product_accent'])
+             + f' · {_config.app_name_zh()}  '
+             + _c('v' + info['tool_version'], PALETTE['hint'])
+             + (f"  {_c('更新 ' + updated, PALETTE['hint'])}" if updated else ''))
+    plain_title = (f' {_config.app_name()} · {_config.app_name_zh()}  '
+                   f'v{info["tool_version"]}' + (f'  更新 {updated}' if updated else ''))
     book_date = _config.book_updated()
-    book_plain = (f' 书籍 {info["title"]}  v{info["version"]}'
+    book = (f' {_c("书籍", PALETTE["label"])} {_c(info["title"], PALETTE["book"])}'
+            f'  {_c("v" + info["version"], PALETTE["hint"])}'
+            + (f'  {_c("更新 " + book_date, PALETTE["hint"])}' if book_date else ''))
+    plain_book = (f' 书籍 {info["title"]}  v{info["version"]}'
                   + (f'  更新 {book_date}' if book_date else ''))
-    book_line = (f' {_c("书籍", PALETTE["label"])} '
-                 f'{_c(info["title"], PALETTE["book"])}'
-                 f'  {_c("v" + info["version"], PALETTE["hint"])}'
-                 + (f'  {_c("更新 " + book_date, PALETTE["hint"])}' if book_date else ''))
+    return title, plain_title, book, plain_book
 
+
+def header() -> str:
+    """Identity on top, operational facts below, chrome kept quiet."""
+    info = settings.summary()
+    facts = _header_facts(info)
+    label_width = max(_width(label) for label, _value in facts) + 1
+    title_rendered, product_plain, book_rendered, book_plain = _header_titles(info)
     inner = max(_width(product_plain), _width(book_plain),
                 max(_width(f' {label} {value}') for label, value in facts)) + 1
 
     def pad(plain: str, rendered: str) -> str:
         return f"{rendered}{' ' * (inner - _width(plain))}"
 
+    def framed(plain: str, rendered: str) -> str:
+        edge = _c('│', PALETTE['frame'])
+        return edge + pad(plain, rendered) + edge
+
     def fact_line(label: str, value: str) -> str:
         gap = ' ' * (label_width - _width(label))
-        plain = f' {label}{gap}{value}'
-        rendered = f' {_c(label, PALETTE["label"])}{gap}{value}'
-        return _c('│', PALETTE['frame']) + pad(plain, rendered) + _c('│', PALETTE['frame'])
+        return framed(f' {label}{gap}{value}',
+                      f' {_c(label, PALETTE["label"])}{gap}{value}')
 
-    product_line = pad(product_plain, ' ' + title_left + title_rest)
-    book_padded = pad(book_plain, book_line)
     rows = [
         _c('╭' + '─' * inner + '╮', PALETTE['frame']),
-        product_line,
-        book_padded,
+        framed(product_plain, ' ' + title_rendered),
+        framed(book_plain, book_rendered),
         _c('├' + '─' * inner + '┤', PALETTE['frame']),
         *[fact_line(label, value) for label, value in facts],
         _c('╰' + '─' * inner + '╯', PALETTE['frame']),
     ]
-    # product/book lines need their frame characters painted without colour bleed
-    rows[1] = rows[1].replace('╭', '│', 0)
-    rows[1] = _c('│', PALETTE['frame']) + rows[1] + _c('│', PALETTE['frame'])
-    rows[2] = _c('│', PALETTE['frame']) + rows[2] + _c('│', PALETTE['frame'])
     return '\n'.join(rows)
-
 
 def screen_rows(screen: str) -> list[tuple[str, str, str]]:
     """(key, action, label) rows for any screen; dynamic screens build theirs."""

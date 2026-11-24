@@ -13,6 +13,13 @@
 
 ### 变更
 
+- **90 小时变更的债清理：三处超长函数归零**：`tui.header()`（60 行）拆成
+  `_header_facts()`/`_header_titles()` 并删掉一行永不生效的 `replace(..., 0)`；
+  `html_shell.apply_layout()`（72 行）把替换链抽成模块级 `_style_rules(**values)` 表，新增一个维度
+  只需加一行；`print_profile.style_block()`（67 行）的 CSS 提成 `PRINT_CSS` 常量，函数只做占位替换
+  （用 `replace` 而非 `format`，避免为 CSS 的大括号再加一层转义）。全库 `≥60 行函数` 重新归零，
+  33 道门禁与 1653 用例保持全绿。
+
 - **代码与测试审计的整改**：删除两处死代码——`lib/_log.tail_since()` 与 `lib/_mdutil.figure_ids()`
   （后者只被自身用例引用，一并删除该用例）；`test_app_tui_keys_platform.py` 中与
   `test_app_tui_keys.py` 重复的 line-mode 用例，保留通用那份、平台文件只留 Windows 序列与空行。
