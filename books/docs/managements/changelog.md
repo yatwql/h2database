@@ -13,6 +13,14 @@
 
 ### 变更
 
+- **文档按体例归位，质量策略更名**：`requirements.md` 去掉当前分析对象的专属名词（分析对象由书的
+  配置声明，目标、章节槽、内容范围都改写成与项目无关的表述）；`testplan.md` §3/§4 只保留「判什么、
+  谁判」（格式体例移入 `style-guide.md` §4.2/§4.3，命令与人工验收步骤不再重复手册）；`technical.md`
+  补六张结构图与两个推导小节（PDF 交付链的写入者与压缩时机、版式由阅读度量推导、门禁执行模型、
+  可再生/需评审/不可再生的分界），并把本轮确立的四条设计决策登记为 D-07～D-10。原
+  `quality-model.md` 更名为 **`content-quality-policy.md`（质量保障流程）**：它与内容标准
+  `content-standard.md` 的分工写进双方定位——内容是标准定义的，判定与基线由项目注册。
+
 - **文档与代码对齐一轮**：日志命名（`check-<档位>-<YYYY-MM-DD>.{log,jsonl}`、`perf-baseline.json`
   与滚动窗口）、`render/` 模块表（补 `pdf_split.py`、`pdf_metrics.py`、`toc_pages.py`）、
   `verify_pdf` 的 `COLUMN` 判据、基线清单（`coverage.json`、`perf-baseline.json`、
@@ -260,7 +268,7 @@
   `technical.md` 同时写明两个目录的分界：`data/archive/` 是自动滚动保险（含产物、45 天、
   gitignored），`data/snapshots/` 是人工挑选的永久对照点（入库、供体量基线引用）。
 - **文档跟随本轮改动**：`plan.md` 移除已达成的覆盖率棘轮项（在办回到 2 项：语言包扩展、图示升级）；
-  `scripts-and-reference.md` 与 `quality-model.md` 的 `snapshot.py import` 用法补上"目录也可"；
+  `scripts-and-reference.md` 与 `content-quality-policy.md` 的 `snapshot.py import` 用法补上"目录也可"；
   `folder.md` 新增 §3.1 讲清 `data/archive/` 与 `data/snapshots/` 的分界（谁写、存什么、留多久、
   入不入库、谁读、怎么提为对照点）。
 - **去掉文档与注释里的时间性措辞**：`requirements.md` 的"上一版已认可基线"改为"已认可的体量基线"，
@@ -348,7 +356,7 @@
   `baselines/<edition>/`；合并规则只指向 `technical.md` §3.1，不在设计里重述；新增
   「非功能需求怎么适用」（体积预算按书、可移植覆盖向上查找、不做跨书汇总）；写明
   `[paths]` 不得越出书根的校验、旧布局不猜位置、自举与 CI 的边界、删 `[editions]` 后的
-  残留处理；与 `quality-model.md` §4「只比一份」对齐为「每版本只比自己那份」。
+  残留处理；与 `content-quality-policy.md` §4「只比一份」对齐为「每版本只比自己那份」。
 - **源目录绑定进多书设计**：源是被分析对象，属于书的输入——声明在书级 `[sources]`，不在
   运行期切换（NFR-02 可复现、体量基线是评审结论）；一棵树不够时用 `roots[]` 带 `label`，
   单根 `src_main` 保持兼容；体量基线写入 `source{label, version, digest}`，换源后要求复核。
@@ -620,7 +628,7 @@
 - **`data/` 归位**：快照目录名去掉冗余标签（`2026-06-11-june-2026` → `2026-06-11`、`2026-06-15-june-2026-edition` → `2026-06-15`）；`data/snapshots/*/artifacts/` 里的成品（PDF/EPUB/HTML，20 MB）改为只留本地、不入库（manifest 入库说明它们曾存在）；`data/state/` 是每次重建的派生状态、且含本机绝对路径，一并从版本库移除并 gitignore；清掉 `data/tmp/type3/` 实验残留；`to_epub.py` 的规范化副本改写到 `data/tmp/` 并在结束时清理，`dist/` 里不再出现 `*.md.epub.md`。
 - **快照目录去重**：`2026-06-11-docs-stm` 与 `2026-06-11-june-2026` 内容完全相同（同一份 `docs-stm.zip`、同一 SHA、16 个文件、36 893 行），保留被基线与变更日志引用的 `june-2026`，删除重复目录及其账本文件。
 - **成品快照**：新增 `snapshot.py import-artifacts`，手稿已丢失时冻结**产出物**（HTML/Markdown/EPUB/标准版与印刷版 PDF），`kind: "artifacts"` 标明身份，`verify` 只按 SHA 校验、不解码二进制。2026-06-15 的五份成品已迁入 `data/snapshots/2026-06-15-june-2026-edition/artifacts/`，`data/tmp/` 下原文件移除。
-- **用户文档补齐与重排**：`README.md` 的用户文档表按「先日常、后接口、参考、问答」重排并更正描述，目录图补 `data/cache`，管理文档索引补 `quality-model.md`、`review-findings.md`；`how-to-use.md` 的交付一节写明 `FONTS`/`DENSITY`/`CHAPTERS` 三个判据与页面松紧的标定命令；`faq.md` 增加三条实战问答（Type3 字体失败、密度失败或换机后页数变化、EPUB 章节失败）。
+- **用户文档补齐与重排**：`README.md` 的用户文档表按「先日常、后接口、参考、问答」重排并更正描述，目录图补 `data/cache`，管理文档索引补 `content-quality-policy.md`、`review-findings.md`；`how-to-use.md` 的交付一节写明 `FONTS`/`DENSITY`/`CHAPTERS` 三个判据与页面松紧的标定命令；`faq.md` 增加三条实战问答（Type3 字体失败、密度失败或换机后页数变化、EPUB 章节失败）。
 - **需求与技术设计同步**：`requirements.md` 的 FR-13/14/15 补上「字体按角色声明、不得回落 Type3、密度区间、每章恰好一个一级标题」，并新增 FR-19（换书/换系统/换字体只改配置，字号行距由栏宽推导）；`technical.md` 的分层表补 `fonts`/`layout`/`frontmatter`，临时目录与缓存目录分开描述；`testplan.md` 补 FR-19 判据行并点名 `to_epub.py`，使 `requirement_trace` 与 `gate_trace` 同时通过。
 - **文档跟随实现更新**：`scripts-and-reference.md` 补齐 `pdf_metrics.py`、`audit/pdf_invariants.py`、`audit/epub_diff.py`、`audit/font_coverage.py`，`verify_pdf`/`verify_epub` 的说明加上 `FONTS`/`DENSITY`/`CHAPTERS`，公共库加上 `fonts`/`layout`/`frontmatter`；`how-to-config.md` 新增「版式与字体」键表（`layout_*`、`font_stack_*`、PDF 判据四项）并在 `[paths]` 增加 `cache`；`testplan.md` 的交付两行补上新判据；`folder.md` 说明 `data/tmp/` 与 `data/cache/` 的承诺差异。
 - **临时文件与缓存分开**：新增 `Config.cache_dir()`（`data/cache/`，按需创建，不可写时退回 `data/tmp/`），字体索引与 HTML 分片缓存都迁过去——它们可重建但有重建成本，`tmp/` 却随时可能被清空。`data/cache/` 同时加入 `.gitignore` 与 `excluded_dirs()`，避免被门禁当作正文。另加「默认值恒等」用例：`TypeScale.from_layout(Layout())` 必须等于 `TypeScale()` 的默认值，当场抓出两处漂移（`code_em` 0.625 vs 0.85、代码行距 1.0 vs 1.23），已统一取自 `DEFAULTS`。
@@ -851,7 +859,7 @@ HTML 里逃出 `<pre>` 的图注串、`--figures` 开关、以及 JSON 两种列
   （`doc_drift` 新增 `LOCUS` 检查）；问题台账改 H1–H3 + 登记档，与 `plan.md` 的时机档
   P1–P4 分开命名；`folder.md` 只留归属，合并规则指向 `technical.md` §3.1；练习与跨章引用
   细则只在 `style-guide.md`。（rf-11）
-- **内容标准与写作规则分轴**：`analysis-doc-standard.md` 只回答“必须有什么”（章节骨架、
+- **内容标准与写作规则分轴**：`content-standard.md` 只回答“必须有什么”（章节骨架、
   阶梯、事实、图示、术语、练习、四项人工自查），写法一律指向 `style-guide.md`；
   判据、级别与门禁改由项目单向登记，标准不再引用任何项目的门禁表、脚本或配置（rf-12）。
 - `file_length.py` 兼校「文件膨胀登记」：`review-findings.md` P4 表里的行数与实测不符即失败。
@@ -865,7 +873,7 @@ HTML 里逃出 `<pre>` 的图注串、`--figures` 开关、以及 JSON 两种列
 - **`testplan` 只留判据**：§4 交付形态收缩为按需验收项与命令（渲染参数、版式规格与两个
   写死的阈值移出，分别指向 `technical.md` §4.4 与 `style-guide.md` §6）；§2.2 的「9 项
   CSS 标记」改为「样式与锚点钩子齐备」，删除「脚本语法有效」这条弱判据；§5 不再复述
-  §2.2；§6 指向 `quality-model.md` §4 与使用手册。（rf-15）
+  §2.2；§6 指向 `content-quality-policy.md` §4 与使用手册。（rf-15）
 - 判据只写性质：`testplan` §2.2 的阈值列改为“不低于配置下限”这类表述，键名与取值集中到
   `technical.md` §3.2 的阈值归属；`doc_drift` 新增 `THRESHOLD` 检查，判据表引用配置键
   名即失败。（rf-14）
@@ -885,8 +893,8 @@ HTML 里逃出 `<pre>` 的图注串、`--figures` 开关、以及 JSON 两种列
 
 - **ingest 不再吃掉正文**：`chapters.py` 只在目标文件为空、内容相同或 `--force` 时写入，否则跳过并报出行数；`actions.analyze` 在三阶段后跑一次 `content_volume.py`，把「内容体积：与基线一致 / N 项低于基线」写进同一份运行结果（后者判失败并给 `--update-baseline` 指引）。（rf-21）
 - **体量基线只能抬高**：`content_volume.py --update-baseline` 默认拒绝把任何条目或总量改低，收缩须 `--accept-shrink --reason "<理由>"`，理由与逐项差额写进基线文件的 `accepted_shrinks`；新增 `--baseline <文件>`，用于显式对照某份历史快照（默认永远比当前基线，不做加权）。（rf-22）
-- **基线记账要求“人 + 提交”**：`--update-baseline` 在 `data/manuscript` 有未提交改动、或没有具名评审人时拒绝记账，写入 `reviewed{by, at, commit, reason}`；`quality-model.md` §4 给出固定流程（check 全绿 → 提交手稿 → 记账留名）。（rf-23）
-- **历史版本可以提为基线**：`content_volume.py --update-baseline --from-snapshot <label>` 从快照的体积账本取数，记录 `source.snapshot`；比当前基线薄时仍须 `--accept-shrink`。`quality-model.md` §4 给出「导入 → 记快照账本 → 提为基线」流程。（rf-24）
+- **基线记账要求“人 + 提交”**：`--update-baseline` 在 `data/manuscript` 有未提交改动、或没有具名评审人时拒绝记账，写入 `reviewed{by, at, commit, reason}`；`content-quality-policy.md` §4 给出固定流程（check 全绿 → 提交手稿 → 记账留名）。（rf-23）
+- **历史版本可以提为基线**：`content_volume.py --update-baseline --from-snapshot <label>` 从快照的体积账本取数，记录 `source.snapshot`；比当前基线薄时仍须 `--accept-shrink`。`content-quality-policy.md` §4 给出「导入 → 记快照账本 → 提为基线」流程。（rf-24）
 - **基线换版**：按用户指示，把 `docs-stm.zip`（2026-06-11 版）导入为只读快照 `2026-06-11-june-2026` 并认定为体量基线（16 文件 / 36 893 行），理由与来源记账在基线文件里。
 - **LLM 用量与费用可见**：新增 `data/config/llm_pricing.json`（每百万 token 单价，未列出的模型记“未定价”）；每次调用记录 token 与费用并追加 `logs/llm-usage.jsonl`；`llm-ask` 打印调用前区间预估 + 调用后「本次 / 今日累计」，`analyze --llm` 打印整轮汇总；`llm_settings.daily_cost_limit` 达到时追加 ⚠ 提醒。（rf-25）
 - **LLM 费用多币种，缺省人民币**：`llm_pricing.json` 增加 `display_currency`（缺省 `CNY`）与 `fx` 锚点，费用按模型货币记账、按显示货币汇总（`¥` 前缀，缺锚点时退回原币种）；`logs/llm-usage.jsonl` 每行同时记 `cost_display`/`display_currency`，跨币种的历史也能正确合计。价格表补 `_source`/`_fetched`，明确“人工核对、不联网取价”。

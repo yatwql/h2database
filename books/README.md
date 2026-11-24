@@ -92,7 +92,7 @@ books/
 
 | 文档 | 内容 |
 | ------ | ------ |
-| [analysis-doc-standard.md](docs/managements/analysis-doc-standard.md) | 内容标准（跨项目复用） |
+| [content-standard.md](docs/managements/content-standard.md) | 内容标准（跨项目复用） |
 | [technical.md](docs/managements/technical.md) | 工具链架构约束；§13 是文件职责分类的权威定义（结构/表述/名词 vs 规则/基础/外部服务） |
 
 **管理文档（`docs/managements/`）**
@@ -103,7 +103,7 @@ books/
 | [requirements.md](docs/managements/requirements.md) | 范围与交付物 |
 | [plan.md](docs/managements/plan.md) | 工作流、维护策略、在建项、风险 |
 | [testplan.md](docs/managements/testplan.md) | 质量门禁与验证命令（验证唯一权威） |
-| [quality-model.md](docs/managements/quality-model.md) | 质量策略：谁做判断、什么时候做、代价多少（判据清单在 testplan） |
+| [content-quality-policy.md](docs/managements/content-quality-policy.md) | 内容质量方针：谁做判断、基线怎么记、代价多少（判据清单在 testplan） |
 | [review-findings.md](docs/managements/review-findings.md) | 未闭合问题台账（rf-N 编号的唯一归属） |
 | [changelog.md](docs/managements/changelog.md) | 版本历史 |
 | [style-guide.md](docs/managements/style-guide.md) | 写作与格式规范 |

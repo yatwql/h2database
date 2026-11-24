@@ -171,7 +171,7 @@ files = ["cover.md", "ch1-2-architecture.md"]
 
 派生状态与体量基线跟着版本分键：`state/<edition>/`、`baselines/<edition>/`，
 目录内的键与当前一致。否则第二份手稿一进，`content_volume.py` 会拿甲版本的下限判乙版本。
-`quality-model.md` §4「只比一份、不做加权」的原则不变：每个版本仍然只与**自己那一份**
+`content-quality-policy.md` §4「只比一份、不做加权」的原则不变：每个版本仍然只与**自己那一份**
 基线比，不引入跨版本平均。
 
 ### 版本的目录派生
@@ -313,7 +313,7 @@ _config.source_tree('src_main')` 这样的模块级赋值会在**导入该模块
 | `technical.md` §3.1 | `Config` 的构造时机、书根来源与优先级 |
 | `folder.md` §1 §3 | 多书形态的目录树与归属表 |
 | `testplan.md` §2.2 §2.4 | 选书相关判据与 IR-10/IR-11 行 |
-| `quality-model.md` §4 | 每版本只比自己那份基线 |
+| `content-quality-policy.md` §4 | 每版本只比自己那份基线 |
 | `requirements.md` | IR-10/IR-11 的措辞与组合边界 |
 
 ## 13. 版本与多书下的门禁口径

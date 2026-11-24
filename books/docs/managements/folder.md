@@ -85,11 +85,11 @@ books/docs/managements/
   plan.md                    # 计划项清单（plan-N，按 P1–P4 分档，每项现状/动作/验收/事实位）
   review-findings.md         # 问题记录（rf-N，待处理 / 已修摘要 / 文件膨胀登记）
   testplan.md                # 质量门禁与验证命令（验证的唯一权威；门禁级别只在 §2.1/§2.2 声明）
-  quality-model.md           # 质量策略（判定分工、三种起点、基线生命周期、复核成本）
+  content-quality-policy.md  # 内容质量方针（判定分工、三种起点、基线生命周期、成本）
   changelog.md               # 版本历史
   folder.md                  # 本文件：目录结构
   technical.md               # 工具链架构约束（可机检部分由 check_architecture 守卫）
-  analysis-doc-standard.md   # 内容标准（跨项目复用）
+  content-standard.md        # 内容标准（跨项目复用）
   style-guide.md             # 写作规则与检查机制（取值在 data/config/style.json）
   DESIGN.md                  # 设计契约总纲（三处呈现面共有规则）
   DESIGN-TUI.md              # 终端交互契约

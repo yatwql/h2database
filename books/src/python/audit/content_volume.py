@@ -56,7 +56,7 @@ def baseline_path() -> str:
         return _config.baseline_path('content_volume')
     except _config.ConfigError:
         return os.path.join(_config.baseline_dir(), 'content-volume.json')
-# Which starting point the book is in (docs/managements/quality-model.md §2):
+# Which starting point the book is in (docs/managements/content-quality-policy.md §2):
 #   baseline    — an accepted manuscript that must not shrink (strict)
 #   rewrite     — the prose is being replaced wholesale: the floor still holds,
 #                 but a reviewed `--update-baseline` is the expected next step

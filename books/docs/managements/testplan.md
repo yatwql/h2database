@@ -226,56 +226,31 @@ report` / `eval-score.sh`）、`balance` 的计量输出（`--json`），以及�
 | NFR-11 | 源文件与文档长度受预算约束 | `file_length.py` |
 | NFR-12 | 文档与注释只描述当前状态 | `traces.py` |
 
-## 3. 格式规范
+## 3. 格式的判法
 
-- 图注：体例与图号规则归 `style-guide.md` §14，本文不复述；门禁按该体例判定
-  （`structure.py` 判图号唯一连续，`captions.py` 判图注词表与长度）。
-- ASCII 图围栏：使用 ` ```text `。
-- Java 代码围栏：使用 ` ```java `；SQL 使用 ` ```sql `。
-- 源码路径：使用 `org/h2/...`，不使用 `h2/src/main/...` 前缀。
-- 源码引用：使用 `ClassName.java:行号`，但不得放入章节标题或 PDF Outline 标题。
-- 跨章引用：使用 `详见第X章《实际 H1 标题》`。
+体例（怎么写）只归 `style-guide.md`：图注 §6.2/§14、围栏与源码引用 §4.2/§4.3、跨章引用 §5。
+本节只登记「格式由谁判、判在什么级别」——级别与判据名称见 §2.2 的对应行：
+
+| 格式面 | 判据载体 |
+| --- | --- |
+| 图号唯一连续、图注体例与长度 | `structure.py`、`captions.py` |
+| 代码围栏成对、语言标注与内容一致 | `structure.py`、`diagrams.py` |
+| 源码路径与 `ClassName.java:行号` 可解析、摘录与源码一致 | `source_refs.py`、`content_depth.py` |
+| 跨章引用指向真实 H1 | `crossrefs.py` |
+| 术语与排版统一、无新增违规 | `style_rules.py` |
 
 ## 4. 交付形态专项验收
 
-日常交付只跑 §1 的命令；本节列出"非日常"形态的验收项与按需命令。版式与实现细节不在本文：
-成书排版规格见 `style-guide.md` §6，渲染实现见 `technical.md` §4.4。
+日常交付只跑 §1 的命令；本节只列「非日常形态」验收什么、谁判。**怎么做不在本文**：命令与流程见
+`scripts-and-reference.md`，成书排版规格见 `style-guide.md`，渲染实现见 `technical.md` §4.4。
 
-### 4.1 标准 PDF
+| 形态 | 验收项 | 载体 |
+| --- | --- | --- |
+| 标准 PDF | 判据同 §2.2「PDF 渲染与 TOC 链接注入」「PDF 交付」；重跑走同一套交付步骤，顺序由步骤表决定（压缩只发生在最后一个写入者身上一次） | `make.py deliver` 内的 `render/to_pdf.py`、`render/pdf_toc_links.py`、`render/verify_pdf.py` |
+| 印刷版 PDF | 与标准版同一页框、同一栏宽与字号，只多印刷 profile（章首横幅、点线目录）；`COLUMN`、`PAGE_SIZE`、`FONTS`、`OUTLINE` 的判据与标准版相同。该形态不在 `make.py` 步骤表里，按需重跑后仍需跑一次 `render/verify_pdf.py` | `render/verify_pdf.py`；印刷版入口见 `scripts-and-reference.md` |
+| EPUB | 判据同 §2.2「EPUB 结构」；分卷与目录深度的取值见 `technical.md` §4.4 | `make.py deliver` 内的 `render/to_epub.py`、`render/verify_epub.py` |
 
-判据同 §2.2「PDF 渲染与 TOC 链接注入」「PDF 交付」（P1）。本节只给按需重跑的顺序：
-
-```bash
-python books/src/python/render/to_pdf.py
-python books/src/python/render/pdf_toc_links.py
-python books/src/python/render/verify_pdf.py
-```
-
-### 4.2 印刷级 PDF（按需）
-
-- 与日常 PDF 文件分离、互不覆盖（`-print` 后缀）
-- 每个 H1 独占一页；目录、页眉页脚按 `style-guide.md` §6 的成书排版规则渲染
-- H1–H4 在 PDF Outline 中可点击跳转
-- 版式与体积没有自动门禁，交付前人工核对；该工具不在 `make.py` 的步骤表里
-
-```bash
-python books/src/python/render/print_pdf.py
-```
-
-人工验收：在 Chrome / Adobe Reader 里看章首页、目录对齐、页眉页脚是否一致。
-
-### 4.3 EPUB（按需）
-
-- 由 pandoc 从合并稿生成（依赖不进日常链路），输出 `dist/<book>.epub`
-- 元数据（标题/作者/日期/语言）来自封面，由渲染层回填
-- 判据同 §2.2「EPUB 结构」（P1，`verify_epub.py`）：容器与清单可解析、阅读顺序与导航可达、
-  元数据齐备、体积不超预算；分卷与目录深度的取值见 `technical.md` §4.4
-
-```bash
-python books/src/python/render/to_epub.py
-```
-
-人工验收：在 Apple Books / Calibre 里看一章正文、一个代码块、一张 ASCII 图、目录导航。
+不进 `make.py` 的形态，其验收就是「把同一个判据跑一遍」：没有自动门禁不等于人工看图。
 
 ## 5. 拒绝标准
 
@@ -288,4 +263,4 @@ python books/src/python/render/to_epub.py
 
 本文只在判据变化时更新：新增一道门禁补一行（§2.2）、改级别改一处（§2.1）、新增需求补 §2.4
 一行。日常与发布的运行节奏见 `docs/manuals/how-to-use.md`；基线的建立与收缩见
-`quality-model.md` §4。
+`content-quality-policy.md` §4。
