@@ -79,10 +79,16 @@ def _invoke(command: list[str], on_line=None) -> tuple[int, str]:
         proc = subprocess.run(command, capture_output=True, text=True,
                               cwd=repo_root(), check=False, env=child_env())
         return proc.returncode, (proc.stdout or '') + (proc.stderr or '')
+    # a pipe makes the child block-buffer its own prints, so a three-minute render
+    # arrives in one lump at the end: force unbuffered output
+    env = child_env()
+    env['PYTHONUNBUFFERED'] = '1'
+    if len(command) > 1 and command[1] != '-u':
+        command = command[:1] + ['-u'] + command[1:]
     chunks: list[str] = []
     process = subprocess.Popen(command, stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT, text=True,
-                               cwd=repo_root(), env=child_env())
+                               cwd=repo_root(), env=env)
     stream = process.stdout
     if stream is None:  # pragma: no cover - PIPE was requested just above
         return process.wait(), ''

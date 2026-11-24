@@ -751,6 +751,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument('--refresh-facts', action='store_true',
                         help='replace only the marked generated blocks; '
                              'files without markers are skipped and reported')
+    parser.add_argument('--plan', action='store_true',
+                        help='只报告 --llm 会写哪些章、大约花多少调用，不写文件')
     parser.add_argument('--llm', action='store_true',
                         help='let the LLM draft the lead-in and summary prose '
                              '(facts, tables and coordinates stay deterministic)')
@@ -808,6 +810,30 @@ def _report(counters: dict[str, int], args) -> None:
               '要对已有正文润色请加 --force（旧文件先备份）或按章用 --only。')
 
 
+# Two calls per chapter (lead-in, summary). The estimate is deliberately crude: it
+# exists so an operator can decide before spending, not to bill anyone.
+CALLS_PER_CHAPTER = 2
+CHARS_PER_CALL = 1200
+
+
+def _print_llm_plan(args) -> int:
+    """What `--llm` would write, and roughly what it costs, without writing anything."""
+    targets = list(CHAPTER_SPEC) + list(APPENDIX_SPEC)
+    if args.only:
+        targets = [name for name in targets if name == args.only]
+    missing = [name for name in targets if not os.path.isfile(_config.manuscript(name))]
+    planned = missing if not (args.force or args.only) else targets
+    calls = len(planned) * CALLS_PER_CHAPTER
+    print(f'计划：{"整篇重写" if args.force or args.only else "补缺"} {len(planned)} 章')
+    print(f'  LLM 作用范围：每章的导读与小结点各一次调用（共 {calls} 次，'
+          f'约 {calls * CHARS_PER_CALL // 1000}k 字符输入量级）；'
+          '事实块、结构、代码摘录不走 LLM。')
+    print(f'  本轮跳过：{len(targets) - len(planned)} 章（正文已在且未要求重写）')
+    if not planned:
+        print('  结论：没有需要 LLM 起草的内容，可以不加 --llm 直接构建。')
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     if args.refresh_facts and args.force:
@@ -823,6 +849,8 @@ def main(argv: list[str] | None = None) -> int:
     # Nothing to polish is knowable before the source scan, which is what makes the
     # wait long. Saying it up front costs milliseconds; saying it after two minutes
     # of scanning is how a run feels like it did nothing.
+    if _USE_LLM and args.plan:
+        return _print_llm_plan(args)
     if _USE_LLM and not (args.force or args.refresh_facts or args.only):
         targets = list(CHAPTER_SPEC) + list(APPENDIX_SPEC)
         missing = [name for name in targets if not os.path.isfile(_config.manuscript(name))]

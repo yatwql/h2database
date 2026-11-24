@@ -176,6 +176,8 @@ def build(html_path: str | None = None, pdf_path: str | None = None,
     """Full print-grade pipeline over the given paths (book defaults)."""
     html_source = html_path or _config.merged_html()
     target = pdf_path or _config.merged_print_pdf()
+    print(f'  读取 {os.path.basename(html_source)}（{os.path.getsize(html_source) / 1048576:.2f} MB）',
+          flush=True)
     html = _fsutil.read_text(html_source)
     headings = parse_headings(html)
     print(f'  Parsed {len(headings)} headings from HTML')
@@ -183,6 +185,7 @@ def build(html_path: str | None = None, pdf_path: str | None = None,
     staging = _config.dist(f'_{ _config.MERGED_NAME }-print.html')
     _fsutil.write_text(staging, inject_css(html))
     try:
+        print('  Chromium 渲染中（730 页量级约 1-2 分钟）…', flush=True)
         render_pdf(staging, target, engine=engine,
                    running_head=_config.project('running_head', 'book'),
                    label=f'印刷版 v{_config.VERSION}')
