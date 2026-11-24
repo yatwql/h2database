@@ -40,6 +40,7 @@ import textwrap
 
 from lib import _config, _errors, _fsutil, fonts
 from lib import layout as _layout
+from render import epub_source
 
 _fsutil.pin_stdout_utf8()
 
@@ -209,39 +210,10 @@ _fsutil.write_text(css_path, EPUB_CSS_SCALED)
 #      line with a decorative underline therefore cut a chapter in half.
 #
 # Both are fixed generically here: no book-specific text, only the conventions.
-ATX_HEADING = re.compile(r'^#{1,6}[ \t]+')
-UNDERLINE = re.compile(r'^[ \t]*={3,}[ \t]*$')
-SHORT_BOLD = re.compile(r'^[ \t]*(?:\*\*|__)[^*_]{1,120}(?:\*\*|__)[ \t]*$')
-# a caption names a numbered figure or table — the same convention in every book
-CAPTION_TEXT = re.compile(
-    r'^[ \t]*\**\s*(?:图|表|Figure|Fig\.|Table)[ \t]*[\dA-Za-z]+[ \t]*[-–—.:：]', re.I)
-
-
-def _is_caption(line: str) -> bool:
-    return bool(SHORT_BOLD.match(line) or CAPTION_TEXT.match(line))
-
-
-def normalise_headings(text: str) -> tuple[str, dict]:
-    """Blank-line before ATX headings, drop decorative underlines under captions."""
-    out: list[str] = []
-    spaced = dropped = 0
-    for line in text.splitlines():
-        if UNDERLINE.match(line) and out and _is_caption(out[-1]):
-            # the caption stays as a bold paragraph; only its underline goes, so
-            # pandoc stops reading it as a setext H1
-            dropped += 1
-            continue
-        if ATX_HEADING.match(line) and out and out[-1].strip():
-            out.append('')
-            spaced += 1
-        out.append(line)
-    return '\n'.join(out), {'spaced': spaced, 'dropped': dropped}
-
-
 # ── Step 5: Run pandoc ───────────────────────────────────────────────────
 # normalised copy, never the merged artifact: other gates compare that file with
 # the manuscript line count, so it must keep the renderer's own output
-_epub_text, _fixes = normalise_headings(_fsutil.read_text(merged_md))
+_epub_text, _fixes = epub_source.normalise_headings(_fsutil.read_text(merged_md))
 # scratch, not dist: the normalised copy is an input to pandoc, not a deliverable,
 # and a name derived from the merged file left a second .md in dist/
 epub_src = os.path.join(_config.tmp_dir(), 'epub-source.md')

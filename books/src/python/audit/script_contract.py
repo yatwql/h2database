@@ -42,7 +42,9 @@ def scripts() -> list[str]:
                # chapter-body sections split out of chapters.py: pure helpers
                os.sep + 'ingest' + os.sep + 'api_sections.py',
                # per-chapter PDF assembly, driven by render/to_pdf.py
-               os.sep + 'render' + os.sep + 'pdf_split.py')
+               os.sep + 'render' + os.sep + 'pdf_split.py',
+               # Markdown fixes applied before pandoc, driven by render/to_epub.py
+               os.sep + 'render' + os.sep + 'epub_source.py')
     return sorted(p for p in found
                   if not any(marker in p for marker in library)
                   and not p.endswith('__init__.py'))
