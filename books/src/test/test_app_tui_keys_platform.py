@@ -104,10 +104,6 @@ class WindowsReaderTest(unittest.TestCase):
             self.assertEqual(keys._windows_getch(), 'k')
 
 class LineModeTest(unittest.TestCase):
-    def test_line_mode_takes_the_first_character(self):
-        with mock.patch.object(keys.sys, 'stdin', io.StringIO('status\n')):
-            self.assertEqual(keys.read_key(), 's')
-
     def test_blank_line_is_treated_as_enter(self):
         with mock.patch.object(keys.sys, 'stdin', io.StringIO('\n')):
             self.assertEqual(keys.read_key(), keys.KEY_ENTER)

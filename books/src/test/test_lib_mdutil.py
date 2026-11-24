@@ -57,10 +57,6 @@ class FigureShapeTest(unittest.TestCase):
     def test_a_body_line_is_not_a_caption(self):
         self.assertIsNone(self.mdutil.figure_caption('如图 7-1 所示，执行计划分三段。'))
 
-    def test_ids_are_collected_in_order(self):
-        text = '**图 1-1: a**\n正文\n**图 1-2: b**'
-        self.assertEqual(self.mdutil.figure_ids(text), ['1-1', '1-2'])
-
     def test_the_prefix_matcher_accepts_a_caption_only(self):
         self.assertTrue(self.mdutil.FIGURE_PREFIX_RE.match('**图 9-4: 锁等待**'))
         self.assertFalse(self.mdutil.FIGURE_PREFIX_RE.match('**图 无编号**'))

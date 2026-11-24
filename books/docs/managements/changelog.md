@@ -13,6 +13,13 @@
 
 ### 变更
 
+- **代码与测试审计的整改**：删除两处死代码——`lib/_log.tail_since()` 与 `lib/_mdutil.figure_ids()`
+  （后者只被自身用例引用，一并删除该用例）；`test_app_tui_keys_platform.py` 中与
+  `test_app_tui_keys.py` 重复的 line-mode 用例，保留通用那份、平台文件只留 Windows 序列与空行。
+  审计结论：107 个配置叶子键均有读取点（无死键），无 TODO/FIXME，23 处 `# noqa` 均为
+  `sys.path` 之后导入或可选依赖；测试侧精确重复体/空断言/同名遮蔽为 0，通用名 0，
+  快档最慢用例 4.4s、整档 37s（无真实 chromium/pandoc 用例被误标 fast）。
+
 - **预估收紧、并发日志可归因**：动作预估按实测重设（build 2–15s、deliver 60–150s、
   deliver-all 100–240s、print 30–90s，实测全链 135s），有历史时按 `mode` 中位数收敛，结果行
   追加「用时 m:ss（预计 a–b）」；`core/menu` 读历史改走新增的 `lib/_perfhistory.py`（`core`

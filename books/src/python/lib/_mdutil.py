@@ -45,12 +45,6 @@ def figure_caption(line: str) -> tuple[str, str] | None:
     return (match.group(1), match.group(2).strip()) if match else None
 
 
-def figure_ids(text: str) -> list[str]:
-    """Every figure id mentioned as a caption in ``text``, in order."""
-    return [m.group(1) for line in text.split('\n')
-            for m in [FIGURE_CAPTION_RE.match(line.strip())] if m]
-
-
 
 def slugify(title: str) -> str:
     """GitHub-style heading anchor, matching what to_html emits."""
