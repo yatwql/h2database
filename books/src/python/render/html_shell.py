@@ -23,7 +23,7 @@ STYLE = r"""
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { min-height: 100vh; }
 body {
-    font-family: -apple-system, 'Microsoft YaHei', sans-serif;
+    font-family: var(--font-sans);
     font-synthesis: none;   /* fake bold cannot be embedded: Chromium writes Type3 glyphs */
     line-height: 1.8; color: #333; background: #fafafa;
     display: flex; flex-direction: column;
@@ -196,7 +196,7 @@ body.sidebar-collapsed #sidebar-toggle .chev { transform: rotate(180deg); }
     #sidebar-toggle:hover { color: #eee; background: transparent; }
     #sidebar-toggle .chev { display: none; }
 }
-h1, h2, h3, h4 { color: #1565C0; margin-top: 1.5em; margin-bottom: 0.5em; font-family: 'Microsoft YaHei', SimSun, -apple-system, sans-serif; scroll-margin-left: 290px; scroll-margin-top: 20px; }
+h1, h2, h3, h4 { color: #1565C0; margin-top: 1.5em; margin-bottom: 0.5em; font-family: var(--font-sans); scroll-margin-left: 290px; scroll-margin-top: 20px; }
 #content h1 { font-size: 1.8em; border-bottom: 2px solid #1565C0; padding-bottom: 8px; position: relative; padding-top: 0.3em; page-break-before: always; }
 #content h1::before {
     content: ''; display: block; width: 60px; height: 4px;
@@ -209,13 +209,13 @@ h4 { font-size: 1.05em; color: #333; }
 p { margin: 0.8em 0; text-align: justify; }
 code {
     background: #f0f4f8; padding: 2px 6px; border-radius: 3px;
-    font-family: Consolas, 'Courier New', monospace; font-size: 0.9em;
+    font-family: var(--font-mono); font-size: 0.9em;
     color: #2d3748;
 }
 pre {
     background: #f4f5f7; padding: 12px; border-radius: 6px;
     overflow-x: auto; font-size: 12px; line-height: 1.0;
-    font-family: Consolas, 'DengXian', SimSun, monospace;
+    font-family: var(--font-mono);
     border: 1px solid #d0d5dd; border-left: 4px solid #1565C0;
     margin: 1em 0; color: #1a1a2e;
 }
@@ -325,12 +325,16 @@ MONO_STACK = fonts.mono_stack(_configured_families('font_stack_mono'))
 
 
 def apply_font_stacks(css: str) -> str:
-    """Replace the hard-coded families in the stylesheet with the resolved stacks."""
-    return (css
-            .replace("-apple-system, 'Microsoft YaHei', sans-serif", SANS_STACK)
-            .replace("'Microsoft YaHei', SimSun, -apple-system, sans-serif", SANS_STACK)
-            .replace("Consolas, 'Courier New', monospace", MONO_STACK)
-            .replace("Consolas, 'DengXian', SimSun, monospace", MONO_STACK))
+    """Bind the two font roles to the stacks resolved for this machine.
+
+    The stylesheet names roles (`var(--font-sans)`, `var(--font-mono)`) instead of
+    families. Substituting by literal text meant a font-family added later kept its
+    Windows-only list and silently lost the cross-platform fallback; a role can only
+    be bound in one place.
+    """
+    root = (f':root {{ --font-sans: {SANS_STACK}; --font-mono: {MONO_STACK}; }}')
+    return root + '\n' + css if ':root' not in css else css.replace(
+        ':root {', f':root {{ --font-sans: {SANS_STACK}; --font-mono: {MONO_STACK};', 1)
 
 
 
