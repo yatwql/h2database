@@ -13,9 +13,11 @@ the shell wrappers only forward, and every run leaves a report behind.
   python check_runner.py --mode p2          # release gate (p1 + slow suite + deliver)
   python check_runner.py --mode p0 --json   # machine readable summary
 
-Reports land in books/logs/check-<mode>-<timestamp>.log (full output) and .json
-(the summary printed to stdout), so a failed tier can be inspected later without
-re-running it.
+Reports land in books/logs/, one pair per mode per day:
+check-<mode>-<YYYYMMDD>.log is the day's journal (every run appended, each with a
+header) and check-<mode>-<YYYYMMDD>.jsonl holds one summary line per run. A second
+granularity per-run file turned a working day into a pile of fragments, and the run
+someone wants to look at is never the newest one.
 
 Exit codes: 0 pass, 1 a step failed, 2 usage/environment error.
 """
@@ -368,13 +370,12 @@ def _record_perf(summary: dict) -> None:
                  'steps': summary.get('steps', [])})
 
 
-# One folder of one file per run is thousands of files a week, and the one that
-# matters is the failing run. Passing runs therefore leave a single line in the
-# day's rollup; a failure keeps its own log and json for forensics.
-def _roll_up(now: datetime.datetime, summary: dict, log_path: str,
-             json_path: str) -> str:
-    """Returns the file a human should open for this run."""
-    """Append the day's one-line record and drop what a passing run does not need."""
+# A day is the unit a person looks back at, so the day is the file: the run log is
+# appended to, and each run's summary is one line in the jsonl beside it. There is
+# nothing to delete when a run passes — and nothing to lose when one fails: the
+# failing run keeps its own section inside the same day's log.
+def _roll_up(now: datetime.datetime, summary: dict, log_path: str) -> str:
+    """Append the day's one-line record; returns the file a human should open."""
     logs = os.path.join(book_root(), 'logs')
     _fsutil.ensure_dir(logs)
     line = json.dumps({'ts': now.isoformat(timespec='seconds'),
@@ -386,14 +387,8 @@ def _roll_up(now: datetime.datetime, summary: dict, log_path: str,
                       ensure_ascii=False) + '\n'
     rollup = os.path.join(logs, f'check-{now:%Y%m%d}.jsonl')
     _append_log(rollup, line)
-    if summary.get('ok'):
-        for path in (log_path, json_path):
-            try:
-                os.remove(path)  # the record is already in the rollup
-            except OSError as exc:  # pragma: no cover - already gone
-                LOG.debug('could not remove %s: %s', path, exc)
     _prune_logs(logs, now)
-    return rollup if summary.get('ok') else json_path
+    return log_path
 
 
 def _prune_logs(logs: str, now: datetime.datetime) -> None:
@@ -406,7 +401,7 @@ def _prune_logs(logs: str, now: datetime.datetime) -> None:
     except OSError:
         return  # no directory, nothing to prune
     for name in names:
-        # `check-<mode>-<date>-<time>.<ext>` and the day rollup `check-<date>.jsonl`
+        # `check-<mode>-<date>.<ext>` and the day rollup `check-<date>.jsonl`
         match = re.match(r'check-(?:[a-z0-9-]*?-)?(\d{8})(?:-|\.)', name)
         if match is None:
             continue
@@ -422,11 +417,12 @@ def _prune_logs(logs: str, now: datetime.datetime) -> None:
             LOG.debug('could not prune %s: %s', name, exc)
 
 
-def report_paths(mode: str, stamp: str) -> tuple[str, str]:
+def report_paths(mode: str, when: datetime.datetime) -> tuple[str, str]:
+    """The day's journal for this mode: one log and one jsonl, appended per run."""
     directory = os.path.join(book_root(), 'logs')
     _fsutil.ensure_dir(directory)
-    base = os.path.join(directory, f'check-{mode}-{stamp}')
-    return base + '.log', base + '.json'
+    base = os.path.join(directory, f'check-{mode}-{when:%Y%m%d}')
+    return base + '.log', base + '.jsonl'
 
 
 def _append_log(path: str, text: str) -> None:
@@ -453,10 +449,10 @@ def run(mode: str, *, archive: bool = True, as_json: bool = False,
         timeout = min(timeout, 300.0)
     steps = select_steps(all_steps, only, skip)
     now = datetime.datetime.now()
-    stamp = now.strftime('%Y%m%d-%H%M%S')
-    log_path, json_path = report_paths(key, stamp)
+    log_path, jsonl_path = report_paths(key, now)
     if archive:
-        _fsutil.write_text(log_path, f'# check mode={key} ({label}) {stamp}\n')
+        _append_log(log_path, f'\n# ===== {now:%Y-%m-%d %H:%M:%S} mode={key} ({label}) '
+                              f'{len(steps)} step(s) =====\n')
     print(f'=== check {key} ({label}): {len(steps)} step(s) ===')
     results = []
     started = time.perf_counter()
@@ -472,17 +468,17 @@ def run(mode: str, *, archive: bool = True, as_json: bool = False,
     summary = {'mode': key, 'label': label, 'ok': not failed,
                'seconds': elapsed, 'steps': results, 'marker': active_marker,
                'machine': machine_info(),
-               'log': log_path if archive else '', 'json': json_path if archive else ''}
+               'log': log_path if archive else '', 'json': jsonl_path if archive else ''}
     report = ''
     if failed:
         summary['failed_step'] = failed[0]['step']
     if archive:
-        payload = json.dumps(summary, ensure_ascii=False, indent=2) + '\n'
         _record_perf(summary)
-        _fsutil.write_text(json_path, payload)
+        _append_log(jsonl_path, json.dumps(summary, ensure_ascii=False) + '\n')
         logs = os.path.join(book_root(), 'logs')
-        _fsutil.write_text(os.path.join(logs, 'check-latest.json'), payload)
-        report = _roll_up(now, summary, log_path, json_path)
+        _fsutil.write_text(os.path.join(logs, 'check-latest.json'),
+                           json.dumps(summary, ensure_ascii=False, indent=2) + '\n')
+        report = _roll_up(now, summary, log_path)
     else:
         report = ''
     LOG.info('check %s -> %s (%.2fs, %d steps)',

@@ -13,6 +13,11 @@
 
 ### 变更
 
+- **check 日志按日归档**：`logs/check-<模式>-<YYYYMMDD>.log` 是当天的运行日记（每次运行
+  追加一段带时间的表头），`check-<模式>-<YYYYMMDD>.jsonl` 每行一次运行的完整摘要；
+  同日多次运行不再各占一对文件，通过/失败都在同一份里，`check-latest.json` 仍指向最后一次。
+  按秒命名留下的一天十来个小文件没有了；清理仍按 `logging.retention_days` 按日进行。
+
 - **印刷版栏宽与代码字号改为推导，并给出可印宽度判据**：`lib/layout.py` 新增
   `printable_width_px/pt`（按纸张与页边距算）、`print_column()`、`print_code_px(列数)`、
   `print_wraps(列数)`；印刷 CSS 的 `#content` / `#toc-page` 栏宽与 `pre` 字号不再手写，

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import datetime
 import glob
 import io
 import os
@@ -267,19 +268,21 @@ class ModesAndSummaryTest(unittest.TestCase):
         self.assertFalse(summary['ok'])
         self.assertEqual(summary['failed_step'], 'gates')
 
-    def test_a_passing_run_leaves_a_rollup_line_not_a_file_per_run(self):
+    def test_a_passing_run_leaves_a_line_in_the_days_journal(self):
         ok = {'step': 'lint', 'code': 0, 'seconds': 0.1}
         with mock.patch.object(self.runner, 'run_step', return_value=ok), \
                 mock.patch.object(self.runner, '_record_perf') as record, \
                 redirect_stdout(io.StringIO()):
             summary = self.runner.run('p0', archive=True, only='lint')
         logs = os.path.join(self.runner.book_root(), 'logs')
-        self.assertFalse(os.path.isfile(summary['json']))
-        self.assertFalse(os.path.isfile(summary['log']))
+        self.assertTrue(os.path.isfile(summary['json']))
+        self.assertTrue(os.path.isfile(summary['log']))
+        self.assertRegex(summary['json'], r'check-p0-\d{8}\.jsonl$')
+        self.assertRegex(summary['log'], r'check-p0-\d{8}\.log$')
         self.assertTrue(glob.glob(os.path.join(logs, 'check-*.jsonl')))
         record.assert_called_once()
 
-    def test_a_failing_run_keeps_its_own_report(self):
+    def test_a_failing_run_stays_in_the_same_journal(self):
         bad = {'step': 'lint', 'code': 1, 'seconds': 0.1}
         with mock.patch.object(self.runner, 'run_step', return_value=bad), \
                 mock.patch.object(self.runner, '_record_perf'), \
@@ -287,6 +290,9 @@ class ModesAndSummaryTest(unittest.TestCase):
             summary = self.runner.run('p0', archive=True, only='lint')
         self.assertTrue(os.path.isfile(summary['json']))
         self.assertTrue(os.path.isfile(summary['log']))
+        self.assertEqual(summary['failed_step'], 'lint')
+        with open(summary['json'], encoding='utf-8') as handle:
+            self.assertIn('"ok": false', handle.read())
 
     def test_the_json_flag_prints_the_summary(self):
         ok = {'step': 'lint', 'code': 0, 'seconds': 0.1}
@@ -297,9 +303,10 @@ class ModesAndSummaryTest(unittest.TestCase):
         self.assertIn('"ok": true', buffer.getvalue())
 
     def test_report_paths_live_under_logs(self):
-        log, payload = self.runner.report_paths('p0', 'STAMP')
-        self.assertTrue(log.endswith('check-p0-STAMP.log'))
-        self.assertTrue(payload.endswith('check-p0-STAMP.json'))
+        log, payload = self.runner.report_paths(
+            'p0', datetime.datetime(2026, 11, 24, 11, 13, 22))
+        self.assertTrue(log.endswith('check-p0-20261124.log'))
+        self.assertTrue(payload.endswith('check-p0-20261124.jsonl'))
 
     def test_perf_recording_survives_a_missing_module(self):
         with mock.patch.object(self.runner.importlib, 'import_module',

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import datetime
 import os
 import tempfile
 import unittest
@@ -40,11 +41,11 @@ class RunnerUnitsTest(unittest.TestCase):
         for key in ('python', 'platform', 'cpus', 'locale', 'book_root'):
             self.assertIn(key, info)
 
-    def test_report_paths_are_stamped_and_separate(self):
-        log, summary = self.runner.report_paths('p0', '2026-01-01_000000')
-        self.assertTrue(log.endswith('.log'))
-        self.assertTrue(summary.endswith('.json'))
-        self.assertIn('check-p0-2026-01-01_000000', log)
+    def test_report_paths_are_the_days_journal(self):
+        log, summary = self.runner.report_paths(
+            'p0', datetime.datetime(2026, 1, 1, 9, 52, 12))
+        self.assertTrue(log.endswith('check-p0-20260101.log'))
+        self.assertTrue(summary.endswith('check-p0-20260101.jsonl'))
 
     def test_lint_step_is_skipped_when_no_linter_exists(self):
         with mock.patch.object(self.runner.shutil, 'which', return_value=None), \
@@ -81,6 +82,26 @@ class RunnerUnitsTest(unittest.TestCase):
             summary = self.runner.run('p0', only='lint')
         self.assertTrue(summary['ok'])
         self.assertTrue(any(path.endswith('check-latest.json') for path in written))
+
+    def test_two_runs_of_a_day_share_one_journal(self):
+        """A day is the unit: the second run appends, it does not start a file."""
+        log_path = os.path.join(self.tmp.name, 'check-p0-20261124.log')
+        jsonl_path = os.path.join(self.tmp.name, 'check-p0-20261124.jsonl')
+        with mock.patch.object(self.runner, 'run_step',
+                               return_value={'step': 'lint', 'code': 0, 'seconds': 0.0}), \
+                mock.patch.object(self.runner, 'report_paths',
+                                  return_value=(log_path, jsonl_path)), \
+                mock.patch.object(self.runner, '_roll_up', return_value=log_path), \
+                mock.patch('builtins.print'):
+            self.runner.run('p0', only='lint')
+            self.runner.run('p0', only='lint')
+        for path in (log_path, jsonl_path):
+            with open(path, encoding='utf-8') as handle:
+                text = handle.read()
+            self.assertEqual(text.count('mode=p0') if path.endswith('.log')
+                             else len(text.strip().splitlines()), 2)
+        self.assertEqual(sorted(os.listdir(self.tmp.name)),
+                         ['check-p0-20261124.jsonl', 'check-p0-20261124.log'])
 
 if __name__ == '__main__':
     unittest.main()

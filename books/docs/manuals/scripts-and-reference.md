@@ -60,7 +60,8 @@ python books/src/python/check_runner.py --mode p2 --only gates,tests
 python books/src/python/check_runner.py --mode p0 --skip slow --timeout 600
 ```
 
-- 每次运行写 `books/logs/check-<模式>-<时间戳>.log` 与同名 `.json`，并刷新
+- 每次运行追加到当天的日记：`books/logs/check-<模式>-<YYYYMMDD>.log`（全文输出与摘要行）
+  与 `check-<模式>-<YYYYMMDD>.jsonl`（每行一次运行的完整摘要），并刷新
   `books/logs/check-latest.json`（失败可直接回看，不必重跑）
 - `.json` 里带 `machine` 段（python/平台/CPU/locale/仓库路径），排查"本机能过 CI 不能过"先看它
 - `--only` / `--skip` 选步骤，`--timeout` 是每步超时（默认 1800 秒，超时记为 124）
