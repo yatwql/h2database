@@ -37,7 +37,7 @@
 
 ---
 
-## 2. 现状事实
+## 2. 起点事实（阶段 1 之前的注册表与判据，供对照；现状见文首状态行与 `plan.md`）
 
 **注册表即全部入口**：`ingest/languages/__init__.py` 的 `ANALYZERS` 收了 java / python /
 rust / kotlin / go；`detect()` 由注册表的 `suffixes` 反推后缀表，所以"加一个语言"目前等于

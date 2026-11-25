@@ -36,7 +36,6 @@ def sent_re():
     return re.compile(rf"(?<=[{endings}])\s*")
 
 
-COORD_RE = re.compile(r"\.java:\d+")
 LIST_RE = re.compile(r"^\s*(?:[-*+]|\d+\.)\s+", re.MULTILINE)
 
 

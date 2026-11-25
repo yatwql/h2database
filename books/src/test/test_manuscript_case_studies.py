@@ -37,23 +37,6 @@ HAS_PANDOC = bool(__import__("shutil").which("pandoc"))
 
 
 
-AUDIT_SCRIPTS = [
-    "links.py",
-    "diagrams.py",
-    "captions.py",
-    "figures.py",
-    "crossrefs.py",
-    "exercises.py",
-    "figure_clusters.py",
-    "index_xrefs.py",
-    "smart.py",
-    "balance.py",
-    "style.py",
-    "readability.py",
-    "source_refs.py",
-    "glossary.py",
-    "index.py",
-]
 
 
 class ScriptTestBase(unittest.TestCase):

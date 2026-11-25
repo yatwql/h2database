@@ -56,7 +56,8 @@
 ### 阶段 3：夹具与用例
 
 #### 动作
-1. 新增 C 夹具目录 `src/test/fixtures/<mini-c>/`：`include/widget.h`、`widget.c`、`main.c`
+1. 新增 C 夹具目录 `src/test/fixtures/<mini-c>/`：`include/common.h`、`widget.h`、`widget.c`、
+   `run.c`（分属 `include/`、`src/`、`tools/` 三个子目录）
    （含块注释、无注释文件、`static` 函数、引号/尖括号 include 各一）。
 2. `src/test/test_languages.py` 补用例：包归属、include→依赖、public/私有、
    无注释文件摘要为空串、`.h`/`.c` 同包。
