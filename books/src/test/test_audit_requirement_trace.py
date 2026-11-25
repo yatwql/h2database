@@ -142,10 +142,11 @@ class RequirementTraceEdgesTest(unittest.TestCase):
             self.assertEqual(self.mod.main([]), 1)
         self.assertIn("FR-01", buffer.getvalue())
 
-    def test_the_gate_runs_as_a_script(self):
-        code, out = _fixture.run_inproc(BOOK_ROOT, "requirement_trace.py", "--json")
-        self.assertEqual(code, 0)
-        self.assertTrue(out.strip())
+    def test_the_gate_refuses_a_book_without_a_requirements_doc(self):
+        book = _fixture.build_book(os.path.join(self.tmp.name, "book"))
+        code, out = _fixture.run_inproc(book, "requirement_trace.py", "--json")
+        self.assertEqual(code, 1)
+        self.assertIn("requirements.md", out)
 
 
 if __name__ == "__main__":

@@ -453,9 +453,14 @@ class FileLengthEdgeTest(unittest.TestCase):
         self.assertIn("src/python/b.py:12", text)
 
     def test_the_gate_runs_as_a_script(self):
-        code, out = _fixture.run_inproc(BOOK_ROOT, "file_length.py", "--json")
-        self.assertEqual(code, 0)
-        self.assertTrue(out.strip())
+        # a fixture book declares no budgets, so the report must name them rather
+        # than depend on how long the real tree happens to be today
+        book = _fixture.build_book(os.path.join(self.tmp.name, "book"))
+        code, out = _fixture.run_inproc(book, "file_length.py", "--json")
+        self.assertEqual(code, 1)
+        payload = json.loads(out)
+        self.assertEqual(sorted(payload), ["ledger", "over", "undeclared", "warn"])
+        self.assertTrue(any("budget" in item["kind"].lower() for item in payload["undeclared"]))
 
 
 if __name__ == "__main__":
