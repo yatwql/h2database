@@ -8,6 +8,7 @@ reported instead of aborting the run. Those wrappers are what these cases drive.
 from __future__ import annotations
 
 import os
+import shutil
 import sys
 import tempfile
 import unittest
@@ -24,7 +25,9 @@ if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
 
 
-class StructureBranchesTest(unittest.TestCase):
+class StructureGateCase(unittest.TestCase):
+    """A fixture book, and the gate run against it in this process."""
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
@@ -32,6 +35,10 @@ class StructureBranchesTest(unittest.TestCase):
 
     def gate(self, script: str = "structure.py", *args: str):
         return _fixture.run_inproc(self.root, script, *args)
+
+
+class SubCheckWrapperTest(StructureGateCase):
+    """A sub-check that cannot run is reported, never raised."""
 
     def test_a_sub_check_that_cannot_run_is_reported_not_raised(self):
         import subprocess
@@ -49,20 +56,6 @@ class StructureBranchesTest(unittest.TestCase):
         self.assertIn("Index", out)
         self.assertNotIn("Traceback", out)
 
-    def test_a_missing_index_is_a_hard_failure(self):
-        os.unlink(os.path.join(self.root, "data", "manuscript", "back", "index.md"))
-        code, out = self.gate()
-        self.assertEqual(code, 1, out[-400:])
-        self.assertIn("Index", out)
-
-    def test_a_broken_css_reference_warns_but_does_not_crash(self):
-        code, out = self.gate()
-        # the fixture book has its own gaps, so the gate exits 1; what matters
-        # here is that the CSS check reported instead of raising
-        self.assertEqual(code, 1, out[-400:])
-        self.assertIn("CSS", out)
-        self.assertNotIn("Traceback", out)
-
     def test_the_gate_reports_each_failing_check_by_name(self):
         path = os.path.join(self.root, "data", "manuscript", "ch1-test.md")
         with open(path, "a", encoding="utf-8") as fh:
@@ -72,63 +65,40 @@ class StructureBranchesTest(unittest.TestCase):
         self.assertIn("FAIL:", out)
 
 
-if __name__ == "__main__":
-    unittest.main()
+class CssCheckSourceTest(StructureGateCase):
+    """The CSS check reads the renderer beside the gate, and says so when absent.
 
-
-class ExtractedChecksTest(unittest.TestCase):
-    """The CSS-hook and builder-script checks, judged without running the script."""
+    Both cases read the files the check really opens: removing a hook from the
+    renderer, or the renderer from the tree, is what makes them fail.
+    """
 
     def setUp(self):
+        super().setUp()
         self.structure = __import__("audit.structure", fromlist=["css_style_missing"])
 
-    def test_every_hook_present_reports_nothing(self):
-        source = "\n".join(self.structure.CSS_HINTS.values())
+    def test_the_shipped_renderer_carries_every_hook(self):
+        render_dir = os.path.join(TOOLS_DIR, "render")
+        fsutil = __import__("lib._fsutil", fromlist=["read_text_raw"])
+        source = "\n".join(
+            fsutil.read_text_raw(os.path.join(render_dir, name))
+            for name in ("to_html.py", "html_shell.py")
+        )
         self.assertEqual(self.structure.css_style_missing(source), [])
 
-    def test_a_missing_hook_is_named_with_its_selector(self):
-        missing = self.structure.css_style_missing("h1::before")
-        self.assertTrue(missing)
-        self.assertIn("print styles (@media print)", missing)
-
-    def test_a_broken_builder_script_is_reported(self):
-        with tempfile.TemporaryDirectory() as directory:
-            path = os.path.join(directory, "glossary.py")
-            with open(path, "w", encoding="utf-8") as handle:
-                handle.write("def broken(:\n")
-            broken, missing = self.structure.builder_script_problems({"glossary.py": path})
-        self.assertEqual(missing, [])
-        self.assertIn("syntax error", broken[0])
-
-    def test_a_missing_builder_script_is_only_a_warning(self):
-        with tempfile.TemporaryDirectory() as directory:
-            broken, missing = self.structure.builder_script_problems(
-                {"glossary.py": os.path.join(directory, "gone.py")}
-            )
-        self.assertEqual(broken, [])
-        self.assertEqual(missing, ["glossary.py not found"])
-
-    def test_the_sources_it_reads_are_the_real_ones(self):
-        """The check used to read audit/to_html.py and audit/glossary.py after both
-        moved, so it silently took the "skipped" branch for months."""
-        src = __import__("pathlib").Path(self.structure.__file__).resolve()
-        python_root = src.parent.parent
-        self.assertTrue((python_root / "render" / "to_html.py").is_file())
-        self.assertTrue((python_root / "render" / "html_shell.py").is_file())
-        self.assertTrue((python_root / "manuscript" / "glossary.py").is_file())
-        self.assertTrue((python_root / "manuscript" / "index.py").is_file())
+    def test_a_tree_without_the_renderer_skips_the_css_check(self):
+        tree = os.path.join(self.tmp.name, "python")
+        os.makedirs(os.path.join(tree, "audit"))
+        # the gate looks for the renderer next to itself, so the copy has to sit in
+        # a tree of its own: patching the reader would prove nothing about the path
+        copy = os.path.join(tree, "audit", "structure.py")
+        shutil.copyfile(self.structure.__file__, copy)
+        code, out = _fixture.run_inproc(self.root, copy)
+        self.assertIn(code, (0, 1))
+        self.assertIn("CSS check skipped (to_html.py not found)", out)
 
 
-class SubCheckFailureModesTest(unittest.TestCase):
+class AdvisorySubCheckTest(StructureGateCase):
     """Every advisory sub-check must report instead of raising, and say when absent."""
-
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.root = _fixture.build_book(self.tmp.name)
-
-    def gate(self):
-        return _fixture.run_inproc(self.root, "structure.py")
 
     def test_a_sub_check_that_cannot_run_is_reported_for_every_advisory_tool(self):
         import subprocess
@@ -180,7 +150,7 @@ class SubCheckFailureModesTest(unittest.TestCase):
         self.assertNotIn("see-also", out)
 
 
-class SubCheckToolWiringTest(unittest.TestCase):
+class SubCheckToolWiringTest(StructureGateCase):
     """The advisory tools structure.py reaches for, present and absent.
 
     The gate looks for these tools next to itself, so the fixture book cannot
@@ -191,9 +161,7 @@ class SubCheckToolWiringTest(unittest.TestCase):
     AUDIT_DIR = os.path.join(TOOLS_DIR, "audit")
 
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.root = _fixture.build_book(self.tmp.name)
+        super().setUp()
         self.hierarchy_tool = os.path.join(self.AUDIT_DIR, "index.py")
 
     def test_the_index_hierarchy_floor_is_checked_when_the_tool_runs(self):
@@ -213,7 +181,7 @@ class SubCheckToolWiringTest(unittest.TestCase):
 
         with mock.patch.object(os.path, "exists", side_effect=exists):
             with mock.patch.object(subprocess, "run", side_effect=run):
-                code, out = _fixture.run_inproc(self.root, "structure.py")
+                code, out = self.gate()
         self.assertIn(code, (0, 1))
         self.assertIn("Index hierarchy floor", out)
         self.assertIn("see-also>=", out)
@@ -235,38 +203,36 @@ class SubCheckToolWiringTest(unittest.TestCase):
 
         with mock.patch.object(os.path, "exists", side_effect=exists):
             with mock.patch.object(subprocess, "run", side_effect=run):
-                code, out = _fixture.run_inproc(self.root, "structure.py")
+                code, out = self.gate()
         self.assertEqual(code, 1, out[-400:])
         self.assertIn("Index hierarchy check failed to run", out)
 
 
-class GlossaryAndIndexContentTest(unittest.TestCase):
+class GlossaryAndIndexContentTest(StructureGateCase):
     """Content shapes the shipped manuscript never produces."""
 
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.root = _fixture.build_book(self.tmp.name)
+        super().setUp()
         self.back = os.path.join(self.root, "data", "manuscript", "back")
-
-    def gate(self):
-        return _fixture.run_inproc(self.root, "structure.py")
 
     def append(self, name: str, text: str) -> None:
         with open(os.path.join(self.back, name), "a", encoding="utf-8") as handle:
             handle.write(text)
 
-    def test_a_index_entry_naming_a_chapter_outside_the_book_is_ignored(self):
+    def test_an_index_entry_naming_a_chapter_outside_the_book_is_reported(self):
         self.append("index.md", "\n- 越界条目 §99.1\n")
         code, out = self.gate()
-        self.assertIn(code, (0, 1))
-        self.assertIn("Index:", out)
+        self.assertEqual(code, 1, out[-600:])
+        self.assertIn("Index references non-existent chapters: [99]", out)
 
     def test_a_glossary_ending_on_a_boundary_closes_its_last_entry(self):
-        self.append("glossary.md", "\n## 附录\n")
+        # the chapter reference sits past the boundary: it belongs to no entry, so
+        # the entry before the boundary is the one reported as unreferenced
+        self.append("glossary.md", "- **BTree**: 索引结构。\n## 附录\n第3章 与本表无关\n")
         code, out = self.gate()
-        self.assertIn(code, (0, 1))
-        self.assertIn("Glossary:", out)
+        self.assertEqual(code, 1, out[-600:])
+        self.assertIn("MISSING CHAPTER REF: BTree", out)
+        self.assertNotIn("MISSING CHAPTER REF: MVStore", out)
 
     def test_a_builder_script_that_does_not_parse_fails_the_gate(self):
         _fsutil = __import__("lib._fsutil", fromlist=["read_text_raw"])
@@ -283,3 +249,7 @@ class GlossaryAndIndexContentTest(unittest.TestCase):
         self.assertEqual(code, 1, out[-600:])
         self.assertIn("FAIL: glossary.py — syntax error", out)
         self.assertIn("Glossary builder scripts available", out)
+
+
+if __name__ == "__main__":
+    unittest.main()

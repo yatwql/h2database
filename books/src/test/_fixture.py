@@ -382,7 +382,14 @@ SUBDIRS = ('', 'lib', 'audit', 'manuscript', 'render', 'ingest', 'app', 'core')
 
 
 def resolve_script(script: str) -> str:
-    """Locate a delivery script by basename under books/src/python."""
+    """Locate a delivery script by basename under books/src/python.
+
+    An absolute path is taken as it is: a case that copies a script elsewhere
+    runs that copy, since the script resolves its own neighbours from
+    ``__file__`` and the copy must not reach back into the repository.
+    """
+    if os.path.isabs(script):
+        return script
     for sub in SUBDIRS:
         candidate = os.path.join(TOOLS_DIR, sub, script)
         if os.path.isfile(candidate):

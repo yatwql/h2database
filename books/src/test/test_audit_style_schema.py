@@ -176,7 +176,7 @@ if __name__ == "__main__":
 
 
 class StyleSchemaMessageTest(unittest.TestCase):
-    """The three prose.sections messages, the read failure and the clean verdict."""
+    """The three prose.sections messages, the unparsable file and the clean verdict."""
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -209,11 +209,13 @@ class StyleSchemaMessageTest(unittest.TestCase):
         problems = self.mod._check_prose(self.prose(exercise={"min_items": 0}))
         self.assertTrue(any("min_items must be >= 1" in p for p in problems), problems)
 
-    def test_an_unreadable_style_file_exits_with_a_message(self):
-        with (
-            mock.patch.object(self.mod._fsutil, "read_text", side_effect=OSError("denied")),
-            self.assertRaises(SystemExit) as raised,
-        ):
+    def test_a_style_file_that_does_not_parse_exits_with_a_message(self):
+        # _fsutil.read_text turns an unreadable file into a clean exit of its own,
+        # so a broken document is the one failure left for load() to report
+        path = self.mod._config.config_path("style.json")
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write('{"captions": ')
+        with self.assertRaises(SystemExit) as raised:
             self.mod.load()
         self.assertIn("cannot read", str(raised.exception))
 

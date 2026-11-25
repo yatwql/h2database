@@ -88,6 +88,26 @@
   pdf_metrics 用例当初正是这样长出来的）。符号集来自 `load_module()` 之后实际调用的属性，
   只是借用模块做准备的套件不会误伤；同时补三条用例把「真子集报出」「自带新符号不报」「两个符号不算」钉住。
 
+- **覆盖率快档 97% → 99%**：缺失 249 行 → **58 行**，半边分支 246 → **103**。尾巴上的模块是
+  `test_report.py` 13 行、`manuscript/terms.py` 9、`render/to_html.py` 9、`manuscript/snapshot.py` 7、
+  `render/pdf_metrics.py` 7、`audit/index_xrefs.py` 6、`audit/smart.py` 6、`manuscript/index.py` 6。
+  补的是入口面与错误路径，用例只认能失败的那种：`test_audit_structure_subchecks.py` 里三条「跑一次
+  健康夹具」的用例断言的是无条件的输出行（`Index:`、`CSS`），改成断言真实结论——越界索引条目的
+  `Index references non-existent chapters: [99]`、边界之后的章节引用不属于任何术语条目的
+  `MISSING CHAPTER REF`、没有 `render/to_html.py` 的树走 `CSS check skipped`；CSS 钩子改成对
+  `render/to_html.py` 与 `html_shell.py` 的真实文本断言，删一条钩子即失败；与
+  `test_gate_structural_branches.py`、`test_audit_structure_gate_paths.py` 重复的四条删掉。
+  同时删掉两处不可达代码：`audit/balance.py` 里第二个 `__main__` 守卫，以及
+  `audit/check_architecture.py` 里 `except OSError` 的两半——`_fsutil.read_text` 已经把 OSError
+  变成一次干净的退出，那两个分支只会被注入的不可能状态照亮。`audit/structure.py` 里
+  `os.path.join(src_dir, 'glossary.py') if False else ...` 的死半边与 `audit/style_schema.py` 里
+  同样的 `except OSError` 半边一并删掉，后者的用例改成写坏 `style.json` 走真实解析失败路径。
+- **`lib/_config.py` 从 916 行回到 801 行**：版本与最后改动日期（`_last_change`、`book_updated`、
+  `tool_updated`、`doc_version`、`source_version`/`source_versions`、`versions`）连同清单解析抽到
+  `lib/_book_versions.py` 的 `BookVersions`，由 `Config` 继承；`_config` 的模块级转发
+  （`_CALLABLES`/`_ALIASES`/`__getattr__`）不变，调用方一处没动。这个位置贴着 900 行上限：
+  一次整文件格式化就把它推到 916 行并让 `file_length` 判红，所以按职责拆出去而不是留着余量。
+
 - **评审修复：配置越界与重复计数（rf-71）**：七个脚本不再按名字拼出书目录
   （`render/to_pdf`、`to_epub`、`pdf_from_html`、`pdf_toc_links`、`audit/balance`、`audit/doc_drift`、
   `core/menu`，其中两个文件的那几行本就是死代码），改读 `_config.BOOK_ROOT` / `_config.DIST_DIR`；

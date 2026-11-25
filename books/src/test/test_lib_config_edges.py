@@ -24,6 +24,7 @@ TAGS = ("layer:lib", "tier:fast")
 _fixture.ensure_tools_path()
 
 _config = importlib.import_module("lib._config")
+_book_versions = importlib.import_module("lib._book_versions")
 
 
 class BookCase(unittest.TestCase):
@@ -161,7 +162,7 @@ class ChangeStampTest(BookCase):
         target = os.path.join(self.root, "src", "python")
         os.makedirs(target)
         pathlib.Path(target, "a.py").write_text("x = 1\n", encoding="utf-8")
-        with mock.patch.object(_config.subprocess, "run", side_effect=OSError("no git")):
+        with mock.patch.object(_book_versions.subprocess, "run", side_effect=OSError("no git")):
             stamp = _config.Config(self.root).tool_updated()
         self.assertRegex(stamp, r"^\d{4}-\d{2}-\d{2}$")
 
@@ -170,7 +171,7 @@ class ChangeStampTest(BookCase):
         os.makedirs(target)
         pathlib.Path(target, "a.py").write_text("x = 1\n", encoding="utf-8")
         with (
-            mock.patch.object(_config.subprocess, "run", side_effect=OSError("no git")),
+            mock.patch.object(_book_versions.subprocess, "run", side_effect=OSError("no git")),
             mock.patch.object(_config.os.path, "getmtime", side_effect=OSError("gone")),
         ):
             self.assertEqual(_config.Config(self.root).tool_updated(), "")
@@ -193,7 +194,7 @@ class SourceVersionTest(BookCase):
         self.assertEqual(_config.Config(self.root).source_version(), "9.9.9")
 
     def test_a_manifest_that_cannot_be_opened_reads_as_no_version(self):
-        self.assertEqual(_config._source_version_from(self.root, r"v(\d+)"), "")
+        self.assertEqual(_book_versions._source_version_from(self.root, r"v(\d+)"), "")
 
 
 if __name__ == "__main__":
