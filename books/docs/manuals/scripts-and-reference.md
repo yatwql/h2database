@@ -193,7 +193,7 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `gate_trace.py` | 质量计划登记与 `make.py` 步骤双向可追溯 | ● |
 | `typecheck.py` | pyright 静态检查（可选依赖，缺失时跳过） | ● |
 | `portability.py` | 移植性：`open()` 必须显式 encoding；`LC_ALL=C` + ASCII 输出下入口不得崩 | ● |
-| `test_redundancy.py` | 测试卫生：重复用例体 / 无断言 / 非 TestCase 的 test_* / 同名遮蔽 | ● |
+| `test_redundancy.py` | 测试卫生：重复用例体 / 整份被子集覆盖的套件 / 无断言 / 非 TestCase 的 test_* / 同名遮蔽 | ● |
 | `perf_baseline.py` | 交付速度：每步耗时对比评审基线，超阈值提示；`--update-baseline --reviewed-by --reason` 固化基线，`--strict` 变成失败 | ● |
 | `order_dependence.py` | 顺序依赖：正序/逆序两跑对比（P2 档自动执行，也可用 `test-eval-order.sh` 单独跑） | ● |
 

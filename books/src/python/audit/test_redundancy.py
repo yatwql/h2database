@@ -6,6 +6,9 @@ investor-review's redundancy family):
 
   DUPLICATE   two test methods run the identical body (copy-paste that will
               drift apart); the body is normalised before comparison
+  SUBSUMED    one suite restates another's coverage of the same module: every
+              symbol it exercises is already exercised there, and it names no
+              symbol of its own. Deletes are cheaper now than drift later.
   NO-ASSERT   a test method contains no assertion at all — it can only fail by
               raising, which is not what its name promises
   TRIVIAL     the body is only `pass` or `assert True`
@@ -212,6 +215,105 @@ def _loose_key(item: dict) -> str:
     return f"{item['file']}::{item['detail'].split(':')[0]}"
 
 
+SUBSET_MIN_SYMBOLS = 4
+
+
+def _target_name(node: ast.AST) -> str:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        parent = _target_name(node.value)
+        return f'{parent}.{node.attr}' if parent else ''
+    return ''
+
+
+def _root_name(node: ast.AST) -> str:
+    while isinstance(node, ast.Attribute):
+        node = node.value
+    return node.id if isinstance(node, ast.Name) else ''
+
+
+def _module_aliases(tree: ast.AST) -> dict[str, str]:
+    """Local name -> toolchain module, for `load_module(root, 'name')` bindings."""
+    aliases: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Call):
+            continue
+        func = node.value.func
+        if (getattr(func, 'attr', '') or getattr(func, 'id', '')) != 'load_module':
+            continue
+        args = node.value.args
+        if len(args) < 2 or not isinstance(args[1], ast.Constant):
+            continue
+        module = args[1].value
+        if not isinstance(module, str):
+            continue
+        for target in node.targets:
+            local = _target_name(target)
+            if local:
+                aliases[local] = module
+    return aliases
+
+
+def exercised_symbols(path: str) -> dict[str, set[str]]:
+    """module -> the attributes this suite asks that module for.
+
+    A suite that loads a module only to reach for one helper is not an owner of
+    it; the set is what separates "covers this module" from "borrows it".
+    """
+    tree = ast.parse(_fsutil.read_text(path))
+    aliases = _module_aliases(tree)
+    symbols: dict[str, set[str]] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            func = node.func
+            if (getattr(func, 'attr', '') or getattr(func, 'id', '')) == 'run_inproc':
+                args = node.args
+                if len(args) >= 2 and isinstance(args[1], ast.Constant) \
+                        and isinstance(args[1].value, str):
+                    name = args[1].value
+                    symbols.setdefault(name[:-3] if name.endswith('.py') else name, set())
+        if isinstance(node, ast.Attribute):
+            root = _root_name(node.value)
+            if root in aliases:
+                symbols.setdefault(aliases[root], set()).add(node.attr)
+    return symbols
+
+
+def subsumed(root: str | None = None) -> list[dict]:
+    """Suites whose every exercised symbol is already exercised by another.
+
+    Whole-file duplicates were the visible form of this; the quiet form is a
+    second suite that restates one module's helpers with new numbers and adds
+    nothing. Naming the module and the missing-unique count is what makes the
+    delete cheap to justify.
+    """
+    owners: dict[str, dict[str, set[str]]] = {}
+    for path in test_files(root):
+        try:
+            symbols = exercised_symbols(path)
+        except SyntaxError:      # reported by analyse() as a SYNTAX finding
+            continue
+        for module, names in symbols.items():
+            if names:
+                owners.setdefault(module, {})[rel(path)] = names
+    out: list[dict] = []
+    for module, by_suite in owners.items():
+        for suite, mine in by_suite.items():
+            for rival, theirs in by_suite.items():
+                if rival == suite or not mine <= theirs or len(theirs) <= len(mine):
+                    continue
+                if len(mine) < SUBSET_MIN_SYMBOLS:
+                    continue
+                out.append({'kind': 'SUBSUMED', 'file': suite, 'line': 1,
+                            'detail': (f'{suite} exercises only {len(mine)} symbols of '
+                                       f'{module}, all of them already exercised by '
+                                       f'{rival} ({len(theirs)}): '
+                                       + ', '.join(sorted(mine)[:8]))})
+                break
+    return out
+
+
 def analyse(root: str | None = None) -> list[dict]:
     findings: list[dict] = []
     bodies: dict[str, list[Case]] = {}
@@ -237,6 +339,7 @@ def analyse(root: str | None = None) -> list[dict]:
                                  'detail': f'{case.class_name}.{case.name}'})
             signature = _signature(body)
             bodies.setdefault(signature, []).append(case)
+    findings += subsumed(root)
     candidates = loose_candidates(root)
     accepted = _loose_baseline()
     findings += [item for item in candidates if _loose_key(item) not in accepted]

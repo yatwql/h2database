@@ -160,7 +160,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | `gate_trace.py` | 门禁表与实现的双向可追溯 | 只管登记一致性 |
 | `requirement_trace.py` | 每条需求是否有判据载体 | 只管追溯，不评判据本身是否够强 |
 | `portability.py` | 移植性：文本 `open()` 均显式 encoding；ASCII locale 下入口可运行 | 只管环境适配，不评判内容 |
-| `test_redundancy.py` | 测试套件卫生：重复用例体、无断言用例、非 TestCase 内的 test_*、同名遮蔽；松散断言（`assertIn(code, (0, 1))`）只登记存量、新增即失败 | 只管测试代码，不判业务 |
+| `test_redundancy.py` | 测试套件卫生：重复用例体、被别处完全覆盖的整个套件（同一模块的符号集是真子集且不少于四个）、无断言用例、非 TestCase 内的 test_*、同名遮蔽；松散断言（`assertIn(code, (0, 1))`）只登记存量、新增即失败 | 只管测试代码，不判业务 |
 | `perf_baseline.py` | 交付速度：各步骤耗时对比评审基线（`data/baselines/perf-baseline.json`；无基线时退回滚动窗口中位数），超阈值提示（默认 advisory） | 只管速度退化，不判正确性 |
 | 顺序依赖探测（order_dependence，人工触发） | 正序/逆序各跑一次，结果不同即报；不进 `check`，慢档执行 | 只管顺序敏感性，不判正确性 |
 | `typecheck.py` | pyright 静态类型检查 | 只管类型 |

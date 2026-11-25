@@ -2,6 +2,7 @@
 """Test-hygiene gate: duplicate bodies, missing assertions, dead cases."""
 from __future__ import annotations
 
+import ast
 import io
 import json
 import os
@@ -75,6 +76,47 @@ class TestRedundancyTest(unittest.TestCase):
                                   '    def test_runs(self):\n'
                                   '        self.assertEqual(1, 1)\n')
         self.assertEqual(self.analyse(), [])
+
+    def widget_suite(self, name: str, symbols: list[str]) -> None:
+        body = "import _fixture\n\n\nclass WidgetTest(unittest.TestCase):\n"
+        body += "    def test_" + name.removesuffix(".py") + "(self):\n"
+        body += '        mod = _fixture.load_module(ROOT, "widget")\n'
+        for symbol in symbols:
+            body += f'        self.assertEqual(mod.{symbol}("a"), 1)\n'
+        self.suite(name, body)
+
+    def test_a_suite_that_only_restates_another_is_reported(self):
+        self.widget_suite("test_broad.py",
+                          ["parse", "compare", "describe", "targets", "write_back"])
+        self.widget_suite("test_narrow.py", ["parse", "compare", "describe", "targets"])
+        findings = [item for item in self.analyse() if item["kind"] == "SUBSUMED"]
+        self.assertEqual(len(findings), 1)
+        self.assertIn("test_narrow.py", findings[0]["file"])
+        self.assertIn("test_broad.py", findings[0]["detail"])
+
+    def test_a_suite_with_a_symbol_of_its_own_is_not_subsumed(self):
+        self.widget_suite("test_broad.py", ["parse", "compare", "describe", "targets"])
+        self.widget_suite("test_own.py", ["parse", "compare", "write_back"])
+        self.assertEqual([i for i in self.analyse() if i["kind"] == "SUBSUMED"], [])
+
+    def test_a_handful_of_shared_symbols_is_not_evidence_of_a_copy(self):
+        self.widget_suite("test_broad.py", ["parse", "compare", "describe", "targets"])
+        self.widget_suite("test_thin.py", ["parse"])
+        self.assertEqual([i for i in self.analyse() if i["kind"] == "SUBSUMED"], [])
+
+    def test_a_suite_that_does_not_parse_is_skipped_by_the_subsumption_scan(self):
+        self.suite("test_broken.py", "def (:\n")
+        self.assertEqual(self.mod.subsumed(self.tmp.name), [])
+
+    def test_only_load_module_bindings_count_as_module_access(self):
+        tree = ast.parse('d["k"] = 1\nf().parse(1)\nx = _fixture.load_module(R, "w")\n'
+                         'x.parse(1)\n')
+        self.assertEqual(self.mod._module_aliases(tree), {"x": "w"})
+        subscript, call = tree.body[0], tree.body[1]
+        assert isinstance(subscript, ast.Assign)   # narrows for the type checker
+        assert isinstance(call, ast.Expr) and isinstance(call.value, ast.Call)
+        self.assertEqual(self.mod._target_name(subscript.targets[0]), "")
+        self.assertEqual(self.mod._root_name(call.value.func), "")
 
     def test_identical_bodies_are_reported_as_duplicates(self):
         body = ('import unittest\n\n\nclass WidgetTest(unittest.TestCase):\n'
