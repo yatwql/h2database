@@ -373,6 +373,22 @@ class ConfigFallbackTest(unittest.TestCase):
         os.remove(os.path.join(self.root, "data", "tmpl", "templates.toml"))
         self.assertEqual(self.config().templates(), {"map_intro": "来自样式表的旧书模板 {x}"})
 
+    def test_defaults_without_a_shipped_template_file_fall_back_to_the_style_policy(self):
+        book_toml = pathlib.Path(self.root, "data", "book", "book.toml")
+        text = book_toml.read_text(encoding="utf-8")
+        self.assertIn("[book]", text)
+        book_toml.write_text(text.replace("[book]", "[book]\ndefaults = true", 1), encoding="utf-8")
+        style = pathlib.Path(self.root, "data", "config", "style.json")
+        payload = json.loads(style.read_text(encoding="utf-8"))
+        payload["generation"]["templates"] = {"map_intro": "来自样式表的旧书模板 {x}"}
+        style.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+        os.remove(os.path.join(self.root, "data", "tmpl", "templates.toml"))
+        # opting into defaults with nothing shipped to merge leaves nothing to
+        # return, so the plain read falls through to the legacy style table
+        absent = pathlib.Path(self.tmp.name, "no-shipped-templates.json")
+        with mock.patch.object(_config, "default_path", return_value=str(absent)):
+            self.assertEqual(self.config().templates(), {"map_intro": "来自样式表的旧书模板 {x}"})
+
     def test_a_broken_template_file_is_a_config_error(self):
         path = pathlib.Path(self.root, "data", "tmpl", "templates.toml")
         path.write_text("not = [valid", encoding="utf-8")

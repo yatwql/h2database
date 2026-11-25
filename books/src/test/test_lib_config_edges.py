@@ -134,6 +134,15 @@ class SourceTreeTest(BookCase):
             _config.Config(self.root).source_roots()
         self.assertIn("src_main", str(caught.exception))
 
+    def test_the_suffixes_named_for_the_configured_languages_are_used(self):
+        self.sources(
+            {
+                "languages": ["java", "kotlin"],
+                "suffixes": {"java": ".java", "kotlin": ".kt"},
+            }
+        )
+        self.assertEqual(_config.Config(self.root).source_suffixes(), [".java", ".kt"])
+
     def test_a_book_without_a_repository_has_no_clone_target(self):
         self.assertEqual(_config.Config(self.root).clone_target(), "")
 

@@ -6,6 +6,7 @@ end-to-end tests exercise only indirectly.
 """
 
 import io
+import json
 import os
 import sys
 import tempfile
@@ -111,6 +112,33 @@ class SourceFreshnessErrorPaths(FixtureCase):
         broken = self.write("state/source-inventory.json", "{not json")
         with mock.patch.object(sfc._config, "state_path", lambda name: broken):
             self.assertEqual(sfc._preferred_paths(), {})
+
+    def test_an_inventory_class_without_a_rel_path_is_not_preferred(self):
+        sfc = self.sfc()
+        inventory = self.write(
+            "state/source-inventory.json",
+            json.dumps(
+                {
+                    "packages": {
+                        "p": {
+                            "classes": [
+                                {"name": "NoRel"},
+                                {"name": "Gone", "rel": "a/Gone.java"},
+                            ]
+                        }
+                    }
+                }
+            ),
+        )
+        with mock.patch.object(sfc._config, "state_path", lambda name: inventory):
+            self.assertEqual(sfc._preferred_paths(), {"Gone": "a/Gone.java"})
+
+    def test_a_non_source_file_in_the_tree_gets_no_index_entry(self):
+        sfc = self.sfc()
+        self.write("src/Widget.java", "class Widget {}\n")
+        self.write("src/README.md", "docs\n")
+        index = sfc.build_class_index(os.path.join(self.tmp.name, "src"))
+        self.assertEqual(list(index), ["Widget"])
 
     def test_a_claim_in_a_missing_chapter_is_skipped(self):
         sfc = self.sfc()

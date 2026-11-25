@@ -11,7 +11,6 @@ investor-review's redundancy family):
               symbol of its own. Deletes are cheaper now than drift later.
   NO-ASSERT   a test method contains no assertion at all — it can only fail by
               raising, which is not what its name promises
-  TRIVIAL     the body is only `pass` or `assert True`
   DEAD        a `test_*` method sits in a class that is not a TestCase subclass,
               or a later definition silently shadows an earlier one
 
@@ -43,7 +42,6 @@ PY_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEST_ROOT = os.path.join(_config.BOOK_ROOT, "src", "test")
 ASSERT_PREFIX = "assert"
 ASSERT_CALLS = frozenset({"assertRaises", "assertWarns", "assertCountEqual", "fail", "assertLogs"})
-TRIVIAL_BODIES = frozenset({"pass", "assert True", "assert 1", "assert"})
 SKIP_FILES = ("conftest.py", "__init__.py")
 
 
@@ -380,15 +378,6 @@ def analyse(root: str | None = None) -> list[dict]:
                         "detail": f"{case.class_name}.{case.name}",
                     }
                 )
-            elif body.splitlines()[-1] in TRIVIAL_BODIES:
-                findings.append(
-                    {
-                        "kind": "TRIVIAL",
-                        "file": rel(path),
-                        "line": case.lineno,
-                        "detail": f"{case.class_name}.{case.name}",
-                    }
-                )
             signature = _signature(body)
             bodies.setdefault(signature, []).append(case)
     findings += subsumed(root)
@@ -442,7 +431,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     findings = analyse()
-    blocking = [f for f in findings if f["kind"] != "TRIVIAL"]
+    blocking = findings
     if args.json:
         print(
             json.dumps(

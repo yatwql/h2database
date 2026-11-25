@@ -137,6 +137,18 @@ class ToHtmlVariantTest(unittest.TestCase):
         self.assertNotIn('href="#示例标题"', html)
         self.assertIn('href="#第2章-紧随其后的标题"', html)
 
+    def test_a_mermaid_fence_is_skipped_without_opening_a_sample(self):
+        merged = (
+            "# 第1章 测试\n\n```mermaid\ngraph TD\n# 图注标题\n```\n\n正文。\n"
+            "# 第2章 紧随其后的标题\n\n正文。\n"
+        )
+        code, out, html = self.build(merged=merged)
+        self.assertEqual(code, 0, out[-400:])
+        # a mermaid fence never enters the "inside a sample" state, so the heading
+        # line it holds is still collected as a TOC entry
+        self.assertIn('href="#图注标题"', html)
+        self.assertIn('href="#第2章-紧随其后的标题"', html)
+
     def test_a_bare_fence_after_an_auto_exit_closes_nothing(self):
         merged = MERGED + "\n```text\n块内一行\n# 自动退出的标题\n```\n"
         code, out, html = self.build(merged=merged)

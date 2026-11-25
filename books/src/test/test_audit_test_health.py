@@ -226,5 +226,16 @@ class TestHealthSurfacesTest(unittest.TestCase):
         self.assertIn("不可读", text)
 
 
+class ScriptGuardTest(unittest.TestCase):
+    """`test_health.py` run as a script: `--help` answers instead of measuring."""
+
+    def test_help_prints_the_json_flag_and_exits_zero(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = _fixture.build_book(tmp)
+            code, out = _fixture.run_inproc(root, "test_health.py", "--help")
+        self.assertEqual(code, 0)
+        self.assertIn("--json", out)
+
+
 if __name__ == "__main__":
     unittest.main()

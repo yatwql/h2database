@@ -187,3 +187,38 @@ class DiagramCountingEdgesTest(FixtureCase):
         lines = ["# 第一章", "## 附：附注", "### 一", "text"]
         headings = [(1, 1, "第一章"), (2, 2, "附：附注"), (3, 3, "一")]
         self.assertEqual(smart.build_exempt_ranges(headings, lines), [(2, 4)])
+
+
+class SectionBoundaryTest(FixtureCase):
+    """Where a ### section ends, and how its gaps are grouped per chapter."""
+
+    def test_a_child_heading_that_ends_the_document_closes_at_eof(self):
+        self.write(
+            "data/manuscript/ch1-test.md",
+            "# 第1章 测试章节\n\n## 1.1 背景\n\n### 1.1.1 写入路径\n\n正文一行。\n\n"
+            "#### 1.1.1.1 缓冲写入\n\n##### 深一层不是标题\n\n正文说明缓冲写入。\n",
+        )
+        code, out = self.run_script("smart.py")
+        self.assertIn(code, (0, 1), out[-400:])
+        self.assertIn("ch1-test.md (1 sections):", out)
+        self.assertIn("### 1.1.1 写入路径", out)
+        self.assertIn("[has #### children]", out)
+        # the heading regex stops at four hashes, so the fifth level is body text
+        self.assertNotIn("深一层不是标题", out)
+        self.assertIn("TOTAL sections needing additional diagrams: 1", out)
+
+    def test_two_thin_sections_in_one_chapter_are_counted_together(self):
+        body = "正文一行。\n\n正文二行。\n\n正文三行。\n"
+        self.write(
+            "data/manuscript/ch1-test.md",
+            "# 第1章 测试章节\n\n## 1.1 背景\n\n### 1.1.1 一节\n\n"
+            + body
+            + "\n### 1.1.2 二节\n\n"
+            + body,
+        )
+        code, out = self.run_script("smart.py")
+        self.assertIn(code, (0, 1), out[-400:])
+        self.assertIn("ch1-test.md (2 sections):", out)
+        self.assertIn("### 1.1.1 一节", out)
+        self.assertIn("### 1.1.2 二节", out)
+        self.assertIn("TOTAL sections needing additional diagrams: 2", out)

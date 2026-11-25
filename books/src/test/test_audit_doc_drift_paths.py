@@ -130,6 +130,12 @@ class ThresholdKeyTest(DriftCase):
         keys = self.drift.config_keys()
         self.assertIn("coverage_fail_under", keys)
 
+    def test_a_book_without_a_style_file_supplies_only_the_base_keys(self):
+        os.remove(self.drift._config.config_path("style.json"))
+        keys = self.drift.config_keys()
+        self.assertIn("coverage_fail_under", keys)
+        self.assertNotIn("thresholds", keys)
+
 
 class ProjectNameScopeTest(DriftCase):
     def test_a_book_configuring_no_project_name_checks_nothing(self):
@@ -148,6 +154,39 @@ class ProjectNameScopeTest(DriftCase):
             side_effect=lambda key, default: "测试之书" if key == "title" else default,
         ):
             self.assertIn("测试之书", self.drift._project_names())
+
+    def test_an_empty_package_prefix_leaves_only_the_project_titles(self):
+        titles = {
+            "display_title_zh": "测试之书",
+            "display_title_en": "Test Book",
+            "title": "测试之书",
+        }
+        with (
+            mock.patch.object(self.drift._config, "SOURCES", {"package_prefix": "  "}),
+            mock.patch.object(
+                self.drift._config,
+                "project",
+                side_effect=lambda key, default: titles.get(key, default),
+            ),
+        ):
+            self.assertEqual(self.drift._project_names(), ["Test Book", "测试之书"])
+
+
+class StyleKeyContractTest(DriftCase):
+    def test_a_scalar_style_key_missing_from_the_manual_is_one_finding(self):
+        config = os.path.join(self.root, "data", "config")
+        os.makedirs(config, exist_ok=True)
+        with open(os.path.join(config, "style.json"), "w", encoding="utf-8") as handle:
+            handle.write('{"_note": "内部", "page_margin": "2cm"}')
+        manual = os.path.join(self.root, "docs", "manuals", "how-to-config.md")
+        os.makedirs(os.path.dirname(manual), exist_ok=True)
+        with open(manual, "w", encoding="utf-8") as handle:
+            handle.write("# 配置\n")
+        findings = self.drift.check_style_keys(self.root)
+        self.assertEqual(
+            [item["detail"] for item in findings],
+            ["style.json key 'page_margin' is not explained in the manual"],
+        )
 
 
 class IllustrativePathTest(DriftCase):

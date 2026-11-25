@@ -317,6 +317,22 @@ class ReportToolTest(unittest.TestCase):
             fh.write("{not json\n")
         self.assertEqual(self.tool.perf_window(20)["runs"], 2)
 
+    def test_a_blank_history_line_never_reaches_the_json_parser(self):
+        path = self.history(
+            [
+                {"seconds": 1.0, "steps": [{"step": "gates", "seconds": 1.0}]},
+                {"seconds": 2.0, "steps": [{"step": "gates", "seconds": 2.0}]},
+            ]
+        )
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write("\n   \n")
+        with mock.patch.object(self.tool.json, "loads", wraps=json.loads) as loads:
+            payload = self.tool.perf_window(20)
+        self.assertEqual(payload["runs"], 2)
+        # the blank line is dropped before parsing, so it never reaches json.loads
+        parsed = [call.args[0] for call in loads.call_args_list]
+        self.assertEqual([text for text in parsed if not text.strip()], [])
+
     # -- CLI --------------------------------------------------------------
     def cli(self, *args: str) -> tuple[int, str]:
         buffer = io.StringIO()
