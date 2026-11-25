@@ -29,8 +29,9 @@ class TestRegistry(unittest.TestCase):
         self.root = _fixture.build_book(self.tmp.name)
 
     def test_known_languages(self):
-        self.assertEqual(sorted(languages.ANALYZERS),
-                         ["c", "go", "java", "kotlin", "python", "rust"])
+        self.assertEqual(
+            sorted(languages.ANALYZERS), ["c", "go", "java", "kotlin", "python", "rust"]
+        )
 
     def test_unknown_language_is_reported(self):
         with self.assertRaises(SystemExit):
@@ -94,6 +95,38 @@ class TestAnalyzers(unittest.TestCase):
         inventory = self.analyze("kotlin", "mini-kotlin")
         package = inventory["packages"]["com.example"]
         self.assertIn("kotlinx.coroutines", package["depends_on"])
+
+    def test_a_kotlin_file_without_a_package_line_falls_back_to_its_directory(self):
+        root = os.path.join(self.tmp.name, "src")
+        path = os.path.join(root, "app", "util", "Util.kt")
+        os.makedirs(os.path.dirname(path))
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write("class Util\n")
+        analyzer = languages.get("kotlin")
+        self.assertEqual(analyzer.package_of(root, path), "app.util")
+
+    def test_a_kotlin_type_without_a_doc_comment_has_an_empty_summary(self):
+        path = os.path.join(self.tmp.name, "Plain.kt")
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write("package p\n\nclass Plain\n")
+        module = languages.get("kotlin").parse(path)
+        self.assertEqual(module.package, "p")
+        self.assertEqual(module.units[0].summary, "")
+
+    def test_a_go_file_without_a_package_line_falls_back_to_its_directory(self):
+        root = os.path.join(self.tmp.name, "src")
+        path = os.path.join(root, "app", "util", "util.go")
+        os.makedirs(os.path.dirname(path))
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write("func F() {}\n")
+        self.assertEqual(languages.get("go").package_of(root, path), "app/util")
+
+    def test_a_go_build_directive_is_not_read_as_a_doc_comment(self):
+        path = os.path.join(self.tmp.name, "tagged.go")
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write("//go:build linux\n\npackage p\n\ntype T struct{}\n")
+        module = languages.get("go").parse(path)
+        self.assertEqual(module.units[0].summary, "")
 
     def test_go_package_units_and_visibility(self):
         inventory = self.analyze("go", "mini-go")

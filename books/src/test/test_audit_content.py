@@ -48,6 +48,29 @@ class TestContentAudits(FixtureTest):
                 result = _fixture.run(self.root, script)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_crossrefs_audit_separates_matching_and_unknown_chapters(self):
+        path = os.path.join(self.root, "data", "manuscript", "ch1-test.md")
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write("\n详见第2章《测试章节》，详见第9章《空章节》。\n")
+        code, out = _fixture.run_inproc(self.root, "crossrefs.py")
+        self.assertEqual(code, 0, out)
+        self.assertIn("CHAPTER_NOT_FOUND", out)
+        self.assertIn("OK: 1, Errors: 3", out)
+
+    def test_crossrefs_audit_confirms_a_book_whose_references_all_match(self):
+        chapters = {
+            "ch1-test.md": "# 第1章 测试章节\n\n详见第2章《测试章节》。\n",
+            "ch2-test.md": "# 第2章 测试章节\n\n正文一段。\n",
+        }
+        for name, text in chapters.items():
+            path = os.path.join(self.root, "data", "manuscript", name)
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(text)
+        code, out = _fixture.run_inproc(self.root, "crossrefs.py")
+        self.assertEqual(code, 0, out)
+        self.assertIn("All cross-references match!", out)
+        self.assertIn("OK: 1, Errors: 0", out)
+
     def test_captions_audit_flags_bare_noun(self):
         path = os.path.join(self.root, "data", "manuscript", "ch1-test.md")
         with open(path, "a", encoding="utf-8") as fh:
