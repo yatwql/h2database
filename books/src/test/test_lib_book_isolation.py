@@ -9,7 +9,6 @@ were resolved against the checkout, or a baseline were keyed by bare filename.
 
 from __future__ import annotations
 
-import hashlib
 import os
 import sys
 import tempfile
@@ -26,11 +25,6 @@ if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
 
 CHAPTER = 'data/manuscript/ch1-test.md'
-
-
-def digest(path: str) -> str:
-    with open(path, 'rb') as fh:
-        return hashlib.sha256(fh.read()).hexdigest()
 
 
 class SameNameIsolationTest(unittest.TestCase):
@@ -75,15 +69,15 @@ class SameNameIsolationTest(unittest.TestCase):
             self.assertTrue(cfg.dist_dir.startswith(os.path.abspath(root)))
 
     def test_running_one_book_leaves_the_other_untouched(self):
-        before_first = digest(os.path.join(self.first, CHAPTER))
-        before_second = digest(os.path.join(self.second, CHAPTER))
+        before_first = _fixture.digest(os.path.join(self.first, CHAPTER))
+        before_second = _fixture.digest(os.path.join(self.second, CHAPTER))
         code, out = _fixture.run_inproc(self.first, 'merge.py')
         self.assertEqual(code, 0, out[-400:])
         self.assertTrue(os.path.isfile(os.path.join(self.first, 'dist', 'test-book.md')))
         self.assertFalse(os.path.exists(os.path.join(self.second, 'dist', 'test-book.md')),
                          'the merge of one book produced an artifact in the other')
-        self.assertEqual(digest(os.path.join(self.first, CHAPTER)), before_first)
-        self.assertEqual(digest(os.path.join(self.second, CHAPTER)), before_second)
+        self.assertEqual(_fixture.digest(os.path.join(self.first, CHAPTER)), before_first)
+        self.assertEqual(_fixture.digest(os.path.join(self.second, CHAPTER)), before_second)
 
     def test_a_baseline_written_for_one_book_is_not_visible_to_the_other(self):
         volume = self.module(self.first, 'content_volume')

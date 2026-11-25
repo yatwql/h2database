@@ -9,10 +9,10 @@ regressions in the audits — the class of bug unit tests cannot see.
 
 import os
 import sys
-import tempfile
 import unittest
 
 import _fixture
+from _cases import FixtureCase
 
 TAGS = ("layer:audit", "tier:fast")
 
@@ -25,21 +25,7 @@ if TOOLS_DIR not in sys.path:
             sys.path.insert(0, _path)
 
 
-class FixtureTest(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.root = _fixture.build_book(self.tmp.name)
-
-    def dist(self, name: str) -> str:
-        return os.path.join(self.root, "dist", name)
-
-    def read(self, path: str) -> str:
-        with open(path, encoding="utf-8") as fh:
-            return fh.read()
-
-
-class TestContentAudits(FixtureTest):
+class TestContentAudits(FixtureCase):
     def test_each_content_audit_passes_on_the_fixture(self):
         # one case per script rather than one test per script: the assertion is the
         # same, and subTest still names the script that failed
@@ -98,7 +84,7 @@ class TestContentAudits(FixtureTest):
         self.assertIn("第2章", result.stdout)
 
 
-class TestFigureCitations(FixtureTest):
+class TestFigureCitations(FixtureCase):
     """figures.py: cited figures, dangling citations, and the strict verdict."""
 
     def write_chapter(self, name: str, text: str) -> str:

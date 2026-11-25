@@ -30,10 +30,6 @@ if TOOLS_DIR not in sys.path:
         if _path not in sys.path:
             sys.path.insert(0, _path)
 
-SLOW = os.environ.get("BOOK_SLOW") == "1"
-HAS_PYPDF = importlib.util.find_spec("pypdf") is not None
-HAS_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
-HAS_PANDOC = bool(__import__("shutil").which("pandoc"))
 
 
 

@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import os
 import tempfile
 import unittest
@@ -14,9 +13,6 @@ TAGS = ('stability:idempotent', 'layer:infra', 'tier:fast')
 
 _fixture.ensure_tools_path()
 
-def digest(path: str) -> str:
-    with open(path, 'rb') as fh:
-        return hashlib.sha256(fh.read()).hexdigest()
 
 class IdempotencyTest(unittest.TestCase):
     def setUp(self):
@@ -27,16 +23,16 @@ class IdempotencyTest(unittest.TestCase):
     def test_building_twice_produces_identical_artifacts(self):
         merged = os.path.join(self.root, 'dist', 'test-book.md')
         _fixture.run_inproc(self.root, 'merge.py')
-        first = digest(merged)
+        first = _fixture.digest(merged)
         _fixture.run_inproc(self.root, 'merge.py')
-        self.assertEqual(first, digest(merged), 'merge.py is not idempotent')
+        self.assertEqual(first, _fixture.digest(merged), 'merge.py is not idempotent')
 
     def test_cover_update_is_idempotent(self):
         cover = os.path.join(self.root, 'data', 'manuscript', 'cover.md')
         _fixture.run_inproc(self.root, 'cover.py')
-        first = digest(cover)
+        first = _fixture.digest(cover)
         _fixture.run_inproc(self.root, 'cover.py')
-        self.assertEqual(first, digest(cover), 'cover.py is not idempotent')
+        self.assertEqual(first, _fixture.digest(cover), 'cover.py is not idempotent')
 
     def test_repeated_gate_runs_agree(self):
         runs = [_fixture.run_inproc(self.root, 'structure.py') for _ in range(3)]
@@ -71,9 +67,9 @@ class DeterminismTest(unittest.TestCase):
         _fixture.run_inproc(root, 'digest.py')
         if not os.path.isfile(inv):
             self.skipTest('no source tree in the fixture')
-        first = digest(inv)
+        first = _fixture.digest(inv)
         _fixture.run_inproc(root, 'digest.py')
-        self.assertEqual(first, digest(inv), 'digest.py output is not stable')
+        self.assertEqual(first, _fixture.digest(inv), 'digest.py output is not stable')
 
 if __name__ == '__main__':
     unittest.main()

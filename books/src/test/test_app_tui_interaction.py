@@ -18,6 +18,13 @@ TAGS = ("layer:app", "tier:fast")
 _fixture.ensure_tools_path()
 
 
+class Tty(io.StringIO):
+    """A stdout substitute that claims to be a terminal."""
+
+    def isatty(self) -> bool:
+        return True
+
+
 class TuiInteractionTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -303,10 +310,6 @@ class TuiInteractionTest(unittest.TestCase):
         self.assertEqual(self.tui._config.current().root, before)
 
     def test_a_frame_is_cleared_before_it_is_drawn(self):
-        class Tty(io.StringIO):
-            def isatty(self) -> bool:
-                return True
-
         buffer = Tty()
         with (
             mock.patch.object(self.tui, "USE_COLOR", True),
@@ -325,10 +328,6 @@ class TuiInteractionTest(unittest.TestCase):
         self.assertEqual(buffer.getvalue(), "")
 
     def test_the_menu_loop_clears_each_frame(self):
-        class Tty(io.StringIO):
-            def isatty(self) -> bool:
-                return True
-
         buffer = Tty()
         with (
             mock.patch.object(self.tui, "USE_COLOR", True),

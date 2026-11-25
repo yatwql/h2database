@@ -13,10 +13,9 @@ gap stays visible instead of silently passing.
 import importlib.util
 import os
 import sys
-import tempfile
 import unittest
 
-import _fixture
+from _cases import ScriptTestBase
 
 TAGS = ('layer:render', 'tier:slow')
 
@@ -31,51 +30,8 @@ if TOOLS_DIR not in sys.path:
             sys.path.insert(0, _path)
 
 SLOW = os.environ.get('BOOK_SLOW') == '1'
-HAS_PYPDF = importlib.util.find_spec('pypdf') is not None
 HAS_PLAYWRIGHT = importlib.util.find_spec('playwright') is not None
-HAS_PANDOC = bool(__import__('shutil').which('pandoc'))
 
-BUILD_SCRIPTS = ['cover.py', 'merge.py', 'to_html.py']
-
-ALL_SCRIPTS = [
-    'cover.py', 'merge.py', 'to_html.py',
-    'pdf_toc_links.py', 'to_epub.py', 'pdf_from_html.py',
-    'structure.py',
-]
-
-AUDIT_SCRIPTS = [
-    'links.py',
-    'diagrams.py',
-    'captions.py',
-    'figures.py',
-    'crossrefs.py',
-    'exercises.py',
-    'figure_clusters.py',
-    'index_xrefs.py',
-    'smart.py',
-    'balance.py',
-    'style.py',
-    'readability.py',
-    'source_refs.py',
-    'glossary.py',
-    'index.py',
-]
-
-class ScriptTestBase(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.root = _fixture.build_book(self.tmp.name)
-
-    def run_script(self, script: str, *args: str) -> tuple[int, str]:
-        return _fixture.run_inproc(self.root, script, *args)
-
-    def path(self, *parts: str) -> str:
-        return os.path.join(self.root, *parts)
-
-    def read(self, *parts: str) -> str:
-        with open(self.path(*parts), encoding='utf-8') as fh:
-            return fh.read()
 
 class TestPdfToolchain(ScriptTestBase):
     """Chromium-backed pipeline: PDF render -> verify -> TOC links -> print PDF."""

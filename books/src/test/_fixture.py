@@ -8,6 +8,7 @@ manuscript.
 
 from __future__ import annotations
 
+import hashlib
 import importlib
 import importlib.util
 import json
@@ -608,3 +609,9 @@ def load_module(root: str, name: str):
 
 def cleanup(root: str) -> None:
     shutil.rmtree(root, ignore_errors=True)
+
+
+def digest(path: str) -> str:
+    """sha256 of a file, for asserting a run left it byte-identical."""
+    with open(path, "rb") as fh:
+        return hashlib.sha256(fh.read()).hexdigest()

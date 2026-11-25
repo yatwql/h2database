@@ -5,16 +5,14 @@ These target the pure logic (counting, parsing, clustering, PDF checks) that the
 end-to-end tests exercise only indirectly.
 """
 
-import importlib.util
 import io
 import json
 import os
 import sys
-import tempfile
 import unittest
 from unittest import mock
 
-import _fixture
+from _cases import FixtureCase
 
 TAGS = ("layer:audit", "tier:fast")
 
@@ -25,25 +23,6 @@ if TOOLS_DIR not in sys.path:
         _path = os.path.join(TOOLS_DIR, _sub)
         if _path not in sys.path:
             sys.path.insert(0, _path)
-
-HAS_PYPDF = importlib.util.find_spec("pypdf") is not None
-
-
-class FixtureCase(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.root = _fixture.build_book(self.tmp.name)
-
-    def module(self, name: str):
-        return _fixture.load_module(self.root, name)
-
-    def write(self, rel: str, text: str) -> str:
-        path = os.path.join(self.root, rel)
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w", encoding="utf-8") as fh:
-            fh.write(text)
-        return path
 
 
 class TestFigureClusterHelpers(FixtureCase):

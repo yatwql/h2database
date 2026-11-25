@@ -20,7 +20,6 @@ TAGS = ("layer:infra", "tier:fast")
 
 _fixture.ensure_tools_path()
 
-BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
 
 
 class OtherBookChangeTest(unittest.TestCase):

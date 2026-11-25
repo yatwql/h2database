@@ -8,7 +8,6 @@ the fixture the other suites happen to use.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import sys
@@ -24,11 +23,6 @@ _fixture.ensure_tools_path()
 TOOLS_DIR = _fixture.TOOLS_DIR
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
-
-
-def digest(path: str) -> str:
-    with open(path, 'rb') as fh:
-        return hashlib.sha256(fh.read()).hexdigest()
 
 
 class IndexParseInvariants(unittest.TestCase):
@@ -106,9 +100,9 @@ class RenumberInvariants(unittest.TestCase):
         with open(chapter, 'a', encoding='utf-8') as fh:
             fh.write('\n详见第7章《测试章节》。\n')
         _fixture.run_inproc(self.root, 'renumber.py', '--apply')
-        first = digest(chapter)
+        first = _fixture.digest(chapter)
         _fixture.run_inproc(self.root, 'renumber.py', '--apply')
-        self.assertEqual(digest(chapter), first)
+        self.assertEqual(_fixture.digest(chapter), first)
 
 
 class MergeInvariants(unittest.TestCase):
@@ -123,10 +117,10 @@ class MergeInvariants(unittest.TestCase):
     def test_two_merges_produce_identical_files(self):
         first_code, first_out = _fixture.run_inproc(self.root, 'merge.py')
         self.assertEqual(first_code, 0, first_out[-300:])
-        first = digest(self.merged)
+        first = _fixture.digest(self.merged)
         second_code, second_out = _fixture.run_inproc(self.root, 'merge.py')
         self.assertEqual(second_code, 0, second_out[-300:])
-        self.assertEqual(digest(self.merged), first)
+        self.assertEqual(_fixture.digest(self.merged), first)
 
     def test_the_merged_file_holds_every_chapter_once(self):
         _fixture.run_inproc(self.root, 'merge.py')

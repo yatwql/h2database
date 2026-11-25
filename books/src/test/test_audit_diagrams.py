@@ -10,11 +10,11 @@ regressions in the audits — the class of bug unit tests cannot see.
 import io
 import os
 import sys
-import tempfile
 import unittest
 from contextlib import redirect_stdout
 
 import _fixture
+from _cases import FixtureCase
 
 TAGS = ("layer:audit", "tier:fast")
 
@@ -27,21 +27,7 @@ if TOOLS_DIR not in sys.path:
             sys.path.insert(0, _path)
 
 
-class FixtureTest(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.root = _fixture.build_book(self.tmp.name)
-
-    def dist(self, name: str) -> str:
-        return os.path.join(self.root, "dist", name)
-
-    def read(self, path: str) -> str:
-        with open(path, encoding="utf-8") as fh:
-            return fh.read()
-
-
-class TestAsciiScanScope(FixtureTest):
+class TestAsciiScanScope(FixtureCase):
     """The file selection, the baseline writer and the report, in-process."""
 
     def manuscript(self, *parts: str) -> str:
@@ -90,7 +76,7 @@ class TestAsciiScanScope(FixtureTest):
         self.assertIn("and 1 more", buffer.getvalue())
 
 
-class TestAsciiAudit(FixtureTest):
+class TestAsciiAudit(FixtureCase):
     def test_clean_fixture_passes(self):
         result = _fixture.run(self.root, "diagrams.py")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

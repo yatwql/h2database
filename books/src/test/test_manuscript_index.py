@@ -6,7 +6,6 @@ artifacts are the branches that never run in the happy path but do fire in real
 use — and they are where a toolchain silently misbehaves instead of reporting.
 """
 
-import importlib.util
 import os
 import sys
 import tempfile
@@ -24,9 +23,6 @@ if TOOLS_DIR not in sys.path:
         if _path not in sys.path:
             sys.path.insert(0, _path)
 
-SLOW = os.environ.get("BOOK_SLOW") == "1"
-HAS_PANDOC = bool(__import__("shutil").which("pandoc"))
-HAS_PYPDF = importlib.util.find_spec("pypdf") is not None
 
 
 class Base(unittest.TestCase):

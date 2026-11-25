@@ -19,6 +19,10 @@ _fixture.ensure_tools_path()
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
 
 
+class Boom(Exception):
+    """An error the LLM layer raises when it cannot answer."""
+
+
 class ActionDispatchTest(unittest.TestCase):
     def setUp(self):
         self.actions = _fixture.load_module(BOOK_ROOT, "actions")
@@ -82,18 +86,12 @@ class ActionDispatchTest(unittest.TestCase):
         self.assertIn("make.py", run.call_args[0][0][1])
 
     def test_the_llm_usage_lines_name_a_failed_ledger(self):
-        class Boom(Exception):
-            pass
-
         with mock.patch.object(self.actions._llm, "budget_line", side_effect=Boom("磁盘满")):
             self.actions._llm.LLMError = Boom
             line = self.actions._llm_lines()
         self.assertIn("用量记账不可用", line)
 
     def test_status_survives_an_llm_layer_that_cannot_answer(self):
-        class Boom(Exception):
-            pass
-
         with mock.patch.object(self.actions._llm, "status", side_effect=Boom("无配置")):
             self.actions._llm.LLMError = Boom
             code, text = self.actions.status()
