@@ -70,7 +70,7 @@ def count_lines(text: str) -> int:
 
 
 def count_figures(text: str) -> int:
-    return len(re.findall(r"^\*\*图 [A-Z0-9]+-\d+(?:[a-z])?:", text, re.MULTILINE))
+    return len(_mdutil.FIGURE_LINE_RE.findall(text))
 
 
 def count_source_refs(text: str) -> int:

@@ -30,6 +30,10 @@ CHAPTER_FIGURE = r"(\d+)-(\d+[a-z]*)"
 APPENDIX_FIGURE = r"([A-Z])-(\d+[a-z]*)"
 FIGURE_CAPTION_RE = re.compile(rf"^\*\*{FIGURE_LABEL} ({FIGURE_ID}):\s*(.+?)\*\*\s*$")
 FIGURE_PREFIX_RE = re.compile(rf"^\*\*{FIGURE_LABEL} {FIGURE_ID}:")
+# The same prefix, scanned across a whole document: the counters work on the file,
+# the caption audits work on one line, so both shapes come from one definition.
+FIGURE_LINE_RE = re.compile(FIGURE_PREFIX_RE.pattern, re.MULTILINE)
+FIGURE_LINE_UNBOLD_RE = re.compile(rf"^{FIGURE_LABEL} {FIGURE_ID}:", re.MULTILINE)
 
 
 # Source coordinates are written `MVStore.java:12`. The shape lives here for the

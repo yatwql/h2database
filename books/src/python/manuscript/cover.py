@@ -44,12 +44,10 @@ for fname in source_files:
         continue
     text = _fsutil.read_text(path)
     lines = len(text.splitlines())
-    # Numeric chapter figures: **图 7-3:**.
-    figs = len(re.findall(r"^\*\*图 \d+-\d+:", text, re.MULTILINE))
-    figs += len(re.findall(r"^图 \d+-\d+:", text, re.MULTILINE))
-    # Appendix figures use a letter prefix: **图 A-1:**.
-    figs += len(re.findall(r"^\*\*图 [A-Z]-\d+:", text, re.MULTILINE))
-    figs += len(re.findall(r"^图 [A-Z]-\d+:", text, re.MULTILINE))
+    # Figure captions are counted from the shared shape: `**图 7-3:**` and `图 A-1:`
+    # differ only by the bold marker, so four local patterns are three too many.
+    figs = len(_mdutil.FIGURE_LINE_RE.findall(text))
+    figs += len(_mdutil.FIGURE_LINE_UNBOLD_RE.findall(text))
     refs = len(_mdutil.source_ref_re(tuple(_config.source_suffixes())).findall(text))
     total_lines += lines
     total_figs += figs
