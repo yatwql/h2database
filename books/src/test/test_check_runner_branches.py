@@ -8,6 +8,7 @@ import glob
 import io
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -392,3 +393,35 @@ class RunnerEdgeBranchesTest(unittest.TestCase):
         self.assertNotIn("check-p0-20200101.log", remaining)
         self.assertIn("check-p0-2026-13-45.log", remaining)
         self.assertIn("notes.txt", remaining)
+
+    def test_only_python_paths_inside_the_toolchain_scope_a_run(self):
+        suite = os.path.join(self.root, "src", "test")
+        os.makedirs(suite, exist_ok=True)
+        with open(os.path.join(suite, "test_source_refs.py"), "w", encoding="utf-8") as handle:
+            handle.write("import unittest\n")
+        touched = [
+            os.path.join(self.root, "src", "docs", "notes.md"),
+            os.path.join(self.root, "tools", "build.py"),
+            os.path.join(self.root, "src", "python", "audit", "source_refs.py"),
+        ]
+        modules = self.mod.tests_for_change(touched)
+        self.assertNotIn("notes", modules)
+        self.assertNotIn("build", modules)
+        self.assertIn("test_source_refs", modules)
+
+    def test_a_step_that_prints_pytest_counts_carries_them_into_the_result(self):
+        log_path = os.path.join(self.tmp.name, "check.log")
+        with mock.patch.object(
+            self.mod,
+            "_command",
+            return_value=[sys.executable, "-c", "print('2 failed, 40 passed')"],
+        ):
+            with mock.patch.object(self.mod, "repo_root", lambda: self.root):
+                result = self.mod.run_step("test", log_path, timeout=60)
+        self.assertEqual(result["code"], 0)
+        self.assertEqual(result["counts"], {"failed": 2, "passed": 40})
+
+    def test_the_script_entry_point_reports_through_the_error_helper(self):
+        done = _fixture.run(self.root, "check_runner.py", "--help")
+        self.assertEqual(done.returncode, 0, done.stderr[-400:])
+        self.assertIn("--mode", done.stdout)

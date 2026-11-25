@@ -383,3 +383,30 @@ class SettingsEdgeTest(unittest.TestCase):
         lib = importlib.import_module("lib")
         with mock.patch.object(lib, "_llm", fake):
             self.assertEqual(self.mod.spend_summary(), "—")
+
+    def test_a_literal_already_in_its_section_is_replaced_in_place(self):
+        path = os.path.join(self.tmp.name, "book3.toml")
+        self.write_toml(path, "[toolchain]\nprint_scale = 0.65\nother = 1\n")
+        self.mod._write_toml_literal(path, "toolchain", "print_scale", "0.71")
+        with open(path, encoding="utf-8") as handle:
+            text = handle.read()
+        self.assertIn("print_scale = 0.71", text)
+        self.assertNotIn("0.65", text)
+        self.assertEqual(text.count("[toolchain]"), 1)
+
+    def test_a_json_list_setting_reads_back_comma_separated(self):
+        path = os.path.join(self.tmp.name, "base.json")
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump({"sources": {"roots": ["h2/src/main", "h2/h2"]}}, handle)
+        row = (path, "sources", "roots", "list", "源码树")
+        with mock.patch.object(self.mod, "spec_table", return_value={"sources.roots": row}):
+            self.assertEqual(self.mod.get("sources.roots"), "h2/src/main,h2/h2")
+
+    def test_the_first_provider_cannot_move_above_the_top(self):
+        providers = os.path.join(self.root, "data", "config", "llm_provider.json")
+        with open(providers, "w", encoding="utf-8") as handle:
+            json.dump({"providers": {"mock": {"priority": 10}, "qwen": {"priority": 20}}}, handle)
+        order = [row["name"] for row in self.mod.provider_order()]
+        self.assertEqual(order, ["mock", "qwen"])
+        self.assertEqual(self.mod.move_provider(order[0], -1)[: len(order[0])], order[0])
+        self.assertEqual([row["name"] for row in self.mod.provider_order()], order)

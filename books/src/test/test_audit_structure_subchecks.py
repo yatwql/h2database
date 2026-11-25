@@ -163,3 +163,123 @@ class SubCheckFailureModesTest(unittest.TestCase):
             code, out = self.gate()
         self.assertEqual(code, 1, out[-400:])
         self.assertIn("tool missing", out)
+
+    def test_a_repository_without_the_style_tool_reports_it_and_moves_on(self):
+        real_exists = os.path.exists
+        absent = ("style.py", "index_xrefs.py")
+
+        def exists(path):
+            if str(path).endswith(absent):
+                return False
+            return real_exists(path)
+
+        with mock.patch.object(os.path, "exists", side_effect=exists):
+            code, out = self.gate()
+        self.assertIn(code, (0, 1))
+        self.assertIn("style.py not found", out)
+        self.assertNotIn("see-also", out)
+
+
+class SubCheckToolWiringTest(unittest.TestCase):
+    """The advisory tools structure.py reaches for, present and absent.
+
+    The gate looks for these tools next to itself, so the fixture book cannot
+    supply them: the boundary (``os.path.exists``/``subprocess.run``) is stubbed
+    and the check itself runs for real.
+    """
+
+    AUDIT_DIR = os.path.join(TOOLS_DIR, "audit")
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.hierarchy_tool = os.path.join(self.AUDIT_DIR, "index.py")
+
+    def test_the_index_hierarchy_floor_is_checked_when_the_tool_runs(self):
+        import subprocess
+
+        real_exists, real_run = os.path.exists, subprocess.run
+
+        def exists(path):
+            if str(path) == self.hierarchy_tool:
+                return True
+            return real_exists(path)
+
+        def run(command, **kwargs):
+            if str(command[1]) == self.hierarchy_tool:
+                return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+            return real_run(command, **kwargs)
+
+        with mock.patch.object(os.path, "exists", side_effect=exists):
+            with mock.patch.object(subprocess, "run", side_effect=run):
+                code, out = _fixture.run_inproc(self.root, "structure.py")
+        self.assertIn(code, (0, 1))
+        self.assertIn("Index hierarchy floor", out)
+        self.assertIn("see-also>=", out)
+
+    def test_a_hierarchy_tool_that_cannot_start_is_reported_by_name(self):
+        import subprocess
+
+        real_exists, real_run = os.path.exists, subprocess.run
+
+        def exists(path):
+            if str(path) == self.hierarchy_tool:
+                return True
+            return real_exists(path)
+
+        def run(command, **kwargs):
+            if str(command[1]) == self.hierarchy_tool:
+                raise OSError("tool exploded")
+            return real_run(command, **kwargs)
+
+        with mock.patch.object(os.path, "exists", side_effect=exists):
+            with mock.patch.object(subprocess, "run", side_effect=run):
+                code, out = _fixture.run_inproc(self.root, "structure.py")
+        self.assertEqual(code, 1, out[-400:])
+        self.assertIn("Index hierarchy check failed to run", out)
+
+
+class GlossaryAndIndexContentTest(unittest.TestCase):
+    """Content shapes the shipped manuscript never produces."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.back = os.path.join(self.root, "data", "manuscript", "back")
+
+    def gate(self):
+        return _fixture.run_inproc(self.root, "structure.py")
+
+    def append(self, name: str, text: str) -> None:
+        with open(os.path.join(self.back, name), "a", encoding="utf-8") as handle:
+            handle.write(text)
+
+    def test_a_index_entry_naming_a_chapter_outside_the_book_is_ignored(self):
+        self.append("index.md", "\n- 越界条目 §99.1\n")
+        code, out = self.gate()
+        self.assertIn(code, (0, 1))
+        self.assertIn("Index:", out)
+
+    def test_a_glossary_ending_on_a_boundary_closes_its_last_entry(self):
+        self.append("glossary.md", "\n## 附录\n")
+        code, out = self.gate()
+        self.assertIn(code, (0, 1))
+        self.assertIn("Glossary:", out)
+
+    def test_a_builder_script_that_does_not_parse_fails_the_gate(self):
+        _fsutil = __import__("lib._fsutil", fromlist=["read_text_raw"])
+        real = _fsutil.read_text_raw
+        builder = os.path.join("manuscript", "glossary.py")
+
+        def broken(path):
+            if str(path).endswith(builder):
+                return "def broken(:\n"
+            return real(path)
+
+        with mock.patch.object(_fsutil, "read_text_raw", side_effect=broken):
+            code, out = self.gate()
+        self.assertEqual(code, 1, out[-600:])
+        self.assertIn("FAIL: glossary.py — syntax error", out)
+        self.assertIn("Glossary builder scripts available", out)
