@@ -121,7 +121,8 @@ def _base_config() -> dict:
     except json.JSONDecodeError as exc:
         raise SystemExit(f'error: invalid base config {source}: {exc}') from exc
     current['sources'] = {'src_main': '', 'languages': ['java'],
-                          'suffixes': {'java': '.java', 'python': '.py', 'rust': '.rs'},
+                          'suffixes': {'java': '.java', 'python': '.py', 'rust': '.rs',
+                                       'kotlin': '.kt', 'go': '.go', 'c': '.c'},
                           'file_suffix': '.java', 'package_prefix': ''}
     current.setdefault('logging', {'level': 'INFO', 'dir': 'logs', 'retention_days': 14})
     return current

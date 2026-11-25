@@ -15,7 +15,8 @@
       "python": ".py",
       "rust": ".rs",
       "kotlin": ".kt",
-      "go": ".go"
+      "go": ".go",
+      "c": ".c"
     }
   },
   "baselines": {

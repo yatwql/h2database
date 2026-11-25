@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 
 from ingest.languages._base import Analyzer, Module, Unit  # noqa: F401
+from ingest.languages.c import CAnalyzer
 from ingest.languages.go import GoAnalyzer
 from ingest.languages.java import JavaAnalyzer
 from ingest.languages.kotlin import KotlinAnalyzer
@@ -21,6 +22,7 @@ ANALYZERS: dict[str, type[Analyzer]] = {
     'rust': RustAnalyzer,
     'kotlin': KotlinAnalyzer,
     'go': GoAnalyzer,
+    'c': CAnalyzer,
 }
 
 

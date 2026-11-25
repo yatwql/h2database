@@ -29,7 +29,8 @@ class TestRegistry(unittest.TestCase):
         self.root = _fixture.build_book(self.tmp.name)
 
     def test_known_languages(self):
-        self.assertEqual(sorted(languages.ANALYZERS), ["go", "java", "kotlin", "python", "rust"])
+        self.assertEqual(sorted(languages.ANALYZERS),
+                         ["c", "go", "java", "kotlin", "python", "rust"])
 
     def test_unknown_language_is_reported(self):
         with self.assertRaises(SystemExit):
@@ -42,6 +43,7 @@ class TestRegistry(unittest.TestCase):
             ("mini-rust", "rust"),
             ("mini-kotlin", "kotlin"),
             ("mini-go", "go"),
+            ("mini-c", "c"),
         ):
             self.assertEqual(languages.detect(os.path.join(FIXTURES, name)), expected)
 
@@ -105,6 +107,33 @@ class TestAnalyzers(unittest.TestCase):
         inventory = self.analyze("go", "mini-go")
         package = next(iter(inventory["packages"].values()))
         self.assertIn("fmt", package["depends_on"])
+
+    def test_c_packages_come_from_directories(self):
+        inventory = self.analyze("c", "mini-c")
+        self.assertEqual(sorted(inventory["packages"]), ["include", "src", "tools"])
+        self.assertEqual(inventory["totals"]["files"], 4)
+
+    def test_c_quoted_includes_become_dependencies_and_system_headers_do_not(self):
+        package = self.analyze("c", "mini-c")["packages"]["src"]
+        self.assertEqual(package["depends_on"], {"include": 1})
+
+    def test_c_header_declarations_are_public_and_carry_the_api(self):
+        package = self.analyze("c", "mini-c")["packages"]["src"]
+        units = {u["name"]: u for u in package["classes"]}
+        self.assertTrue(units["Widget"]["public"])
+        self.assertEqual(units["Widget"]["kind"], "struct")
+        self.assertEqual(units["WidgetState"]["kind"], "enum")
+        self.assertIn("widget_render", units["Widget"]["api"])
+
+    def test_c_static_helpers_stay_out_of_the_api(self):
+        package = self.analyze("c", "mini-c")["packages"]["src"]
+        api = {name for unit in package["classes"] for name in unit["api"]}
+        self.assertNotIn("widget_note", api)
+
+    def test_c_file_without_a_comment_has_no_summary(self):
+        package = self.analyze("c", "mini-c")["packages"]["tools"]
+        self.assertEqual(package["summary"], "")
+        self.assertEqual(package["depends_on"], {"src": 1})
 
     def test_java_packages(self):
         inventory = self.analyze("java", "mini-java")

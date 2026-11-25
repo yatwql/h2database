@@ -158,7 +158,7 @@ class MissingConfigTest(unittest.TestCase):
         with mock.patch.object(case_studies, "case_study_config", lambda: target):
             self.assertEqual(case_studies.scenario_headers()["select"]["heading"], "## A.1 示例")
             with open(target, "w", encoding="utf-8") as fh:
-                fh.write('[scenarios.select]\n')
+                fh.write("[scenarios.select]\n")
             self.assertEqual(case_studies.scenario_headers(), {})
 
     def test_headers_of_a_broken_file_are_ignored(self):

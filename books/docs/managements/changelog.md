@@ -13,6 +13,14 @@
 
 ### 变更
 
+- **C 语言分析器落地（plan-12 阶段 1–4）**：新增 `ingest/languages/<lang>.py`（`name = 'c'`、
+  `suffixes = ('.c', '.h')`），注册表与 `data/config/base.json [sources].suffixes` 都补上 `c`，
+  脚手架模板同步。C 没有包声明，所以包按目录切；`.h` 与同名 `.c` 同包；**引号形式**
+  `#include` 才转成包级依赖（尖括号系统头丢弃），目标先在引用文件所在目录、再到根解析；
+  public 遵循 C 自己的规矩——头文件声明过的类型与原型才是 API，只在 `.c` 里定义（含
+  `static`）的不进 `api`。新夹具 `src/test/fixtures/<mini-c>/`（头文件 + 实现 + 无注释文件 +
+  静态函数 + 两种 include）与六个用例同行，覆盖包归属、依赖方向、public/API、无注释摘要为空。
+  真实 C 树验收（阶段 5）仍待执行。
 - **书的内容从工具链里搬出去**：`manuscript/terms.py` 原本写着 44 条中英术语别名与 99 条「不算术语」
   词表，`manuscript/case_studies.py` 写着三个案例的章节标题与开篇散文——都是这本书的内容，
   换一本书就是错的。现在它们的归属处是 `data/book/glossary.toml`（`skip` + `[aliases]`）与
