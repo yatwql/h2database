@@ -156,7 +156,7 @@ def parse_chapter_slots(lines: list[str]) -> list[dict]:
             current["summary_line"] = line_number
         elif kind == "exercises":
             current["exercises_line"] = line_number
-        elif kind == "further":
+        else:  # _heading_events yields only chapter/summary/exercises/further
             current["further_line"] = line_number
             # 延展阅读 closes a chapter slot; emit and reset.
             slots.append(current)
