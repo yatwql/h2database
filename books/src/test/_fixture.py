@@ -300,6 +300,31 @@ decision = "提交路径的选择"
 component = "恢复"
 anchor = "§2.1"
 decision = "崩溃后的恢复点"
+
+[headers.select]
+heading = "## A.1 案例 A：示例查询"
+opening = "示例查询经过的组件。"
+figure_prefix = "A"
+figure_start = 1
+
+[headers.commit]
+heading = "## A.2 案例 B：示例提交流程"
+opening = "示例提交流程经过的组件。"
+figure_prefix = "A"
+figure_start = 7
+
+[headers.recover]
+heading = "## A.3 案例 C：示例恢复"
+opening = "示例恢复经过的组件。"
+figure_prefix = "A"
+figure_start = 12
+"""
+
+GLOSSARY_TOML = """
+skip = ["核心文件", "延展阅读", "待补充"]
+
+[aliases]
+"写放大" = "Write Amplification"
 """
 
 CONFIG_JSON = {
@@ -405,6 +430,8 @@ def build_book(root: str, *, extra: dict[str, str] | None = None) -> str:
         json.dump(LANGUAGE_JSON, fh, ensure_ascii=False, indent=2)
     with open(os.path.join(config_dir, 'case-studies.toml'), 'w', encoding='utf-8') as fh:
         fh.write(CASE_STUDIES_TOML)
+    with open(os.path.join(config_dir, 'glossary.toml'), 'w', encoding='utf-8') as fh:
+        fh.write(GLOSSARY_TOML)
     for rel, text in {**FILES, **(extra or {})}.items():
         path = os.path.join(root, rel)
         os.makedirs(os.path.dirname(path), exist_ok=True)

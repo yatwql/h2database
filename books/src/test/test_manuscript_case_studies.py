@@ -150,6 +150,25 @@ class MissingConfigTest(unittest.TestCase):
         ):
             self.assertEqual(case_studies.load_scenarios(), {})
 
+    def test_headers_come_from_the_book_file_and_are_empty_without_one(self):
+        case_studies = importlib.import_module("case_studies")
+        target = os.path.join(self.tmp, "case-studies.toml")
+        with open(target, "w", encoding="utf-8") as fh:
+            fh.write('[headers.select]\nheading = "## A.1 示例"\nopening = "开篇。"\n')
+        with mock.patch.object(case_studies, "case_study_config", lambda: target):
+            self.assertEqual(case_studies.scenario_headers()["select"]["heading"], "## A.1 示例")
+            with open(target, "w", encoding="utf-8") as fh:
+                fh.write('[scenarios.select]\n')
+            self.assertEqual(case_studies.scenario_headers(), {})
+
+    def test_headers_of_a_broken_file_are_ignored(self):
+        case_studies = importlib.import_module("case_studies")
+        target = os.path.join(self.tmp, "broken.toml")
+        with open(target, "w", encoding="utf-8") as fh:
+            fh.write("{not toml")
+        with mock.patch.object(case_studies, "case_study_config", lambda: target):
+            self.assertEqual(case_studies.scenario_headers(), {})
+
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.tmp, True)

@@ -38,6 +38,15 @@ class TermsCase(unittest.TestCase):
         with open(path, "w", encoding="utf-8") as handle:
             handle.write(text)
 
+    def book_terms(self, aliases: dict[str, str], skip: tuple[str, ...] = ()) -> None:
+        """Write the book's glossary config: aliases plus the skip list."""
+        lines = ["skip = [" + ", ".join(f'"{item}"' for item in skip) + "]", "", "[aliases]"]
+        lines += [f'"{key}" = "{value}"' for key, value in aliases.items()]
+        path = os.path.join(self.root, "data", "book", "glossary.toml")
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write("\n".join(lines) + "\n")
+        self.terms = _fixture.load_module(self.root, "terms")
+
 
 class ParseTermsTest(TermsCase):
     def test_one_entry_citing_a_chapter_twice_lists_it_once(self):
@@ -84,6 +93,7 @@ class RelatedEntriesTest(TermsCase):
 
 class MissingTermReportTest(TermsCase):
     def test_aliases_captions_and_skip_terms_are_not_reported(self):
+        self.book_terms({"写放大": "Write Amplification"}, skip=("关键字",))
         self.glossary("- **Write Amplification**: 写放大。\n  **章节**：第1章 §1.1\n")
         self.chapter("# 第1章 测试章节\n\n**写放大**\n**图 1-1 布局**\n**1.2 小节**\n**关键字**\n")
         self.assertEqual(self.terms.report_missing(), 0)

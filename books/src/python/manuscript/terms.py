@@ -19,6 +19,7 @@ import sys as _sys
 # make the shared package importable when the script runs standalone
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
+import functools
 import glob
 import os
 import re
@@ -31,6 +32,8 @@ _fsutil.pin_stdout_utf8()
 docs_dir = _config.BOOK_ROOT
 src_dir = _config.MANUSCRIPT_DIR
 dist_dir = _config.DIST_DIR
+
+
 def _lang_terms() -> dict:
     """The active book's language pack, read when asked.
 
@@ -38,30 +41,32 @@ def _lang_terms() -> dict:
     more than one book, and a module-level copy would keep answering for the
     first one.
     """
-    return (_config.language().get('terms') or {})
+    return _config.language().get("terms") or {}
 
 
 def reference_line() -> str:
-    return _lang_terms().get('reference_line', '术语参考')
+    return _lang_terms().get("reference_line", "术语参考")
 
 
 def glossary_title() -> str:
-    return _lang_terms().get('glossary_title', '术语表')
+    return _lang_terms().get("glossary_title", "术语表")
 
 
 def glossary_link() -> str:
-    return _lang_terms().get('glossary_link', 'back/glossary.md')
-glossary_path = os.path.join(src_dir, glossary_link())
+    return _lang_terms().get("glossary_link", "back/glossary.md")
 
+
+glossary_path = os.path.join(src_dir, glossary_link())
 
 
 def _write_text(path: str, text: str) -> None:
     """Write a UTF-8 text file, failing with a clean message on I/O error."""
     try:
-        with open(path, 'w', encoding='utf-8') as fh:
+        with open(path, "w", encoding="utf-8") as fh:
             fh.write(text)
     except OSError as exc:
-        raise _errors.ToolError(f'error: cannot write {path}: {exc}') from exc
+        raise _errors.ToolError(f"error: cannot write {path}: {exc}") from exc
+
 
 def parse_glossary_terms(path: str) -> dict[str, list[int]]:
     """Parse glossary.md and return a mapping of term names to chapter numbers.
@@ -75,8 +80,8 @@ def parse_glossary_terms(path: str) -> dict[str, list[int]]:
     Falls back gracefully on single-line entries.
     """
     terms: dict[str, list[int]] = {}
-    term_pattern = re.compile(r'^- \*\*([^*]+)\*\*')
-    ch_pattern = re.compile(r'第(\d+)章')
+    term_pattern = re.compile(r"^- \*\*([^*]+)\*\*")
+    ch_pattern = re.compile(r"第(\d+)章")
 
     lines = _fsutil.read_lines(path)
 
@@ -98,7 +103,7 @@ def parse_glossary_terms(path: str) -> dict[str, list[int]]:
                 if ch not in current_chapters:
                     current_chapters.append(ch)
             # Top-level non-list-item line ends the entry
-            if line and not line[0].isspace() and not line.startswith('-'):
+            if line and not line[0].isspace() and not line.startswith("-"):
                 terms[current_term] = current_chapters
                 current_term = None
                 current_chapters = []
@@ -109,26 +114,27 @@ def parse_glossary_terms(path: str) -> dict[str, list[int]]:
 
     return terms
 
+
 def parse_glossary_with_related(path: str) -> dict[str, dict]:
     """Parse glossary.md into rich entries: {term: {chapters, related, body}}.
 
     Used by --check-related to verify see-also closure.
     """
     entries: dict[str, dict] = {}
-    term_pattern = re.compile(r'^- \*\*([^*]+)\*\*')
-    ch_pattern = re.compile(r'第(\d+)章')
+    term_pattern = re.compile(r"^- \*\*([^*]+)\*\*")
+    ch_pattern = re.compile(r"第(\d+)章")
     # see-also links use [[Term]] markdown-flavored cross references
-    related_pattern = re.compile(r'\[\[([^\]]+)\]\]')
+    related_pattern = re.compile(r"\[\[([^\]]+)\]\]")
 
     lines = _fsutil.read_lines(path)
 
     current: dict | None = None
     current_term: str | None = None
     for raw in lines:
-        line = raw.rstrip('\n')
+        line = raw.rstrip("\n")
         # Boundary: horizontal rule or italic footer terminates open entry
         stripped = line.strip()
-        if stripped.startswith(('---', '## ')):
+        if stripped.startswith(("---", "## ")):
             if current_term is not None and current is not None:
                 entries[current_term] = current
                 current_term = None
@@ -139,23 +145,23 @@ def parse_glossary_with_related(path: str) -> dict[str, dict]:
             if current_term is not None and current is not None:
                 entries[current_term] = current
             current_term = m.group(1).strip()
-            current = {'chapters': [], 'related': [], 'body': []}
+            current = {"chapters": [], "related": [], "body": []}
             for c in ch_pattern.findall(line):
                 ch = int(c)
-                if ch not in current['chapters']:
-                    current['chapters'].append(ch)
+                if ch not in current["chapters"]:
+                    current["chapters"].append(ch)
         elif current is not None:
             # Continuation line
-            current['body'].append(line)
+            current["body"].append(line)
             for c in ch_pattern.findall(line):
                 ch = int(c)
-                if ch not in current['chapters']:
-                    current['chapters'].append(ch)
+                if ch not in current["chapters"]:
+                    current["chapters"].append(ch)
             for r in related_pattern.findall(line):
                 r = r.strip()
-                if r and r not in current['related']:
-                    current['related'].append(r)
-            if line and not line.startswith(' ') and not line.startswith('-'):
+                if r and r not in current["related"]:
+                    current["related"].append(r)
+            if line and not line.startswith(" ") and not line.startswith("-"):
                 # Top-level non-indented line — end of entry
                 if current_term is not None:
                     entries[current_term] = current
@@ -166,6 +172,7 @@ def parse_glossary_with_related(path: str) -> dict[str, dict]:
         entries[current_term] = current
 
     return entries
+
 
 def check_related(verbose: bool = False) -> int:
     """Verify see-also closure: every [[Term]] link must resolve to an existing entry.
@@ -180,14 +187,14 @@ def check_related(verbose: bool = False) -> int:
     dangling = 0
     one_way = 0
     for term, info in entries.items():
-        for r in info['related']:
+        for r in info["related"]:
             r_norm = r.lower()
             if r_norm not in known:
                 # Try a few common normalization fallbacks
                 # e.g. "COW / Copy-on-Write" matches "COW" or "Copy-on-Write"
                 hit = False
                 for candidate in known:
-                    if r_norm in candidate or candidate.startswith(r_norm + ' '):
+                    if r_norm in candidate or candidate.startswith(r_norm + " "):
                         hit = True
                         break
                 if not hit:
@@ -200,102 +207,37 @@ def check_related(verbose: bool = False) -> int:
         print(f"One-way see-also references: {one_way} (informational)")
     return dangling
 
-# Chinese <-> English term aliases: the glossary is English-first, chapters are not.
-CH_EN_ALIASES: dict[str, str] = {
-    '写放大': 'Write Amplification',
-    '无锁读': 'CAS',
-    '快照隔离': 'Snapshot Isolation',
-    '写时复制': 'COW',
-    '仅追加': 'Append-Only',
-    '仅追加写入': 'Append-Only',
-    '日志结构存储': 'Log-Structured Storage',
-    '日志结构合并树': 'LSM-Tree',
-    '递归下降解析器': 'Recursive Descent Parser',
-    '递归下降': 'Recursive Descent Parser',
-    '预编译语句': 'Prepared Statement',
-    '预写日志': 'WAL',
-    '撤销日志': 'Undo Log',
-    '保存点': 'Savepoint',
-    '可串行化': 'Serializable',
-    '可重复读': 'Repeatable Read',
-    '读已提交': 'Read Committed',
-    '索引组织表': 'IOT',
-    '变长整数': 'VarInt / VarLong',
-    '空闲空间': 'Free Space',
-    '文件头': 'File Header',
-    '页面分裂': 'PageSplit',
-    '页面指针': 'Page Pointer',
-    '表索引': 'Table Index',
-    '索引条件': 'IndexCondition',
-    '元数据锁': 'Meta Lock',
-    '兼容模式': 'Mode',
-    '词法分析器': 'Tokenizer',
-    '事务管理器': 'TransactionStore',
-    '紧凑化': 'Compact',
-    '死锁': 'Deadlock',
-    '会话': 'Session',
-    '混合优化策略': 'Hybrid Strategy',
-    '遗传算法': 'Genetic Algorithm',
-    '连接顺序': 'Hybrid Strategy',
-    '后台写入': 'BackgroundWriter',
-    '文件存储': 'FileStore',
-    '版本化值': 'VersionedValue',
-    '写冲突': 'TxDecisionMaker',
-    '提交决策': 'CommitDecisionMaker',
-    '回滚决策': 'RollbackDecisionMaker',
-    '单写入者': 'Single Writer',
-    '命令容器': 'CommandContainer',
-    '本地结果集': 'LocalResult',
-}
 
-# Structural markers and phrases that are never glossary terms.
-SKIP_TERMS = {
-              '核心文件', '源码位置', '实现位置', '延展阅读', '待补充', '附录',
-              '术语参考', '性能参考', '阅读策略', '优势', '局限', '关键字', '局限性',
-              '标识符', '运算符', '分隔符', '层定位', '关键类', '写流程',
-              '实现架构', '发展历程与定位', '部署模式与多协议接入',
-              '跨层数据流与编译执行分离', '核心设计哲学', '设计决策关联网络',
-              '测试目录', 'SQL 流程断点入口', '测试服务器启动', 'H2 Console 地址',
-              '平衡树', 'COW', '锁机制', '递归性', 'SQL 解析', 'Row 迭代',
-              '行迭代', '快照读', 'Page 缓存', 'Chunk 分配', 'Chunk 压缩',
-              '文件 truncate', '显式紧凑', '崩溃恢复',
-              # Feature descriptions (not technical terms)
-              '超轻量', '零管理', '纯 Java', '薄封装', '无锁读',
-              # Generic SQL/Java concepts
-              'SQL 注入防护', 'SQL 兼容',
-              # Value names
-              'READ_COMMITTED', 'statementSnapshot', 'snapshot',
-              # Class names already covered by related glossary entries
-              'CommandList', 'Plan', 'PlanItem',
-              # Short state/transition labels
-              'OPEN → STOPPING', 'STOPPING → CLOSED', 'CLOSED',
-              # Heading phrases
-              'JDBC 调用链路', '无锁读取 + COW 写入',
-              '索引组织表 + 二级索引回表', '策略模式 + 装饰器模式',
-              'MVCC 需要保留旧版本', 'Java GC 管理内存',
-              '45 秒保留', 'next 链',
-              'DDL 版本检查优先于缓存查找',
-              'append 批量写入模式',
-              'CAS 防重入', 'DROP', 'GIS 系统',
-              # Deployment mode descriptions
-              'Embedded 模式', 'Client-Server 模式', 'In-Memory 模式',
-              '纯 Java + 可嵌入', 'B-Tree + COW',
-              # Design patterns (named in code but not glossary concepts)
-              'Command Pattern', 'Composite Pattern',
-              # Descriptive compound phrases
-              'Chunk 存储', 'B-Tree 映射', 'COW 写', 'CAS 循环',
-              'B+Tree 变体', 'append 模式', 'MVMap 根页面访问',
-              'DDL 解析', 'Command 接口', 'Prepared 抽象基类',
-              'Index Conditions', 'Filter Condition',
-              # MVStore internal structures (too granular for glossary)
-              'Store Header', 'Chunk Header', 'Chunk Footer',
-              # Phrases, not terms
-              'undo log 用于事务回滚', 'Read-Write Locks 模型',
-              'CAS + Single Writer 模型',
-              # Close enough to Compact (already in glossary)
-              'Compaction 策略',
-              # Class name (too specific for book-level glossary)
-              'FreeSpaceBitSet'}
+# The book's own term tables — Chinese/English aliases and the phrases that are
+# never glossary terms — live in `data/book/glossary.toml`. They are content, not
+# toolchain: a C book shares none of these strings.
+def glossary_config() -> str:
+    """Where this book keeps its term aliases and its skip list."""
+    return _config.book_path("glossary.toml")
+
+
+@functools.lru_cache(maxsize=1)
+def _book_terms() -> tuple[dict[str, str], frozenset[str]]:
+    """(aliases, skip) from the book's glossary file, empty when it has none."""
+    import tomllib
+
+    try:
+        with open(glossary_config(), "rb") as fh:
+            data = tomllib.load(fh)
+    except (OSError, tomllib.TOMLDecodeError):
+        return {}, frozenset()
+    aliases = {str(key): str(value) for key, value in (data.get("aliases") or {}).items()}
+    return aliases, frozenset(str(item) for item in (data.get("skip") or []))
+
+
+def term_aliases() -> dict[str, str]:
+    """Chinese term → the English name the glossary is filed under."""
+    return _book_terms()[0]
+
+
+def skip_terms() -> frozenset[str]:
+    """Phrases that look like terms (headings, feature names) and are not."""
+    return _book_terms()[1]
 
 
 def is_glossary_candidate(term: str) -> bool:
@@ -303,59 +245,58 @@ def is_glossary_candidate(term: str) -> bool:
     if len(term) < 3:
         return False
     # Contains structural function words (phrases, not terms)
-    if re.search(r'[的与和及或]', term):
-        return False        # Ends with 层 (layer reference)
-    if term.endswith('层'):
+    if re.search(r"[的与和及或]", term):
+        return False  # Ends with 层 (layer reference)
+    if term.endswith("层"):
         return False
     # Starts with a phase marker
-    if re.match(r'^第[一二三四五六七八九十\d]', term):
+    if re.match(r"^第[一二三四五六七八九十\d]", term):
         return False
     # Contains 详解/追踪/练习/场景
-    if re.search(r'(详解|追踪|练习|场景)', term):
+    if re.search(r"(详解|追踪|练习|场景)", term):
         return False
     # Method names (contain parentheses)
-    if '()' in term:
+    if "()" in term:
         return False
     # Arrow operators (state transitions)
-    if '→' in term:
+    if "→" in term:
         return False
     # Code/comparison operators
-    if '->' in term:
+    if "->" in term:
         return False
     # Ends with Chinese colon or English colon (heading style)
-    if re.search(r'[：:]$', term):
+    if re.search(r"[：:]$", term):
         return False
     # Pure Chinese with 4+ characters (likely a descriptive heading)
-    if re.match(r'^[一-鿿\s，。、；：""''（）()]+$', term) and len(term) >= 4:
+    if re.match(r'^[一-鿿\s，。、；：""' "（）()]+$", term) and len(term) >= 4:
         return False
     # Contains file path patterns or code references (for the suffixes this book
     # declares, so a C book's `foo.c` is filtered as well as a Java one's `Foo.java`)
-    if re.search(r'[/\\]', term) or any(suffix in term
-                                         for suffix in _config.source_suffixes()):
+    if re.search(r"[/\\]", term) or any(suffix in term for suffix in _config.source_suffixes()):
         return False
     # Backtick-containing terms (code references)
-    if '`' in term:
+    if "`" in term:
         return False
     # Parenthesized descriptions (e.g. "DML（数据操作语言）")
-    if re.match(r'.+[（(][^）)]+[）)]', term):
+    if re.match(r".+[（(][^）)]+[）)]", term):
         return False
     # Too long to be a single term
     if len(term) > 35:
         return False
     # Version strings
-    if re.match(r'^v?\d+[\.x]\d+', term):
+    if re.match(r"^v?\d+[\.x]\d+", term):
         return False
     # Pure English single words shorter than 8 chars (common like Plan, Select)
-    if re.match(r'^[A-Z][a-zA-Z]{1,7}$', term):
+    if re.match(r"^[A-Z][a-zA-Z]{1,7}$", term):
         return False
     # Method call patterns (name followed by parentheses content)
-    if re.match(r'^[a-z]\w+\(', term):
+    if re.match(r"^[a-z]\w+\(", term):
         return False
     # SQL keywords or tips
-    if re.match(r'^(SELECT|INSERT|UPDATE|DELETE|JOIN|FROM|WHERE)\s', term):
+    if re.match(r"^(SELECT|INSERT|UPDATE|DELETE|JOIN|FROM|WHERE)\s", term):
         return False
     # Descriptive phrases like "每次 put() 导致页面超出容量"
-    return not re.match(r'^(每次|当|如果|所有|使用)', term)
+    return not re.match(r"^(每次|当|如果|所有|使用)", term)
 
 
 def report_missing(check_mode: bool = False) -> int:
@@ -371,18 +312,18 @@ def report_missing(check_mode: bool = False) -> int:
     chinese_aliases: dict[str, str] = {}
     # Known Chinese<->English term mappings
     for t in terms:
-        known_normalized[t.lower().rstrip('.')] = t
+        known_normalized[t.lower().rstrip(".")] = t
         # Check if this term has Chinese aliases
-        for ch, en in CH_EN_ALIASES.items():
+        for ch, en in term_aliases().items():
             if en.lower() == t.lower() or t.lower().startswith(en.lower()):
                 chinese_aliases[ch] = t
                 # Also add normalized version
                 known_normalized[ch.lower()] = t
 
-    chapter_files = sorted(glob.glob(os.path.join(src_dir, 'ch[0-9]*.md')))
+    chapter_files = sorted(glob.glob(os.path.join(src_dir, "ch[0-9]*.md")))
 
     # Patterns for term-like text in chapter files
-    bold_pattern = re.compile(r'\*\*([^*]+)\*\*')
+    bold_pattern = re.compile(r"\*\*([^*]+)\*\*")
 
     # Structural markers that should never be glossary terms
 
@@ -398,70 +339,75 @@ def report_missing(check_mode: bool = False) -> int:
                 if not is_glossary_candidate(term):
                     continue
                 # Skip figure captions, section numbers
-                if re.match(r'^图 \d+-\d+', term) or re.match(r'^\d+[.、]', term):
+                if re.match(r"^图 \d+-\d+", term) or re.match(r"^\d+[.、]", term):
                     continue
                 # Skip heading abbreviations
-                if re.match(r'^\d+\.\d+\s', term):
+                if re.match(r"^\d+\.\d+\s", term):
                     continue
                 # Skip explicit skip terms
-                if term in SKIP_TERMS:
+                if term in skip_terms():
                     continue
 
-                norm = term.lower().rstrip('.')
+                norm = term.lower().rstrip(".")
                 if norm not in known_normalized:
                     print(f"  MISSING: {fname}:{lineno}: **{term}**")
                     missing_count += 1
 
     if check_mode and missing_count > 0:
         raise _errors.ToolError(
-            f'Found {missing_count} missing term(s). Use --report-missing for details.')
+            f"Found {missing_count} missing term(s). Use --report-missing for details."
+        )
 
     return missing_count
 
+
 # ---- Entry point ----
+
 
 def main(argv: list[str]) -> int:
     """CLI entry point. Import-safe: nothing runs at module import time."""
-    if '--check-related' in argv:
+    if "--check-related" in argv:
         return 1 if check_related(verbose=True) > 0 else 0
 
-    if '--report-missing' in argv:
+    if "--report-missing" in argv:
         count = report_missing(check_mode=False)
         print(f"\nTotal missing term occurrences: {count}")
         return 0
 
-    if '--check' in argv:
+    if "--check" in argv:
         count = report_missing(check_mode=True)
         print(f"\nNo missing terms found (checked {count} occurrences).")
         return 0
 
     # Default: insert the glossary reference into unannotated chapters.
-    chapter_files = sorted(glob.glob(os.path.join(src_dir, 'ch[0-9]*.md')))
-    glossary_ref = (f'> **{reference_line()}**: 本章涉及的专业术语详见书末'
-                    f'[{glossary_title()}]({glossary_link()})。\n')
+    chapter_files = sorted(glob.glob(os.path.join(src_dir, "ch[0-9]*.md")))
+    glossary_ref = (
+        f"> **{reference_line()}**: 本章涉及的专业术语详见书末"
+        f"[{glossary_title()}]({glossary_link()})。\n"
+    )
     count = 0
 
     for fpath in chapter_files:
         content = _fsutil.read_text(fpath)
 
-        if '术语参考' in content:
+        if "术语参考" in content:
             print(f"  Already annotated: {os.path.basename(fpath)}")
             continue
 
-        lines = content.split('\n')
+        lines = content.split("\n")
         last_guide_line = -1
         in_guide = False
         for i, line in enumerate(lines):
-            if line.strip().startswith('> **本章导读**'):
+            if line.strip().startswith("> **本章导读**"):
                 in_guide = True
-            if in_guide and line.strip().startswith('>'):
+            if in_guide and line.strip().startswith(">"):
                 last_guide_line = i
-            elif in_guide and not line.strip().startswith('>') and line.strip() != '':
+            elif in_guide and not line.strip().startswith(">") and line.strip() != "":
                 break
 
         if last_guide_line >= 0:
-            lines.insert(last_guide_line + 1, glossary_ref.rstrip('\n'))
-            content = '\n'.join(lines)
+            lines.insert(last_guide_line + 1, glossary_ref.rstrip("\n"))
+            content = "\n".join(lines)
             _write_text(fpath, content)
             count += 1
             print(f"  Added to {os.path.basename(fpath)}")
@@ -471,5 +417,6 @@ def main(argv: list[str]) -> int:
     print(f"Updated {count} chapter files")
     return 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(_errors.run(main, sys.argv[1:]))

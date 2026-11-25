@@ -1,0 +1,150 @@
+# 本书的术语配置：中英别名与「不算术语」的词表。
+# 这是书的内容（换一本书就换一份），工具链里不保留这些字符串。
+
+skip = [
+    "45 秒保留",
+    "B+Tree 变体",
+    "B-Tree + COW",
+    "B-Tree 映射",
+    "CAS + Single Writer 模型",
+    "CAS 循环",
+    "CAS 防重入",
+    "CLOSED",
+    "COW",
+    "COW 写",
+    "Chunk Footer",
+    "Chunk Header",
+    "Chunk 分配",
+    "Chunk 压缩",
+    "Chunk 存储",
+    "Client-Server 模式",
+    "Command Pattern",
+    "Command 接口",
+    "CommandList",
+    "Compaction 策略",
+    "Composite Pattern",
+    "DDL 版本检查优先于缓存查找",
+    "DDL 解析",
+    "DROP",
+    "Embedded 模式",
+    "Filter Condition",
+    "FreeSpaceBitSet",
+    "GIS 系统",
+    "H2 Console 地址",
+    "In-Memory 模式",
+    "Index Conditions",
+    "JDBC 调用链路",
+    "Java GC 管理内存",
+    "MVCC 需要保留旧版本",
+    "MVMap 根页面访问",
+    "OPEN → STOPPING",
+    "Page 缓存",
+    "Plan",
+    "PlanItem",
+    "Prepared 抽象基类",
+    "READ_COMMITTED",
+    "Read-Write Locks 模型",
+    "Row 迭代",
+    "SQL 兼容",
+    "SQL 注入防护",
+    "SQL 流程断点入口",
+    "SQL 解析",
+    "STOPPING → CLOSED",
+    "Store Header",
+    "append 批量写入模式",
+    "append 模式",
+    "next 链",
+    "snapshot",
+    "statementSnapshot",
+    "undo log 用于事务回滚",
+    "优势",
+    "关键字",
+    "关键类",
+    "写流程",
+    "分隔符",
+    "发展历程与定位",
+    "实现位置",
+    "实现架构",
+    "局限",
+    "局限性",
+    "层定位",
+    "崩溃恢复",
+    "平衡树",
+    "延展阅读",
+    "待补充",
+    "快照读",
+    "性能参考",
+    "文件 truncate",
+    "无锁读",
+    "无锁读取 + COW 写入",
+    "显式紧凑",
+    "术语参考",
+    "标识符",
+    "核心文件",
+    "核心设计哲学",
+    "测试服务器启动",
+    "测试目录",
+    "源码位置",
+    "策略模式 + 装饰器模式",
+    "索引组织表 + 二级索引回表",
+    "纯 Java",
+    "纯 Java + 可嵌入",
+    "薄封装",
+    "行迭代",
+    "设计决策关联网络",
+    "超轻量",
+    "跨层数据流与编译执行分离",
+    "运算符",
+    "递归性",
+    "部署模式与多协议接入",
+    "锁机制",
+    "阅读策略",
+    "附录",
+    "零管理",
+]
+
+[aliases]
+"事务管理器" = "TransactionStore"
+"仅追加" = "Append-Only"
+"仅追加写入" = "Append-Only"
+"会话" = "Session"
+"保存点" = "Savepoint"
+"元数据锁" = "Meta Lock"
+"兼容模式" = "Mode"
+"写冲突" = "TxDecisionMaker"
+"写放大" = "Write Amplification"
+"写时复制" = "COW"
+"单写入者" = "Single Writer"
+"变长整数" = "VarInt / VarLong"
+"可串行化" = "Serializable"
+"可重复读" = "Repeatable Read"
+"后台写入" = "BackgroundWriter"
+"命令容器" = "CommandContainer"
+"回滚决策" = "RollbackDecisionMaker"
+"快照隔离" = "Snapshot Isolation"
+"提交决策" = "CommitDecisionMaker"
+"撤销日志" = "Undo Log"
+"文件头" = "File Header"
+"文件存储" = "FileStore"
+"无锁读" = "CAS"
+"日志结构合并树" = "LSM-Tree"
+"日志结构存储" = "Log-Structured Storage"
+"本地结果集" = "LocalResult"
+"死锁" = "Deadlock"
+"混合优化策略" = "Hybrid Strategy"
+"版本化值" = "VersionedValue"
+"空闲空间" = "Free Space"
+"索引条件" = "IndexCondition"
+"索引组织表" = "IOT"
+"紧凑化" = "Compact"
+"表索引" = "Table Index"
+"词法分析器" = "Tokenizer"
+"读已提交" = "Read Committed"
+"连接顺序" = "Hybrid Strategy"
+"递归下降" = "Recursive Descent Parser"
+"递归下降解析器" = "Recursive Descent Parser"
+"遗传算法" = "Genetic Algorithm"
+"页面分裂" = "PageSplit"
+"页面指针" = "Page Pointer"
+"预写日志" = "WAL"
+"预编译语句" = "Prepared Statement"

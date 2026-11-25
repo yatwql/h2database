@@ -64,14 +64,18 @@ GLOSSARY_CHAPTER_RE = re.compile(r"第(\d+)章")
 # 匹配 index 条目右侧的 "§X.Y" 或 "第X章"；左侧是 — 分隔。
 INDEX_CHAPTER_RE = re.compile(r"§(\d+)\.|第(\d+)章")
 
+
 def count_lines(text: str) -> int:
     return len(text.splitlines())
+
 
 def count_figures(text: str) -> int:
     return len(re.findall(r"^\*\*图 [A-Z0-9]+-\d+(?:[a-z])?:", text, re.MULTILINE))
 
+
 def count_source_refs(text: str) -> int:
     return len(_mdutil.source_ref_re(tuple(_config.source_suffixes())).findall(text))
+
 
 def load_glossary_chapter_index() -> dict[int, int]:
     """Return {chapter_number: count_of_terms_referencing_that_chapter}.
@@ -118,6 +122,7 @@ def load_glossary_chapter_index() -> dict[int, int]:
     flush(current_block)
     return counts
 
+
 def load_index_chapter_index() -> dict[int, int]:
     """Return {chapter_number: count_of_index_entries_referencing_that_chapter}."""
     path = os.path.join(MS_DIR, INDEX_REL)
@@ -135,6 +140,7 @@ def load_index_chapter_index() -> dict[int, int]:
             counts[ch] = counts.get(ch, 0) + 1
     return counts
 
+
 def collect_metrics() -> dict[str, Any]:
     glossary_by_chapter = load_glossary_chapter_index()
     index_by_chapter = load_index_chapter_index()
@@ -150,15 +156,17 @@ def collect_metrics() -> dict[str, Any]:
         refs = count_source_refs(text)
         term_hits = sum(glossary_by_chapter.get(c, 0) for c in chapters)
         index_hits = sum(index_by_chapter.get(c, 0) for c in chapters)
-        files.append({
-            "file": rel,
-            "chapters": chapters,
-            "lines": lines,
-            "figures": figs,
-            "source_refs": refs,
-            "term_hits": term_hits,
-            "index_hits": index_hits,
-        })
+        files.append(
+            {
+                "file": rel,
+                "chapters": chapters,
+                "lines": lines,
+                "figures": figs,
+                "source_refs": refs,
+                "term_hits": term_hits,
+                "index_hits": index_hits,
+            }
+        )
 
     line_counts = [f["lines"] for f in files]
     fig_total = sum(f["figures"] for f in files)
@@ -195,6 +203,7 @@ def collect_metrics() -> dict[str, Any]:
         },
     }
 
+
 def render_markdown(metrics: dict[str, Any]) -> str:
     out: list[str] = []
     out.append("# 章节均衡度量报告")
@@ -226,10 +235,13 @@ def render_markdown(metrics: dict[str, Any]) -> str:
     out.append("")
     out.append(f"- 最大行数：{b['max_lines']:,}")
     out.append(f"- 最小行数：{b['min_lines']:,}")
-    out.append(f"- max_min_ratio：**{b['max_min_ratio']}**（v6.0 目标 ≤ 2.5；ch7-8 拆分后预期 ≈ 2.7）")
+    out.append(
+        f"- max_min_ratio：**{b['max_min_ratio']}**（v6.0 目标 ≤ 2.5；ch7-8 拆分后预期 ≈ 2.7）"
+    )
     out.append(f"- 平均行数：{b['mean_lines']}")
     out.append(f"- 标准差：{b['stddev_lines']}")
     return "\n".join(out) + "\n"
+
 
 def render_diff(current: dict[str, Any], baseline: dict[str, Any]) -> str:
     out: list[str] = []
@@ -276,8 +288,11 @@ def render_diff(current: dict[str, Any], baseline: dict[str, Any]) -> str:
     out.append(f"- 最小行数：{bb['min_lines']:,} → {cb['min_lines']:,}")
     return "\n".join(out) + "\n"
 
+
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     p.add_argument("--baseline", metavar="FILE", help="写入 JSON 基线快照到 FILE")
     p.add_argument("--diff", metavar="FILE", help="对比当前状态与 baseline JSON 文件")
     p.add_argument("--json", action="store_true", help="向 stdout 输出 JSON（机读）")
@@ -297,9 +312,11 @@ def main(argv: list[str] | None = None) -> int:
         _fsutil.ensure_dir(args.baseline)
         _fsutil.dump_json(args.baseline, metrics)
         print(f"✅ 基线已保存：{args.baseline}")
-        print(f"   {metrics['totals']['files']} 个文件 · "
-              f"{metrics['totals']['lines']:,} 行 · "
-              f"max_min_ratio={metrics['balance']['max_min_ratio']}")
+        print(
+            f"   {metrics['totals']['files']} 个文件 · "
+            f"{metrics['totals']['lines']:,} 行 · "
+            f"max_min_ratio={metrics['balance']['max_min_ratio']}"
+        )
         return 0
 
     if args.json:
@@ -309,9 +326,10 @@ def main(argv: list[str] | None = None) -> int:
     print(render_markdown(metrics))
     return 0
 
+
 if __name__ == "__main__":
     raise SystemExit(main())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(_errors.run(main, sys.argv[1:]))

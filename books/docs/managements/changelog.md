@@ -13,6 +13,14 @@
 
 ### 变更
 
+- **书的内容从工具链里搬出去**：`manuscript/terms.py` 原本写着 44 条中英术语别名与 99 条「不算术语」
+  词表，`manuscript/case_studies.py` 写着三个案例的章节标题与开篇散文——都是这本书的内容，
+  换一本书就是错的。现在它们的归属处是 `data/book/glossary.toml`（`skip` + `[aliases]`）与
+  `data/book/case-studies.toml`（`[headers.<scenario>]` 的 `heading`/`opening`/`figure_prefix`/
+  `figure_start`），脚本在**调用时**读取，文件缺失或损坏按「没配」处理，导入期不再读配置。
+- **源码坐标形状只有一份**：`lib/_mdutil.source_ref_re(suffixes)` 统一 `Class.java:12` 形状，
+  `cover`、`balance`、`book_quality`、`prose_quality`、`smart`、`terms` 与 `source_refs` 均按
+  `_config.source_suffixes()` 现建；之前七处各自写死 `.java:`，换成 C/Rust 的书会统计出「零坐标」。
 - **归档目录建成 `docs/archive/v0.1/`**：恢复被 `43cd061cc` 删掉的历史快照（`phase3-audit`、
   `writing-style-enhance-plan`、五份计划、旧 changelog / plan / review-findings），并把 4.x–6.1 的
   书籍版本记录归一为 0.1——工具链、书籍、被分析源码是三条版本轴，之前被当成了同一条。

@@ -119,12 +119,17 @@ def doc_files() -> list[str]:
     files and sections that have since moved; judging it as a live document would
     demand that history stay current, which defeats the point of keeping it.
     """
-    archive = os.path.join(_config.BOOK_ROOT, 'docs', 'archive') + os.sep
+    archive = os.path.join(_config.BOOK_ROOT, "docs", "archive") + os.sep
     files = glob.glob(os.path.join(_config.BOOK_ROOT, "docs", "**", "*.md"), recursive=True)
     files.append(os.path.join(_config.BOOK_ROOT, "README.md"))
     files.append(os.path.join(REPO_ROOT, "CLAUDE.md"))
-    return sorted({os.path.normpath(p) for p in files
-                   if os.path.isfile(p) and not os.path.normpath(p).startswith(archive)})
+    return sorted(
+        {
+            os.path.normpath(p)
+            for p in files
+            if os.path.isfile(p) and not os.path.normpath(p).startswith(archive)
+        }
+    )
 
 
 def _repo_root(explicit: str | None = None) -> str:

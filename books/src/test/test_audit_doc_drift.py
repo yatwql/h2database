@@ -57,8 +57,9 @@ class DocDriftTest(unittest.TestCase):
         os.makedirs(os.path.dirname(archived), exist_ok=True)
         with open(archived, "w", encoding="utf-8") as fh:
             fh.write("见 `books/no-such-file.md`。\n")
-        self.assertNotIn(os.path.normpath(archived),
-                         [os.path.normpath(p) for p in self.drift.doc_files()])
+        self.assertNotIn(
+            os.path.normpath(archived), [os.path.normpath(p) for p in self.drift.doc_files()]
+        )
 
     def test_existing_path_is_accepted(self):
         path = self.doc("见 `books/README.md`。\n")
