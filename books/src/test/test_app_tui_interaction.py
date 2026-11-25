@@ -452,12 +452,6 @@ class TuiInteractionTest(unittest.TestCase):
             text = self.tui.run_entry("deliver", "EPUB + PDF")
         self.assertIn("未更新", text)
 
-
-def menu_estimate(action: str) -> tuple[int, int]:
-    """The estimate as the menu module computes it (no book needed for defaults)."""
-    module = importlib.import_module("core.menu")
-    return module.estimate(action) or (0, 0)
-
     def test_the_estimate_is_a_short_range_not_a_guess(self):
         # measured: build ~0.3 s, deliver ~92 s, print ~43 s, all-in ~135 s
         self.assertLessEqual(menu_estimate("build")[1], 30)
@@ -474,11 +468,62 @@ def menu_estimate(action: str) -> tuple[int, int]:
         buffer = io.StringIO()
         with (
             mock.patch.object(self.tui.menu, "run_report", return_value=outcome),
+            mock.patch.object(self.tui, "confirm", return_value=True),
             redirect_stdout(buffer),
         ):
             text = self.tui.run_entry("print", "印刷版 PDF")
         self.assertIn("用时 0:43", text)
         self.assertIn("预计", text)
+
+    def test_a_run_without_an_estimate_reports_only_the_elapsed_time(self):
+        outcome = self.menu.Outcome(
+            action="check", label="门禁", code=0, output_lines=1, tail="done", elapsed=2.0
+        )
+        buffer = io.StringIO()
+        with (
+            mock.patch.object(self.tui.menu, "run_report", return_value=outcome),
+            mock.patch.object(self.tui.menu, "estimate", return_value=None),
+            redirect_stdout(buffer),
+        ):
+            text = self.tui.run_entry("check", "全部门禁")
+        self.assertNotIn("预计", buffer.getvalue())
+        self.assertNotIn("预计", text)
+        self.assertIn("用时 0:02", text)
+
+    def test_the_settings_entry_opens_the_configuration_editor(self):
+        with mock.patch.object(self.tui, "configure", return_value="配置页"):
+            self.assertEqual(self.tui.run_entry("settings", "配置"), "配置页")
+
+    def test_once_settings_prints_the_editor_to_stdout(self):
+        buffer = io.StringIO()
+        with (
+            mock.patch.object(self.tui, "configure", return_value="配置页\n"),
+            redirect_stdout(buffer),
+        ):
+            code = self.tui.main(["--once", "settings"])
+        self.assertEqual(code, 0)
+        self.assertEqual(buffer.getvalue(), "配置页\n")
+
+    def test_a_group_whose_rows_are_gone_renders_nothing_for_it(self):
+        with mock.patch.object(self.menu, "MENU_GROUPS",
+                               (("已消失的分组", ("nonexistent",)),)):
+            text = self.tui.menu_text("main")
+        self.assertNotIn("已消失的分组", text)
+        self.assertIn("源码 → 手稿", text)
+
+    def test_the_quit_row_exits_through_the_handler(self):
+        # the cursor starts on the everyday row (index 2); seven downs reach 退出
+        presses = (self.keys.KEY_DOWN,) * 7 + (self.keys.KEY_ENTER,)
+        code, out = self.press(*presses)
+        self.assertEqual(code, 0)
+        self.assertEqual(self.calls, [])
+        self.assertTrue(out.endswith("\n"), out[-40:])
+
+
+def menu_estimate(action: str) -> tuple[int, int]:
+    """The estimate as the menu module computes it (no book needed for defaults)."""
+    module = importlib.import_module("core.menu")
+    return module.estimate(action) or (0, 0)
 
 
 class EditSettingTest(unittest.TestCase):
@@ -532,7 +577,13 @@ class EditSettingTest(unittest.TestCase):
             text = self.tui.edit_setting("k", reader=self.answer("new"))
         self.assertIn("修改失败", text)
 
-    def test_an_accepted_value_is_confirmed(self):
+    def test_a_rejected_provider_move_is_reported_as_a_failure(self):
+        with mock.patch.object(
+            self.tui.settings, "move_provider", side_effect=KeyError("a")
+        ):
+            text = self.tui.edit_provider("a", reader=self.answer("u"))
+        self.assertIn("修改失败", text)
+
         with (
             mock.patch.object(
                 self.tui.settings, "list_settings", return_value=[{"key": "k", "value": "v"}]

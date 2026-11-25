@@ -3,7 +3,7 @@
   "files": {
     "books/src/python/app/cli.py": 96.6,
     "books/src/python/app/keys.py": 98.9,
-    "books/src/python/app/tui.py": 92.7,
+    "books/src/python/app/tui.py": 100.0,
     "books/src/python/app/web.py": 98.3,
     "books/src/python/audit/balance.py": 93.5,
     "books/src/python/audit/book_quality.py": 92.4,
@@ -81,7 +81,7 @@
     "books/src/python/manuscript/archive.py": 99.4,
     "books/src/python/manuscript/case_studies.py": 94.3,
     "books/src/python/manuscript/cover.py": 90.5,
-    "books/src/python/manuscript/glossary.py": 93.8,
+    "books/src/python/manuscript/glossary.py": 100.0,
     "books/src/python/manuscript/index.py": 97.4,
     "books/src/python/manuscript/renumber.py": 95.6,
     "books/src/python/manuscript/snapshot.py": 98.1,

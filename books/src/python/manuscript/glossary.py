@@ -200,13 +200,10 @@ for fpath in chapter_files:
                 continue
             if re.match(r'^[a-z_]+\(', term):
                 continue
-            # Skip heading abbreviations (e.g. "1.1 H2 Database 概述")
-            if re.match(r'^\d+\.\d+\s', term):
-                continue
 
             all_terms.add(term)
             if term not in term_first:
-                term_first[term] = (ch_num, line.strip())
+                term_first[term] = (ch_num, line[m.end():].strip())
 
 # Output the glossary draft
 print('# 术语表（自动生成草稿）')
@@ -227,22 +224,14 @@ for term in sorted_terms:
         print(f'## {current_letter}')
         print()
 
-    ch_num, context = term_first.get(term, ('?', ''))
+    ch_num, suffix = term_first.get(term, (None, ''))
     ch_info = f'（第{ch_num}章）' if ch_num else ''
 
-    # Try to extract a definition from context
-    # Look for patterns: "term：definition" or "term: definition"
-    definition = ''
-    # Try text after the bold term
-    after_bold = re.split(r'\*\*' + re.escape(term) + r'\*\*', context, maxsplit=1)
-    if len(after_bold) > 1:
-        suffix = after_bold[1].strip()
-        # Check for colon separator
-        if suffix.startswith((':', '：')):
-            definition = suffix[1:].strip()
-        # If definition is too long, truncate
-        if len(definition) > 150:
-            definition = definition[:147] + '...'
+    # A definition is what directly follows the term behind a colon:
+    # "**term**：definition" or "**term**: definition".
+    definition = suffix[1:].strip() if suffix.startswith((':', '：')) else ''
+    if len(definition) > 150:
+        definition = definition[:147] + '...'
 
     if definition:
         print(f'- **{term}**: {definition} {ch_info}')
