@@ -10,7 +10,7 @@ import os
 import shutil
 import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from unittest import mock
 
 import _fixture
@@ -165,6 +165,26 @@ class TestRedundancyTest(unittest.TestCase):
             "    def test_a(self):\n        self.assertTrue(True)\n",
         )
         self.assertIn("DEAD", self.kinds())
+
+    def test_a_tuple_binding_is_not_a_module_alias(self):
+        tree = ast.parse('left, right = _fixture.load_module(R, "widget")\n')
+        self.assertEqual(self.mod._module_aliases(tree), {})
+
+    def test_a_stale_baseline_entry_warns_on_stderr(self):
+        self.suite(
+            "test_plain.py",
+            "import unittest\n\n\nclass WidgetTest(unittest.TestCase):\n"
+            "    def test_runs(self):\n        self.assertEqual(1, 1)\n",
+        )
+        stderr = io.StringIO()
+        stale = {"books/src/test/test_gone.py::test_gone"}
+        with (
+            mock.patch.object(self.mod, "_loose_baseline", lambda: stale),
+            redirect_stderr(stderr),
+        ):
+            findings = self.mod.analyse(self.tmp.name)
+        self.assertEqual(findings, [])
+        self.assertIn("1 条松散断言基线已不再命中", stderr.getvalue())
 
     def test_json_output_reports_the_counts(self):
         buffer = io.StringIO()

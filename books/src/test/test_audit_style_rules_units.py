@@ -126,6 +126,14 @@ class StyleRulesCliTest(unittest.TestCase):
             kinds = [item["kind"] for item in self.mod.check_file(path)]
         self.assertIn("LIST", kinds)
 
+    def test_a_mixed_list_that_ends_the_file_is_still_one_finding(self):
+        path = os.path.join(self.tmp.name, "ch1-tail.md")
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write("# 第1章\n\n- 甲。\n- 乙")
+        with mock.patch.dict(self.mod.RULES, {"list_punctuation": "consistent"}):
+            found = [item for item in self.mod.check_file(path) if item["kind"] == "LIST"]
+        self.assertEqual([item["detail"] for item in found], ["1 list(s) mix ending punctuation"])
+
     def test_updating_the_baseline_reports_the_path(self):
         path = os.path.join(self.tmp.name, "style-rules.json")
         buffer = io.StringIO()

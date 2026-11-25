@@ -127,6 +127,21 @@ class ArchiveGateTest(unittest.TestCase):
                 fh.write(text.replace("## 归档", f"## 归档\n{link}"))
         self.assertEqual(self.mod.check(self.root, self.tmp), [])
 
+    def test_a_live_section_for_an_unarchived_version_is_not_a_problem(self):
+        # 0.2 is live and not filed away yet: the ledger legitimately still carries it
+        self.archive()
+        bodies = {
+            "changelog": CHANGELOG.replace("## [0.1] - 开发中（未发布）", "## [0.2] — 2026-06-15"),
+            "plan": PLAN + "## 归档\n",
+            "review-findings": RF.replace("### 本版本已修复（0.1）", "### 已修复"),
+        }
+        for ledger, text in bodies.items():
+            link = f"- [x](../archive/v0.1/archived_{ledger}.0.1.md)"
+            path = os.path.join(self.tmp, "managements", f"{ledger}.md")
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(text.replace("## 归档", f"## 归档\n{link}"))
+        self.assertEqual(self.mod.check(self.root, self.tmp), [])
+
     def test_a_topic_directory_with_extra_files_is_reported(self):
         self.archive()
         topic = os.path.join(self.root, "v0.1", "diagram-upgrade")

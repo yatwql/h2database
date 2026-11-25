@@ -2,6 +2,7 @@
 """Tests for books/tools/_fsutil.py (filesystem helpers with clean exits)."""
 
 import importlib
+import io
 import os
 import sys
 import tempfile
@@ -153,3 +154,14 @@ class WriteFailureTest(unittest.TestCase):
         with mock.patch.object(_fsutil.sys, "stdout", stream):
             _fsutil.pin_stdout_utf8()
             self.assertIs(_fsutil.sys.stdout, stream)
+
+    def test_a_byte_stream_stdout_is_rewrapped_as_utf8(self):
+        buffer = io.BytesIO()
+        stream = mock.Mock(encoding="ascii", buffer=buffer)
+        with mock.patch.object(_fsutil.sys, "stdout", stream):
+            _fsutil.pin_stdout_utf8()
+            wrapped = _fsutil.sys.stdout
+            self.addCleanup(setattr, _fsutil.sys, "stdout", sys.__stdout__)
+        self.assertIsInstance(wrapped, io.TextIOWrapper)
+        self.assertEqual(wrapped.encoding, "utf-8")
+        self.assertIs(wrapped.buffer, buffer)
