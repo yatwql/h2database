@@ -102,7 +102,7 @@ display = "删节版"
     "package_prefix": "<包前缀>"
   },
   "baselines": {"ascii": "data/baselines/ascii-baseline.json"},
-  "toolchain": {"coverage_fail_under": 88, "pdf_max_mb": 12, "epub_max_mb": 10},
+  "toolchain": {"coverage_fail_under": 90, "pdf_max_mb": 12, "epub_max_mb": 10},
   "logging": {"level": "INFO", "dir": "logs", "retention_days": 14}
 }
 ```
@@ -176,6 +176,7 @@ display = "删节版"
 | 判定规则与阈值（图注词表、质量/文风阈值、篇幅预算、必备段落名） | `data/config/style.json` | 配置 |
 | 文体文案（四段引言、深读要点等叙述模板） | `data/tmpl/templates.toml` | 文档 |
 | 名称与提示语（章节骨架名、练习提示/回顾前缀、术语行） | `data/language/zh.json` | 文档 |
+| 术语中英别名与「不算术语」词表 | `data/book/glossary.toml`（按书可选） | 文档 |
 | 书籍身份与展示文案（书名、作者、页眉、产物名） | `data/book/book.toml [book]/[project]` | 文档 |
 
 `style_schema.py` 会拒绝把叙述模板塞回 `style.json`（`generation.templates`）

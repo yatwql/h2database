@@ -85,14 +85,6 @@ class StyleRulesUnitTest(unittest.TestCase):
             self.assertTrue(self.mod.load_baseline())
             self.assertEqual(self.mod.baseline_path(), path)
 
-    def test_main_reports_the_rule_findings(self):
-        buffer = io.StringIO()
-        with redirect_stdout(buffer):
-            code = self.mod.main([])
-        self.assertIsInstance(code, int)
-        self.assertRegex(buffer.getvalue(), r"✅|❌|WARN|FAIL|规则|rule")
-        self.assertTrue(buffer.getvalue().strip())
-
     def test_json_output_reports_findings(self):
         buffer = io.StringIO()
         with redirect_stdout(buffer):

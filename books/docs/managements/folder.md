@@ -64,6 +64,8 @@ books/
     manuals/                 # 使用手册：任务流水线、CLI/TUI/Web、配置、新建书、写作手法、
                              #   脚本与参数清单、FAQ（每份声明自己的「维度」）
     plan/                    # 单项迭代的设计与计划（<主题>/design.md 与 <主题>/plan.md，见 §2）
+    archive/                 # 已关闭版本：v<major>.<minor>/ 下三份归档台账 + 已完成的迭代目录
+                             #   （布局由 audit/doc_archive.py 机检，见 §3）
 ```
 
 ## 2. 管理文档

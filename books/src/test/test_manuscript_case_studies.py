@@ -35,17 +35,7 @@ HAS_PYPDF = importlib.util.find_spec("pypdf") is not None
 HAS_PLAYWRIGHT = importlib.util.find_spec("playwright") is not None
 HAS_PANDOC = bool(__import__("shutil").which("pandoc"))
 
-BUILD_SCRIPTS = ["cover.py", "merge.py", "to_html.py"]
 
-ALL_SCRIPTS = [
-    "cover.py",
-    "merge.py",
-    "to_html.py",
-    "pdf_toc_links.py",
-    "to_epub.py",
-    "pdf_from_html.py",
-    "structure.py",
-]
 
 AUDIT_SCRIPTS = [
     "links.py",

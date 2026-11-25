@@ -25,7 +25,7 @@
   词表，`manuscript/case_studies.py` 写着三个案例的章节标题与开篇散文——都是这本书的内容，
   换一本书就是错的。现在它们的归属处是 `data/book/glossary.toml`（`skip` + `[aliases]`）与
   `data/book/case-studies.toml`（`[headers.<scenario>]` 的 `heading`/`opening`/`figure_prefix`/
-  `figure_start`），脚本在**调用时**读取，文件缺失或损坏按「没配」处理，导入期不再读配置。
+  `figure_start`），脚本在**调用时**读取，文件缺失或损坏按「没配」处理（词表与案例表不再于导入期读取）。
 - **源码坐标形状只有一份**：`lib/_mdutil.source_ref_re(suffixes)` 统一 `Class.java:12` 形状，
   `cover`、`balance`、`book_quality`、`prose_quality`、`smart`、`terms` 与 `source_refs` 均按
   `_config.source_suffixes()` 现建；之前七处各自写死 `.java:`，换成 C/Rust 的书会统计出「零坐标」。
@@ -88,9 +88,10 @@
   pdf_metrics 用例当初正是这样长出来的）。符号集来自 `load_module()` 之后实际调用的属性，
   只是借用模块做准备的套件不会误伤；同时补三条用例把「真子集报出」「自带新符号不报」「两个符号不算」钉住。
 
-- **覆盖率快档 97% → 99%**：缺失 249 行 → **58 行**，半边分支 246 → **103**。尾巴上的模块是
-  `test_report.py` 13 行、`manuscript/terms.py` 9、`render/to_html.py` 9、`manuscript/snapshot.py` 7、
-  `render/pdf_metrics.py` 7、`audit/index_xrefs.py` 6、`audit/smart.py` 6、`manuscript/index.py` 6。
+- **覆盖率快档 97% → 99.66%**：缺失 249 行 → **21 行**，半边分支 246 → **48**（14,704 条语句）。
+  尾巴剩下的 69 个缺口分布在 `render/pdf_split.py`、`audit/requirement_trace.py`、`audit/version_consistency.py`、
+  `audit/epub_diff.py`、`audit/smart.py`、`render/pdf_from_html.py`、`manuscript/terms.py`、`lib/_config.py`、
+  `audit/doc_drift.py` 等，多为需要真实浏览器/PDF 或整档重构才能触发的分支。
   补的是入口面与错误路径，用例只认能失败的那种：`test_audit_structure_subchecks.py` 里三条「跑一次
   健康夹具」的用例断言的是无条件的输出行（`Index:`、`CSS`），改成断言真实结论——越界索引条目的
   `Index references non-existent chapters: [99]`、边界之后的章节引用不属于任何术语条目的
