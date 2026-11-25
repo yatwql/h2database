@@ -45,7 +45,6 @@ from lib import _config, _errors, _fsutil, _mdutil
 
 _fsutil.pin_stdout_utf8()
 
-MS_DIR = _config.MANUSCRIPT_DIR
 
 # 章节文件 → 该文件覆盖的章节号集合（用于术语/索引命中归属）。
 # 双章文件按其内含章节展开；ch6 三个子文件均归属"第6章"。
@@ -85,7 +84,7 @@ def load_glossary_chapter_index() -> dict[int, int]:
     entries as blocks delimited by `- **Term**:` markers and accumulate any
     chapter numbers found within each block.
     """
-    path = os.path.join(MS_DIR, GLOSSARY_REL)
+    path = os.path.join(_config.MANUSCRIPT_DIR, GLOSSARY_REL)
     counts: dict[int, int] = {}
     if not os.path.exists(path):
         return counts
@@ -125,7 +124,7 @@ def load_glossary_chapter_index() -> dict[int, int]:
 
 def load_index_chapter_index() -> dict[int, int]:
     """Return {chapter_number: count_of_index_entries_referencing_that_chapter}."""
-    path = os.path.join(MS_DIR, INDEX_REL)
+    path = os.path.join(_config.MANUSCRIPT_DIR, INDEX_REL)
     counts: dict[int, int] = {}
     if not os.path.exists(path):
         return counts
@@ -147,7 +146,7 @@ def collect_metrics() -> dict[str, Any]:
 
     files: list[dict[str, Any]] = []
     for rel, chapters in CHAPTER_FILES:
-        path = os.path.join(MS_DIR, rel)
+        path = os.path.join(_config.MANUSCRIPT_DIR, rel)
         if not os.path.exists(path):
             continue
         text = _fsutil.read_text(path)

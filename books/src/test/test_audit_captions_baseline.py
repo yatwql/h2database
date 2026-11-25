@@ -110,7 +110,7 @@ class CaptionMissingBranchesTest(unittest.TestCase):
 
     def test_a_glob_target_limits_the_scan(self):
         self.write("data/manuscript/ch1-test.md", "# 第1章\n\n**图 1-1: 写入**\n")
-        files = self.mod.scan(self.mod.THRESHOLDS["normal"], "data/manuscript/ch1-test.md")
+        files = self.mod.scan(self.mod.thresholds()["normal"], "data/manuscript/ch1-test.md")
         self.assertEqual({item.fig_id for item in files}, {"1-1"})
 
     def test_a_glob_matching_directories_and_unreadable_files_is_skipped(self):
@@ -128,7 +128,7 @@ class CaptionMissingBranchesTest(unittest.TestCase):
             ),
             mock.patch("sys.stderr", new=io.StringIO()),
         ):
-            found = self.mod.scan(self.mod.THRESHOLDS["normal"], "data/manuscript/*")
+            found = self.mod.scan(self.mod.thresholds()["normal"], "data/manuscript/*")
         self.assertIsInstance(found, list)
 
     def test_new_violations_are_listed_against_the_baseline(self):
@@ -139,7 +139,7 @@ class CaptionMissingBranchesTest(unittest.TestCase):
         args = self.mod._parser().parse_args(["--diff", baseline])
         buffer = io.StringIO()
         with redirect_stdout(buffer):
-            code = self.mod._diff_report(args, self.mod.scan(self.mod.THRESHOLDS["normal"]))
+            code = self.mod._diff_report(args, self.mod.scan(self.mod.thresholds()["normal"]))
         self.assertEqual(code, 0)
         self.assertIn("新引入", buffer.getvalue())
 

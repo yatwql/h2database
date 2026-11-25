@@ -49,16 +49,27 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Match `## N.X 延伸思考` where N is the chapter number and X is the local
 # subsection index. We accept any subsection number — placement enforcement
-# (between 本章小结 and 延展阅读) is checked separately.
-LANG = _config.language().get('sections', {})
-EXERCISES_TITLE = LANG.get('exercises', '延伸思考')
-SUMMARY_TITLE = LANG.get('summary', '本章小结')
-FURTHER_TITLE = LANG.get('further', '延展阅读')
-HINT_MARK = _config.language().get('exercise', {}).get('hint_prefix', '提示')
-REVIEW_MARK = _config.language().get('exercise', {}).get('review_prefix', '回顾')
-HEADING_EXERCISES = re.compile(r'^## (\d+)\.(\d+)\s+' + EXERCISES_TITLE + r'\s*$')
-HEADING_SUMMARY = re.compile(r'^## (\d+)\.(\d+)\s+' + SUMMARY_TITLE + r'\s*$')
-HEADING_FURTHER = re.compile(r'^## (\d+)\.(\d+)\s+' + FURTHER_TITLE + r'\s*$')
+# (between 本章小结 and 延展阅读) is checked separately. The wording comes from the
+# language pack, read when the patterns are needed and never at import.
+def language_shapes() -> dict[str, re.Pattern[str]]:
+    """Slot headings and hint/review markers for the active language pack."""
+    pack = _config.language()
+    sections = pack.get('sections', {})
+    exercise = pack.get('exercise', {})
+    exercises = sections.get('exercises', '延伸思考')
+    summary = sections.get('summary', '本章小结')
+    further = sections.get('further', '延展阅读')
+    hint = exercise.get('hint_prefix', '提示')
+    review = exercise.get('review_prefix', '回顾')
+    return {
+        'exercises': re.compile(r'^## (\d+)\.(\d+)\s+' + exercises + r'\s*$'),
+        'summary': re.compile(r'^## (\d+)\.(\d+)\s+' + summary + r'\s*$'),
+        'further': re.compile(r'^## (\d+)\.(\d+)\s+' + further + r'\s*$'),
+        'hint': re.compile(r'^>\s*' + hint + r'[：:]\s*(.+)'),
+        'review': re.compile(r'^>\s*' + review + r'[：:]\s*(.+)'),
+    }
+
+
 HEADING_CHAPTER = re.compile(r'^# 第(\d+)章')
 HEADING_H2_ANY = re.compile(r'^## ')
 
@@ -69,10 +80,8 @@ EXERCISE_LEAD = re.compile(
     r'^\*\*(\d+)\.\s*([🟢🔵🟠])(★+)\s*(.+?)\*\*\s*$'
 )
 
-# Hint and review markers — both are blockquote lines but the wording is
-# fixed so the audit can recognise them deterministically.
-HINT_RE = re.compile(r'^>\s*' + HINT_MARK + r'[：:]\s*(.+)')
-REVIEW_RE = re.compile(r'^>\s*' + REVIEW_MARK + r'[：:]\s*(.+)')
+# Hint and review markers are blockquote lines whose wording comes from the
+# language pack (`language_shapes()`), so the audit recognises them per book.
 
 # The review line must contain at least one §X.Y or 第X章 anchor.
 ANCHOR_RE = re.compile(r'§\d+(?:\.\d+)*[a-z]?|第\d+章')
@@ -96,6 +105,7 @@ def _empty_slot(chapter: int | None = None) -> dict:
 
 def _heading_events(lines: list[str], fence: list[bool]):
     """Yield (kind, chapter, line_number) for every slot-relevant heading."""
+    shapes = language_shapes()
     for index, raw in enumerate(lines):
         if fence[index]:
             continue
@@ -103,15 +113,15 @@ def _heading_events(lines: list[str], fence: list[bool]):
         if chapter:
             yield 'chapter', int(chapter.group(1)), index + 1
             continue
-        summary = HEADING_SUMMARY.match(raw)
+        summary = shapes['summary'].match(raw)
         if summary:
             yield 'summary', int(summary.group(1)), index + 1
             continue
-        exercises = HEADING_EXERCISES.match(raw)
+        exercises = shapes['exercises'].match(raw)
         if exercises:
             yield 'exercises', int(exercises.group(1)), index + 1
             continue
-        further = HEADING_FURTHER.match(raw)
+        further = shapes['further'].match(raw)
         if further:
             yield 'further', int(further.group(1)), index + 1
 
@@ -191,10 +201,11 @@ def parse_exercises(lines: list[str], start_line: int, end_line: int) -> list[di
             i += 1
             continue
         if cur is not None:
-            hm = HINT_RE.match(raw)
+            shapes = language_shapes()
+            hm = shapes['hint'].match(raw)
             if hm:
                 cur['has_hint'] = True
-            rm = REVIEW_RE.match(raw)
+            rm = shapes['review'].match(raw)
             if rm:
                 cur['has_review'] = True
                 cur['review_anchors'] = ANCHOR_RE.findall(rm.group(1))

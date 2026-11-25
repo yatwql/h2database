@@ -67,11 +67,13 @@ VAGUE_TRAILING = tuple(_config.CAPTIONS.get('vague_trailing', ()))
 FIG_RE = _mdutil.FIGURE_CAPTION_RE
 
 # Presets (min_chars / max_chars / fail_at) come from policy with safe defaults.
-THRESHOLDS = _config.CAPTIONS.get('presets') or {
-    'strict': {'min_chars': 8, 'max_chars': 30, 'fail_at': 0},
-    'normal': {'min_chars': 6, 'max_chars': 35, 'fail_at': 30},
-    'loose': {'min_chars': 4, 'max_chars': 45, 'fail_at': 80},
-}
+def thresholds() -> dict[str, dict]:
+    """Caption length presets for this book, read when needed."""
+    return _config.CAPTIONS.get('presets') or {
+        'strict': {'min_chars': 8, 'max_chars': 30, 'fail_at': 0},
+        'normal': {'min_chars': 6, 'max_chars': 35, 'fail_at': 30},
+        'loose': {'min_chars': 4, 'max_chars': 45, 'fail_at': 80},
+    }
 
 @dataclass
 class Violation:
@@ -197,7 +199,7 @@ def render_report(violations: Iterable[Violation], threshold: dict) -> int:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--threshold', choices=list(THRESHOLDS), default='normal',
+    parser.add_argument('--threshold', choices=list(thresholds()), default='normal',
                         help='violation threshold preset (default: normal)')
     parser.add_argument('--json', action='store_true',
                         help='emit machine-readable JSON summary instead of report')
@@ -252,7 +254,7 @@ def _diff_report(args, violations) -> int:
 
 def main(argv: list[str]) -> int:
     args = _parser().parse_args(argv)
-    threshold = THRESHOLDS[args.threshold]
+    threshold = thresholds()[args.threshold]
     violations = scan(threshold, args.target)
     keys = _violation_keys(violations)
 

@@ -88,7 +88,7 @@ class _TempFile:
         os.unlink(self._tmp.name)
 
 class TestCaptionClassifier(unittest.TestCase):
-    threshold = _audit_captions.THRESHOLDS['normal']
+    threshold = _audit_captions.thresholds()['normal']
 
     def classify(self, title: str) -> str | None:
         kind, _hint = _audit_captions._classify(title, self.threshold)

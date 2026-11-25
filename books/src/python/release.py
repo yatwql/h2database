@@ -29,10 +29,18 @@ from lib import _config, _errors, _fsutil, _log
 
 PY = sys.executable
 PY_ROOT = os.path.dirname(os.path.abspath(__file__))
-BOOK_ROOT = _config.BOOK_ROOT
-REPO_ROOT = os.path.dirname(BOOK_ROOT)
 RUNNER = os.path.join(PY_ROOT, 'check_runner.py')
 LOG = _log.get_logger('release')
+
+
+def book_root() -> str:
+    """The book being released, resolved when a step runs (never at import)."""
+    return _config.BOOK_ROOT
+
+
+def repo_root() -> str:
+    """The checkout that holds the book."""
+    return os.path.dirname(book_root())
 
 def artifacts() -> tuple[str, ...]:
     """Delivery artifacts by basename, derived from the configured book name."""
@@ -50,13 +58,13 @@ def status() -> dict:
         path = os.path.join(dist, name)
         present[name] = os.path.getsize(path) if os.path.isfile(path) else 0
     return {'versions': versions, 'artifacts': present,
-            'dist': os.path.relpath(dist, REPO_ROOT),
+            'dist': os.path.relpath(dist, repo_root()),
             'generated': datetime.datetime.now().isoformat(timespec='seconds')}
 
 
 def git(*args: str) -> str:
     try:
-        result = subprocess.run(['git', *args], cwd=REPO_ROOT, capture_output=True,
+        result = subprocess.run(['git', *args], cwd=repo_root(), capture_output=True,
                                 text=True, timeout=20, check=False)
     except (OSError, subprocess.SubprocessError):
         return ''
@@ -110,7 +118,7 @@ def write_manifest(title: str = '') -> str:
 
 def run_runner(mode: str) -> int:
     """Delegate to the tier runner so release and CI share one orchestration."""
-    proc = subprocess.run([PY, RUNNER, '--mode', mode], cwd=REPO_ROOT, check=False)
+    proc = subprocess.run([PY, RUNNER, '--mode', mode], cwd=repo_root(), check=False)
     return proc.returncode
 
 
@@ -130,7 +138,7 @@ def cmd_gate(_args: argparse.Namespace) -> int:
 
 def cmd_manifest(_args: argparse.Namespace) -> int:
     target = write_manifest()
-    print('manifest :', os.path.relpath(target, REPO_ROOT))
+    print('manifest :', os.path.relpath(target, repo_root()))
     return 0
 
 
@@ -145,7 +153,7 @@ def cmd_publish(args: argparse.Namespace) -> int:
         return code
     target = write_manifest(args.title)
     version = _config.versions()['doc']
-    print(f'manifest : {os.path.relpath(target, REPO_ROOT)}')
+    print(f'manifest : {os.path.relpath(target, repo_root())}')
     print(f'next     : git tag -a v{version} -m "{args.title or "release"}" && git push --tags')
     return 0
 
