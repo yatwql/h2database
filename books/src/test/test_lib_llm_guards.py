@@ -186,5 +186,12 @@ class UsageLedgerTest(LlmCase):
             self.assertEqual(self.llm.budget_line(), "")
 
 
+class ApiKeyResolutionTest(LlmCase):
+    def test_a_provider_without_an_env_var_reads_the_key_file(self):
+        key_file = {"keys": {"p": "from-key-file"}}
+        with mock.patch.object(self.llm, "key_file", return_value=key_file):
+            self.assertEqual(self.llm._api_key("p", {}), "from-key-file")
+
+
 if __name__ == "__main__":
     unittest.main()

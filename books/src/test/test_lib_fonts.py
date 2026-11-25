@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import tempfile
+import types
 import unittest
 from unittest import mock
 
@@ -368,3 +369,33 @@ class FontFallbackTest(unittest.TestCase):
 
     def test_an_unreadable_file_yields_no_families(self):
         self.assertEqual(self.mod._read_families(os.path.join(tempfile.mkdtemp(), "x.ttf")), [])
+
+    def test_a_face_without_a_name_table_is_skipped(self):
+        ttlib = types.SimpleNamespace(
+            TTCollection=lambda path, lazy=True: types.SimpleNamespace(
+                fonts=[_NamelessFace(), _NamedFace("DejaVu Sans")]),
+            TTFont=lambda path, lazy=True: _NamedFace("DejaVu Sans"),
+        )
+        with mock.patch.dict("sys.modules", {"fontTools.ttLib": ttlib}), \
+                mock.patch.object(self.mod, "is_collection_file", return_value=True):
+            rows = self.mod._read_families("/fonts/x.ttc")
+        self.assertEqual(rows, [("DejaVu Sans", 1, True)])
+
+
+class _NamelessFace:
+    """A face whose `name` table is absent: the lookup raises KeyError."""
+
+    def __getitem__(self, key):
+        raise KeyError(key)
+
+
+class _NamedFace:
+    def __init__(self, family):
+        self.family = family
+
+    def __getitem__(self, key):
+        if key == "name":
+            return types.SimpleNamespace(
+                getDebugName=lambda name_id: self.family if name_id == 1 else None
+            )
+        raise KeyError(key)

@@ -331,3 +331,19 @@ class JavaAnalyzerBranchesTest(unittest.TestCase):
         )
         module = self.analyzer.parse(path)
         self.assertEqual(module.depends_on.get("org.h2"), 1)  # the file's own package
+
+
+class RustAnalyzerBranchesTest(unittest.TestCase):
+    """A Rust item without a `//!` block has no summary to carry."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+
+    def test_an_item_without_a_doc_comment_has_an_empty_summary(self):
+        path = os.path.join(self.tmp.name, "plain.rs")
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write("pub struct Widget;\n")
+        module = languages.get("rust").parse(path)
+        self.assertEqual([unit.name for unit in module.units], ["Widget"])
+        self.assertEqual(module.units[0].summary, "")

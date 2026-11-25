@@ -92,5 +92,14 @@ class ShapingSamplesTest(unittest.TestCase):
                                  (f'{chapter}-{index}', f'展示第{index}张图'))
 
 
+class UnclosedFenceTest(unittest.TestCase):
+    def setUp(self):
+        self.mdutil = importlib.import_module('lib._mdutil')
+
+    def test_a_fence_left_open_hides_its_body_and_keeps_the_prose_before_it(self):
+        self.assertEqual(self.mdutil.split_fences('intro\n```'), ['intro'])
+        self.assertEqual(self.mdutil.split_fences('```'), [])
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -149,5 +149,18 @@ class RequirementTraceEdgesTest(unittest.TestCase):
         self.assertIn("requirements.md", out)
 
 
+class KnownCarriersTest(unittest.TestCase):
+    """A glob hit that is not a file adds no carrier name."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.mod = _fixture.load_module(BOOK_ROOT, "requirement_trace")
+
+    def test_a_glob_hit_that_is_not_a_file_is_no_carrier(self):
+        with mock.patch.object(self.mod.glob, "glob", return_value=[self.tmp.name]):
+            self.assertEqual(self.mod.known_carriers(), set())
+
+
 if __name__ == "__main__":
     unittest.main()
