@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import importlib
+import io
 import json
 import os
 import shutil
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from unittest import mock
 
 import _fixture
@@ -134,6 +136,18 @@ files = ["cover.md", "ch1-test.md", "ch2-test.md"]
         base = {'ch1-test.md': [1], 'ch2-test.md': [2]}
         target = {'ch1-test.md': [1]}
         self.assertEqual(self.mod.mapping_of(base, target), {})
+
+    def test_a_non_numeric_numbering_value_is_ignored(self):
+        base = {'ch1-test.md': [1], 'ch2-test.md': [2]}
+        target = {'ch1-test.md': ['I'], 'ch2-test.md': [3]}
+        self.assertEqual(self.mod.mapping_of(base, target), {2: 3})
+
+    def test_main_reports_a_book_without_editions(self):
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            code = self.mod.main(['--write'])
+        self.assertEqual(code, 2)
+        self.assertIn('edition', buffer.getvalue())
 
     def test_a_kept_chapter_that_moves_is_recorded(self):
         base = {'ch1-test.md': [1], 'ch2-test.md': [2], 'ch3-test.md': [3]}

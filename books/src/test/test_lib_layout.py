@@ -137,6 +137,45 @@ class BodySizeDerivationTest(unittest.TestCase):
         self.assertEqual(layout.body_line_height(), 1.4)
 
 
+class PageGeometryTest(unittest.TestCase):
+    """Page size and margin shorthand, as an author may write them."""
+
+    def test_a_page_size_given_as_two_lengths_is_measured(self):
+        layout = Layout.from_mapping({'layout_page_size': '210x297'})[0]
+        self.assertEqual(layout.page_size_mm(), (210.0, 297.0))
+
+    def test_an_unmeasurable_page_size_falls_back_to_a4(self):
+        layout = Layout.from_mapping({'layout_page_size': 'AxB'})[0]
+        self.assertEqual(layout.page_size_mm(), (210.0, 297.0))
+
+    def test_three_margin_tokens_use_the_middle_value_on_both_sides(self):
+        layout = Layout.from_mapping({'layout_page_margin': '10mm 20mm 30mm'})[0]
+        self.assertEqual(layout.margins_mm(), (20.0, 20.0))
+
+    def test_four_margin_tokens_take_left_and_right(self):
+        layout = Layout.from_mapping({'layout_page_margin': '10mm 20mm 30mm 40mm'})[0]
+        self.assertEqual(layout.margins_mm(), (40.0, 20.0))
+
+    def test_two_margin_tokens_use_the_horizontal_value_on_both_sides(self):
+        layout = Layout.from_mapping({'layout_page_margin': '18mm 16mm'})[0]
+        self.assertEqual(layout.margins_mm(), (16.0, 16.0))
+
+    def test_the_type_scale_describes_itself_for_the_build_log(self):
+        text = Layout.from_mapping({})[0].typescale().describe()
+        self.assertIn('type: body=', text)
+        self.assertIn('spacing_scale=', text)
+
+    def test_a_code_block_without_its_own_leading_follows_the_prose(self):
+        layout = Layout.from_mapping({'layout_code_line_height': 0,
+                                      'layout_lead_ratio': 0.4})[0]
+        self.assertEqual(layout.code_line_height_value(), layout.body_line_height())
+
+    def test_a_configured_code_leading_wins_over_the_prose(self):
+        layout = Layout.from_mapping({'layout_code_line_height': 1,
+                                      'layout_lead_ratio': 0.4})[0]
+        self.assertEqual(layout.code_line_height_value(), 1.0)
+
+
 class PrintColumnTest(unittest.TestCase):
     """The printed column is measured against the sheet, not chosen by hand."""
 

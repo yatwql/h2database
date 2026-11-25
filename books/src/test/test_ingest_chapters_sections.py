@@ -147,6 +147,27 @@ class CombinedChapterFileTest(SectionsCase):
         )
 
 
+class ApiSectionTest(SectionsCase):
+    def api_text(self, packages: dict) -> str:
+        return "\n".join(self.chapters._api_sections(1, self.ctx(1, packages)))
+
+    def test_a_class_without_a_source_file_is_left_out_of_the_entry_table(self):
+        packages = {"org.example": package(80)}
+        packages["org.example"]["key_classes"][0]["rel"] = ""
+        text = self.api_text(packages)
+        self.assertNotIn("Widget0.run()", text)
+        self.assertIn("`org/h2/...`", text)
+
+    def test_an_entry_without_a_line_number_keeps_the_file_coordinate(self):
+        packages = {"org.example": package(80)}
+        packages["org.example"]["key_classes"][0]["api_lines"] = {}
+        text = self.api_text(packages)
+        self.assertIn("`Widget0.run()`", text)
+        self.assertIn("`org/example/Widget0.java`", text)
+        # no line number means no row in the coordinate appendix
+        self.assertNotIn("源码坐标明细", text)
+
+
 class ProseCleanupTest(SectionsCase):
     def test_marker_only_lines_do_not_join_the_paragraph(self):
         reply = ">\n本章先看目录结构，再看两条调用链之间的关系与边界。"

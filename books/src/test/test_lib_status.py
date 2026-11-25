@@ -103,3 +103,29 @@ class SourceFactsTest(unittest.TestCase):
 
     def test_nothing_delivered_yields_no_artifact_rows(self):
         self.assertEqual(self.mod.artifact_facts(os.path.join(self.root, "nowhere")), [])
+
+    def test_an_absent_inventory_falls_back_to_the_configured_source(self):
+        facts = self.mod.source_facts()
+        self.assertEqual(facts["version"], "")
+        self.assertEqual(facts["changed"], "")
+        self.assertTrue(facts["root"])
+
+    def test_a_run_without_source_or_artifacts_prints_only_the_verdict(self):
+        text = self.mod.render(True, "build", 1.25, 0, source={}, artifacts=[])
+        self.assertEqual(text.splitlines(), ["✓ 完成  build   用时 1.2s   退出码 0"])
+
+    def test_source_without_a_version_or_stamp_prints_the_root_alone(self):
+        text = self.mod.render(
+            False,
+            "build",
+            2.0,
+            1,
+            source={"root": "/src/h2"},
+            artifacts=[
+                {"name": "book.pdf", "pages": "3 页", "size": "1 MB", "changed": "2026-01-01 08:00"}
+            ],
+        )
+        self.assertIn("  源码 /src/h2", text)
+        self.assertNotIn("版本", text)
+        self.assertNotIn("清单更新于", text)
+        self.assertIn("    book.pdf   3 页   1 MB   2026-01-01 08:00", text)

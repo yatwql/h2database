@@ -48,6 +48,15 @@ class TestRegistry(unittest.TestCase):
         ):
             self.assertEqual(languages.detect(os.path.join(FIXTURES, name)), expected)
 
+    def test_a_tree_without_known_suffixes_is_reported(self):
+        only = os.path.join(self.tmp.name, "sources")
+        os.makedirs(only, exist_ok=True)
+        with open(os.path.join(only, "notes.txt"), "w", encoding="utf-8") as fh:
+            fh.write("hello")
+        with self.assertRaises(SystemExit) as caught:
+            languages.detect(only)
+        self.assertIn("no known source files", str(caught.exception))
+
 
 class TestAnalyzers(unittest.TestCase):
     def setUp(self):
@@ -184,6 +193,65 @@ class TestAnalyzers(unittest.TestCase):
             inventory = self.analyze(language, fixture)
             self.assertGreater(inventory["totals"]["files"], 0, language)
             self.assertGreater(inventory["totals"]["lines"], 0, language)
+
+
+class AnalyzerBaseTest(unittest.TestCase):
+    """The defaults a new language adapter inherits from the base class."""
+
+    def setUp(self):
+        self.base = importlib.import_module("ingest.languages._base")
+
+    def test_the_default_package_is_the_directory_below_the_root(self):
+        analyzer = self.base.Analyzer()
+        self.assertEqual(analyzer.package_of("/src/tree", "/src/tree/a/b/Widget.java"), "a.b")
+
+    def test_a_file_at_the_root_belongs_to_the_root_package(self):
+        self.assertEqual(self.base.Analyzer().package_of("/src/tree", "/src/tree/setup.py"), "root")
+
+    def test_the_base_analyzer_leaves_parsing_to_its_subclasses(self):
+        with self.assertRaises(NotImplementedError):
+            self.base.Analyzer().parse("/src/tree/x.py")
+
+
+class CSourceTreeTest(unittest.TestCase):
+    """Trees the mini-c fixture lacks: header-only APIs, lost includes, repeat tags."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.srctree = os.path.join(self.tmp.name, "csrc")
+
+    def write(self, rel: str, text: str) -> None:
+        path = os.path.join(self.srctree, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(text)
+
+    def package(self, name: str) -> dict:
+        return languages.get("c").analyze(self.srctree)["packages"][name]
+
+    def test_a_header_with_only_prototypes_still_exposes_a_unit(self):
+        self.write("api/ping.h", "/**/\nextern int ping(void);\n")
+        package = self.package("api")
+        self.assertEqual([unit["name"] for unit in package["classes"]], ["ping"])
+        unit = package["classes"][0]
+        self.assertEqual(unit["kind"], "header")
+        self.assertTrue(unit["public"])
+        self.assertIn("ping", unit["api"])
+        self.assertEqual(package["summary"], "")
+
+    def test_an_include_that_is_not_in_the_tree_is_dropped(self):
+        self.write("lib/impl.c", '#include "missing.h"\n\nstatic void helper(void) {}\n')
+        self.assertEqual(self.package("lib")["depends_on"], {})
+
+    def test_the_same_tag_defined_twice_is_listed_once(self):
+        self.write(
+            "dup/dup.h",
+            "#ifdef HOST\nstruct Thing { int id; };\n#endif\n"
+            "#ifdef GUEST\nstruct Thing { int id; };\n#endif\n",
+        )
+        names = [unit["name"] for unit in self.package("dup")["classes"]]
+        self.assertEqual(names, ["Thing"])
 
 
 class TestDigestLanguages(unittest.TestCase):

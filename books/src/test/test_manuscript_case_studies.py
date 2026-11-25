@@ -169,6 +169,23 @@ class MissingConfigTest(unittest.TestCase):
         with mock.patch.object(case_studies, "case_study_config", lambda: target):
             self.assertEqual(case_studies.scenario_headers(), {})
 
+    def test_a_broken_file_stops_the_scenario_loader(self):
+        case_studies = importlib.import_module("case_studies")
+        target = os.path.join(self.tmp, "broken.toml")
+        with open(target, "w", encoding="utf-8") as fh:
+            fh.write("{not toml")
+        with mock.patch.object(case_studies, "case_study_config", lambda: target):
+            with self.assertRaises(SystemExit) as caught:
+                case_studies.load_scenarios()
+        self.assertIn("invalid TOML", str(caught.exception))
+
+    def test_an_unknown_scenario_is_rejected(self):
+        case_studies = importlib.import_module("case_studies")
+        with mock.patch.object(case_studies, "scenarios", lambda: {"select": []}):
+            with self.assertRaises(ValueError) as caught:
+                case_studies.render("nope")
+        self.assertIn("unknown scenario 'nope'", str(caught.exception))
+
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.tmp, True)

@@ -241,3 +241,54 @@ class DocsArchiveFailurePathsTest(unittest.TestCase):
         ):
             self.assertEqual(self.mod.main(["--version", "0.1"]), 0)
         self.assertIn("已归档 0.1", buffer.getvalue())
+
+
+class DocsArchiveEdgeCaseTest(unittest.TestCase):
+    """The entries an archive tree accumulates that do not belong to a release."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.mod = _fixture.load_module(self.root, "docs_archive")
+        self.docs = os.path.join(self.tmp.name, "docs")
+        write_docs(self.docs)
+
+    def test_a_fixed_issue_block_for_another_version_is_skipped(self):
+        ledger = (
+            "# 问题记录\n"
+            "### 本版本已修复（9.9）\n| rf-0 | 旧问题 |\n\n"
+            "### 本版本已修复（0.1）\n| rf-1 | 新问题 |\n"
+        )
+        rest, block = self.mod.split_rf_block(ledger, "0.1")
+        self.assertIn("rf-0", rest)
+        self.assertIn("rf-1", block)
+        self.assertNotIn("rf-1", rest)
+
+    def test_an_iteration_directory_with_an_irregular_name_is_an_error(self):
+        os.makedirs(os.path.join(self.docs, "plan", "2024 旧计划"))
+        plan = self.mod.build_plan("0.1", self.docs, ["2024 旧计划"], "2026-01-01")
+        self.assertTrue(any("不合规" in error for error in plan.errors), plan.errors)
+
+    def test_a_stray_entry_in_the_archive_directory_gets_no_index_line(self):
+        os.makedirs(os.path.join(self.docs, "archive", "v0.1"))
+        with open(os.path.join(self.docs, "archive", "notes.md"), "w", encoding="utf-8") as fh:
+            fh.write("随手笔记\n")
+        plan = self.mod.build_plan("0.2", self.docs, [], "2026-01-01")
+        self.mod._refresh_indexes(plan)
+        with open(os.path.join(self.docs, "managements", "changelog.md"), encoding="utf-8") as fh:
+            changelog = fh.read()
+        self.assertIn("v0.1", changelog)
+        self.assertNotIn("notes", changelog)
+
+    def test_the_cli_reports_a_version_it_cannot_archive(self):
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            code = self.mod.main(["--version", "7", "--dry-run"])
+        self.assertEqual(code, 2)
+        self.assertIn("error:", buffer.getvalue())
+
+    def test_the_script_entrypoint_reports_through_the_error_wrapper(self):
+        code, out = _fixture.run_inproc(self.root, "docs_archive.py", "--version", "7")
+        self.assertEqual(code, 2, out[-300:])
+        self.assertIn("error:", out)
