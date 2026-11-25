@@ -218,3 +218,60 @@ class ArchitectureRuleCoverageTest(unittest.TestCase):
         problems = self.mod.check_scripts(directory)
         self.assertEqual(len(problems), 1)
         self.assertIn("helper.py", problems[0])
+
+
+class WiringAuditTest(unittest.TestCase):
+    """The rules that judge wiring, proven on injected sources and step tables."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.book_root = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
+        self.mod = _fixture.load_module(self.book_root, "check_architecture")
+
+    def write(self, rel: str, body: str) -> str:
+        path = os.path.join(self.tmp.name, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write(body)
+        return path
+
+    def test_a_report_script_without_json_output_is_reported(self):
+        problems = self.mod._exit_problems(
+            "audit/report.py", "audit", 'parser.add_argument("--verbose")'
+        )
+        self.assertEqual(problems, ["audit/report.py: report script should support --json"])
+
+    def test_an_unparsable_module_is_skipped_and_a_spawned_script_is_a_wiring(self):
+        broken = self.write("src/python/broken.py", "def (:\n")
+        spawner = self.write(
+            "src/python/runner.py",
+            '"""d"""\nimport subprocess\nsubprocess.run(["book", "spawned_tool.py"])\n',
+        )
+        with mock.patch.object(self.mod.glob, "glob", return_value=[broken, spawner]):
+            mentioned = self.mod.referenced_modules()
+        self.assertIn("subprocess", mentioned)
+        self.assertIn("spawned_tool", mentioned)
+
+    def test_an_unparsable_step_table_yields_no_wiring(self):
+        path = self.write("make_broken.py", "STEPS = [\n")
+        with mock.patch.object(self.mod, "MAKE_PY", path):
+            self.assertEqual(self.mod.declared_steps(), ({}, {}))
+
+    def test_step_entries_that_are_not_name_script_pairs_are_ignored(self):
+        path = self.write(
+            "make_odd.py",
+            'STEPS = [("one",), (name, "x.py"), ("two", "audit/two.py")]\n'
+            'GROUPS = {"test": (member, "two")}\n',
+        )
+        with mock.patch.object(self.mod, "MAKE_PY", path):
+            steps, groups = self.mod.declared_steps()
+        self.assertEqual(steps, {"two": "audit/two.py"})
+        self.assertEqual(groups, {"test": ("two",)})
+
+    def test_an_empty_step_table_skips_the_reachability_check(self):
+        self.assertEqual(self.mod.check_wiring({}, {}), [])
+
+    def test_a_command_group_is_not_checked_for_membership(self):
+        problems = self.mod.check_wiring({"build": "audit/x.py"}, {"test": ("nowhere",)})
+        self.assertFalse(any("unknown step" in problem for problem in problems), problems)

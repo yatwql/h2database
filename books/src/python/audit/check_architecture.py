@@ -309,7 +309,7 @@ def referenced_modules() -> set[str]:
             continue  # the step table declares wiring; it is not a driver
         try:
             tree = ast.parse(_fsutil.read_text(path))
-        except (OSError, SyntaxError):
+        except SyntaxError:  # read_text turns an unreadable file into a clean exit
             continue
         # a module that spawns processes may hold its command list in string
         # constants, so every '.py' literal there counts as a wiring
@@ -358,7 +358,7 @@ def declared_steps() -> tuple[dict[str, str], dict[str, tuple[str, ...]]]:
     groups: dict[str, tuple[str, ...]] = {}
     try:
         tree = ast.parse(_fsutil.read_text(MAKE_PY))
-    except (OSError, SyntaxError):
+    except SyntaxError:  # read_text turns an unreadable file into a clean exit
         return steps, groups
     for node in tree.body:
         target = None

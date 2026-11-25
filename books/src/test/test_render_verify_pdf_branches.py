@@ -443,3 +443,83 @@ class VerifyPdfLoopEdgesTest(PdfFixtureCase):
         outline = [("第1章", 0, 0)]
         problems = self.verify_pdf._check_toc_links(reader, [(0, 0, annot)], outline)
         self.assertIn("expected 1", problems[0])
+
+
+class _Ref:
+    """A pypdf-shaped indirect reference over a plain dict."""
+
+    def __init__(self, payload):
+        self.idnum = id(self)
+        self._payload = payload
+
+    def get_object(self):
+        return self._payload
+
+
+class FontAndLinkStructureTest(unittest.TestCase):
+    """The annotation and font dictionaries the checks classify.
+
+    Every case builds the PDF object graph by hand, so the classification of one
+    dictionary can be judged without a renderer.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.mod = importlib.import_module("verify_pdf")
+
+    def page(self, annots=None, resources=None):
+        page = {}
+        if annots is not None:
+            page["/Annots"] = annots
+        if resources is not None:
+            page["/Resources"] = resources
+        return page
+
+    def reader(self, *pages):
+        return types.SimpleNamespace(pages=list(pages))
+
+    def test_annotations_that_are_not_links_are_ignored(self):
+        annots = [_Ref({"/Subtype": "/Text"}), _Ref({"/Subtype": "/Link", "/NM": "toc-link-7"})]
+        found = self.mod.toc_link_annotations(self.reader(self.page(annots=annots)))
+        self.assertEqual([index for index, _page, _annot in found], [7])
+
+    def test_a_composite_face_keeps_its_program_on_the_descendant(self):
+        font = {"/DescendantFonts": [_Ref({"/FontDescriptor": {"/FontFile2": object()}})]}
+        self.assertTrue(self.mod._has_program(font))
+
+    def test_a_descendant_without_a_descriptor_is_not_embedded(self):
+        font = {"/DescendantFonts": [_Ref({})]}
+        self.assertFalse(self.mod._has_program(font))
+
+    def test_an_unreadable_font_is_unclassifiable_rather_than_unembedded(self):
+        class Unreadable:
+            def get(self, _key, _default=None):
+                raise AttributeError("not a PDF dictionary")
+
+        self.assertIsNone(self.mod.font_is_embedded(Unreadable()))
+
+    def test_a_page_without_a_font_resource_has_no_type3_fonts(self):
+        pages = [self.page(), self.page(resources=_Ref({}))]
+        self.assertEqual(self.mod._type3_fonts(self.reader(*pages)), set())
+
+    def test_a_type3_font_reference_is_recorded_by_object_id(self):
+        type3 = _Ref({"/Subtype": "/Type3"})
+        truetype = _Ref({"/Subtype": "/TrueType"})
+        resources = _Ref({"/Font": _Ref({"F1": type3, "F2": truetype})})
+        found = self.mod._type3_fonts(self.reader(self.page(resources=resources)))
+        self.assertEqual(found, {type3.idnum})
+
+    def test_a_page_without_resources_contributes_no_fonts(self):
+        face = {"/BaseFont": "/DejaVu", "/FontDescriptor": {"/FontFile2": object()}}
+        pages = [self.page(), self.page(resources={"/Font": {"/F1": face}})]
+        self.assertEqual(self.mod.non_embedded_fonts(self.reader(*pages)), [])
+
+    def test_a_density_check_without_the_metrics_module_is_skipped(self):
+        report = self.mod.Report()
+        # the metrics module lives behind `render`; without the package the
+        # import in the check cannot resolve, which is the case being judged
+        with mock.patch.dict(sys.modules, {"render": None}):
+            self.mod._check_density(report, "/nonexistent.pdf")
+        name, ok, detail = report.checks[-1]
+        self.assertEqual((name, ok), ("DENSITY", True))
+        self.assertIn("pdf_metrics unavailable", detail)
