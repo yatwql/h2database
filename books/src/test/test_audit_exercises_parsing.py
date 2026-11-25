@@ -76,10 +76,12 @@ class AuditFileTest(unittest.TestCase):
         self.assertEqual(slot['exercise_count'], 2)
         self.assertTrue(slot['placement_ok'])
 
-    def test_audit_file_tolerates_a_missing_slot(self):
-        path = self.write('# 第1章 测试\n\n没有小结也没有练习。\n')
+    def test_audit_file_reports_a_missing_slot_instead_of_crashing(self):
+        path = self.write("# 第1章 测试\n\n没有小结也没有练习。\n")
         report = self.mod.audit_file(path)
-        self.assertIsInstance(report, dict)
+        self.assertEqual(len(report["slots"]), 1)
+        self.assertFalse(report["slots"][0]["has_exercises"])
+        self.assertEqual(report["issues"], ["ch1 缺少 ## N.X 延伸思考 小节"])
 
 if __name__ == '__main__':
     unittest.main()

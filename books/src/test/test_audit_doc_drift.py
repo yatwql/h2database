@@ -194,6 +194,14 @@ class DocDriftTest(unittest.TestCase):
         path = self.doc('只允许 `check`、`eval` 两类前缀。\n')
         self.assertEqual(self.drift.check_prefixes([path], ['check', 'eval']), [])
 
+    def test_wrapper_prefixes_are_read_in_either_quote_style(self):
+        real = _fixture.load_module(BOOK_ROOT, "doc_drift")
+        source = (
+            '"""d"""\n\ndef check_scripts():\n'
+            '    allowed = (\n        "bookctl",\n        "check",\n    )\n'
+        )
+        self.assertEqual(real.script_prefixes(source), ["bookctl", "check"])
+
     def test_the_orchestrator_is_the_source_of_both_lists(self):
         real = _fixture.load_module(BOOK_ROOT, 'doc_drift')
         self.assertIn('to_pdf', real.deliver_steps())

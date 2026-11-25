@@ -117,7 +117,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 文件长度 | 源码/测试/文档/手稿四档行数均不超过各自预算；四档预算须在配置里显式声明（不靠默认值）；手稿正文与附录同档 | `file_length.py` | P0 |
 | 脚本契约 | 每个入口脚本有模块说明、可执行入口、必要时说明退出码与 `--json` | `script_contract.py` | P0 |
 | 文档一致性 | 文档与配置的引用对象存在（路径、脚本、章节名、管理目录与目录树、编号源）；同一事实只声明一次（章节键、门禁级别）；管理文档头部必须有一行 `> 定位：`；跨项目的内容标准只能指向 `../manuals/how-to-write.md`；引用的交付链路与脚本名前缀清单等于 `make.py` / `check_architecture.py` 里的声明 | `doc_drift.py` | P0 |
-| 测试隔离 | 全程零出站：`_netguard` 只允许回环，任何真实建连（含 LLM provider）立即失败；写入真实 `data/manuscript` 被守卫拒绝（`BOOK_TEST_GUARD`）；夹具书自建在临时目录，日志与用量账本只落在其中；LLM 用例一律 mock，Playwright 用假引擎 | `src/test/_netguard.py`、`src/test/test_no_network.py`、`src/test/test_isolation.py` | P0 |
+| 测试隔离 | 全程零出站：`_netguard` 只允许回环，任何真实建连（含 LLM provider）立即失败；写入真实 `data/manuscript` 被守卫拒绝（`BOOK_TEST_GUARD`）；夹具书自建在临时目录，日志与用量账本只落在其中；LLM 用例一律 mock，Playwright 用假引擎 | `src/test/_netguard.py`、`src/test/test_network_isolation.py`、`src/test/test_isolation.py` | P0 |
 | 失败语义 | 工具层失败一律抛同一类异常并携带消息与退出码，入口只做一次转换；仓库内不存在“先打印再 `sys.exit(1)`”的失败路径，退出码与消息由用例成对断言 | `src/test/test_lib_errors.py`、`audit/script_contract.py` | P1 |
 | 覆盖率 | 分支覆盖率不低于配置的红线，且每个文件的覆盖率不低于自己的基线；每次提交量快档，带 chromium/pandoc 的完整档另量一次，避免“只有慢档才走到的路径”被当成无人可达 | `make.py cover`（快档）、`make.py cover --full`（含慢档） | P1 |
 | 历史痕迹 | 文档、代码注释、脚本/钩子/CI 注释与配置 `_note` 只描述当前状态 | `traces.py` | P0 |
@@ -208,7 +208,7 @@ report` / `eval-score.sh`）、`balance` 的计量输出（`--json`），以及�
 | IR-13 | 多份手稿互不覆盖：状态、基线与产物名按版本分开，单版本行为不变 | `src/python/lib/_config.py` |
 | IR-03 | 分档不改判据，提交/发布跑全集 | `src/python/check_runner.py` |
 | IR-04 | 失败给出文件与行号，退出码非 0 即失败 | `script_contract.py` |
-| IR-05 | 检查与构建离线完成 | `src/test/_netguard.py`、`src/test/test_no_network.py` |
+| IR-05 | 检查与构建离线完成 | `src/test/_netguard.py`、`src/test/test_network_isolation.py` |
 | IR-06 | 三入口共享同一份动作与状态 | `src/test/test_llm.py`、`src/test/test_app_web.py` |
 | IR-07 | 状态摘要一屏，含阶段与最近一次结果 | `src/test/test_app_tui_interaction.py` |
 | IR-08 | 耗时步骤打印阶段，失败不吞掉已有结果 | `src/python/check_runner.py`、`src/test/test_logging.py` |
@@ -222,7 +222,7 @@ report` / `eval-score.sh`）、`balance` 的计量输出（`--json`），以及�
 | NFR-07 | 历史稿只读，不入构建与扫描 | `src/python/manuscript/snapshot.py` |
 | NFR-08 | 阈值与路径全部读配置，不内联 | `check_architecture.py`、`style_schema.py` |
 | NFR-09 | 三平台一致：显式编码、无绝对路径 | `portability.py` |
-| NFR-10 | 检查与构建阶段零出站连接 | `src/test/test_no_network.py` |
+| NFR-10 | 检查与构建阶段零出站连接 | `src/test/test_network_isolation.py` |
 | NFR-11 | 源文件与文档长度受预算约束 | `file_length.py` |
 | NFR-12 | 文档与注释只描述当前状态 | `traces.py` |
 

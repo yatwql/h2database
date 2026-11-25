@@ -47,6 +47,11 @@ class ScriptContractTest(unittest.TestCase):
     def test_script_style_module_passes(self):
         self.assertEqual(self.problems('"""d"""\nprint("hi")\n'), [])
 
+    def test_the_guard_is_recognised_in_either_quote_style(self):
+        body = ('"""d"""\ndef main(argv=None):\n    return 0\n\n'
+                'if __name__ == "__main__":\n    main()\n')
+        self.assertEqual(self.problems(body), [])
+
     def test_main_with_guard_passes(self):
         body = ('"""d"""\ndef main(argv=None):\n    return 0\n\n'
                 "if __name__ == '__main__':\n    main()\n")

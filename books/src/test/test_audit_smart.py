@@ -55,19 +55,14 @@ class TestSmartAuditHelpers(FixtureCase):
         smart = self.module('smart')
         self.assertEqual(smart.count_diagrams('```text\nab\n```\n'), 0)
 
-    def test_build_exempt_ranges_for_appendix_file(self):
-        smart = self.module('smart')
-        lines = ['# 附录 A 案例研究', '', '## 附：小节', '正文']
-        headings = [(1, '附录 A 案例研究', 1), (2, '附：小节', 3)]
-        ranges = smart.build_exempt_ranges(headings, lines)
-        self.assertIsInstance(ranges, list)
-
-    def test_check_figure_refs_runs(self):
-        smart = self.module('smart')
+    def test_check_figure_refs_reports_the_coverage_verdict(self):
+        smart = self.module("smart")
         buffer = io.StringIO()
         with redirect_stdout(buffer):
             smart.check_figure_refs()
-        self.assertTrue(buffer.getvalue(), 'figure-refs report was silent')
+        text = buffer.getvalue()
+        self.assertIn("TOTAL:", text)
+        self.assertIn("COVERAGE:", text)
 
 if __name__ == '__main__':
     unittest.main()

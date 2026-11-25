@@ -189,7 +189,8 @@ ENTRY_RE = re.compile(r'\b(plan|rf)-(\d+)\b')
 # a document that spells out the delivery pipeline, or the script-name prefixes,
 # is quoting the orchestrator; both lists must be read from it, not retyped
 DELIVER_GROUP_RE = re.compile(r"'deliver':\s*\(([^)]*)\)")
-QUOTED_NAME_RE = re.compile(r"'([a-z_]+)'")
+# names quoted in a docstring or a tuple may use either quote style
+QUOTED_NAME_RE = re.compile(r"['\"]([a-z_]+)['\"]")
 INLINE_TOKEN_RE = re.compile(r'`([a-z_]+)`')
 ALLOWED_PREFIX_RE = re.compile(r'allowed\s*=\s*\(([^)]*)\)')
 PREFIX_CLAIM_RE = re.compile(r'只允许([^。]{0,200})')

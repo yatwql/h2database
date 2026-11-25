@@ -62,13 +62,15 @@ class IndexXrefUnitTest(unittest.TestCase):
         self.assertRegex(buffer.getvalue(), r"索引|index|缺失|missing|FAIL|❌")
         self.assertTrue(buffer.getvalue())
 
-    def test_json_output_is_parseable(self):
+    def test_json_output_lists_the_issues(self):
         buffer = io.StringIO()
         with redirect_stdout(buffer):
             self.mod.main(["--json"])
         text = buffer.getvalue()
-        start = text.find("{")
-        self.assertIsInstance(json.loads(text[start:]) if start >= 0 else {}, dict)
+        payload = json.loads(text[text.index("{"):])
+        self.assertEqual(list(payload), ["issues"])
+        self.assertIsInstance(payload["issues"], int)
+        self.assertGreaterEqual(payload["issues"], 0)
 
 
 class FileLengthUnitTest(unittest.TestCase):

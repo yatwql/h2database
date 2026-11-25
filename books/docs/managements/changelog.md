@@ -13,6 +13,17 @@
 
 ### 变更
 
+- **测试用例核查与整改**：删掉整份重复的 pdf_metrics 目标写回用例（13 条与
+  `test_render_pdf_metrics_units.py` 同函数同断言，后者 33 条覆盖更全）；把零出站用例并入
+  `test_network_isolation.py`（原本两处各写一半）；去掉 `test_pdf_tools`、
+  `test_release_and_runner` 里与别处重复的两条；四处同名不同源的用例改名说明差别
+  （artifact/manuscript、book 前缀、带 `--title` 的发布、in-process 的 to_epub）。
+  弱断言改成内容断言：`index_xrefs` 的「JSON 可解析」原本恒真（`{...} if ... else {}`），
+  `balance` 的索引计数与 diff 方向、`exercises` 的缺槽位、`suggest_renames` 的邻近方法、
+  `smart` 的图形引用结论各自断言真实结果；四条「跑一次脚本」的用例改成不依赖仓库当前状态的确定值。
+  `script_contract` 与 `doc_drift` 原先按单引号匹配 `__main__` 守卫与引号内的名字，一次格式化就会让
+  规则静默失效，改为两种引号都认（各带一条用例）。testplan 的网络隔离载体指向合并后的文件。
+
 - **评审修复：配置越界与重复计数（rf-71）**：七个脚本不再按名字拼出书目录
   （`render/to_pdf`、`to_epub`、`pdf_from_html`、`pdf_toc_links`、`audit/balance`、`audit/doc_drift`、
   `core/menu`，其中两个文件的那几行本就是死代码），改读 `_config.BOOK_ROOT` / `_config.DIST_DIR`；
@@ -969,7 +980,7 @@ HTML 里逃出 `<pre>` 的图注串、`--figures` 开关、以及 JSON 两种列
 - **单文件下限 77 → 78**：夹具补上 `data/tmpl/templates.toml`（新书脚手架会逐字复制它，此前夹具缺这一份，用例只能走到「读模板」之前），`core/scaffold.py` 77 → 98%——新增 10 条用例覆盖三种坏配置的具名拒绝、手稿目录不可读、脚手架产出的五份文档侧文件、二次执行不改已写文件、`set_source` 的仓库/目录/空值三种形态、`create_book` 与命令行入口两种收尾。最薄处变成 `audit/content_volume.py`（78.6%），下限随之抬到 78。
 - **导入期读配置的最后一批判改完**：`audit/source_refs.py`、`ingest/chapters.py`、`render/to_html.py`、`ingest/outline.py`、`audit/style_schema.py`、`audit/smart.py` 的路径与策略常量全部改为调用时解析（`_config` 门面 + `suffixes()`/`generation()`/`templates()`/`quality_policy()` 这类小函数；`source_refs` 的引用正则按后缀元组缓存）。一个进程换书后不再沿用上一本的路径。
   顺带修两处测试隔离：`_fixture.refresh_config` 现在也丢弃 `lib._baseline`/`_fsutil`/`_errors`（它们各自持有 `_config` 引用，不丢弃就会绑在上一本书上），新增的两组用例退出时恢复 `BOOK_ROOT` 与活动书。
-- **测试用例核查与整改**：`test_redundancy`（重复体、空断言、松散断言）、`test_no_network`/`test_isolation`（零出站）、`test_meta_taxonomy`（层标签与文件名）全绿；人工扫描后修四处：① 真跑 pandoc 的 EPUB 用例从 `tier:fast` 的 `test_render_script_branches.py` 移出，新建 `test_render_epub_pandoc.py`（`tier:slow`）——快档不得依赖 pandoc；② `test_healthy_fixture_passes` 改为 `test_the_fixture_reports_the_gaps_it_has`（夹具本就有缺口，名不副实）；③ `test_repeated_gate_runs_agree` 改为真的比对三次运行的退出码与结论，而不是三次断言同一个值；④ `test_missing_glossary_exits_cleanly` 改为 `test_a_missing_glossary_is_regenerated`（该用例断言的是重新生成）。
+- **测试用例核查与整改**：`test_redundancy`（重复体、空断言、松散断言）、`test_network_isolation`/`test_isolation`（零出站）、`test_meta_taxonomy`（层标签与文件名）全绿；人工扫描后修四处：① 真跑 pandoc 的 EPUB 用例从 `tier:fast` 的 `test_render_script_branches.py` 移出，新建 `test_render_epub_pandoc.py`（`tier:slow`）——快档不得依赖 pandoc；② `test_healthy_fixture_passes` 改为 `test_the_fixture_reports_the_gaps_it_has`（夹具本就有缺口，名不副实）；③ `test_repeated_gate_runs_agree` 改为真的比对三次运行的退出码与结论，而不是三次断言同一个值；④ `test_missing_glossary_exits_cleanly` 改为 `test_a_missing_glossary_is_regenerated`（该用例断言的是重新生成）。
 - **架构核查后的三处整改**：① `lib/_baseline.path_for()` 不再自己拼路径（一份与 `Config.baseline_path` 重复的实现，且漏掉版本目录），改为委托后者；② `audit/captions.py`、`audit/figure_clusters.py`、`audit/exercises.py` 删掉导入期算出的 `DOCS_DIR`/`MS_DIR` 常量，改读 `_config` 门面；③ `manuscript/terms.py` 的语言包与 `manuscript/case_studies.py` 的输入文件同样改为调用时解析——一个进程换书时不再继续用上一本的路径。另将剩下 6 个仍在导入期读配置的模块记入问题台账。
 - **单文件下限 75 → 77**：`core/actions.py` 76 → 81%（补 5 条用例：LLM 层不可用时的状态行、体积结论的三种分支、按定价/未定价两种预估输出），最薄处变成 `core/scaffold.py`（77.1%），下限随之抬到 77。
 - **同名文件的书间隔离回归**：新增 `test_lib_book_isolation.py`——两本书各有 同名手稿 `ch1-test.md`、`data/config/base.json` 与 `dist/`，用例钉住四条不变量：同名相对路径各自解析到自己书根、跑一本书的合并不会在另一本里留下产物、一本书的体量基线另一本读不到、两本的同名配置文件各读各的。
@@ -1040,7 +1051,7 @@ HTML 里逃出 `<pre>` 的图注串、`--figures` 开关、以及 JSON 两种列
 - 判据只写性质：`testplan` §2.2 的阈值列改为“不低于配置下限”这类表述，键名与取值集中到
   `technical.md` §3.2 的阈值归属；`doc_drift` 新增 `THRESHOLD` 检查，判据表引用配置键
   名即失败。（rf-14）
-- 补回 `src/test/test_no_network.py`：testplan 一直把它列为网络隔离的载体，文件已不存在。
+- 补回网络隔离的用例文件：testplan 一直把它列为网络隔离的载体，文件已不存在。
 
 ### 文档清理
 

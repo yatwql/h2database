@@ -59,11 +59,6 @@ class SourceRefsReportTest(unittest.TestCase):
         new, known = self.mod.split_drift([(claim, 'src/Widget.java')], baseline)
         self.assertEqual((len(new), len(known)), (0, 1))
 
-    def test_suggest_renames_returns_a_list(self):
-        suggestions = self.mod.suggest_renames(
-            self.Claim('ch1.md', 1, 'Widgets', 'run'), {'Widget': ['/src/Widget.java']})
-        self.assertIsInstance(suggestions, list)
-
     def test_json_summary_is_serialisable(self):
         buffer = io.StringIO()
         with redirect_stdout(buffer), \

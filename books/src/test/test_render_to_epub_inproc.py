@@ -54,7 +54,7 @@ class ToEpubInProcessTest(unittest.TestCase):
         epub = os.path.join(self.root, 'dist', 'test-book.epub')
         self.assertTrue(os.path.isfile(epub))
 
-    def test_missing_merged_markdown_is_reported(self):
+    def test_a_missing_merged_markdown_stops_the_in_process_run(self):
         merged = os.path.join(self.root, 'dist', 'test-book.md')
         if os.path.exists(merged):
             os.remove(merged)

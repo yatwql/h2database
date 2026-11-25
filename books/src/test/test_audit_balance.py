@@ -6,6 +6,7 @@ end-to-end tests exercise only indirectly.
 """
 
 import importlib.util
+import json
 import os
 import sys
 import tempfile
@@ -63,10 +64,14 @@ class TestBalanceCheckHelpers(FixtureCase):
         self.assertIsInstance(index, dict)
         self.assertTrue(index, 'fixture glossary should contribute chapter hits')
 
-    def test_load_index_chapter_index_returns_a_mapping(self):
-        bc = self.module('balance')
-        index = bc.load_index_chapter_index()
-        self.assertIsInstance(index, dict)
+    def test_load_index_chapter_index_counts_entries_per_chapter(self):
+        bc = self.module("balance")
+        index_md = self.write(
+            "data/manuscript/back/index.md",
+            "# 索引\n\n- **MVStore** —— §3.2\n- **事务** —— §3.4, §7.1\n",
+        )
+        self.assertTrue(index_md)
+        self.assertEqual(bc.load_index_chapter_index(), {3: 2, 7: 1})
 
     def test_collect_metrics_and_render(self):
         bc = self.module('balance')
@@ -76,12 +81,15 @@ class TestBalanceCheckHelpers(FixtureCase):
         rendered = bc.render_markdown(metrics)
         self.assertIn('| 文件 |', rendered)
 
-    def test_render_diff_returns_text(self):
-        bc = self.module('balance')
+    def test_render_diff_shows_the_direction_of_each_change(self):
+        bc = self.module("balance")
         current = bc.collect_metrics()
-        baseline = bc.collect_metrics()
+        baseline = json.loads(json.dumps(current))
+        for row in baseline["files"]:
+            row["lines"] += 2
         diff = bc.render_diff(current, baseline)
-        self.assertIsInstance(diff, str)
+        self.assertIn("| 文件 |", diff)
+        self.assertIn("(-2)", diff)
 
 if __name__ == '__main__':
     unittest.main()

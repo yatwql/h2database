@@ -60,7 +60,7 @@ class ArtifactSnapshotTest(unittest.TestCase):
             handle.write('# 改过\n')
         self.assertEqual(verify('2026-06-15-ref2'), 1)
 
-    def test_an_existing_snapshot_is_not_overwritten(self):
+    def test_an_existing_artifact_snapshot_is_not_overwritten(self):
         self.assertEqual(import_artifacts(self.source, 'ref3', '2026-06-15'), 0)
         self.assertEqual(import_artifacts(self.source, 'ref3', '2026-06-15'), 2)
 

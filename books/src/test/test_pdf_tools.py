@@ -86,10 +86,6 @@ class PdfVerificationTest(unittest.TestCase):
         report = self.module.verify(self.pdf, self.html)
         self.assertTrue(report.to_dict()['ok'], report.to_dict())
 
-    def test_missing_pdf_reports_exists(self):
-        report = self.module.verify(self.pdf, self.html)
-        self.assertFalse(self.check(report, 'EXISTS')[0])
-
     def test_missing_html_reports_source_html(self):
         make_pdf(self.pdf)
         report = self.module.verify(self.pdf, os.path.join(self.tmp.name, 'no.html'))

@@ -90,7 +90,10 @@ def check(path: str) -> list[str]:
 
     defines_main = any(isinstance(node, ast.FunctionDef) and node.name == 'main'
                        for node in tree.body)
-    has_guard = "__name__ == '__main__'" in source
+    # either quote style: a formatter may rewrite the source without changing
+    # what the guard means, and the contract is about the guard, not the typing
+    has_guard = ("__name__ == '__main__'" in source
+                 or '__name__ == "__main__"' in source)
     runs_top_level = bool([n for n in tree.body
                            if isinstance(n, (ast.Expr, ast.For, ast.If, ast.With))
                            and not isinstance(getattr(n, 'value', None), ast.Constant)])

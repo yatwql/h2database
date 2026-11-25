@@ -152,10 +152,11 @@ class MutationSmokeCliTest(unittest.TestCase):
         self.assertNotEqual(raised.exception.code, 0)
 
     def test_the_tool_runs_as_a_script(self):
-        code, _out = _fixture.run_inproc(
+        code, out = _fixture.run_inproc(
             self.root, "mutation_smoke.py", "--module", "tiny.py", "--tests", "test_tiny.py"
         )
-        self.assertIsInstance(code, int)
+        self.assertEqual(code, 2)
+        self.assertIn("no such module", out)
 
 
 if __name__ == "__main__":
