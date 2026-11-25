@@ -113,10 +113,18 @@ def check_plan_tree(book_root: str | None = None) -> list[dict]:
 
 
 def doc_files() -> list[str]:
+    """Markdown the gates judge: the live documents, never the archive.
+
+    An archived ledger keeps the wording of the version it describes, so it names
+    files and sections that have since moved; judging it as a live document would
+    demand that history stay current, which defeats the point of keeping it.
+    """
+    archive = os.path.join(_config.BOOK_ROOT, 'docs', 'archive') + os.sep
     files = glob.glob(os.path.join(_config.BOOK_ROOT, "docs", "**", "*.md"), recursive=True)
     files.append(os.path.join(_config.BOOK_ROOT, "README.md"))
     files.append(os.path.join(REPO_ROOT, "CLAUDE.md"))
-    return sorted({os.path.normpath(p) for p in files if os.path.isfile(p)})
+    return sorted({os.path.normpath(p) for p in files
+                   if os.path.isfile(p) and not os.path.normpath(p).startswith(archive)})
 
 
 def _repo_root(explicit: str | None = None) -> str:

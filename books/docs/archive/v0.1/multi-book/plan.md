@@ -133,28 +133,23 @@
 
 ## 步骤四（条件成熟时）：工具链独立成包
 
-**状态**：包骨架已落地（`books/pyproject.toml`：七个顶层包 + 空依赖，可离线
-`pip install --target`），尚未提供控制台命令。
+**现状**：包骨架在 `books/pyproject.toml`（七个顶层包 + 空依赖，可离线
+`pip install --target`）。安装形态下不得有导入期配置读取：那时 `--book` 还没解析，
+书根会按安装位置推导成 `/` 并报 `missing config: /data/book/book.toml`。
 
-**为什么还没有命令**：安装后导入即失败——若干模块在**导入期**读配置，那时 `--book` 还没
-解析，书根按安装位置推导成 `/`，报 `missing config: /data/book/book.toml`。
+配置读取因此全部放在调用时：`make.book_root()`、`check_runner.book_root()/repo_root()`、
+`core/actions.repo_root()`、`core/settings.spec_table()`，以及 `_log`（无书时只输出到控制台，
+选定书后才写文件）。控制台入口已登记：`[project.scripts] bookwright = "app.cli:main"`，
+安装形态下 `--book` 必填。
 
-已改为调用时读取：`make.book_root()`、`check_runner.book_root()/repo_root()`、
-`core/actions.repo_root()`，以及 `_log`（无书时只输出到控制台，选定书后才写文件）。
-**仍余一处**：`core/settings.py` 的 `SPEC` 表在导入期用 `_config.CONFIG_PATH` 拼路径，
-要改成惰性构建（`spec()`）才能让安装形态导入通过。改完再打开
-`[project.scripts] bookwright = "app.cli:main"`。
+**待办**：
 
-**余下动作**：
-
-1. `_log`、`check_runner`、`make` 的模块级配置读取改为函数内读取；
-2. 恢复控制台命令，`--book` 在安装形态下必填；
-3. 默认配置随包分发（`base.json`/`style.json`/`templates.toml`/`language/`），书里只留覆盖项。
+1. 默认配置随包分发（`base.json`/`style.json`/`templates.toml`/`language/`），书里只留覆盖项。
    约束：**缺失即用包内默认值会改变语义**——`language()` 缺文件时原本退回「只有骨架名的
    最小包」，若换成包内完整的 `zh.json`，最小书会被按完整骨架生成；`base.json`/`style.json`
    同理（缺失＝空策略，而不是「等同仓库那份」）。因此这一层要按「键级回退」实现：书的文件
    存在就用它，缺某个键才取包内默认值，并保留「整份缺失」的原有回退语义，配套用例钉住；
-4. 安装后的端到端验收：把书目录复制到仓外，`bookwright check` 与仓内结论一致。
+2. 安装后的端到端验收：把书目录复制到仓外，`bookwright check` 与仓内结论一致。
 
 **动作**：`src/python/` 抽成带 `pyproject.toml` 的包；默认配置随包分发；
 `--book` 必填；本仓只剩书目录与文档。包里必须一并带上三样东西，
@@ -179,9 +174,9 @@
 
 ## 步骤五（按需）：多根源与源指纹
 
-**已落地**：`[sources].roots[]` 的声明、`label` 唯一校验、`source_tree()` 的解析与
+**现有实现**：`[sources].roots[]` 的声明、`label` 唯一校验、`source_tree()` 的解析与
 `versions()['source']` 的单根/多根两种形态。
-**余下**：`ingest/digest.py` 逐根遍历并在 inventory 里按 `label` 分组；体量基线写入
+**待办**：`ingest/digest.py` 逐根遍历并在 inventory 里按 `label` 分组；体量基线写入
 `source{label, version, digest}`，指纹不符时要求复核。
 
 只有一本书要同时分析多个源时才做，单源时不做任何改动。

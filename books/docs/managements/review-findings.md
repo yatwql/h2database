@@ -97,9 +97,9 @@
 
 ## 已解决问题
 
-### 本版本已修复（6.5）
+### 已修复（当前版本 0.1）
 
-> 本表为当前开发周期的摘要行，详情见 `changelog.md` 的 `[6.5]` 段；发布时摘要留在
+> 本表为当前开发周期的摘要行，详情见 `changelog.md` 的 `[0.1]` 段；发布时摘要留在
 > 版本段，本表清空。
 
 | # | 问题 | 修复 |
@@ -162,7 +162,12 @@
 | rf-52 | `logs/perf-history.jsonl` 只增不减（1.58 MB / 11,725 行），且同时充当判据——按保留窗口清理就会移动基准 | **已解决**：窗口按 `style.json [quality].perf_history_runs`（默认 200）封顶、超出后原子重写保留最新段；评审下限另存 `data/baselines/perf-baseline.json`（`reviewed{by,at,commit,reason,runs}` + 逐步/总计中位数），`compare()` 优先比基线并报 `source`，无基线时退回窗口中位数；新增 `--update-baseline --reviewed-by --reason`。首次运行把历史 11,725 行收敛到 200 行（1.58 MB → 30 KB） |
 | rf-53 | `to_pdf` 第 3 步把 TOC 页码写回 HTML 后，同一份正文的重渲页数从 975 变成 905，原因未定位 | **已解决**：根因是 `rstrip('</a>')`——`str.rstrip` 删的是字符集合而非后缀，标题以行内元素结尾的条目（`…<code>x</code>`）被啃掉闭合标签，留下未闭合的 `<code>`，解析器重挂内容：`<body>` 下多出一个游离 `<code>`、`#page-wrap` 消失、文档高度少约 10%（对应 70 页）。写回逻辑抽到 `render/toc_pages.py`：按锚点精确删除末尾 `</a>` 四个字符；写盘前三项自检（`#content` 逐字节不变、`<a` 数量不变、可扰动标签按名成对），任一不成立即放弃并保留原文件。`to_pdf` 改为调用 `toc_pages.apply()`，新增 9 条用例。实测：写回前后 `#content` 哈希一致（`c43fb21341c7`）、文档高度 682,878 → 760,779px、`<body>` 子节点恢复为 `cover,toc-page,DIV,page-wrap`；同一份 HTML 的印刷版 905 → **977 页**（标准版 967，差 10 页 = 章首横幅）。判据：写回前后 `#content` 哈希相同、页数差 ≤ 1% |
 
-### 归档
+## 归档
 
-本项目不按版本切分问题归档文件：已修条目在下一次发布时摘要进 `changelog.md` 对应
-版本段，历史由 git 保留。
+> 已关闭版本的问题台账在 `docs/archive/`；本文件只留当前在办与未关闭的条目。
+
+| 版本 | 归档台账 |
+| --- | --- |
+| v0.1 | [archived_review-findings.0.1.md](../archive/v0.1/archived_review-findings.0.1.md) · [archived_changelog.0.1.md](../archive/v0.1/archived_changelog.0.1.md) · [archived_plan.0.1.md](../archive/v0.1/archived_plan.0.1.md) |
+
+已修条目在下一次发布时摘要进 `changelog.md` 对应版本段，历史由 git 保留。

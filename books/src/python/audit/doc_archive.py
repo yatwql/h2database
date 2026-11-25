@@ -37,6 +37,10 @@ TRACKER_RE = re.compile(r'(plan|rf)-\d+')
 ALLOWED_TOPIC_FILES = frozenset({'design.md', 'plan.md', 'README.md'})
 LIVE_SECTION_RE = re.compile(r'^## \[([^\]]+)\][^\n]*$', re.M)
 LIVE_RF_RE = re.compile(r'^### 本版本已修复[（(]([^)）]+)[)）][^\n]*$', re.M)
+# A version directory can exist while its version is still being written: the
+# finished iterations are filed away as they close, and the development segment
+# stays live until the release moves it. Only a released section must be gone.
+DEV_MARKERS = ('未发布', '开发中')
 
 
 def archive_root() -> str:
@@ -71,7 +75,9 @@ def index_links(text: str) -> set[str]:
 
 
 def live_versions(text: str) -> set[str]:
-    return {match.group(1).strip().lstrip('v') for match in LIVE_SECTION_RE.finditer(text)}
+    """Versions still written as a live section, dev segments excluded."""
+    return {match.group(1).strip().lstrip('v') for match in LIVE_SECTION_RE.finditer(text)
+            if not any(marker in match.group(0) for marker in DEV_MARKERS)}
 
 
 def _version_dir_problems(root: str) -> list[str]:

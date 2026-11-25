@@ -64,11 +64,18 @@ ID_OWNERS = ('plan.md', 'review-findings.md')
 
 
 def doc_files() -> list[str]:
-    """Documentation and repository-level guides (manuscript and dist are content)."""
+    """Documentation and repository-level guides (manuscript and dist are content).
+
+    `docs/archive/` is history: an archived ledger keeps the wording of the version
+    it describes, so its phase labels and version numbers are facts about that
+    version, not traces in the live docs.
+    """
+    archive = os.path.join(_config.BOOK_ROOT, 'docs', 'archive') + os.sep
     files = glob.glob(os.path.join(_config.BOOK_ROOT, 'docs', '**', '*.md'), recursive=True)
     files.append(os.path.join(_config.BOOK_ROOT, 'README.md'))
     files.append(os.path.join(_config.BOOK_ROOT, '..', 'CLAUDE.md'))
-    return sorted({os.path.normpath(p) for p in files if os.path.isfile(p)})
+    return sorted({os.path.normpath(p) for p in files
+                   if os.path.isfile(p) and not os.path.normpath(p).startswith(archive)})
 
 
 def code_patterns() -> tuple[str, ...]:

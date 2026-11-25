@@ -1,0 +1,100 @@
+> 涵盖版本：0.1
+> 归档时间：2026-11-25
+
+# H2 Database 源码分析 — 实施计划（0.1 归档）
+
+> 版本：0.1
+> 最后更新：2026-06-15
+
+---
+
+## 1. 当前状态
+
+文档已发布 0.1 工业级技术书籍质量里程碑，并在 0.1 扩展了 EPUB 交付形态：
+
+- 12 章 + 5 附录已交付（A 端到端案例研究、B 源码版本变更说明、C 术语表、D 概念索引、E 参考文献）。
+- 正式源码、管理文档与交付工具统一位于 `books/`。
+- 标准 MD/HTML 验证链路通过；PDF / 印刷级 PDF / EPUB 按需生成。
+- 全部历史审查问题均在 `books/docs/managements/review-findings.md` 中关闭（第 7 轮含 R7-1..R7-17 与 R8-1）。
+
+具体统计（行数、图数、术语表/索引条目数、工具脚本数）以 `books/cover.md` 自动更新结果与 `books/src/python/final_check.py` 输出为准，本文件不再重复维护数字。
+
+## 2. 正式目录
+
+```text
+books/
+  cover.md
+  front/                          # 书籍前件（preface, copyright, how-to-read）
+  ch1-2-architecture.md
+  ch3-packages.md
+  ch4-5-modules-processes.md
+  ch6-1-data-structures.md
+  ch6-2-storage-algorithms.md
+  ch6-3-query-algorithms.md
+  ch7-sql-execution.md
+  ch8-query-optimizer.md
+  ch9-10-persistence-locking.md
+  ch11-12-guide-summary.md
+  appendix-a-case-studies.md      # 附录 A
+  appendix-b-version-changes.md   # 附录 B
+  back/glossary.md                # 附录 C 术语表
+  back/index.md                   # 附录 D 概念索引
+  back/references.md              # 附录 E 参考文献
+  management/                     # 管理文档（README, requirements, plan, testplan, changelog, review-findings, style-guide, baseline-*.json）
+  plan/                           # 阶段性实施计划（版本路线、详细 PRD/任务清单）
+  h2-source-code-analysis.md      # 合并 Markdown 交付物
+  tools/                          # 正式生成、审计与验证脚本
+```
+
+## 3. 验证流程
+
+标准验证流程与 PDF 交付命令详见 `books/docs/managements/testplan.md` 第 1 节。本章节不重复维护命令清单。
+
+## 5. 管理文档职责
+
+管理文档职责分配见 `books/docs/managements/README.md` 与项目根 `CLAUDE.md` 的「Management Document Authority」节。核心原则：同一事实只维护在一个权威位置。
+
+## 6. 维护策略
+
+- 发现新问题时先登记到 `books/docs/managements/review-findings.md`，修复完成后同步记录到 `books/docs/managements/changelog.md`。
+- 不保留一次性修复脚本、临时压缩包、`__pycache__` 或外部 session 文件。
+- 本项目 session 文件只保留在仓库 `.claude/` 目录中。
+- 建议在 H2 上游版本升级或源码大改后，运行 `python books/src/python/source_freshness_check.py` 检查源码引用保鲜状态。
+
+## 7. 后续增强项
+
+| 特性 | 说明 | 优先级 |
+|------|------|--------|
+| API 文档索引 | 从 javadoc 或源码生成关键类速查表 | P3 |
+| 交互式图表 | 评估将部分 ASCII 图迁移为 Mermaid/HTML 交互图 | P3 |
+| 英文版本 | 翻译为英文版 | P4 |
+| CI 集成 | 将标准验证链路接入 GitHub Actions | P4 |
+
+## 8. 风险与应对
+
+| 风险 | 应对 |
+|------|------|
+| 源文件与合并文档不同步 | 运行 `rebuild_merged.py` 和 `final_check.py` |
+| 统计数据漂移 | 先运行 `cover_stats.py`，统计以 cover/final_check 为准 |
+| HTML TOC 或围栏状态回归 | 运行 `generate_html.py` 和 `final_check.py` |
+| PDF 大纲/目录失效 | 正式交付前运行 PDF 三步验证 |
+| 管理文档重复维护导致冲突 | 保持职责分离，删除重复段落，使用交叉引用 |
+
+## 9. 当前在建项：源码重分析 → 手稿重生成
+
+上游源码更新（H2 2.5.259-SNAPSHOT，843 个 Java 文件 / 231k 行）后，手稿改为
+"事实驱动重生成 + 十轮质量复盘"：
+
+- 阶段一（源码 → 手稿）：`sources/digest_source.py` 产出版图清单，
+  `sources/plan_outline.py` 生成章节大纲与覆盖矩阵，`sources/build_manuscript.py`
+  依据事实渲染章节（包版图、核心类型、源码坐标、练习）。
+- 阶段二（手稿 → 文档）：沿用 `render/` 与 `audit/` 既有门禁。
+- 质量复盘：十轮递进，每轮"度量 → 改进生成器 → 重生成 → 复核门禁"，
+  度量口径与验收标准见 `books/docs/plan/2026-06-16-001-manuscript-regeneration.md`。
+
+### 9.1 在建子项
+
+| 立项 | 目标 | 设计文档 |
+|------|------|----------|
+| 章节范围去重叠 | 已完成：重复句 16.5% → 4.3%，阈值收紧到 12% | `docs/plan/2026-06-16-002-chapter-scope-disjoint.md` |
+| 工具链通用化（配置已分三类：数据组织/基础/风格） | 去 H2 特化，成为通用源码分析出版工具 | `docs/plan/2026-06-16-003-toolchain-generality.md` |

@@ -49,6 +49,17 @@ class DocDriftTest(unittest.TestCase):
         self.assertTrue(findings)
         self.assertEqual(findings[0]["kind"], "PATH")
 
+    def test_the_archive_is_not_judged_as_a_live_document(self):
+        # an archived ledger keeps the wording of the version it describes, so the
+        # paths it names have moved on; judging it would demand that history stay
+        # current. doc_files() is what decides, hence the check on its output.
+        archived = os.path.join(self.root, "docs", "archive", "v0.1", "archived_plan.0.1.md")
+        os.makedirs(os.path.dirname(archived), exist_ok=True)
+        with open(archived, "w", encoding="utf-8") as fh:
+            fh.write("见 `books/no-such-file.md`。\n")
+        self.assertNotIn(os.path.normpath(archived),
+                         [os.path.normpath(p) for p in self.drift.doc_files()])
+
     def test_existing_path_is_accepted(self):
         path = self.doc("见 `books/README.md`。\n")
         self.assertEqual(self.drift.check_paths([path], os.path.dirname(BOOK_ROOT)), [])

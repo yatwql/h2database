@@ -6,12 +6,13 @@ build-backend = "setuptools.build_meta"
 name = "bookwright"
 version = "0.1.0"
 description = "Source-code analysis into a book: the toolchain behind books/."
-# No console scripts yet: an installed entry point would import the action layer,
-# which reads the configuration at import time. Those reads (lib/_log.py,
-# check_runner.py, make.py) must become call-time first — see
-# docs/plan/multi-book/plan.md step four.
 requires-python = ">=3.11"
 dependencies = []
+
+[project.scripts]
+# The configuration is read when an action runs, never at import, so the entry
+# point works from an installed copy: `bookwright check --book <book root>`.
+bookwright = "app.cli:main"
 
 [tool.setuptools]
 package-dir = { "" = "src/python" }

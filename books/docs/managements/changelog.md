@@ -13,6 +13,19 @@
 
 ### 变更
 
+- **归档目录建成 `docs/archive/v0.1/`**：恢复被 `43cd061cc` 删掉的历史快照（`phase3-audit`、
+  `writing-style-enhance-plan`、五份计划、旧 changelog / plan / review-findings），并把 4.x–6.1 的
+  书籍版本记录归一为 0.1——工具链、书籍、被分析源码是三条版本轴，之前被当成了同一条。
+  `multi-book` 与 `figure-chapter-plumbing` 两个已完成的迭代目录移入该目录，设计文档去掉
+  「已落地 / 尚未 / 余下」这类过程描述，只描述当前事实。三份主账本各新增 `## 归档` 索引。
+- **归档不当活文档判定**：`doc_drift`、`traces` 的 doc 清单与 `_config.excluded_dirs()` 排除
+  `docs/archive/`——归档保存的是它描述那一版的措辞，强求它跟上当前路径等于要求历史保持最新。
+  `audit/doc_archive.py` 新增例外：版本目录可与「开发中」的版本段并存（迭代收尾即归档，发布时
+  才迁出变更段），只有已发布版本不得留在主文档。
+- **工具链控制台入口登记**：`books/pyproject.toml` 新增
+  `[project.scripts] bookwright = "app.cli:main"`；配置读取全部在调用时完成，已验证无书环境下
+  `app.cli`、`core.actions`、`app.tui`、`core.settings`、`check_runner`、`make`、`ingest.digest`
+  导入不报错（安装形态下 `--book` 必填）。
 - **覆盖率收尾：`app/tui.py` 与 `manuscript/glossary.py` 到 100%**：全局 97%（缺 249 行、246 个半边分支，
   此前 264 / 266）。补的都是入口面与错误路径：`--once settings`、退出行经 `handle` 退出、无预估时
   只报用时、provider 上移被拒、分组里已经没有对应行、`edit_provider` 的失败分支；术语表补上
@@ -523,8 +536,8 @@
   新增的 `source-inventory.prev.json`（只用于告知源码是否变化）已进 `.gitignore`，并在目录树里
   标明三者各自的用途与读者。
 - **基线目录清理**：删掉三个不再有读者的文件——一份只有 `ch1.md` 的测试遗漏账本（`rf-31` 说已删，
-  但它又出现了）、`snapshot-june-2026` 的裸标签副本（与日期全名那份内容重复），以及 v5.0 的
-  `balance` 手动快照（`balance.py --baseline` 随时可重生成，且书名版本已到 6.5）。剩下的 9 份
+  但它又出现了）、`snapshot-june-2026` 的裸标签副本（与日期全名那份内容重复），以及早期版本的
+  `balance` 手动快照（`balance.py --baseline` 随时可重生成，且书籍版本已到 6.5）。剩下的 9 份
   各有明确读者：六份经 `base.json [baselines]` 配置，两份是按日期命名的快照体积账本，一份是
   松散断言登记表。
 - **`templates.toml` 的无效查找去掉**：`chapters.py` 原来对每一条深读要点都调 `tpl('deep_dive_item', …)`，
@@ -551,7 +564,7 @@
   （base/style/llm_*）。`Config.book_toml`、scaffold 写入位置、注释痕迹扫描面、fixture、
   用户文档与 20 处路径引用同步改指向。
 - **多书并行维护立档**：配置已能按书解析，但入口、派生状态与基线仍是单份，第二本书一进来就会
-  互相覆盖。新增 `docs/plan/multi-book/` 记录目标形态（先一仓多书、条件成熟再让工具链独立成包）、
+  互相覆盖。新增 `docs/archive/v0.1/multi-book/` 记录目标形态（先一仓多书、条件成熟再让工具链独立成包）、
   按书隔离与共享的边界、配置三层与手稿 edition 轴，并把 `plan-11` 列为当前待办；
   `technical.md` §10 的「不做多书合一构建」仍然有效——一本书一份产物。
 - **多书设计与计划定稿**：两轮以上逐条复核后改掉的事实错误与不可实施处——`PATH_LITERALS`
@@ -584,7 +597,7 @@
   （版本目录名、三份文件与头行、索引链接可打开、已归档版本不得留在主文档、迭代目录名不含
   追踪编号），空归档视为通过。规则写在 `docs/archive/README.md`，归属写进 `folder.md` §3，
   能力登记为 IR-12；用例按层拆成 `test_core_docs_archive.py` 与 `test_audit_doc_archive.py`。
-- **计划管理补上双向覆盖**：`docs/plan/figure-chapter-plumbing/` 这一完成态迭代没有认领它的
+- **计划管理补上双向覆盖**：`docs/archive/v0.1/figure-chapter-plumbing/` 这一完成态迭代没有认领它的
   计划项，`plan-11`（多书并行维护）的条目在 `plan.md` 里丢失——概述仍写「在办 3 项」而正文
   只剩两项。恢复 `plan-11` 全条，并在 `plan.md` 新增「待归档」节：已完成的迭代在这里列名
   并给出结论出处，发布时由 `core/docs_archive.py` 整体移入版本归档。新增门禁
@@ -1133,3 +1146,11 @@ HTML 里逃出 `<pre>` 的图注串、`--figures` 开关、以及 JSON 两种列
 
 本文件记录工具链的版本段，版本号取 `lib/_version.py`。书籍版本（`book.toml`）与
 封面统计不由本文维护；两者的历史都在 git 中。
+
+## 归档
+
+> 已关闭版本的台账在 `docs/archive/`，一个版本一个目录；本文件只留当前版本段。
+
+| 版本 | 变更日志 | 计划快照 | 问题台账 |
+| --- | --- | --- | --- |
+| v0.1 | [archived_changelog.0.1.md](../archive/v0.1/archived_changelog.0.1.md) | [archived_plan.0.1.md](../archive/v0.1/archived_plan.0.1.md) | [archived_review-findings.0.1.md](../archive/v0.1/archived_review-findings.0.1.md) |

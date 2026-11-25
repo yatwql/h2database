@@ -416,13 +416,14 @@ class Config:
         return os.path.join(self.dist_dir, name)
 
     def excluded_dirs(self) -> tuple[str, ...]:
-        """Artifacts and read-only history: gates judge the manuscript, not these."""
+        """Artifacts, read-only history and archives: gates judge the live book."""
         snapshots = str((self.base_policy.get('paths') or {}).get('snapshots', 'data/snapshots'))
         archive = str((self.base_policy.get('archive') or {}).get('dir') or 'data/archive')
         reports = str((self.base_policy.get('reports') or {}).get('dir') or 'test-reports')
         return (os.path.join(self.root, 'dist'),
                 os.path.join(self.root, snapshots),
                 os.path.join(self.root, archive),
+                os.path.join(self.root, 'docs', 'archive'),
                 os.path.join(self.root, reports),
                 self.cache_dir(),
                 self.tmp_dir())

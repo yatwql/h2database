@@ -104,12 +104,28 @@ class ArchiveGateTest(unittest.TestCase):
         path = os.path.join(self.tmp, "managements", "changelog.md")
         with open(path, "w", encoding="utf-8") as fh:
             fh.write(
-                CHANGELOG.replace(
+                CHANGELOG.replace("## [0.1] - 开发中（未发布）", "## [0.1] — 2026-06-15").replace(
                     "## 归档", "## 归档\n- [x](../archive/v0.1/archived_changelog.0.1.md)"
                 )
             )
         problems = self.mod.check(self.root, self.tmp)
         self.assertTrue(any("仍留在主文档" in p for p in problems))
+
+    def test_a_version_still_in_development_keeps_its_live_section(self):
+        # iterations are filed away as they close, while the development segment
+        # stays live until the release moves it
+        self.archive()
+        bodies = {
+            "changelog": CHANGELOG,
+            "plan": PLAN + "## 归档\n",
+            "review-findings": RF.replace("### 本版本已修复（0.1）", "### 已修复"),
+        }
+        for ledger, text in bodies.items():
+            link = f"- [x](../archive/v0.1/archived_{ledger}.0.1.md)"
+            path = os.path.join(self.tmp, "managements", f"{ledger}.md")
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(text.replace("## 归档", f"## 归档\n{link}"))
+        self.assertEqual(self.mod.check(self.root, self.tmp), [])
 
     def test_a_topic_directory_with_extra_files_is_reported(self):
         self.archive()

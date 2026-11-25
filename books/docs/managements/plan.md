@@ -90,13 +90,15 @@
 
 | 迭代目录 | 结论出处 |
 | --- | --- |
-| `docs/plan/figure-chapter-plumbing/` | `rf-35`、`changelog.md` 的 6.5 段 |
-| `docs/plan/multi-book/` | `plan-11` 多书并行维护：步骤与设计在该目录，结论见 `changelog.md` 同段与 `technical.md` §3.1 |
+
+当前无待归档项：已完成的迭代已随 `docs/archive/v0.1/` 归档。
 
 ## 归档
 
-> 已发布版本的台账见 `docs/archive/`；当前尚无已归档版本。
+> 已关闭版本的台账在 `docs/archive/`；本文件只留当前与将来的计划项。
 
+| 版本 | 计划快照 | 变更日志 | 问题台账 |
+| --- | --- | --- | --- |
+| v0.1 | [archived_plan.0.1.md](../archive/v0.1/archived_plan.0.1.md) | [archived_changelog.0.1.md](../archive/v0.1/archived_changelog.0.1.md) | [archived_review-findings.0.1.md](../archive/v0.1/archived_review-findings.0.1.md) |
 
-本项目不按版本切分计划归档文件：计划项完成后写进 `changelog.md` 对应版本段，
-本文不留存已完成项，历史由 git 保留。
+计划项完成后摘要进 `changelog.md` 对应版本段，本文不留存已完成项，历史由 git 与归档目录保留。
