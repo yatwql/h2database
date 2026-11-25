@@ -65,6 +65,14 @@ class ParseTermsTest(TermsCase):
 
 
 class RelatedEntriesTest(TermsCase):
+    def test_a_term_line_citing_one_chapter_twice_lists_it_once(self):
+        path = self.glossary("- **ACID**: 事务特性。第1章、第1章\n")
+        self.assertEqual(self.terms.parse_glossary_with_related(path)["ACID"]["chapters"], [1])
+
+    def test_a_glossary_without_entries_has_nothing_to_close(self):
+        path = self.glossary("## 术语表\n\n暂无。\n")
+        self.assertEqual(self.terms.parse_glossary_with_related(path), {})
+
     def test_a_repeated_link_is_recorded_once_and_an_empty_one_is_dropped(self):
         path = self.glossary(
             "- **ACID**: 事务特性。\n  **章节**：第1章 §1.1 与第1章 §1.2\n"
@@ -120,6 +128,19 @@ class CandidateRuleTest(TermsCase):
         for term in ("run(arg)", "SELECT 语句"):
             with self.subTest(term=term):
                 self.assertFalse(self.terms.is_glossary_candidate(term))
+
+    def test_an_unclosed_call_reference_is_not_a_term(self):
+        self.assertFalse(self.terms.is_glossary_candidate("append(元素"))
+
+
+class GlossaryConfigTest(TermsCase):
+    def test_a_broken_glossary_config_leaves_no_aliases_or_skips(self):
+        path = os.path.join(self.root, "data", "book", "glossary.toml")
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write("[aliases\n")
+        self.terms = _fixture.load_module(self.root, "terms")
+        self.assertEqual(self.terms.term_aliases(), {})
+        self.assertEqual(self.terms.skip_terms(), frozenset())
 
 
 if __name__ == "__main__":

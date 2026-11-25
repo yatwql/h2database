@@ -10,6 +10,7 @@ import importlib.util
 import io
 import json
 import os
+import sys
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -137,6 +138,12 @@ class CalibrationTest(unittest.TestCase):
         self.assertTrue(search.converged)
         self.assertIsNone(search.suggest())
 
+    def test_a_measurement_exactly_on_target_moves_no_bound(self):
+        search = _metrics.Calibration(target=100, low=0.5, high=1.5)
+        search.record(1.0, 100)
+        self.assertEqual((search.low, search.high), (0.5, 1.5))
+        self.assertTrue(search.converged)
+
     def test_a_collapsed_interval_stops_without_converging(self):
         search = _metrics.Calibration(target=100, low=1.0, high=1.001)
         self.assertFalse(search.converged)
@@ -240,6 +247,41 @@ class CliTest(unittest.TestCase):
         code, out = self.run_cli("--target", "pages=2", self.pdf)
         self.assertEqual(code, 0)
         self.assertIn("pages", out)
+
+    def test_a_lone_target_flag_falls_through_to_the_usage(self):
+        code, out = self.run_cli("--target")
+        self.assertEqual(code, 2)
+        self.assertIn("Usage", out)
+
+
+class ModulePathTest(unittest.TestCase):
+    """The module is importable from anywhere: it puts its package root first."""
+
+    script = os.path.join(_fixture.TOOLS_DIR, "render", "pdf_metrics.py")
+
+    def test_loading_it_without_its_package_root_restores_the_path(self):
+        pruned = [
+            entry
+            for entry in sys.path
+            if os.path.realpath(entry or ".") != os.path.realpath(_fixture.TOOLS_DIR)
+        ]
+        self.assertNotIn(
+            os.path.realpath(_fixture.TOOLS_DIR),
+            [os.path.realpath(entry or ".") for entry in pruned],
+        )
+        spec = importlib.util.spec_from_file_location("pdf_metrics_standalone", self.script)
+        if spec is None or spec.loader is None:
+            raise AssertionError(f"cannot load {self.script}")
+        module = importlib.util.module_from_spec(spec)
+        with mock.patch.object(sys, "path", pruned):
+            spec.loader.exec_module(module)
+            self.assertEqual(os.path.realpath(sys.path[0]), os.path.realpath(_fixture.TOOLS_DIR))
+        self.assertEqual(module.SAMPLE_PAGES, 80)
+
+    def test_the_script_entrypoint_prints_the_usage(self):
+        code, out = _fixture.run_inproc(_fixture.BOOK_ROOT, "pdf_metrics.py")
+        self.assertEqual(code, 2)
+        self.assertIn("Usage", out)
 
 
 class BoundaryTest(unittest.TestCase):

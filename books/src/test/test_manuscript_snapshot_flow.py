@@ -188,6 +188,21 @@ class SnapshotFlowTest(unittest.TestCase):
         with redirect_stdout(io.StringIO()):
             self.assertNotEqual(self.mod.main(["verify", "nope"]), 0)
 
+    def test_baseline_refuses_a_label_that_resolves_to_nothing(self):
+        with redirect_stdout(io.StringIO()), mock.patch("sys.stderr", new=io.StringIO()):
+            self.assertEqual(self.mod.baseline("nope"), 2)
+
+    def test_baseline_ignores_files_that_are_not_markdown(self):
+        source = self.archive({"manuscript/ch1.md": "# 第1章\n正文。\n"})
+        with redirect_stdout(io.StringIO()):
+            self.mod.import_snapshot(source, "june", "2026-06-11")
+            extra = os.path.join(self.snapshots, "2026-06-11-june", "manuscript", "notes.txt")
+            with open(extra, "w", encoding="utf-8") as fh:
+                fh.write("scratch\n")
+            self.assertEqual(self.mod.baseline("june"), 0)
+        with open(os.path.join(self.baselines, "snapshot-june.json"), encoding="utf-8") as fh:
+            self.assertEqual(list(json.load(fh)["files"]), ["ch1.md"])
+
 
 class SnapshotEdgeTest(unittest.TestCase):
     """The error paths: unwritable targets, foreign members, missing manifests."""
@@ -228,6 +243,15 @@ class SnapshotEdgeTest(unittest.TestCase):
         root = os.path.join(self.snapshots, "2026-06-11-june", "manuscript")
         self.assertEqual(sorted(os.listdir(root)), ["ch1.md"])
 
+    def test_a_zip_member_that_is_markdown_but_not_manuscript_is_ignored(self):
+        source = self.archive(
+            {"manuscript/ch1.md": "# 第1章\n", "manuscript/notes.md": "# 随手记\n"}
+        )
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(self.mod.import_snapshot(source, "june", "2026-06-11"), 0)
+        root = os.path.join(self.snapshots, "2026-06-11-june", "manuscript")
+        self.assertEqual(sorted(os.listdir(root)), ["ch1.md"])
+
     def test_a_directory_without_markdown_is_refused(self):
         source = os.path.join(self.tmp.name, "draft")
         os.makedirs(source)
@@ -235,6 +259,18 @@ class SnapshotEdgeTest(unittest.TestCase):
             handle.write("notes\n")
         with redirect_stdout(io.StringIO()), mock.patch("sys.stderr", new=io.StringIO()):
             self.assertEqual(self.mod.import_snapshot(source, "june", "2026-06-11"), 2)
+
+    def test_a_markdown_file_outside_the_manuscript_tree_is_ignored(self):
+        source = os.path.join(self.tmp.name, "draft3")
+        os.makedirs(source)
+        with open(os.path.join(source, "ch1.md"), "w", encoding="utf-8") as handle:
+            handle.write("# 第1章\n")
+        with open(os.path.join(source, "README.md"), "w", encoding="utf-8") as handle:
+            handle.write("# 不是正文\n")
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(self.mod.import_snapshot(source, "june", "2026-06-11"), 0)
+        root = os.path.join(self.snapshots, "2026-06-11-june", "manuscript")
+        self.assertEqual(sorted(os.listdir(root)), ["ch1.md"])
 
     def test_a_directory_file_that_cannot_be_copied_is_refused(self):
         source = os.path.join(self.tmp.name, "draft2")
