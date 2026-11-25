@@ -22,6 +22,7 @@ Usage:
 
 Exit codes: 0 clean, 1 findings, 2 usage error.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -39,12 +40,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lib import _config, _errors, _fsutil
 
 PY_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TEST_ROOT = os.path.join(_config.BOOK_ROOT, 'src', 'test')
-ASSERT_PREFIX = 'assert'
-ASSERT_CALLS = frozenset({'assertRaises', 'assertWarns', 'assertCountEqual',
-                          'fail', 'assertLogs'})
-TRIVIAL_BODIES = frozenset({'pass', 'assert True', 'assert 1', 'assert'})
-SKIP_FILES = ('conftest.py', '__init__.py')
+TEST_ROOT = os.path.join(_config.BOOK_ROOT, "src", "test")
+ASSERT_PREFIX = "assert"
+ASSERT_CALLS = frozenset({"assertRaises", "assertWarns", "assertCountEqual", "fail", "assertLogs"})
+TRIVIAL_BODIES = frozenset({"pass", "assert True", "assert 1", "assert"})
+SKIP_FILES = ("conftest.py", "__init__.py")
 
 
 class Case(NamedTuple):
@@ -59,19 +59,22 @@ class Case(NamedTuple):
 
 def test_files(root: str | None = None) -> list[str]:
     base = root or TEST_ROOT
-    return sorted(p for p in glob.glob(os.path.join(base, '**', '*.py'), recursive=True)
-                  if '__pycache__' not in p and os.path.basename(p) not in SKIP_FILES)
+    return sorted(
+        p
+        for p in glob.glob(os.path.join(base, "**", "*.py"), recursive=True)
+        if "__pycache__" not in p and os.path.basename(p) not in SKIP_FILES
+    )
 
 
 def normalise(body: str) -> str:
     """Strip comments, blank lines and indentation so copies compare equal."""
     lines = []
     for line in body.splitlines():
-        stripped = line.split('#', 1)[0].rstrip()
+        stripped = line.split("#", 1)[0].rstrip()
         if stripped.strip():
             lines.append(stripped)
     # the method is indented inside its class; dedent so the body parses alone
-    return textwrap.dedent('\n'.join(lines))
+    return textwrap.dedent("\n".join(lines))
 
 
 def has_assertion(node: ast.AST) -> bool:
@@ -80,7 +83,7 @@ def has_assertion(node: ast.AST) -> bool:
             return True
         if isinstance(child, ast.Call):
             func = child.func
-            name = getattr(func, 'id', None) or getattr(func, 'attr', None) or ''
+            name = getattr(func, "id", None) or getattr(func, "attr", None) or ""
             if name.startswith(ASSERT_PREFIX) or name in ASSERT_CALLS:
                 return True
     return False
@@ -95,23 +98,32 @@ def cases_in(path: str) -> list[Case]:
         if not isinstance(node, ast.ClassDef):
             continue
         for item in node.body:
-            if not (isinstance(item, ast.FunctionDef) and item.name.startswith('test_')):
+            if not (isinstance(item, ast.FunctionDef) and item.name.startswith("test_")):
                 continue
-            body = '\n'.join(lines[item.lineno - 1:item.end_lineno])
+            body = "\n".join(lines[item.lineno - 1 : item.end_lineno])
             found.append(Case(path, node.name, item.name, item.lineno, body))
     return found
 
 
 # Base classes the suite uses (src/test/_cases.py) count as test cases even
 # though the name does not end in TestCase.
-KNOWN_BASES = frozenset({'TestCase', 'TempFileCase', 'FixtureCase', 'FixtureTest',
-                         'ScriptTestBase', 'Base', 'DepthCase'})
+KNOWN_BASES = frozenset(
+    {
+        "TestCase",
+        "TempFileCase",
+        "FixtureCase",
+        "FixtureTest",
+        "ScriptTestBase",
+        "Base",
+        "DepthCase",
+    }
+)
 
 
 def is_test_case(node: ast.ClassDef) -> bool:
     for base in node.bases:
-        name = getattr(base, 'id', None) or getattr(base, 'attr', None) or ''
-        if name in KNOWN_BASES or name.endswith(('TestCase', 'Case', 'Test')):
+        name = getattr(base, "id", None) or getattr(base, "attr", None) or ""
+        if name in KNOWN_BASES or name.endswith(("TestCase", "Case", "Test")):
             return True
     return False
 
@@ -123,32 +135,43 @@ def dead_cases(path: str) -> list[dict]:
         if isinstance(node, ast.ClassDef):
             if not is_test_case(node):
                 for item in node.body:
-                    if isinstance(item, ast.FunctionDef) and item.name.startswith('test_'):
-                        findings.append({'kind': 'DEAD', 'file': rel(path),
-                                         'line': item.lineno,
-                                         'detail': f'{node.name}.{item.name} is not in a TestCase'})
+                    if isinstance(item, ast.FunctionDef) and item.name.startswith("test_"):
+                        findings.append(
+                            {
+                                "kind": "DEAD",
+                                "file": rel(path),
+                                "line": item.lineno,
+                                "detail": f"{node.name}.{item.name} is not in a TestCase",
+                            }
+                        )
             else:
                 seen: dict[str, int] = {}
                 for item in node.body:
-                    if isinstance(item, ast.FunctionDef) and item.name.startswith('test_'):
+                    if isinstance(item, ast.FunctionDef) and item.name.startswith("test_"):
                         if item.name in seen:
-                            findings.append({'kind': 'DEAD', 'file': rel(path),
-                                             'line': item.lineno,
-                                             'detail': f'{node.name}.{item.name} shadows line {seen[item.name]}'})
+                            findings.append(
+                                {
+                                    "kind": "DEAD",
+                                    "file": rel(path),
+                                    "line": item.lineno,
+                                    "detail": f"{node.name}.{item.name} shadows line {seen[item.name]}",
+                                }
+                            )
                         seen[item.name] = item.lineno
     return findings
 
 
 def rel(path: str) -> str:
-    return os.path.relpath(path, os.path.join(_config.BOOK_ROOT, '..'))
+    return os.path.relpath(path, os.path.join(_config.BOOK_ROOT, ".."))
 
 
-LOOSE_RE = re.compile(r'assertIn\(\s*code\s*,\s*\(([^)]*)\)')
-LOOSE_BASELINE = os.path.join('data', 'baselines', 'loose-assertions.json')
+LOOSE_RE = re.compile(r"assertIn\(\s*code\s*,\s*\(([^)]*)\)")
+LOOSE_BASELINE = os.path.join("data", "baselines", "loose-assertions.json")
 
 
 def _loose_baseline() -> set[str]:
     from lib import _config as config
+
     path = os.path.join(config.BOOK_ROOT, LOOSE_BASELINE)
     if not os.path.isfile(path):
         return set()
@@ -156,17 +179,18 @@ def _loose_baseline() -> set[str]:
         payload = json.loads(_fsutil.read_text(path))
     except (OSError, ValueError):
         return set()
-    return {str(item) for item in payload.get('accepted') or []}
+    return {str(item) for item in payload.get("accepted") or []}
 
 
 CONTENT_ASSERT_RE = re.compile(
-    r"assert(?:In|NotIn|Regex|Equal|True)\(\s*[^)]*?['\"]([^'\"]{3,})['\"]")
+    r"assert(?:In|NotIn|Regex|Equal|True)\(\s*[^)]*?['\"]([^'\"]{3,})['\"]"
+)
 
 
 def _names_a_finding(body: str) -> bool:
     """Whether the case asserts a concrete message besides the exit code."""
     for literal in CONTENT_ASSERT_RE.findall(body):
-        if literal.strip() not in ('Traceback', '\n'):
+        if literal.strip() not in ("Traceback", "\n"):
             return True
     return False
 
@@ -187,10 +211,10 @@ def loose_candidates(root: str | None = None) -> list[dict]:
         for node in ast.walk(tree):
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue
-            if not node.name.startswith('test_'):
+            if not node.name.startswith("test_"):
                 continue
-            lines = _fsutil.read_text(path).split('\n')[node.lineno - 1:node.end_lineno]
-            body = '\n'.join(lines)
+            lines = _fsutil.read_text(path).split("\n")[node.lineno - 1 : node.end_lineno]
+            body = "\n".join(lines)
             # A loose code check is acceptable when the case also asserts what the
             # output says: the outcome is still pinned, the code is not the subject.
             if _names_a_finding(body):
@@ -199,13 +223,18 @@ def loose_candidates(root: str | None = None) -> list[dict]:
                 match = LOOSE_RE.search(line)
                 if not match:
                     continue
-                codes = [part.strip() for part in match.group(1).split(',')]
-                if '0' not in codes or '1' not in codes:
+                codes = [part.strip() for part in match.group(1).split(",")]
+                if "0" not in codes or "1" not in codes:
                     continue
-                findings.append({'kind': 'LOOSE-ASSERT', 'file': rel(path),
-                                 'line': node.lineno,
-                                 'detail': f'{node.name}: assertIn(code, ({match.group(1)})) '
-                                           'accepts both success and failure'})
+                findings.append(
+                    {
+                        "kind": "LOOSE-ASSERT",
+                        "file": rel(path),
+                        "line": node.lineno,
+                        "detail": f"{node.name}: assertIn(code, ({match.group(1)})) "
+                        "accepts both success and failure",
+                    }
+                )
                 break
     return findings
 
@@ -223,14 +252,14 @@ def _target_name(node: ast.AST) -> str:
         return node.id
     if isinstance(node, ast.Attribute):
         parent = _target_name(node.value)
-        return f'{parent}.{node.attr}' if parent else ''
-    return ''
+        return f"{parent}.{node.attr}" if parent else ""
+    return ""
 
 
 def _root_name(node: ast.AST) -> str:
     while isinstance(node, ast.Attribute):
         node = node.value
-    return node.id if isinstance(node, ast.Name) else ''
+    return node.id if isinstance(node, ast.Name) else ""
 
 
 def _module_aliases(tree: ast.AST) -> dict[str, str]:
@@ -240,7 +269,7 @@ def _module_aliases(tree: ast.AST) -> dict[str, str]:
         if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Call):
             continue
         func = node.value.func
-        if (getattr(func, 'attr', '') or getattr(func, 'id', '')) != 'load_module':
+        if (getattr(func, "attr", "") or getattr(func, "id", "")) != "load_module":
             continue
         args = node.value.args
         if len(args) < 2 or not isinstance(args[1], ast.Constant):
@@ -267,12 +296,15 @@ def exercised_symbols(path: str) -> dict[str, set[str]]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
             func = node.func
-            if (getattr(func, 'attr', '') or getattr(func, 'id', '')) == 'run_inproc':
+            if (getattr(func, "attr", "") or getattr(func, "id", "")) == "run_inproc":
                 args = node.args
-                if len(args) >= 2 and isinstance(args[1], ast.Constant) \
-                        and isinstance(args[1].value, str):
+                if (
+                    len(args) >= 2
+                    and isinstance(args[1], ast.Constant)
+                    and isinstance(args[1].value, str)
+                ):
                     name = args[1].value
-                    symbols.setdefault(name[:-3] if name.endswith('.py') else name, set())
+                    symbols.setdefault(name[:-3] if name.endswith(".py") else name, set())
         if isinstance(node, ast.Attribute):
             root = _root_name(node.value)
             if root in aliases:
@@ -292,7 +324,7 @@ def subsumed(root: str | None = None) -> list[dict]:
     for path in test_files(root):
         try:
             symbols = exercised_symbols(path)
-        except SyntaxError:      # reported by analyse() as a SYNTAX finding
+        except SyntaxError:  # reported by analyse() as a SYNTAX finding
             continue
         for module, names in symbols.items():
             if names:
@@ -305,11 +337,18 @@ def subsumed(root: str | None = None) -> list[dict]:
                     continue
                 if len(mine) < SUBSET_MIN_SYMBOLS:
                     continue
-                out.append({'kind': 'SUBSUMED', 'file': suite, 'line': 1,
-                            'detail': (f'{suite} exercises only {len(mine)} symbols of '
-                                       f'{module}, all of them already exercised by '
-                                       f'{rival} ({len(theirs)}): '
-                                       + ', '.join(sorted(mine)[:8]))})
+                out.append(
+                    {
+                        "kind": "SUBSUMED",
+                        "file": suite,
+                        "line": 1,
+                        "detail": (
+                            f"{suite} exercises only {len(mine)} symbols of "
+                            f"{module}, all of them already exercised by "
+                            f"{rival} ({len(theirs)}): " + ", ".join(sorted(mine)[:8])
+                        ),
+                    }
+                )
                 break
     return out
 
@@ -321,22 +360,35 @@ def analyse(root: str | None = None) -> list[dict]:
         try:
             cases = cases_in(path)
         except SyntaxError as exc:  # pragma: no cover - a broken test file is loud elsewhere
-            findings.append({'kind': 'SYNTAX', 'file': rel(path), 'line': exc.lineno or 0,
-                             'detail': exc.msg})
+            findings.append(
+                {"kind": "SYNTAX", "file": rel(path), "line": exc.lineno or 0, "detail": exc.msg}
+            )
             continue
         findings += dead_cases(path)
         for case in cases:
             body = normalise(case.body)
             try:
-                tree = ast.parse(body or 'pass')
-            except SyntaxError:      # a body that does not parse alone: skip it
+                tree = ast.parse(body or "pass")
+            except SyntaxError:  # a body that does not parse alone: skip it
                 continue
             if not has_assertion(tree):
-                findings.append({'kind': 'NO-ASSERT', 'file': rel(path), 'line': case.lineno,
-                                 'detail': f'{case.class_name}.{case.name}'})
+                findings.append(
+                    {
+                        "kind": "NO-ASSERT",
+                        "file": rel(path),
+                        "line": case.lineno,
+                        "detail": f"{case.class_name}.{case.name}",
+                    }
+                )
             elif body.splitlines()[-1] in TRIVIAL_BODIES:
-                findings.append({'kind': 'TRIVIAL', 'file': rel(path), 'line': case.lineno,
-                                 'detail': f'{case.class_name}.{case.name}'})
+                findings.append(
+                    {
+                        "kind": "TRIVIAL",
+                        "file": rel(path),
+                        "line": case.lineno,
+                        "detail": f"{case.class_name}.{case.name}",
+                    }
+                )
             signature = _signature(body)
             bodies.setdefault(signature, []).append(case)
     findings += subsumed(root)
@@ -345,52 +397,70 @@ def analyse(root: str | None = None) -> list[dict]:
     findings += [item for item in candidates if _loose_key(item) not in accepted]
     stale = sorted(accepted - {_loose_key(item) for item in candidates})
     if stale:
-        print(f'  [warn] {len(stale)} 条松散断言基线已不再命中'
-              f'（已收紧，可收缩 data/baselines/loose-assertions.json）', file=sys.stderr)
+        print(
+            f"  [warn] {len(stale)} 条松散断言基线已不再命中"
+            f"（已收紧，可收缩 data/baselines/loose-assertions.json）",
+            file=sys.stderr,
+        )
 
     for group in sorted(bodies.values(), key=len, reverse=True):
         if len(group) < 2:
             continue
         first = group[0]
         for other in group[1:]:
-            findings.append({'kind': 'DUPLICATE', 'file': rel(other.path),
-                             'line': other.lineno,
-                             'detail': (f'{other.class_name}.{other.name} duplicates '
-                                        f'{first.class_name}.{first.name} '
-                                        f'({os.path.basename(first.path)})')})
+            findings.append(
+                {
+                    "kind": "DUPLICATE",
+                    "file": rel(other.path),
+                    "line": other.lineno,
+                    "detail": (
+                        f"{other.class_name}.{other.name} duplicates "
+                        f"{first.class_name}.{first.name} "
+                        f"({os.path.basename(first.path)})"
+                    ),
+                }
+            )
     return findings
 
 
 def _signature(body: str) -> str:
     """Body without the `def` line and whitespace: copies share a key."""
     lines = normalise(body).splitlines()[1:]
-    return re.sub(r'\s+', '', '\n'.join(lines))
+    return re.sub(r"\s+", "", "\n".join(lines))
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--json', action='store_true')
-    parser.add_argument('--strict', action='store_true',
-                        help='treat DUPLICATE findings as blocking (they always are)')
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="treat DUPLICATE findings as blocking (they always are)",
+    )
     args = parser.parse_args(argv)
 
     findings = analyse()
-    blocking = [f for f in findings if f['kind'] != 'TRIVIAL']
+    blocking = [f for f in findings if f["kind"] != "TRIVIAL"]
     if args.json:
-        print(json.dumps({'count': len(findings),
-                          'blocking': len(blocking), 'findings': findings},
-                         ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {"count": len(findings), "blocking": len(blocking), "findings": findings},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 0 if not blocking else 1
 
     if not findings:
-        print('✅ 测试用例无冗余（无重复体、无空断言、无遮蔽）')
+        print("✅ 测试用例无冗余（无重复体、无空断言、无遮蔽）")
         return 0
-    print(f'测试用例问题 {len(findings)} 处（其中阻塞 {len(blocking)}）：')
+    print(f"测试用例问题 {len(findings)} 处（其中阻塞 {len(blocking)}）：")
     for item in findings[:60]:
         print(f"  [{item['kind']}] {item['file']}:{item['line']}  {item['detail']}")
     return 0 if not blocking else 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(_errors.run(main, sys.argv[1:]))

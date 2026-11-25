@@ -51,10 +51,10 @@ dist_dir = _config.DIST_DIR
 
 merged_md = _config.merged_md()
 epub_out = _config.merged_epub()
-cover_md = os.path.join(src_dir, 'cover.md')
+cover_md = os.path.join(src_dir, "cover.md")
 
 # ── Step 0: Pandoc availability check ────────────────────────────────────
-pandoc = shutil.which('pandoc')
+pandoc = shutil.which("pandoc")
 if not pandoc:
     raise _errors.ToolError(
         "pandoc not found on PATH.\n"
@@ -67,8 +67,10 @@ if not pandoc:
     )
 print(f"=== Step 0: pandoc detected at {pandoc} ===")
 try:
-    res = subprocess.run([pandoc, '--version'], capture_output=True, text=True, encoding='utf-8', check=False)
-    first_line = (res.stdout or '').splitlines()[0] if res.stdout else ''
+    res = subprocess.run(
+        [pandoc, "--version"], capture_output=True, text=True, encoding="utf-8", check=False
+    )
+    first_line = (res.stdout or "").splitlines()[0] if res.stdout else ""
     if first_line:
         print(f"  {first_line}")
 except (OSError, subprocess.SubprocessError) as exc:
@@ -76,17 +78,19 @@ except (OSError, subprocess.SubprocessError) as exc:
 
 # ── Step 1: Ensure the merged Markdown is current ────────────────────────
 print("\n=== Step 1: Ensuring merged Markdown is up to date ===")
-rebuild = os.path.join(script_dir, 'merge.py')
+rebuild = os.path.join(script_dir, "merge.py")
 if os.path.exists(rebuild):
     res = subprocess.run(
         [sys.executable, rebuild],
-        capture_output=True, text=True, encoding='utf-8',
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
         cwd=repo_root,
         check=False,
     )
     if res.returncode != 0:
         raise _errors.ToolError(f"merge.py FAILED: {res.stderr}")
-    last = (res.stdout or '').strip().splitlines()[-1] if res.stdout else ''
+    last = (res.stdout or "").strip().splitlines()[-1] if res.stdout else ""
     if last:
         print(f"  {last}")
 
@@ -96,26 +100,26 @@ if not os.path.exists(merged_md):
 # ── Step 2: Extract title / version / author from cover.md ───────────────
 title = _config.project("display_title_en", _config.TITLE)
 subtitle = _config.project("display_title_zh", _config.TITLE)
-version = f'v{_config.VERSION}' if _config.VERSION else 'v1.0'
+version = f"v{_config.VERSION}" if _config.VERSION else "v1.0"
 author = "其·龙（Stallman Wang）"
 publish_date = datetime.date.today().isoformat()
 
 if os.path.exists(cover_md):
     cover_text = _fsutil.read_text(cover_md)
-    m = re.search(r'^# (.+?)$', cover_text, re.MULTILINE)
+    m = re.search(r"^# (.+?)$", cover_text, re.MULTILINE)
     if m:
         title = m.group(1).strip()
-    m = re.search(r'^## (.+?)$', cover_text, re.MULTILINE)
+    m = re.search(r"^## (.+?)$", cover_text, re.MULTILINE)
     if m:
         subtitle = m.group(1).strip()
-    m = re.search(r'版本 (v[\d.]+) · (\d{4}-\d{2}-\d{2})', cover_text)
+    m = re.search(r"版本 (v[\d.]+) · (\d{4}-\d{2}-\d{2})", cover_text)
     if m:
         # the cover only repeats the configured version; keep the configured one
         cover_version = m.group(1)
-        if _config.VERSION and cover_version.lstrip('v') != _config.VERSION:
-            print(f'  warn: cover says {cover_version}, book.toml says v{_config.VERSION}')
+        if _config.VERSION and cover_version.lstrip("v") != _config.VERSION:
+            print(f"  warn: cover says {cover_version}, book.toml says v{_config.VERSION}")
         publish_date = m.group(2)
-    m = re.search(r'\*\*作者：([^*]+?)\*\*', cover_text)
+    m = re.search(r"\*\*作者：([^*]+?)\*\*", cover_text)
     if m:
         author = m.group(1).strip()
 
@@ -131,19 +135,23 @@ metadata_yaml = textwrap.dedent(f"""\
     subtitle: "{subtitle}"
     author: "{author}"
     date: "{publish_date}"
-    rights: "© {publish_date.split('-')[0]} {author}"
+    rights: "© {publish_date.split("-")[0]} {author}"
     lang: zh-CN
     publisher: "{publisher}"
     description: "{description} — {version}"
     """)
 
-metadata_path = os.path.join(dist_dir, '_epub_metadata.yaml')
+metadata_path = os.path.join(dist_dir, "_epub_metadata.yaml")
 _fsutil.write_text(metadata_path, metadata_yaml)
 
 # ── Step 4: Build a small CSS sheet for typography ───────────────────────
 # Reading apps already render their own fonts, so we keep this minimal:
 # tighter ASCII art, sensible heading rhythm, code-block contrast.
-EPUB_CSS = '/* ' + _config.project('running_head', _config.TITLE) + ' — EPUB stylesheet */' + """
+EPUB_CSS = (
+    "/* "
+    + _config.project("running_head", _config.TITLE)
+    + " — EPUB stylesheet */"
+    + """
 body { line-height: 1.55; font-family: __FONT_SERIF__; }
 h1 { font-size: 1.6em; margin-top: 1.2em; page-break-before: always; color: #1565C0; }
 h2 { font-size: 1.3em; margin-top: 1em; color: #1565C0; }
@@ -184,6 +192,7 @@ blockquote {
 /* Figure caption pattern from the source: **图 X-Y: Title** rendered as <strong>. */
 strong { font-weight: 600; }
 """
+)
 
 # the shared type scale decides sizes and rhythm; the paged dimensions stay in the
 # PDF renderer, because an EPUB has no page to place them on
@@ -192,12 +201,14 @@ for _problem in _layout_problems:
     print(f"  layout: {_problem}")
 # the reader's device renders this, not this machine: the stylesheet declares
 # portable families and embeds nothing, which is the opposite rule from the PDF
-EPUB_CSS_SCALED = (_layout_obj.typescale().apply(EPUB_CSS)
-                   .replace('__FONT_SERIF__', fonts.portable_stack('serif'))
-                   .replace('__FONT_MONO__', fonts.portable_stack('mono')))
-css_path = os.path.join(dist_dir, '_epub.css')
+EPUB_CSS_SCALED = (
+    _layout_obj.typescale()
+    .apply(EPUB_CSS)
+    .replace("__FONT_SERIF__", fonts.portable_stack("serif"))
+    .replace("__FONT_MONO__", fonts.portable_stack("mono"))
+)
+css_path = os.path.join(dist_dir, "_epub.css")
 _fsutil.write_text(css_path, EPUB_CSS_SCALED)
-
 
 
 # Two markdown rules decide where pandoc's `--split-level=1` cuts a chapter, and
@@ -215,45 +226,47 @@ _fsutil.write_text(css_path, EPUB_CSS_SCALED)
 _epub_text, _fixes = epub_source.normalise_headings(_fsutil.read_text(merged_md))
 # scratch, not dist: the normalised copy is an input to pandoc, not a deliverable,
 # and a name derived from the merged file left a second .md in dist/
-epub_src = os.path.join(_config.tmp_dir(), 'epub-source.md')
+epub_src = os.path.join(_config.tmp_dir(), "epub-source.md")
 try:
     os.makedirs(_config.tmp_dir(), exist_ok=True)  # a minimal book need not have one
 except OSError as exc:  # pragma: no cover - an unwritable tree, reported then exited
-    raise _errors.ToolError(f'error: cannot create {_config.tmp_dir()}: {exc}') from exc
+    raise _errors.ToolError(f"error: cannot create {_config.tmp_dir()}: {exc}") from exc
 _fsutil.write_text(epub_src, _epub_text)
-print(f"  Headings normalised: {_fixes['spaced']} missing blank line(s), "
-      f"{_fixes['dropped']} decorative underline(s)")
+print(
+    f"  Headings normalised: {_fixes['spaced']} missing blank line(s), "
+    f"{_fixes['dropped']} decorative underline(s)"
+)
 
 print(f"\n=== Step 2: Converting {merged_md} -> EPUB ===")
 
 cmd = [
     pandoc,
     epub_src,
-    '-o', epub_out,
+    "-o",
+    epub_out,
     # Disable yaml_metadata_block in the input reader. The merged doc uses
     # bare `---` thematic-break lines as section separators, and pandoc's
     # default markdown reader treats those as the *start* of a YAML metadata
     # block, then fails parsing the body that follows. Metadata comes from
     # the standalone --metadata-file below, so we don't need inline YAML.
-    '--from=markdown+pipe_tables+fenced_code_blocks+backtick_code_blocks-yaml_metadata_block',
-    f'--metadata-file={metadata_path}',
-    '--to=epub3',
-    '--toc',
-    '--toc-depth=3',
-    '--split-level=1',  # one H1 per chapter file inside the EPUB
-    f'--css={css_path}',
-    '--metadata=lang:zh-CN',
+    "--from=markdown+pipe_tables+fenced_code_blocks+backtick_code_blocks-yaml_metadata_block",
+    f"--metadata-file={metadata_path}",
+    "--to=epub3",
+    "--toc",
+    "--toc-depth=3",
+    "--split-level=1",  # one H1 per chapter file inside the EPUB
+    f"--css={css_path}",
+    "--metadata=lang:zh-CN",
 ]
 
 print("  Command: pandoc <metadata> <merged.md> -o <epub>")
 print("           --toc --toc-depth=3 --split-level=1 --to=epub3")
 
 try:
-    res = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', check=False)
+    res = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", check=False)
     if res.returncode != 0:
-        detail = '\n'.join(part for part in (res.stdout, res.stderr) if part)
-        raise _errors.ToolError(f"pandoc FAILED:\n{detail}" if detail
-                                else "pandoc FAILED")
+        detail = "\n".join(part for part in (res.stdout, res.stderr) if part)
+        raise _errors.ToolError(f"pandoc FAILED:\n{detail}" if detail else "pandoc FAILED")
     if res.stdout.strip():
         for line in res.stdout.splitlines():
             print(f"  {line}")
@@ -263,7 +276,8 @@ try:
             print(f"  [pandoc warn] {line}")
 except FileNotFoundError:
     raise _errors.ToolError(
-        "pandoc executable disappeared between detection and invocation.") from None
+        "pandoc executable disappeared between detection and invocation."
+    ) from None
 finally:
     # Tidy up the staging files; pandoc has already consumed them.
     for p in (metadata_path, css_path, epub_src):

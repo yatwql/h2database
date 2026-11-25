@@ -48,16 +48,18 @@ pdf_path = _config.merged_pdf()
 try:
     os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
 except OSError as exc:
-    raise _errors.ToolError(f'error: cannot create output directory for {pdf_path}: {exc}') from exc
-generate_script = os.path.join(script_dir, 'to_html.py')
+    raise _errors.ToolError(f"error: cannot create output directory for {pdf_path}: {exc}") from exc
+generate_script = os.path.join(script_dir, "to_html.py")
 
 print("=== Step 1: Generating HTML ===")
 if os.path.exists(generate_script):
     result = subprocess.run(
         [sys.executable, generate_script],
-        capture_output=True, text=True, encoding='utf-8',
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
         cwd=repo_root,
-    check=False
+        check=False,
     )
     print(result.stdout)
     if result.returncode != 0:
@@ -75,16 +77,13 @@ print(f"Output: {pdf_path}")
 
 # ── Parse headings from HTML first (used in both Step 2 and Step 3) ────────
 try:
-    with open(html_path, encoding='utf-8') as f:
+    with open(html_path, encoding="utf-8") as f:
         html_content = f.read()
 except OSError as exc:
-    raise _errors.ToolError(f'error: cannot read {html_path}: {exc}') from exc
+    raise _errors.ToolError(f"error: cannot read {html_path}: {exc}") from exc
 
 headings = []  # (level, plain_text, anchor_id)
-for m in re.finditer(
-    r'<h([1-4])\s+id="([^"]*)"[^>]*>(.*?)</h\1>',
-    html_content, re.DOTALL
-):
+for m in re.finditer(r'<h([1-4])\s+id="([^"]*)"[^>]*>(.*?)</h\1>', html_content, re.DOTALL):
     try:
         level = int(m.group(1))
     except ValueError:  # pragma: no cover - regex only matches 1-4
@@ -92,8 +91,8 @@ for m in re.finditer(
     anchor_id = m.group(2)
     raw_html = m.group(3)
     # Strip any inner HTML tags to get plain text
-    plain = re.sub(r'<[^>]+>', '', raw_html).strip()
-    plain = plain.replace('\u200b', '')  # zero-width spaces
+    plain = re.sub(r"<[^>]+>", "", raw_html).strip()
+    plain = plain.replace("\u200b", "")  # zero-width spaces
     headings.append((level, plain, anchor_id))
 
 print(f"  Parsed {len(headings)} headings from HTML")
@@ -106,7 +105,8 @@ try:
 except ImportError:
     raise _errors.ToolError(
         "Playwright not installed. Run: pip install playwright && "
-        "python3 -m playwright install chromium") from None
+        "python3 -m playwright install chromium"
+    ) from None
 
 print("Launching Chromium via Playwright...")
 headings_json = []
@@ -114,21 +114,20 @@ generated_with_markers = False
 try:
     with sync_playwright() as p:
         browser = p.chromium.launch(
-            headless=True,
-            args=['--no-sandbox', '--disable-setuid-sandbox']
+            headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"]
         )
         page = browser.new_page()
 
         # Load the HTML file
-        file_url = 'file:///' + html_path.replace('\\', '/')
-        page.goto(file_url, wait_until='networkidle', timeout=60000)
+        file_url = "file:///" + html_path.replace("\\", "/")
+        page.goto(file_url, wait_until="networkidle", timeout=60000)
 
         # Wait for fonts and rendering to settle
         page.wait_for_timeout(3000)
 
         # Wait for Mermaid diagrams to render
         try:
-            page.wait_for_selector('.mermaid svg', timeout=15000)
+            page.wait_for_selector(".mermaid svg", timeout=15000)
             print("  Mermaid diagrams rendered successfully")
         except Exception as e:
             print(f"  Mermaid rendering note: {e}")
@@ -140,28 +139,36 @@ try:
         # font-size:3px + white text keeps them invisible while still rendering into
         # the PDF text layer; the same injection serves every entry point.
         from render import pdf_split  # noqa: PLC0415 - optional path
+
         headings_json = pdf_split.inject_markers(page)
 
         print(f"  Injected {len(headings_json)} heading markers")
 
         # Print to PDF
-        if bool(_config.THRESHOLDS.get('pdf_split_by_chapter', False)):
-            pdf_split.render(page, pdf_path, {
-                'format': 'A4',
-                'print_background': True,
-                'display_header_footer': False,
-                'prefer_css_page_size': True,
-            }, headings_json, optimize=False)
+        if bool(_config.THRESHOLDS.get("pdf_split_by_chapter", False)):
+            pdf_split.render(
+                page,
+                pdf_path,
+                {
+                    "format": "A4",
+                    "print_background": True,
+                    "display_header_footer": False,
+                    "prefer_css_page_size": True,
+                },
+                headings_json,
+                optimize=False,
+            )
         else:
-                page.pdf(
+            page.pdf(
                 path=pdf_path,
-                format='A4',
-
+                format="A4",
                 print_background=True,
                 display_header_footer=True,
-                header_template=('<div style="font-size:8px;color:#999;text-align:center;'
-                                 'width:100%;border-bottom:1px solid #ddd;padding:2px 15mm;">'
-                                 f'{_config.project("running_head")}</div>'),
+                header_template=(
+                    '<div style="font-size:8px;color:#999;text-align:center;'
+                    'width:100%;border-bottom:1px solid #ddd;padding:2px 15mm;">'
+                    f"{_config.project('running_head')}</div>"
+                ),
                 footer_template='<div style="font-size:8px;color:#999;text-align:center;width:100%;border-top:1px solid #ddd;padding:4px 15mm;">第 <span class="pageNumber"></span> 页 / 共 <span class="totalPages"></span> 页</div>',
                 prefer_css_page_size=True,
             )
@@ -172,7 +179,8 @@ try:
 except Exception as e:
     raise _errors.ToolError(
         f"  Playwright rendering FAILED: {e}\n"
-        "  Refusing to reuse an existing PDF because it may be stale.") from e
+        "  Refusing to reuse an existing PDF because it may be stale."
+    ) from e
 
 # ══════════════════════════════════════════════════════════════════════════
 # Step 3: Post-process with pypdf to add PDF outlines (bookmarks)
@@ -193,12 +201,12 @@ try:
 
     def strip_ws(t: str) -> str:
         """Remove ALL whitespace for fuzzy comparison."""
-        return re.sub(r'\s+', '', t)
+        return re.sub(r"\s+", "", t)
 
     # Pre-extract page text (once) for speed
     page_texts = []
     for p in reader.pages:
-        raw = p.extract_text() or ''
+        raw = p.extract_text() or ""
         page_texts.append(strip_ws(raw))
 
     # ── Try Strategy A: Find markers in PDF ────────────────────────────────
@@ -206,14 +214,14 @@ try:
     # Inject the marker data into page_texts as unique search keys
     search_keys = []
     for h in headings_json:
-        marker_text = f'__hdr_{h["index"]}__'
-        search_keys.append((h['level'], h['text'], marker_text))
+        marker_text = f"__hdr_{h['index']}__"
+        search_keys.append((h["level"], h["text"], marker_text))
         marker_mode = True
 
     # Check if any marker was found in the PDF
     any_marker_found = False
     if marker_mode:
-        test_marker = '__hdr_0__'
+        test_marker = "__hdr_0__"
         for pt in page_texts:
             if test_marker in pt:
                 any_marker_found = True
@@ -257,19 +265,21 @@ try:
         if content_start == 0:
             content_start = min(2, len(page_texts))
 
-        print(f"  Content start detected at page {content_start} "
-              f"(density: page {content_start-1} had {match_counts[content_start-1]}/30, "
-              f"page {content_start} has {match_counts[content_start]}/30)")
+        print(
+            f"  Content start detected at page {content_start} "
+            f"(density: page {content_start - 1} had {match_counts[content_start - 1]}/30, "
+            f"page {content_start} has {match_counts[content_start]}/30)"
+        )
     else:
         # With markers, look for the content marker
         for i, pt in enumerate(page_texts):
-            if '__content__' in pt:
+            if "__content__" in pt:
                 content_start = i
                 break
         if content_start == 0:
             # Fallback: find first heading marker
             for i, pt in enumerate(page_texts):
-                if '__hdr_0__' in pt:
+                if "__hdr_0__" in pt:
                     content_start = i
                     break
         if content_start == 0:
@@ -313,8 +323,7 @@ try:
                 if lvl in outline_stack:
                     parent = outline_stack[lvl]
                     break
-            item = writer.add_outline_item(title=text, page_number=page_num,
-                                          parent=parent)
+            item = writer.add_outline_item(title=text, page_number=page_num, parent=parent)
             outline_stack[level] = item
             found_count += 1
         else:
@@ -325,7 +334,9 @@ try:
         print(f"  {len(not_found)} headings not found in PDF (first 10):")
         for t in not_found[:10]:
             print(f"    - {t[:60]}")
-        raise RuntimeError(f"Incomplete PDF outline: {found_count}/{len(search_keys)} headings resolved")
+        raise RuntimeError(
+            f"Incomplete PDF outline: {found_count}/{len(search_keys)} headings resolved"
+        )
 
     # ── Build heading-to-page mapping for TOC page number injection ──────
     heading_pages_found = []
@@ -351,6 +362,7 @@ try:
     # Stamped for the next render and the screen edition; the module refuses the
     # rewrite when it cannot prove the markup survived (see render/toc_pages.py).
     from render import toc_pages  # noqa: PLC0415 - printed-TOC bookkeeping only
+
     stamps = toc_pages.apply(html_path, search_keys, heading_pages_found)
     if stamps:
         print(f"  Page numbers added to HTML TOC ({stamps} entries)")
@@ -364,11 +376,12 @@ try:
 
 except ImportError:
     raise _errors.ToolError(
-        "  pypdf not installed — outlines skipped (pip install pypdf)") from None
+        "  pypdf not installed — outlines skipped (pip install pypdf)"
+    ) from None
 except Exception as e:
     raise _errors.ToolError(f"  Outline generation FAILED: {e}") from e
 
 file_size = os.path.getsize(pdf_path)
 print("\n=== PDF Generated Successfully ===")
 print(f"Path: {pdf_path}")
-print(f"Size: {file_size:,} bytes ({file_size/1024:.1f} KB)")
+print(f"Size: {file_size:,} bytes ({file_size / 1024:.1f} KB)")

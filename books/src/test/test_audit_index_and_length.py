@@ -67,7 +67,7 @@ class IndexXrefUnitTest(unittest.TestCase):
         with redirect_stdout(buffer):
             self.mod.main(["--json"])
         text = buffer.getvalue()
-        payload = json.loads(text[text.index("{"):])
+        payload = json.loads(text[text.index("{") :])
         self.assertEqual(list(payload), ["issues"])
         self.assertIsInstance(payload["issues"], int)
         self.assertGreaterEqual(payload["issues"], 0)
@@ -451,6 +451,15 @@ class FileLengthEdgeTest(unittest.TestCase):
         self.assertIn("超出长度上限 1 个文件", text)
         self.assertIn("src/python/a.py", text)
         self.assertIn("src/python/b.py:12", text)
+
+    def test_main_reports_a_within_budget_tree(self):
+        buffer = io.StringIO()
+        with mock.patch.object(self.mod, "scan", return_value=([], [])), \
+                mock.patch.object(self.mod, "check_ledger", return_value=[]), \
+                mock.patch.object(self.mod, "check_declared_budgets", return_value=[]), \
+                redirect_stdout(buffer):
+            self.assertEqual(self.mod.main([]), 0)
+        self.assertIn("文件长度预算通过", buffer.getvalue())
 
     def test_the_gate_runs_as_a_script(self):
         # a fixture book declares no budgets, so the report must name them rather

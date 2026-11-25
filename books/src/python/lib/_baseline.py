@@ -14,6 +14,7 @@ knows. Recording is not the same as accepting: a coverage ratchet or a volume
 ledger is a measurement, not a reviewed backlog, and those gates keep their own
 files.
 """
+
 from __future__ import annotations
 
 import datetime
@@ -22,7 +23,7 @@ import os
 
 from . import _config, _fsutil
 
-DEFAULT_NOTE = 'Reviewed backlog: these findings are accepted, new ones fail.'
+DEFAULT_NOTE = "Reviewed backlog: these findings are accepted, new ones fail."
 
 
 def baseline_dir() -> str:
@@ -43,15 +44,15 @@ def path_for(name: str) -> str:
     `<name>-findings.json`, so adding a baseline stays a config decision rather
     than a code one.
     """
-    key = name.replace('-', '_')
-    if key in (_config.BASE_POLICY.get('baselines') or {}):
+    key = name.replace("-", "_")
+    if key in (_config.BASE_POLICY.get("baselines") or {}):
         return _config.current().baseline_path(key)
-    return os.path.join(baseline_dir(), f'{name}-findings.json')
+    return os.path.join(baseline_dir(), f"{name}-findings.json")
 
 
 def load(name: str) -> set[str]:
     """Accepted keys for a gate; empty when no baseline was recorded yet."""
-    return {str(key) for key in (load_raw(name).get('accepted') or [])}
+    return {str(key) for key in (load_raw(name).get("accepted") or [])}
 
 
 def load_at(path: str) -> dict:
@@ -70,17 +71,18 @@ def load_raw(name: str) -> dict:
     return load_at(path_for(name))
 
 
-def save(name: str, keys: set[str], note: str = '') -> str:
-    return save_at(path_for(name), {'accepted': sorted(keys)}, note)
+def save(name: str, keys: set[str], note: str = "") -> str:
+    return save_at(path_for(name), {"accepted": sorted(keys)}, note)
 
 
-def save_at(path: str, payload: dict, note: str = '') -> str:
+def save_at(path: str, payload: dict, note: str = "") -> str:
     """Write the keys (and extras) with the review stamp this tree expects."""
     _fsutil.ensure_dir(path)
-    body = {'updated': datetime.date.today().isoformat(),
-            'note': note or payload.get('note') or DEFAULT_NOTE}
-    body.update({key: value for key, value in payload.items()
-                 if key not in ('updated', 'note')})
+    body = {
+        "updated": datetime.date.today().isoformat(),
+        "note": note or payload.get("note") or DEFAULT_NOTE,
+    }
+    body.update({key: value for key, value in payload.items() if key not in ("updated", "note")})
     _fsutil.dump_json(path, body)
     return path
 
