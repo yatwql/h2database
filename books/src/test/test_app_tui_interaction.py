@@ -505,8 +505,7 @@ class TuiInteractionTest(unittest.TestCase):
         self.assertEqual(buffer.getvalue(), "配置页\n")
 
     def test_a_group_whose_rows_are_gone_renders_nothing_for_it(self):
-        with mock.patch.object(self.menu, "MENU_GROUPS",
-                               (("已消失的分组", ("nonexistent",)),)):
+        with mock.patch.object(self.menu, "MENU_GROUPS", (("已消失的分组", ("nonexistent",)),)):
             text = self.tui.menu_text("main")
         self.assertNotIn("已消失的分组", text)
         self.assertIn("源码 → 手稿", text)
@@ -578,9 +577,7 @@ class EditSettingTest(unittest.TestCase):
         self.assertIn("修改失败", text)
 
     def test_a_rejected_provider_move_is_reported_as_a_failure(self):
-        with mock.patch.object(
-            self.tui.settings, "move_provider", side_effect=KeyError("a")
-        ):
+        with mock.patch.object(self.tui.settings, "move_provider", side_effect=KeyError("a")):
             text = self.tui.edit_provider("a", reader=self.answer("u"))
         self.assertIn("修改失败", text)
 
