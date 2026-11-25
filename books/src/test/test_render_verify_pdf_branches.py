@@ -210,6 +210,12 @@ class VerifyPdfTest(PdfFixtureCase):
             writer.write(fh)
         self.assertEqual(self.verify_pdf.non_embedded_fonts(PdfReader(self.pdf)), [])
 
+    def test_a_font_entry_without_a_dictionary_is_skipped(self):
+        page = types.SimpleNamespace()
+        page.get = lambda key: {"/Font": {"/F1": 7}} if key == "/Resources" else None
+        reader = types.SimpleNamespace(pages=[page])
+        self.assertEqual(self.verify_pdf.non_embedded_fonts(reader), [])
+
 
 @unittest.skipUnless(HAS_PYPDF, "pypdf not installed")
 class TocLinkInjectionTest(PdfFixtureCase):

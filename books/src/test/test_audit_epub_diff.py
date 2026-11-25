@@ -109,6 +109,12 @@ class CheckTest(unittest.TestCase):
         code, out = _fixture.run_inproc(BOOK_ROOT, "epub_diff.py")
         self.assertEqual(code, 2, out[-300:])
 
+    def test_help_exits_zero_through_the_script_guard(self):
+        done = _fixture.run(BOOK_ROOT, "epub_diff.py", "--help")
+        self.assertEqual(done.returncode, 0, done.stderr[-300:])
+        self.assertIn("usage: epub_diff.py", done.stdout)
+        self.assertIn("--check", done.stdout)
+
 
 def build_with(
     directory: str, name: str, css: str = CSS, chapters: int = 1, bitmaps: int = 0

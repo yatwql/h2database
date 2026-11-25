@@ -161,6 +161,16 @@ class CacheFailureTest(unittest.TestCase):
         with mock.patch.object(self.cache.os, "listdir", side_effect=OSError("ro")):
             self.assertEqual(self.cache.prune(set()), 0)
 
+    def test_pruning_an_existing_directory_it_cannot_list_removes_nothing(self):
+        folder = self.cache.cache_root()
+        os.makedirs(folder, exist_ok=True)
+        stale = os.path.join(folder, "stale.json")
+        with open(stale, "w", encoding="utf-8") as handle:
+            handle.write("{}")
+        with mock.patch.object(self.cache.os, "listdir", side_effect=OSError("ro")):
+            self.assertEqual(self.cache.prune(set()), 0)
+        self.assertTrue(os.path.exists(stale))  # unlisted, so never a candidate
+
     def test_pruning_survives_a_file_it_cannot_remove(self):
         folder = self.cache.cache_root()
         os.makedirs(folder, exist_ok=True)
