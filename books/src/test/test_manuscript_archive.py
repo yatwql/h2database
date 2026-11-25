@@ -182,6 +182,14 @@ class ArchiveEdgeTest(unittest.TestCase):
         self.assertEqual(code, 0, out[-300:])
         self.assertIn("已清理", out)
 
+    def test_the_cli_stays_silent_about_pruning_when_nothing_aged_out(self):
+        code, out = _fixture.run_inproc(
+            self.root, "archive.py", "--kind", "manuscript", "--today", "2026-11-22"
+        )
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn("已归档", out)
+        self.assertNotIn("已清理", out)
+
 
 if __name__ == "__main__":
     unittest.main()
