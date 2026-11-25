@@ -13,7 +13,7 @@ import glob as _glob
 import os
 import re
 
-from lib import _config, _fsutil
+from lib import _config, _fsutil, _mdutil
 
 _fsutil.pin_stdout_utf8()
 
@@ -48,7 +48,7 @@ for fname in source_files:
     # Appendix figures use a letter prefix: **图 A-1:**.
     figs += len(re.findall(r'^\*\*图 [A-Z]-\d+:', text, re.MULTILINE))
     figs += len(re.findall(r'^图 [A-Z]-\d+:', text, re.MULTILINE))
-    refs = len(re.findall(r'\.java:\d+', text))
+    refs = len(_mdutil.source_ref_re(tuple(_config.source_suffixes())).findall(text))
     total_lines += lines
     total_figs += figs
     total_refs += refs

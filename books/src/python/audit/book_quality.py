@@ -23,11 +23,15 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _errors, _fsutil
+from lib import _config, _errors, _fsutil, _mdutil
 
 LADDER = ('模块版图', '核心类型', '关键 API 与源码坐标', '阅读路径')
-COORD_RE = re.compile(r'\.java:\d+')
 EXERCISE_RE = re.compile(r'^\*\*\d+\.\s*([🟢🔵🟠])(★+)', re.MULTILINE)
+
+
+def coord_count(text: str) -> int:
+    """Source coordinates in the text, for the suffixes this book declares."""
+    return len(_mdutil.source_ref_re(tuple(_config.source_suffixes())).findall(text))
 H2_RE = re.compile(r'^## \d+\.(\d+)\s+(.+)$', re.MULTILINE)
 def sent_split():
     """Sentence splitter for the active language pack."""
@@ -75,7 +79,7 @@ def measure() -> dict:
                   for block in re.split(r'\n\n', text)]
         per_file[name] = {
             'lines': len(file_lines),
-            'coords': len(COORD_RE.findall(text)),
+            'coords': coord_count(text),
             'ladder': sum(bool(re.search(rf'## \d+\.\d+ {stage}', text)) for stage in LADDER),
             'max_table_rows': max(tables or [0]),
             'cross_refs': len(re.findall(r'详见第\d+章', text)),

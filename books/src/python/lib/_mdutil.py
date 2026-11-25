@@ -6,6 +6,7 @@ Keeping the anchor algorithm in one place is what makes ``to_html``'s
 """
 from __future__ import annotations
 
+import functools
 import re
 
 _HEADING_RE = re.compile(r'^(#{1,6})\s+(.+?)\s*$')
@@ -28,6 +29,19 @@ CHAPTER_FIGURE = r'(\d+)-(\d+[a-z]*)'
 APPENDIX_FIGURE = r'([A-Z])-(\d+[a-z]*)'
 FIGURE_CAPTION_RE = re.compile(rf'^\*\*{FIGURE_LABEL} ({FIGURE_ID}):\s*(.+?)\*\*\s*$')
 FIGURE_PREFIX_RE = re.compile(rf'^\*\*{FIGURE_LABEL} {FIGURE_ID}:')
+
+# Source coordinates are written `MVStore.java:12`. The shape lives here for the
+# same reason the figure shape does: the counters in cover, balance, book_quality,
+# prose_quality and smart must not each keep matching one hard-coded suffix.
+@functools.lru_cache(maxsize=8)
+def source_ref_re(suffixes: tuple[str, ...]) -> re.Pattern[str]:
+    """`Class.java:12` shaped references, for the suffixes a book declares.
+
+    Built from the configured suffixes rather than a literal: a gate must not
+    keep counting `.java:` after the analysed tree became C or Rust.
+    """
+    return re.compile(r'\b(\w+)(?:' + '|'.join(re.escape(x) for x in suffixes)
+                      + r'):(\d+)')
 
 
 def table(headers: list[str], rows: list[list[str]], cap: int = 20) -> list[str]:

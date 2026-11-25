@@ -24,7 +24,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _errors, _fsutil
+from lib import _config, _errors, _fsutil, _mdutil
 
 FENCE_RE = re.compile(r'```[\s\S]*?```')
 def sent_re():
@@ -33,6 +33,11 @@ def sent_re():
     return re.compile(rf'(?<=[{endings}])\s*')
 COORD_RE = re.compile(r'\.java:\d+')
 LIST_RE = re.compile(r'^\s*(?:[-*+]|\d+\.)\s+', re.MULTILINE)
+
+
+def coord_count(text: str) -> int:
+    """Source coordinates in the text, for the suffixes this book declares."""
+    return len(_mdutil.source_ref_re(tuple(_config.source_suffixes())).findall(text))
 H2_RE = re.compile(r'^## ', re.MULTILINE)
 H3_RE = re.compile(r'^### ', re.MULTILINE)
 TABLE_ROW_RE = re.compile(r'^\|', re.MULTILINE)
@@ -129,7 +134,7 @@ def _file_metrics(path: str) -> tuple[str, dict, list[str], int]:
         'paragraphs': len(paragraphs),
         'avg_paragraph': round(sum(len(p) for p in paragraphs) / max(1, len(paragraphs)), 1),
         'bullet_ratio': round(100 * bullets / max(1, len(prose_lines)), 1),
-        'coords': len(COORD_RE.findall(text)),
+        'coords': coord_count(text),
         'h2': len(H2_RE.findall(text)),
         'h3': len(H3_RE.findall(text)),
         'table_rows': rows_with_cells,

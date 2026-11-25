@@ -41,7 +41,7 @@ import re
 import sys
 from typing import Any
 
-from lib import _config, _errors, _fsutil
+from lib import _config, _errors, _fsutil, _mdutil
 
 _fsutil.pin_stdout_utf8()
 
@@ -71,7 +71,7 @@ def count_figures(text: str) -> int:
     return len(re.findall(r"^\*\*图 [A-Z0-9]+-\d+(?:[a-z])?:", text, re.MULTILINE))
 
 def count_source_refs(text: str) -> int:
-    return len(re.findall(r"\.java:\d+", text))
+    return len(_mdutil.source_ref_re(tuple(_config.source_suffixes())).findall(text))
 
 def load_glossary_chapter_index() -> dict[int, int]:
     """Return {chapter_number: count_of_terms_referencing_that_chapter}.

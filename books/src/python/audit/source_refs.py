@@ -26,7 +26,7 @@ from collections import defaultdict
 from datetime import date
 from typing import NamedTuple
 
-from lib import _baseline, _config, _errors, _fsutil
+from lib import _baseline, _config, _errors, _fsutil, _mdutil
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -68,8 +68,7 @@ def scanned_chapter_files() -> list[str]:
 @functools.lru_cache(maxsize=4)
 def ref_re(source_suffixes: tuple[str, ...]) -> re.Pattern:
     """`Class.java:12` shaped references, for the suffixes a book declares."""
-    return re.compile(r'\b(\w+)(?:' + '|'.join(re.escape(x) for x in source_suffixes)
-                      + r'):(\d+)')
+    return _mdutil.source_ref_re(source_suffixes)
 
 # ---------------------------------------------------------------------------
 # Data types

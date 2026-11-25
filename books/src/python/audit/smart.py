@@ -239,7 +239,8 @@ if __name__ == "__main__":
 
             section_len = end - line_num
             code_blocks = "".join(lines[line_num:end]).count("```") // 2
-            java_refs = "".join(lines[line_num:end]).count(".java:")
+            refs = _mdutil.source_ref_re(tuple(_config.source_suffixes()))
+            source_refs = len(refs.findall("".join(lines[line_num:end])))
 
             if total_diagrams < min_figures():
                 all_gaps.append(
@@ -249,7 +250,7 @@ if __name__ == "__main__":
                         section_len,
                         total_diagrams,
                         code_blocks,
-                        java_refs,
+                        source_refs,
                         has_children,
                     )
                 )

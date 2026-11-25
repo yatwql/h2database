@@ -328,8 +328,10 @@ def is_glossary_candidate(term: str) -> bool:
     # Pure Chinese with 4+ characters (likely a descriptive heading)
     if re.match(r'^[一-鿿\s，。、；：""''（）()]+$', term) and len(term) >= 4:
         return False
-    # Contains file path patterns or code references
-    if re.search(r'[/\\]', term) or re.search(r'\.java', term):
+    # Contains file path patterns or code references (for the suffixes this book
+    # declares, so a C book's `foo.c` is filtered as well as a Java one's `Foo.java`)
+    if re.search(r'[/\\]', term) or any(suffix in term
+                                         for suffix in _config.source_suffixes()):
         return False
     # Backtick-containing terms (code references)
     if '`' in term:
