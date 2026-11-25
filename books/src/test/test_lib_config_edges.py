@@ -166,6 +166,15 @@ class ChangeStampTest(BookCase):
             stamp = _config.Config(self.root).tool_updated()
         self.assertRegex(stamp, r"^\d{4}-\d{2}-\d{2}$")
 
+    def test_a_git_stamp_is_used_as_it_stands(self):
+        done = _book_versions.subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="2025-02-03\n"
+        )
+        with mock.patch.object(_book_versions.subprocess, "run", return_value=done) as run:
+            stamp = _config.Config(self.root).tool_updated()
+        self.assertEqual(stamp, "2025-02-03")
+        run.assert_called_once()
+
     def test_a_file_that_cannot_be_stat_ed_contributes_nothing(self):
         target = os.path.join(self.root, "src", "python")
         os.makedirs(target)
@@ -187,6 +196,12 @@ class SourceVersionTest(BookCase):
         self.manifest("pom.xml", "<project></project>")
         cfg = _config.Config(self.root)
         self.assertEqual(cfg.source_version(), "unknown")
+
+    def test_a_manifest_without_a_version_lets_the_next_one_answer(self):
+        self.sources({"src_main": "src-tree"})
+        self.manifest("pom.xml", "<project></project>")
+        self.manifest("pyproject.toml", '[project]\nversion = "2.5.0"\n')
+        self.assertEqual(_config.Config(self.root).source_version(), "2.5.0")
 
     def test_a_manifest_inside_the_source_root_is_read_without_a_pom_root(self):
         self.sources({"src_main": "src-tree"})

@@ -5,6 +5,7 @@ Only these keys are writable from the UI/CLI; everything else belongs to the
 configuration files and the gates. Each write updates the owning file and
 reloads ``lib._config`` so the running session sees the new value.
 """
+
 from __future__ import annotations
 
 import os
@@ -27,31 +28,42 @@ def book_toml() -> str:
 
 
 def provider_json() -> str:
-    return os.path.join(config_dir(), 'llm_provider.json')
+    return os.path.join(config_dir(), "llm_provider.json")
 
 
-LEVELS = ('DEBUG', 'INFO', 'WARNING', 'ERROR')
+LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")
+
 
 # logical key -> (file, section, field, kind, description)
 def spec_table() -> dict[str, tuple[str, str, str, str, str]]:
     """Writable settings and where each one lives, built for the active book."""
     folder = config_dir()
     BOOK_TOML = book_toml()
-    BASE_JSON = os.path.join(folder, 'base.json')
-    LLM_PROVIDER_JSON = os.path.join(folder, 'llm_provider.json')
-    LLM_SETTINGS_JSON = os.path.join(folder, 'llm_settings.json')
+    BASE_JSON = os.path.join(folder, "base.json")
+    LLM_PROVIDER_JSON = os.path.join(folder, "llm_provider.json")
+    LLM_SETTINGS_JSON = os.path.join(folder, "llm_settings.json")
     return {
-    'title': (BOOK_TOML, 'book', 'title', 'str', '书名'),
-    'version': (BOOK_TOML, 'book', 'version', 'str', '版本号'),
-    'manuscript': (BOOK_TOML, 'paths', 'manuscript', 'str', '手稿目录'),
-    'dist': (BOOK_TOML, 'paths', 'dist', 'str', '产物目录'),
-    'languages': (BASE_JSON, 'sources', 'languages', 'list', '源码语言'),
-    'log.level': (BASE_JSON, 'logging', 'level', 'level', '日志级别'),
-    'llm.provider': (LLM_PROVIDER_JSON, '', 'default_provider', 'str', '默认 LLM provider'),
-    'llm.daily_cost_limit': (LLM_SETTINGS_JSON, '', 'daily_cost_limit', 'number',
-                             'LLM 每日费用上限（0 = 不限，达到即提醒）'),
-    'llm.ingest_prose': (BOOK_TOML, 'llm', 'ingest_prose', 'bool',
-                         'ingest 的导读/小结是否用 LLM 起草'),
+        "title": (BOOK_TOML, "book", "title", "str", "书名"),
+        "version": (BOOK_TOML, "book", "version", "str", "版本号"),
+        "manuscript": (BOOK_TOML, "paths", "manuscript", "str", "手稿目录"),
+        "dist": (BOOK_TOML, "paths", "dist", "str", "产物目录"),
+        "languages": (BASE_JSON, "sources", "languages", "list", "源码语言"),
+        "log.level": (BASE_JSON, "logging", "level", "level", "日志级别"),
+        "llm.provider": (LLM_PROVIDER_JSON, "", "default_provider", "str", "默认 LLM provider"),
+        "llm.daily_cost_limit": (
+            LLM_SETTINGS_JSON,
+            "",
+            "daily_cost_limit",
+            "number",
+            "LLM 每日费用上限（0 = 不限，达到即提醒）",
+        ),
+        "llm.ingest_prose": (
+            BOOK_TOML,
+            "llm",
+            "ingest_prose",
+            "bool",
+            "ingest 的导读/小结是否用 LLM 起草",
+        ),
     }
 
 
@@ -68,10 +80,10 @@ def _reload() -> None:
 def _read_toml_value(path: str, section: str, field: str) -> str | None:
     """Read ``[section].field`` from a TOML file with a line-oriented scan."""
     text = _fsutil.read_text(path)
-    current = ''
+    current = ""
     pattern = re.compile(rf'^\s*{re.escape(field)}\s*=\s*"?(.*?)"?\s*$')
-    for line in text.split('\n'):
-        header = re.match(r'^\s*\[([^\]]+)\]\s*$', line)
+    for line in text.split("\n"):
+        header = re.match(r"^\s*\[([^\]]+)\]\s*$", line)
         if header:
             current = header.group(1).strip()
             continue
@@ -85,63 +97,65 @@ def _read_toml_value(path: str, section: str, field: str) -> str | None:
 def _write_toml_value(path: str, section: str, field: str, value: str) -> None:
     """Replace ``[section].field`` in place, keeping the rest of the file."""
     text = _fsutil.read_text(path)
-    lines = text.split('\n')
-    current = ''
+    lines = text.split("\n")
+    current = ""
     replaced = False
     for index, line in enumerate(lines):
-        header = re.match(r'^\s*\[([^\]]+)\]\s*$', line)
+        header = re.match(r"^\s*\[([^\]]+)\]\s*$", line)
         if header:
             current = header.group(1).strip()
             continue
-        if current == section and re.match(rf'^\s*{re.escape(field)}\s*=', line):
+        if current == section and re.match(rf"^\s*{re.escape(field)}\s*=", line):
             lines[index] = f'{field} = "{value}"'
             replaced = True
             break
     if not replaced:
-        raise KeyError(f'{section}.{field} not found in {path}')
-    _fsutil.write_text(path, '\n'.join(lines))
+        raise KeyError(f"{section}.{field} not found in {path}")
+    _fsutil.write_text(path, "\n".join(lines))
 
 
 def _write_toml_literal(path: str, section: str, field: str, literal: str) -> None:
     """Replace ``[section].field`` with a bare TOML literal (true/false/number)."""
     text = _fsutil.read_text(path)
-    lines = text.split('\n')
-    current = ''
+    lines = text.split("\n")
+    current = ""
     for index, line in enumerate(lines):
-        header = re.match(r'^\s*\[([^\]]+)\]\s*$', line)
+        header = re.match(r"^\s*\[([^\]]+)\]\s*$", line)
         if header:
             current = header.group(1).strip()
             continue
-        if current == section and re.match(rf'^\s*{re.escape(field)}\s*=', line):
-            lines[index] = f'{field} = {literal}'
-            _fsutil.write_text(path, '\n'.join(lines))
+        if current == section and re.match(rf"^\s*{re.escape(field)}\s*=", line):
+            lines[index] = f"{field} = {literal}"
+            _fsutil.write_text(path, "\n".join(lines))
             return
     # the section may already exist without this key: add the key inside it,
     # otherwise the file ends up with two sections of the same name and stops
-    # being valid TOML
-    if section:
-        header_at = next((i for i, line in enumerate(lines)
-                          if re.match(rf'^\s*\[{re.escape(section)}\]\s*$', line)), None)
-        if header_at is not None:
-            end = next((i for i in range(header_at + 1, len(lines))
-                        if re.match(r'^\s*\[', lines[i])), len(lines))
-            insert_at = end
-            while insert_at > header_at + 1 and not lines[insert_at - 1].strip():
-                insert_at -= 1
-            lines.insert(insert_at, f'{field} = {literal}')
-            _fsutil.write_text(path, '\n'.join(lines))
-            return
+    # being valid TOML. Every bool lives under a section, so this runs as-is.
+    header_at = next(
+        (i for i, line in enumerate(lines) if re.match(rf"^\s*\[{re.escape(section)}\]\s*$", line)),
+        None,
+    )
+    if header_at is not None:
+        end = next(
+            (i for i in range(header_at + 1, len(lines)) if re.match(r"^\s*\[", lines[i])),
+            len(lines),
+        )
+        insert_at = end
+        while insert_at > header_at + 1 and not lines[insert_at - 1].strip():
+            insert_at -= 1
+        lines.insert(insert_at, f"{field} = {literal}")
+        _fsutil.write_text(path, "\n".join(lines))
+        return
     # a book that predates the section gets one added, rather than a dead end
-    body = '\n'.join(lines).rstrip('\n')
-    _fsutil.write_text(path, f'{body}\n\n[{section}]\n{field} = {literal}\n')
+    body = "\n".join(lines).rstrip("\n")
+    _fsutil.write_text(path, f"{body}\n\n[{section}]\n{field} = {literal}\n")
 
 
 def list_settings() -> list[dict]:
     """Current value and description of every writable key."""
     rows = []
     for key, row in spec_table().items():
-        rows.append({'key': key, 'value': get(key), 'kind': row[3],
-                     'description': row[4]})
+        rows.append({"key": key, "value": get(key), "kind": row[3], "description": row[4]})
     return rows
 
 
@@ -150,7 +164,7 @@ def get(key: str) -> str:
     if key not in spec_table():
         raise KeyError(key)
     path, section, field, _kind, _ = spec_table()[key]
-    if path.endswith('.json'):
+    if path.endswith(".json"):
         payload = _fsutil.load_json(path)
         if section:
             payload = payload.get(section) or {}
@@ -158,37 +172,37 @@ def get(key: str) -> str:
     else:
         value = _read_toml_value(path, section, field)
     if isinstance(value, list):
-        return ','.join(str(item) for item in value)
-    return '' if value is None else str(value)
+        return ",".join(str(item) for item in value)
+    return "" if value is None else str(value)
 
 
 def _validate(key: str, value: str) -> object:
     kind = spec_table()[key][3]
-    if kind == 'bool':
+    if kind == "bool":
         text = value.strip().lower()
-        if text not in ('true', 'false', 'yes', 'no', '1', '0', 'on', 'off'):
-            raise ValueError(f'{key} must be a boolean (true/false)')
-        return text in ('true', 'yes', '1', 'on')
-    if kind == 'number':
+        if text not in ("true", "false", "yes", "no", "1", "0", "on", "off"):
+            raise ValueError(f"{key} must be a boolean (true/false)")
+        return text in ("true", "yes", "1", "on")
+    if kind == "number":
         try:
             number = float(value)
         except ValueError as exc:
-            raise ValueError(f'{key} must be a number') from exc
+            raise ValueError(f"{key} must be a number") from exc
         if number < 0:
-            raise ValueError(f'{key} must not be negative')
+            raise ValueError(f"{key} must not be negative")
         return number
-    if kind == 'level':
+    if kind == "level":
         upper = value.strip().upper()
         if upper not in LEVELS:
-            raise ValueError(f'log.level must be one of {", ".join(LEVELS)}')
+            raise ValueError(f"log.level must be one of {', '.join(LEVELS)}")
         return upper
-    if kind == 'list':
-        items = [item.strip() for item in value.split(',') if item.strip()]
+    if kind == "list":
+        items = [item.strip() for item in value.split(",") if item.strip()]
         if not items:
-            raise ValueError('languages needs at least one value')
+            raise ValueError("languages needs at least one value")
         return items
     if not value.strip():
-        raise ValueError(f'{key} must not be empty')
+        raise ValueError(f"{key} must not be empty")
     return value.strip()
 
 
@@ -198,11 +212,11 @@ def set_value(key: str, value: str) -> str:
         raise KeyError(key)
     stored = _validate(key, value)
     path, section, field, kind, _description = spec_table()[key]
-    if kind == 'bool':
-        _write_toml_literal(path, section, field, 'true' if stored else 'false')
+    if kind == "bool":
+        _write_toml_literal(path, section, field, "true" if stored else "false")
         _reload()
-        return 'true' if stored else 'false'
-    if path.endswith('.json'):
+        return "true" if stored else "false"
+    if path.endswith(".json"):
         payload = _fsutil.load_json(path)
         target = payload.setdefault(section, {}) if section else payload
         target[field] = stored
@@ -210,13 +224,13 @@ def set_value(key: str, value: str) -> str:
     else:
         _write_toml_value(path, section, field, str(stored))
     _reload()
-    return ','.join(stored) if isinstance(stored, list) else str(stored)
+    return ",".join(stored) if isinstance(stored, list) else str(stored)
 
 
 def _priority(spec: dict | None) -> int:
     """Declared fallback priority, tolerating a malformed value."""
     try:
-        return int((spec or {}).get('priority', 100))
+        return int((spec or {}).get("priority", 100))
     except (TypeError, ValueError):
         return 100
 
@@ -224,9 +238,9 @@ def _priority(spec: dict | None) -> int:
 def provider_order() -> list[dict]:
     """Providers in fallback order, with the priority the router will read."""
     payload = _fsutil.load_json(provider_json())
-    providers = payload.get('providers') or {}
-    rows = [{'name': name, 'priority': _priority(spec)} for name, spec in providers.items()]
-    return sorted(rows, key=lambda row: (row['priority'], row['name']))
+    providers = payload.get("providers") or {}
+    rows = [{"name": name, "priority": _priority(spec)} for name, spec in providers.items()]
+    return sorted(rows, key=lambda row: (row["priority"], row["name"]))
 
 
 def move_provider(name: str, delta: int) -> str:
@@ -236,31 +250,31 @@ def move_provider(name: str, delta: int) -> str:
     no renumbering. It is the file the router reads, not a session-only view.
     """
     if delta not in (-1, 1):
-        raise ValueError('delta must be -1 or 1')
+        raise ValueError("delta must be -1 or 1")
     payload = _fsutil.load_json(provider_json())
-    providers = payload.get('providers') or {}
+    providers = payload.get("providers") or {}
     if name not in providers:
-        raise KeyError(f'unknown provider {name!r}')
-    order = [row['name'] for row in provider_order()]
+        raise KeyError(f"unknown provider {name!r}")
+    order = [row["name"] for row in provider_order()]
     position = order.index(name)
     target = max(0, min(len(order) - 1, position + delta))
     if target == position:
-        return ', '.join(order)
+        return ", ".join(order)
     order.insert(target, order.pop(position))
     for index, provider in enumerate(order):
-        providers.setdefault(provider, {})['priority'] = (index + 1) * 10
-    payload['providers'] = providers
+        providers.setdefault(provider, {})["priority"] = (index + 1) * 10
+    payload["providers"] = providers
     _fsutil.dump_json(provider_json(), payload)
     _reload()
-    return ', '.join(order)
+    return ", ".join(order)
 
 
 def _source_dir() -> str:
     """Configured source tree (empty when not configured)."""
     try:
-        return _config.source_tree('src_main')
+        return _config.source_tree("src_main")
     except Exception:
-        return ''
+        return ""
 
 
 def spend_summary() -> str:
@@ -268,14 +282,14 @@ def spend_summary() -> str:
     from lib import _llm
 
     try:
-        spent = _llm.today_cost()          # already summed in the display currency
-        limit = _llm.daily_limit()         # configured in that same currency
+        spent = _llm.today_cost()  # already summed in the display currency
+        limit = _llm.daily_limit()  # configured in that same currency
         currency = _llm.display_currency()
-        symbol = _llm.SYMBOLS.get(currency, '')
+        symbol = _llm.SYMBOLS.get(currency, "")
     except _llm.LLMError:
-        return '—'      # a book without LLM config still gets a header
-    left = f'/{symbol}{limit:.2f}' if limit else ''
-    return f'{symbol}{spent:.2f}{left}'
+        return "—"  # a book without LLM config still gets a header
+    left = f"/{symbol}{limit:.2f}" if limit else ""
+    return f"{symbol}{spent:.2f}{left}"
 
 
 def volume_summary() -> str:
@@ -288,25 +302,24 @@ def volume_summary() -> str:
     """
     room = _volume.headroom()
     if room is None:
-        return '—'
-    return (f'{room["lines"]:,} 行'
-            f'（再少 {room["above"]:,} 行即判「内容变薄」）')
+        return "—"
+    return f"{room['lines']:,} 行（再少 {room['above']:,} 行即判「内容变薄」）"
 
 
 def summary() -> dict:
     """Book identity plus the settings shown in the UI header."""
     return {
-        'title': _config.TITLE,
-        'version': _config.VERSION,
-        'manuscript': _config.MANUSCRIPT_DIR,
-        'dist': _config.DIST_DIR,
-        'languages': ','.join(_config.source_languages()),
-        'log_level': get('log.level') if 'log.level' in spec_table() else '',
-        'llm_provider': get('llm.provider'),
-        'source_dir': _source_dir(),
-        'llm_spend': spend_summary(),
-        'volume_margin': volume_summary(),
-        'tool_version': _config.versions()['tool'],
-        'source_version': _config.versions()['source'],
-        'doc_version': _config.versions()['doc'],
+        "title": _config.TITLE,
+        "version": _config.VERSION,
+        "manuscript": _config.MANUSCRIPT_DIR,
+        "dist": _config.DIST_DIR,
+        "languages": ",".join(_config.source_languages()),
+        "log_level": get("log.level") if "log.level" in spec_table() else "",
+        "llm_provider": get("llm.provider"),
+        "source_dir": _source_dir(),
+        "llm_spend": spend_summary(),
+        "volume_margin": volume_summary(),
+        "tool_version": _config.versions()["tool"],
+        "source_version": _config.versions()["source"],
+        "doc_version": _config.versions()["doc"],
     }

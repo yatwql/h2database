@@ -61,6 +61,26 @@ class BaselinePathTest(unittest.TestCase):
         self.assertIn(os.path.join("baselines", "main"), path)
 
 
+class ManuscriptFileOrderTest(unittest.TestCase):
+    """The reading order keeps each existing file once."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.mod = _fixture.load_module(self.root, "_volume")
+
+    def test_a_missing_or_repeated_manuscript_file_is_listed_once(self):
+        existing = os.path.join(self.root, "data", "manuscript", "cover.md")
+        missing = os.path.join(self.root, "data", "manuscript", "absent.md")
+        with (
+            mock.patch.object(self.mod._config, "front_matter", lambda: [existing, existing]),
+            mock.patch.object(self.mod._config, "chapter_files", lambda **kwargs: []),
+            mock.patch.object(self.mod._config, "back_matter", lambda: [missing, existing]),
+        ):
+            self.assertEqual(self.mod.manuscript_files(), [existing])
+
+
 if __name__ == "__main__":
     unittest.main()
 

@@ -150,8 +150,8 @@ def parse_glossary_with_related(path: str) -> dict[str, dict]:
                 ch = int(c)
                 if ch not in current["chapters"]:
                     current["chapters"].append(ch)
-        elif current is not None:
-            # Continuation line
+        elif current is not None and current_term is not None:
+            # Continuation line; the term is set exactly when the entry is
             current["body"].append(line)
             for c in ch_pattern.findall(line):
                 ch = int(c)
@@ -162,9 +162,9 @@ def parse_glossary_with_related(path: str) -> dict[str, dict]:
                 if r and r not in current["related"]:
                     current["related"].append(r)
             if line and not line.startswith(" ") and not line.startswith("-"):
-                # Top-level non-indented line — end of entry
-                if current_term is not None:
-                    entries[current_term] = current
+                # Top-level non-indented line — end of entry. The pair is never
+                # half-set, so the key is always there.
+                entries[current_term] = current
                 current_term = None
                 current = None
 
@@ -340,9 +340,6 @@ def report_missing(check_mode: bool = False) -> int:
                     continue
                 # Skip figure captions, section numbers
                 if re.match(r"^图 \d+-\d+", term) or re.match(r"^\d+[.、]", term):
-                    continue
-                # Skip heading abbreviations
-                if re.match(r"^\d+\.\d+\s", term):
                     continue
                 # Skip explicit skip terms
                 if term in skip_terms():

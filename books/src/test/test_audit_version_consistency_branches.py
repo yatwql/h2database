@@ -111,6 +111,36 @@ class VersionConsistencyExtraBranchesTest(unittest.TestCase):
         problems = self.mod.software_problems()
         self.assertTrue(any("bad.py" in problem for problem in problems), problems)
 
+    def test_the_version_module_may_spell_the_name_and_a_clean_file_stays_quiet(self):
+        name, chinese = self.app_names()
+        self.write("docs/managements/plan.md", f"# 计划\n\n{name} 与 {chinese}\n")
+        self.write("src/python/lib/_version.py", f"APP_NAME = {name!r}\n")
+        self.write("src/python/clean.py", "VALUE = 1\n")
+        self.write("src/python/bad.py", f"LABEL = {name!r}\n")
+        problems = self.mod.software_problems()
+        self.assertEqual(
+            [problem for problem in problems if problem.startswith("src/python")],
+            ["src/python/bad.py: spells the software name; read it from lib._version instead"],
+        )
+
+    def test_book_name_problems_without_a_cover_or_an_artifact_has_nothing_to_read(self):
+        absent = os.path.join(self.tmp.name, "absent")
+        with (
+            mock.patch.object(
+                self.mod._config, "manuscript", lambda name: os.path.join(absent, name)
+            ),
+            mock.patch.object(
+                self.mod._config, "merged_html", lambda: os.path.join(absent, "b.html")
+            ),
+            mock.patch.object(
+                self.mod._config, "merged_epub", lambda: os.path.join(absent, "b.epub")
+            ),
+            mock.patch.object(
+                self.mod._config, "merged_pdf", lambda: os.path.join(absent, "b.pdf")
+            ),
+        ):
+            self.assertEqual(self.mod.book_name_problems(), [])
+
     def test_a_display_field_that_drops_the_title_is_reported(self):
         with mock.patch.object(self.mod._config, "project", return_value="另一个书名"):
             problems = self.mod.title_problems()

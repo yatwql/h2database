@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import io
 import os
+import runpy
+import sys
 import tempfile
 import unittest
 import zipfile
@@ -255,6 +257,26 @@ class CliTest(unittest.TestCase):
         with self.assertRaises(SystemExit) as raised:
             self.run_cli("--check", self.left)
         self.assertEqual(raised.exception.code, 2)
+
+
+class ScriptPathSetupTest(unittest.TestCase):
+    """The script run from outside the tool root puts that root on sys.path."""
+
+    def test_the_script_adds_the_tool_root_to_the_path_and_prints_usage(self):
+        tools = os.path.abspath(_fixture.TOOLS_DIR)
+        script = os.path.join(tools, "audit", "epub_diff.py")
+        saved_path = list(sys.path)
+        saved_argv = sys.argv[:]
+        self.addCleanup(sys.path.__setitem__, slice(None), saved_path)
+        self.addCleanup(setattr, sys, "argv", saved_argv)
+        sys.argv = ["epub_diff.py", "--help"]
+        sys.path[:] = [entry for entry in sys.path if os.path.abspath(entry or ".") != tools]
+        self.assertNotIn(tools, [os.path.abspath(entry or ".") for entry in sys.path])
+        with redirect_stdout(io.StringIO()) as printed, self.assertRaises(SystemExit) as raised:
+            runpy.run_path(script, run_name="__main__")
+        self.assertEqual(raised.exception.code, 0)
+        self.assertIn("epub_diff.py", printed.getvalue())
+        self.assertIn(tools, [os.path.abspath(entry or ".") for entry in sys.path])
 
 
 if __name__ == "__main__":
