@@ -141,3 +141,33 @@ class IndexXrefParserEdgesTest(unittest.TestCase):
             bad = self.mod._check_section_order(sections)
         self.assertEqual(bad, 1)
         self.assertIn("out of order", buffer.getvalue())
+
+    def test_a_category_suffix_that_leaves_nothing_is_not_an_alias(self):
+        # '类' is itself a trailing category suffix: stripping it leaves "",
+        # so the only alias left is the term as written.
+        self.assertEqual(self.mod._aliases_for("类"), {"类"})
+
+    def test_a_slash_with_nothing_after_it_adds_no_alias(self):
+        # the split on '/' yields one empty piece, which must not become an alias
+        self.assertEqual(self.mod._aliases_for("A  /  "), {"A", "A  /", "A  /  "})
+
+    def test_a_line_that_is_neither_an_entry_nor_a_reference_parts_to_nothing(self):
+        self.assertEqual(self.mod._term_and_refs("-"), ("", "", []))
+
+    def test_a_sub_entry_before_any_main_entry_is_dropped(self):
+        path = os.path.join(self.tmp.name, "index.md")
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write("# 索引\n\n  - 孤立子项 —— §1.1\n\n## A\n\n- ACID —— §1.1\n")
+        main_entries, sub_entries, _, sections = self.mod.parse_index(path)
+        self.assertEqual(sub_entries, [])
+        self.assertEqual(sorted(main_entries), ["ACID"])
+        self.assertEqual(sections, [("A", 5)])
+
+    def test_a_see_also_target_that_is_only_a_prefix_is_skipped(self):
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            dangling = self.mod._check_see_also(
+                {"ACID"}, {}, [{"line": 7, "parent": "ACID", "targets": [""]}]
+            )
+        self.assertEqual(dangling, 0)
+        self.assertIn("every see-also target resolves", buffer.getvalue())
