@@ -42,10 +42,9 @@ import re
 import sys
 import unicodedata
 
-from lib import _config, _errors, _fsutil
+from lib import _baseline, _config, _errors, _fsutil
 
 BOX_CHARS = set('─│┌┐└┘├┤┬┴┼━┃┏┓┗┛┣┫┳┻╋═║╔╗╚╝╠╣╦╩╬')
-BASELINE_PATH = _config.baseline_path('ascii')
 
 _ASCII_BORDER_RE = re.compile(r'^\s*\+[-+]{2,}\+\s*$')
 _ASCII_EDGE_RE = re.compile(r'^\s*\|.*\|\s*$')
@@ -134,24 +133,19 @@ def _key(path: str, lineno: int, kind: str) -> str:
     digest = hashlib.sha256(_line_text(path, lineno).strip().encode('utf-8'))
     return f'{_rel(path)}::{kind}::{digest.hexdigest()[:12]}'
 
+def baseline_path() -> str:
+    """The accepted-violations file, resolved per call so an edition keeps its own."""
+    return _baseline.path_for('ascii')
+
 def load_baseline() -> set[str]:
-    if not os.path.isfile(BASELINE_PATH):
-        return set()
-    try:
-        with open(BASELINE_PATH, encoding='utf-8') as fh:
-            return set(json.load(fh).get('accepted', []))
-    except (OSError, json.JSONDecodeError, AttributeError) as exc:
-        print(f'  [WARN] cannot read baseline {BASELINE_PATH}: {exc}', file=sys.stderr)
-        return set()
+    return {str(key) for key in (_baseline.load_at(baseline_path()).get('accepted') or [])}
 
 def save_baseline(violations: list[Violation]) -> None:
-    payload = {
-        'updated': __import__('datetime').date.today().isoformat(),
-        'note': 'Accepted ASCII diagram violations. Refresh with --update-baseline.',
-        'accepted': sorted(_key(p, line, kind) for p, line, kind, _d in violations),
-    }
-    _fsutil.ensure_dir(BASELINE_PATH)
-    _fsutil.write_text(BASELINE_PATH, json.dumps(payload, ensure_ascii=False, indent=2) + '\n')
+    _baseline.save_at(
+        baseline_path(),
+        {'accepted': sorted({_key(p, line, kind) for p, line, kind, _d in violations})},
+        note='Accepted ASCII diagram violations. Refresh with --update-baseline.',
+    )
 
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(
@@ -167,7 +161,7 @@ def main(argv: list[str]) -> int:
     if args.update_baseline:
         save_baseline(violations)
         print(f'baseline updated: {len(violations)} accepted -> '
-              f'{os.path.relpath(BASELINE_PATH, _config.BOOK_ROOT)}')
+              f'{os.path.relpath(baseline_path(), _config.BOOK_ROOT)}')
         return 0
 
     accepted = load_baseline()

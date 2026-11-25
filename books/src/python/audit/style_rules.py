@@ -23,11 +23,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _errors, _fsutil
+from lib import _baseline, _config, _errors, _fsutil
 
 RULES = (_config.STYLE_POLICY.get('style_rules') or {})
-BASELINE_PATH = os.path.join(_config.baseline_dir(),
-                             'style-rules-baseline.json')
 FENCE_RE = re.compile(r'^\s*```')
 HEADING_RE = re.compile(r'^(#{1,6})\s+(.+?)\s*$')
 LINK_RE = re.compile(r'\[([^\]]+)\]\([^)]*\)')
@@ -139,21 +137,21 @@ def _key(item: dict) -> str:
     return f"{item['file']}::{item['kind']}::{detail}"
 
 
+def baseline_path() -> str:
+    """The accepted-findings file, resolved per call so an edition keeps its own."""
+    return _baseline.path_for("style-rules")
+
+
 def load_baseline() -> set[str]:
-    if not os.path.isfile(BASELINE_PATH):
-        return set()
-    try:
-        return set(json.loads(_fsutil.read_text(BASELINE_PATH)).get('accepted', []))
-    except (OSError, json.JSONDecodeError):
-        return set()
+    return {str(key) for key in (_baseline.load_at(baseline_path()).get("accepted") or [])}
 
 
 def save_baseline(findings: list[dict]) -> None:
-    payload = {'updated': __import__('datetime').date.today().isoformat(),
-               'note': 'Accepted style-rule findings. Refresh with --update-baseline.',
-               'accepted': sorted(_key(item) for item in findings)}
-    _fsutil.ensure_dir(BASELINE_PATH)
-    _fsutil.write_text(BASELINE_PATH, json.dumps(payload, ensure_ascii=False, indent=2) + '\n')
+    _baseline.save_at(
+        baseline_path(),
+        {"accepted": sorted({_key(item) for item in findings})},
+        note="Accepted style-rule findings. Refresh with --update-baseline.",
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -174,7 +172,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.update_baseline:
         save_baseline(findings)
         print(f'baseline updated: {len(findings)} accepted -> '
-              f'{os.path.relpath(BASELINE_PATH, _config.BOOK_ROOT)}')
+              f'{os.path.relpath(baseline_path(), _config.BOOK_ROOT)}')
         return 0
 
     accepted = load_baseline()

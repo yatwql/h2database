@@ -13,6 +13,12 @@
 
 ### 变更
 
+- **基线读写收口到 `lib/_baseline.py`（rf-71）**：`ascii`、`style_rules`、`source_symbol` 三份「已接受的遗留项」
+  原先各写一遍读取、容错与写入，现在共用 `_baseline.load_at` / `save_at`（统一 `updated` / `note` / `accepted`
+  外壳，扩展字段如 `source_version` 原样保留），每个 gate 只留一个按调用解析的 `baseline_path()`。
+  顺带修掉 `diagrams.py` 在 import 时就把基线路径定死的问题——选了版本（edition）后它会写进无版本的仓库路径。
+  `perf_baseline` 与 `content_volume` 仍是各自的文件：它们记的是测量值与卷册台账，不是接受清单。
+
 - **测试用例核查与整改**：删掉整份重复的 pdf_metrics 目标写回用例（13 条与
   `test_render_pdf_metrics_units.py` 同函数同断言，后者 33 条覆盖更全）；把零出站用例并入
   `test_network_isolation.py`（原本两处各写一半）；去掉 `test_pdf_tools`、

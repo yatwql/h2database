@@ -69,12 +69,13 @@ class StyleRulesUnitTest(unittest.TestCase):
         self.assertIn('TERM', key)
 
     def test_baseline_round_trip(self):
-        path = os.path.join(self.tmp.name, 'baseline.json')
-        with mock.patch.object(self.mod, 'BASELINE_PATH', path):
+        path = os.path.join(self.tmp.name, "baseline.json")
+        with mock.patch.object(self.mod, "baseline_path", lambda: path):
             self.assertEqual(self.mod.load_baseline(), set())
-            self.mod.save_baseline([{'file': 'a.md', 'line': 1, 'kind': 'TERM',
-                                     'detail': 'mixed spellings'}])
+            self.mod.save_baseline([{"file": "a.md", "line": 1, "kind": "TERM",
+                                     "detail": "mixed spellings"}])
             self.assertTrue(self.mod.load_baseline())
+            self.assertEqual(self.mod.baseline_path(), path)
 
     def test_main_reports_the_rule_findings(self):
         buffer = io.StringIO()

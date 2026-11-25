@@ -26,7 +26,7 @@ from collections import defaultdict
 from datetime import date
 from typing import NamedTuple
 
-from lib import _config, _errors, _fsutil
+from lib import _baseline, _config, _errors, _fsutil
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -307,31 +307,21 @@ def _claim_key(doc_file: str, class_name: str, method: str) -> str:
 
 def load_baseline(path: str | None = None) -> dict:
     """Return the accepted-drift baseline (empty skeleton when absent)."""
-    target = path or baseline_file()
-    if not os.path.isfile(target):
-        return {'source_version': '', 'accepted': []}
-    try:
-        data = json.loads(_fsutil.read_text_raw(target))
-    except (OSError, json.JSONDecodeError) as exc:
-        print(f'  [WARN] cannot read baseline {target}: {exc}', file=sys.stderr)
-        return {'source_version': '', 'accepted': []}
+    data = dict(_baseline.load_at(path or baseline_file()))
     data.setdefault('accepted', [])
+    # an upstream rename of the field must not read as "no recorded version"
     data.setdefault('source_version', data.pop('h2_version', ''))
     return data
 
 def save_baseline(broken: list, source_version: str, path: str | None = None) -> None:
     """Record the current drift as accepted."""
-    target = path or baseline_file()
-    payload = {
-        'updated': date.today().isoformat(),
-        'source_version': source_version,
-        'note': 'Accepted symbol drift. Refresh after an upstream update.',
-        'accepted': sorted(
-            {_claim_key(c.doc_file, c.class_name, c.method) for c, _rel in broken}
-        ),
-    }
-    _fsutil.ensure_dir(target)
-    _fsutil.write_text(target, json.dumps(payload, ensure_ascii=False, indent=2) + '\n')
+    _baseline.save_at(
+        path or baseline_file(),
+        {'source_version': source_version,
+         'accepted': sorted({_claim_key(c.doc_file, c.class_name, c.method)
+                             for c, _rel in broken})},
+        note='Accepted symbol drift. Refresh after an upstream update.',
+    )
 
 def split_drift(broken: list, baseline: dict) -> tuple[list, list]:
     """Split broken claims into (new_drift, known_drift)."""

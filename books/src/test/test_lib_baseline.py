@@ -65,5 +65,42 @@ class BaselineTest(unittest.TestCase):
         self.assertEqual((new, stale), (set(), {'old'}))
 
 
+
+class BaselinePayloadTest(unittest.TestCase):
+    """A payload may carry more than keys; the review stamp is added, not asked for."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.mod = importlib.reload(importlib.import_module("lib._baseline"))
+
+    def path(self, name: str = "payload.json") -> str:
+        return os.path.join(self.tmp.name, name)
+
+    def test_extras_survive_the_round_trip(self):
+        path = self.path()
+        self.assertEqual(self.mod.load_at(path), {})
+        self.mod.save_at(path, {"source_version": "2.5.259", "accepted": ["b", "a"]},
+                         note="drift")
+        payload = self.mod.load_at(path)
+        self.assertEqual(payload["source_version"], "2.5.259")
+        self.assertEqual(payload["accepted"], ["b", "a"])   # the gate owns the order
+        self.assertEqual(payload["note"], "drift")
+        self.assertRegex(payload["updated"], r"^\d{4}-\d{2}-\d{2}$")
+
+    def test_a_payload_without_keys_still_records_its_note(self):
+        path = self.path("note.json")
+        self.mod.save_at(path, {"steps": {"lint": 0.4}})
+        payload = self.mod.load_at(path)
+        self.assertEqual(payload["steps"], {"lint": 0.4})
+        self.assertIn("accepted", self.mod.DEFAULT_NOTE)
+
+    def test_a_non_object_baseline_reads_as_empty(self):
+        path = self.path("list.json")
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write("[1, 2]")
+        self.assertEqual(self.mod.load_at(path), {})
+
+
 if __name__ == '__main__':
     unittest.main()
