@@ -4,14 +4,14 @@
 > 版本：v0.1-dev
 > 定位：在办事项的**时机档与逐项验收**——每项现状 / 动作 / 验收 / 事实位只在这里；
 > 不记设计细节（看 `technical.md`），也不存问题台账（看 `review-findings.md`）。
-> **编号源**：`plan-next = 12`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-11，
+> **编号源**：`plan-next = 13`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-12，
 > 递增保证唯一，归档不回收。编号与 `review-findings.md` 的 `rf-*` 是两套，互不占用）
 
 ---
 
 ## 概述
 
-在办 2 项：P2 1 项（**plan-4**）、P3 1 项（**plan-6**）。
+在办 3 项：P2 1 项（**plan-4**）、P3 2 项（**plan-6**、**plan-12**）。
 单项的范围、验收与事实位只在本文维护；系统怎么搭见 `technical.md`，怎么验证见
 `testplan.md`。
 
@@ -61,6 +61,22 @@
 **事实位**：设计与计划在 `docs/plan/diagram-upgrade/design.md` 与 `docs/plan/diagram-upgrade/plan.md`；
 图注体例与图号规则在 `../manuals/how-to-write.md` §14，图号唯一与连续由 `audit/structure.py` 判定、
 图注词表与长度由 `audit/captions.py` 判定。
+
+#### `plan-12` C 语言源码解析（源码树 → 书）
+
+**现状**：`ingest/languages/` 的注册表只收 java / python / rust / kotlin / go，`.c`/`.h`
+不在其中；指向 C 源码树时 `detect()` 报「no known source files」而中止，手稿只能手写。
+判据里还有按 `.java:` 写死的源码坐标匹配（`cover.py`、`balance.py`、`book_quality.py`、
+`prose_quality.py`、`smart.py`、`terms.py`），换个后缀的语言会被当成「没有坐标」。
+**动作**：按 `docs/plan/c-language/plan.md` 分阶段推进（包与单元抽取 → 依赖方向与 public
+判定 → 夹具与用例 → 坐标字面量按 `sources.suffixes` 取值 → 真实 C 树验收）；C 无包声明，
+按目录切包，`.h` 与同名 `.c` 同包，引号形式 `#include` 才是包内依赖。
+**验收**：`languages.detect()` 对 C 夹具返回 `c`；inventory 形状与现有语言一致并通过
+`outline.py`；`source_refs.py` 认可 `foo.c:行号` 且能对过期坐标报红；换成 Java 书后各门禁
+结论逐条不变；新分析器达到单文件覆盖率地板。
+**事实位**：设计与计划在 `docs/plan/c-language/design.md` 与 `docs/plan/c-language/plan.md`；
+分析器契约 `ingest/languages/_base.py`，注册与探测 `ingest/languages/__init__.py`，
+后缀表 `data/config/base.json [sources]`，坐标核验 `audit/source_refs.py`。
 
 ### P4 — 先决门槛未过，暂缓
 
