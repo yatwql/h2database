@@ -224,3 +224,29 @@ class StyleSchemaMessageTest(unittest.TestCase):
         with mock.patch.object(self.mod, "validate", return_value=[]), redirect_stdout(buffer):
             self.assertEqual(self.mod.main([]), 0)
         self.assertIn("结构合规", buffer.getvalue())
+
+
+class StyleSchemaTemplateAndLimitTest(unittest.TestCase):
+    """The template library and the per-kind budgets, one rejection each."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.mod = _fixture.load_module(_fixture.build_book(self.tmp.name), "style_schema")
+
+    def test_an_unknown_prose_template_key_is_named(self):
+        templates = dict(self.mod._config.templates())
+        templates["bogus_intro"] = "x {name}"
+        with mock.patch.object(self.mod._config, "templates", return_value=templates):
+            problems = self.mod._check_templates({})
+        self.assertIn("templates: unknown keys ['bogus_intro']", problems)
+
+    def test_an_empty_template_library_does_not_ask_for_deep_dive(self):
+        with mock.patch.object(self.mod._config, "templates", return_value={}):
+            problems = self.mod._check_templates({})
+        self.assertNotIn("templates.deep_dive must be a list of strings", problems)
+
+    def test_a_limit_entry_that_is_not_a_mapping_is_named(self):
+        self.assertEqual(
+            self.mod._check_limits({"limits": {"prose": "80"}}), ["[limits].prose needs limit/warn"]
+        )

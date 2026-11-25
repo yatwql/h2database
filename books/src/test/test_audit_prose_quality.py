@@ -85,3 +85,14 @@ class ProseQualitySurfacesTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ProseTableEdgesTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.mod = _fixture.load_module(BOOK_ROOT, "prose_quality")
+
+    def test_a_table_that_ends_the_text_is_still_measured(self):
+        rows, _empty, _ragged = self.mod._table_metrics("| 名称 | 值 |\n| --- | --- |\n| a | 1 |")
+        self.assertEqual(rows, 2)

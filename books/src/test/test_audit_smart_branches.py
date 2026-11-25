@@ -192,3 +192,19 @@ class TestSmartAuditGaps(FixtureCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DiagramCountingEdgesTest(FixtureCase):
+    """A diagram block and an appendix run that both reach the end of the text."""
+
+    def test_a_marker_block_ending_the_text_is_still_one_diagram(self):
+        smart = self.module("smart")
+        marker = next(iter(smart.DIAGRAM_MARKERS))
+        text = "\n".join([marker, marker, marker])
+        self.assertEqual(smart.count_diagrams(text), 1)
+
+    def test_an_appendix_heading_with_no_following_heading_runs_to_eof(self):
+        smart = self.module("smart")
+        lines = ["# 第一章", "## 附：附注", "### 一", "text"]
+        headings = [(1, 1, "第一章"), (2, 2, "附：附注"), (3, 3, "一")]
+        self.assertEqual(smart.build_exempt_ranges(headings, lines), [(2, 4)])
