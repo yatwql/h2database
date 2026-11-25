@@ -253,6 +253,13 @@ class CliTest(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("Usage", out)
 
+    def test_a_dash_spec_is_not_a_file_path_so_the_usage_is_printed(self):
+        # a spec starting with '-' never enters `args`; with no PDF path left the CLI
+        # prints the usage instead of measuring the spec as a file
+        code, out = self.run_cli("--target", "-pages=2")
+        self.assertEqual(code, 2)
+        self.assertEqual(out, _metrics.__doc__ + "\n")
+
 
 class ModulePathTest(unittest.TestCase):
     """The module is importable from anywhere: it puts its package root first."""

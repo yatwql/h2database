@@ -217,14 +217,10 @@ if __name__ == "__main__":
             child_sections = []
             for hidx, (hln, hl, ht) in enumerate(headings):
                 if hl == 4 and hln > line_num and hln < end:
-                    h_end = end
-                    for nid in range(hidx + 1, len(headings)):
-                        if headings[nid][0] >= end:
-                            break
-                        if headings[nid][1] == 4:
-                            h_end = headings[nid][0]
-                            break
-                    child_sections.append((hln, h_end, ht))
+                    # `end` is the first heading at level <= 3 after this section, so any
+                    # heading in between is level 4: the next one closes the child
+                    nxt = headings[hidx + 1][0] if hidx + 1 < len(headings) else end
+                    child_sections.append((hln, min(nxt, end), ht))
 
             if child_sections:
                 total_diagrams = 0

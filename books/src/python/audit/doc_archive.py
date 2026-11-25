@@ -133,8 +133,8 @@ def _version_content_problems(name: str, directory: str, names: dict) -> list[st
             continue
         if entry.endswith(".md"):
             continue
-        if entry not in names.values():
-            problems.append(f"{name}/{entry}：版本目录顶层的多余文件")
+        # archived_names() only yields archived_*.md, so a non-.md entry is always extra
+        problems.append(f"{name}/{entry}：版本目录顶层的多余文件")
     return problems
 
 

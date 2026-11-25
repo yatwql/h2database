@@ -88,26 +88,14 @@
   pdf_metrics 用例当初正是这样长出来的）。符号集来自 `load_module()` 之后实际调用的属性，
   只是借用模块做准备的套件不会误伤；同时补三条用例把「真子集报出」「自带新符号不报」「两个符号不算」钉住。
 
-- **覆盖率快档 97% → 99.66%**：缺失 249 行 → **21 行**，半边分支 246 → **48**（14,704 条语句）。
-  尾巴剩下的 69 个缺口分布在 `render/pdf_split.py`、`audit/requirement_trace.py`、`audit/version_consistency.py`、
-  `audit/epub_diff.py`、`audit/smart.py`、`render/pdf_from_html.py`、`manuscript/terms.py`、`lib/_config.py`、
-  `audit/doc_drift.py` 等，多为需要真实浏览器/PDF 或整档重构才能触发的分支。
-  补的是入口面与错误路径，用例只认能失败的那种：`test_audit_structure_subchecks.py` 里三条「跑一次
-  健康夹具」的用例断言的是无条件的输出行（`Index:`、`CSS`），改成断言真实结论——越界索引条目的
-  `Index references non-existent chapters: [99]`、边界之后的章节引用不属于任何术语条目的
-  `MISSING CHAPTER REF`、没有 `render/to_html.py` 的树走 `CSS check skipped`；CSS 钩子改成对
-  `render/to_html.py` 与 `html_shell.py` 的真实文本断言，删一条钩子即失败；与
-  `test_gate_structural_branches.py`、`test_audit_structure_gate_paths.py` 重复的四条删掉。
-  同时删掉两处不可达代码：`audit/balance.py` 里第二个 `__main__` 守卫，以及
-  `audit/check_architecture.py` 里 `except OSError` 的两半——`_fsutil.read_text` 已经把 OSError
-  变成一次干净的退出，那两个分支只会被注入的不可能状态照亮。`audit/structure.py` 里
-  `os.path.join(src_dir, 'glossary.py') if False else ...` 的死半边与 `audit/style_schema.py` 里
-  同样的 `except OSError` 半边一并删掉，后者的用例改成写坏 `style.json` 走真实解析失败路径。
-- **`lib/_config.py` 从 916 行回到 801 行**：版本与最后改动日期（`_last_change`、`book_updated`、
-  `tool_updated`、`doc_version`、`source_version`/`source_versions`、`versions`）连同清单解析抽到
-  `lib/_book_versions.py` 的 `BookVersions`，由 `Config` 继承；`_config` 的模块级转发
-  （`_CALLABLES`/`_ALIASES`/`__getattr__`）不变，调用方一处没动。这个位置贴着 900 行上限：
-  一次整文件格式化就把它推到 916 行并让 `file_length` 判红，所以按职责拆出去而不是留着余量。
+- **覆盖率快档 97% → 100%**：缺失 249 行 → **0 行**，半边分支 246 → **0**（14,683 条语句，105 个文件全部 100%），
+  基线重记。收敛过程中删掉的分支都先证明过不可达：`balance` 的第二个 `__main__`、`terms` 的成对守卫假分支
+  与被编号规则覆盖的标题缩写规则、`settings` 恒不成立的空小节分支、`epub_diff` 在 `parser.error` 之后的
+  `return`、`index` 的兜底章标题、`test_redundancy` 的 `TRIVIAL` 边（`normalise` 保留 `def` 行）、`smart` 的
+  非四级标题边、`doc_archive` 的顶层多余文件分支（`archived_names()` 的值都以 `.md` 结尾）。
+  三条 `__main__` 守卫（`app/web.py`、`check_runner.py`、`audit/test_health.py`）改用
+  `_fixture.run_inproc(..., '--help')` 在**被测进程内**执行——argparse 会在起服务/跑门禁之前退出，
+  既不卡死也计入覆盖率；此前判它们「快档不可达」是错的。
 
 - **评审修复：配置越界与重复计数（rf-71）**：七个脚本不再按名字拼出书目录
   （`render/to_pdf`、`to_epub`、`pdf_from_html`、`pdf_toc_links`、`audit/balance`、`audit/doc_drift`、
