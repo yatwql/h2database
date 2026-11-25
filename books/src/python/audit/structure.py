@@ -408,7 +408,9 @@ try:
         print(f"  All {len(CSS_HINTS)} CSS features present")
     check(not missing, f"CSS style integrity: {len(CSS_HINTS)} checks")
 except FileNotFoundError:
-    check(True, "CSS check skipped (to_html.py not found)")
+    # Not a pass: the check could not run. Saying "skipped" without recording a
+    # success keeps the summary honest -- a missing renderer cannot be green.
+    print("  [WARN]  CSS check skipped (to_html.py not found)")
 
 # 9. Check: glossary builder scripts exist
 section("p1", "Glossary Builder Checks")
@@ -424,7 +426,8 @@ for problem in missing_scripts:
     print(f"  [WARN]  {problem}")
 scripts_ok = not broken
 for name in ("glossary.py", "index.py"):
-    if not any(name in problem for problem in broken):
+    reported = broken + missing_scripts
+    if not any(name in problem for problem in reported):
         print(f"  OK: {name} — syntax valid")
 check(scripts_ok, "Glossary builder scripts available")
 
@@ -451,7 +454,7 @@ if os.path.exists(index_path):
         refs += re.findall(r"第(\d+)章", entry)
         for ref in set(refs):
             ch = int(ref)
-            if 1 <= ch <= 12:
+            if ch in per_chapter:      # the book's own chapters, not a fixed range
                 per_chapter[ch] = per_chapter.get(ch, 0) + 1
 
     # Check every chapter has enough entries
@@ -597,7 +600,7 @@ else:
 
 # 11c. v5.6 chapter exercises (how-to-write §12). Each chapter must end with
 # a 延伸思考 section containing >= 3 well-formed exercises; the book total
-# must be >= 50 across all 14 chapter slots.
+# must be >= 50 across every chapter slot the book declares.
 section("p2", "Chapter Exercises (how-to-write §12)")
 exercises_tool = os.path.join(script_dir, "exercises.py")
 if os.path.exists(exercises_tool):
@@ -680,7 +683,7 @@ if os.path.exists(glossary_path):
     else:
         check(True, f"All {entry_count} glossary entries have chapter references")
 
-    # Validate chapter numbers (must be 1-12)
+    # Validate chapter numbers against the declared chapter list
     all_refs = re.findall(r"第(\d+)章", glossary_content)
     declared = set(chapter_numbers())
     invalid_refs = sorted({int(ch) for ch in all_refs if int(ch) not in declared})

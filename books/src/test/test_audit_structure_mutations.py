@@ -47,7 +47,7 @@ class StructureMutationTest(unittest.TestCase):
     def test_duplicate_figure_number_is_reported(self):
         self.mutate('ch1-test.md', '**图 1-1:', '**图 2-1:')
         _code, out = self.run_gate()
-        self.assertTrue(out)
+        self.assertIn('Figure Numbering', out)
 
     def test_unbalanced_code_fence_is_reported(self):
         self.mutate('ch1-test.md', '```text\n', '```text\n```text\n')
@@ -67,7 +67,7 @@ class StructureMutationTest(unittest.TestCase):
     def test_heading_level_jump_is_reported(self):
         self.mutate('ch1-test.md', '## 1.1 小节', '#### 1.1 小节')
         _code, out = self.run_gate()
-        self.assertTrue(out)
+        self.assertIn('Heading Hierarchy', out)
 
     def test_missing_artifacts_are_reported_not_raised(self):
         """The HTML and merged-doc sections must degrade to a finding."""
