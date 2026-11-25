@@ -99,7 +99,7 @@ def _aliases_for(term: str) -> set[str]:
         out.add(m.group(1).strip())
 
     # Leading ASCII identifier — many entries have the form
-    #   "Chunk 文件格式" / "MVStore 架构" / "Recover 工具"
+    #   "文件格式" / "Widget 架构" / "Recover 工具"
     # so the leading ASCII token is a useful alias for see-also lookups.
     head = re.match(r'^([A-Za-z][A-Za-z0-9_\-]*(?:\s*-\s*[A-Za-z0-9_]+)*)', bare)
     if head:

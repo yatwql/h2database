@@ -59,7 +59,7 @@ LEADING_VERBS = tuple(_config.CAPTIONS.get('leading_verbs', (
 )))
 
 # Vague nouns in policy: a caption ending with one passes only when the
-# prefix is long enough to qualify it ("MVStore 四层架构" passes).
+# prefix is long enough to qualify it ("Widget 四层架构" passes).
 VAGUE_TRAILING = tuple(_config.CAPTIONS.get('vague_trailing', ()))
 
 # A single-character marker the figure caption regex uses; kept as a constant
@@ -115,9 +115,9 @@ def _classify(title: str, threshold: dict) -> tuple[str | None, str]:
     if length > threshold['max_chars']:
         return 'TOO_LONG', f'压缩至 ≤ {threshold["max_chars"]} 字，把次要语境移到正文'
 
-    # Vague trailing nouns with no qualifying prefix (e.g. just "MVStore 架构")
+    # Vague trailing nouns with no qualifying prefix (e.g. just "Widget 架构")
     # are flagged. The body must be at least 6 chars before the trailing noun
-    # for it to pass — a richer caption like "MVStore 四层架构" is fine.
+    # for it to pass — a richer caption like "Widget 四层架构" is fine.
     for tail in VAGUE_TRAILING:
         if body.endswith(tail) and len(body) - len(tail) <= 4:
             return 'VAGUE', f'去掉模糊后缀「{tail}」，补充具体动词或维度'

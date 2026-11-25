@@ -83,7 +83,7 @@ class Reference(NamedTuple):
 
     doc_file: str  # e.g. 'ch3-packages.md'
     doc_line: int  # 1-based line number in the doc file
-    class_name: str  # e.g. 'MVStore'
+    class_name: str  # e.g. 'Widget'
     lineno: int  # referenced line number
 
 

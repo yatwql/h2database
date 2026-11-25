@@ -36,7 +36,7 @@ FIGURE_LINE_RE = re.compile(FIGURE_PREFIX_RE.pattern, re.MULTILINE)
 FIGURE_LINE_UNBOLD_RE = re.compile(rf"^{FIGURE_LABEL} {FIGURE_ID}:", re.MULTILINE)
 
 
-# Source coordinates are written `MVStore.java:12`. The shape lives here for the
+# Source coordinates are written `Widget.java:12`. The shape lives here for the
 # same reason the figure shape does: the counters in cover, balance, book_quality,
 # prose_quality and smart must not each keep matching one hard-coded suffix.
 @functools.lru_cache(maxsize=8)
