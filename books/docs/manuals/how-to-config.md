@@ -32,7 +32,7 @@ tmp = "data/tmp"                   # 临时目录：一次性脚本、--force �
 cache = "data/cache"               # 缓存：字体索引、HTML 分片（可重建但有成本）
 state = "data/state"               # 派生状态：ingest 每次重建（已 gitignore）
 templates = "data/tmpl"            # 叙述模板（templates.toml）
-book = "data/book"                 # 本书专属文件（book.toml / case-studies.toml）
+book = "data/book"                 # 本书专属文件（book.toml / case-studies.toml / glossary.toml）
 library = ".."                     # 其他书所在的目录（缺省＝本书的父目录）
 baselines = "data/baselines"       # 已评审存量的账本目录
 cover_image = ""                   # 可选：封面图，留空则不生成
@@ -97,7 +97,7 @@ display = "删节版"
   "sources": {
     "src_main": "../h2/src/main",     // 源码树根
     "pom_root": "../h2/pom.xml",      // 版本来源（可缺省）
-    "languages": ["java"],            // 支持 java / python / rust / kotlin / go，可多选
+    "languages": ["java"],            // 支持 java / python / rust / kotlin / go / c，可多选
     "file_suffix": ".java",
     "package_prefix": "<包前缀>"
   },

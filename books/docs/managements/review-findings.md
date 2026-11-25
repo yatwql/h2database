@@ -4,7 +4,7 @@
 > 版本：v0.1-dev
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
-> **编号源**：`rf-next = 74`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-73，
+> **编号源**：`rf-next = 75`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-74，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -13,7 +13,8 @@
 
 | # | 问题 | 修复方向 |
 | --- | --- | --- |
-| rf-73 | 四个脚本模块在**导入期**读配置：`audit/captions.py` 的 `THRESHOLDS`、`audit/exercises.py` 的 `LANG`/`HINT_MARK`/`REVIEW_MARK`、`audit/balance.py` 的 `MS_DIR`、`release.py` 的 `BOOK_ROOT`。它们不在安装后的 `app.cli` 调用链上，所以控制台入口不受影响，但同一类写法正是当初阻断安装形态的原因；换书后用 `with use(cfg)` 切换也会拿到第一本书的值 | 改成调用时读取（函数或属性），与 `terms.py`/`case_studies.py` 已完成的改法一致；另给 `check_architecture.py` 加一条「`manuscript/`、`audit/` 不得出现本书专有词」的字面量检查，词表取 `data/book/` 下的内容文件 |
+| rf-73 | **已修（导入期读配置部分）**：`audit/captions.py`、`audit/exercises.py`、`audit/balance.py`、`release.py` 的模块级配置读取改为调用时读取（`exercises` 的槽位标题与提示/回顾正则改为 `language_shapes()`）。剩下的一半——「`manuscript/`、`audit/` 不得出现本书专有词」的门禁规则——转记 rf-74 | — |
+| rf-74 | 本书专有词写进工具链没有门禁拦：`check_architecture.py` 只禁 `books/`、`data/manuscript` 这类路径字面量，书的人名/类名/术语即使被硬编码也能通过 | 加一条字面量检查：`manuscript/`、`audit/` 的源码不得出现 `data/book/` 下内容文件（`glossary.toml`、`case-studies.toml`）里的词，词表在运行时取配置，命中即报 |
 
 ## 分档口径
 

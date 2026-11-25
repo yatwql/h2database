@@ -13,7 +13,8 @@ books/
   data/                      # 输入数据：配置 + 手稿 + 机器维护的状态
     book/                    # 本书专属：换一本书就整份替换
       book.toml              # 文档·结构：身份、路径、章节顺序、标题与编号、包映射（也可直接放在书根）
-      case-studies.toml      # 文档·案例：案例流水线（scenario -> steps），按书可选
+      case-studies.toml      # 文档·案例：案例流水线（scenario -> steps）与附录标题/开篇，按书可选
+      glossary.toml          # 文档·术语：中英别名与「不算术语」词表，按书可选
     config/                  # 工具链策略：换一本书也照用
       base.json              # 配置·基础：源码树、语言与后缀、包前缀、基线路径、预算、日志
       style.json             # 配置·规则：图注词表、质量/文风阈值、禁用语、必备段落、预算上限

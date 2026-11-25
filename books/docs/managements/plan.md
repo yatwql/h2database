@@ -64,16 +64,12 @@
 
 #### `plan-12` C 语言源码解析（源码树 → 书）
 
-**现状**：`ingest/languages/` 的注册表只收 java / python / rust / kotlin / go，`.c`/`.h`
-不在其中；指向 C 源码树时 `detect()` 报「no known source files」而中止，手稿只能手写。
-判据里还有按 `.java:` 写死的源码坐标匹配（`cover.py`、`balance.py`、`book_quality.py`、
-`prose_quality.py`、`smart.py`、`terms.py`），换个后缀的语言会被当成「没有坐标」。
-**动作**：按 `docs/plan/c-language/plan.md` 分阶段推进（包与单元抽取 → 依赖方向与 public
-判定 → 夹具与用例 → 坐标字面量按 `sources.suffixes` 取值 → 真实 C 树验收）；C 无包声明，
-按目录切包，`.h` 与同名 `.c` 同包，引号形式 `#include` 才是包内依赖。
-**验收**：`languages.detect()` 对 C 夹具返回 `c`；inventory 形状与现有语言一致并通过
-`outline.py`；`source_refs.py` 认可 `foo.c:行号` 且能对过期坐标报红；换成 Java 书后各门禁
-结论逐条不变；新分析器达到单文件覆盖率地板。
+**现状**：阶段 1–4 已落地——`ingest/languages/c.py` 按目录切包、头文件声明即 public、引号 `#include`
+转包级依赖，注册表与 `sources.suffixes` 都已收 `c`，坐标匹配全部按 `sources.suffixes` 现建。
+**动作**：还剩阶段 5：按 `docs/plan/c-language/plan.md` 用一棵真实 C 树跑 `digest.py → outline.py →
+chapters.py`，填好 `book.toml [chapters.packages]` 后跑 `make.py check`。
+**验收**：`digest.py` 产出的 inventory 行数与 `cloc` 同档、包数与目录结构一致；`outline.py` 无异常
+且每包有章归属；`structure.py` 与 `source_refs.py` 绿，手稿里至少 20 处 `.c:` 坐标通过核验。
 **事实位**：设计与计划在 `docs/plan/c-language/design.md` 与 `docs/plan/c-language/plan.md`；
 分析器契约 `ingest/languages/_base.py`，注册与探测 `ingest/languages/__init__.py`，
 后缀表 `data/config/base.json [sources]`，坐标核验 `audit/source_refs.py`。

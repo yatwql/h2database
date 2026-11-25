@@ -23,7 +23,7 @@ bookwright（源码分析成书工具）是一套本地工具链：把它指向�
 | 三个入口一套动作 | CLI、TUI、Web 控制台共用同一份动作与状态，结果一致 |
 | 换书只换配置 | 书的身份、章节、包归属在 `data/book/book.toml`，分析口径与预算在 `data/config/`，代码不动 |
 
-支持 Java / Python / Rust / Kotlin / Go 源码，可多语言混跑。
+支持 Java / Python / Rust / Kotlin / Go / C 源码，可多语言混跑。
 
 ## 快速开始
 
