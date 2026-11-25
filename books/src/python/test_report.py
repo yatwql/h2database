@@ -285,16 +285,9 @@ def collect() -> dict:
                     tags = tuple(ast.literal_eval(node.value))
                 except ValueError:
                     tags = ()
-        tests = 0
-        for node in ast.walk(tree):
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) \
-                    and node.name.startswith('test_'):
-                tests += 1
-            elif isinstance(node, ast.ClassDef) and node.name.startswith('Test'):
-                for child in node.body:
-                    if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)) \
-                            and child.name.startswith('test_'):
-                        tests += 1
+        tests = sum(1 for node in ast.walk(tree)
+                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                    and node.name.startswith('test_'))
         if not tests:
             continue
         tier = 'fast' if 'tier:fast' in tags else ('slow' if 'tier:slow' in tags else 'untiered')

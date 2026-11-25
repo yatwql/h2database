@@ -226,8 +226,10 @@ def detect_weak_verb_xing(lines, fname):
 
         for m in pattern.finditer(stripped):
             verb = m.group(0)
-            # Filter out false positives (e.g., "进行中" = in progress)
-            if verb in ('进行中', '进行的', '进行时'):
+            # "进行中" (in progress) is a state, not a "进行+verb" construction;
+            # the pattern can only match four characters or more, so the skip has
+            # to look at the match's prefix rather than at the whole of it.
+            if verb.startswith(('进行中', '进行的', '进行时')):
                 continue
             warn(fname, i, f'弱动词构造："{verb}"，建议改为直接表达', level='WARN')
 

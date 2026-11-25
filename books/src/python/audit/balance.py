@@ -45,9 +45,6 @@ from lib import _config, _errors, _fsutil
 
 _fsutil.pin_stdout_utf8()
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "..", ".."))
-DOCS_DIR = os.path.join(REPO_ROOT, "books")
 MS_DIR = _config.MANUSCRIPT_DIR
 
 # 章节文件 → 该文件覆盖的章节号集合（用于术语/索引命中归属）。

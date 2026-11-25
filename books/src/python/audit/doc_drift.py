@@ -165,7 +165,12 @@ def _exists(rel: str, repo_root: str | None = None) -> bool:
         return bool(glob.glob(os.path.join(root, rel), recursive=True))
     if os.path.exists(os.path.join(root, rel)):
         return True
-    return _git_ignored(os.path.join('books', rel) if book_relative else rel)
+    return _git_ignored(os.path.join(_book_dirname(), rel) if book_relative else rel)
+
+
+def _book_dirname() -> str:
+    """The book's directory name inside the repository (documented paths omit it)."""
+    return os.path.basename(os.path.normpath(_config.BOOK_ROOT))
 
 
 DIMENSION_RE = re.compile(r'^>\s*维度：\**(.+?)\**\s*$', re.MULTILINE)

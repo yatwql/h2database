@@ -45,10 +45,9 @@ from render import epub_source
 _fsutil.pin_stdout_utf8()
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-repo_root = os.path.normpath(os.path.join(script_dir, '..', '..', '..', '..'))
-docs_dir = os.path.join(repo_root, 'books')
+repo_root = os.path.dirname(_config.BOOK_ROOT)
 src_dir = _config.MANUSCRIPT_DIR
-dist_dir = os.path.join(docs_dir, 'dist')
+dist_dir = _config.DIST_DIR
 
 merged_md = _config.merged_md()
 epub_out = _config.merged_epub()
@@ -83,7 +82,7 @@ if os.path.exists(rebuild):
         [sys.executable, rebuild],
         capture_output=True, text=True, encoding='utf-8',
         cwd=repo_root,
-    check=False,
+        check=False,
     )
     if res.returncode != 0:
         raise _errors.ToolError(f"merge.py FAILED: {res.stderr}")

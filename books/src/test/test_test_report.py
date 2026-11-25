@@ -324,5 +324,114 @@ class ReportToolTest(unittest.TestCase):
         self.assertIn('report ->', out)
 
 
+
+class ReportEdgePathTest(unittest.TestCase):
+    """The reporter's own failure paths: bad XML, broken modules, failed deletes."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.mod = _fixture.load_module(self.root, 'test_report')
+
+    def write(self, rel: str, text: str) -> str:
+        path = os.path.join(self.tmp.name, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as handle:
+            handle.write(text)
+        return path
+
+    def test_a_case_listed_twice_is_counted_once(self):
+        junit = self.write('first.xml', JUNIT.replace(
+            '</testsuite>',
+            '<testcase classname="src.test.test_alpha.AlphaTest" name="test_ok" />'
+            '</testsuite>'))
+        cases, totals = self.mod._cases(junit)
+        self.assertEqual(totals['tests'], 3)
+        self.assertEqual(len({case['id'] for case in cases}), 3)
+
+    def test_a_coverage_snapshot_that_cannot_run_is_empty(self):
+        with mock.patch.object(self.mod.subprocess, 'run', side_effect=OSError('nope')):
+            snapshot = self.mod.coverage_snapshot(5)
+        self.assertEqual(snapshot['files'], {})
+        self.assertEqual(snapshot['path'], '')
+
+    def test_collect_skips_a_module_it_cannot_parse_and_counts_classes(self):
+        tests = os.path.join(self.tmp.name, 'tests')
+        self.write('tests/test_broken.py', 'def (:\n')
+        self.write('tests/test_untagged.py',
+                   'TAGS = ("tier:fast",) + EXTRA\n\n'
+                   'def test_a(): pass\n'
+                   'def test_b(): pass\n')
+        self.write('tests/test_classy.py',
+                   'TAGS = ("tier:slow",)\n\n'
+                   'class TestThing:\n'
+                   '    def test_a(self): pass\n')
+        with mock.patch.object(self.mod, 'TESTS_DIR', tests):
+            payload = self.mod.collect()
+        self.assertEqual(sorted(payload['files']), ['test_classy.py', 'test_untagged.py'])
+        self.assertEqual(payload['files']['test_untagged.py']['tests'], 2)
+        # a method inside a Test class is one case, not two
+        self.assertEqual(payload['files']['test_classy.py']['tests'], 1)
+        self.assertEqual(payload['counts']['untiered'], 2)
+
+    def test_prune_ignores_names_that_are_not_stamps_and_warns_on_delete(self):
+        reports = os.path.join(self.tmp.name, 'reports')
+        old = '20000101-000000'
+        os.makedirs(os.path.join(reports, old))
+        os.makedirs(os.path.join(reports, 'not-a-stamp'))
+        with mock.patch.object(self.mod, 'reports_root', lambda: reports), \
+                mock.patch.object(self.mod.shutil, 'rmtree', side_effect=OSError('busy')), \
+                mock.patch('sys.stderr', new=io.StringIO()):
+            removed = self.mod.prune()
+        self.assertEqual(removed, [old])
+
+    def test_a_case_id_without_a_module_falls_back_to_its_class(self):
+        self.assertEqual(self.mod._module_of('pkg.AlphaTest::test_ok'), 'AlphaTest')
+        self.assertEqual(self.mod._module_of(''), '')
+
+    def test_cli_run_reports_the_coverage_snapshot_it_wrote(self):
+        summary = {'dir': self.tmp.name, 'seconds': 1.0, 'code': 0,
+                   'totals': {'tests': 1, 'failures': 0}}
+        buffer = io.StringIO()
+        with mock.patch.object(self.mod, 'run', return_value=summary), \
+                mock.patch.object(self.mod, 'coverage_snapshot',
+                                  return_value={'path': os.path.join(self.tmp.name, 'c.json'),
+                                                'files': {}, 'stamp': 'x'}), \
+                redirect_stdout(buffer):
+            self.assertEqual(self.mod.main(['run', '--coverage', '--marker', 'tier_fast']), 0)
+        self.assertIn('coverage ->', buffer.getvalue())
+
+    def test_cli_collect_and_perf_speak_json(self):
+        buffer = io.StringIO()
+        with mock.patch.object(self.mod, 'collect',
+                               return_value={'counts': {'fast': 1}, 'path': self.tmp.name}), \
+                redirect_stdout(buffer):
+            self.assertEqual(self.mod.main(['collect', '--json']), 0)
+        with mock.patch.object(self.mod, 'perf_window', return_value={'steps': []}), \
+                redirect_stdout(buffer):
+            self.assertEqual(self.mod.main(['perf']), 0)
+        with mock.patch.object(self.mod, 'perf_window',
+                               return_value={'steps': [], 'runs': 0, 'total': 0.0}), \
+                redirect_stdout(buffer):
+            self.assertEqual(self.mod.main(['perf', '--json']), 0)
+        self.assertIn('没有足够的历史数据', buffer.getvalue())
+
+    def test_cli_last_prints_the_failures_and_the_rerun_command(self):
+        payload = {'report': 'r1', 'failures': [{'id': 'test_a', 'reason': 'boom'}],
+                   'rerun': 'pytest books/src/test/test_a.py'}
+        buffer = io.StringIO()
+        with mock.patch.object(self.mod, 'last_failures', return_value=payload), \
+                redirect_stdout(buffer):
+            self.assertEqual(self.mod.main(['last']), 1)
+        text = buffer.getvalue()
+        self.assertIn('test_a', text)
+        self.assertIn('只重跑这些模块', text)
+
+    def test_the_tool_runs_as_a_script(self):
+        code, out = _fixture.run_inproc(self.root, 'test_report.py', 'collect')
+        self.assertEqual(code, 0)
+        self.assertTrue(out.strip())
+
 if __name__ == '__main__':
     unittest.main()

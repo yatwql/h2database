@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import time
 from dataclasses import dataclass
 
-from lib import _perfhistory
+from lib import _log, _perfhistory
 
 BACK_KEY = "0"
 BACK_ACTION = "@back"
@@ -320,4 +320,4 @@ def run_report(action: str, label: str, on_progress=None, **kwargs) -> Outcome:
 
 def log_location() -> str:
     """Where the full log lives, for the operator's next step."""
-    return os.path.join("books", "logs")
+    return _log.log_dir()

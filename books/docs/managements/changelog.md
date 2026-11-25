@@ -13,6 +13,15 @@
 
 ### 变更
 
+- **评审修复：配置越界与重复计数（rf-71）**：七个脚本不再按名字拼出书目录
+  （`render/to_pdf`、`to_epub`、`pdf_from_html`、`pdf_toc_links`、`audit/balance`、`audit/doc_drift`、
+  `core/menu`，其中两个文件的那几行本就是死代码），改读 `_config.BOOK_ROOT` / `_config.DIST_DIR`；
+  `check_architecture` 补上「按名字拼出书目录」规则——原先只拦带斜杠的 `books/`，`os.path.join(R, 'books')`
+  可以绕过。`test_report.py collect` 把类方法算了两次（2351 vs pytest 2013），改为每个 `test_` 函数只记一次；
+  `smart.py` 的图形标记改读 `style.json [diagrams].markers`（配置里写着、代码里写死），`_defaults/style.json`
+  删掉谁都不读的 `sections` 块；`detect_weak_verb_xing` 的「进行中」豁免判定永远不成立（正则最短四字），
+  改前缀判定；`to_epub.py` 一处缩进错位。
+
 - **变异冒烟成为可运行的一步（rf-68）**：`mutation_smoke.py` 增加 `--all` 与 `TARGETS`（模块 → 测试文件 +
   允许的等价变异数），候选变异改为按行排序的固定顺序（原先每次抽样不同，无法当判据）；`make.py mutation`
   接入，默认 advisory、`--mutation-strict` 可当硬门禁。实测 `epub_source`/`_perfhistory`/`menu` 全部杀死，
@@ -24,8 +33,11 @@
   （字体命令、`doctor` 的可选工具）都不再只能靠真机触发；`calibrate()`/`figure_caption()` 的 docstring
   写明公共 API 定位。
 
-- **rf-70 量化**：`source_refs.py` 86.3% → 86.5%、`content_depth.py` 86.3% → **89%**（缺/坏清单降级）；
-  抬到 88 仍需补的十个模块与各自百分比已写进台账。全局 91.7%。
+- **单文件覆盖率地板抬到 88（rf-70）**：十二个低于 88 的模块逐个补错误路径与入口面的用例
+  （`make.py` 85.7% → 99%、`test_report.py` → 97%、`snapshot.py` → 98%、`source_refs.py` → 98%、
+  `index.py` → 97%、`style.py` → 95%、`smart.py` → 98%、`version_consistency.py` → 94%、
+  `file_length.py` → 97%、`archive.py` → 99%、`mutation_smoke.py` → 100%、`requirement_trace.py` → 99%），
+  `coverage_min_per_file` 86 → **88**，基线重记；全局 91.7% → **94%**，最低文件 88.1%。
 
 - **rf-67 / rf-68**：单文件覆盖率地板 84 → **86**（门槛 90 下通过，最低文件 86.3%）；把变异冒烟作为验收手段
   跑通——`render/epub_source.py` 5 个变异全部杀死、`lib/layout.py` 8 个全部杀死；`pdf_metrics` 补 8 条 3%/样本窗口

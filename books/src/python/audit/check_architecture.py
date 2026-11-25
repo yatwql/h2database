@@ -49,6 +49,10 @@ DEPENDENCY_MATRIX: dict[str, frozenset[str]] = {
 }
 STDLIB_CLASH = {'types', 'html', 'json', 'logging', 'email', 'code', 'test', 'binascii'}
 PATH_LITERALS = ('books/', 'data/manuscript', 'data/config', 'data/tmpl')
+# The same rule, for the spelling that walked past the literal check: deriving the
+# book directory by name instead of asking _config for it.
+BOOK_DIR_DERIVATION = re.compile(r"os\.path\.join\([^)]*['\"]books['\"]"
+                                 r"|/\s*['\"]books['\"]")
 WRITE_CALLS = ('write_text', 'open(')  # kept for the human-readable rule text
 WRITE_MODES = 'wax+'
 # Entry points that are deliberately not a make.py step (ad-hoc inspection
@@ -216,9 +220,13 @@ def _write_problems(tree, rel: str, layer: str, source: str) -> list[str]:
 def _path_literal_problems(rel: str, layer: str, name: str, source: str) -> list[str]:
     if layer == 'lib' or name == 'check_architecture':
         return []
-    return [f'{rel}: hardcodes repository path "{literal}"'
-            for literal in PATH_LITERALS
-            if f'"{literal}' in source or f"'{literal}" in source]
+    problems = [f'{rel}: hardcodes repository path "{literal}"'
+                for literal in PATH_LITERALS
+                if f'"{literal}' in source or f"'{literal}" in source]
+    if BOOK_DIR_DERIVATION.search(source):
+        problems.append(f'{rel}: derives the book directory by name; '
+                        'read _config.BOOK_ROOT instead')
+    return problems
 
 
 def _naming_problems(path: str, rel: str, layer: str, name: str) -> list[str]:

@@ -4,7 +4,7 @@
 > 版本：v0.1-dev
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
-> **编号源**：`rf-next = 71`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-70，
+> **编号源**：`rf-next = 72`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-71，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -56,7 +56,8 @@
 | rf-63 | 覆盖率统计只看「行」：错误与缺省路径的覆盖率最低 | **已解决**：按缺口从大到小补齐——`status.py` 85.4% → 88%、`chapters.py` 86.9% → 88%、`structure.py` 84.6% → 89%、`doc_drift.py` 85.8% → **89%**（手册维度缺失/重复/引用管理文档三条）、`tui.py` 86% → 88%（改配置的非法序号/空值/失败/确认、进度行的去重与时间戳），`verify_pdf` 89%、`actions` 95%。全局 91.6%，门槛 90 通过 |
 | rf-64 | `verify_pdf` 的字体检查与 `actions._invoke` 的流/心跳混在大函数里，只能整体跑 | **已解决**：`font_is_embedded()`/`_has_program()`（rf-61 内完成）与 `_unbuffered()`/`_stream()`/`_heartbeat()` 三个小函数拆出，各 6 条用例（去重、回调抛异常不影响流、命令补 `-u` 一次、心跳确实报「仍在执行」）；`verify_pdf` 89%、`actions` **97%** |
 | rf-69 | `structure.py` 的 CSS 钩子与构建脚本检查路径指向已搬迁的 `to_html.py` 与 `audit/glossary.py`，常年走「跳过/未找到」 | **已解决**：抽成 `css_style_missing()` 与 `builder_script_problems()`（缺脚本=告警、脚本不解析=失败），路径改为 `render/to_html.py` + `render/html_shell.py` 与 `manuscript/*.py`；修复后 9 个 CSS 钩子全部命中。另加一条用例钉住「这四个源文件确实存在」，路径再漂移即失败。`structure.py` 84.6% → **89%** |
-| rf-70 | 单文件地板抬到 88 前，仍有若干模块低于它 | **待做（已完成 2/12）**：`content_depth.py` 86.3% → **89%**、`source_refs.py` 86.3% → 86.5% 已补；仍未达 88 的是 `index.py` 86.3、`file_length.py` 86.6、`test_report.py` 86.8、`snapshot.py` 86.9、`archive.py` 87.2、`requirement_trace.py` 87.3、`smart.py` 87.4、`style.py` 87.7、`version_consistency.py` 87.9。逐个补 2–3 条分支用例后把 `coverage_min_per_file` 86 → 88 并重记基线 |
+| rf-70 | 单文件地板抬到 88 前，仍有若干模块低于它 | **已解决**：十二个低于 88 的模块逐个补分支用例后全部过线，`coverage_min_per_file` 86 → **88**，基线已重记（全局 91.7% → **94%**，最低文件 `ingest/chapters.py` 88.1%）。补的是错误路径与入口面：`make.py` 85.7% → **99%**（解释器守卫、pin 漂移、步骤超时、棘轮升降、子命令派发）、`test_report.py` 86.8% → **97%**（坏 junit、坏 TOML 快照、解析失败的用例模块、`--json` 三个子命令）、`snapshot.py` 86.9% → **98%**、`source_refs.py` 86.5% → **98%**、`index.py` 86.3% → **97%**、`style.py` 87.7% → **95%**、`version_consistency.py` 87.9% → **94%**、`smart.py` 87.4% → **98%**、`file_length.py` 86.6% → **97%**、`archive.py` 87.2% → **99%**、`mutation_smoke.py` 86.9% → **100%**、`requirement_trace.py` 87.3% → **99%** |
+| rf-71 | 脚本自己拼书目录、重复的 baseline 读写、写死却可配的标记表 | **部分已解决**：七个文件不再按名字拼出书目录（`render/to_pdf`、`to_epub`、`pdf_from_html`、`pdf_toc_links`、`audit/balance`、`audit/doc_drift`、`core/menu`），并给 `check_architecture` 补「按名字拼出书目录」规则（原先只拦带斜杠的 `books/`，绕过方式没人拦）；`test_report.collect` 的重复计数（2351 vs pytest 2013）改为每个 `test_` 函数只记一次；`smart.py` 的图形标记改为读 `style.json [diagrams].markers`（配置里写着、代码里写死，等于死配置）。**仍待做**：五个 gate 各自实现 `load_baseline`/`save_baseline`，与 `lib/_baseline.py` 重复，但 payload 形状不同（版本号、snapshot 来源、reviewed_by），合并需先统一格式 |
 | rf-65 | 依赖真环境的探测（字体命令、浏览器、pandoc）只有真机才跑得到 | **已解决**：`fonts` 的探测链（命令缺失/输出/异常/目录不可写）与 `make.doctor` 的「可选工具缺失」均有用例；环境失败路径不再只能靠真机触发 |
 | rf-66 | 少数辅助函数只有用例在调用，形成「假覆盖」 | **已解决**：`calibrate()` 与 `figure_caption()` 的 docstring 写明为公共 API 及为何不接进 CLI；`log_file()` 已接入 `describe()`；其余两处早前已删除。判据：不再有「只被测试引用且无说明」的函数 |
 | rf-67 | 单文件覆盖率地板停在 84 | **已解决（两批中的第一批）**：地板 84 → **86**（门槛 90 下通过，最低文件 86.3% → 现为 86.5%）。抬到 88 的剩余工作与实际百分比见 rf-70 |

@@ -39,10 +39,8 @@ from lib import _config, _errors, _fsutil
 _fsutil.pin_stdout_utf8()
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-repo_root = os.path.normpath(os.path.join(script_dir, '..', '..', '..', '..'))
-docs_dir = os.path.join(repo_root, 'books')
+repo_root = os.path.dirname(_config.BOOK_ROOT)
 src_dir = _config.MANUSCRIPT_DIR
-dist_dir = os.path.join(docs_dir, 'dist')
 
 # Step 1: Ensure HTML is up to date
 html_path = _config.merged_html()

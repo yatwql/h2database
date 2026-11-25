@@ -1,18 +1,5 @@
 {
   "_note": "Book style: display copy, section skeleton, caption vocabulary, writing thresholds, generation templates.",
-  "sections": {
-    "per_chapter": [
-      "本章导读",
-      "本章小结",
-      "延伸思考",
-      "延展阅读"
-    ],
-    "optional": [
-      "术语参考",
-      "知识点清单",
-      "阅读检查清单"
-    ]
-  },
   "captions": {
     "leading_verbs": [
       "展示",

@@ -26,9 +26,6 @@ from pypdf.annotations import Link
 from pypdf.generic import NameObject, TextStringObject
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-REPO_ROOT = SCRIPT_DIR.parents[3]
-DOCS_DIR = REPO_ROOT / 'books'
-DIST_DIR = DOCS_DIR / 'dist'
 HTML_PATH = Path(_config.merged_html())
 PDF_PATH = Path(_config.merged_pdf())
 TMP_PATH = PDF_PATH.with_suffix('.pdf.tmp')

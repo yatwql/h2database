@@ -109,6 +109,15 @@ class ArchitectureRulesTest(unittest.TestCase):
         self.assert_rule('audit/x.py', '"""d"""\nP = "data/manuscript"\n',
                          'hardcodes repository path')
 
+    def test_deriving_the_book_directory_by_name_is_rejected(self):
+        self.assert_rule('render/x.py',
+                         '"""d"""\nimport os\nP = os.path.join(R, "books")\n',
+                         'derives the book directory by name')
+
+    def test_reading_the_book_root_from_config_passes(self):
+        self.assertEqual(self.problems(
+            'render/y.py', '"""d"""\nfrom lib import _config\nP = _config.BOOK_ROOT\n'), [])
+
     # -- scripts/ naming --------------------------------------------------
     def test_scripts_directory_accepts_check_and_eval_prefixes(self):
         for name in ('check-fast.sh', 'check.sh', 'eval-score.ps1',

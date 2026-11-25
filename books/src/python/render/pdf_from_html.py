@@ -28,10 +28,7 @@ from pypdf import PdfReader, PdfWriter
 _fsutil.pin_stdout_utf8()
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-repo_root = os.path.normpath(os.path.join(script_dir, '..', '..', '..', '..'))
-docs_dir = os.path.join(repo_root, 'books')
 src_dir = _config.MANUSCRIPT_DIR
-dist_dir = os.path.join(docs_dir, 'dist')
 html_path = _config.merged_html()
 pdf_path = _config.merged_pdf()
 

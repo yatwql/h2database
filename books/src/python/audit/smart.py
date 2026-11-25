@@ -26,7 +26,9 @@ src_dir = _config.MANUSCRIPT_DIR
 dist_dir = _config.DIST_DIR
 # Tolerate the appendix file being absent during phased delivery.
 
-DIAGRAM_MARKERS = ['┌', '└', '├', '│', '▼', '▲', '→']
+DEFAULT_DIAGRAM_MARKERS = ['┌', '└', '├', '│', '▼', '▲', '→']
+DIAGRAM_MARKERS = list((_config.STYLE_POLICY.get('diagrams') or {}).get('markers')
+                       or DEFAULT_DIAGRAM_MARKERS)
 
 # --- Figure reference check (--fig-refs) ---
 def _figures_in(lines: list[str]) -> list[tuple[int, str, str]]:
