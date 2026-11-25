@@ -115,6 +115,7 @@ class CaptionMissingBranchesTest(unittest.TestCase):
 
     def test_a_glob_matching_directories_and_unreadable_files_is_skipped(self):
         self.write("data/manuscript/figures/note.txt", "x\n")
+        self.write("data/manuscript/ch3-test.md", "# 第3章\n\n**图 3-1: 图**\n")
         broken = self.write("data/manuscript/ch9-test.md", "# 第9章\n")
         real_open = open
         with (
@@ -129,7 +130,13 @@ class CaptionMissingBranchesTest(unittest.TestCase):
             mock.patch("sys.stderr", new=io.StringIO()),
         ):
             found = self.mod.scan(self.mod.thresholds()["normal"], "data/manuscript/*")
-        self.assertIsInstance(found, list)
+        # the directory and the unreadable file contribute nothing; only the
+        # readable chapter the fixture ships shows up, and it does have a finding
+        scanned = {os.path.basename(item.file) for item in found}
+        self.assertIn("ch3-test.md", scanned)            # the readable chapter is scanned
+        self.assertNotIn("ch9-test.md", scanned)         # the unreadable one is skipped
+        self.assertNotIn("note.txt", scanned)            # a directory entry never becomes a file
+        self.assertIn("3-1", {item.fig_id for item in found})   # and its caption was judged
 
     def test_new_violations_are_listed_against_the_baseline(self):
         baseline = os.path.join(self.tmp.name, "base.json")
