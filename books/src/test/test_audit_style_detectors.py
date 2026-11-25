@@ -104,6 +104,9 @@ class DetectorBucketTest(unittest.TestCase):
     def test_a_blank_paragraph_has_no_sentence_starts(self):
         self.assertEqual(self.style._sentence_starts(["   ", ""], [0, 1]), [])
 
+    def test_a_sentence_without_a_word_contributes_no_opening(self):
+        self.assertEqual(self.style._sentence_starts(["1234567890。"], [0]), [])
+
     def test_a_repeated_connector_far_apart_is_tolerated(self):
         self.assertEqual(
             self.findings(
@@ -117,6 +120,16 @@ class DetectorBucketTest(unittest.TestCase):
             self.findings(self.style.detect_repeated_connectors, ["同时写入同时更新"], "near.md"), 0
         )
 
+    def test_a_repeated_contrast_connector_needs_no_proximity_check(self):
+        self.assertGreater(
+            self.findings(
+                self.style.detect_repeated_connectors,
+                ["但是这里先落盘" + "字" * 60 + "但是那里先提交"],
+                "contrast.md",
+            ),
+            0,
+        )
+
     def test_a_weak_verb_construction_is_reported(self):
         self.assertGreater(
             self.findings(self.style.detect_weak_verb_xing, ["我们对索引进行分析。"], "weak.md"), 0
@@ -124,7 +137,10 @@ class DetectorBucketTest(unittest.TestCase):
 
     def test_the_progress_form_is_not_a_weak_verb(self):
         self.assertEqual(
-            self.findings(self.style.detect_weak_verb_xing, ["进行中的事务不阻塞读。"], "progress.md"), 0
+            self.findings(
+                self.style.detect_weak_verb_xing, ["进行中的事务不阻塞读。"], "progress.md"
+            ),
+            0,
         )
 
     def test_forbidden_phrases_are_reported_but_not_inside_quotes_or_fences(self):
@@ -132,6 +148,12 @@ class DetectorBucketTest(unittest.TestCase):
             self.assertGreater(
                 self.findings(
                     self.style.detect_forbidden_phrases, ["说白了，这就是缓存。"], "p.md"
+                ),
+                0,
+            )
+            self.assertEqual(
+                self.findings(
+                    self.style.detect_forbidden_phrases, ["缓存写入先于提交。"], "plain.md"
                 ),
                 0,
             )
@@ -145,6 +167,21 @@ class DetectorBucketTest(unittest.TestCase):
         self.style.chapter_stats.clear()
         self.style.detect_vague_qi(lines, "qi.md")
         self.assertEqual(len(self.style.chapter_stats["qi.md"]["infos"]), 1)
+
+    def test_four_de_in_a_long_line_stay_below_the_density_threshold(self):
+        self.assertEqual(
+            self.findings(self.style.detect_excessive_de, ["的" * 4 + "a" * 60], "sparse.md"),
+            0,
+        )
+
+    def test_a_vague_pronoun_without_preceding_context_is_not_reported(self):
+        self.assertEqual(
+            self.findings(self.style.detect_vague_qi, ["其值由调用方决定。"], "first.md"), 0
+        )
+
+    def test_blank_and_heading_neighbours_supply_no_context(self):
+        lines = ["## 缓存边界", "", "其值由调用方决定。"]
+        self.assertEqual(self.findings(self.style.detect_vague_qi, lines, "heading.md"), 0)
 
     def test_colloquial_phrases_and_mixed_code_are_reported(self):
         self.assertGreater(
