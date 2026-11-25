@@ -117,6 +117,43 @@ class TestHealthTest(unittest.TestCase):
         self.assertIn('无数据', out)
         self.assertIn('不可读', out)
 
+class TestHealthSurfacesTest(unittest.TestCase):
+    """The reader's own surfaces: the subprocess helper, loose counts, the report."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.mod = _fixture.load_module(
+            os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR)), "test_health")
+
+    def test_run_reports_the_code_and_the_stdout(self):
+        code, out = self.mod._run([sys.executable, "-c", "print('hi')"])
+        self.assertEqual((code, out.strip()), (0, "hi"))
+
+    def test_an_unreadable_redundancy_module_reads_as_unknown(self):
+        with mock.patch.dict(sys.modules, {"audit.test_redundancy": None}):
+            self.assertEqual(self.mod.loose_assertions(), -1)
+
+    def test_the_report_names_the_thinnest_files_and_the_baseline_drops(self):
+        payload = {"coverage": {"total_percent": 94.0, "missing": 1, "statements": 100,
+                                "half_branches": 3,
+                                "thinnest": [{"percent": 88.0, "statements": 50,
+                                              "file": "a.py"}],
+                                "branch_heavy": [{"half_branches": 7, "file": "b.py"}]},
+                   "coverage_threshold": 90, "below_baseline": [{"file": "c.py", "now": 80.0,
+                                                                "baseline": 85.0}],
+                   "loose_assertions": -1, "function_length_warn": 60,
+                   "long_functions": [{"lines": 70, "file": "d.py", "name": "long"}]}
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            self.mod.render(payload)
+        text = buffer.getvalue()
+        self.assertIn("a.py", text)
+        self.assertIn("b.py", text)
+        self.assertIn("c.py", text)
+        self.assertIn("d.py::long", text)
+        self.assertIn("不可读", text)
+
 
 if __name__ == '__main__':
     unittest.main()

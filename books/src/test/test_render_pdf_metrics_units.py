@@ -5,6 +5,7 @@ wrong reason should fail here rather than in a calibration run that costs minute
 """
 from __future__ import annotations
 
+import importlib.util
 import io
 import json
 import os
@@ -248,3 +249,82 @@ class BoundaryTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class WriteBackCliTest(unittest.TestCase):
+    """`--write-back` persists the calibrated knob and reports it."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.config = os.path.join(self.tmp.name, 'base.json')
+        with open(self.config, 'w', encoding='utf-8') as handle:
+            handle.write('{\n  "toolchain": {\n    "pdf_bytes_per_page": 24576\n  }\n}\n')
+        self.mod = _metrics
+
+    def test_the_value_is_written_and_reported(self):
+        buffer = io.StringIO()
+        current = mock.Mock(base_policy_path=self.config)
+        with mock.patch.object(self.mod._config, 'current', return_value=current), \
+                redirect_stdout(buffer):
+            code = self.mod.main(['pdf_metrics.py', '--write-back',
+                                  'pdf_bytes_per_page=30000'])
+        self.assertEqual(code, 0)
+        self.assertIn('pdf_bytes_per_page = 30000', buffer.getvalue())
+        with open(self.config, encoding='utf-8') as handle:
+            self.assertIn('30000', handle.read())
+
+    def test_an_unknown_knob_is_refused(self):
+        with self.assertRaises(SystemExit) as raised:
+            self.mod.write_back(self.config, 'no_such_knob', 1.0)
+        self.assertIn('no_such_knob', str(raised.exception.code))
+
+
+@unittest.skipUnless(importlib.util.find_spec('pypdf'), 'pypdf not installed')
+class MeasureTextPdfTest(unittest.TestCase):
+    """A PDF with real text: the visitor path that a blank page never reaches."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.pdf = os.path.join(self.tmp.name, 'text.pdf')
+        self.write_text_pdf(self.pdf, [['First line of body text.', 'Second line.']])
+
+    @staticmethod
+    def write_text_pdf(path: str, pages: list[list[str]]) -> None:
+        from pypdf import PdfWriter
+        from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
+
+        writer = PdfWriter()
+        font = DictionaryObject({
+            NameObject('/Type'): NameObject('/Font'),
+            NameObject('/Subtype'): NameObject('/Type1'),
+            NameObject('/BaseFont'): NameObject('/Helvetica'),
+        })
+        font_ref = writer._add_object(font)
+        for lines in pages:
+            page = writer.add_blank_page(width=595, height=842)
+            page[NameObject('/Resources')] = DictionaryObject({
+                NameObject('/Font'): DictionaryObject({NameObject('/F1'): font_ref})})
+            stream = DecodedStreamObject()
+            body = ['BT', '/F1 12 Tf', '14 TL', '40 800 Td']
+            for line in lines:
+                escaped = line.replace('(', r'\(').replace(')', r'\)')
+                body.append(f'({escaped}) Tj T*')
+            body.append('ET')
+            stream.set_data('\n'.join(body).encode('utf-8'))
+            page[NameObject('/Contents')] = writer._add_object(stream)
+        with open(path, 'wb') as handle:
+            writer.write(handle)
+
+    def test_the_measured_width_and_body_size_come_from_the_text(self):
+        metrics = _metrics.measure(self.pdf)
+        self.assertGreater(metrics["text_width_pt"], 0.0)
+        self.assertGreater(metrics["body_pt"], 0.0)
+        self.assertGreater(metrics["chars_per_page"], 0)
+        # the share is a percentage of the characters actually counted
+        self.assertLessEqual(metrics["body_share"], 100)
+        self.assertGreater(metrics["body_share"], 0)
+        # two lines set at 14pt leading: pitch and line count come from the order
+        self.assertAlmostEqual(metrics["pitch_pt"], 14.0, places=1)
+        self.assertEqual(metrics["lines_per_page"], 2)

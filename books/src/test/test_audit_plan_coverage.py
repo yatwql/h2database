@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import importlib
+import io
 import os
 import shutil
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+from unittest import mock
 
 import _fixture
 
@@ -112,6 +115,43 @@ class PlanCoverageTest(unittest.TestCase):
         self.write_plan(PLAN.replace('`docs/plan/figure-chapter-plumbing/`',
                                      '`docs/plan/already-deleted/`', 1))
         self.assertTrue(any('待归档' in p and '不存在的目录' in p for p in self.check()))
+
+
+
+class PlanCoverageSurfacesTest(unittest.TestCase):
+    """The gate's own surfaces: configured path, two missing markers, exit codes."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.mod = importlib.import_module("audit.plan_coverage")
+
+    def test_the_plan_directory_comes_from_the_configured_docs_dir(self):
+        self.assertEqual(self.mod.plan_dir(),
+                         os.path.join(self.mod._config.DOCS_DIR, "plan"))
+
+    def test_a_plan_without_its_numbering_source_is_reported(self):
+        problems = self.mod._numbering_problems("## P1（4 项）\n\n- `plan-3` 某件事\n")
+        self.assertEqual(problems, ["缺少 `plan-next` 编号源"])
+
+    def test_a_plan_without_its_overview_line_is_reported(self):
+        text = "## P1（1 项）\n\n- `plan-3` 某件事\n"
+        problems = self.mod._count_problems(text, {"plan-3": {"tier": "P1"}})
+        self.assertIn("缺少「在办 N 项」概述行", problems)
+
+    def test_main_prints_the_problems_and_exits_one(self):
+        buffer = io.StringIO()
+        with mock.patch.object(self.mod, "check", return_value=["某处不一致"]), \
+                redirect_stdout(buffer):
+            self.assertEqual(self.mod.main(), 1)
+        self.assertIn("某处不一致", buffer.getvalue())
+
+    def test_main_reports_a_clean_plan(self):
+        buffer = io.StringIO()
+        with mock.patch.object(self.mod, "check", return_value=[]), \
+                redirect_stdout(buffer):
+            self.assertEqual(self.mod.main(), 0)
+        self.assertIn("计划覆盖正常", buffer.getvalue())
 
 
 if __name__ == '__main__':

@@ -7,6 +7,7 @@ import json
 import os
 import tempfile
 import unittest
+from unittest import mock
 
 import _fixture
 
@@ -127,3 +128,42 @@ class FragmentReuseTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class CacheFailureTest(unittest.TestCase):
+    """A cache that cannot be read, written or pruned must not fail a render."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.cache = _fixture.load_module(self.root, 'html_cache')
+
+    def test_a_definition_without_readable_source_hashes_a_stable_fallback(self):
+        self.assertEqual(self.cache.fingerprint(len), self.cache.fingerprint(sorted))
+        self.assertRegex(self.cache.fingerprint(len), r'^[0-9a-f]{16}$')
+
+    def test_an_unreadable_entry_reads_as_a_miss(self):
+        folder = self.cache.cache_root()
+        os.makedirs(folder, exist_ok=True)
+        path = os.path.join(folder, 'deadbeef.json')
+        with open(path, 'w', encoding='utf-8') as handle:
+            handle.write('{not json')
+        self.assertIsNone(self.cache.load('deadbeef'))
+
+    def test_a_writable_failure_is_not_fatal(self):
+        with mock.patch.object(self.cache.os, 'makedirs', side_effect=OSError('ro')):
+            self.assertIsNone(self.cache.store('key', {'html': '<p>x</p>'}))
+            self.assertIsNone(self.cache.load('key'))
+
+    def test_pruning_survives_an_unreadable_directory(self):
+        with mock.patch.object(self.cache.os, 'listdir', side_effect=OSError('ro')):
+            self.assertEqual(self.cache.prune(set()), 0)
+
+    def test_pruning_survives_a_file_it_cannot_remove(self):
+        folder = self.cache.cache_root()
+        os.makedirs(folder, exist_ok=True)
+        with open(os.path.join(folder, 'stale.json'), 'w', encoding='utf-8') as handle:
+            handle.write('{}')
+        with mock.patch.object(self.cache.os, 'remove', side_effect=OSError('ro')):
+            self.assertEqual(self.cache.prune(set()), 0)

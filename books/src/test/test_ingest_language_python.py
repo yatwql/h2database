@@ -72,3 +72,21 @@ class PythonAnalyzerTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class PythonImportDepsTest(unittest.TestCase):
+    """Imports become dependencies, including dotted ones (first segment only)."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.analyzer = load_analyzer()
+
+    def test_dotted_imports_count_their_top_level_package(self):
+        path = os.path.join(self.tmp.name, 'mod.py')
+        with open(path, 'w', encoding='utf-8') as handle:
+            handle.write('import os\nimport a.b.c\nfrom x.y import z\n')
+        module = self.analyzer.parse(path)
+        self.assertEqual(module.depends_on.get('a'), 1)
+        self.assertEqual(module.depends_on.get('x'), 1)
+        self.assertEqual(module.depends_on.get('os'), 1)

@@ -7,6 +7,7 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 import _fixture
 
@@ -62,3 +63,29 @@ class BaselinePathTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class VolumeHeadroomTest(unittest.TestCase):
+    """Headroom is blank, not zero, when there is nothing to measure against."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.mod = _fixture.load_module(self.root, '_volume')
+
+    def baseline(self, body: str) -> str:
+        path = os.path.join(self.tmp.name, 'volume.json')
+        with open(path, 'w', encoding='utf-8') as handle:
+            handle.write(body)
+        return path
+
+    def test_a_broken_baseline_has_no_headroom(self):
+        path = self.baseline('{not json')
+        with mock.patch.object(self.mod, 'baseline_path', lambda: path):
+            self.assertIsNone(self.mod.headroom())
+
+    def test_a_baseline_without_lines_has_no_headroom(self):
+        path = self.baseline('{"manuscript": {"total": {"lines": 0}}}')
+        with mock.patch.object(self.mod, 'baseline_path', lambda: path):
+            self.assertIsNone(self.mod.headroom())

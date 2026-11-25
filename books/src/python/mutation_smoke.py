@@ -147,10 +147,11 @@ def _write(path: str, text: str) -> None:
 # is number, not a blanket pass.
 TARGETS: dict[str, tuple[str, int]] = {
     'render/epub_source.py': ('test_render_epub_source.py', 0),
-    # four survivors, all equivalent: the sample-window `<=`, the `<= 3` flag (a delta
-    # of exactly three percent is float-identical), and two `or` defaults inside the
-    # PDF text visitor that only real text layers reach
-    'render/pdf_metrics.py': ('test_render_pdf_metrics_units.py', 4),
+    # three survivors, all equivalent: the sample-window `<=` (a reader holding
+    # exactly SAMPLE_PAGES pages returns the same slice either way) and the two `or`
+    # defaults inside `abs(cm[0] or 1) * abs(tm[0] or 1)`, where pypdf's transform
+    # matrices always carry a non-zero scale, so `or` and `and` yield the same number
+    'render/pdf_metrics.py': ('test_render_pdf_metrics_units.py', 3),
     'lib/_perfhistory.py': ('test_lib_perfhistory.py', 0),
     'core/menu.py': ('test_core_menu.py', 0),
 }

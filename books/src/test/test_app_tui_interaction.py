@@ -541,3 +541,47 @@ class ProgressLinesTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class SettingEditAndConfirmTest(unittest.TestCase):
+    """The two prompts that take a keypress: editing a setting and confirming."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.tui = _fixture.load_module(self.root, 'tui')
+
+    def reader(self, *answers: str):
+        remaining = list(answers)
+        return lambda _prompt='': remaining.pop(0) if remaining else ''
+
+    def rows(self) -> list[dict]:
+        return [{'key': 'book.title', 'value': '旧名', 'description': '书名'}]
+
+    def test_an_empty_answer_leaves_the_setting_alone(self):
+        with mock.patch.object(self.tui.settings, 'list_settings', self.rows), \
+                redirect_stdout(io.StringIO()):
+            self.assertEqual(self.tui.configure(self.reader('1', '')), '未修改')
+
+    def test_a_changed_value_is_stored_and_reported(self):
+        with mock.patch.object(self.tui.settings, 'list_settings', self.rows), \
+                mock.patch.object(self.tui.settings, 'set_value',
+                                  return_value='新名'), redirect_stdout(io.StringIO()):
+            self.assertEqual(self.tui.configure(self.reader('1', '新名')),
+                             '已更新 book.title = 新名')
+
+    def test_a_rejected_value_is_reported_instead_of_crashing(self):
+        with mock.patch.object(self.tui.settings, 'list_settings', self.rows), \
+                mock.patch.object(self.tui.settings, 'set_value',
+                                  side_effect=ValueError('bad')), redirect_stdout(io.StringIO()):
+            self.assertEqual(self.tui.configure(self.reader('1', 'x')), '修改失败：bad')
+
+    def test_confirm_accepts_y_and_yes_and_chinese_yes(self):
+        for answer in ('y', 'YES', '是'):
+            with self.subTest(answer=answer):
+                self.assertTrue(self.tui.confirm('继续？', self.reader(answer)))
+
+    def test_confirm_defaults_to_no(self):
+        self.assertFalse(self.tui.confirm('继续？', self.reader('')))
+        self.assertFalse(self.tui.confirm('继续？', self.reader('n')))

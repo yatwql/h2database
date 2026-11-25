@@ -8,13 +8,17 @@ are supplied, so the whole decision chain runs without a browser.
 
 from __future__ import annotations
 
+import importlib
 import importlib.util
+import io
 import os
 import pathlib
 import sys
 import tempfile
 import types
 import unittest
+from contextlib import redirect_stdout
+from unittest import mock
 
 import _fixture
 
@@ -298,3 +302,51 @@ class FontEmbeddingTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class VerifyPdfSkipAndDensityTest(PdfFixtureCase):
+    """A missing optional reader, an unavailable metric, and the density verdict."""
+
+    def test_a_missing_pypdf_is_reported_and_skips_the_rest(self):
+        report = self.verify_pdf.Report()
+        with mock.patch.object(self.verify_pdf, 'PdfReader', None):
+            self.assertIsNone(self.verify_pdf._open_inputs(report, self.pdf, self.html))
+        self.assertEqual([name for name, ok, _d in report.checks], ['PYPDF'])
+        self.assertFalse(report.checks[0][1])
+
+    def test_a_named_destination_that_is_not_a_list_has_no_target(self):
+        reader = mock.Mock(pages=[mock.Mock()])
+        self.assertIsNone(self.verify_pdf._annotation_target_page(reader, {"/Dest": "nope"}))
+
+    def test_a_goto_action_must_be_a_goto_and_point_at_a_real_page(self):
+        reader = mock.Mock(pages=[mock.Mock(), mock.Mock()])
+        skipped = {"/A": {"/S": "/URI"}}
+        self.assertIsNone(self.verify_pdf._annotation_target_page(reader, skipped))
+        beyond = {"/A": {"/S": "/GoTo", "/D": [99]}}
+        self.assertIsNone(self.verify_pdf._annotation_target_page(reader, beyond))
+        inside = {"/A": {"/S": "/GoTo", "/D": [1]}}
+        self.assertEqual(self.verify_pdf._annotation_target_page(reader, inside), 1)
+
+    def test_a_page_reference_is_matched_by_its_indirect_object(self):
+        first, second = mock.Mock(), mock.Mock()
+        first.indirect_reference, second.indirect_reference = "ref-a", "ref-b"
+        reader = mock.Mock(pages=[first, second])
+        self.assertEqual(self.verify_pdf._annotation_target_page(reader, {"/Dest": ["ref-b"]}), 1)
+        self.assertIsNone(self.verify_pdf._annotation_target_page(reader, {"/Dest": ["ref-z"]}))
+
+    def test_the_density_ratio_is_judged_against_the_leading_window(self):
+        self.build()
+        render = importlib.import_module("render")
+        fake = types.SimpleNamespace(
+            measure=lambda _path: {"body_pt": 10.0, "pitch_pt": 14.0, "lines_per_page": 50})
+        report = self.verify_pdf.Report()
+        with mock.patch.dict(sys.modules, {"render.pdf_metrics": fake}), \
+                mock.patch.object(render, "pdf_metrics", fake, create=True), \
+                mock.patch.dict(self.verify_pdf._config.THRESHOLDS,
+                                {"pdf_leading_ratio_min": 1.15,
+                                 "pdf_leading_ratio_max": 1.75}), \
+                redirect_stdout(io.StringIO()):
+            self.verify_pdf._check_density(report, self.pdf)
+        self.assertEqual([name for name, _ok, _d in report.checks], ["DENSITY"])
+        self.assertTrue(report.checks[0][1], report.checks[0][2])
+        self.assertIn("1.40x", report.checks[0][2])

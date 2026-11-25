@@ -4,7 +4,7 @@
 > 版本：v0.1-dev
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
-> **编号源**：`rf-next = 72`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-71，
+> **编号源**：`rf-next = 73`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-72，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -58,6 +58,7 @@
 | rf-69 | `structure.py` 的 CSS 钩子与构建脚本检查路径指向已搬迁的 `to_html.py` 与 `audit/glossary.py`，常年走「跳过/未找到」 | **已解决**：抽成 `css_style_missing()` 与 `builder_script_problems()`（缺脚本=告警、脚本不解析=失败），路径改为 `render/to_html.py` + `render/html_shell.py` 与 `manuscript/*.py`；修复后 9 个 CSS 钩子全部命中。另加一条用例钉住「这四个源文件确实存在」，路径再漂移即失败。`structure.py` 84.6% → **89%** |
 | rf-70 | 单文件地板抬到 88 前，仍有若干模块低于它 | **已解决**：十二个低于 88 的模块逐个补分支用例后全部过线，`coverage_min_per_file` 86 → **88**，基线已重记（全局 91.7% → **94%**，最低文件 `ingest/chapters.py` 88.1%）。补的是错误路径与入口面：`make.py` 85.7% → **99%**（解释器守卫、pin 漂移、步骤超时、棘轮升降、子命令派发）、`test_report.py` 86.8% → **97%**（坏 junit、坏 TOML 快照、解析失败的用例模块、`--json` 三个子命令）、`snapshot.py` 86.9% → **98%**、`source_refs.py` 86.5% → **98%**、`index.py` 86.3% → **97%**、`style.py` 87.7% → **95%**、`version_consistency.py` 87.9% → **94%**、`smart.py` 87.4% → **98%**、`file_length.py` 86.6% → **97%**、`archive.py` 87.2% → **99%**、`mutation_smoke.py` 86.9% → **100%**、`requirement_trace.py` 87.3% → **99%** |
 | rf-71 | 脚本自己拼书目录、重复的 baseline 读写、写死却可配的标记表 | **已解决**：七个文件不再按名字拼出书目录（`render/to_pdf`、`to_epub`、`pdf_from_html`、`pdf_toc_links`、`audit/balance`、`audit/doc_drift`、`core/menu`），`check_architecture` 补「按名字拼出书目录」规则；`test_report.collect` 的重复计数（2351 vs pytest 2013）改为每个 `test_` 函数只记一次；`smart.py` 的图形标记改读 `style.json [diagrams].markers`。三个「接受式」基线合并到 `lib/_baseline.py`——`ascii`、`style_rules`、`source_symbol` 各自只留一个 `baseline_path()`（按调用解析，`diagrams` 原先在 import 时就把路径定死，选版本时会写错文件），读写走 `load_at`/`save_at`，统一的 `updated`/`note`/`accepted` 外壳加各自的扩展字段（`source_version`）。`perf_baseline` 与 `content_volume` 不并入：它们记的是测量值与卷册台账，不是「已接受的遗留项」，形状不同是概念不同，不是重复 |
+| rf-72 | 慢档（`make.py cover --full`）有一处低于单文件地板 | **待做**：`audit/order_dependence.py` 在 slow 档实测 61%（168 语句，未覆盖 59 行/13 半分支），低于 90 的地板。该模块只在 p2 顺序依赖探测里被驱动，快档完全不测量它，因此这一条只会在 `cover --full` 里显形；地板为 86 时同样是红的（61 < 86），与地板的数值无关。补齐需要给「顺序对照/结果比较」两条纯函数路径写用例，并让 subprocess 驱动的入口可注入 |
 | rf-65 | 依赖真环境的探测（字体命令、浏览器、pandoc）只有真机才跑得到 | **已解决**：`fonts` 的探测链（命令缺失/输出/异常/目录不可写）与 `make.doctor` 的「可选工具缺失」均有用例；环境失败路径不再只能靠真机触发 |
 | rf-66 | 少数辅助函数只有用例在调用，形成「假覆盖」 | **已解决**：`calibrate()` 与 `figure_caption()` 的 docstring 写明为公共 API 及为何不接进 CLI；`log_file()` 已接入 `describe()`；其余两处早前已删除。判据：不再有「只被测试引用且无说明」的函数 |
 | rf-67 | 单文件覆盖率地板停在 84 | **已解决（两批中的第一批）**：地板 84 → **86**（门槛 90 下通过，最低文件 86.3% → 现为 86.5%）。抬到 88 的剩余工作与实际百分比见 rf-70 |

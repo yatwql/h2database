@@ -116,3 +116,46 @@ class ExtractedChecksTest(unittest.TestCase):
         self.assertTrue((python_root / 'render' / 'html_shell.py').is_file())
         self.assertTrue((python_root / 'manuscript' / 'glossary.py').is_file())
         self.assertTrue((python_root / 'manuscript' / 'index.py').is_file())
+
+
+class SubCheckFailureModesTest(unittest.TestCase):
+    """Every advisory sub-check must report instead of raising, and say when absent."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+
+    def gate(self):
+        return _fixture.run_inproc(self.root, 'structure.py')
+
+    def test_a_sub_check_that_cannot_run_is_reported_for_every_advisory_tool(self):
+        import subprocess
+
+        real_run = subprocess.run
+
+        def failing(command, **kwargs):
+            if any(name in str(part) for part in command
+                   for name in ('captions', 'figure_clusters', 'exercises')):
+                raise OSError('tool exploded')
+            return real_run(command, **kwargs)
+
+        with mock.patch.object(subprocess, 'run', side_effect=failing):
+            code, out = self.gate()
+        self.assertIn(code, (0, 1))
+        self.assertIn('failed to run', out)
+        self.assertNotIn('Traceback', out)
+
+    def test_a_missing_advisory_tool_is_a_hard_failure(self):
+        real_exists = os.path.exists
+        hidden = ('captions.py', 'figure_clusters.py', 'exercises.py')
+
+        def exists(path):
+            if str(path).endswith(hidden):
+                return False
+            return real_exists(path)
+
+        with mock.patch.object(os.path, 'exists', side_effect=exists):
+            code, out = self.gate()
+        self.assertEqual(code, 1, out[-400:])
+        self.assertIn('tool missing', out)

@@ -13,6 +13,20 @@
 
 ### 变更
 
+- **单文件覆盖率地板抬到 90，全局 95%**：十八个低于 90 的模块按「先补错误路径、再补入口面」补齐，
+  最低文件从 88.1% 抬到 **90.1%**（`audit/index_xrefs.py`），`coverage_min_per_file` 88 → **90**，基线重记。
+  补的多是不可达兜底之外的真题：`_fsutil` 的写入失败、`html_cache` 的缓存不可用、`plan_coverage` 的两个
+  缺标记、`prose_quality` 的评分锚点与表格空行、`content_depth` 的基线更新与按类型计数、`exercises` 的
+  三个缺标记、`doc_drift` 的 `STYLE_KEY` 检查、`structure` 的四个子检查失败、`chapters` 的附录追加
+  （跳过/干跑/写入）、`pdf_metrics` 的写回与真实文本测量、`verify_pdf` 的注释目标与密度判定。
+- **删除不可达分支**：对整棵树做「`return`/`raise`/`continue`/`break` 之后还有语句」的扫描，结果为 0；
+  上一轮在 `style.py` 查到的唯一一处（恒不成立的「进行中」豁免）已修。
+- **慢档实测（`cover --full`）**：全局 95%，但 `audit/order_dependence.py` 只有 61%，低于 90 的地板；
+  该模块只在慢档的顺序依赖探测里运行，快档不测量，地板 86 时也已经红，登记为 rf-72。
+- **变异分数收口**：`core/menu.py` 的 `Outcome` 补一条不可变性断言（`frozen=True` 的变异原先存活），
+  survivor 6 → **0**；`render/pdf_metrics.py` 的 survivor 6 → **3**（新增真实文本 PDF 测量用例杀掉
+  `reverse=True`、`sum(...) or 1` 两处），剩下三条登记为等价变异并把容忍数 4 → **3**。
+
 - **基线读写收口到 `lib/_baseline.py`（rf-71）**：`ascii`、`style_rules`、`source_symbol` 三份「已接受的遗留项」
   原先各写一遍读取、容错与写入，现在共用 `_baseline.load_at` / `save_at`（统一 `updated` / `note` / `accepted`
   外壳，扩展字段如 `source_version` 原样保留），每个 gate 只留一个按调用解析的 `baseline_path()`。

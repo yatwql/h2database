@@ -70,3 +70,35 @@ class ArtifactLineTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class SourceFactsTest(unittest.TestCase):
+    """Facts about the source tree and the artifacts, each degrading to a blank."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.mod = _fixture.load_module(self.root, 'status')
+
+    def state(self, body: str) -> str:
+        path = os.path.join(self.root, 'data', 'state', 'source-inventory.json')
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as handle:
+            handle.write(body)
+        return path
+
+    def test_a_broken_inventory_falls_back_to_the_configured_source(self):
+        self.state('{not json')
+        facts = self.mod.source_facts()
+        self.assertTrue(facts['root'])
+        self.assertEqual(facts['version'], '')
+
+    def test_the_inventory_supplies_root_and_version(self):
+        self.state('{"root": "/src/h2", "source_version": "2.5.259"}')
+        facts = self.mod.source_facts()
+        self.assertEqual((facts['root'], facts['version']), ('/src/h2', '2.5.259'))
+        self.assertTrue(facts['changed'])
+
+    def test_nothing_delivered_yields_no_artifact_rows(self):
+        self.assertEqual(self.mod.artifact_facts(os.path.join(self.root, 'nowhere')), [])

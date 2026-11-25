@@ -3,9 +3,11 @@
 
 from __future__ import annotations
 
+import io
 import os
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 
 import _fixture
 
@@ -85,3 +87,61 @@ class AuditFileTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ExerciseIssueBranchesTest(unittest.TestCase):
+    """Each missing marker becomes its own issue line, and a full chapter passes."""
+
+    def setUp(self):
+        self.mod = _fixture.load_module(BOOK_ROOT, "exercises")
+
+    def lines(self, text: str) -> list[str]:
+        return text.splitlines(keepends=True)
+
+    def slot(self, text: str) -> dict:
+        slot = self.mod.parse_chapter_slots(self.lines(text))[0]
+        issues: list[str] = []
+        report = self.mod._slot_exercises(self.lines(text), slot, issues)
+        return {"report": report, "issues": issues}
+
+    CHAPTER = ("# 第1章 测试\n\n## 1.9 本章小结\n\n小结。\n\n"
+               "## 1.10 延伸思考\n\n"
+               "**1. 🟢★ 说说你的看法**\n\n{hint}{review}\n"
+               "## 1.11 延展阅读\n\n- 参考\n")
+    HINT = "> 提示：先看写入路径。\n\n"
+    REVIEW = "> 回顾：见 §1.2 的顺序。\n"
+
+    def text(self, hint: str, review: str) -> str:
+        return self.CHAPTER.replace("{hint}", hint).replace("{review}", review)
+
+    def test_a_complete_chapter_has_no_issues(self):
+        outcome = self.slot(self.text(self.HINT, self.REVIEW))
+        self.assertEqual(outcome["issues"], [])
+        self.assertTrue(outcome["report"]["all_have_hint"])
+
+    def test_a_missing_hint_line_is_reported(self):
+        outcome = self.slot(self.text("", self.REVIEW))
+        self.assertTrue(any("缺少 提示 行" in issue for issue in outcome["issues"]))
+        self.assertFalse(outcome["report"]["all_have_hint"])
+
+    def test_a_missing_review_line_is_reported(self):
+        outcome = self.slot(self.text(self.HINT, ""))
+        self.assertTrue(any("缺少 回顾 行" in issue for issue in outcome["issues"]))
+        self.assertFalse(outcome["report"]["all_have_review"])
+
+    def test_a_review_without_an_anchor_is_reported(self):
+        outcome = self.slot(self.text(self.HINT, "> 回顾：没有坐标。\n"))
+        self.assertTrue(any("无 §X.Y 锚点" in issue for issue in outcome["issues"]))
+        self.assertFalse(outcome["report"]["all_anchors_present"])
+
+    def test_a_chapter_that_meets_the_floor_passes_the_report(self):
+        report = {"file": "ch1.md", "issues": [], "slots": [
+            {"chapter": 1, "exercise_count": self.mod.PER_CHAPTER_FLOOR,
+             "placement_ok": True, "all_have_hint": True, "all_have_review": True,
+             "all_anchors_present": True, "difficulties": [1, 2, 3],
+             "emoji_distribution": {"🟢": 1, "🔵": 1, "🟠": 1}}]}
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            code = self.mod.render_report([report], total_floor=1)
+        self.assertEqual(code, 0)
+        self.assertIn("章节合格：1 / 1", buffer.getvalue())

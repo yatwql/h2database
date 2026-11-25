@@ -105,6 +105,15 @@ class AliasesTest(unittest.TestCase):
         self.assertTrue(menu.is_llm('llm-ask'))
         self.assertFalse(menu.is_llm('build'))
 
+    def test_an_outcome_cannot_be_edited_after_the_fact(self):
+        import dataclasses
+
+        outcome = menu.Outcome(action="build", label="构建", code=0,
+                               output_lines=0, tail="", elapsed=1.0)
+        self.assertTrue(outcome.ok)
+        with self.assertRaises(dataclasses.FrozenInstanceError):
+            outcome.code = 1
+
     def test_every_confirmed_action_says_what_it_rewrites(self):
         for action in menu.CONFIRM_ACTIONS:
             self.assertTrue(menu.artifacts(action), action)

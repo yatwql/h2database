@@ -6,6 +6,7 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 TAGS = ('layer:infra', 'tier:fast')
 
@@ -96,3 +97,51 @@ class TestEnsureDir(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class WriteFailureTest(unittest.TestCase):
+    """Every write helper must exit with a message, not a traceback."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.path = os.path.join(self.tmp.name, 'out.txt')
+
+    def test_the_write_guard_is_off_without_the_variable(self):
+        with mock.patch.dict(os.environ, {}, clear=False) as env:
+            env.pop('BOOK_TEST_GUARD', None)
+            _fsutil.write_text(self.path, 'ok\n')
+        self.assertEqual(_fsutil.read_text(self.path), 'ok\n')
+
+    def test_an_unwritable_text_target_exits_with_a_message(self):
+        with mock.patch('builtins.open', side_effect=OSError('denied')), \
+                self.assertRaises(SystemExit) as raised:
+            _fsutil.write_text(self.path, 'x')
+        self.assertIn('cannot write', str(raised.exception.code))
+
+    def test_an_unwritable_json_target_exits_with_a_message(self):
+        with mock.patch('builtins.open', side_effect=OSError('denied')), \
+                self.assertRaises(SystemExit) as raised:
+            _fsutil.dump_json(self.path, {'a': 1})
+        self.assertIn('cannot write', str(raised.exception.code))
+
+    def test_an_undeclarable_directory_exits_with_a_message(self):
+        with mock.patch.object(os, 'makedirs', side_effect=OSError('denied')), \
+                self.assertRaises(SystemExit) as raised:
+            _fsutil.ensure_dir(self.path)
+        self.assertIn('cannot create directory', str(raised.exception.code))
+
+    def test_stdout_without_a_buffer_is_left_alone(self):
+        class Stream:
+            encoding = 'ascii'
+
+        stream = Stream()
+        with mock.patch.object(_fsutil.sys, 'stdout', stream):
+            _fsutil.pin_stdout_utf8()
+            self.assertIs(_fsutil.sys.stdout, stream)
+
+    def test_stdout_already_in_utf8_is_left_alone(self):
+        stream = mock.Mock(encoding='UTF-8')
+        with mock.patch.object(_fsutil.sys, 'stdout', stream):
+            _fsutil.pin_stdout_utf8()
+            self.assertIs(_fsutil.sys.stdout, stream)

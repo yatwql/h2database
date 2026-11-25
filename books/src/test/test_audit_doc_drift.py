@@ -408,3 +408,47 @@ class ManualScopeTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class DriftConfigurationAndExitTest(unittest.TestCase):
+    """The style-key check, and the two verdict exits of the gate."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.drift = _fixture.load_module(BOOK_ROOT, 'doc_drift')
+
+    def write(self, rel: str, text: str) -> str:
+        path = os.path.join(self.root, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as handle:
+            handle.write(text)
+        return path
+
+    def test_a_style_key_nobody_explains_is_reported(self):
+        self.write('data/config/style.json',
+                   json.dumps({'limits': {'sources': {'limit': 800}}}, ensure_ascii=False))
+        self.write('docs/manuals/how-to-config.md', '# 配置\n\n## limits\n')
+        details = [item['detail'] for item in self.drift.check_style_keys(self.root)]
+        self.assertTrue(any("'sources'" in detail for detail in details), details)
+
+    def test_private_sections_and_keys_are_ignored(self):
+        self.write('data/config/style.json',
+                   json.dumps({'_note': 'x', 'limits': {'_draft': 1}}, ensure_ascii=False))
+        self.write('docs/manuals/how-to-config.md', '# 配置\n\n## limits\n')
+        self.assertEqual(self.drift.check_style_keys(self.root), [])
+
+    def test_an_unreadable_style_file_is_skipped(self):
+        self.write('data/config/style.json', '{not json')
+        self.write('docs/manuals/how-to-config.md', '# 配置\n')
+        self.assertEqual(self.drift.check_style_keys(self.root), [])
+
+    def test_main_prints_the_drift_and_exits_one(self):
+        buffer = io.StringIO()
+        finding = {"kind": "PATH", "file": "docs/x.md", "line": 3, "detail": "src/nowhere.py"}
+        with mock.patch.object(self.drift, "doc_files", return_value=[]), \
+                mock.patch.object(self.drift, "check_paths", return_value=[finding]), \
+                redirect_stdout(buffer):
+            self.assertEqual(self.drift.main([]), 1)
+        self.assertIn("src/nowhere.py", buffer.getvalue())

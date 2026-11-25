@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Tests for the content-depth checks (prereq / glossary / excerpt / exercise)."""
 
+import io
 import json
 import os
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+from unittest import mock
 
 import _fixture
 
@@ -89,6 +92,79 @@ class TestWholeGate(DepthCase):
         self.assertIn(code, (0, 1), out[-300:])
         payload = json.loads(out)
         self.assertIn('by_kind', payload)
+
+
+class DepthSurfacesTest(DepthCase):
+    """Owner mapping, the two exercise exemptions, and the two CLI outcomes."""
+
+    def depth(self):
+        return _fixture.load_module(self.root, "content_depth")
+
+    def test_the_owner_map_comes_from_the_inventory_and_the_chapter_packages(self):
+        self.write("data/state/source-inventory.json",
+                   json.dumps({"packages": {"pkg.core": {"classes": [
+                       {"name": "WidgetEngine", "rel": "pkg/core/WidgetEngine.java"}]}}}))
+        depth = self.depth()
+        with mock.patch.object(depth._config, "chapter_packages",
+                               lambda: {"ch1-test.md": ["pkg.core"]}), \
+                mock.patch.object(depth._config, "chapter_numbering",
+                                  lambda: {"ch1-test.md": [1]}):
+            self.assertEqual(depth.owner_map(), {"WidgetEngine": [1]})
+
+    def test_an_exercise_with_a_forward_anchor_is_exempt(self):
+        depth = self.depth()
+        body = ("# 第1章 测试\n\n## 1.9 延伸思考\n\n"
+                "**1. 🟢★ 说说你的看法**\n\n> 提示：见 §2.1\n")
+        path = self.write("manuscript/ch1-test.md", body)
+        self.assertEqual(depth.check_exercises([path], {}, {"ch1-test.md": [1]}), [])
+
+    def test_a_chapter_without_exercises_is_skipped(self):
+        depth = self.depth()
+        path = self.write("manuscript/ch1-test.md", "# 第1章 测试\n\n正文。\n")
+        self.assertEqual(depth.check_exercises([path], {}, {"ch1-test.md": [1]}), [])
+
+    def findings(self) -> list[dict]:
+        return [{"file": "ch1-test.md", "line": 3, "kind": "GLOSSARY",
+                 "detail": "MVStore 没有术语条目"},
+                {"file": "ch2-test.md", "line": 9, "kind": "EXERCISE",
+                 "detail": "练习没有指向"}]
+
+    def patched_gate(self, depth):
+        return (mock.patch.object(depth, "check_prerequisites", return_value=[]),
+                mock.patch.object(depth, "check_glossary", return_value=self.findings()),
+                mock.patch.object(depth, "check_excerpts", return_value=[]),
+                mock.patch.object(depth, "check_exercises", return_value=[]))
+
+    def test_updating_the_baseline_records_the_current_findings(self):
+        depth = self.depth()
+        patches = self.patched_gate(depth)
+        for patcher in patches:
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        buffer = io.StringIO()
+        with mock.patch.object(depth._baseline, "save",
+                               return_value=os.path.join(self.root, "b.json")), \
+                redirect_stdout(buffer):
+            self.assertEqual(depth.main(["--update-baseline"]), 0)
+        self.assertIn("内容深度基线已更新", buffer.getvalue())
+
+    def test_the_report_counts_each_kind_and_lists_the_stale_entries(self):
+        depth = self.depth()
+        for patcher in self.patched_gate(depth):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        buffer = io.StringIO()
+        keys = {f'{item["file"]}:{item["kind"]}:{item["detail"]}'
+                for item in self.findings()}
+        with mock.patch.object(depth._baseline, "split",
+                               return_value=(keys, {"old-key"})), \
+                redirect_stdout(buffer):
+            code = depth.main([])
+        self.assertEqual(code, 1)
+        text = buffer.getvalue()
+        self.assertIn("GLOSSARY=1", text)
+        self.assertIn("已不再出现", text)
+
 
 if __name__ == '__main__':
     unittest.main()

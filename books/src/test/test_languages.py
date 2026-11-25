@@ -163,3 +163,31 @@ class TestDigestLanguages(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class JavaAnalyzerBranchesTest(unittest.TestCase):
+    """A javadoc summary and a package import are the two paths a fixture skips."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.analyzer = languages.get('java')
+
+    def write(self, name: str, body: str) -> str:
+        path = os.path.join(self.tmp.name, name)
+        with open(path, 'w', encoding='utf-8') as handle:
+            handle.write(body)
+        return path
+
+    def test_the_javadoc_becomes_the_unit_summary(self):
+        path = self.write('Widget.java', 'public class Widget { }\n'
+                                          '/**\n * A widget that holds state.\n */\n')
+        module = self.analyzer.parse(path)
+        self.assertEqual(module.units[0].summary, 'A widget that holds state.')
+        self.assertEqual(module.summary, 'A widget that holds state.')
+
+    def test_an_import_becomes_its_package_dependency(self):
+        path = self.write('Store.java', 'package a.b;\nimport org.h2.engine.Database;\n'
+                                         'public class Store { void open() {} }\n')
+        module = self.analyzer.parse(path)
+        self.assertEqual(module.depends_on.get('org.h2'), 1)   # the file's own package
