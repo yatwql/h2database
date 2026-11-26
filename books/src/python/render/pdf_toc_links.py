@@ -19,7 +19,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from lib import _config, _errors
+from lib import _browser, _config, _errors
 from playwright.sync_api import sync_playwright
 from pypdf import PdfReader, PdfWriter
 from pypdf.annotations import Link
@@ -51,9 +51,7 @@ def collect_outline(reader: PdfReader) -> list[tuple[str, int]]:
 def get_toc_links(html_path: Path | None = None) -> list[dict]:
     html_path = Path(html_path) if html_path else Path(_config.merged_html())
     with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"]
-        )
+        browser = _browser.launch(p)
         page = browser.new_page(
             viewport={"width": int(VIEWPORT_WIDTH), "height": int(VIEWPORT_HEIGHT)}
         )

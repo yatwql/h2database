@@ -34,7 +34,7 @@ import subprocess
 import sys
 from typing import Any
 
-from lib import _config, _errors, _fsutil
+from lib import _browser, _config, _errors, _fsutil
 
 _fsutil.pin_stdout_utf8()
 
@@ -113,9 +113,7 @@ headings_json = []
 generated_with_markers = False
 try:
     with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"]
-        )
+        browser = _browser.launch(p)
         page = browser.new_page()
 
         # Load the HTML file

@@ -20,7 +20,7 @@ import subprocess
 import tempfile
 from typing import Any
 
-from lib import _log
+from lib import _browser, _log
 from pypdf import PdfReader, PdfWriter
 
 MARKER_RE = re.compile(r"__hdr_(\d+)__")
@@ -284,9 +284,7 @@ def render_html(
         "prefer_css_page_size": True,
     }
     with engine() as playwright:
-        browser = playwright.chromium.launch(
-            headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"]
-        )
+        browser = _browser.launch(playwright)
         try:
             page = browser.new_page()
             page.goto(

@@ -47,6 +47,10 @@ books/data/config/llm_key.json
 .coverage
 .coverage.*
 books/data/tmp/
+
+# a crashed browser used to leave its core dump in the repository root
+core.*
+
 books/data/cache/
 # packaging artifacts (pip install -e . / build)
 books/build/

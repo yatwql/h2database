@@ -21,7 +21,7 @@ import os
 import re
 from typing import Any
 
-from lib import _config, _errors, _fsutil, _mdutil
+from lib import _browser, _config, _errors, _fsutil, _mdutil
 from playwright.sync_api import sync_playwright
 from pypdf import PdfReader, PdfWriter
 
@@ -50,9 +50,7 @@ def render_pdf(html: str, target: str, engine: Any = None) -> list[dict]:
     """Print ``html`` to ``target`` with Chromium, returning heading markers."""
     engine = engine or sync_playwright
     with engine() as p:
-        browser = p.chromium.launch(
-            headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"]
-        )
+        browser = _browser.launch(p)
         page = browser.new_page()
         page.goto(
             "file:///" + str(html).replace("\\", "/"), wait_until="networkidle", timeout=60000
