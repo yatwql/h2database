@@ -11,7 +11,7 @@
 
 ## 概述
 
-在办 8 项：P3 7 项（**plan-6**、**plan-12**、**plan-13**、**plan-14**、**plan-15**、**plan-16**、**plan-17**）、P4 1 项（**plan-4**）。
+在办 8 项：P1 1 项（**plan-17**）、P3 6 项（**plan-6**、**plan-12**、**plan-13**、**plan-14**、**plan-15**、**plan-16**）、P4 1 项（**plan-4**）。
 单项的范围、验收与事实位只在本文维护；系统怎么搭见 `technical.md`，怎么验证见
 `testplan.md`。
 
@@ -30,6 +30,18 @@
 ### P1 — 当前待办（立即执行）
 
 入选标准：不做就让门禁或文档事实失去意义。
+
+#### `plan-17` 出炉收口（均衡、印刷密度、图示、索引）
+
+**现状**：四个已量出的具体缺口——章节 max/min 127.8（目标 ≤2.5）、印刷版 944 页反而多于标准版 920 页、
+5 处 ASCII 框线角字符不配对、索引 209 条与跨章引用 30 处偏薄。
+**动作**：按 `docs/plan/book-quality-closeout/plan.md` 分四项独立推进（拆章并重编号 → 调纸面阅读度量 →
+修框线 → 补索引与交叉引用），每项独立提交。
+**验收**：`balance.py` 比值降到 ≤2.5；`make.py print` 全绿且印刷版比标准版少 5% 页数以上；
+`readability.py` 无框线告警；索引与交叉引用密度达标且可达性判据绿。
+
+**事实位**：设计与计划在 `docs/plan/book-quality-closeout/design.md` 与 `docs/plan/book-quality-closeout/plan.md`；
+章节映射在 `data/book/book.toml`，重编号在 `src/python/manuscript/renumber.py`，判据在 `src/python/audit/`。
 
 ### P2 — 下一阶段就绪（条件满足即开工）
 
@@ -105,18 +117,6 @@ API/依赖/坐标，失败路径、不变量、调用链没有产出。
 
 **事实位**：设计与计划在 `docs/plan/llm-contract-drafting/design.md` 与 `docs/plan/llm-contract-drafting/plan.md`；
 调用面在 `src/python/ingest/chapters.py`，provider 配置在 `data/config/`。
-
-#### `plan-17` 出炉收口（均衡、印刷密度、图示、索引）
-
-**现状**：四个已量出的具体缺口——章节 max/min 127.8（目标 ≤2.5）、印刷版 944 页反而多于标准版 920 页、
-5 处 ASCII 框线角字符不配对、索引 209 条与跨章引用 30 处偏薄。
-**动作**：按 `docs/plan/book-quality-closeout/plan.md` 分四项独立推进（拆章并重编号 → 调纸面阅读度量 →
-修框线 → 补索引与交叉引用），每项独立提交。
-**验收**：`balance.py` 比值降到 ≤2.5；`make.py print` 全绿且印刷版比标准版少 5% 页数以上；
-`readability.py` 无框线告警；索引与交叉引用密度达标且可达性判据绿。
-
-**事实位**：设计与计划在 `docs/plan/book-quality-closeout/design.md` 与 `docs/plan/book-quality-closeout/plan.md`；
-章节映射在 `data/book/book.toml`，重编号在 `src/python/manuscript/renumber.py`，判据在 `src/python/audit/`。
 
 ### P4 — 先决门槛未过，暂缓
 
