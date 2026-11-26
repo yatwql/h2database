@@ -162,6 +162,46 @@ def _make(*args: str, on_line=None) -> tuple[int, str]:
     return _invoke([sys.executable, MAKE, *args], on_line)
 
 
+def artifact_sizes() -> list[tuple[str, str]]:
+    """(label, "920 页 / 7.49 MB") for every deliverable that exists.
+
+    A run that ends in "done" tells the operator nothing about what they got; the page
+    count and the file size are the two numbers that do. PDFs are read with pypdf when
+    it is installed — a sampled page count, not a full extraction.
+    """
+    entries = (
+        ('Markdown', _config.merged_md()),
+        ('HTML', _config.merged_html()),
+        ('EPUB', _config.merged_epub()),
+        ('标准版 PDF', _config.merged_pdf()),
+        ('印刷版 PDF', _config.merged_print_pdf()),
+    )
+    out: list[tuple[str, str]] = []
+    for label, path in entries:
+        if not os.path.isfile(path):
+            continue
+        mb = os.path.getsize(path) / 1048576
+        detail = f'{mb:.2f} MB'
+        if label.endswith('PDF'):
+            pages = _page_count(path)
+            if pages:
+                detail = f'{pages} 页 / {detail}'
+        out.append((label, detail))
+    return out
+
+
+def _page_count(path: str) -> int:
+    """Pages in a PDF, or 0 when pypdf is absent or the file cannot be read."""
+    try:
+        from pypdf import PdfReader  # noqa: PLC0415 - optional dependency
+    except ImportError:  # pragma: no cover - the venv always has pypdf
+        return 0
+    try:
+        return len(PdfReader(path).pages)
+    except Exception:  # pragma: no cover - a half-written file is not an error here
+        return 0
+
+
 def status() -> tuple[int, str]:
     """Book identity, configuration layers and LLM routing."""
     versions = _config.versions()

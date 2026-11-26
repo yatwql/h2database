@@ -704,6 +704,15 @@ class ProgressLinesTest(unittest.TestCase):
         out = self.run_with(["  .. to_pdf"])
         self.assertIn("✅ 完成 2 份产物", out)
 
+    def test_a_finished_run_lists_what_it_produced(self):
+        sizes = [("标准版 PDF", "920 页 / 7.49 MB"), ("EPUB", "0.63 MB")]
+        with mock.patch.object(self.tui.actions, "artifact_sizes", return_value=sizes):
+            out = self.run_with(["  .. to_pdf"])
+        # the padding is by character count, so assert the content, not the column
+        self.assertIn("标准版 PDF", out)
+        self.assertIn("920 页 / 7.49 MB", out)
+        self.assertIn("0.63 MB", out)
+
     def test_a_failed_run_says_which_artifact_failed(self):
         def fake(action, label, force=False, on_progress=None):
             return self.tui.menu.Outcome(

@@ -311,6 +311,53 @@ class DeliverAllTest(unittest.TestCase):
         self.assertIn("deliver failed", text)
 
 
+class ArtifactSizesTest(unittest.TestCase):
+    """What the run produced, in pages and megabytes."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.actions = _fixture.load_module(self.root, "actions")
+
+    def put(self, name: str, size: int) -> str:
+        path = self.actions._config.dist(name)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "wb") as handle:
+            handle.write(b"x" * size)
+        return path
+
+    def test_only_the_files_that_exist_are_listed(self):
+        # the fixture book's merged name is its own: take the path from the config
+        path = self.actions._config.merged_md()
+        with open(path, "wb") as handle:
+            handle.write(b"x" * 1024)
+        labels = [label for label, _detail in self.actions.artifact_sizes()]
+        self.assertEqual(labels, ["Markdown"])
+
+    def test_a_pdf_reports_its_pages_and_size(self):
+        from pypdf import PdfWriter
+
+        path = self.actions._config.merged_pdf()
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        writer = PdfWriter()
+        for _ in range(3):
+            writer.add_blank_page(width=595, height=842)
+        with open(path, "wb") as handle:
+            writer.write(handle)
+        detail = dict(self.actions.artifact_sizes())["标准版 PDF"]
+        self.assertIn("3 页", detail)
+        self.assertIn("MB", detail)
+
+    def test_a_damaged_pdf_reports_no_pages(self):
+        path = self.actions._config.merged_pdf()
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "wb") as handle:
+            handle.write(b"not a pdf")
+        detail = dict(self.actions.artifact_sizes())["标准版 PDF"]
+        self.assertNotIn("页", detail)
+
+
 class HeartbeatTest(unittest.TestCase):
     """A silent child still reports that it is working."""
 

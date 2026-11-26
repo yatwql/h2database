@@ -410,6 +410,10 @@ def _run_with_progress(action: str, label: str, force: bool) -> menu.Outcome:
         summary = f'完成 {count} 份产物' if count else '完成'
         sys.stdout.write(_c(f'   ✅ {summary}，用时 {_duration(outcome.elapsed)}\n',
                             PALETTE['value_ok']))
+        if count:
+            # what the operator actually got: pages and megabytes, one line each
+            for label, detail in actions.artifact_sizes():
+                sys.stdout.write(_c(f'      {label:<10} {detail}\n', PALETTE['hint']))
     else:
         where = menu.short_artifacts(action) or label
         sys.stdout.write(_c(f'   ❌ 失败：{where}（退出码 {outcome.code}），'
