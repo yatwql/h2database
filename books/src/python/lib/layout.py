@@ -48,7 +48,7 @@ DEFAULTS = {
     # prose characters per line on paper — the unit the adaptive solver measures, so
     # a CJK glyph counts one. A printed page is taken in at once, so it may carry a
     # slightly longer line than the screen does.
-    'layout_print_chars_per_line': 20,
+    'layout_print_chars_per_line': 22,
     # the band the reading measure must land in, in em; outside it the gate fails
     'layout_chars_per_line_min': 36,
     'layout_chars_per_line_max': 46,

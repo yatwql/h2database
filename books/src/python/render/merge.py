@@ -45,10 +45,34 @@ output = _config.merged_md()
 
 _fsutil.ensure_dir(output)
 
+# The exercise-type markers are emoji, and no embeddable text font carries them:
+# Chromium writes those glyphs as Type3 procedures (12 objects in the PDF) and an EPUB
+# reader without an emoji font draws a box. The manuscript keeps the emoji — the author
+# writes and reviews them in an editor — and the *delivery* copy says the same thing in
+# words, so every export agrees and the PDF has no fallback face to draw.
+TYPE_MARKS = {'🟢': '【理解】', '🔵': '【分析】', '🟠': '【动手】'}
+
+
+# Circled digits (①..⑳) are the second glyph class with no embeddable coverage: they
+# sit outside the CJK fallback's cmap, so Chromium draws them with its last-resort face
+# and writes Type3 procedures (11 more objects). The derived copy says `(1)` instead, in
+# the same place the emoji become words, so the manuscript keeps its typography.
+CIRCLED = {chr(0x2460 + i): f'({i + 1})' for i in range(20)}
+
+
+def plain_type_marks(text: str) -> str:
+    """Replace the emoji markers and circled digits with text every font has."""
+    for emoji, label in TYPE_MARKS.items():
+        text = text.replace(emoji, label)
+    for circled, plain in CIRCLED.items():
+        text = text.replace(circled, plain)
+    return text
+
+
 total_lines = 0
 parts: list[str] = []
 for ch_path in chapters:
-    content = _fsutil.read_text(ch_path)
+    content = plain_type_marks(_fsutil.read_text(ch_path))
     parts.append(content)
     if not content.endswith('\n'):
         parts.append('\n')
