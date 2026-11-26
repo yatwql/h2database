@@ -347,7 +347,11 @@ STEP_ARTIFACT = {
 }
 STEP_START = re.compile(r'^\s*\.\.\s+(\w+)\s*$')
 STEP_OK = re.compile(r'^\s*ok\s+(\w+)\s+\(([\d.]+)s\)\s*$')
+STEP_FAIL = re.compile(r'^\s*FAIL\s+(\w+)\s+\(([^)]*)\)\s*$')
 PHASE_LINE = re.compile(r'^=== make (\w+): (\d+) step')
+# Detail worth a line in a terminal: what the renderer produced, and warnings. The
+# rest of the child's output (per-file lines, resource counts) is for the log file.
+DETAIL_LINE = re.compile(r'^\s*(?:Rendered|EPUB|Size|TOC links|WARN|\[WARN\]|\S+：)')
 
 
 def _stage_text(line: str) -> str:
@@ -363,6 +367,9 @@ def _stage_text(line: str) -> str:
     done = STEP_OK.match(line)
     if done and done.group(1) in STEP_ARTIFACT:
         return f'{STEP_ARTIFACT[done.group(1)]}：完成（{done.group(2)}s）'
+    failed = STEP_FAIL.match(line)
+    if failed and failed.group(1) in STEP_ARTIFACT:
+        return f'{STEP_ARTIFACT[failed.group(1)]}：失败（{failed.group(2)}）'
     phase = PHASE_LINE.match(line)
     if phase:
         labels = {'build': '构建', 'deliver': '交付', 'print': '印刷版',
@@ -370,7 +377,10 @@ def _stage_text(line: str) -> str:
         label = labels.get(phase.group(1), phase.group(1))
         return f'{label}：{phase.group(2)} 步'
     match = LOG_LINE.match(line)
-    return (match.group(1) if match else line).strip()
+    text = (match.group(1) if match else line).strip()
+    # an untranslated line is either a detail worth seeing or developer noise; the
+    # log file keeps all of it, the terminal gets the first kind only
+    return text if DETAIL_LINE.match(text) else ''
 
 
 def _run_with_progress(action: str, label: str, force: bool) -> menu.Outcome:
@@ -394,7 +404,18 @@ def _run_with_progress(action: str, label: str, force: bool) -> menu.Outcome:
         sys.stdout.write(f'   [{stamp:>5}] {_c(text[:100], PALETTE["hint"])}\n')
         sys.stdout.flush()
 
-    return menu.run_report(action, label, force=force, on_progress=show)
+    outcome = menu.run_report(action, label, force=force, on_progress=show)
+    count = len(menu.ORDERED_ARTIFACTS.get(action, ()))
+    if outcome.code == 0:
+        summary = f'完成 {count} 份产物' if count else '完成'
+        sys.stdout.write(_c(f'   ✅ {summary}，用时 {_duration(outcome.elapsed)}\n',
+                            PALETTE['value_ok']))
+    else:
+        where = menu.short_artifacts(action) or label
+        sys.stdout.write(_c(f'   ❌ 失败：{where}（退出码 {outcome.code}），'
+                            f'用时 {_duration(outcome.elapsed)}\n', PALETTE['warn']))
+    sys.stdout.flush()
+    return outcome
 
 
 def edit_setting(key: str, reader=input) -> str:

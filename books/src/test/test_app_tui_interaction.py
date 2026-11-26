@@ -679,19 +679,44 @@ class ProgressLinesTest(unittest.TestCase):
         return buffer.getvalue()
 
     def test_a_repeated_stage_is_printed_once(self):
-        out = self.run_with(
-            ["2026-01-01 00:00:00 INFO x 阶段一", "2026-01-01 00:00:01 INFO x 阶段一"]
-        )
-        self.assertEqual(out.count("阶段一"), 1)
+        out = self.run_with(["  .. to_pdf", "  .. to_pdf"])
+        self.assertEqual(out.count("标准版 PDF：开始"), 1)
 
     def test_a_blank_line_is_ignored(self):
-        out = self.run_with(["   ", "阶段二"])
-        self.assertEqual(out.strip().count("阶段二"), 1)
+        out = self.run_with(["   ", "  .. to_pdf"])
+        self.assertEqual(out.strip().count("标准版 PDF：开始"), 1)
 
     def test_a_log_line_loses_its_timestamp(self):
-        out = self.run_with(["2026-01-01 00:00:00 INFO x 阶段三"])
+        out = self.run_with(["2026-01-01 00:00:00 INFO x Rendered 20 chapter part(s)"])
         self.assertNotIn("2026-01-01", out)
-        self.assertIn("阶段三", out)
+        self.assertIn("Rendered 20 chapter part(s)", out)
+
+    def test_a_failure_closes_the_artifact_line(self):
+        out = self.run_with(["  .. to_pdf", "  FAIL to_pdf (rc=1)"])
+        self.assertIn("标准版 PDF：开始", out)
+        self.assertIn("标准版 PDF：失败（rc=1）", out)
+
+    def test_developer_detail_stays_out_of_the_terminal(self):
+        out = self.run_with(["h2-source-code-analysis.md   2.34 MB   2026-11-26"])
+        self.assertNotIn("2.34 MB", out)
+
+    def test_the_run_ends_with_one_verdict_line(self):
+        out = self.run_with(["  .. to_pdf"])
+        self.assertIn("✅ 完成 2 份产物", out)
+
+    def test_a_failed_run_says_which_artifact_failed(self):
+        def fake(action, label, force=False, on_progress=None):
+            return self.tui.menu.Outcome(
+                action=action, label=label, code=1, output_lines=1, tail="", elapsed=2.0
+            )
+
+        buffer = io.StringIO()
+        with (
+            mock.patch.object(self.tui.menu, "run_report", side_effect=fake),
+            redirect_stdout(buffer),
+        ):
+            self.tui._run_with_progress("build", "构建", False)
+        self.assertIn("❌ 失败：Markdown 与 HTML（退出码 1）", buffer.getvalue())
 
 
 
