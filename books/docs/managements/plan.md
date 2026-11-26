@@ -4,14 +4,15 @@
 > 版本：v0.2-dev
 > 定位：在办事项的**时机档与逐项验收**——每项现状 / 动作 / 验收 / 事实位只在这里；
 > 不记设计细节（看 `technical.md`），也不存问题台账（看 `review-findings.md`）。
-> **编号源**：`plan-next = 14`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-13，
+> **编号源**：`plan-next = 18`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-17，
 > 递增保证唯一，归档不回收。编号与 `review-findings.md` 的 `rf-*` 是两套，互不占用）
 
 ---
 
 ## 概述
 
-在办 4 项：P2 1 项（**plan-4**）、P3 3 项（**plan-6**、**plan-12**、**plan-13**）。
+在办 8 项：P2 1 项（**plan-4**）、P3 7 项（**plan-6**、**plan-12**、**plan-13**、
+**plan-14**、**plan-15**、**plan-16**、**plan-17**）。
 单项的范围、验收与事实位只在本文维护；系统怎么搭见 `technical.md`，怎么验证见
 `testplan.md`。
 
@@ -85,6 +86,51 @@ chapters.py`，填好 `book.toml [chapters.packages]` 后跑 `make.py check`。
 `readability` 的结论与改动前一致（指标仍在区间内）；EPUB 窄屏下表格不溢出。
 **事实位**：设计与计划在 `docs/plan/tabular-comparisons/design.md` 与 `docs/plan/tabular-comparisons/plan.md`；
 表格体例在 `docs/manuals/how-to-write.md`，表格渲染与校验在 `render/to_html.py` 与交付校验两步。
+
+#### `plan-14` 编辑风格档（元素集合与密度）
+
+**现状**：优秀技术书的要素（学习目标、前置知识、要点回顾、常见误区、代码清单编号、术语中英对照、
+提示类区块、图表并重）只有四项被 `[sections]` 强制，其余靠自觉；本书实测提示类 2 条、代码标注 0 处、
+表格 3 处、学习目标 3/14 章。
+**动作**：按 `docs/plan/editorial-profile/plan.md` 分阶段推进（配置与量化 → 补内容 → 其余元素）；
+新增书级编辑配置声明「哪些元素必选、标签叫什么、下限多少」，判据只读配置，三档预设（手册 / 教程 / 实战）。
+**验收**：每个元素都有能红的判据；本书三档判据全绿；换档只改配置即可通过。
+
+**事实位**：设计与计划在 `docs/plan/editorial-profile/design.md` 与 `docs/plan/editorial-profile/plan.md`；
+段落契约在 `data/book/book.toml [sections]`，标签词表在 `data/language/`，判据实现进 `src/python/audit/`。
+
+#### `plan-15` 依据化（claims 判据与三类事实块）
+
+**现状**：`source_refs` 只校验已写出的坐标是否过期，不检查强断言是否有依据；分析器只抽包/类型/
+API/依赖/坐标，失败路径、不变量、调用链没有产出。
+**动作**：按 `docs/plan/evidence-and-claims/plan.md` 分阶段推进（claims 判据 → `failure`/`invariants`
+块 → `paths` 块）；句式词表进语言包，抽取按语言适配器实现。
+**验收**：claims 判据能红且本书基线可复现；两块新事实块能在正文被引用；路径首尾坐标可解析，断链处显式标注。
+
+**事实位**：设计与计划在 `docs/plan/evidence-and-claims/design.md` 与 `docs/plan/evidence-and-claims/plan.md`；
+事实块机制在 `src/python/ingest/factblocks.py`，坐标解析在 `src/python/audit/source_refs.py`。
+
+#### `plan-16` LLM 契约起草与自评审
+
+**现状**：LLM 只起草导读与小节小结，输入是包摘要，输出没有任何可核验约束，写多了风险就大。
+**动作**：按 `docs/plan/llm-contract-drafting/plan.md` 分阶段推进（台账与契约骨架 → 学习目标/要点回顾/
+代码标注解释 → 常见误区与自评审）；每次调用记录 prompt 摘要、响应哈希与配置指纹。
+**验收**：模型不得引入事实块之外的数字、不得增删标注编号；每个任务产出全部过判据；人工抽查无编造。
+
+**事实位**：设计与计划在 `docs/plan/llm-contract-drafting/design.md` 与 `docs/plan/llm-contract-drafting/plan.md`；
+调用面在 `src/python/ingest/chapters.py`，provider 配置在 `data/config/`。
+
+#### `plan-17` 出炉收口（均衡、印刷密度、图示、索引）
+
+**现状**：四个已量出的具体缺口——章节 max/min 127.8（目标 ≤2.5）、印刷版 944 页反而多于标准版 920 页、
+5 处 ASCII 框线角字符不配对、索引 209 条与跨章引用 30 处偏薄。
+**动作**：按 `docs/plan/book-quality-closeout/plan.md` 分四项独立推进（拆章并重编号 → 调纸面阅读度量 →
+修框线 → 补索引与交叉引用），每项独立提交。
+**验收**：`balance.py` 比值降到 ≤2.5；`make.py print` 全绿且印刷版比标准版少 5% 页数以上；
+`readability.py` 无框线告警；索引与交叉引用密度达标且可达性判据绿。
+
+**事实位**：设计与计划在 `docs/plan/book-quality-closeout/design.md` 与 `docs/plan/book-quality-closeout/plan.md`；
+章节映射在 `data/book/book.toml`，重编号在 `src/python/manuscript/renumber.py`，判据在 `src/python/audit/`。
 
 ### P4 — 先决门槛未过，暂缓
 
