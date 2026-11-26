@@ -10,6 +10,7 @@ import sys
 import tempfile
 import unittest
 from contextlib import redirect_stdout
+from unittest import mock
 
 import _fixture
 from pypdf import PdfReader, PdfWriter
@@ -291,6 +292,53 @@ class TocLinkInjectionTest(unittest.TestCase):
         self.assertIn("cannot read", str(caught.exception))
         self.assertEqual(getattr(caught.exception, "exit_code", None), 1)
 
+    def test_a_page_without_annotations_is_left_alone(self):
+        make_pdf(self.pdf)
+        reader = PdfReader(self.pdf)
+        self.assertEqual(self.module._drop_targetless_links(reader), 0)
+
+    def test_a_page_that_cannot_be_read_is_skipped(self):
+        class Broken:
+            def get(self, _key, *_args):
+                raise ValueError("malformed page")
+
+        reader = mock.Mock(pages=[Broken()])
+        self.assertEqual(self.module._drop_targetless_links(reader), 0)
+
+    def test_a_comment_annotation_is_not_dropped(self):
+        from pypdf import PdfWriter
+
+        writer = PdfWriter()
+        writer.add_blank_page(width=595, height=842)
+        note = DictionaryObject({NameObject("/Subtype"): NameObject("/Text")})
+        writer.pages[0][NameObject("/Annots")] = ArrayObject([writer._add_object(note)])
+        buffer = io.BytesIO()
+        writer.write(buffer)
+        buffer.seek(0)
+        reader = PdfReader(buffer)
+        self.assertEqual(self.module._drop_targetless_links(reader), 0)
+        annots = reader.pages[0]["/Annots"]
+        assert isinstance(annots, ArrayObject)
+        self.assertEqual(len(annots), 1)
+
+    def test_add_links_reports_the_rectangles_it_removed(self):
+        from pypdf import PdfWriter
+
+        make_pdf(self.pdf)
+        writer = PdfWriter()
+        writer.append(str(self.pdf))
+        page = writer.pages[0]
+        dead = DictionaryObject({NameObject("/Subtype"): NameObject("/Link")})
+        page[NameObject("/Annots")] = ArrayObject([writer._add_object(dead)])
+        buffer = io.BytesIO()
+        writer.write(buffer)
+        with open(self.pdf, "wb") as fh:
+            fh.write(buffer.getvalue())
+        out = io.StringIO()
+        with redirect_stdout(out):
+            self.module.add_links(self.pdf, self.html, toc_links=[])
+        self.assertIn("移除无目标的链接框: 1", out.getvalue())
+
     def test_an_empty_manifest_still_produces_a_pdf(self):
         make_pdf(self.pdf)
         self.module.add_links(self.pdf, self.html, toc_links=[])
@@ -298,6 +346,31 @@ class TocLinkInjectionTest(unittest.TestCase):
         self.assertEqual(len(reader.pages), 2)
         self.assertFalse(any(page.get("/Annots") for page in reader.pages))
         self.assertFalse(os.path.exists(self.pdf + ".tmp"))
+
+    def test_a_link_rectangle_without_a_destination_is_dropped(self):
+        """The split renderer leaves TOC rectangles with no /Dest to point at."""
+        from pypdf import PdfWriter
+
+        writer = PdfWriter()
+        writer.add_blank_page(width=595, height=842)
+        page = writer.pages[0]
+        dead = DictionaryObject({NameObject("/Subtype"): NameObject("/Link")})
+        alive = DictionaryObject({NameObject("/Subtype"): NameObject("/Link"),
+                                  NameObject("/Dest"): ArrayObject([])})
+        page[NameObject("/Annots")] = ArrayObject([
+            writer._add_object(dead), writer._add_object(alive)])
+        buffer = io.BytesIO()
+        writer.write(buffer)
+        buffer.seek(0)
+        reader = PdfReader(buffer)
+        removed = self.module._drop_targetless_links(reader)
+        self.assertEqual(removed, 1)
+        annots = reader.pages[0]["/Annots"]
+        assert isinstance(annots, ArrayObject)
+        self.assertEqual(len(annots), 1)
+        kept = annots[0]
+        assert not isinstance(kept, ArrayObject)
+        self.assertIn("/Dest", kept.get_object())
 
     def test_the_toc_is_read_from_the_html_when_none_is_passed(self):
         make_pdf(self.pdf, titles=[("第一章", 0), ("第二章", 1)])

@@ -23,12 +23,9 @@ from lib import _config, _errors
 from playwright.sync_api import sync_playwright
 from pypdf import PdfReader, PdfWriter
 from pypdf.annotations import Link
-from pypdf.generic import NameObject, TextStringObject
+from pypdf.generic import ArrayObject, NameObject, TextStringObject
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-HTML_PATH = Path(_config.merged_html())
-PDF_PATH = Path(_config.merged_pdf())
-TMP_PATH = PDF_PATH.with_suffix(".pdf.tmp")
 VIEWPORT_WIDTH = 794.0
 VIEWPORT_HEIGHT = 1123.0
 
@@ -52,7 +49,7 @@ def collect_outline(reader: PdfReader) -> list[tuple[str, int]]:
 
 
 def get_toc_links(html_path: Path | None = None) -> list[dict]:
-    html_path = Path(html_path) if html_path else HTML_PATH
+    html_path = Path(html_path) if html_path else Path(_config.merged_html())
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"]
@@ -127,6 +124,36 @@ def _annotation_box(
     return float(x0), float(y0), float(x1), float(y1)
 
 
+def _drop_targetless_links(reader) -> int:
+    """Remove link rectangles Chromium wrote without a destination.
+
+    The split renderer stitches per-chapter PDFs, so a TOC entry that points into
+    another part arrives as a clickable rectangle with neither /Dest nor /A. Left
+    in place they pile up beside the annotations this step adds (975-page print
+    edition: 647 dead + 644 real).
+    """
+    removed = 0
+    for page in reader.pages:
+        try:
+            annots = page.get('/Annots')
+        except Exception:
+            continue
+        if not annots:
+            continue
+        keep = []
+        for ref in annots:
+            obj = ref.get_object()
+            # key presence, not truthiness: an empty /Dest array is still a target
+            if obj.get('/Subtype') == '/Link' and '/Dest' not in obj \
+                    and '/A' not in obj:
+                removed += 1
+                continue
+            keep.append(ref)
+        if len(keep) != len(annots):
+            page[NameObject('/Annots')] = ArrayObject(keep)
+    return removed
+
+
 def _add_annotations(writer, reader, toc_links, outline_entries) -> int:
     """One link annotation per printed TOC entry; returns how many were added."""
     page_width = float(reader.pages[0].mediabox.width)
@@ -156,8 +183,9 @@ def add_links(
     tmp_path: Path | None = None,
     toc_links: list[dict] | None = None,
 ) -> None:
-    html_path = Path(html_path) if html_path else HTML_PATH
-    pdf_path = Path(pdf_path) if pdf_path else PDF_PATH
+    # resolved when the step runs: the print edition passes its own pair
+    html_path = Path(html_path) if html_path else Path(_config.merged_html())
+    pdf_path = Path(pdf_path) if pdf_path else Path(_config.merged_pdf())
     tmp_path = Path(tmp_path) if tmp_path else pdf_path.with_suffix(".pdf.tmp")
     _require_inputs(html_path, pdf_path)
 
@@ -182,6 +210,9 @@ def add_links(
             )
 
     print(f"TOC links to add: {len(toc_links)} / {len(outline_entries)} outline entries")
+    dead = _drop_targetless_links(reader)
+    if dead:
+        print(f"  移除无目标的链接框: {dead}")
 
     writer = PdfWriter()
     # Use append() which preserves outlines (clone_document_from_reader may lose them)

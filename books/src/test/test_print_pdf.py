@@ -128,6 +128,7 @@ class PrintEditionTest(unittest.TestCase):
         self.root = _fixture.build_book(self.tmp.name)
         self.module = _fixture.load_module(self.root, "print_pdf")
         self.profile = _fixture.load_module(self.root, "print_profile")
+        self.layout = _fixture.load_module(self.root, "layout")
         self.html = os.path.join(self.tmp.name, "book.html")
         self.pdf = os.path.join(self.tmp.name, "print.pdf")
         with open(self.html, "w", encoding="utf-8") as handle:
@@ -168,7 +169,7 @@ class PrintEditionTest(unittest.TestCase):
     def test_build_renders_through_the_splitter(self):
         page = SplitPage(self.pdf, self.parts, self.headings)
         with redirect_stdout(io.StringIO()):
-            count = self.module.build(self.html, self.pdf, fake_engine(page))
+            count = self.module.build(self.html, self.pdf, fake_engine(page), linker=None)
         self.assertEqual(count, 3)  # front matter + one page per chapter part
         self.assertEqual(page.viewport, {"width": 794, "height": 1123})
         self.assertTrue(page.pdf_kwargs["prefer_css_page_size"])
@@ -188,10 +189,32 @@ class PrintEditionTest(unittest.TestCase):
             mock.patch.object(self.module.pdf_split, "render_html", side_effect=capture),
             redirect_stdout(io.StringIO()),
         ):
-            count = self.module.build(self.html, self.pdf)
+            count = self.module.build(self.html, self.pdf, linker=None)
         self.assertEqual(count, 3)
         self.assertIn("print-grade-css", seen["html"])
         self.assertFalse(os.path.exists(seen["path"]))
+
+    def test_the_printed_toc_gets_its_link_targets_stamped(self):
+        """Chromium's split render leaves TOC links without destinations."""
+        seen: dict[str, object] = {}
+
+        def capture(path: str, _target: str, **_kwargs) -> int:
+            seen["html"] = path
+            return 3
+
+        def linker(**kwargs) -> None:
+            seen["pdf"] = str(kwargs["pdf_path"])
+            seen["linker_html"] = str(kwargs["html_path"])
+            seen["html_existed"] = os.path.exists(kwargs["html_path"])
+
+        with (
+            mock.patch.object(self.module.pdf_split, "render_html", side_effect=capture),
+            redirect_stdout(io.StringIO()),
+        ):
+            self.module.build(self.html, self.pdf, linker=linker)
+        self.assertEqual(seen["pdf"], self.pdf)
+        self.assertEqual(seen["linker_html"], seen["html"])
+        self.assertTrue(seen["html_existed"])
 
     def test_a_missing_source_is_reported_not_raised(self):
         with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
