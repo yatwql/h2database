@@ -11,7 +11,7 @@
 
 ## 概述
 
-在办 8 项：P1 1 项（**plan-17**）、P3 6 项（**plan-6**、**plan-12**、**plan-13**、**plan-14**、**plan-15**、**plan-16**）、P4 1 项（**plan-4**）。
+在办 8 项：P1 1 项（**plan-17**）、P2 3 项（**plan-13**、**plan-14**、**plan-16**）、P3 3 项（**plan-6**、**plan-12**、**plan-15**）、P4 1 项（**plan-4**）。
 单项的范围、验收与事实位只在本文维护；系统怎么搭见 `technical.md`，怎么验证见
 `testplan.md`。
 
@@ -45,7 +45,40 @@
 
 ### P2 — 下一阶段就绪（条件满足即开工）
 
-入选标准：价值明确、成本可控，前置条件可判定。当前无待办项。
+入选标准：价值明确、成本可控，前置条件可判定。
+
+#### `plan-13` 对比类论述表格化
+
+**现状**：附录 B 的版本差异与第 7 章的 Statement/PreparedStatement 对照已改为 3 列表（试点完成），
+门禁与三个出口均已验证；其余候选（升级与回滚对照、附录 A 案例链路对照）仍是段落。
+**动作**：按 `docs/plan/tabular-comparisons/plan.md` 继续阶段 3：把剩余候选逐一表格化，每处独立提交，
+每次改动后跑全量门禁与一次 `deliver`/`print` 目视检查 EPUB 窄屏排布。
+**验收**：每处改写前后事实逐条对应、无新增断言；交付校验（PDF、EPUB 两侧）全绿；`content_depth`、
+`readability` 的结论与改动前一致（指标仍在区间内）；EPUB 窄屏下表格不溢出。
+**事实位**：设计与计划在 `docs/plan/tabular-comparisons/design.md` 与 `docs/plan/tabular-comparisons/plan.md`；
+表格体例在 `docs/manuals/how-to-write.md`，表格渲染与校验在 `render/to_html.py` 与交付校验两步。
+
+#### `plan-14` 编辑风格档（元素集合与密度）
+
+**现状**：优秀技术书的要素（学习目标、前置知识、要点回顾、常见误区、代码清单编号、术语中英对照、
+提示类区块、图表并重）只有四项被 `[sections]` 强制，其余靠自觉；本书实测提示类 2 条、代码标注 0 处、
+表格 3 处、学习目标 3/14 章。
+**动作**：按 `docs/plan/editorial-profile/plan.md` 分阶段推进（配置与量化 → 补内容 → 其余元素）；
+新增书级编辑配置声明「哪些元素必选、标签叫什么、下限多少」，判据只读配置，三档预设（手册 / 教程 / 实战）。
+**验收**：每个元素都有能红的判据；本书三档判据全绿；换档只改配置即可通过。
+
+**事实位**：设计与计划在 `docs/plan/editorial-profile/design.md` 与 `docs/plan/editorial-profile/plan.md`；
+段落契约在 `data/book/book.toml [sections]`，标签词表在 `data/language/`，判据实现进 `src/python/audit/`。
+
+#### `plan-16` LLM 契约起草与自评审
+
+**现状**：LLM 只起草导读与小节小结，输入是包摘要，输出没有任何可核验约束，写多了风险就大。
+**动作**：按 `docs/plan/llm-contract-drafting/plan.md` 分阶段推进（台账与契约骨架 → 学习目标/要点回顾/
+代码标注解释 → 常见误区与自评审）；每次调用记录 prompt 摘要、响应哈希与配置指纹。
+**验收**：模型不得引入事实块之外的数字、不得增删标注编号；每个任务产出全部过判据；人工抽查无编造。
+
+**事实位**：设计与计划在 `docs/plan/llm-contract-drafting/design.md` 与 `docs/plan/llm-contract-drafting/plan.md`；
+调用面在 `src/python/ingest/chapters.py`，provider 配置在 `data/config/`。
 
 ### P3 — 预期实施，有空时安排
 
@@ -74,29 +107,6 @@ chapters.py`，填好 `book.toml [chapters.packages]` 后跑 `make.py check`。
 分析器契约 `ingest/languages/_base.py`，注册与探测 `ingest/languages/__init__.py`，
 后缀表 `data/config/base.json [sources]`，坐标核验 `audit/source_refs.py`。
 
-#### `plan-13` 对比类论述表格化
-
-**现状**：附录 B 的版本差异与第 7 章的 Statement/PreparedStatement 对照已改为 3 列表（试点完成），
-门禁与三个出口均已验证；其余候选（升级与回滚对照、附录 A 案例链路对照）仍是段落。
-**动作**：按 `docs/plan/tabular-comparisons/plan.md` 继续阶段 3：把剩余候选逐一表格化，每处独立提交，
-每次改动后跑全量门禁与一次 `deliver`/`print` 目视检查 EPUB 窄屏排布。
-**验收**：每处改写前后事实逐条对应、无新增断言；交付校验（PDF、EPUB 两侧）全绿；`content_depth`、
-`readability` 的结论与改动前一致（指标仍在区间内）；EPUB 窄屏下表格不溢出。
-**事实位**：设计与计划在 `docs/plan/tabular-comparisons/design.md` 与 `docs/plan/tabular-comparisons/plan.md`；
-表格体例在 `docs/manuals/how-to-write.md`，表格渲染与校验在 `render/to_html.py` 与交付校验两步。
-
-#### `plan-14` 编辑风格档（元素集合与密度）
-
-**现状**：优秀技术书的要素（学习目标、前置知识、要点回顾、常见误区、代码清单编号、术语中英对照、
-提示类区块、图表并重）只有四项被 `[sections]` 强制，其余靠自觉；本书实测提示类 2 条、代码标注 0 处、
-表格 3 处、学习目标 3/14 章。
-**动作**：按 `docs/plan/editorial-profile/plan.md` 分阶段推进（配置与量化 → 补内容 → 其余元素）；
-新增书级编辑配置声明「哪些元素必选、标签叫什么、下限多少」，判据只读配置，三档预设（手册 / 教程 / 实战）。
-**验收**：每个元素都有能红的判据；本书三档判据全绿；换档只改配置即可通过。
-
-**事实位**：设计与计划在 `docs/plan/editorial-profile/design.md` 与 `docs/plan/editorial-profile/plan.md`；
-段落契约在 `data/book/book.toml [sections]`，标签词表在 `data/language/`，判据实现进 `src/python/audit/`。
-
 #### `plan-15` 依据化（claims 判据与三类事实块）
 
 **现状**：`source_refs` 只校验已写出的坐标是否过期，不检查强断言是否有依据；分析器只抽包/类型/
@@ -107,16 +117,6 @@ API/依赖/坐标，失败路径、不变量、调用链没有产出。
 
 **事实位**：设计与计划在 `docs/plan/evidence-and-claims/design.md` 与 `docs/plan/evidence-and-claims/plan.md`；
 事实块机制在 `src/python/ingest/factblocks.py`，坐标解析在 `src/python/audit/source_refs.py`。
-
-#### `plan-16` LLM 契约起草与自评审
-
-**现状**：LLM 只起草导读与小节小结，输入是包摘要，输出没有任何可核验约束，写多了风险就大。
-**动作**：按 `docs/plan/llm-contract-drafting/plan.md` 分阶段推进（台账与契约骨架 → 学习目标/要点回顾/
-代码标注解释 → 常见误区与自评审）；每次调用记录 prompt 摘要、响应哈希与配置指纹。
-**验收**：模型不得引入事实块之外的数字、不得增删标注编号；每个任务产出全部过判据；人工抽查无编造。
-
-**事实位**：设计与计划在 `docs/plan/llm-contract-drafting/design.md` 与 `docs/plan/llm-contract-drafting/plan.md`；
-调用面在 `src/python/ingest/chapters.py`，provider 配置在 `data/config/`。
 
 ### P4 — 先决门槛未过，暂缓
 
