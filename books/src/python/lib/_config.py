@@ -361,6 +361,10 @@ class Config(BookVersions):
         """Directory holding the files that belong to this book alone."""
         return self._rel("book", "data/book")
 
+    def book_subdir(self, rel: str) -> str:
+        """A book-relative directory (policy value), as an absolute path."""
+        return os.path.join(self.root, rel)
+
     def tmp_dir(self) -> str:
         """Scratch directory under the book root (gitignored, regenerated)."""
         return self._rel("tmp", "data/tmp")
@@ -406,6 +410,10 @@ class Config(BookVersions):
     def manuscript(self, *parts: str) -> str:
         """Absolute path inside manuscript/."""
         return os.path.join(self.manuscript_dir, *parts)
+
+    def manuscript_rel(self, path: str) -> str:
+        """``path`` relative to manuscript/, with forward slashes."""
+        return os.path.relpath(path, self.manuscript_dir).replace(os.sep, "/")
 
     def dist(self, name: str) -> str:
         """Absolute path to a delivery artifact."""

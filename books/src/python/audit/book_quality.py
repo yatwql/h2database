@@ -30,11 +30,6 @@ LADDER = ("模块版图", "核心类型", "关键 API 与源码坐标", "阅读�
 EXERCISE_RE = re.compile(r"^\*\*\d+\.\s*([🟢🔵🟠])(★+)", re.MULTILINE)
 
 
-def coord_count(text: str) -> int:
-    """Source coordinates in the text, for the suffixes this book declares."""
-    return len(_mdutil.source_ref_re(tuple(_config.source_suffixes())).findall(text))
-
-
 H2_RE = re.compile(r"^## \d+\.(\d+)\s+(.+)$", re.MULTILINE)
 
 
@@ -45,11 +40,6 @@ def sent_split():
 
 
 NORMALIZE = re.compile(r"[^\u4e00-\u9fffA-Za-z0-9]")
-
-
-def _files() -> list[str]:
-    """Chapters plus appendices, in the configured reading order."""
-    return _config.chapter_files(include_cover=False)
 
 
 def _sentences(text: str) -> list[str]:
@@ -71,7 +61,7 @@ def measure() -> dict:
     lines: list[str] = []
     sentences: list[str] = []
 
-    for path in _files():
+    for path in _config.chapter_files(include_cover=False):
         enabled = os.path.isfile(path)
         if not enabled:
             continue
@@ -90,7 +80,7 @@ def measure() -> dict:
         ]
         per_file[name] = {
             "lines": len(file_lines),
-            "coords": coord_count(text),
+            "coords": _mdutil.coord_count(text),
             "ladder": sum(bool(re.search(rf"## \d+\.\d+ {stage}", text)) for stage in LADDER),
             "max_table_rows": max(tables or [0]),
             "cross_refs": len(re.findall(r"详见第\d+章", text)),

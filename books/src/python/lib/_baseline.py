@@ -71,6 +71,11 @@ def load_raw(name: str) -> dict:
     return load_at(path_for(name))
 
 
+def load_accepted(path: str) -> set[str]:
+    """Accepted keys recorded at ``path``; empty when none were recorded yet."""
+    return {str(key) for key in (load_at(path).get("accepted") or [])}
+
+
 def save(name: str, keys: set[str], note: str = "") -> str:
     return save_at(path_for(name), {"accepted": sorted(keys)}, note)
 

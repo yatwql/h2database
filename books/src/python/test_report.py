@@ -62,7 +62,7 @@ def settings() -> dict:
 
 
 def reports_root() -> str:
-    return os.path.join(_config.BOOK_ROOT, settings()["dir"])
+    return _config.book_subdir(settings()["dir"])
 
 
 def latest_pointer() -> str:

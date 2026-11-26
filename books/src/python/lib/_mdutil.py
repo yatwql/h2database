@@ -10,6 +10,8 @@ from __future__ import annotations
 import functools
 import re
 
+from lib import _config
+
 _HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 _FENCE_RE = re.compile(r"^\s*```")
 _SLUG_STRIP_RE = re.compile(r"[^\w\u4e00-\u9fff\u3400-\u4dbf\s-]")
@@ -47,6 +49,11 @@ def source_ref_re(suffixes: tuple[str, ...]) -> re.Pattern[str]:
     keep counting `.java:` after the analysed tree became C or Rust.
     """
     return re.compile(r"\b(\w+)(?:" + "|".join(re.escape(x) for x in suffixes) + r"):(\d+)")
+
+
+def coord_count(text: str) -> int:
+    """Source coordinates in the text, for the suffixes this book declares."""
+    return len(source_ref_re(tuple(_config.source_suffixes())).findall(text))
 
 
 def table(headers: list[str], rows: list[list[str]], cap: int = 20) -> list[str]:

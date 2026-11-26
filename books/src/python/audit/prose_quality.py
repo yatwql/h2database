@@ -39,20 +39,10 @@ def sent_re():
 LIST_RE = re.compile(r"^\s*(?:[-*+]|\d+\.)\s+", re.MULTILINE)
 
 
-def coord_count(text: str) -> int:
-    """Source coordinates in the text, for the suffixes this book declares."""
-    return len(_mdutil.source_ref_re(tuple(_config.source_suffixes())).findall(text))
-
-
 H2_RE = re.compile(r"^## ", re.MULTILINE)
 H3_RE = re.compile(r"^### ", re.MULTILINE)
 TABLE_ROW_RE = re.compile(r"^\|", re.MULTILINE)
 NORM_RE = re.compile(r"[^\u4e00-\u9fffA-Za-z0-9]")
-
-
-def _files() -> list[str]:
-    """Chapters plus appendices, in the configured reading order."""
-    return _config.chapter_files(include_cover=False)
 
 
 def _score(value: float, good: float, bad: float, *, higher_is_better: bool = True) -> float:
@@ -141,7 +131,7 @@ def _file_metrics(path: str) -> tuple[str, dict, list[str], int]:
         "paragraphs": len(paragraphs),
         "avg_paragraph": round(sum(len(p) for p in paragraphs) / max(1, len(paragraphs)), 1),
         "bullet_ratio": round(100 * bullets / max(1, len(prose_lines)), 1),
-        "coords": coord_count(text),
+        "coords": _mdutil.coord_count(text),
         "h2": len(H2_RE.findall(text)),
         "h3": len(H3_RE.findall(text)),
         "table_rows": rows_with_cells,
@@ -187,7 +177,7 @@ def measure() -> dict:
     all_rows = 0
     bad_rows = 0
 
-    for path in _files():
+    for path in _config.chapter_files(include_cover=False):
         name, metrics, dup_keys, file_bad_rows = _file_metrics(path)
         all_rows += metrics["table_rows"]
         bad_rows += file_bad_rows

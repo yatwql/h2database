@@ -120,11 +120,7 @@ def check_book_identity() -> list[str]:
 
 
 def scripts() -> list[str]:
-    return sorted(
-        p
-        for p in glob.glob(os.path.join(PY_ROOT, "**", "*.py"), recursive=True)
-        if "__pycache__" not in p
-    )
+    return _fsutil.python_files(PY_ROOT)
 
 
 def imports_of(path: str) -> list[str]:
