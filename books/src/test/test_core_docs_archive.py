@@ -159,8 +159,6 @@ class ArchiveFlowTest(unittest.TestCase):
         self.assertEqual(len(plan.errors), 3)
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class DocsArchiveFailurePathsTest(unittest.TestCase):
@@ -292,3 +290,7 @@ class DocsArchiveEdgeCaseTest(unittest.TestCase):
         code, out = _fixture.run_inproc(self.root, "docs_archive.py", "--version", "7")
         self.assertEqual(code, 2, out[-300:])
         self.assertIn("error:", out)
+
+
+if __name__ == "__main__":
+    unittest.main()

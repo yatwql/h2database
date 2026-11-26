@@ -79,8 +79,6 @@ class TestFullDeliveryPipeline(ScriptTestBase):
         code, out = self.run_script('verify_epub.py')
         self.assertEqual(code, 0, out[-400:])
 
-if __name__ == '__main__':
-    unittest.main()
 
 class TestDeliveryScripts(ScriptTestBase):
     def setUp(self):
@@ -109,3 +107,7 @@ class TestDeliveryScripts(ScriptTestBase):
 
     # `pdf_from_html` is covered by TestFullDeliveryPipeline.test_pdf_from_html:
     # the same script, the same two assertions after the full prelude.
+
+
+if __name__ == '__main__':
+    unittest.main()

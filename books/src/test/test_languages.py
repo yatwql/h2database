@@ -298,8 +298,6 @@ class TestDigestLanguages(unittest.TestCase):
         self.assertIn("java:org.example", inventory["packages"])
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class JavaAnalyzerBranchesTest(unittest.TestCase):
@@ -347,3 +345,7 @@ class RustAnalyzerBranchesTest(unittest.TestCase):
         module = languages.get("rust").parse(path)
         self.assertEqual([unit.name for unit in module.units], ["Widget"])
         self.assertEqual(module.units[0].summary, "")
+
+
+if __name__ == "__main__":
+    unittest.main()

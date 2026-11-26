@@ -75,8 +75,6 @@ class CaptionsBaselineTest(unittest.TestCase):
         self.assertIn("TOTAL", out)
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class CaptionMissingBranchesTest(unittest.TestCase):
@@ -162,3 +160,7 @@ class CaptionMissingBranchesTest(unittest.TestCase):
         self.assertEqual(code, 0)
         saved.assert_called_once()
         self.assertIn("图注基线已更新", buffer.getvalue())
+
+
+if __name__ == "__main__":
+    unittest.main()

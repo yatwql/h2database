@@ -37,8 +37,6 @@ class TestToolchainEntryPoint(FixtureCase):
         result = _fixture.run(self.root, 'make.py', 'check', '--only', 'nope')
         self.assertNotEqual(result.returncode, 0)
 
-if __name__ == '__main__':
-    unittest.main()
 
 class TestMakeEntryPoint(ScriptTestBase):
     def test_make_doctor(self):
@@ -50,3 +48,7 @@ class TestMakeEntryPoint(ScriptTestBase):
         code, out = _fixture.run_inproc(
             self.root, 'make.py', 'build', '--only', 'cover_stats')
         self.assertEqual(code, 0, out)
+
+
+if __name__ == '__main__':
+    unittest.main()

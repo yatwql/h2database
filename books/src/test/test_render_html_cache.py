@@ -127,8 +127,6 @@ class FragmentReuseTest(unittest.TestCase):
             self.assertIn("html", json.load(fh))
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class CacheFailureTest(unittest.TestCase):
@@ -178,3 +176,7 @@ class CacheFailureTest(unittest.TestCase):
             handle.write("{}")
         with mock.patch.object(self.cache.os, "remove", side_effect=OSError("ro")):
             self.assertEqual(self.cache.prune(set()), 0)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -78,8 +78,6 @@ class PythonAnalyzerTest(unittest.TestCase):
         self.assertIn(".py", self.analyzer.suffixes)
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class PythonImportDepsTest(unittest.TestCase):
@@ -98,3 +96,7 @@ class PythonImportDepsTest(unittest.TestCase):
         self.assertEqual(module.depends_on.get("a"), 1)
         self.assertEqual(module.depends_on.get("x"), 1)
         self.assertEqual(module.depends_on.get("os"), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()

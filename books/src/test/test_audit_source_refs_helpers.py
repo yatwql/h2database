@@ -73,8 +73,6 @@ class TestSourceFreshnessHelpers(FixtureCase):
         self.assertNotEqual(a, sfc._claim_key("ch2.md", "MVMap", "open"))
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class PrefixFallbackTest(unittest.TestCase):
@@ -232,3 +230,7 @@ class SourceFreshnessErrorPaths(FixtureCase):
             mock.patch("sys.stderr", new=io.StringIO()),
         ):
             self.assertEqual(sfc.main([]), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()

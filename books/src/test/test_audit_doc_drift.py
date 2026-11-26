@@ -420,8 +420,6 @@ class ManualScopeTest(unittest.TestCase):
         self.assertEqual(self.drift.check_manual_scope(self.directory), [])
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class DriftConfigurationAndExitTest(unittest.TestCase):
@@ -472,3 +470,7 @@ class DriftConfigurationAndExitTest(unittest.TestCase):
         ):
             self.assertEqual(self.drift.main([]), 1)
         self.assertIn("src/nowhere.py", buffer.getvalue())
+
+
+if __name__ == "__main__":
+    unittest.main()

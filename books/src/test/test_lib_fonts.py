@@ -313,8 +313,6 @@ class ResolveTest(unittest.TestCase):
         self.assertNotIn("Mutated", _fonts.default_sans())
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class FontFallbackTest(unittest.TestCase):
@@ -399,3 +397,7 @@ class _NamedFace:
                 getDebugName=lambda name_id: self.family if name_id == 1 else None
             )
         raise KeyError(key)
+
+
+if __name__ == "__main__":
+    unittest.main()

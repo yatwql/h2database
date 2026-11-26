@@ -57,8 +57,6 @@ class TestExerciseParser(unittest.TestCase):
         self.assertGreater(end, 10)
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class ExerciseEdgeParserTest(unittest.TestCase):
@@ -98,3 +96,7 @@ class ExerciseEdgeParserTest(unittest.TestCase):
         lines = ("## 3.10 延伸思考\n\n```\n## 这是图里的字\n```\n\n## 3.11 延展阅读\n").splitlines()
         end = _audit_exercises.find_section_end(lines, 2)
         self.assertEqual(lines[end - 1], "## 3.11 延展阅读")
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -635,8 +635,6 @@ class ProgressLinesTest(unittest.TestCase):
         self.assertIn("阶段三", out)
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class SettingEditAndConfirmTest(unittest.TestCase):
@@ -740,3 +738,7 @@ class HandleDispatchAndNewBookTest(unittest.TestCase):
             said = self.tui.new_book(lambda _prompt="": "demo" if "书名" in _prompt else "")
         self.assertIn("新建失败", said)
         self.assertIn("denied", said)
+
+
+if __name__ == "__main__":
+    unittest.main()

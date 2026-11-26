@@ -83,8 +83,6 @@ class ProseQualitySurfacesTest(unittest.TestCase):
         self.assertIn("未达目标", buffer.getvalue())
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class ProseTableEdgesTest(unittest.TestCase):
@@ -96,3 +94,7 @@ class ProseTableEdgesTest(unittest.TestCase):
     def test_a_table_that_ends_the_text_is_still_measured(self):
         rows, _empty, _ragged = self.mod._table_metrics("| 名称 | 值 |\n| --- | --- |\n| a | 1 |")
         self.assertEqual(rows, 2)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -163,8 +163,6 @@ class ArchitectureRulesTest(unittest.TestCase):
         self.assertEqual(code, 0, out[-600:])
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class ArchitectureRuleCoverageTest(unittest.TestCase):
@@ -343,3 +341,7 @@ class ImportTimeConfigReadTest(unittest.TestCase):
                            if name not in self.ALLOWED and self.module_level_reads(modules[name]))
         self.assertEqual(offenders, [],
                          f"module-level _config read on the console entry chain: {offenders}")
+
+
+if __name__ == "__main__":
+    unittest.main()

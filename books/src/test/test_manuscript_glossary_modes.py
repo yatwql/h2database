@@ -75,8 +75,6 @@ class TestGlossaryEdgeBranches(FixtureCase):
             self.assertNotIn(f"- **{skipped}**", out)
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class TestGlossaryCoverageMode(FixtureCase):
@@ -114,3 +112,7 @@ class TestGlossaryBuilderBranches(FixtureCase):
         code, out = self.run_script("glossary.py", "--check")
         self.assertEqual(code, 0, out[-300:])
         self.assertIn("自动生成", out)
+
+
+if __name__ == "__main__":
+    unittest.main()

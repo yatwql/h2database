@@ -77,8 +77,6 @@ class ExcerptFreshnessTest(unittest.TestCase):
             self.assertEqual(self.check(), [])
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class InventoryFallbackTest(unittest.TestCase):
@@ -101,3 +99,7 @@ class InventoryFallbackTest(unittest.TestCase):
         with open(self.path, "w", encoding="utf-8") as handle:
             handle.write("{not json")
         self.assertEqual(self.depth.inventory(), {})
+
+
+if __name__ == "__main__":
+    unittest.main()

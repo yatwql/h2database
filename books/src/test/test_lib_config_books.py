@@ -345,8 +345,6 @@ class TwoBooksTest(unittest.TestCase):
         self.assertEqual(_config.chapter_names(), active.chapter_names())
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class ConfigFallbackTest(unittest.TestCase):
@@ -407,3 +405,7 @@ class ConfigFallbackTest(unittest.TestCase):
         path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
         with self.assertRaises(_config.ConfigError):
             self.config().source_roots()
+
+
+if __name__ == "__main__":
+    unittest.main()

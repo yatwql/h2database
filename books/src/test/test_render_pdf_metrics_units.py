@@ -330,8 +330,6 @@ class BoundaryTest(unittest.TestCase):
         self.assertIsNone(search.suggest())
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class WriteBackCliTest(unittest.TestCase):
@@ -415,3 +413,7 @@ class MeasureTextPdfTest(unittest.TestCase):
         # two lines set at 14pt leading: pitch and line count come from the order
         self.assertAlmostEqual(metrics["pitch_pt"], 14.0, places=1)
         self.assertEqual(metrics["lines_per_page"], 2)
+
+
+if __name__ == "__main__":
+    unittest.main()

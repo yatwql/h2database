@@ -39,8 +39,6 @@ class TestStyleAndHtmlBranches(FixtureCase):
         code, out = self.run_script('to_html.py')
         self.assertEqual(code, 0, out[-300:])
 
-if __name__ == '__main__':
-    unittest.main()
 
 class TestHtmlCoverBranches(Base):
     RICH_COVER = (
@@ -64,3 +62,7 @@ class TestHtmlCoverBranches(Base):
     def test_missing_merged_md(self):
         _code, out = self.run_script('to_html.py')
         self.assertNotIn('Traceback', out)
+
+
+if __name__ == '__main__':
+    unittest.main()

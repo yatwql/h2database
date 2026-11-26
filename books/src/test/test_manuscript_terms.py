@@ -86,8 +86,6 @@ class TestAnnotateTermsBranches(FixtureCase):
         self.assertIn('cannot read', out)
         self.assertNotIn('Traceback', out)
 
-if __name__ == '__main__':
-    unittest.main()
 
 class TestAnnotateTermsGuideBranches(Base):
     def test_chapter_without_guide_block(self):
@@ -132,3 +130,7 @@ class TestAnnotateTermsModes(ScriptTestBase):
         code, out = self.run_script('terms.py', '--check')
         self.assertEqual(code, 0, out)
         self.assertIn('No missing terms found', out)
+
+
+if __name__ == '__main__':
+    unittest.main()

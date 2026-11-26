@@ -341,8 +341,6 @@ class ReviewedBaselineTest(unittest.TestCase):
         self.assertEqual(payload["reviewed"]["by"], "阿龙")
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class ContentVolumeReportTest(unittest.TestCase):
@@ -403,3 +401,7 @@ class ContentVolumeReportTest(unittest.TestCase):
             os.path.join(self.tmp.name, "none.json"),
         )
         self.assertEqual(code, 0, out[-400:])
+
+
+if __name__ == "__main__":
+    unittest.main()

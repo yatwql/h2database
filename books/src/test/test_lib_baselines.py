@@ -81,8 +81,6 @@ class ManuscriptFileOrderTest(unittest.TestCase):
             self.assertEqual(self.mod.manuscript_files(), [existing])
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class VolumeHeadroomTest(unittest.TestCase):
@@ -109,3 +107,7 @@ class VolumeHeadroomTest(unittest.TestCase):
         path = self.baseline('{"manuscript": {"total": {"lines": 0}}}')
         with mock.patch.object(self.mod, "baseline_path", lambda: path):
             self.assertIsNone(self.mod.headroom())
+
+
+if __name__ == "__main__":
+    unittest.main()

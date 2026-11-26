@@ -195,8 +195,6 @@ class TestChannels(unittest.TestCase):
         self.assertEqual(code, 0, out[-300:])
         self.assertIn('book', out)
 
-if __name__ == '__main__':
-    unittest.main()
 
 class TestThinkingLevels(unittest.TestCase):
     """Routing may pin a thinking level per scenario/book/chapter."""
@@ -244,3 +242,7 @@ class TestThinkingLevels(unittest.TestCase):
             json.dump(payload, fh)
         with self.assertRaises(llm.LLMError):
             llm.resolve('summary')
+
+
+if __name__ == '__main__':
+    unittest.main()

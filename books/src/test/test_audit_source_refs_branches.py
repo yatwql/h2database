@@ -46,8 +46,6 @@ class TestSourceFreshnessReport(FixtureCase):
         for status in ('OK', 'OFFSET', 'ERROR'):
             self.assertIn(status, report)
 
-if __name__ == '__main__':
-    unittest.main()
 
 class TestSourceFreshnessBranches(FixtureCase):
     def test_missing_reference_and_baseline_flow(self):
@@ -66,3 +64,7 @@ class TestSourceFreshnessBranches(FixtureCase):
         code, out = self.run_script('source_refs.py', '--suggest')
         self.assertEqual(code, 0, out[-300:])
         self.assertIn('source tree not found', out)
+
+
+if __name__ == '__main__':
+    unittest.main()

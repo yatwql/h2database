@@ -170,8 +170,6 @@ class StyleSchemaTest(unittest.TestCase):
         self.assertIn("must be a template string", out)
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class StyleSchemaMessageTest(unittest.TestCase):
@@ -249,3 +247,7 @@ class StyleSchemaTemplateAndLimitTest(unittest.TestCase):
         self.assertEqual(
             self.mod._check_limits({"limits": {"prose": "80"}}), ["[limits].prose needs limit/warn"]
         )
+
+
+if __name__ == "__main__":
+    unittest.main()

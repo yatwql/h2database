@@ -91,8 +91,6 @@ class AuditFileTest(unittest.TestCase):
         self.assertEqual(report["issues"], ["ch1 缺少 ## N.X 延伸思考 小节"])
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class ExerciseIssueBranchesTest(unittest.TestCase):
@@ -195,3 +193,7 @@ class ExerciseCliModesTest(unittest.TestCase):
     def test_a_section_without_a_following_h2_runs_to_the_end(self):
         lines = ["## 1.1 延伸思考\n", "正文\n", "更多\n"]
         self.assertEqual(self.mod.find_section_end(lines, 1), len(lines) + 1)
+
+
+if __name__ == "__main__":
+    unittest.main()

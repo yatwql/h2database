@@ -335,8 +335,6 @@ class ModesAndSummaryTest(unittest.TestCase):
         self.assertTrue(info["book_root"])
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class RunnerEdgeBranchesTest(unittest.TestCase):
@@ -424,3 +422,7 @@ class RunnerEdgeBranchesTest(unittest.TestCase):
         done = _fixture.run(self.root, "check_runner.py", "--help")
         self.assertEqual(done.returncode, 0, done.stderr[-400:])
         self.assertIn("--mode", done.stdout)
+
+
+if __name__ == "__main__":
+    unittest.main()

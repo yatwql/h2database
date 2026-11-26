@@ -94,8 +94,6 @@ class StyleRulesUnitTest(unittest.TestCase):
         self.assertIn("findings", payload)
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class StyleRulesCliTest(unittest.TestCase):
@@ -162,3 +160,7 @@ class StyleRulesCliTest(unittest.TestCase):
         ):
             self.assertEqual(self.mod.main([]), 0)
         self.assertIn("风格规则通过", buffer.getvalue())
+
+
+if __name__ == "__main__":
+    unittest.main()

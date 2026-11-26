@@ -333,8 +333,6 @@ class FontEmbeddingTest(unittest.TestCase):
         self.assertEqual(self.verify.non_embedded_fonts(types.SimpleNamespace(pages=[page])), [])
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class VerifyPdfSkipAndDensityTest(PdfFixtureCase):
@@ -529,3 +527,7 @@ class FontAndLinkStructureTest(unittest.TestCase):
         name, ok, detail = report.checks[-1]
         self.assertEqual((name, ok), ("DENSITY", True))
         self.assertIn("pdf_metrics unavailable", detail)
+
+
+if __name__ == "__main__":
+    unittest.main()

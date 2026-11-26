@@ -57,8 +57,6 @@ class TestVerifyPdfErrorPaths(Base):
         _code, out = self.run_script('verify_epub.py', '--json')
         self.assertIn('"ok"', out)
 
-if __name__ == '__main__':
-    unittest.main()
 
 class TestVerifyPdfTocLinkSuccess(Base):
     @unittest.skipUnless(HAS_PYPDF, 'pypdf not installed')
@@ -91,3 +89,7 @@ class TestVerifyPdfTocLinkSuccess(Base):
         verify_pdf = _fixture.load_module(self.root, 'verify_pdf')
         self.assertEqual(verify_pdf._annotation_rect(object()), [])
         self.assertIsNone(verify_pdf._annotation_target_page(None, {'/A': {'/S': '/URI'}}))
+
+
+if __name__ == '__main__':
+    unittest.main()

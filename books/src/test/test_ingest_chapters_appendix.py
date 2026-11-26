@@ -94,8 +94,6 @@ class AppendixRenderTest(unittest.TestCase):
         self.assertNotIn("Anon", text)
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class AppendixAppendTest(unittest.TestCase):
@@ -147,3 +145,7 @@ class AppendixAppendTest(unittest.TestCase):
         self.assertEqual(outcome, "written")
         path = os.path.join(self.root, "data", "manuscript", self.file)
         self.assertIn("## 7.1 坐标", open(path, encoding="utf-8").read())
+
+
+if __name__ == "__main__":
+    unittest.main()

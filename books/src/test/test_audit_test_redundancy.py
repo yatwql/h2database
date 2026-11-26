@@ -200,8 +200,6 @@ class TestRedundancyTest(unittest.TestCase):
         self.assertEqual(code, 0, out[-600:])
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class RedundancyGateEdgesTest(unittest.TestCase):
@@ -259,3 +257,7 @@ class RedundancyGateEdgesTest(unittest.TestCase):
         ):
             self.assertEqual(self.mod.main([]), 0)
         self.assertIn("无冗余", buffer.getvalue())
+
+
+if __name__ == "__main__":
+    unittest.main()

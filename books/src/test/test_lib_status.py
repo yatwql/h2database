@@ -69,8 +69,6 @@ class ArtifactLineTest(unittest.TestCase):
             self.assertEqual(_status._pages_cached("/tmp/three.pdf", 3.0), "3 页")
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class SourceFactsTest(unittest.TestCase):
@@ -129,3 +127,7 @@ class SourceFactsTest(unittest.TestCase):
         self.assertNotIn("版本", text)
         self.assertNotIn("清单更新于", text)
         self.assertIn("    book.pdf   3 页   1 MB   2026-01-01 08:00", text)
+
+
+if __name__ == "__main__":
+    unittest.main()

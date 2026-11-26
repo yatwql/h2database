@@ -98,8 +98,6 @@ class TestEnsureDir(unittest.TestCase):
             self.assertTrue(os.path.isdir(tmp))
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class WriteFailureTest(unittest.TestCase):
@@ -165,3 +163,7 @@ class WriteFailureTest(unittest.TestCase):
         self.assertIsInstance(wrapped, io.TextIOWrapper)
         self.assertEqual(wrapped.encoding, "utf-8")
         self.assertIs(wrapped.buffer, buffer)
+
+
+if __name__ == "__main__":
+    unittest.main()

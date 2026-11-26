@@ -82,6 +82,24 @@ class TaxonomyTest(unittest.TestCase):
                                     or node.name.endswith(('Test', 'Case')),
                                     f'{name}: {node.name} does not name its subject')
 
+    def test_a_main_guard_never_precedes_a_test_definition(self):
+        """`python test_x.py` must run every case, so the guard goes last."""
+        for name in suites():
+            tree = parse_suite(name)
+            guard = None
+            for node in tree.body:
+                if (isinstance(node, ast.If) and isinstance(node.test, ast.Compare)
+                        and isinstance(node.test.left, ast.Name)
+                        and node.test.left.id == '__name__'):
+                    guard = node
+            if guard is None:
+                continue
+            later = [n.name for n in tree.body
+                     if isinstance(n, (ast.ClassDef, ast.FunctionDef))
+                     and n.lineno > guard.lineno and not n.name.startswith('_')]
+            with self.subTest(suite=name):
+                self.assertEqual(later, [], f'{name}: the __main__ guard precedes {later}')
+
     def test_layer_directories_have_suites(self):
         layers = {_tags.layer_of(name) for name in suites()}
         for layer in ('audit', 'render', 'ingest', 'manuscript', 'app', 'lib'):

@@ -453,8 +453,6 @@ class DispatchRoutingTest(unittest.TestCase):
         self.assertIn("unknown action", text)
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class StreamHelpersTest(unittest.TestCase):
@@ -557,3 +555,7 @@ class LlmBridgeTest(unittest.TestCase):
         self.assertEqual(
             [call.args[0] for call in make.call_args_list], ["check", "test", "doctor"]
         )
+
+
+if __name__ == "__main__":
+    unittest.main()

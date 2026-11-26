@@ -104,8 +104,6 @@ class CoverStatsTest(ScriptTestBase):
         self.assertEqual(after[1], before[1])
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class MissingConfigTest(unittest.TestCase):
@@ -183,3 +181,7 @@ class MissingConfigTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.tmp, True)
+
+
+if __name__ == "__main__":
+    unittest.main()

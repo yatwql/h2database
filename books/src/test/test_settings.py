@@ -270,8 +270,6 @@ class TestCliSurface(SettingsCase):
         self.assertIn("error", out)
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class SettingsEdgeTest(unittest.TestCase):
@@ -410,3 +408,7 @@ class SettingsEdgeTest(unittest.TestCase):
         self.assertEqual(order, ["mock", "qwen"])
         self.assertEqual(self.mod.move_provider(order[0], -1)[: len(order[0])], order[0])
         self.assertEqual([row["name"] for row in self.mod.provider_order()], order)
+
+
+if __name__ == "__main__":
+    unittest.main()

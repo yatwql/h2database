@@ -66,8 +66,6 @@ class TestIndexXrefBranches(FixtureCase):
         self.assertIn("issues:          1", out)
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class IndexXrefParserEdgesTest(unittest.TestCase):
@@ -152,3 +150,7 @@ class IndexXrefParserEdgesTest(unittest.TestCase):
             )
         self.assertEqual(dangling, 0)
         self.assertIn("every see-also target resolves", buffer.getvalue())
+
+
+if __name__ == "__main__":
+    unittest.main()

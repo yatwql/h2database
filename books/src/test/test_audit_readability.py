@@ -46,8 +46,6 @@ class TestReadabilityDeep(FixtureCase):
         self.assertIn("READABILITY", out)
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class TestReadabilityBranches(FixtureCase):
@@ -107,3 +105,7 @@ class TestReadabilityBranches(FixtureCase):
         code, out = self.run_script("readability.py")
         self.assertEqual(code, 0, out[-400:])
         self.assertIn("diagram/code block length", out)
+
+
+if __name__ == "__main__":
+    unittest.main()
