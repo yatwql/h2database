@@ -33,6 +33,7 @@ DEFAULTS = {
     'layout_table_gap_em': 1.0,
     'layout_epub_code_em': 0.85,
     'layout_chars_per_line': 40,
+    'layout_prose_line_height': 1.65,
     'layout_lead_ratio': 0.23,
     'layout_epub_line_height': 1.55,
     # advance of one monospace character, in em: the width a printed code line
@@ -79,6 +80,7 @@ RANGES = {
     'print_wrap': (0, 1),
     'print_margin_min_mm': (5.0, 40.0),
     'print_chars_per_line': (30, 80),
+    'prose_line_height': (1.0, 2.4),
 }
 
 # sheet sizes in millimetres; an unknown name falls back to A4 rather than guessing
@@ -228,6 +230,7 @@ class Layout:
     print_wrap: int = DEFAULTS['layout_print_wrap']
     print_margin_min_mm: float = DEFAULTS['layout_print_margin_min_mm']
     print_chars_per_line: int = DEFAULTS['layout_print_chars_per_line']
+    prose_line_height: float = DEFAULTS['layout_prose_line_height']
     chars_per_line_min: int = DEFAULTS['layout_chars_per_line_min']
     chars_per_line_max: int = DEFAULTS['layout_chars_per_line_max']
 

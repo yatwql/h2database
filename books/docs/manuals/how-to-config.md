@@ -122,7 +122,9 @@ display = "删节版"
 | `layout_print_code_min_px` / `layout_print_mono_advance` | 代码可读下限与等宽字符步距（按 `ascii_max_cols` 反推印刷代码字号） |
 | `layout_print_wrap` | 超长代码行换行（默认 `0` 关）；开启后用换行而非继续缩字号 |
 | `layout_code_px` / `layout_code_line_height` | 代码块字号与行距；行距写 `0` 表示「与正文一致」 |
-| `layout_lead_ratio` | 正文行距增量（`1 + ratio`，默认 0.23）；`DENSITY` 门禁据此判松紧 |
+| `layout_prose_line_height` | 正文行距系数（默认 1.65）；`DENSITY` 判的就是它：正文行距÷字号须在 1.15–1.75 |
+| `layout_lead_ratio` | 代码清单行距增量（`1 + ratio`，默认 0.23）；`CODE_LEAD` 只要求 ≥ 1.0 |
+| `layout_print_chars_per_line` | 纸面阅读度量（默认 44）；自适应印刷据此解算纸面正文字号 |
 | `layout_epub_code_em` / `layout_epub_line_height` | 重排版面的相对字号与行高（`em`，读者可缩放） |
 | `layout_spacing_scale` + `layout_*_gap_em` | 段距/标题距/表距等，全部相对行高，由一个倍数统一缩放 |
 | `font_stack_sans` / `font_stack_mono` | 候选字体族（逗号分隔或数组）；按本机可用性排序，缺字体时逐级回退 |

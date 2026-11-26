@@ -249,12 +249,21 @@ def _check_density(report: Report, pdf_path: str) -> None:
         report.add('DENSITY', True,
                    f'too little text to judge (fills {fill:.0f}pt of the page)')
         return
-    ratio = pitch / body
+    # the criterion is about reading comfort in running text. A page-wide median
+    # mixes prose, headings and listings, and a listing's line height is a property of
+    # its column width, not of the prose leading the gate means to judge.
+    ratio = float(metrics.get('prose_pitch_ratio') or 0.0) or (pitch / body)
     low = float(_config.THRESHOLDS.get('pdf_leading_ratio_min', 1.15) or 1.15)
     high = float(_config.THRESHOLDS.get('pdf_leading_ratio_max', 1.75) or 1.75)
     report.add('DENSITY', low <= ratio <= high,
-               f'leading {ratio:.2f}x body (want {low}-{high}), '
+               f'prose leading {ratio:.2f}x body (want {low}-{high}), '
                f'text fills {fill:.0f}pt of the page')
+    # listings get their own floor: cramped code is unreadable, but their line height
+    # follows the code size the column can carry, so it is not held to the prose band
+    code_ratio = float(metrics.get('code_pitch_ratio') or 0.0)
+    if code_ratio:
+        report.add('CODE_LEAD', code_ratio >= 1.0,
+                   f'listing leading {code_ratio:.2f}x (want >= 1.00)')
 
 
 def _check_outline(report: Report, reader, headings) -> list:

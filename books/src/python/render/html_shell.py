@@ -381,7 +381,7 @@ def _layout_value(key):
 
 def _style_rules(*, print_code, lead, print_column, wrap_css, page_size, margin,
                  column, body, para, head_before, head_after, list_gap,
-                 table_gap) -> dict[str, str]:
+                 table_gap, prose_lead=1.65) -> dict[str, str]:
     """Stylesheet literal -> its configured value, in one table.
 
     Kept apart from `apply_layout` so the numbers are computed in one readable block
@@ -399,6 +399,8 @@ def _style_rules(*, print_code, lead, print_column, wrap_css, page_size, margin,
             wrap_css + f'  @page {{ size: {page_size}; margin: {margin}; }}',
         'flex: 1; max-width: 960px;': f'flex: 1; max-width: {column}px;',
         'body {\n    font-size: 16px;': f'body {{\n    font-size: {body}px;',
+        '    line-height: 1.8; color: #333;':
+            f'    line-height: {prose_lead}; color: #333;',
         'p { margin: 0.8em 0; text-align: justify; }':
             f'p {{ margin: {para} 0; text-align: justify; }}',
         'margin-top: 1.5em; margin-bottom: 0.5em; font-family:':
@@ -425,6 +427,7 @@ def apply_layout(css: str) -> str:
     layout, _problems = _layout_lib.Layout.from_mapping(
         _config.THRESHOLDS if _config else {})
     lead = layout.code_line_height_value()
+    prose_lead = layout.prose_line_height
     body = layout.body_size_px()
     column = layout.column()
     page_size = _layout_value('layout_page_size')
@@ -458,7 +461,7 @@ def apply_layout(css: str) -> str:
     head_after = gap('layout_heading_gap_after_em')
     list_gap = gap('layout_list_gap_em')
     table_gap = gap('layout_table_gap_em')
-    values = {'print_code': print_code, 'lead': lead, 'print_column': print_column,
+    values = {'print_code': print_code, 'lead': lead, 'prose_lead': prose_lead, 'print_column': print_column,
               'wrap_css': wrap_css, 'page_size': page_size, 'margin': margin,
               'column': column, 'body': body, 'para': para, 'head_before': head_before,
               'head_after': head_after, 'list_gap': list_gap, 'table_gap': table_gap}

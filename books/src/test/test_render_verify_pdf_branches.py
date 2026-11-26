@@ -383,6 +383,45 @@ class VerifyPdfSkipAndDensityTest(PdfFixtureCase):
         self.assertTrue(ok, detail)
         self.assertIn("too little text to judge", detail)
 
+    def test_the_prose_ratio_decides_when_it_is_measured(self):
+        """A page median can hide prose that is set too loose."""
+        self.build()
+        render = importlib.import_module("render")
+        fake = types.SimpleNamespace(
+            measure=lambda _path: {"body_pt": 6.8, "pitch_pt": 8.2, "lines_per_page": 50,
+                                   "pages": 10, "prose_pitch_ratio": 1.81,
+                                   "code_pitch_ratio": 1.10})
+        report = self.verify_pdf.Report()
+        with (
+            mock.patch.dict(sys.modules, {"render.pdf_metrics": fake}),
+            mock.patch.object(render, "pdf_metrics", fake, create=True),
+            mock.patch.dict(self.verify_pdf._config.THRESHOLDS,
+                            {"pdf_leading_ratio_min": 1.15, "pdf_leading_ratio_max": 1.75}),
+            redirect_stdout(io.StringIO()),
+        ):
+            self.verify_pdf._check_density(report, self.pdf)
+        by_name = {name: ok for name, ok, _d in report.checks}
+        self.assertFalse(by_name["DENSITY"])   # 1.81 is above the ceiling
+        self.assertTrue(by_name["CODE_LEAD"])  # listings keep their own floor
+
+    def test_cramped_listings_fail_their_own_check(self):
+        self.build()
+        render = importlib.import_module("render")
+        fake = types.SimpleNamespace(
+            measure=lambda _path: {"body_pt": 6.8, "pitch_pt": 8.2, "lines_per_page": 50,
+                                   "pages": 10, "prose_pitch_ratio": 1.30,
+                                   "code_pitch_ratio": 0.90})
+        report = self.verify_pdf.Report()
+        with (
+            mock.patch.dict(sys.modules, {"render.pdf_metrics": fake}),
+            mock.patch.object(render, "pdf_metrics", fake, create=True),
+            redirect_stdout(io.StringIO()),
+        ):
+            self.verify_pdf._check_density(report, self.pdf)
+        by_name = {name: ok for name, ok, _d in report.checks}
+        self.assertTrue(by_name["DENSITY"])
+        self.assertFalse(by_name["CODE_LEAD"])
+
     def test_the_density_ratio_is_judged_against_the_leading_window(self):
         self.build()
         render = importlib.import_module("render")

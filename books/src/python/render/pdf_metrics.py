@@ -63,13 +63,17 @@ def measure(path: str) -> dict:
     prose_pitches: list[float] = []
     prose_sizes: Counter = Counter()
     prose_chars = 0
+    code_pitches: list[float] = []
+    code_sizes: Counter = Counter()
 
     for page in _sample(reader):
         ys: set[float] = set()
         xs: list[float] = []
         prose_ys: set[float] = set()
+        code_ys: set[float] = set()
 
-        def visit(text, cm, tm, font_dict, font_size, ys=ys, xs=xs, prose_ys=prose_ys):
+        def visit(text, cm, tm, font_dict, font_size, ys=ys, xs=xs, prose_ys=prose_ys,
+                  code_ys=code_ys):
             nonlocal prose_chars
             if not text.strip():
                 return
@@ -80,7 +84,10 @@ def measure(path: str) -> dict:
             xs.append(tm[4] + tm[0] * len(text) * font_size)
             # the printed body size only governs running text: a listing is sized by
             # its column width, so its leading must not decide the prose judgement
-            if not _is_mono_font(font_dict):
+            if _is_mono_font(font_dict):
+                code_ys.add(round(tm[5], 1))
+                code_sizes[size] += len(text)
+            else:
                 prose_ys.add(round(tm[5], 1))
                 prose_sizes[size] += len(text)
                 prose_chars += len(text)
@@ -95,6 +102,10 @@ def measure(path: str) -> dict:
         prose_pitches.extend(
             prose_ordered[i - 1] - prose_ordered[i] for i in range(1, len(prose_ordered))
             if 4 < prose_ordered[i - 1] - prose_ordered[i] < 40)
+        code_ordered = sorted(code_ys, reverse=True)
+        code_pitches.extend(
+            code_ordered[i - 1] - code_ordered[i] for i in range(1, len(code_ordered))
+            if 4 < code_ordered[i - 1] - code_ordered[i] < 40)
         if xs:
             widths.append(max(xs) - min(xs))
 
@@ -128,6 +139,9 @@ def measure(path: str) -> dict:
         'prose_pitch_ratio': round(statistics.median(prose_pitches)
                                    / (prose_sizes.most_common(1)[0][0] or 1), 3)
         if prose_pitches and prose_sizes else 0.0,
+        'code_pitch_ratio': round(statistics.median(code_pitches)
+                                  / (code_sizes.most_common(1)[0][0] or 1), 3)
+        if code_pitches and code_sizes else 0.0,
         'pitch_pt': round(statistics.median(pitches), 1) if pitches else 0.0,
         'text_width_pt': round(statistics.median(widths), 1) if widths else 0.0,
     }
