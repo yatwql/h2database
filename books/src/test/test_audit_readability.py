@@ -46,8 +46,6 @@ class TestReadabilityDeep(FixtureCase):
         self.assertIn("READABILITY", out)
 
 
-
-
 class TestReadabilityBranches(FixtureCase):
     def test_runs_on_fixture(self):
         code, out = self.run_script("readability.py")
@@ -68,7 +66,7 @@ class TestReadabilityBranches(FixtureCase):
         diagram = "```text\n┌──┬──┐┐\n" + wide + "\n└──┴──┴──┘\n```\n"
         self.write("data/manuscript/ch1-test.md", "# 第1章 测试章节\n\n" + diagram)
         code, out = self.run_script("readability.py")
-        self.assertEqual(code, 1, out[-400:])   # a book with no recorded stock
+        self.assertEqual(code, 1, out[-400:])  # a book with no recorded stock
         self.assertIn("diagram width", out)
         self.assertIn("┌ (1) != ┐ (2)", out)
         self.assertIn("┬ (1) != ┴ (2)", out)

@@ -95,6 +95,27 @@ class TestBalanceCheckHelpers(FixtureCase):
         self.assertEqual(metrics["balance"]["stddev_lines"], 0.0)
         self.assertIn("均衡指标", bc.render_markdown(metrics))
 
+    def test_an_appendix_stays_out_of_the_ratio(self):
+        toml_path = os.path.join(self.root, "data", "book", "book.toml")
+        with open(toml_path, encoding="utf-8") as fh:
+            config = fh.read()
+        with open(toml_path, "w", encoding="utf-8") as fh:
+            fh.write(
+                config.replace(
+                    '    "ch2-test.md",\n]', '    "ch2-test.md",\n    "appendix-z-notes.md",\n]'
+                )
+            )
+        # one line: if a reference section entered min/max the ratio would explode
+        self.write("data/manuscript/appendix-z-notes.md", "# 附录 Z\n\n一句。\n")
+        bc = self.module("balance")
+        self.assertNotIn("appendix-z-notes.md", bc.BODY_FILES)
+        metrics = bc.collect_metrics()
+        rows = {row["file"]: row["lines"] for row in metrics["files"]}
+        self.assertIn("appendix-z-notes.md", rows)
+        self.assertGreater(metrics["balance"]["min_lines"], rows["appendix-z-notes.md"])
+        self.assertIn("appendix-z-notes.md", metrics["balance"]["scope"]["excluded_files"])
+        self.assertIn("进比值", bc.render_markdown(metrics))
+
     def test_render_diff_marks_files_added_and_dropped(self):
         bc = self.module("balance")
         current = bc.collect_metrics()

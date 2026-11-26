@@ -10,7 +10,8 @@
     "ch6-1-data-structures.md": 38,
     "ch6-2-storage-algorithms.md": 52,
     "ch6-3-query-algorithms.md": 76,
-    "ch7-8-sql-optimizer.md": 276,
+    "ch7-sql-execution.md": 124,
+    "ch8-query-optimizer.md": 152,
     "ch9-10-persistence-locking.md": 186
   }
 }

@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-20",
+  "updated": "2026-11-26",
   "note": "Accepted ASCII diagram violations. Refresh with --update-baseline.",
   "accepted": [
     "ch4-5-modules-processes.md::WIDE_LINE::57e233f816e6",
@@ -18,10 +18,10 @@
     "ch6-3-query-algorithms.md::WIDE_LINE::7c6b34fe2968",
     "ch6-3-query-algorithms.md::WIDE_LINE::bb29604e12b8",
     "ch6-3-query-algorithms.md::WIDE_LINE::f1b54871b17f",
-    "ch7-8-sql-optimizer.md::WIDE_LINE::5fb383bae238",
-    "ch7-8-sql-optimizer.md::WIDE_LINE::a8abb6932fd4",
-    "ch7-8-sql-optimizer.md::WIDE_LINE::f311ad7e81e4",
-    "ch7-8-sql-optimizer.md::WIDE_LINE::fbd098ba70aa",
+    "ch7-sql-execution.md::WIDE_LINE::5fb383bae238",
+    "ch7-sql-execution.md::WIDE_LINE::a8abb6932fd4",
+    "ch7-sql-execution.md::WIDE_LINE::f311ad7e81e4",
+    "ch7-sql-execution.md::WIDE_LINE::fbd098ba70aa",
     "ch9-10-persistence-locking.md::WIDE_LINE::dbd24e95b460"
   ]
 }

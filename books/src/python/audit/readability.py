@@ -41,32 +41,33 @@ DIST_DIR = Path(_config.DIST_DIR)
 DOCS = [Path(p) for p in _config.chapter_files(include_cover=False)]
 CAPTION_RE = _mdutil.FIGURE_PREFIX_RE
 CAPTION_FULL_RE = _mdutil.FIGURE_CAPTION_RE
-DIAGRAM_MARKERS = set('┌┐└┘├┤│┬┴┼')
+DIAGRAM_MARKERS = set("┌┐└┘├┤│┬┴┼")
 # Box-drawing corner pairs for closure checking
-OPENING_CORNERS = {'┌': '┐', '└': '┘', '├': '┤', '┬': '┴'}
-CLOSING_CORNERS = {'┐': '┌', '┘': '└', '┤': '├', '┴': '┬'}
+OPENING_CORNERS = {"┌": "┐", "└": "┘", "├": "┤", "┬": "┴"}
+CLOSING_CORNERS = {"┐": "┌", "┘": "└", "┤": "├", "┴": "┬"}
 
-BOX_CLOSURE = 'box-drawing closure'
-BOX_BASELINE = 'readability_box'  # base.json [baselines].readability_box
+BOX_CLOSURE = "box-drawing closure"
+BOX_BASELINE = "readability_box"  # base.json [baselines].readability_box
 
 failures = []
 warnings = []
 
 
 def _box_warning(path, fence_start, detail):
-    warnings.append(f'{path}:{fence_start} {BOX_CLOSURE}: {detail}')
+    warnings.append(f"{path}:{fence_start} {BOX_CLOSURE}: {detail}")
 
 
 def check_box_closure(block_lines, fence_start, path):
     """Check box-drawing character completeness within a diagram block."""
     # Collect lines with box-drawing characters
-    box_lines = [(i, line) for i, line in enumerate(block_lines)
-                 if any(c in line for c in DIAGRAM_MARKERS)]
+    box_lines = [
+        (i, line) for i, line in enumerate(block_lines) if any(c in line for c in DIAGRAM_MARKERS)
+    ]
     if not box_lines:
         return
 
     # Count each type of corner character
-    counts = dict.fromkeys('┌┐└┘├┤┬┴┼', 0)
+    counts = dict.fromkeys("┌┐└┘├┤┬┴┼", 0)
     for _, line in box_lines:
         for c in line:
             if c in counts:
@@ -74,20 +75,21 @@ def check_box_closure(block_lines, fence_start, path):
 
     # Check paired openings/closings
     # ┌ should be paired with ┐ (top corners)
-    if counts['┌'] != counts['┐']:
-        _box_warning(path, fence_start, f'┌ ({counts["┌"]}) != ┐ ({counts["┐"]})')
+    if counts["┌"] != counts["┐"]:
+        _box_warning(path, fence_start, f"┌ ({counts['┌']}) != ┐ ({counts['┐']})")
 
     # └ should be paired with ┘ (bottom corners)
-    if counts['└'] != counts['┘']:
-        _box_warning(path, fence_start, f'└ ({counts["└"]}) != ┘ ({counts["┘"]})')
+    if counts["└"] != counts["┘"]:
+        _box_warning(path, fence_start, f"└ ({counts['└']}) != ┘ ({counts['┘']})")
 
     # ├ should be paired with ┤ (T-junctions)
-    if counts['├'] != counts['┤']:
-        _box_warning(path, fence_start, f'├ ({counts["├"]}) != ┤ ({counts["┤"]})')
+    if counts["├"] != counts["┤"]:
+        _box_warning(path, fence_start, f"├ ({counts['├']}) != ┤ ({counts['┤']})")
 
     # ┬ should be paired with ┴ (top/bottom T-junctions)
-    if counts['┬'] != counts['┴']:
-        _box_warning(path, fence_start, f'┬ ({counts["┬"]}) != ┴ ({counts["┴"]})')
+    if counts["┬"] != counts["┴"]:
+        _box_warning(path, fence_start, f"┬ ({counts['┬']}) != ┴ ({counts['┴']})")
+
 
 def check_caption_quality(path, lines):
     """Check figure caption quality — length and verb presence."""
@@ -100,30 +102,76 @@ def check_caption_quality(path, lines):
             # Check minimum length
             if len(caption) < 8:
                 warnings.append(
-                    f'{path}:{idx} caption too short ({len(caption)} chars): '
-                    f'图 {fig_id}: {caption}'
+                    f"{path}:{idx} caption too short ({len(caption)} chars): 图 {fig_id}: {caption}"
                 )
 
             # Check for verb-like content (Chinese action/process indicators)
             # Common verb/action indicators in technical captions
             verb_indicators = [
-                '流程', '过程', '对比', '关系', '结构', '示意',
-                '步骤', '策略', '决策', '机制', '变换', '转换',
-                '映射', '传播', '分配', '释放', '获取', '创建',
-                '合并', '分裂', '插入', '删除', '更新', '查找',
-                '搜索', '排序', '比较', '计算', '构建', '解析',
-                '生命周期', '状态', '时序', '调用', '依赖',
-                '路径', '布局', '架构', '层次', '分类', '组成',
-                '数据流', '检测', '统计', '替换', '迁移', '演进',
-                '构造', '迭代', '设计', '选择', '匹配', '评估',
-                '追踪', '监控', '恢复', '保护', '验证', '诊断',
+                "流程",
+                "过程",
+                "对比",
+                "关系",
+                "结构",
+                "示意",
+                "步骤",
+                "策略",
+                "决策",
+                "机制",
+                "变换",
+                "转换",
+                "映射",
+                "传播",
+                "分配",
+                "释放",
+                "获取",
+                "创建",
+                "合并",
+                "分裂",
+                "插入",
+                "删除",
+                "更新",
+                "查找",
+                "搜索",
+                "排序",
+                "比较",
+                "计算",
+                "构建",
+                "解析",
+                "生命周期",
+                "状态",
+                "时序",
+                "调用",
+                "依赖",
+                "路径",
+                "布局",
+                "架构",
+                "层次",
+                "分类",
+                "组成",
+                "数据流",
+                "检测",
+                "统计",
+                "替换",
+                "迁移",
+                "演进",
+                "构造",
+                "迭代",
+                "设计",
+                "选择",
+                "匹配",
+                "评估",
+                "追踪",
+                "监控",
+                "恢复",
+                "保护",
+                "验证",
+                "诊断",
             ]
             has_verb = any(v in caption for v in verb_indicators)
             if not has_verb:
-                warnings.append(
-                    f'{path}:{idx} caption may lack verb: '
-                    f'图 {fig_id}: {caption[:60]}'
-                )
+                warnings.append(f"{path}:{idx} caption may lack verb: 图 {fig_id}: {caption[:60]}")
+
 
 def _scan_fences(path, lines) -> list[str]:
     """Fence balance, diagram width/length and caption-inside-fence for one file."""
@@ -132,32 +180,35 @@ def _scan_fences(path, lines) -> list[str]:
     fence_start = 0
     block_lines: list[str] = []
     for idx, line in enumerate(lines, 1):
-        if line.strip().startswith('```'):
+        if line.strip().startswith("```"):
             if not in_fence:
                 in_fence = True
                 fence_start = idx
                 block_lines = []
             else:
-                marker_lines = [row for row in block_lines
-                                if any(c in row for c in DIAGRAM_MARKERS)]
+                marker_lines = [
+                    row for row in block_lines if any(c in row for c in DIAGRAM_MARKERS)
+                ]
                 if marker_lines:
                     max_width = max(len(row) for row in block_lines) if block_lines else 0
                     if max_width > 118:
-                        warnings.append(f'{path}:{fence_start} diagram width {max_width} > 118')
+                        warnings.append(f"{path}:{fence_start} diagram width {max_width} > 118")
                     if len(block_lines) > 80:
-                        warnings.append(f'{path}:{fence_start} diagram/code block length '
-                                        f'{len(block_lines)} > 80')
+                        warnings.append(
+                            f"{path}:{fence_start} diagram/code block length "
+                            f"{len(block_lines)} > 80"
+                        )
                     # Box-drawing closure check (always run)
                     check_box_closure(marker_lines, fence_start, path)
                 in_fence = False
             continue
         if in_fence:
             if CAPTION_RE.match(line.strip()):
-                failures.append(f'{path}:{idx} caption inside fence')
+                failures.append(f"{path}:{idx} caption inside fence")
             block_lines.append(line)
 
     if in_fence:
-        failures.append(f'{path}:{fence_start} unclosed fence')
+        failures.append(f"{path}:{fence_start} unclosed fence")
     return failures
 
 
@@ -166,8 +217,8 @@ def _check_html() -> None:
     html_path = Path(_config.merged_html())
     if not html_path.exists():
         return
-    html = html_path.read_text(encoding='utf-8')
-    body = re.sub(r'<pre[^>]*>.*?</pre>', '', html, flags=re.DOTALL)
+    html = html_path.read_text(encoding="utf-8")
+    body = re.sub(r"<pre[^>]*>.*?</pre>", "", html, flags=re.DOTALL)
     lines = body.splitlines()
     outside_lines = [line for line in lines if any(c in line for c in DIAGRAM_MARKERS)]
     runs = []
@@ -182,22 +233,25 @@ def _check_html() -> None:
     if streak >= 3:
         runs.append(streak)
     if runs:
-        failures.append(f'{html_path}: {len(outside_lines)} diagram-like lines outside '
-                        f'<pre>, blocks: {runs}')
+        failures.append(
+            f"{html_path}: {len(outside_lines)} diagram-like lines outside <pre>, blocks: {runs}"
+        )
     elif outside_lines:
-        warnings.append(f'{html_path}: {len(outside_lines)} inline visual-aid lines use box '
-                        f'chars outside <pre> (non-block, acceptable)')
+        warnings.append(
+            f"{html_path}: {len(outside_lines)} inline visual-aid lines use box "
+            f"chars outside <pre> (non-block, acceptable)"
+        )
 
 
 def box_closure_counts(items: list[str]) -> dict[str, int]:
     """Box-drawing warnings per manuscript file: the unit the baseline records."""
-    marker = f' {BOX_CLOSURE}: '
+    marker = f" {BOX_CLOSURE}: "
     counts: dict[str, int] = {}
     for item in items:
         head, found, _ = item.partition(marker)
         if not found:
             continue
-        name = _config.manuscript_rel(head.rsplit(':', 1)[0])
+        name = _config.manuscript_rel(head.rsplit(":", 1)[0])
         counts[name] = counts.get(name, 0) + 1
     return counts
 
@@ -209,7 +263,7 @@ def box_baseline_path() -> str:
 
 def load_box_baseline() -> dict[str, int]:
     """Accepted box-drawing warning count per file; empty when none was recorded."""
-    files = _baseline.load_at(box_baseline_path()).get('files')
+    files = _baseline.load_at(box_baseline_path()).get("files")
     if not isinstance(files, dict):
         return {}
     return {str(name): int(count) for name, count in files.items()}
@@ -219,8 +273,8 @@ def save_box_baseline(counts: dict[str, int]) -> str:
     """Record today's counts as the accepted stock."""
     return _baseline.save_at(
         box_baseline_path(),
-        {'files': dict(sorted(counts.items()))},
-        note='Accepted box-drawing warnings per file. A count may fall, never rise.',
+        {"files": dict(sorted(counts.items()))},
+        note="Accepted box-drawing warnings per file. A count may fall, never rise.",
     )
 
 
@@ -246,29 +300,36 @@ class BoxTally:
 
 
 def _report(failures: list[str], warnings: list[str], as_json: bool, box: BoxTally) -> int:
-    print('READABILITY FAILURES:', len(failures))
+    print("READABILITY FAILURES:", len(failures))
     for item in failures[:80]:
-        print('FAIL:', item)
-    print('READABILITY WARNINGS:', len(warnings))
+        print("FAIL:", item)
+    print("READABILITY WARNINGS:", len(warnings))
     for item in warnings[:120]:
-        print('WARN:', item)
-    print('BOX-DRAWING CLOSURE:', sum(box.counts.values()),
-          f'warning(s) in {len(box.counts)} file(s)',
-          f'(accepted {sum(box.accepted.values())})')
+        print("WARN:", item)
+    print(
+        "BOX-DRAWING CLOSURE:",
+        sum(box.counts.values()),
+        f"warning(s) in {len(box.counts)} file(s)",
+        f"(accepted {sum(box.accepted.values())})",
+    )
     for name, count in sorted(box.risen().items()):
-        print(f'FAIL: {name}: {count} box-drawing warning(s) > accepted {box.accepted.get(name, 0)}')
+        print(
+            f"FAIL: {name}: {count} box-drawing warning(s) > accepted {box.accepted.get(name, 0)}"
+        )
     for name, count in sorted(box.shrunk().items()):
-        print(f'INFO: {name}: {box.counts.get(name, 0)} box-drawing warning(s) < accepted {count}'
-              ' — rerun with --update-baseline to tighten the record')
+        print(
+            f"INFO: {name}: {box.counts.get(name, 0)} box-drawing warning(s) < accepted {count}"
+            " — rerun with --update-baseline to tighten the record"
+        )
     if as_json:
         payload: dict[str, Any] = {
-            'failures': failures,
-            'warnings': warnings,
-            'box_drawing': {
-                'counts': box.counts,
-                'accepted': box.accepted,
-                'risen': box.risen(),
-                'shrunk': box.shrunk(),
+            "failures": failures,
+            "warnings": warnings,
+            "box_drawing": {
+                "counts": box.counts,
+                "accepted": box.accepted,
+                "risen": box.risen(),
+                "shrunk": box.shrunk(),
             },
         }
         print(json.dumps(payload, ensure_ascii=False))
@@ -280,16 +341,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument('--json', action='store_true', help='machine-readable output')
+    parser.add_argument("--json", action="store_true", help="machine-readable output")
+    parser.add_argument("--figures", action="store_true", help="also judge figure captions")
     parser.add_argument(
-        '--figures', action='store_true', help='also judge figure captions'
-    )
-    parser.add_argument(
-        '--update-baseline', action='store_true', help='record the current box-drawing counts'
+        "--update-baseline", action="store_true", help="record the current box-drawing counts"
     )
     args = parser.parse_args(sys.argv[1:] if argv is None else list(argv))
     for path in DOCS:
-        lines = path.read_text(encoding='utf-8').splitlines()
+        lines = path.read_text(encoding="utf-8").splitlines()
         failures.extend(_scan_fences(path, lines))
         if args.figures:
             check_caption_quality(path, lines)
@@ -298,11 +357,13 @@ def main(argv: list[str] | None = None) -> int:
     counts = box_closure_counts(warnings)
     if args.update_baseline:
         saved = save_box_baseline(counts)
-        print(f'box-drawing baseline updated: {sum(counts.values())} accepted -> '
-              f'{_os.path.relpath(saved, _config.BOOK_ROOT)}')
+        print(
+            f"box-drawing baseline updated: {sum(counts.values())} accepted -> "
+            f"{_os.path.relpath(saved, _config.BOOK_ROOT)}"
+        )
         return 0
     return _report(failures, warnings, args.json, BoxTally(counts, load_box_baseline()))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(_errors.run(main, sys.argv[1:]))

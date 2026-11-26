@@ -47,13 +47,20 @@ _fsutil.pin_stdout_utf8()
 
 
 # 章节文件 → 该文件覆盖的章节号集合（用于术语/索引命中归属）。
-# 双章文件按其内含章节展开；ch6 三个子文件均归属"第6章"。
-
+# 双章文件按其内含章节展开；同一章的多个文件各自列出。
 # Chapter numbering and file list come from book.toml (via _config).
 CHAPTER_FILES: list[tuple[str, list[int]]] = [
     (os.path.basename(path), _config.chapter_coverage().get(os.path.basename(path), []))
     for path in _config.chapter_files(include_cover=False)
 ]
+
+# A file that declares content coverage is a chapter competing for the reader's
+# budget; front matter, appendices and other reference matter are listed but do
+# not enter the ratio, whose whole point is how evenly the chapters divide.
+BODY_FILES = [name for name, chapters in CHAPTER_FILES if chapters]
+
+# The ratio the chapters should stay inside, from base.json [toolchain].
+TARGET_RATIO = _config.THRESHOLDS.get("balance_max_min_ratio", 2.5)
 
 GLOSSARY_REL = "back/glossary.md"
 INDEX_REL = "back/index.md"
@@ -167,7 +174,7 @@ def collect_metrics() -> dict[str, Any]:
             }
         )
 
-    line_counts = [f["lines"] for f in files]
+    line_counts = [f["lines"] for f in files if f["file"] in BODY_FILES]
     fig_total = sum(f["figures"] for f in files)
     ref_total = sum(f["source_refs"] for f in files)
 
@@ -199,6 +206,10 @@ def collect_metrics() -> dict[str, Any]:
             "max_min_ratio": round(ratio, 3),
             "mean_lines": round(mean, 1),
             "stddev_lines": round(stddev, 1),
+            "scope": {
+                "body_files": sorted(BODY_FILES),
+                "excluded_files": sorted(f["file"] for f in files if f["file"] not in BODY_FILES),
+            },
         },
     }
 
@@ -235,10 +246,15 @@ def render_markdown(metrics: dict[str, Any]) -> str:
     out.append(f"- 最大行数：{b['max_lines']:,}")
     out.append(f"- 最小行数：{b['min_lines']:,}")
     out.append(
-        f"- max_min_ratio：**{b['max_min_ratio']}**（v6.0 目标 ≤ 2.5；ch7-8 拆分后预期 ≈ 2.7）"
+        f"- max_min_ratio：**{b['max_min_ratio']}**（目标 ≤ {TARGET_RATIO}，计量范围为正文各章）"
     )
     out.append(f"- 平均行数：{b['mean_lines']}")
     out.append(f"- 标准差：{b['stddev_lines']}")
+    out.append(
+        "- 计量范围："
+        + "、".join(f"`{name}`" for name in sorted(BODY_FILES))
+        + "；附录与前件只列表，不进比值"
+    )
     return "\n".join(out) + "\n"
 
 
