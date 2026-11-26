@@ -10,6 +10,7 @@ Two rules, both about leaving the checkout clean:
 * the child starts with its core-dump limit at zero, so a crash cannot write that
   file in the first place. Linux and macOS only; the guard is skipped elsewhere.
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -19,7 +20,7 @@ from lib import _config
 
 # The flags every launch here needs: no sandbox (containers and CI), no setuid
 # sandbox. Kept as data so a caller can extend them without copying the list.
-LAUNCH_ARGS = ('--no-sandbox', '--disable-setuid-sandbox')
+LAUNCH_ARGS = ("--no-sandbox", "--disable-setuid-sandbox")
 
 
 def _no_core_dumps() -> None:
@@ -41,9 +42,9 @@ def launch(playwright, *, args=LAUNCH_ARGS, **kwargs):
         os.makedirs(folder, exist_ok=True)
     except OSError:
         # a read-only checkout still renders: the browser keeps the default tmp dir
-        folder = ''
+        folder = ""
     _no_core_dumps()
-    env = dict(kwargs.pop('env', None) or os.environ)
+    env = dict(kwargs.pop("env", None) or os.environ)
     if folder:
-        env['TMPDIR'] = folder
+        env["TMPDIR"] = folder
     return playwright.chromium.launch(headless=True, args=list(args), env=env, **kwargs)

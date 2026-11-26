@@ -153,8 +153,9 @@ class SourceChangeErrorTest(CliCase):
             os.path.join(state, "source-inventory.prev.json"), "w", encoding="utf-8"
         ) as handle:
             handle.write("{}")
+        # the read happens in _source_state, so that is the module to break
         read_text = mock.patch.object(
-            self.chapters._fsutil, "read_text", side_effect=OSError("media error")
+            self.chapters._source_state._fsutil, "read_text", side_effect=OSError("media error")
         )
         with read_text:
             self.assertIn("不可读", self.chapters._source_change_line())

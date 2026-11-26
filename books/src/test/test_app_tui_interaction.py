@@ -528,6 +528,26 @@ class TuiInteractionTest(unittest.TestCase):
         self.assertNotIn("预计", text)
         self.assertIn("用时 2 秒", text)
 
+    def test_an_analysis_run_says_what_moved_in_the_source(self):
+        buffer = io.StringIO()
+        with (
+            mock.patch.object(self.tui.actions, "run", side_effect=lambda *a, **k: (0, "ok")),
+            mock.patch.object(self.tui._source_state, "change_line",
+                              return_value=("源码清单：已变化（新增包 b）", True)),
+            redirect_stdout(buffer),
+        ):
+            self.tui.run_entry("analyze", "源码 → 手稿")
+        self.assertIn("源码清单：已变化", buffer.getvalue())
+
+    def test_a_render_run_does_not_repeat_the_source_summary(self):
+        buffer = io.StringIO()
+        with (
+            mock.patch.object(self.tui.actions, "run", side_effect=lambda *a, **k: (0, "ok")),
+            redirect_stdout(buffer),
+        ):
+            self.tui.run_entry("build", "手稿 → Markdown + HTML")
+        self.assertNotIn("源码清单", buffer.getvalue())
+
     def test_the_settings_entry_opens_the_configuration_editor(self):
         with mock.patch.object(self.tui, "configure", return_value="配置页"):
             self.assertEqual(self.tui.run_entry("settings", "配置"), "配置页")

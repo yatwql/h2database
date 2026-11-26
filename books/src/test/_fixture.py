@@ -437,6 +437,8 @@ def refresh_config(root: str) -> None:
         "_config",
         "lib._config",
         "lib._baseline",
+        "lib._browser",
+        "lib._source_state",
         "lib._errors",
         "lib._fsutil",
         "lib._log",

@@ -21,7 +21,7 @@ import unicodedata
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core import actions, menu, settings
-from lib import _config, _errors, _fsutil, status
+from lib import _config, _errors, _fsutil, _source_state, status
 
 from app import keys
 
@@ -296,6 +296,10 @@ def run_entry(action: str, label: str, force: bool = False) -> str:
         if not confirm(question):
             return _c(f'已取消，{rewritten or "产物"}未改动', PALETTE['hint'])
     short = menu.short_artifacts(action)
+    if action in ('analyze', 'analyze-llm', 'analyze-refresh'):
+        # what moved since the last ingest decides whether this run is worth it
+        sys.stdout.write(_c(f'  {_source_state.change_line(*_source_state.state_paths())[0]}\n', PALETTE['hint']))
+        sys.stdout.flush()
     ordered = menu.plan(action)
     if ordered:
         sys.stdout.write(_c(f'  产物：{ordered}\n', PALETTE['hint']))

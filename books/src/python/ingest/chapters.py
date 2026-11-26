@@ -27,7 +27,7 @@ from appendix import APPENDIX_SPEC, TYPE_EMOJI, render_appendix
 from factblocks import backup_existing, line_delta, refresh_blocks
 from factblocks import mark_block as _gen
 from ingest import factblocks
-from lib import _config, _errors, _fsutil, _log, _mdutil
+from lib import _config, _errors, _fsutil, _log, _mdutil, _source_state
 
 
 def _spec_table() -> dict[str, list[tuple[int, str]]]:
@@ -727,18 +727,10 @@ def _emit_chapter(ch: dict, args, stamp: str) -> str:
 
 
 def _source_change_line() -> str:
-    """Whether the source inventory moved since the previous ingest."""
-    current = _config.state_path('source-inventory.json')
-    previous = _config.state_path('source-inventory.prev.json')
-    if not os.path.isfile(previous):
-        return '源码清单：首次 ingest（无上次记录可比）'
-    try:
-        same = _fsutil.read_text(previous) == _fsutil.read_text(current)
-    except OSError:
-        return '源码清单：上次记录不可读，按已变化处理'
-    if same:
-        return '源码清单：与上次一致（源码树无变化，事实块不应变）'
-    return '源码清单：已变化（源码树有新内容，事实块会随之刷新）'
+    """Whether, and how, the source inventory moved since the previous ingest."""
+    return _source_state.change_line(
+        _config.state_path('source-inventory.json'),
+        _config.state_path('source-inventory.prev.json'))[0]
 
 
 def _parser() -> argparse.ArgumentParser:

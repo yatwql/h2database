@@ -24,7 +24,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ingest import languages
-from lib import _config, _errors, _fsutil, _log
+from lib import _config, _errors, _fsutil, _log, _source_state
 
 LOG = _log.get_logger('ingest')
 
@@ -120,6 +120,7 @@ def main(argv: list[str] | None = None) -> int:
     _fsutil.write_text(out, json.dumps(inventory, ensure_ascii=False, indent=2) + '\n')
     totals = inventory['totals']
     print(f"inventory -> {os.path.relpath(out, _config.BOOK_ROOT)}")
+    print(f"  {_source_state.change_line(*_source_state.state_paths())[0]}")
     print(f"  languages {', '.join(inventory['languages'])}  "
           f"packages {totals['packages']}  files {totals['files']}  "
           f"lines {totals['lines']:,}")

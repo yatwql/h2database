@@ -71,6 +71,5 @@ class BrowserLaunchTest(unittest.TestCase):
         self.assertEqual(seen["timeout"], 5)
 
 
-
 if __name__ == "__main__":
     unittest.main()
