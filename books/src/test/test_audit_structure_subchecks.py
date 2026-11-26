@@ -65,6 +65,20 @@ class SubCheckWrapperTest(StructureGateCase):
         self.assertIn("FAIL:", out)
 
 
+class JsonReportTest(StructureGateCase):
+    """`--json` is what the entry-point sweep and CI logs consume."""
+
+    def test_the_report_is_one_json_object(self):
+        import json
+
+        code, out = _fixture.run_inproc(self.root, "structure.py", "--json")
+        # the gate narrates as it runs; the object is the last line
+        payload = json.loads([line for line in out.splitlines() if line.strip()][-1])
+        self.assertEqual(payload["total"], len(payload["checks"]))
+        self.assertEqual(payload["passed"], sum(1 for c in payload["checks"] if c["ok"]))
+        self.assertEqual(code, 0 if payload["passed"] == payload["total"] else 1)
+
+
 class CssCheckSourceTest(StructureGateCase):
     """The CSS check reads the renderer beside the gate, and says so when absent.
 

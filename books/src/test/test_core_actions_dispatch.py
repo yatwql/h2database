@@ -329,6 +329,24 @@ class HeartbeatTest(unittest.TestCase):
         self.assertTrue(any("仍在执行" in line for line in lines), lines)
 
 
+    def test_deliver_all_hands_the_progress_callback_on(self):
+        seen: list[object] = []
+
+        def fake(on_line=None):
+            seen.append(on_line)
+            return 0, 'ok'
+
+        with mock.patch.object(self.actions, "deliver_all", side_effect=fake):
+            code, text = self.actions.run('deliver-all', on_progress=print)
+        self.assertEqual((code, text), (0, 'ok'))
+        self.assertEqual(seen, [print])
+
+    def test_elapsed_time_spells_out_its_unit(self):
+        self.assertEqual(self.actions._clock(40), '40 秒')
+        self.assertEqual(self.actions._clock(100), '1 分 40 秒')
+        self.assertEqual(self.actions._clock(3900), '1 小时 5 分')
+
+
 class ReportingHelpersTest(unittest.TestCase):
     """The one-line reports compose the action output; each verdict has a branch."""
 

@@ -476,6 +476,12 @@ class TuiInteractionTest(unittest.TestCase):
         self.assertIn("用时 43 秒", text)
         self.assertIn("预计", text)
 
+    def test_a_duration_carries_its_unit(self):
+        # m:ss reads as an hour to anyone skimming; the unit is spelled out instead
+        self.assertEqual(self.tui._duration(40), "40 秒")
+        self.assertEqual(self.tui._duration(100), "1 分 40 秒")
+        self.assertEqual(self.tui._duration(3900), "1 小时 5 分")
+
     def test_a_run_without_an_estimate_reports_only_the_elapsed_time(self):
         outcome = self.menu.Outcome(
             action="check", label="门禁", code=0, output_lines=1, tail="done", elapsed=2.0
