@@ -82,11 +82,12 @@
   },
   "thresholds": {
     "exercises_min_total": 50,
-    "index_total_min": 120,
+    "index_total_min": 300,
     "index_per_chapter_min": 5,
-    "index_main_min": 150,
-    "index_sub_min": 50,
-    "index_see_also_min": 30,
+    "index_main_min": 185,
+    "index_sub_min": 112,
+    "index_see_also_min": 145,
+    "chapters_min_cross_refs": 2,
     "glossary_min_entries": 60,
     "exercises_min_per_chapter": 3,
     "ledger_growth": 10

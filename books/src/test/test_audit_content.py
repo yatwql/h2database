@@ -9,6 +9,7 @@ regressions in the audits — the class of bug unit tests cannot see.
 
 import os
 import sys
+import tempfile
 import unittest
 
 import _fixture
@@ -39,14 +40,14 @@ class TestContentAudits(FixtureCase):
         with open(path, "a", encoding="utf-8") as fh:
             fh.write("\n详见第2章《测试章节》，详见第9章《空章节》。\n")
         code, out = _fixture.run_inproc(self.root, "crossrefs.py")
-        self.assertEqual(code, 0, out)
+        self.assertEqual(code, 1, out)
         self.assertIn("CHAPTER_NOT_FOUND", out)
-        self.assertIn("OK: 1, Errors: 3", out)
+        self.assertIn("OK: 3, Errors: 1", out)
 
     def test_crossrefs_audit_confirms_a_book_whose_references_all_match(self):
         chapters = {
             "ch1-test.md": "# 第1章 测试章节\n\n详见第2章《测试章节》。\n",
-            "ch2-test.md": "# 第2章 测试章节\n\n正文一段。\n",
+            "ch2-test.md": "# 第2章 测试章节\n\n正文一段，详见第1章《测试章节》。\n",
         }
         for name, text in chapters.items():
             path = os.path.join(self.root, "data", "manuscript", name)
@@ -55,7 +56,19 @@ class TestContentAudits(FixtureCase):
         code, out = _fixture.run_inproc(self.root, "crossrefs.py")
         self.assertEqual(code, 0, out)
         self.assertIn("All cross-references match!", out)
-        self.assertIn("OK: 1, Errors: 0", out)
+        self.assertIn("OK: 2, Errors: 0", out)
+
+    def test_crossrefs_audit_fails_a_chapter_below_the_density_floor(self):
+        """A chapter the rest of the book never sends the reader to is a finding."""
+        path = os.path.join(self.root, "data", "manuscript", "ch2-test.md")
+        with open(path, encoding="utf-8") as fh:
+            text = fh.read()
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(text.replace("详见第1章《测试章节》。", "本章不与它章互相引用。"))
+        code, out = _fixture.run_inproc(self.root, "crossrefs.py")
+        self.assertEqual(code, 1, out)
+        self.assertIn("below the configured minimum", out)
+        self.assertIn("ch2(0)", out)
 
     def test_captions_audit_flags_bare_noun(self):
         path = os.path.join(self.root, "data", "manuscript", "ch1-test.md")
@@ -123,6 +136,69 @@ class TestFigureCitations(FixtureCase):
         code, out = _fixture.run_inproc(self.root, "figures.py", "--strict")
         self.assertEqual(code, 0, out)
         self.assertIn("Files with uncited figures: 0", out)
+
+
+
+
+class CrossrefsDensityTest(unittest.TestCase):
+    """The density rule counts chapters, and a title that drifted is an error."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+
+    def _append(self, name, text):
+        path = os.path.join(self.root, "data", "manuscript", name)
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(text)
+
+    def test_a_reference_whose_title_drifted_is_reported_with_the_actual_title(self):
+        self._append("ch1-test.md", "\n详见第2章《一直没改的旧标题》。\n")
+        code, out = _fixture.run_inproc(self.root, "crossrefs.py")
+        self.assertEqual(code, 1, out)
+        self.assertIn("MISMATCHES: 1", out)
+        self.assertIn('actual "测试章节"', out)
+
+    def test_a_continuation_file_covering_several_chapters_is_listed_not_counted(self):
+        """It cannot be attributed to one chapter, so it is reported, never guessed."""
+        self._append("ch1-test.md", "\n## 1.12 附录小节\n\n详见第2章《测试章节》。\n")
+        self._append("ch3-test.md", "续写内容，详见第2章《测试章节》。\n")
+        book = os.path.join(self.root, "data", "book", "book.toml")
+        with open(book, encoding="utf-8") as fh:
+            text = fh.read()
+        text = text.replace('    "ch2-test.md",\n]', '    "ch2-test.md",\n    "ch3-test.md",\n]', 1)
+        text = text.replace('[chapters.coverage]',
+                            '[chapters.coverage]\n"ch3-test.md" = [2, 3]', 1)
+        with open(book, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        code, out = _fixture.run_inproc(self.root, "crossrefs.py")
+        self.assertIn("declares no chapter and covers several", out)
+        self.assertNotIn("ch3 ", out.replace("ch3-test.md", ""))
+
+    def test_a_continuation_file_covering_one_chapter_is_attributed_to_it(self):
+        """One chapter is the only case where the answer is not a guess."""
+        self._append("ch1-test.md", "\n续写，详见第2章《测试章节》。\n")
+        self._append("ch4-test.md", "无关内容，没有 H1，也不在任何章节的覆盖表里。\n")
+        self._append("ch5-test.md", "续写，详见第2章《测试章节》。\n")
+        book = os.path.join(self.root, "data", "book", "book.toml")
+        with open(book, encoding="utf-8") as fh:
+            text = fh.read()
+        text = text.replace('    "ch2-test.md",\n]',
+                            '    "ch2-test.md",\n    "ch4-test.md",\n    "ch5-test.md",\n]', 1)
+        text = text.replace('[chapters.coverage]',
+                            '[chapters.coverage]\n"ch5-test.md" = [2]', 1)
+        with open(book, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        code, out = _fixture.run_inproc(self.root, "crossrefs.py")
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("declares no chapter and covers several", out)
+        self.assertIn("ch2-test.md, ch5-test.md", out)
+
+    def test_the_audit_can_be_imported_and_driven_by_a_runner(self):
+        """The gate is also called in-process, where the module is not `__main__`."""
+        module = _fixture.load_module(self.root, "crossrefs")
+        self.assertTrue(callable(module.main))
 
 
 if __name__ == "__main__":

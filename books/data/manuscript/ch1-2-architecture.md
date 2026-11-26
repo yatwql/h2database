@@ -1709,6 +1709,8 @@ JDBC  ──→ Engine ──→ Command ──→ Expression
 - **MVStore 层**依赖 FileSystem 层做文件读写
 - **Server 层**依赖 Engine 层创建 Session，依赖 FileSystem 层访问数据库文件
 
+每一层内部的 `org.h2.*` 子包构成、以及各子包在层内承担的职责，详见第3章《核心包结构详解》；依赖图上这些包内的关键类（`Engine`、`SessionLocal`、`MVStore`、`MVTable`）的字段、方法与协作关系，详见第4章《核心模块深度解读》。
+
 如图 2-17 所示，关键设计原则：**Table 和 Index 的抽象接口不依赖具体的存储引擎**（`org/h2/table/Table.java:87`）。`MVTable` 和 `MVStore` 位于 `org.h2.mvstore.db` 包，而非 `org.h2.table` 包，正是为了保持这种分离。
 
 **图 2-17: 完整包间依赖图（含所有主要子包）**

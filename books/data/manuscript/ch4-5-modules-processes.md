@@ -509,7 +509,7 @@ public void rollback() {
 
 **路径**: `org/h2/mvstore/MVStore.java` (2213 行)
 
-如图 4-16 所示，MVStore 是一个基于 Chunk 的持久化 key-value 存储引擎，使用 B-Tree 映射 (MVMap) 和 undo log。
+如图 4-16 所示，MVStore 是一个基于 Chunk 的持久化 key-value 存储引擎，使用 B-Tree 映射 (MVMap) 和 undo log。Chunk 的文件布局、检查点与崩溃恢复详见第9章《持久化引擎深度解析》。
 
 ### 4.3.1 核心设计
 - **Chunk 存储**: 数据文件按 Chunk 组织，每个 Chunk 包含连续的 page
@@ -1534,6 +1534,9 @@ private final ConcurrentHashMap<SessionLocal, SessionLocal> lockSharedSessions;
 // MVTable.java:133 — 等待锁的 FIFO 队列
 private final ArrayDeque<SessionLocal> waitingSessions;
 ```
+
+表级锁之下的行级 MVCC（`TransactionMap`）与事务隔离级别的实现，详见第10章《锁实现与并发控制》。
+
 ```text
   如图 4-44 所示，MVTable
   ┌──────────────────────────────────────────────┐
@@ -3224,7 +3227,7 @@ public MVMap.Decision decide(Record existingValue, Record providedValue) {
              └── Phase 2: compactMoveChunks()
                    └── 移动 Chunk 到文件尾 + truncate
 ```
-以下七张图共同呈现同一条主线，按标号顺序阅读：图 5-29「Compaction 触发决策树」、图 5-30「FreeSpaceBitSet 位图示意」、图 5-31「填充率与压缩决策」、图 5-50「Chunk 填充率与 compact 选择」、图 5-49「Compaction 类层次结构」、图 5-32「关键文件调用链」、图 5-51「空间整理效果指标」。三者连起来看，可以确认该主题从整体结构到具体实现的对应关系。
+以下七张图共同呈现同一条主线，按标号顺序阅读：图 5-29「Compaction 触发决策树」、图 5-30「FreeSpaceBitSet 位图示意」、图 5-31「填充率与压缩决策」、图 5-50「Chunk 填充率与 compact 选择」、图 5-49「Compaction 类层次结构」、图 5-32「关键文件调用链」、图 5-51「空间整理效果指标」。三者连起来看，可以确认该主题从整体结构到具体实现的对应关系。压缩整理与空闲空间回收的算法原理详见第6章《H2 数据库核心算法分析》。
 
 
 **图 5-29: Compaction 触发决策树**

@@ -160,14 +160,17 @@ class PrintEditionTest(unittest.TestCase):
         # a face whose line holds fewer characters than the reading measure wants is
         # set too large for the column, so the printed body shrinks; a narrower face
         # that already fits is left at the screen size (never enlarged)
-        wide = self.profile.solve_print_type({"chars_per_line": 30}, body_px=16,
-                                             chars_per_line=40, lead_target=1.4)
-        narrow = self.profile.solve_print_type({"chars_per_line": 55}, body_px=16,
-                                               chars_per_line=40, lead_target=1.4)
-        self.assertEqual(wide["scale"], 0.8)       # floored: 30/40 would be 0.75
+        wide = self.profile.solve_print_type(
+            {"chars_per_line": 30}, body_px=16, chars_per_line=40, lead_target=1.4
+        )
+        narrow = self.profile.solve_print_type(
+            {"chars_per_line": 55}, body_px=16, chars_per_line=40, lead_target=1.4
+        )
+        self.assertEqual(wide["scale"], 0.8)  # floored: 30/40 would be 0.75
         self.assertEqual(wide["body_px"], 13)
-        mid = self.profile.solve_print_type({"chars_per_line": 34}, body_px=16,
-                                            chars_per_line=40, lead_target=1.4)
+        mid = self.profile.solve_print_type(
+            {"chars_per_line": 34}, body_px=16, chars_per_line=40, lead_target=1.4
+        )
         self.assertEqual(mid["scale"], 0.85)
         self.assertEqual(mid["body_px"], 14)
         self.assertEqual(narrow["body_px"], 16)
@@ -175,20 +178,40 @@ class PrintEditionTest(unittest.TestCase):
         self.assertEqual(narrow["line_height"], 1.4)
 
     def test_a_measurement_that_says_nothing_keeps_the_screen_type(self):
-        numbers = self.profile.solve_print_type({}, body_px=16, chars_per_line=40,
-                                                lead_target=1.4)
+        numbers = self.profile.solve_print_type({}, body_px=16, chars_per_line=40, lead_target=1.4)
         self.assertEqual(numbers["body_px"], 16)
         self.assertEqual(numbers["scale"], 1.0)
 
     def test_the_density_rule_only_applies_to_paper(self):
-        numbers = self.profile.solve_print_type({"chars_per_line": 50, "code_px": 9.5},
-                                                body_px=16, chars_per_line=40,
-                                                lead_target=1.4)
+        numbers = self.profile.solve_print_type(
+            {"chars_per_line": 50, "code_px": 9.5}, body_px=16, chars_per_line=40, lead_target=1.4
+        )
         block = self.profile.inject("<head></head>", numbers)
         self.assertIn("@media print", block)
-        self.assertIn(f'font-size: {numbers["body_px"]}px', block)
-        self.assertIn(f'line-height: {numbers["line_height"]}', block)
-        self.assertIn('font-size: 9.5px', block)
+        self.assertIn(f"font-size: {numbers['body_px']}px", block)
+        self.assertIn(f"line-height: {numbers['line_height']}", block)
+        self.assertIn("font-size: 9.5px", block)
+
+    def test_listings_get_their_own_leading(self):
+        """A page of listings is set by its column, so its leading is its own knob."""
+        numbers = self.profile.solve_print_type(
+            {"chars_per_line": 40, "code_px": 9.5},
+            body_px=16,
+            chars_per_line=40,
+            lead_target=1.4,
+            code_lead_target=1.1,
+        )
+        self.assertEqual(numbers["line_height"], 1.4)
+        self.assertEqual(numbers["code_line_height"], 1.1)
+        block = self.profile.inject("<head></head>", numbers)
+        self.assertIn("line-height: 1.4", block)
+        self.assertIn("line-height: 1.1", block)
+
+    def test_the_listing_lead_follows_the_prose_lead_when_unconfigured(self):
+        numbers = self.profile.solve_print_type(
+            {"chars_per_line": 40}, body_px=16, chars_per_line=40, lead_target=1.4
+        )
+        self.assertEqual(numbers["code_line_height"], 1.4)
 
     def test_the_profile_does_not_fix_type_in_pixels(self):
         block = self.profile.style_block()
@@ -222,11 +245,27 @@ class PrintEditionTest(unittest.TestCase):
         # a blank page has no text, so there is nothing to adapt to
         self.assertIsNone(self.module.adaptive_numbers(self.pdf))
         measured = {"chars_per_line": 14, "code_px": 9.0}
-        with mock.patch.object(self.module, "reference_metrics",
-                               lambda _path=None, m=measured: m):
+        with mock.patch.object(self.module, "reference_metrics", lambda _path=None, m=measured: m):
             numbers = self.module.adaptive_numbers(self.pdf)
         self.assertIsNotNone(numbers)
         self.assertLess(numbers["body_px"], 16)
+
+    def test_the_printed_numbers_come_from_the_configuration(self):
+        """The reading measure and both leadings are configuration, not defaults."""
+        measured = {"chars_per_line": 18, "code_px": 9.0}
+        thresholds = {
+            "layout_print_chars_per_line": 36,
+            "layout_print_lead_target": 0.4,
+            "layout_print_code_lead_target": 0.1,
+        }
+        with (
+            mock.patch.object(self.module, "reference_metrics", lambda _path=None, m=measured: m),
+            mock.patch.object(self.module._config, "THRESHOLDS", thresholds),
+        ):
+            numbers = self.module.adaptive_numbers(self.pdf)
+        self.assertEqual(numbers["scale"], 0.8)  # 18/36, floored
+        self.assertEqual(numbers["line_height"], 1.4)
+        self.assertEqual(numbers["code_line_height"], 1.1)
 
     def test_the_adaptive_flag_hands_the_solver_to_build(self):
         page = SplitPage(self.pdf, self.parts, self.headings)

@@ -13,6 +13,14 @@
 
 ### 变更
 
+- **印刷版重新省页（plan-17 ③）**：纸面阅读度量与自适应解算改为配置驱动（`layout_print_chars_per_line`
+  等），标准版 920 页、印刷版 935 → **829 页（−9.9%，目标 ≤874）**，`DENSITY`、`CODE_LEAD`、`TOC_LINKS` 全绿。
+- **章节均衡的计量范围**：`balance.py` 只量正文各章，附录与前件在报告里列在 `scope.excluded_files` 下明示不计入
+  ——原来的最小值来自附录 B（68 行），比值由参考件而非章节决定。ch7-8 拆成 ch7/ch8 后正文比值
+  120.4 → **2.993**，目标经决策定为 **3.0**（再拆 ch4-5 需重编号 105 张图，代价与收益不成比例）。
+- **跨章引用有了密度判据（plan-17 ④）**：`crossrefs.py` 新增每章引用下限（`style.json chapters_min_cross_refs
+  = 2`），每条 `详见第X章《…》` 仍须解析到存在的章与 H1 标题；索引下限按实测收到 185/112/145/300。实测跨章引用
+  29 → **37 处**，索引 331 条全部可达，不留空格子内容。
 - **通用性写成约束并机检**：`technical.md` 新增 §2.4「不绑定某一本书，也不绑定某一棵源码树」——书的专有词
   只能存在于 `data/`，仓库路径/语言/后缀只能从 `[sources]` 读。`check_architecture.py` 新增
   `book_vocabulary` 检查：词表由书在 `base.json [toolchain]` 声明（当前为 `MVStore`、`TransactionStore`、

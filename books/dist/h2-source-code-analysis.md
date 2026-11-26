@@ -304,7 +304,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## H2 数据库引擎源码剖析
 
-版本 v6.6 · 2026-11-26 · 40,043 行 · 12 章 + 5 附录
+版本 v6.6 · 2026-11-26 · 40,048 行 · 12 章 + 5 附录
 
 **作者：其·龙（Stallman Wang）**
 **联系邮箱：[stallman.wang@foxmail.com](mailto:stallman.wang@foxmail.com)**
@@ -2038,6 +2038,8 @@ JDBC  ──→ Engine ──→ Command ──→ Expression
 - **Table/Index 层**依赖 MVStore 或 PageStore 做持久化
 - **MVStore 层**依赖 FileSystem 层做文件读写
 - **Server 层**依赖 Engine 层创建 Session，依赖 FileSystem 层访问数据库文件
+
+每一层内部的 `org.h2.*` 子包构成、以及各子包在层内承担的职责，详见第3章《核心包结构详解》；依赖图上这些包内的关键类（`Engine`、`SessionLocal`、`MVStore`、`MVTable`）的字段、方法与协作关系，详见第4章《核心模块深度解读》。
 
 如图 2-17 所示，关键设计原则：**Table 和 Index 的抽象接口不依赖具体的存储引擎**（`org/h2/table/Table.java:87`）。`MVTable` 和 `MVStore` 位于 `org.h2.mvstore.db` 包，而非 `org.h2.table` 包，正是为了保持这种分离。
 
@@ -5354,7 +5356,7 @@ public void rollback() {
 
 **路径**: `org/h2/mvstore/MVStore.java` (2213 行)
 
-如图 4-16 所示，MVStore 是一个基于 Chunk 的持久化 key-value 存储引擎，使用 B-Tree 映射 (MVMap) 和 undo log。
+如图 4-16 所示，MVStore 是一个基于 Chunk 的持久化 key-value 存储引擎，使用 B-Tree 映射 (MVMap) 和 undo log。Chunk 的文件布局、检查点与崩溃恢复详见第9章《持久化引擎深度解析》。
 
 ### 4.3.1 核心设计
 - **Chunk 存储**: 数据文件按 Chunk 组织，每个 Chunk 包含连续的 page
@@ -5863,7 +5865,7 @@ public V operate(K key, V value, DecisionMaker<V> decisionMaker) {
                      │       │   └──→ 回到开头
                      │       ▼
                      │  返回结果
-                     └─────────────
+                     └─────────────┘
 ```
 **图 4-30: operate() CAS 循环流程**
 ```text
@@ -6379,6 +6381,9 @@ private final ConcurrentHashMap<SessionLocal, SessionLocal> lockSharedSessions;
 // MVTable.java:133 — 等待锁的 FIFO 队列
 private final ArrayDeque<SessionLocal> waitingSessions;
 ```
+
+表级锁之下的行级 MVCC（`TransactionMap`）与事务隔离级别的实现，详见第10章《锁实现与并发控制》。
+
 ```text
   如图 4-44 所示，MVTable
   ┌──────────────────────────────────────────────┐
@@ -8069,7 +8074,7 @@ public MVMap.Decision decide(Record existingValue, Record providedValue) {
              └── Phase 2: compactMoveChunks()
                    └── 移动 Chunk 到文件尾 + truncate
 ```
-以下七张图共同呈现同一条主线，按标号顺序阅读：图 5-29「Compaction 触发决策树」、图 5-30「FreeSpaceBitSet 位图示意」、图 5-31「填充率与压缩决策」、图 5-50「Chunk 填充率与 compact 选择」、图 5-49「Compaction 类层次结构」、图 5-32「关键文件调用链」、图 5-51「空间整理效果指标」。三者连起来看，可以确认该主题从整体结构到具体实现的对应关系。
+以下七张图共同呈现同一条主线，按标号顺序阅读：图 5-29「Compaction 触发决策树」、图 5-30「FreeSpaceBitSet 位图示意」、图 5-31「填充率与压缩决策」、图 5-50「Chunk 填充率与 compact 选择」、图 5-49「Compaction 类层次结构」、图 5-32「关键文件调用链」、图 5-51「空间整理效果指标」。三者连起来看，可以确认该主题从整体结构到具体实现的对应关系。压缩整理与空闲空间回收的算法原理详见第6章《H2 数据库核心算法分析》。
 
 
 **图 5-29: Compaction 触发决策树**
@@ -25913,7 +25918,7 @@ public class IndexCondition {
 }
 ```
 
-如图 8-34 所示，条件通过**掩码**与索引匹配。每个 `IndexCondition` 都绑定到一个特定的列和一个比较类型。
+如图 8-34 所示，条件通过**掩码**与索引匹配。每个 `IndexCondition` 都绑定到一个特定的列和一个比较类型。掩码最终落到存储层的 B-Tree 区间查找上，其页结构与分裂合并详见第9章《持久化引擎深度解析》9.2 节。
 
 ```text
 IndexCondition 类型与掩码取值
@@ -31330,7 +31335,7 @@ H2 Database 的 MVStore 引擎实现了多层次的并发控制机制：表级�
 
 **核心文件**: `org/h2/mvstore/db/MVTable.java`
 
-`MVTable` 是 MVStore 存储模式下的表实现，它提供了表级的共享锁（读锁）和排他锁（写锁）机制。
+`MVTable` 是 MVStore 存储模式下的表实现，它提供了表级的共享锁（读锁）和排他锁（写锁）机制。该类在模块层面的职责与字段布局详见第4章《核心模块深度解读》4.6 节。
 
 ### 10.1.1 锁状态字段
 
@@ -31993,7 +31998,7 @@ public static final DebuggingThreadLocal<ArrayList<String>> SHARED_LOCKS;
 
 如图 10-6 所示，**核心文件**: `org/h2/mvstore/tx/TransactionMap.java`, `mvstore/tx/TxDecisionMaker.java`
 
-`TransactionMap` 是 `MVMap` 的事务性包装器，提供了基于 MVCC 的行级并发控制。它通过 `VersionedValue` 为每个键值对维护多个版本，支持快照隔离（Snapshot Isolation——事务开始时的数据快照作为整个事务期间的一致读视图，写入时采用 first-committer-wins 策略解决冲突）。
+`TransactionMap` 是 `MVMap` 的事务性包装器，提供了基于 MVCC 的行级并发控制。它通过 `VersionedValue` 为每个键值对维护多个版本，支持快照隔离（Snapshot Isolation——事务开始时的数据快照作为整个事务期间的一致读视图，写入时采用 first-committer-wins 策略解决冲突）。版本链在 `MVStore` 内的持久化形态（undo log 的写入与提交时的一次性落盘）详见第9章《持久化引擎深度解析》9.4 节。
 
 ### 10.2.1 VersionedValue 结构
 

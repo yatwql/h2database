@@ -55,7 +55,7 @@ class StructureMutationTest(unittest.TestCase):
         self.assertIn('Code Fence', out)
 
     def test_broken_cross_reference_is_reported(self):
-        self.mutate('ch1-test.md', '详见第2章《第2章 测试章节》。', '详见第9章《不存在》。')
+        self.mutate('ch1-test.md', '详见第2章《测试章节》。', '详见第9章《不存在》。')
         _code, out = self.run_gate()
         self.assertIn('9', out)
 

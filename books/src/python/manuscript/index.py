@@ -13,8 +13,9 @@ Flags:
   --coverage          Show per-chapter entry density report from chapter files.
   --hierarchy-check   Audit the existing index.md for main/sub-entry depth and
                       report counts (main, sub, see-also). Exits 1 when the
-                      counts fall below the configured minimums (main >= 150, sub >= 50,
-                      see-also >= 30).
+                      counts fall below the book's configured minimums
+                      (`index_main_min`, `index_sub_min`, `index_see_also_min`,
+                      `index_total_min`).
 """
 
 import os as _os
@@ -82,9 +83,15 @@ if hierarchy_check:
     print(f"  main entries w/ subs:    {main_with_subs}")
     print(f"  total entries:           {main_count + sub_count}")
 
-    # Floor values (set below the live numbers on purpose)
-    # that flag accidental regressions if someone bulk-deletes entries).
-    floors = {"main": 150, "sub": 50, "see_also": 30, "total": 250}
+    # Floor values keep a bulk deletion from passing as an edit. They are read from
+    # the book's thresholds, because the floor of this index is a property of this
+    # book: the numbers in the defaults are only what a book that declares none gets.
+    floors = {
+        "main": int(_config.THRESHOLDS.get("index_main_min", 150)),
+        "sub": int(_config.THRESHOLDS.get("index_sub_min", 50)),
+        "see_also": int(_config.THRESHOLDS.get("index_see_also_min", 30)),
+        "total": int(_config.THRESHOLDS.get("index_total_min", 250)),
+    }
     fails: list[str] = []
     if main_count < floors["main"]:
         fails.append(f"main {main_count} < {floors['main']}")

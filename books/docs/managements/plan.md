@@ -43,6 +43,11 @@
 **事实位**：设计与计划在 `docs/plan/book-quality-closeout/design.md` 与 `docs/plan/book-quality-closeout/plan.md`；
 章节映射在 `data/book/book.toml`，重编号在 `src/python/manuscript/renumber.py`，判据在 `src/python/audit/`。
 
+**分项状态**：①图示闭合——已提交，`readability.py` 改为按文件存量记账（存量与改动见 `changelog.md`）；
+②章节均衡——拆章后正文 max/min 2.993，目标经决策调整为 3.0（再拆一章 ch4-5 要重编号 105 张图，收益不抵代价），判据随配置转绿；③印刷密度——完成，标准版 920 页、
+印刷版 829 页（−9.9%，目标 ≤874 页），`DENSITY`/`CODE_LEAD`/`TOC_LINKS` 全绿；④索引与交叉引用——完成，
+索引下限按实测收到 185/112/145/300、每章引用下限 2，实测跨章引用 37 处且逐条解析。
+
 ### P2 — 下一阶段就绪（条件满足即开工）
 
 入选标准：价值明确、成本可控，前置条件可判定。

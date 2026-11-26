@@ -2358,7 +2358,7 @@ public class IndexCondition {
 }
 ```
 
-如图 8-34 所示，条件通过**掩码**与索引匹配。每个 `IndexCondition` 都绑定到一个特定的列和一个比较类型。
+如图 8-34 所示，条件通过**掩码**与索引匹配。每个 `IndexCondition` 都绑定到一个特定的列和一个比较类型。掩码最终落到存储层的 B-Tree 区间查找上，其页结构与分裂合并详见第9章《持久化引擎深度解析》9.2 节。
 
 ```text
 IndexCondition 类型与掩码取值

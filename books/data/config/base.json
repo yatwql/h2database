@@ -47,7 +47,10 @@
     "pdf_split_by_chapter": true,
     "pdf_bytes_per_page": 30000.0,
     "layout_spacing_scale": 0.7,
-    "balance_max_min_ratio": 2.5,
+    "layout_print_adaptive": true,
+    "layout_print_chars_per_line": 22,
+    "layout_print_code_lead_target": 0.1,
+    "balance_max_min_ratio": 3.0,
     "optional_imports": [
       "fontTools"
     ],

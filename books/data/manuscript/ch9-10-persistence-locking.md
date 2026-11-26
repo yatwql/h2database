@@ -3276,7 +3276,7 @@ H2 Database 的 MVStore 引擎实现了多层次的并发控制机制：表级�
 
 **核心文件**: `org/h2/mvstore/db/MVTable.java`
 
-`MVTable` 是 MVStore 存储模式下的表实现，它提供了表级的共享锁（读锁）和排他锁（写锁）机制。
+`MVTable` 是 MVStore 存储模式下的表实现，它提供了表级的共享锁（读锁）和排他锁（写锁）机制。该类在模块层面的职责与字段布局详见第4章《核心模块深度解读》4.6 节。
 
 ### 10.1.1 锁状态字段
 
@@ -3939,7 +3939,7 @@ public static final DebuggingThreadLocal<ArrayList<String>> SHARED_LOCKS;
 
 如图 10-6 所示，**核心文件**: `org/h2/mvstore/tx/TransactionMap.java`, `mvstore/tx/TxDecisionMaker.java`
 
-`TransactionMap` 是 `MVMap` 的事务性包装器，提供了基于 MVCC 的行级并发控制。它通过 `VersionedValue` 为每个键值对维护多个版本，支持快照隔离（Snapshot Isolation——事务开始时的数据快照作为整个事务期间的一致读视图，写入时采用 first-committer-wins 策略解决冲突）。
+`TransactionMap` 是 `MVMap` 的事务性包装器，提供了基于 MVCC 的行级并发控制。它通过 `VersionedValue` 为每个键值对维护多个版本，支持快照隔离（Snapshot Isolation——事务开始时的数据快照作为整个事务期间的一致读视图，写入时采用 first-committer-wins 策略解决冲突）。版本链在 `MVStore` 内的持久化形态（undo log 的写入与提交时的一次性落盘）详见第9章《持久化引擎深度解析》9.4 节。
 
 ### 10.2.1 VersionedValue 结构
 
