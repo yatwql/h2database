@@ -25,7 +25,8 @@
     "content_volume": "data/baselines/content-volume.json",
     "captions": "data/baselines/captions-findings.json",
     "content_depth": "data/baselines/content-depth-findings.json",
-    "style_rules": "data/baselines/style-rules-baseline.json"
+    "style_rules": "data/baselines/style-rules-baseline.json",
+    "readability_box": "data/baselines/readability-box-drawing.json"
   },
   "toolchain": {
     "coverage_fail_under": 90,

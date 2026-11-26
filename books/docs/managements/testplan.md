@@ -101,7 +101,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | PDF 交付 | PDF 重新生成自当前 HTML；页面为 A4（尺寸与容差取配置）、无旋转；字体全部嵌入且 Type3 不超过 `pdf_type3_max`（`FONTS`）；outline 与 HTML 标题逐一对应；印刷 TOC 链接按序且在页内；体积不超过配置的 PDF 预算（随页数增长）；正文行距÷字号落在配置区间（`DENSITY`，只判运行正文，判定用按字体分开的测量 `prose_pitch_ratio`）、清单行距不低于 1.0（`CODE_LEAD`，清单字号由栏宽决定，故不套用正文区间）、文字占可印高度达标 | `render/verify_pdf.py`（`--require-toc-links`） | P1 |
 | EPUB 结构 | mimetype 首条且未压缩；container/OPF/manifest/spine/nav 全部可解析、导航链接全部命中；元数据齐备；每个正文文件恰好一个 `h1`（`CHAPTERS`，图注被当成标题时当场报警）；体积不超过配置的 EPUB 预算 | `render/verify_epub.py` | P1 |
 | EPUB 生成 | pandoc 可用时由 `to_epub.py` 生成 EPUB（在 `deliver` 组内，生成后由 `verify_epub.py` 校验） | `render/to_epub.py` | P1 |
-| 可读性 | 长句、宽 ASCII 图、框线闭合、图注质量 | `readability.py` | P1 |
+| 可读性 | 长句、宽 ASCII 图、图注质量；框线闭合按文件记账（`data/baselines/readability-box-drawing.json`）：某文件条数上涨或出现基线外的文件即失败，下降提示收紧记录 | `readability.py` | P1 |
 | 术语与排版规则 | 同一概念不混用两种写法；标题无尾标点；链接文字可读；中英之间留空格；列表标点一致；段落 ≤ 上限（已知项走基线） | `style_rules.py` | P1 |
 | 内容深度 | 前向引用须点名主责章节；高频类型须入术语表；练习题须指向本章类型或 §锚点 | `content_depth.py` | P1 |
 | ASCII 图质量 | 图宽不超过配置的列数上限（CJK 记 2 列）；无行尾空格/制表符；单图不混用框线与 ASCII 边框；已知项走基线 | `diagrams.py`、`books/data/baselines/ascii-baseline.json` | P1 |

@@ -1018,7 +1018,7 @@ public V operate(K key, V value, DecisionMaker<V> decisionMaker) {
                      │       │   └──→ 回到开头
                      │       ▼
                      │  返回结果
-                     └─────────────
+                     └─────────────┘
 ```
 **图 4-30: operate() CAS 循环流程**
 ```text

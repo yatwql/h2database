@@ -1,0 +1,16 @@
+{
+  "updated": "2026-11-26",
+  "note": "Accepted box-drawing warnings per file. A count may fall, never rise.",
+  "files": {
+    "appendix-a-case-studies.md": 21,
+    "ch1-2-architecture.md": 50,
+    "ch11-12-guide-summary.md": 38,
+    "ch3-packages.md": 52,
+    "ch4-5-modules-processes.md": 137,
+    "ch6-1-data-structures.md": 38,
+    "ch6-2-storage-algorithms.md": 52,
+    "ch6-3-query-algorithms.md": 76,
+    "ch7-8-sql-optimizer.md": 276,
+    "ch9-10-persistence-locking.md": 186
+  }
+}
