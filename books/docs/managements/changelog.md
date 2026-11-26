@@ -13,6 +13,11 @@
 
 ### 变更
 
+- **通用性写成约束并机检**：`technical.md` 新增 §2.4「不绑定某一本书，也不绑定某一棵源码树」——书的专有词
+  只能存在于 `data/`，仓库路径/语言/后缀只能从 `[sources]` 读。`check_architecture.py` 新增
+  `book_vocabulary` 检查：词表由书在 `base.json [toolchain]` 声明（当前为 `MVStore`、`TransactionStore`、
+  `JdbcStatement`、`SessionLocal`、`H2 Console`），整词匹配 `src/python/` 全文，命中即报，随架构层一起
+  是 P0 门禁（关闭了「书的内容写进工具链」这条长期无门禁的口子）。
 - **对比类论述开始表格化（plan-13 阶段 1–2）**：附录 B 的十二项 MVStore 变更与十一项事务子系统变更
   改成两张 3 列表（变更点 / 之前 → 现在 / 读者影响），第 7 章补一张 Statement 与 PreparedStatement
   的 5 行对照表（编译时机、N 次开销、参数传递、注入面、适用场景）。改写只换呈现：每条事实逐条对应，

@@ -48,6 +48,13 @@
     "layout_spacing_scale": 0.7,
     "optional_imports": [
       "fontTools"
+    ],
+    "book_vocabulary": [
+      "MVStore",
+      "TransactionStore",
+      "JdbcStatement",
+      "SessionLocal",
+      "H2 Console"
     ]
   },
   "logging": {

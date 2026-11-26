@@ -274,6 +274,33 @@ class WiringAuditTest(unittest.TestCase):
         problems = self.mod.check_wiring({"build": "audit/x.py"}, {"test": ("nowhere",)})
         self.assertFalse(any("unknown step" in problem for problem in problems), problems)
 
+class BookVocabularyTest(unittest.TestCase):
+    """The toolchain must not name this book's subject anywhere in code."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.arch = _fixture.load_module(self.root, "check_architecture")
+
+    def test_a_book_term_in_the_source_is_reported(self):
+        with mock.patch.object(self.arch, "_config") as config:
+            config.THRESHOLDS = {"book_vocabulary": ["MVStore"]}
+            problems = self.arch._book_literal_problems("x.py", "widgets", "x = 'MVStore'\n")
+        self.assertTrue(any("MVStore" in problem for problem in problems), problems)
+
+    def test_a_substring_of_a_longer_identifier_is_not_a_match(self):
+        with mock.patch.object(self.arch, "_config") as config:
+            config.THRESHOLDS = {"book_vocabulary": ["Store"]}
+            problems = self.arch._book_literal_problems("x.py", "widgets", "x = 'StoreHouse'\n")
+        self.assertEqual(problems, [])
+
+    def test_no_declared_vocabulary_reports_nothing(self):
+        with mock.patch.object(self.arch, "_config") as config:
+            config.THRESHOLDS = {}
+            self.assertEqual(self.arch._book_literal_problems("x.py", "x", "MVStore"), [])
+
+
 class ImportTimeConfigReadTest(unittest.TestCase):
     """Modules the console entry imports must read configuration when they run.
 

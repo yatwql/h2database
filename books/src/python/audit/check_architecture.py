@@ -231,6 +231,27 @@ def _write_problems(tree, rel: str, layer: str, source: str) -> list[str]:
     return [f'{rel}: "{layer}" layer must not write files (line {writers[0]})'] if writers else []
 
 
+def book_vocabulary() -> tuple[str, ...]:
+    """Words that belong to one book, declared by that book's own configuration.
+
+    The toolchain must not know any book: a term that names this manuscript's subject
+    (a type, a component, a product) is content, and content lives in `data/`. The list
+    is configured rather than inferred, so a false positive is a configuration edit, not
+    a code change.
+    """
+    return tuple(str(item) for item in (_config.THRESHOLDS.get('book_vocabulary') or ()))
+
+
+def _book_literal_problems(rel: str, name: str, source: str) -> list[str]:
+    if name == "check_architecture":
+        return []
+    return [
+        f'{rel}: hardcodes this book\'s vocabulary "{word}"'
+        for word in book_vocabulary()
+        if word and re.search(rf'(?<![\w]){re.escape(word)}(?![\w])', source)
+    ]
+
+
 def _path_literal_problems(rel: str, layer: str, name: str, source: str) -> list[str]:
     if layer == "lib" or name == "check_architecture":
         return []
@@ -284,6 +305,7 @@ def check(path: str, root: str | None = None) -> list[str]:
     problems += _direction_problems(path, rel, layer)
     problems += _write_problems(tree, rel, layer, source)
     problems += _path_literal_problems(rel, layer, name, source)
+    problems += _book_literal_problems(rel, name, source)
     problems += _naming_problems(path, rel, layer, name)
     problems += _exit_problems(rel, layer, source)
     return problems
