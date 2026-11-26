@@ -4,14 +4,14 @@
 > 版本：v0.1
 > 定位：在办事项的**时机档与逐项验收**——每项现状 / 动作 / 验收 / 事实位只在这里；
 > 不记设计细节（看 `technical.md`），也不存问题台账（看 `review-findings.md`）。
-> **编号源**：`plan-next = 13`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-12，
+> **编号源**：`plan-next = 14`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-13，
 > 递增保证唯一，归档不回收。编号与 `review-findings.md` 的 `rf-*` 是两套，互不占用）
 
 ---
 
 ## 概述
 
-在办 3 项：P2 1 项（**plan-4**）、P3 2 项（**plan-6**、**plan-12**）。
+在办 4 项：P2 1 项（**plan-4**）、P3 3 项（**plan-6**、**plan-12**、**plan-13**）。
 单项的范围、验收与事实位只在本文维护；系统怎么搭见 `technical.md`，怎么验证见
 `testplan.md`。
 
@@ -74,6 +74,18 @@ chapters.py`，填好 `book.toml [chapters.packages]` 后跑 `make.py check`。
 分析器契约 `ingest/languages/_base.py`，注册与探测 `ingest/languages/__init__.py`，
 后缀表 `data/config/base.json [sources]`，坐标核验 `audit/source_refs.py`。
 
+#### `plan-13` 对比类论述表格化
+
+**现状**：并列比较（相邻小版本差异、优化器参数取舍、升级与回滚对照）写成长段落，读时要自行对齐
+两侧取值；全书表格仅 3 处。
+**动作**：按 `docs/plan/tabular-comparisons/plan.md` 分阶段推进（选点与判据冻结 → 试点两处 →
+铺开与门禁回归 → 收尾）；先挑附录 B 与 ch7 参数取舍两处改 3 列表，验证三个出口（HTML/PDF/EPUB）
+与既有判据后再铺开。
+**验收**：每处改写前后事实逐条对应、无新增断言；交付校验（PDF、EPUB 两侧）全绿；`content_depth`、
+`readability` 的结论与改动前一致（指标仍在区间内）；EPUB 窄屏下表格不溢出。
+**事实位**：设计与计划在 `docs/plan/tabular-comparisons/design.md` 与 `docs/plan/tabular-comparisons/plan.md`；
+表格体例在 `docs/manuals/how-to-write.md`，表格渲染与校验在 `render/to_html.py` 与交付校验两步。
+
 ### P4 — 先决门槛未过，暂缓
 
 入选标准：接入前有硬性先决条件，门槛未过不排期。当前无待办项。
@@ -93,4 +105,4 @@ chapters.py`，填好 `book.toml [chapters.packages]` 后跑 `make.py check`。
 
 > 已发布版本的计划快照只在上面的归档文件里；本文只留在办与将来的计划项。
 
-- [`archived_plan.0.1.md`](../archive/v0.1/archived_plan.0.1.md) — v0.1（0.1 开发段，2026-11 发布）
+- [`archived_plan.0.1.md`](../archive/v0.1/archived_plan.0.1.md) — v0.1（2026-11-26 发布）

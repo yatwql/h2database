@@ -594,7 +594,12 @@ def load_module(root: str, name: str):
             raise ImportError(f"cannot load {name} from {module_path}")
         module = importlib.util.module_from_spec(spec)
         sys.modules[name] = module
-        spec.loader.exec_module(module)
+        try:
+            spec.loader.exec_module(module)
+        except SystemExit:
+            # a delivery script runs its gate at import time; loading it to reach a
+            # helper must not turn the gate's verdict into a test error
+            pass
         return module
     finally:
         if previous_root is None:

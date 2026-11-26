@@ -10,11 +10,25 @@ optional dependencies are importable; otherwise they are skipped by name so the
 gap stays visible instead of silently passing.
 """
 
+import importlib.util
 import os
+import shutil
 import sys
 import unittest
 
 from _cases import ScriptTestBase
+
+# Scripts whose exit code depends on an optional tool: in a bare environment they
+# report the missing dependency, so the recorded verdict only holds where it exists.
+TOOL_FOR = {'to_epub.py': 'pandoc', 'pdf_toc_links.py': 'playwright',
+            'pdf_from_html.py': 'playwright'}
+
+
+def has_tool(name: str) -> bool:
+    if name == 'pandoc':
+        return bool(shutil.which('pandoc'))
+    return importlib.util.find_spec(name) is not None
+
 
 TAGS = ('layer:infra', 'tier:fast')
 
@@ -87,6 +101,9 @@ class TestEveryScriptRuns(ScriptTestBase):
         self.run_script('to_html.py')
         for script in ALL_SCRIPTS + AUDIT_SCRIPTS:
             with self.subTest(script=script):
+                tool = TOOL_FOR.get(script)
+                if tool and not has_tool(tool):
+                    self.skipTest(f'{tool} is not installed')
                 code, out = self.run_script(script)
                 self.assertIn(script, SCRIPT_EXIT_CODES, f'{script} has no recorded verdict')
                 self.assertEqual(code, SCRIPT_EXIT_CODES[script], f'{script} -> {code}\n{out}')

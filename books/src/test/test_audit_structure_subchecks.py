@@ -74,7 +74,9 @@ class CssCheckSourceTest(StructureGateCase):
 
     def setUp(self):
         super().setUp()
-        self.structure = __import__("audit.structure", fromlist=["css_style_missing"])
+        # load through the fixture (so the config resolves) and tolerate the gate the
+        # script runs at import time: a red gate must not become a test error
+        self.structure = _fixture.load_module(self.root, "structure")
 
     def test_the_shipped_renderer_carries_every_hook(self):
         render_dir = os.path.join(TOOLS_DIR, "render")
@@ -91,7 +93,9 @@ class CssCheckSourceTest(StructureGateCase):
         # the gate looks for the renderer next to itself, so the copy has to sit in
         # a tree of its own: patching the reader would prove nothing about the path
         copy = os.path.join(tree, "audit", "structure.py")
-        shutil.copyfile(self.structure.__file__, copy)
+        source = self.structure.__file__
+        assert source is not None        # a loaded module always has one
+        shutil.copyfile(source, copy)
         code, out = _fixture.run_inproc(self.root, copy)
         self.assertIn(code, (0, 1))
         self.assertIn("CSS check skipped (to_html.py not found)", out)

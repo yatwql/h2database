@@ -109,8 +109,14 @@ def build(html_path: str | None = None, pdf_path: str | None = None,
         print('  Chromium 分章渲染中（与标准版同一页框）…', flush=True)
         count = pdf_split.render_html(staging, target, engine=engine)
         if linker is _DEFAULT_LINKER:
-            from render import pdf_toc_links  # noqa: PLC0415 - playwright only here
-            linker = pdf_toc_links.add_links
+            try:
+                from render import pdf_toc_links  # noqa: PLC0415 - playwright only here
+                linker = pdf_toc_links.add_links
+            except ImportError:
+                # a plain environment has no browser engine; the PDF is still usable,
+                # the printed TOC just keeps clickable rectangles without targets
+                print('  [WARN] 目录链接未写回（playwright 未安装）', flush=True)
+                linker = None
         if linker is not None:
             print('  印刷目录链接写回 PDF 目标…', flush=True)
             linker(pdf_path=target, html_path=staging)

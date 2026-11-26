@@ -63,6 +63,7 @@ GATE_EXIT_CODES = {
     'script_contract': 0,
     'style_rules': 0,
     'style_schema': 1,
+    'structure': 0,   # script-style gate: the import *is* the run
     'version_consistency': 0,
     'style': 0,
     'smart': 0,

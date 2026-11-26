@@ -18,4 +18,4 @@
 
 > 已发布版本只在上面的归档文件里；本文只留当前开发段。
 
-- [`archived_changelog.0.1.md`](../archive/v0.1/archived_changelog.0.1.md) — v0.1（0.1 开发段，2026-11 发布）
+- [`archived_changelog.0.1.md`](../archive/v0.1/archived_changelog.0.1.md) — v0.1（2026-11-26 发布）

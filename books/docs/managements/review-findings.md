@@ -75,13 +75,13 @@
 
 | 文件 | 现状与拆分方向 |
 | --- | --- |
-| `src/python/ingest/chapters.py` 881 行 | 占比 97%，章节正文已按小节组拆成模块版图 / 接口坐标 / 阅读路径 / 设计权衡 / 深读要点 / 术语 / 小结 / 视角 / 检查清单九个助手（每章事实只在 `_chapter_context` 算一次），剩余方向是骨架生成与语言适配调用两段（事实块标记与刷新已拆到 `ingest/factblocks.py`） |
+| `src/python/ingest/chapters.py` 900 行 | 占比 97%，章节正文已按小节组拆成模块版图 / 接口坐标 / 阅读路径 / 设计权衡 / 深读要点 / 术语 / 小结 / 视角 / 检查清单九个助手（每章事实只在 `_chapter_context` 算一次），剩余方向是骨架生成与语言适配调用两段（事实块标记与刷新已拆到 `ingest/factblocks.py`） |
 | `src/python/audit/style.py` 648 行 | 占比 68%，句式规则已按规则族拆开（单调 / 重复 / 段落各自成函数），剩余方向是共享解析（行扫描、句切分）上提到 `lib/_mdutil` |
-| `src/python/lib/_config.py` 801 行 | 占比 89%，版本与最后改动日期已抽到 `lib/_book_versions.py`（`BookVersions` 由 `Config` 继承，门面与模块属性转发不变），剩余方向是「书目发现 / 配置加载」与「路径与策略」两段。**这个文件贴着 900 行上限，不得整文件重排**：一次格式化就把它从 896 行推到 916 行并判红，抽取后也要留出同样的余量。拆分时的三处内部依赖：`_IMPORT_ROOT` 由发现逻辑算出、`ConfigError` 被两侧共用、`candidate_books()` 反过来用 `Config`——先把前两者下沉到新模块、`candidate_books` 留在门面，才能避开循环导入（试过整体抽取，14 个用例导入失败） |
+| `src/python/lib/_config.py` 809 行 | 占比 89%，版本与最后改动日期已抽到 `lib/_book_versions.py`（`BookVersions` 由 `Config` 继承，门面与模块属性转发不变），剩余方向是「书目发现 / 配置加载」与「路径与策略」两段。**这个文件贴着 900 行上限，不得整文件重排**：一次格式化就把它从 896 行推到 916 行并判红，抽取后也要留出同样的余量。拆分时的三处内部依赖：`_IMPORT_ROOT` 由发现逻辑算出、`ConfigError` 被两侧共用、`candidate_books()` 反过来用 `Config`——先把前两者下沉到新模块、`candidate_books` 留在门面，才能避开循环导入（试过整体抽取，14 个用例导入失败） |
 
 
 ## 归档
 
 > 已关闭版本的问题台账只在上面的归档文件里；本文只留在办与未关闭的条目。
 
-- [`archived_review-findings.0.1.md`](../archive/v0.1/archived_review-findings.0.1.md) — v0.1（0.1 开发段，2026-11 发布）
+- [`archived_review-findings.0.1.md`](../archive/v0.1/archived_review-findings.0.1.md) — v0.1（2026-11-26 发布）

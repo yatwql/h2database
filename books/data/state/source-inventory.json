@@ -1,20 +1,20 @@
 {
   "root": "/lzcapp/document/codebase/h2db/h2/src/main",
   "source_version": "2.5.259-SNAPSHOT",
-  "tool_version": "0.1-dev",
+  "tool_version": "0.1",
   "languages": [
     "java"
   ],
   "totals": {
     "packages": 58,
     "files": 843,
-    "lines": 232242
+    "lines": 232284
   },
   "by_language": {
     "java": {
       "packages": 58,
       "files": 843,
-      "lines": 232242
+      "lines": 232284
     }
   },
   "packages": {
@@ -4511,7 +4511,7 @@
       "path": "h2/src/main/org/h2/engine",
       "summary": "",
       "files": 29,
-      "lines": 11851,
+      "lines": 11880,
       "depends_on": {
         "org.h2": 213,
         "org.h2.command": 7,
@@ -4589,11 +4589,11 @@
           "name": "SessionLocal",
           "file": "SessionLocal.java",
           "rel": "h2/src/main/org/h2/engine/SessionLocal.java",
-          "lines": 2156,
+          "lines": 2185,
           "public": true,
           "kind": "type",
           "summary": "",
-          "public_methods": 135,
+          "public_methods": 137,
           "api": [
             "addLocalTempTable",
             "addLocalTempTableConstraint",
@@ -4604,6 +4604,7 @@
             "areEqual",
             "begin",
             "cancel",
+            "checkAdminFunction",
             "checkCanceled",
             "clearViewIndexCache",
             "close",
@@ -4617,34 +4618,33 @@
             "endStatement",
             "equals",
             "findLocalTempTable",
-            "findLocalTempTableConstraint",
-            "findLocalTempTableIndex"
+            "findLocalTempTableConstraint"
           ],
           "api_lines": {
-            "addLocalTempTable": 397,
-            "addLocalTempTableConstraint": 510,
-            "addLocalTempTableIndex": 454,
-            "addProcedure": 1424,
-            "addSavepoint": 1140,
-            "addTemporaryLob": 1768,
-            "areEqual": 1997,
-            "begin": 1478,
-            "cancel": 896,
-            "checkCanceled": 1301,
-            "clearViewIndexCache": 1763,
-            "close": 911,
-            "commit": 687,
-            "compare": 2012,
-            "compareTypeSafe": 2040,
-            "compareWithNull": 2027,
-            "createConnection": 1364,
-            "currentTimeZone": 1965,
-            "currentTimestamp": 1901,
-            "endStatement": 1740,
+            "addLocalTempTable": 426,
+            "addLocalTempTableConstraint": 539,
+            "addLocalTempTableIndex": 483,
+            "addProcedure": 1453,
+            "addSavepoint": 1169,
+            "addTemporaryLob": 1797,
+            "areEqual": 2026,
+            "begin": 1507,
+            "cancel": 925,
+            "checkAdminFunction": 325,
+            "checkCanceled": 1330,
+            "clearViewIndexCache": 1792,
+            "close": 940,
+            "commit": 716,
+            "compare": 2041,
+            "compareTypeSafe": 2069,
+            "compareWithNull": 2056,
+            "createConnection": 1393,
+            "currentTimeZone": 1994,
+            "currentTimestamp": 1930,
+            "endStatement": 1769,
             "equals": 98,
-            "findLocalTempTable": 377,
-            "findLocalTempTableConstraint": 484,
-            "findLocalTempTableIndex": 434
+            "findLocalTempTable": 406,
+            "findLocalTempTableConstraint": 513
           }
         },
         {
@@ -7926,7 +7926,7 @@
       "path": "h2/src/main/org/h2/expression/function",
       "summary": "",
       "files": 51,
-      "lines": 9520,
+      "lines": 9524,
       "depends_on": {
         "org.h2": 484,
         "org.h2.util": 11,
@@ -8151,7 +8151,7 @@
           "name": "DBObjectFunction",
           "file": "DBObjectFunction.java",
           "rel": "h2/src/main/org/h2/expression/function/DBObjectFunction.java",
-          "lines": 203,
+          "lines": 204,
           "public": true,
           "kind": "type",
           "summary": "",
@@ -8163,9 +8163,9 @@
             "optimize"
           ],
           "api_lines": {
-            "getName": 198,
+            "getName": 199,
             "getValue": 72,
-            "isEverything": 189,
+            "isEverything": 190,
             "optimize": 167
           }
         },
@@ -8405,7 +8405,7 @@
           "name": "FileFunction",
           "file": "FileFunction.java",
           "rel": "h2/src/main/org/h2/expression/function/FileFunction.java",
-          "lines": 146,
+          "lines": 147,
           "public": true,
           "kind": "type",
           "summary": "",
@@ -8417,9 +8417,9 @@
             "optimize"
           ],
           "api_lines": {
-            "getName": 141,
+            "getName": 142,
             "getValue": 56,
-            "isEverything": 127,
+            "isEverything": 128,
             "optimize": 107
           }
         },
@@ -8501,7 +8501,7 @@
           "name": "CSVWriteFunction",
           "file": "CSVWriteFunction.java",
           "rel": "h2/src/main/org/h2/expression/function/CSVWriteFunction.java",
-          "lines": 127,
+          "lines": 128,
           "public": true,
           "kind": "type",
           "summary": "",
@@ -8514,9 +8514,9 @@
             "setCsvDelimiterEscape"
           ],
           "api_lines": {
-            "getName": 107,
+            "getName": 108,
             "getValue": 31,
-            "isEverything": 112,
+            "isEverything": 113,
             "optimize": 96,
             "setCsvDelimiterEscape": 76
           }
@@ -8761,7 +8761,7 @@
           "name": "SessionControlFunction",
           "file": "SessionControlFunction.java",
           "rel": "h2/src/main/org/h2/expression/function/SessionControlFunction.java",
-          "lines": 100,
+          "lines": 101,
           "public": true,
           "kind": "type",
           "summary": "",
@@ -8773,9 +8773,9 @@
             "optimize"
           ],
           "api_lines": {
-            "getName": 95,
+            "getName": 96,
             "getValue": 45,
-            "isEverything": 84,
+            "isEverything": 85,
             "optimize": 77
           }
         },
@@ -9094,7 +9094,7 @@
       "path": "h2/src/main/org/h2/expression/function/table",
       "summary": "",
       "files": 6,
-      "lines": 608,
+      "lines": 609,
       "depends_on": {
         "org.h2": 43,
         "org.h2.util": 2,
@@ -9136,7 +9136,7 @@
           "name": "LinkSchemaFunction",
           "file": "LinkSchemaFunction.java",
           "rel": "h2/src/main/org/h2/expression/function/table/LinkSchemaFunction.java",
-          "lines": 126,
+          "lines": 127,
           "public": true,
           "kind": "type",
           "summary": "",
@@ -9149,10 +9149,10 @@
             "optimize"
           ],
           "api_lines": {
-            "getName": 116,
+            "getName": 117,
             "getValue": 34,
             "getValueTemplate": 109,
-            "isDeterministic": 121,
+            "isDeterministic": 122,
             "optimize": 100
           }
         },
@@ -18494,7 +18494,7 @@
       "path": "h2/src/main/org/h2/table",
       "summary": "",
       "files": 32,
-      "lines": 13399,
+      "lines": 13407,
       "depends_on": {
         "org.h2": 352,
         "org.h2.command": 19,
@@ -18802,7 +18802,7 @@
           "name": "TableView",
           "file": "TableView.java",
           "rel": "h2/src/main/org/h2/table/TableView.java",
-          "lines": 354,
+          "lines": 362,
           "public": true,
           "kind": "type",
           "summary": "",
@@ -18828,23 +18828,23 @@
             "replace"
           ],
           "api_lines": {
-            "canDrop": 269,
-            "clearIndexCaches": 292,
-            "getCreateSQL": 227,
-            "getCreateSQLForCopy": 221,
-            "getDropSQL": 216,
-            "getMaxDataModificationId": 319,
-            "getQuerySQL": 298,
-            "getQueryScope": 303,
-            "getScanIndex": 308,
-            "getTableType": 274,
-            "getTables": 349,
-            "getTopQuery": 211,
-            "isDeterministic": 342,
-            "isInvalid": 206,
-            "recheckOwnerRights": 183,
-            "recompile": 102,
-            "removeChildrenAndResources": 279,
+            "canDrop": 277,
+            "clearIndexCaches": 300,
+            "getCreateSQL": 235,
+            "getCreateSQLForCopy": 229,
+            "getDropSQL": 224,
+            "getMaxDataModificationId": 327,
+            "getQuerySQL": 306,
+            "getQueryScope": 311,
+            "getScanIndex": 316,
+            "getTableType": 282,
+            "getTables": 357,
+            "getTopQuery": 219,
+            "isDeterministic": 350,
+            "isInvalid": 214,
+            "recheckOwnerRights": 191,
+            "recompile": 110,
+            "removeChildrenAndResources": 287,
             "replace": 61
           }
         },

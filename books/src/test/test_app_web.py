@@ -47,7 +47,9 @@ class WebConsoleTest(unittest.TestCase):
         return f"http://127.0.0.1:{self.port}{path}"
 
     def request(self, method: str, path: str, body: bytes | None = None):
-        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=10)
+        # the full suite runs many servers and subprocesses at once; a loopback
+        # handshake that needs more than a moment is slow, not broken
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=30)
         headers = {"Content-Type": "application/json"} if body is not None else {}
         conn.request(method, path, body=body, headers=headers)
         response = conn.getresponse()

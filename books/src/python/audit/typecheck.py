@@ -60,8 +60,23 @@ def main(argv: list[str] | None = None) -> int:
     if proc.returncode == 0:
         print('✅ 类型检查通过')
         return 0
+    # an optional dependency is allowed to be absent: its import is a probe, not a
+    # type error, so those diagnostics are reported separately and do not fail the gate
+    optional = set(_config.THRESHOLDS.get('optional_imports') or ())
+    failing, skipped = [], []
+    for diagnostic in (payload.get('generalDiagnostics') or []):
+        message = str(diagnostic.get('message', ''))
+        target = message.split('"')[1] if message.count('"') >= 2 else ''
+        if target and target.split('.')[0] in optional:
+            skipped.append(target)
+            continue
+        failing.append(diagnostic)
+    errors = len(failing)
+    if not failing:
+        print(f'✅ 类型检查通过（跳过可选依赖 {len(skipped)} 处）')
+        return 0
     print(f'类型检查失败：{errors} 个错误')
-    for diagnostic in (payload.get('generalDiagnostics') or [])[:20]:
+    for diagnostic in failing[:20]:
         location = diagnostic.get('file', '')
         line = diagnostic.get('range', {}).get('start', {}).get('line', 0) + 1
         print(f"  {location}:{line}  {diagnostic.get('message', '')[:100]}")

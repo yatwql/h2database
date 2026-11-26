@@ -176,7 +176,7 @@
 - 书目目录：`--books-dir`／`BOOKS_DIR` > `book.toml [paths] library` > 书的父目录；
   `books_in()` 列出该目录下的书，`candidate_books()` 在其下找
   `data/book/book.toml`——「其他书放在哪」是配置事实，不是目录约定；
-- 临时目录：`book.toml [paths] tmp`（缺省 `data/tmp`，读 `_config.tmp_dir()`），
+- 临时目录：`book.toml [paths] tmp`（缺省 `data/tmp/…`，读 `_config.tmp_dir()`），
   放一次性脚本与 `--force` 备份，随时可清空；
 - 缓存目录：`book.toml [paths] cache`（缺省 `data/cache`，读 `_config.cache_dir()`），
   放字体索引与 HTML 分片缓存——可重建但有重建成本；不可写时退回临时目录。

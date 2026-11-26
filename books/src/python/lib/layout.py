@@ -33,7 +33,7 @@ DEFAULTS = {
     'layout_table_gap_em': 1.0,
     'layout_epub_code_em': 0.85,
     'layout_chars_per_line': 40,
-    'layout_prose_line_height': 1.65,
+    'layout_prose_line_height': 1.6,
     'layout_lead_ratio': 0.23,
     'layout_epub_line_height': 1.55,
     # advance of one monospace character, in em: the width a printed code line
@@ -45,9 +45,10 @@ DEFAULTS = {
     'layout_print_wrap': 0,
     # the smallest margin paper gets; the column gives way if it would go below
     'layout_print_margin_min_mm': 16.0,
-    # the reading measure on paper: roomier than the screen's, because a printed
-    # line is followed by a reader who can see the whole page at once
-    'layout_print_chars_per_line': 44,
+    # prose characters per line on paper — the unit the adaptive solver measures, so
+    # a CJK glyph counts one. A printed page is taken in at once, so it may carry a
+    # slightly longer line than the screen does.
+    'layout_print_chars_per_line': 20,
     # the band the reading measure must land in, in em; outside it the gate fails
     'layout_chars_per_line_min': 36,
     'layout_chars_per_line_max': 46,
@@ -79,7 +80,7 @@ RANGES = {
     'print_code_min_px': (4, 14),
     'print_wrap': (0, 1),
     'print_margin_min_mm': (5.0, 40.0),
-    'print_chars_per_line': (30, 80),
+    'print_chars_per_line': (10, 40),
     'prose_line_height': (1.0, 2.4),
 }
 

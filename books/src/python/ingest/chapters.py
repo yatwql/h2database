@@ -26,6 +26,7 @@ from api_sections import api_section
 from appendix import APPENDIX_SPEC, TYPE_EMOJI, render_appendix
 from factblocks import backup_existing, line_delta, refresh_blocks
 from factblocks import mark_block as _gen
+from ingest import factblocks
 from lib import _config, _errors, _fsutil, _log, _mdutil
 
 
@@ -751,12 +752,27 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument('--refresh-facts', action='store_true',
                         help='replace only the marked generated blocks; '
                              'files without markers are skipped and reported')
+    parser.add_argument('--check-markers', action='store_true',
+                        help='report, per chapter, which generated blocks are missing '
+                             'and where they would go (writes nothing)')
+    parser.add_argument('--insert-markers', action='store_true',
+                        help='insert the missing blocks at the planned anchors; '
+                             'without --apply it only prints the plan')
+    parser.add_argument('--apply', action='store_true',
+                        help='with --insert-markers: write the files (backup first)')
     parser.add_argument('--plan', action='store_true',
                         help='只报告 --llm 会写哪些章、大约花多少调用，不写文件')
     parser.add_argument('--llm', action='store_true',
                         help='let the LLM draft the lead-in and summary prose '
                              '(facts, tables and coordinates stay deterministic)')
     return parser
+
+
+def _marker_mode(outline: dict, args) -> int:
+    """Report or perform marker insertion; the policy lives in `factblocks`."""
+    return factblocks.marker_mode(
+        outline['chapters'], args, spec=CHAPTER_SPEC, skeleton_for=render_chapter,
+        path_of=lambda name: os.path.join(_config.MANUSCRIPT_DIR, name))
 
 
 def _load_state():
@@ -870,6 +886,9 @@ def main(argv: list[str] | None = None) -> int:
     if state is None:
         return 2
     _inventory, outline = state
+
+    if args.check_markers or args.insert_markers:
+        return _marker_mode(outline, args)   # report or insert, never rewrite prose
 
     print(_source_change_line())
     counters = _emit_all(outline, args, time.strftime('%Y-%m-%d_%H%M%S'))

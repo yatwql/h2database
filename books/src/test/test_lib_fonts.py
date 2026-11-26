@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import subprocess
@@ -13,6 +14,10 @@ from unittest import mock
 import _fixture
 
 TAGS = ("layer:lib", "tier:fast")
+
+# fontTools is an optional dependency: without it `coverage()` answers with
+# a message instead of face data, so the face-merging cases cannot run
+HAS_FONTTOOLS = importlib.util.find_spec("fontTools") is not None
 
 _fixture.ensure_tools_path()
 
@@ -199,6 +204,8 @@ class FamilyLookupTest(unittest.TestCase):
 
 class CoverageTest(unittest.TestCase):
     def setUp(self):
+        if not HAS_FONTTOOLS:
+            self.skipTest('fontTools is not installed')
         _reset_caches()
         self.addCleanup(_reset_caches)
 

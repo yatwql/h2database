@@ -6,6 +6,7 @@ artifacts are the branches that never run in the happy path but do fire in real
 use — and they are where a toolchain silently misbehaves instead of reporting.
 """
 
+import importlib.util
 import os
 import sys
 import unittest
@@ -13,6 +14,8 @@ import unittest
 from _cases import Base
 
 TAGS = ('layer:render', 'tier:fast')
+
+HAS_PLAYWRIGHT = importlib.util.find_spec('playwright') is not None
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -36,6 +39,7 @@ class TestDeliveryPrerequisites(Base):
         self.assertEqual(code, 1, out[-300:])
         self.assertIn('cannot read', out)
 
+    @unittest.skipUnless(HAS_PLAYWRIGHT, 'no browser engine')
     def test_print_grade_builds_from_the_html(self):
         self.run_script('merge.py')
         self.run_script('to_html.py')

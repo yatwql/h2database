@@ -736,6 +736,15 @@ else:
     check(True, "Style check skipped")
 
 # Summary
+if '--json' in sys.argv:
+    # machine-readable form for the entry-point sweep and for CI logs
+    import json as _json
+
+    print(_json.dumps({'passed': sum(1 for ok, _ in results if ok),
+                       'total': len(results),
+                       'checks': [{'name': msg, 'ok': ok} for ok, msg in results]},
+                      ensure_ascii=False))
+    raise SystemExit(0 if all(ok for ok, _ in results) else 1)
 print("\n=== Summary ===")
 passed = sum(1 for ok, _ in results if ok)
 total = len(results)

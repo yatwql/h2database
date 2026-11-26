@@ -4,7 +4,7 @@
   "source_totals": {
     "packages": 58,
     "files": 843,
-    "lines": 232242
+    "lines": 232284
   },
   "chapters": [
     {
@@ -52,7 +52,7 @@
           ]
         },
         "org.h2.engine": {
-          "lines": 11851,
+          "lines": 11880,
           "files": 29,
           "summary": "",
           "depends_on": {
@@ -127,9 +127,9 @@
             },
             {
               "name": "SessionLocal",
-              "lines": 2156,
+              "lines": 2185,
               "summary": "",
-              "public_methods": 135,
+              "public_methods": 137,
               "rel": "h2/src/main/org/h2/engine/SessionLocal.java",
               "api": [
                 "addLocalTempTable",
@@ -141,6 +141,7 @@
                 "areEqual",
                 "begin",
                 "cancel",
+                "checkAdminFunction",
                 "checkCanceled",
                 "clearViewIndexCache",
                 "close",
@@ -154,34 +155,33 @@
                 "endStatement",
                 "equals",
                 "findLocalTempTable",
-                "findLocalTempTableConstraint",
-                "findLocalTempTableIndex"
+                "findLocalTempTableConstraint"
               ],
               "api_lines": {
-                "addLocalTempTable": 397,
-                "addLocalTempTableConstraint": 510,
-                "addLocalTempTableIndex": 454,
-                "addProcedure": 1424,
-                "addSavepoint": 1140,
-                "addTemporaryLob": 1768,
-                "areEqual": 1997,
-                "begin": 1478,
-                "cancel": 896,
-                "checkCanceled": 1301,
-                "clearViewIndexCache": 1763,
-                "close": 911,
-                "commit": 687,
-                "compare": 2012,
-                "compareTypeSafe": 2040,
-                "compareWithNull": 2027,
-                "createConnection": 1364,
-                "currentTimeZone": 1965,
-                "currentTimestamp": 1901,
-                "endStatement": 1740,
+                "addLocalTempTable": 426,
+                "addLocalTempTableConstraint": 539,
+                "addLocalTempTableIndex": 483,
+                "addProcedure": 1453,
+                "addSavepoint": 1169,
+                "addTemporaryLob": 1797,
+                "areEqual": 2026,
+                "begin": 1507,
+                "cancel": 925,
+                "checkAdminFunction": 325,
+                "checkCanceled": 1330,
+                "clearViewIndexCache": 1792,
+                "close": 940,
+                "commit": 716,
+                "compare": 2041,
+                "compareTypeSafe": 2069,
+                "compareWithNull": 2056,
+                "createConnection": 1393,
+                "currentTimeZone": 1994,
+                "currentTimestamp": 1930,
+                "endStatement": 1769,
                 "equals": 98,
-                "findLocalTempTable": 377,
-                "findLocalTempTableConstraint": 484,
-                "findLocalTempTableIndex": 434
+                "findLocalTempTable": 406,
+                "findLocalTempTableConstraint": 513
               }
             },
             {
@@ -336,7 +336,7 @@
         }
       },
       "missing_packages": [],
-      "source_lines": 12067
+      "source_lines": 12096
     },
     {
       "file": "ch3-packages.md",
@@ -2420,7 +2420,7 @@
           ]
         },
         "org.h2.expression.function": {
-          "lines": 9520,
+          "lines": 9524,
           "files": 51,
           "summary": "",
           "depends_on": {
@@ -3053,7 +3053,7 @@
           ]
         },
         "org.h2.table": {
-          "lines": 13399,
+          "lines": 13407,
           "files": 32,
           "summary": "",
           "depends_on": {
@@ -3529,7 +3529,7 @@
         }
       },
       "missing_packages": [],
-      "source_lines": 44673
+      "source_lines": 44685
     },
     {
       "file": "ch9-10-persistence-locking.md",
