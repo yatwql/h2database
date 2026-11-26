@@ -169,8 +169,6 @@ class TestSmartAuditGaps(FixtureCase):
         self.assertIn("TOTAL", out)
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class DiagramCountingEdgesTest(FixtureCase):
@@ -205,7 +203,9 @@ class SectionBoundaryTest(FixtureCase):
         self.assertIn("[has #### children]", out)
         # the heading regex stops at four hashes, so the fifth level is body text
         self.assertNotIn("深一层不是标题", out)
-        self.assertIn("TOTAL sections needing additional diagrams: 1", out)
+        # the section runs to EOF, so its measured length is the whole tail; a
+        # wrong `end` shrinks this number even though the gap verdict stays
+        self.assertIn("### 1.1.1 写入路径 (9l, 0 diag total)", out)
 
     def test_two_thin_sections_in_one_chapter_are_counted_together(self):
         body = "正文一行。\n\n正文二行。\n\n正文三行。\n"
@@ -222,3 +222,7 @@ class SectionBoundaryTest(FixtureCase):
         self.assertIn("### 1.1.1 一节", out)
         self.assertIn("### 1.1.2 二节", out)
         self.assertIn("TOTAL sections needing additional diagrams: 2", out)
+
+
+if __name__ == "__main__":
+    unittest.main()

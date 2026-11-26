@@ -4,8 +4,9 @@
 What it checks (all mechanical, all cheap):
 
 * ``docs/archive/`` holds only README files and ``v<major>.<minor>`` directories;
-* each version directory holds the three archived ledgers and nothing else at its
-  top level except finished iteration directories;
+* each version directory holds the three archived ledgers, plus the restored
+  historical snapshots it was filed with (.md) and its finished iteration
+  directories; anything else at the top level is a stray file;
 * each archived ledger carries the two self-describing header lines;
 * the live ledgers keep one ``## 归档`` index whose links resolve and which lists
   every archived version — an unlisted directory is a version nobody can find;

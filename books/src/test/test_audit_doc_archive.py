@@ -172,8 +172,6 @@ class ArchiveGateTest(unittest.TestCase):
         self.assertTrue(any("不存在的文件" in p for p in problems))
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class ArchiveLayoutCheckTest(unittest.TestCase):
@@ -221,3 +219,7 @@ class ArchiveLayoutCheckTest(unittest.TestCase):
         with mock.patch.object(self.mod, "check", return_value=[]), redirect_stdout(buffer):
             self.assertEqual(self.mod.main(), 0)
         self.assertIn("归档布局正常", buffer.getvalue())
+
+
+if __name__ == "__main__":
+    unittest.main()
