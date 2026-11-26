@@ -293,6 +293,18 @@ class PrintEditionTest(unittest.TestCase):
         self.assertEqual(seen["linker_html"], seen["html"])
         self.assertTrue(seen["html_existed"])
 
+    def test_a_missing_browser_engine_only_skips_the_link_step(self):
+        """A plain environment renders the PDF; the TOC links are the only casualty."""
+        page = SplitPage(self.pdf, self.parts, self.headings)
+        out = io.StringIO()
+        with (
+            mock.patch.dict(sys.modules, {"render.pdf_toc_links": None}),
+            redirect_stdout(out),
+        ):
+            count = self.module.build(self.html, self.pdf, fake_engine(page))
+        self.assertEqual(count, 3)
+        self.assertIn("playwright 未安装", out.getvalue())
+
     def test_a_missing_source_is_reported_not_raised(self):
         with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
             code = self.module._errors.run(

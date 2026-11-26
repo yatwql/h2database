@@ -78,17 +78,22 @@ class MarkerParseTest(unittest.TestCase):
 
     def test_a_second_open_marker_leaves_the_first_unclosed(self):
         state = self.blocks.marker_names(
-            "<!-- generated:a -->\n| x |\n\n<!-- generated:b -->\n| y |\n<!-- /generated -->\n")
+            "<!-- generated:a -->\n| x |\n\n<!-- generated:b -->\n| y |\n<!-- /generated -->\n"
+        )
         self.assertEqual(state["unclosed"], ["a"])
         self.assertEqual(state["present"], ["a", "b"])
 
     def test_existing_markers_report_duplicates_and_unclosed_blocks(self):
         state = self.blocks.marker_names(
-            PROSE.replace("## 1.1 概览", "## 1.1 概览\n\n<!-- generated:packages -->\n| a |\n"
-                                          "<!-- /generated -->\n\n"
-                                          "<!-- generated:packages -->\n| b |\n"
-                                          "<!-- /generated -->")
-            + "\n<!-- generated:deps -->\n| c |\n")
+            PROSE.replace(
+                "## 1.1 概览",
+                "## 1.1 概览\n\n<!-- generated:packages -->\n| a |\n"
+                "<!-- /generated -->\n\n"
+                "<!-- generated:packages -->\n| b |\n"
+                "<!-- /generated -->",
+            )
+            + "\n<!-- generated:deps -->\n| c |\n"
+        )
         self.assertEqual(state["duplicated"], ["packages"])
         self.assertEqual(state["unclosed"], ["deps"])
 
@@ -125,8 +130,9 @@ class AnchorTest(unittest.TestCase):
         self.assertEqual(why, "## 1.2 包结构总览")
 
     def test_nothing_similar_appends_at_the_end(self):
-        self.assertEqual(self.blocks.suggest_anchor(self.lines(PROSE), "## 9.9 完全无关"),
-                         (0, "（章末）"))
+        self.assertEqual(
+            self.blocks.suggest_anchor(self.lines(PROSE), "## 9.9 完全无关"), (0, "（章末）")
+        )
         self.assertEqual(self.blocks.suggest_anchor(self.lines(PROSE), ""), (0, "（章末）"))
 
 
@@ -172,8 +178,9 @@ class MarkerModeTest(unittest.TestCase):
         self.outline = {"chapters": [{"file": self.name, "packages": {}, "source_lines": 10}]}
 
     def args(self, *, insert: bool = False, apply: bool = False) -> argparse.Namespace:
-        return argparse.Namespace(only=None, check_markers=not insert,
-                                  insert_markers=insert, apply=apply)
+        return argparse.Namespace(
+            only=None, check_markers=not insert, insert_markers=insert, apply=apply
+        )
 
     def run_mode(self, **kwargs) -> str:
         buffer = io.StringIO()
@@ -203,8 +210,9 @@ class MarkerModeTest(unittest.TestCase):
         self.assertEqual(buffer.getvalue(), "")
 
     def test_a_chapter_the_generator_does_not_know_is_skipped(self):
-        outline = {"chapters": [{"file": "appendix-z-unknown.md", "packages": {},
-                                 "source_lines": 1}]}
+        outline = {
+            "chapters": [{"file": "appendix-z-unknown.md", "packages": {}, "source_lines": 1}]
+        }
         buffer = io.StringIO()
         with redirect_stdout(buffer):
             self.chapters._marker_mode(outline, self.args())
@@ -212,16 +220,17 @@ class MarkerModeTest(unittest.TestCase):
 
     def test_a_duplicated_marker_is_warned_about(self):
         with open(self.path, "w", encoding="utf-8") as handle:
-            handle.write(PROSE + "\n<!-- generated:packages -->\n| a |\n<!-- /generated -->\n"
-                         "\n<!-- generated:packages -->\n| b |\n<!-- /generated -->\n")
+            handle.write(
+                PROSE + "\n<!-- generated:packages -->\n| a |\n<!-- /generated -->\n"
+                "\n<!-- generated:packages -->\n| b |\n<!-- /generated -->\n"
+            )
         out = self.run_mode()
         self.assertIn("duplicated: packages", out)
 
     def test_the_dispatch_reaches_the_marker_mode(self):
         buffer = io.StringIO()
         with (
-            mock.patch.object(self.chapters, "_load_state",
-                              return_value=({}, self.outline)),
+            mock.patch.object(self.chapters, "_load_state", return_value=({}, self.outline)),
             redirect_stdout(buffer),
         ):
             code = self.chapters.main(["--check-markers"])

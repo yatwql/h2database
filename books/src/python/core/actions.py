@@ -144,9 +144,13 @@ def _invoke(command: list[str], on_line=None) -> tuple[int, str]:
 
 
 def _clock(seconds: float) -> str:
-    """`m:ss` for the progress lines."""
+    """Elapsed time with its unit spelled out: `40 秒`, `1 分 40 秒`, `1 小时 5 分`."""
     total = int(seconds)
-    return f'{total // 60}:{total % 60:02d}'
+    if total < 60:
+        return f'{total} 秒'
+    if total < 3600:
+        return f'{total // 60} 分 {total % 60:02d} 秒'
+    return f'{total // 3600} 小时 {total % 3600 // 60} 分'
 
 
 def _run(script: str, *args: str, on_line=None) -> tuple[int, str]:
@@ -387,6 +391,9 @@ def _dispatch(action: str, **kwargs) -> tuple[int, str]:
         return llm_ask(kwargs.get('prompt', ''), kwargs.get('scenario', 'summary'))
     if action in ('build', 'check', 'test', 'deliver', 'print'):
         return _dispatch_build(action, kwargs.get('on_progress'))
+    if action == 'deliver-all':
+        # the longest action: without a callback the caller sees silence for minutes
+        return deliver_all(on_line=kwargs.get('on_progress'))
     if action in ANALYZE_ACTIONS:
         LOG.info('action %s start', action)
         code, text = analyze(use_llm=action == 'analyze-llm' or bool(kwargs.get('use_llm')),

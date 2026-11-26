@@ -437,7 +437,7 @@ class TuiInteractionTest(unittest.TestCase):
             redirect_stdout(buffer),
         ):
             text = self.tui.run_entry("build", "手稿 → Markdown + HTML")
-        self.assertIn("正在重建 合并 Markdown 与 HTML", buffer.getvalue())
+        self.assertIn("正在重建 Markdown 与 HTML", buffer.getvalue())
         self.assertIn("已重建：合并 Markdown 与 HTML", text)
 
     def test_a_failed_run_says_the_artifacts_were_not_updated(self):
@@ -473,7 +473,7 @@ class TuiInteractionTest(unittest.TestCase):
             redirect_stdout(buffer),
         ):
             text = self.tui.run_entry("print", "印刷版 PDF")
-        self.assertIn("用时 0:43", text)
+        self.assertIn("用时 43 秒", text)
         self.assertIn("预计", text)
 
     def test_a_run_without_an_estimate_reports_only_the_elapsed_time(self):
@@ -489,7 +489,7 @@ class TuiInteractionTest(unittest.TestCase):
             text = self.tui.run_entry("check", "全部门禁")
         self.assertNotIn("预计", buffer.getvalue())
         self.assertNotIn("预计", text)
-        self.assertIn("用时 0:02", text)
+        self.assertIn("用时 2 秒", text)
 
     def test_the_settings_entry_opens_the_configuration_editor(self):
         with mock.patch.object(self.tui, "configure", return_value="配置页"):

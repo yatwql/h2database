@@ -262,9 +262,16 @@ def configure(reader=input) -> str:
 
 
 def _duration(seconds: float) -> str:
-    """`m:ss` for the estimates and the progress stamps."""
+    """Elapsed time with its unit spelled out.
+
+    `1:40` reads as an hour to anyone skimming a progress line; `1 分 40 秒` does not.
+    """
     total = int(seconds)
-    return f'{total // 60}:{total % 60:02d}'
+    if total < 60:
+        return f'{total} 秒'
+    if total < 3600:
+        return f'{total // 60} 分 {total % 60:02d} 秒'
+    return f'{total // 3600} 小时 {total % 3600 // 60} 分'
 
 
 def confirm(question: str, reader=input) -> bool:
@@ -288,8 +295,9 @@ def run_entry(action: str, label: str, force: bool = False) -> str:
         question = f'重建 {short}，覆盖同名文件？' if short else f'{label} 会重写产物，继续？'
         if not confirm(question):
             return _c(f'已取消，{rewritten or "产物"}未改动', PALETTE['hint'])
-    progress = (f'⠿ 正在重建 {rewritten}（{label}）…' if rewritten
-                else f'⠿ 正在执行 {label}（{action}）…')
+    short = menu.short_artifacts(action)
+    progress = (f'⠿ 正在重建 {short}…' if short
+                else f'⠿ 正在执行 {label}…')
     estimate = menu.estimate(action)
     if estimate:
         sys.stdout.write(_c(f'  预计 {_duration(estimate[0])}–{_duration(estimate[1])}'
