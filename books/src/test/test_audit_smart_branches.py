@@ -66,7 +66,7 @@ class TestSmartEdgeBranches(FixtureCase):
     def test_the_marker_list_is_configuration(self):
         # style.json [diagrams].markers decides what counts as a diagram
         smart = self.smart()
-        with mock.patch.object(smart, "DIAGRAM_MARKERS", ["#"]):
+        with mock.patch.object(smart, "diagram_markers", lambda: ["#"]):
             self.assertEqual(smart.count_diagrams("#a\n#b\n#c\n正文\n"), 1)
 
     def test_an_appendix_file_is_exempt_wholly(self):
@@ -169,14 +169,12 @@ class TestSmartAuditGaps(FixtureCase):
         self.assertIn("TOTAL", out)
 
 
-
-
 class DiagramCountingEdgesTest(FixtureCase):
     """A diagram block and an appendix run that both reach the end of the text."""
 
     def test_a_marker_block_ending_the_text_is_still_one_diagram(self):
         smart = self.module("smart")
-        marker = next(iter(smart.DIAGRAM_MARKERS))
+        marker = next(iter(smart.diagram_markers()))
         text = "\n".join([marker, marker, marker])
         self.assertEqual(smart.count_diagrams(text), 1)
 

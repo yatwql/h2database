@@ -21,15 +21,15 @@ from lib import _config, _fsutil, _mdutil
 _fsutil.pin_stdout_utf8()
 
 
-docs_dir = _config.BOOK_ROOT
-src_dir = _config.MANUSCRIPT_DIR
-dist_dir = _config.DIST_DIR
 # Tolerate the appendix file being absent during phased delivery.
 
 DEFAULT_DIAGRAM_MARKERS = ["┌", "└", "├", "│", "▼", "▲", "→"]
-DIAGRAM_MARKERS = list(
-    (_config.STYLE_POLICY.get("diagrams") or {}).get("markers") or DEFAULT_DIAGRAM_MARKERS
-)
+
+
+def diagram_markers() -> list[str]:
+    """Characters that mark a diagram block, from this book's style policy."""
+    policy = _config.STYLE_POLICY.get("diagrams") or {}
+    return list(policy.get("markers") or DEFAULT_DIAGRAM_MARKERS)
 
 
 # --- Figure reference check (--fig-refs) ---
@@ -114,12 +114,13 @@ def check_figure_refs():
 
 # --- Diagram counting ---
 def count_diagrams(text):
+    markers = diagram_markers()
     lines = text.split("\n")
     in_block = False
     block_lines = 0
     count = 0
     for line in lines:
-        has_marker = any(m in line for m in DIAGRAM_MARKERS)
+        has_marker = any(m in line for m in markers)
         if has_marker and not in_block:
             in_block = True
             block_lines = 1

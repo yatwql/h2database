@@ -275,3 +275,71 @@ class WiringAuditTest(unittest.TestCase):
     def test_a_command_group_is_not_checked_for_membership(self):
         problems = self.mod.check_wiring({"build": "audit/x.py"}, {"test": ("nowhere",)})
         self.assertFalse(any("unknown step" in problem for problem in problems), problems)
+
+class ImportTimeConfigReadTest(unittest.TestCase):
+    """Modules the console entry imports must read configuration when they run.
+
+    `[project.scripts] bookwright = app.cli:main` imports a fixed set of modules
+    in-process; a module-level `_config.` read binds the first book's values there
+    and breaks `with _config.use(cfg)`. Script modules outside that closure run in
+    a child process, where an import-time read is harmless — so the invariant is
+    about the entry chain, not about every file.
+    """
+
+    SEEDS = ('cli', 'tui', 'web', 'actions', 'make', 'check_runner', 'settings', 'scaffold')
+    # scaffold keeps its layout constants at module level on purpose: creating a
+    # book must report a broken source policy as its own error, and a call-time
+    # read would let _config raise ConfigError first (see rf-75).
+    ALLOWED = frozenset({'scaffold'})
+
+    def modules(self) -> dict[str, str]:
+        root = os.path.join(_fixture.TOOLS_DIR)
+        found = {}
+        for base, _dirs, files in os.walk(root):
+            for name in files:
+                if name.endswith('.py'):
+                    found[name[:-3]] = os.path.join(base, name)
+        return found
+
+    def imports_of(self, path: str) -> set[str]:
+        import ast
+
+        with open(path, encoding='utf-8') as handle:
+            tree = ast.parse(handle.read())
+        out = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module:
+                out.update(alias.name for alias in node.names)
+                out.add(node.module.split('.')[-1])
+            elif isinstance(node, ast.Import):
+                out.update(alias.name.split('.')[-1] for alias in node.names)
+        return out
+
+    def module_level_reads(self, path: str) -> bool:
+        import ast
+
+        with open(path, encoding='utf-8') as handle:
+            tree = ast.parse(handle.read())
+        for node in tree.body:
+            value = getattr(node, 'value', None)
+            if not isinstance(node, (ast.Assign, ast.AnnAssign)) or value is None:
+                continue
+            for sub in ast.walk(value):
+                if (isinstance(sub, ast.Attribute) and isinstance(sub.value, ast.Name)
+                        and sub.value.id == '_config'):
+                    return True
+        return False
+
+    def test_the_entry_chain_never_reads_config_while_importing(self):
+        modules = self.modules()
+        seen, todo = set(), [name for name in self.SEEDS if name in modules]
+        while todo:
+            name = todo.pop()
+            if name in seen:
+                continue
+            seen.add(name)
+            todo.extend(m for m in self.imports_of(modules[name]) if m in modules and m not in seen)
+        offenders = sorted(name for name in seen
+                           if name not in self.ALLOWED and self.module_level_reads(modules[name]))
+        self.assertEqual(offenders, [],
+                         f"module-level _config read on the console entry chain: {offenders}")

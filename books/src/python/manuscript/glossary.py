@@ -30,11 +30,10 @@ from lib import _config, _errors, _fsutil
 
 _fsutil.pin_stdout_utf8()
 
-docs_dir = _config.BOOK_ROOT
-src_dir = _config.MANUSCRIPT_DIR
-dist_dir = _config.DIST_DIR
-chapter_files = sorted(glob.glob(os.path.join(src_dir, "ch[0-9]*.md")))
-glossary_path = os.path.join(src_dir, "back", "glossary.md")
+
+def chapter_files() -> list[str]:
+    """Chapter files of the book being scanned, read when the scan runs."""
+    return sorted(glob.glob(os.path.join(_config.MANUSCRIPT_DIR, "ch[0-9]*.md")))
 
 
 def parse_glossary_v6() -> dict[str, dict]:
@@ -48,7 +47,7 @@ def parse_glossary_v6() -> dict[str, dict]:
     ch_pattern = re.compile(r"第(\d+)章")
     section_pattern = re.compile(r"§\d+(?:\.\d+)*[a-z]?")
 
-    lines = _fsutil.read_lines(glossary_path)
+    lines = _fsutil.read_lines(os.path.join(_config.MANUSCRIPT_DIR, "back", "glossary.md"))
 
     current: dict | None = None
     current_term: str | None = None
@@ -101,7 +100,7 @@ if "--coverage" in sys.argv:
 
     # Determine expected chapters from doc file set
     expected_chapters = set()
-    for fpath in chapter_files:
+    for fpath in chapter_files():
         for line in _fsutil.read_lines(fpath):
             m = re.match(r"^# 第(\d+)章", line)
             if m:
@@ -138,7 +137,7 @@ if "--validate" in sys.argv:
 
     # Collect available chapter numbers from filesystem
     available_chapters: set[int] = set()
-    for fpath in chapter_files:
+    for fpath in chapter_files():
         for line in _fsutil.read_lines(fpath):
             m = re.match(r"^# 第(\d+)章", line)
             if m:
@@ -170,7 +169,7 @@ if "--validate" in sys.argv:
 term_first = {}  # term -> (chapter, line_text)
 all_terms = set()
 
-for fpath in chapter_files:
+for fpath in chapter_files():
     fname = os.path.basename(fpath)
     # Extract chapter number from filename or content
     ch_num = None

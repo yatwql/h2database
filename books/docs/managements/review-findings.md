@@ -4,7 +4,7 @@
 > 版本：v0.1-dev
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
-> **编号源**：`rf-next = 75`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-74，
+> **编号源**：`rf-next = 76`（新增问题提出后取此编号，写入后更新为 +1；已用最大 rf-75，
 > 递增保证唯一，归档不回收。编号与 `plan.md` 的 `plan-N` 是两套，互不占用）
 
 ---
@@ -15,6 +15,7 @@
 | --- | --- | --- |
 | rf-73 | **已修（导入期读配置部分）**：`audit/captions.py`、`audit/exercises.py`、`audit/balance.py`、`release.py` 的模块级配置读取改为调用时读取（`exercises` 的槽位标题与提示/回顾正则改为 `language_shapes()`）。剩下的一半——「`manuscript/`、`audit/` 不得出现本书专有词」的门禁规则——转记 rf-74 | — |
 | rf-74 | 本书专有词写进工具链没有门禁拦：`check_architecture.py` 只禁 `books/`、`data/manuscript` 这类路径字面量，书的人名/类名/术语即使被硬编码也能通过 | 加一条字面量检查：`manuscript/`、`audit/` 的源码不得出现 `data/book/` 下内容文件（`glossary.toml`、`case-studies.toml`）里的词，词表在运行时取配置，命中即报 |
+| rf-75 | 仍有约 100 处模块级配置读取留在脚本模块（`render/*`、`manuscript/*`、`audit/*` 等 31 个模块）。它们由 `check_runner` 以子进程执行，导入期读取不影响安装形态，因此不构成当前违规；但一旦这类模块被 `app/`、`core/` 在进程内导入，就会把第一本书的配置钉死 | 已加门禁：`test_audit_check_architecture.py::ImportTimeConfigReadTest` 从控制台入口种子出发做导入闭包，闭包内任何模块的模块级 `_config.` 读取都会失败。唯一豁免 `core/scaffold.py`（建书时必须先报自己那份 `invalid base config`，而非让 `_config` 抛 `ConfigError`）。后续如要让 `with use(cfg)` 覆盖这些脚本，再按 `captions.thresholds()` 的形状逐个改造 |
 
 ## 分档口径
 

@@ -32,10 +32,11 @@ from lib import _config, _errors, _fsutil
 
 _fsutil.pin_stdout_utf8()
 
-docs_dir = _config.BOOK_ROOT
-src_dir = _config.MANUSCRIPT_DIR
-dist_dir = _config.DIST_DIR
-chapter_files = sorted(glob.glob(os.path.join(src_dir, "ch[0-9]*.md")))
+
+def chapter_files() -> list[str]:
+    """Chapter files of the book being indexed, read when the build runs."""
+    return sorted(glob.glob(os.path.join(_config.MANUSCRIPT_DIR, "ch[0-9]*.md")))
+
 
 # Check for --coverage flag
 show_coverage = "--coverage" in sys.argv
@@ -44,7 +45,7 @@ hierarchy_check = "--hierarchy-check" in sys.argv
 # ---- Hierarchy check mode: inspect the existing index.md ----
 
 if hierarchy_check:
-    index_path = os.path.join(src_dir, "back", "index.md")
+    index_path = os.path.join(_config.MANUSCRIPT_DIR, "back", "index.md")
     if not os.path.exists(index_path):
         raise _errors.ToolError(f"ERROR: index not found at {index_path}")
 
@@ -109,7 +110,7 @@ current_sections = []  # stack of (level, number, title)
 
 entries = []  # (term, chapter, section_ref, type)
 
-for fpath in chapter_files:
+for fpath in chapter_files():
     fname = os.path.basename(fpath)
     lines = _fsutil.read_lines(fpath)
 

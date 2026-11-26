@@ -54,7 +54,7 @@ class IndexXrefUnitTest(unittest.TestCase):
         with (
             redirect_stdout(buffer),
             mock.patch.object(
-                self.mod, "index_path", os.path.join(self.tmp.name, "none.md"), create=True
+                self.mod, "index_path", lambda: os.path.join(self.tmp.name, "none.md")
             ),
         ):
             code = self.mod.main([])
@@ -454,10 +454,12 @@ class FileLengthEdgeTest(unittest.TestCase):
 
     def test_main_reports_a_within_budget_tree(self):
         buffer = io.StringIO()
-        with mock.patch.object(self.mod, "scan", return_value=([], [])), \
-                mock.patch.object(self.mod, "check_ledger", return_value=[]), \
-                mock.patch.object(self.mod, "check_declared_budgets", return_value=[]), \
-                redirect_stdout(buffer):
+        with (
+            mock.patch.object(self.mod, "scan", return_value=([], [])),
+            mock.patch.object(self.mod, "check_ledger", return_value=[]),
+            mock.patch.object(self.mod, "check_declared_budgets", return_value=[]),
+            redirect_stdout(buffer),
+        ):
             self.assertEqual(self.mod.main([]), 0)
         self.assertIn("文件长度预算通过", buffer.getvalue())
 
