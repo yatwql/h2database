@@ -270,8 +270,12 @@ def deliver(on_line=None) -> tuple[int, str]:
 
 
 def print_edition(on_line=None) -> tuple[int, str]:
-    """The print-grade PDF: its own renderer, not a flag on the standard one."""
-    return _run('render/print_pdf.py', on_line=on_line)
+    """The print-grade PDF: render it, then judge it by the same rules as delivery.
+
+    This is `make.py print` — one definition of the pipeline, so the TUI cannot
+    produce a paper artifact that the step table would reject.
+    """
+    return _make('print', on_line=on_line)
 
 
 def deliver_all(on_line=None) -> tuple[int, str]:

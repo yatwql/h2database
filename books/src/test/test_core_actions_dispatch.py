@@ -290,8 +290,8 @@ class DeliverAllTest(unittest.TestCase):
         ):
             code, text = self.actions.deliver_all()
         self.assertEqual(code, 0)
-        self.assertEqual([call[1] for call in calls], ["build", "deliver", "render/print_pdf.py"])
-        self.assertIn("print_pdf.py ok", text)
+        self.assertEqual([call[1] for call in calls], ["build", "deliver", "print"])
+        self.assertIn("print ok", text)
 
     def test_a_failed_step_stops_the_run(self):
         calls = []

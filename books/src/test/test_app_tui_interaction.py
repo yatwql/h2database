@@ -420,9 +420,11 @@ class TuiInteractionTest(unittest.TestCase):
         ):
             text = self.tui.run_entry("deliver-all", "手稿 → 全量交付")
         self.assertEqual(len(asked), 1)
-        self.assertIn("Markdown", asked[0])
-        self.assertIn("印刷版 PDF", asked[0])
+        # one glance, no paths: the progress line and the outcome carry those
+        self.assertIn("5 份产物", asked[0])
+        self.assertIn("印刷 PDF", asked[0])
         self.assertIn("覆盖", asked[0])
+        self.assertLess(len(asked[0]), 60)
         self.assertIn("未改动", text)
 
     def test_the_progress_and_outcome_name_the_artifacts(self):

@@ -284,8 +284,8 @@ def run_entry(action: str, label: str, force: bool = False) -> str:
         return configure()
     rewritten = menu.artifacts(action)
     if menu.needs_confirmation(action):
-        question = (f'{label}：将重建 {rewritten}；同名文件会被覆盖，继续？'
-                    if rewritten else f'{label} 会重写产物，继续？')
+        short = menu.short_artifacts(action)
+        question = f'重建 {short}，覆盖同名文件？' if short else f'{label} 会重写产物，继续？'
         if not confirm(question):
             return _c(f'已取消，{rewritten or "产物"}未改动', PALETTE['hint'])
     progress = (f'⠿ 正在重建 {rewritten}（{label}）…' if rewritten

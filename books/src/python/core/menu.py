@@ -155,6 +155,24 @@ ARTIFACTS: dict[str, str] = {
 }
 
 
+# The confirmation line is read at a glance before a multi-minute run; the progress
+# line and the outcome carry the paths, so the question only names the shapes.
+SHORT_ARTIFACTS: dict[str, str] = {
+    "analyze": "手稿骨架",
+    "analyze-llm": "手稿措辞",
+    "analyze-refresh": "手稿事实块",
+    "build": "Markdown 与 HTML",
+    "deliver": "EPUB 与标准 PDF",
+    "deliver-all": "5 份产物（MD / HTML / EPUB / 标准 PDF / 印刷 PDF）",
+    "print": "印刷版 PDF",
+}
+
+
+def short_artifacts(action: str) -> str:
+    """A one-glance name for what an action rewrites, for the confirmation line."""
+    return SHORT_ARTIFACTS.get(action, artifacts(action))
+
+
 def artifacts(action: str) -> str:
     """What an action rewrites, for confirmations and progress lines."""
     return ARTIFACTS.get(action, "")
