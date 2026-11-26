@@ -70,6 +70,22 @@ class TestCaseStudyOutline(ScriptTestBase):
 class CoverStatsTest(ScriptTestBase):
     """cover.py repeats only what book.toml declares, and counts what it finds."""
 
+    def test_cover_stats_runs(self):
+        code, out = self.run_script("cover.py")
+        self.assertEqual(code, 0, out)
+        self.assertIn("cover.md", out)
+
+    def test_cover_without_a_book_date_keeps_the_printed_date(self):
+        # book_updated() is "" only when git has no history for the manuscript and no
+        # file under it can be stat'ed; cover.md itself must exist to be rewritten, so
+        # the fixture cannot reach that shape and the date source is stubbed instead.
+        with mock.patch("lib._book_versions.BookVersions.book_updated", return_value=""):
+            code, out = self.run_script("cover.py")
+        self.assertEqual(code, 0, out)
+        after = self.read("data", "manuscript", "cover.md")
+        self.assertIn("版本 v0.1 · 2026-01-01 · ", after)
+        self.assertNotIn("1,000 行", after)
+
     def test_the_cover_repeats_the_counts_and_the_source_references(self):
         self.write(
             "data/manuscript/cover.md",
