@@ -13,6 +13,16 @@
 
 ### 变更
 
+- **共享辅助函数收进 `lib/`，配置读取改成有判据的边界**：六个函数原先在 2–3 个审计里各写一遍
+  （`coord_count`、`_files`/`files`、`scripts`/`python_files`、`_rel`/`_relative`、`load_baseline`、
+  `archive_root`/`reports_root`），现在各只有一份，落在 `_mdutil`、`_config`、`_fsutil`、`_baseline`；
+  被测试 `patch.object` 的名字保留一行别名（patch 缝是契约的一部分），语句数 14,679 → **14,674**。
+  新增 `ImportTimeConfigReadTest`：从控制台入口做导入闭包，闭包内出现模块级 `_config.` 读取即失败；
+  `crossrefs`/`glossary`/`index`/`index_xrefs`/`smart` 已改为调用时读取（删掉 9 个纯死赋值），
+  仍以子进程执行的脚本模块不在闭包内、残余登记为 `rf-75`，`core/scaffold.py` 是带理由的例外。
+- **测试：守卫位置与归类**：39 个 suite 把 `__main__` 守卫写在类定义之前（直接跑会静默跳过这些类），
+  全部移到文件末并由 `test_meta_taxonomy.py` 的元测试永久禁止；`cover.py` 的两个用例从 `layer:render`
+  移入 `layer:manuscript` 的 `CoverStatsTest`，迁移后闲置的 `mock` 导入一并删除。
 - **把最后几处「这本书的内容」从代码里清掉**：`manuscript/case_studies.py` 的思考小结原本写死三条 H2/JDBC
   问题，现改为 `data/book/case-studies.toml [headers.<scenario>].questions`，缺省用与书无关的三问；
   同一函数对 `heading`/`opening` 缺省也不再抛 `KeyError`（只配标题的书也能渲染）。`glossary.py`、
@@ -94,7 +104,7 @@
   pdf_metrics 用例当初正是这样长出来的）。符号集来自 `load_module()` 之后实际调用的属性，
   只是借用模块做准备的套件不会误伤；同时补三条用例把「真子集报出」「自带新符号不报」「两个符号不算」钉住。
 
-- **覆盖率快档 97% → 100%**：缺失 249 行 → **0 行**，半边分支 246 → **0**（14,676 条语句，105 个文件全部 100%），
+- **覆盖率快档 97% → 100%**：缺失 249 行 → **0 行**，半边分支 246 → **0**（105 个文件全部 100%；共享函数收敛后语句数 14,676 → 14,674），
   基线重记。收敛过程中删掉的分支都先证明过不可达：`balance` 的第二个 `__main__`、`terms` 的成对守卫假分支
   与被编号规则覆盖的标题缩写规则、`settings` 恒不成立的空小节分支、`epub_diff` 在 `parser.error` 之后的
   `return`、`index` 的兜底章标题、`test_redundancy` 的 `TRIVIAL` 边（`normalise` 保留 `def` 行）、`smart` 的
