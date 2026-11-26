@@ -407,6 +407,37 @@ class TuiInteractionTest(unittest.TestCase):
         self.press("a")
         self.assertEqual(self.calls, ["analyze"])
 
+    def test_a_step_line_names_the_artifact_not_the_script(self):
+        cases = {
+            '  .. to_pdf': '标准版 PDF：开始',
+            '  ok   to_pdf (12.34s)': '标准版 PDF：完成（12.34s）',
+            '  .. verify_print': '印刷版 PDF · 校验：开始',
+            '=== make deliver: 6 step(s) ===': '交付：6 步',
+        }
+        for raw, expected in cases.items():
+            with self.subTest(line=raw):
+                self.assertEqual(self.tui._stage_text(raw), expected)
+
+    def test_a_multi_artifact_run_states_the_order_first(self):
+        buffer = io.StringIO()
+        with (
+            mock.patch.object(self.tui.actions, "run", side_effect=lambda *a, **k: (0, "ok")),
+            mock.patch.object(self.tui, "confirm", return_value=True),
+            redirect_stdout(buffer),
+        ):
+            self.tui.run_entry("deliver-all", "全量交付", force=True)
+        self.assertIn("产物：Markdown → HTML → EPUB → 标准版 PDF → 印刷版 PDF",
+                      buffer.getvalue())
+
+    def test_a_single_artifact_run_states_no_plan(self):
+        buffer = io.StringIO()
+        with (
+            mock.patch.object(self.tui.actions, "run", side_effect=lambda *a, **k: (0, "ok")),
+            redirect_stdout(buffer),
+        ):
+            self.tui.run_entry("status", "状态")
+        self.assertNotIn("产物：", buffer.getvalue())
+
     def test_the_confirmation_says_which_artifacts_will_be_rewritten(self):
         asked: list[str] = []
 

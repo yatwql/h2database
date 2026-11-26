@@ -168,6 +168,22 @@ SHORT_ARTIFACTS: dict[str, str] = {
 }
 
 
+# The order the artifacts appear in, for the line shown before a multi-artifact run.
+# Shared steps (the PDF pipeline) still belong to one artifact each, so the list reads
+# as five deliverables rather than as a list of scripts.
+ORDERED_ARTIFACTS: dict[str, tuple[str, ...]] = {
+    "build": ("Markdown", "HTML"),
+    "deliver": ("EPUB", "标准版 PDF"),
+    "print": ("印刷版 PDF",),
+    "deliver-all": ("Markdown", "HTML", "EPUB", "标准版 PDF", "印刷版 PDF"),
+}
+
+
+def plan(action: str) -> str:
+    """`Markdown → HTML → EPUB → …`: what the run produces, in order."""
+    return " → ".join(ORDERED_ARTIFACTS.get(action, ()))
+
+
 def short_artifacts(action: str) -> str:
     """A one-glance name for what an action rewrites, for the confirmation line."""
     return SHORT_ARTIFACTS.get(action, artifacts(action))

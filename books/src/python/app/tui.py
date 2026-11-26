@@ -296,6 +296,10 @@ def run_entry(action: str, label: str, force: bool = False) -> str:
         if not confirm(question):
             return _c(f'已取消，{rewritten or "产物"}未改动', PALETTE['hint'])
     short = menu.short_artifacts(action)
+    ordered = menu.plan(action)
+    if ordered:
+        sys.stdout.write(_c(f'  产物：{ordered}\n', PALETTE['hint']))
+        sys.stdout.flush()
     progress = (f'⠿ 正在重建 {short}…' if short
                 else f'⠿ 正在执行 {label}…')
     estimate = menu.estimate(action)
@@ -324,9 +328,43 @@ def run_entry(action: str, label: str, force: bool = False) -> str:
 # it beats a spinner that says nothing for two minutes.
 LOG_LINE = re.compile(r'^\S+ \S+ \w+\s+[\w.]+\s+(.*)$')
 
+# make.py names each step after its script. Someone waiting for five artifacts does not
+# want `.. to_pdf`; they want to know which artifact is being built. Shared steps get
+# the artifact they belong to, so the PDF pipeline reads as one artifact's stages.
+STEP_ARTIFACT = {
+    'cover_stats': 'Markdown', 'rebuild_merged': 'Markdown',
+    'to_html': 'HTML', 'archive': '归档',
+    'to_pdf': '标准版 PDF', 'pdf_toc_links': '标准版 PDF · 目录链接',
+    'verify_pdf': '标准版 PDF · 校验',
+    'to_epub': 'EPUB', 'verify_epub': 'EPUB · 校验',
+    'archive_release': '归档',
+    'print_pdf': '印刷版 PDF', 'verify_print': '印刷版 PDF · 校验',
+    'unittest': '测试', 'coverage': '覆盖率',
+}
+STEP_START = re.compile(r'^\s*\.\.\s+(\w+)\s*$')
+STEP_OK = re.compile(r'^\s*ok\s+(\w+)\s+\(([\d.]+)s\)\s*$')
+PHASE_LINE = re.compile(r'^=== make (\w+): (\d+) step')
+
 
 def _stage_text(line: str) -> str:
-    """The message part of a log line, without the timestamp and level."""
+    """A user-readable stage line: which artifact, which stage.
+
+    The child prints `.. to_pdf` and `ok to_pdf (12.3s)`; a reader waiting for five
+    artifacts needs `标准版 PDF：开始/完成（12.3s）`, and the shared PDF steps need to be
+    attributed to the artifact they belong to.
+    """
+    started = STEP_START.match(line)
+    if started and started.group(1) in STEP_ARTIFACT:
+        return f'{STEP_ARTIFACT[started.group(1)]}：开始'
+    done = STEP_OK.match(line)
+    if done and done.group(1) in STEP_ARTIFACT:
+        return f'{STEP_ARTIFACT[done.group(1)]}：完成（{done.group(2)}s）'
+    phase = PHASE_LINE.match(line)
+    if phase:
+        labels = {'build': '构建', 'deliver': '交付', 'print': '印刷版',
+                  'verify': '门禁', 'check': '门禁', 'test': '测试', 'cover': '覆盖率'}
+        label = labels.get(phase.group(1), phase.group(1))
+        return f'{label}：{phase.group(2)} 步'
     match = LOG_LINE.match(line)
     return (match.group(1) if match else line).strip()
 
