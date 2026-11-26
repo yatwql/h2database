@@ -1,4 +1,4 @@
-<!-- versions: tool=0.1-dev source=2.5.259-SNAPSHOT doc=6.5 edition=main language=zh -->
+<!-- versions: tool=0.1 source=2.5.259-SNAPSHOT doc=6.6 edition=main language=zh -->
 
 ---
 
@@ -304,7 +304,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## H2 数据库引擎源码剖析
 
-版本 v6.5 · 2026-11-24 · 40,031 行 · 12 章 + 5 附录
+版本 v6.6 · 2026-11-24 · 40,031 行 · 12 章 + 5 附录
 
 **作者：其·龙（Stallman Wang）**
 **联系邮箱：[stallman.wang@foxmail.com](mailto:stallman.wang@foxmail.com)**
@@ -325,7 +325,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 | 代码总规模 | 1,187 个文件 · 328,971 行 |
 | 源码变更 | 2026-05-25（基于上游 v2.4.240 的 44 次提交更新） |
 
-共 10 个经典算法 · 598 幅 ASCII 示意图 · 232 处源码引用
+共 10 个经典算法 · 599 幅 ASCII 示意图 · 232 处源码引用
 
 ---
 # 第1章 总体架构

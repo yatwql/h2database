@@ -80,7 +80,9 @@ class TestVersionGate(VersionsCase):
         docs = os.path.join(self.root, 'docs', 'managements')
         os.makedirs(docs, exist_ok=True)
         with open(os.path.join(docs, 'plan.md'), 'w', encoding='utf-8') as fh:
-            fh.write('# Plan\n\n> 版本：v0.1\n')
+            # a version the software is not: the case must not depend on which
+            # version the tree happens to carry today
+            fh.write('# Plan\n\n> 版本：v9.9\n')
         code, out = self.run_gate()
         self.assertEqual(code, 1, out[-300:])
         self.assertIn('is not the software version', out)

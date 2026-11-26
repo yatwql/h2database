@@ -1,7 +1,7 @@
 # 实施与维护计划
 
 > 软件：bookwright — 源码分析成书工具 v0.1
-> 版本：v0.1-dev
+> 版本：v0.1
 > 定位：在办事项的**时机档与逐项验收**——每项现状 / 动作 / 验收 / 事实位只在这里；
 > 不记设计细节（看 `technical.md`），也不存问题台账（看 `review-findings.md`）。
 > **编号源**：`plan-next = 13`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-12，
@@ -91,10 +91,6 @@ chapters.py`，填好 `book.toml [chapters.packages]` 后跑 `make.py check`。
 
 ## 归档
 
-> 已关闭版本的台账在 `docs/archive/`；本文件只留当前与将来的计划项。
+> 已发布版本的计划快照只在上面的归档文件里；本文只留在办与将来的计划项。
 
-| 版本 | 计划快照 | 变更日志 | 问题台账 |
-| --- | --- | --- | --- |
-| v0.1 | [archived_plan.0.1.md](../archive/v0.1/archived_plan.0.1.md) | [archived_changelog.0.1.md](../archive/v0.1/archived_changelog.0.1.md) | [archived_review-findings.0.1.md](../archive/v0.1/archived_review-findings.0.1.md) |
-
-计划项完成后摘要进 `changelog.md` 对应版本段，本文不留存已完成项，历史由 git 与归档目录保留。
+- [`archived_plan.0.1.md`](../archive/v0.1/archived_plan.0.1.md) — v0.1（0.1 开发段，2026-11 发布）

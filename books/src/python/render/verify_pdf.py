@@ -241,11 +241,17 @@ def _check_density(report: Report, pdf_path: str) -> None:
     if not body or not pitch:
         report.add('DENSITY', True, 'no text to measure')
         return
+    # A page that holds less than a third of its printable height has no measured
+    # rhythm: the pitch median then comes from headings and captions, and a
+    # miniature document would be judged as if it were a book. Say so instead.
+    fill = pitch * metrics.get('lines_per_page', 0)
+    if fill < 300:
+        report.add('DENSITY', True,
+                   f'too little text to judge (fills {fill:.0f}pt of the page)')
+        return
     ratio = pitch / body
     low = float(_config.THRESHOLDS.get('pdf_leading_ratio_min', 1.15) or 1.15)
     high = float(_config.THRESHOLDS.get('pdf_leading_ratio_max', 1.75) or 1.75)
-    # A4 at the configured 24mm top/bottom margin leaves 705.9pt of printable height
-    fill = pitch * metrics.get('lines_per_page', 0)
     report.add('DENSITY', low <= ratio <= high,
                f'leading {ratio:.2f}x body (want {low}-{high}), '
                f'text fills {fill:.0f}pt of the page')

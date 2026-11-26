@@ -4,7 +4,7 @@
 
 [book]
 title = "H2 数据库引擎源码剖析"
-version = "6.5"
+version = "6.6"
 merged_name = "h2-source-code-analysis"
 
 [project]

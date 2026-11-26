@@ -365,11 +365,30 @@ class VerifyPdfSkipAndDensityTest(PdfFixtureCase):
         self.assertEqual(self.verify_pdf._annotation_target_page(reader, {"/Dest": ["ref-b"]}), 1)
         self.assertIsNone(self.verify_pdf._annotation_target_page(reader, {"/Dest": ["ref-z"]}))
 
+    def test_a_page_that_is_mostly_empty_has_no_rhythm_to_judge(self):
+        self.build()
+        render = importlib.import_module("render")
+        fake = types.SimpleNamespace(
+            measure=lambda _path: {"body_pt": 10.0, "pitch_pt": 8.3,
+                                   "lines_per_page": 11, "pages": 4}
+        )
+        report = self.verify_pdf.Report()
+        with (
+            mock.patch.dict(sys.modules, {"render.pdf_metrics": fake}),
+            mock.patch.object(render, "pdf_metrics", fake, create=True),
+            redirect_stdout(io.StringIO()),
+        ):
+            self.verify_pdf._check_density(report, self.pdf)
+        _name, ok, detail = report.checks[0]
+        self.assertTrue(ok, detail)
+        self.assertIn("too little text to judge", detail)
+
     def test_the_density_ratio_is_judged_against_the_leading_window(self):
         self.build()
         render = importlib.import_module("render")
         fake = types.SimpleNamespace(
-            measure=lambda _path: {"body_pt": 10.0, "pitch_pt": 14.0, "lines_per_page": 50}
+            measure=lambda _path: {"body_pt": 10.0, "pitch_pt": 14.0,
+                                   "lines_per_page": 50, "pages": 10}
         )
         report = self.verify_pdf.Report()
         with (
