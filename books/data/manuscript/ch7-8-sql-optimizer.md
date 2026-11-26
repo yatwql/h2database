@@ -418,6 +418,14 @@ Statement 的特点是**每次调用 executeQuery 都走完整的编译-执行�
 
 PreparedStatement 的核心优势在于**一次编译，多次执行**。在 `prepareStatement()` 阶段，内核完成所有的解析、优化和计划生成工作，生成 `CommandContainer` 对象，并由客户端持有该对象的引用（通过 JDBC 驱动封装在 `JdbcPreparedStatement` 中）。后续每次调用 `executeQuery()`，客户端仅需通过 `setXxx()` 方法绑定参数，然后直接触发已编译计划的执行。内核无需重新解析 SQL，也无需重新选择执行计划。
 
+| 维度 | Statement | PreparedStatement |
+| --- | --- | --- |
+| 编译时机 | 每次 `executeQuery()` 都重新解析、优化、生成计划 | `prepareStatement()` 一次编译，后续只绑定参数 |
+| 执行 N 次的开销 | O(N ×（解析 + 执行）) | O(解析 + N × 执行) |
+| 参数传递 | 值拼进 SQL 文本，参与语法解析 | `setXxx()` 绑定，值不参与 SQL 文本 |
+| SQL 注入面 | 拼接即语法，需调用方自行转义 | 计划固定，值作为数据绑定 |
+| 适用场景 | 一次性的 DDL、管理语句 | OLTP 高频同构查询、循环内调用 |
+
 两者的性能差异随执行次数增加而放大：对于执行 N 次的查询，Statement 的解析开销约为 O(N)，而 PreparedStatement 约为 O(1)。在高并发 OLTP 系统中，这一差异使 PreparedStatement 的收益尤为突出。此外，PreparedStatement 天然防止 SQL 注入攻击，因为参数值在编译后作为数据安全地绑定到查询计划中，不会参与 SQL 文本拼接，从根源上消除了恶意 SQL 片段被解释为语法结构的可能性。
 
 从执行时间的构成看，两种模式的开销差异随执行次数增长而急剧拉大：

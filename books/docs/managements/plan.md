@@ -77,11 +77,10 @@ chapters.py`，填好 `book.toml [chapters.packages]` 后跑 `make.py check`。
 
 #### `plan-13` 对比类论述表格化
 
-**现状**：并列比较（相邻小版本差异、优化器参数取舍、升级与回滚对照）写成长段落，读时要自行对齐
-两侧取值；全书表格仅 3 处。
-**动作**：按 `docs/plan/tabular-comparisons/plan.md` 分阶段推进（选点与判据冻结 → 试点两处 →
-铺开与门禁回归 → 收尾）；先挑附录 B 与 ch7 参数取舍两处改 3 列表，验证三个出口（HTML/PDF/EPUB）
-与既有判据后再铺开。
+**现状**：附录 B 的版本差异与第 7 章的 Statement/PreparedStatement 对照已改为 3 列表（试点完成），
+门禁与三个出口均已验证；其余候选（升级与回滚对照、附录 A 案例链路对照）仍是段落。
+**动作**：按 `docs/plan/tabular-comparisons/plan.md` 继续阶段 3：把剩余候选逐一表格化，每处独立提交，
+每次改动后跑全量门禁与一次 `deliver`/`print` 目视检查 EPUB 窄屏排布。
 **验收**：每处改写前后事实逐条对应、无新增断言；交付校验（PDF、EPUB 两侧）全绿；`content_depth`、
 `readability` 的结论与改动前一致（指标仍在区间内）；EPUB 窄屏下表格不溢出。
 **事实位**：设计与计划在 `docs/plan/tabular-comparisons/design.md` 与 `docs/plan/tabular-comparisons/plan.md`；

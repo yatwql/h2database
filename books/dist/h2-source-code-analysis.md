@@ -304,7 +304,7 @@ H2 项目自 2004 年由 Thomas Mueller 创立以来，始终保持小而精的�
 
 ## H2 数据库引擎源码剖析
 
-版本 v6.6 · 2026-11-26 · 40,031 行 · 12 章 + 5 附录
+版本 v6.6 · 2026-11-26 · 40,043 行 · 12 章 + 5 附录
 
 **作者：其·龙（Stallman Wang）**
 **联系邮箱：[stallman.wang@foxmail.com](mailto:stallman.wang@foxmail.com)**
@@ -20285,6 +20285,14 @@ Statement 的特点是**每次调用 executeQuery 都走完整的编译-执行�
 
 PreparedStatement 的核心优势在于**一次编译，多次执行**。在 `prepareStatement()` 阶段，内核完成所有的解析、优化和计划生成工作，生成 `CommandContainer` 对象，并由客户端持有该对象的引用（通过 JDBC 驱动封装在 `JdbcPreparedStatement` 中）。后续每次调用 `executeQuery()`，客户端仅需通过 `setXxx()` 方法绑定参数，然后直接触发已编译计划的执行。内核无需重新解析 SQL，也无需重新选择执行计划。
 
+| 维度 | Statement | PreparedStatement |
+| --- | --- | --- |
+| 编译时机 | 每次 `executeQuery()` 都重新解析、优化、生成计划 | `prepareStatement()` 一次编译，后续只绑定参数 |
+| 执行 N 次的开销 | O(N ×（解析 + 执行）) | O(解析 + N × 执行) |
+| 参数传递 | 值拼进 SQL 文本，参与语法解析 | `setXxx()` 绑定，值不参与 SQL 文本 |
+| SQL 注入面 | 拼接即语法，需调用方自行转义 | 计划固定，值作为数据绑定 |
+| 适用场景 | 一次性的 DDL、管理语句 | OLTP 高频同构查询、循环内调用 |
+
 两者的性能差异随执行次数增加而放大：对于执行 N 次的查询，Statement 的解析开销约为 O(N)，而 PreparedStatement 约为 O(1)。在高并发 OLTP 系统中，这一差异使 PreparedStatement 的收益尤为突出。此外，PreparedStatement 天然防止 SQL 注入攻击，因为参数值在编译后作为数据安全地绑定到查询计划中，不会参与 SQL 文本拼接，从根源上消除了恶意 SQL 片段被解释为语法结构的可能性。
 
 从执行时间的构成看，两种模式的开销差异随执行次数增长而急剧拉大：
@@ -38569,32 +38577,36 @@ B-Tree 根重建后，`TransactionStore.open()` 被调用。它在 metaMap 中�
 
 ## B.1 MVStore 核心层
 
-- **panicException 改为 AtomicReference**：原先为 `volatile` 字段，现改为 `AtomicReference` + `compareAndSet`，确保仅捕获首个 panic 异常。新增 `panic(Throwable)` 重载作为标准入口。后台线程在 panic 状态下不再调用 `closeImmediately()`，仅通过 `handleException()` 记录。
-- **closeStore() 序列变更**：`commit()` 移至 maps 关闭循环之后；状态转换从 `if (state == STATE_OPEN)` 守卫改为 `assert state == STATE_OPEN` + 无条件转换。新增 `closingThreadId` 追踪。
-- **`isClosed()` 自旋等待**：若发现其他线程正在执行 `closeStore()`，当前线程将以 `Thread.sleep(millis++)` 从 1ms 递增等待，仅在 `closingThreadId != Thread.currentThread().getId()`（不同线程）时触发。
-- **commit() 防重入**：通过快照记录 `versionAtStart`，若在锁重入时版本已变化，则跳过本次提交，防止嵌套提交。
-- **MVMap.operate() 简化**：所有页面操作逻辑（拆分、删除、复制、根分裂）从 `operate()` 内联代码移至 `DecisionMaker.decide(CursorPos, K, V)` 方法。`operate()` 仅负责任务重试/中止/应用循环。
-- **tryLock() CPU 感知退避**：根据 `Runtime.getRuntime().availableProcessors()` 自适应旋转等待。前 `CPU_COUNT` 次使用 `Thread.onSpinWait()`，随后 `Thread.yield()`，再降级为 `lock.wait(1)`。移除 `Thread.sleep(contention)`。
-- **CursorPos 树遍历路径重用**：`traverseDown()` 新增 `existing CursorPos` 参数。重试时可复用上次遍历路径。若页面键数组未变（`sameKeys()` 引用相等性检查），连二分查找结果也可重用。
-- **Page 批量删除**：`Page.remove(long positionsToRemove)` 新增位掩码批量删除方法，可在一次操作中移除多个键值对。
-- **编译压缩优化**：`TransactionStore.isTransactionClosed()` 的条件判断简化为 `transactionId <= maxTransactionId`，减少冗余方法调用。
-- **FileStore 流水线重构**：新增 `recentlySaved` 队列（`LinkedBlockingQueue<Chunk>`），chunk 元数据提交至 layout map 被延迟到下一个 chunk 创建时。`saveRecentChunksInLayout(long version)` 作为刷新方法，由 `stop()` 在最终提交前调用。修复因 layout map 不完整导致的 ChunkNotFound 问题。
-- **moveChunk 错误恢复**：移动操作失败时恢复 chunk 原始 block 位置并释放新分配空间。
-- **isBackupThread 判定移除**：原 `isBackupThread` 逻辑已被 H2_THREAD_GROUP 的线程分组机制替代，后台线程的身份识别统一基于线程组归属。
+| 变更点 | 之前 → 现在（v2.4.240 → v2.4.249） | 读者需要知道的影响 |
+| --- | --- | --- |
+| `panicException` 承载方式 | `volatile` 字段 → `AtomicReference` + `compareAndSet`，新增 `panic(Throwable)` 作为标准入口 | 只捕获**首个** panic 异常；后台线程在 panic 状态下不再 `closeImmediately()`，改为 `handleException()` 记录 |
+| `closeStore()` 顺序 | `commit()` 移到 maps 关闭循环之后；守卫 `if (state == STATE_OPEN)` → `assert` + 无条件转换；新增 `closingThreadId` | 关闭期间的状态判定从「静默跳过」改为「断言失败」，并发关闭由 `closingThreadId` 识别 |
+| `isClosed()` 自旋 | 新增 `Thread.sleep(millis++)` 从 1ms 递增，仅在 `closingThreadId != 当前线程` 时触发 | 他线程正在关闭时不再忙等；本线程重入不会自旋 |
+| `commit()` 重入 | 新增 `versionAtStart` 快照，锁重入时若版本已变则跳过本次提交 | 嵌套提交不再产生重复版本 |
+| `MVMap.operate()` | 页面操作（拆分、删除、复制、根分裂）内联 → `DecisionMaker.decide(CursorPos, K, V)` | `operate()` 只负责重试/中止/应用循环，决策逻辑可单测 |
+| `tryLock()` 退避 | 按 `availableProcessors()` 自适应：`onSpinWait()` → `Thread.yield()` → `lock.wait(1)`；移除 `sleep(contention)` | 高核机器上自旋更久、低核机器更早让步 |
+| `CursorPos` 遍历 | `traverseDown()` 新增 `existing CursorPos` 参数；`sameKeys()` 引用相等时连二分查找结果一并重用 | 重试路径复用上次遍历结果 |
+| 批量删除 | 新增 `Page.remove(long positionsToRemove)` 位掩码批量删除 | 一次操作移除多个键值对 |
+| 事务关闭判定 | `isTransactionClosed()` 简化为 `transactionId <= maxTransactionId` | 去掉冗余方法调用 |
+| FileStore 流水线 | 新增 `recentlySaved` 队列（`LinkedBlockingQueue<Chunk>`）；元数据延到下一个 chunk 创建时提交；`saveRecentChunksInLayout(long)` 由 `stop()` 在终提交前调用 | 修复 layout map 不完整导致的 `ChunkNotFound` |
+| `moveChunk` 失败 | 失败时恢复 chunk 原始 block 位置并释放新分配空间 | 移动失败不再泄漏空间 |
+| 后台线程识别 | `isBackupThread` 逻辑删除，改由 `H2_THREAD_GROUP` 线程分组判定 | 后台线程身份识别只依赖线程组归属 |
 
 ## B.2 事务子系统
 
-- **TransactionStore 状态机**：引入显式状态常量（OPEN→INITIALIZING→READY→CLOSING→CLOSED = 0→4），配合 `AtomicInteger` 替代原先的 `boolean init` 标志。`init()` 和 `close()` 均使用 CAS 原子转换，防止并发竞态。
-- **CommitDecisionMaker（新增）**：实现 page-level 决策机制，以页为单位批量处理提交逻辑，而非逐条处理 undo log 条目。通过 `haveSeenEntry(int entryId)` 实现同一条目的去重，配合 `VersionedValueCommitted.getInstance(value, entryId)` 将条目标记为已提交。
-- **等待事务提前通知**：`TransactionStore.commit()` 在 undo log 回放前即调用 `notifyAllWaitingTransactions()`，使受阻塞的事务更早被唤醒。
-- **MAX_OPEN_TRANSACTIONS 默认值调整**：从 65535 降为 255，现可通过 `h2.maxOpenTransactions` 系统属性配置。`undoLogs` 数组大小调整为 `MAX_OPEN_TRANSACTIONS + 1`。
-- **恢复工具 maxOpenTransactions 覆盖**：`DirectRecover.java` 和 `Recover.java` 的 `main()` 入口处通过 `System.setProperty("h2.maxOpenTransactions", "65535")` 将上限恢复为 65535。此变更为以命令行的方式运行恢复工具时默认放宽限制，不影响嵌入式运行。
-- **VersionedBitSet 重写**：不再继承 `java.util.BitSet`，改为不可变的 `long[]` 包装类。`clone()` 调用全部移除，通过构造器 `VersionedBitSet(VersionedBitSet, int)` 创建新实例并翻转指定位。
-- **BitSetHelper（新增）**：提供基于 `long[]` 的最小 BitSet 功能（get/flip/nextSetBit/nextClearBit/length），通过不可变模式保证线程安全。
-- **committingTransactions 类型迁移**：`TransactionStore.committingTransactions` 从 `BitSet` 改为 `long[]`，波及 `TransactionMap`、`Snapshot`、`Transaction` 等 7 个文件。`Snapshot.hashCode()` 改用 `System.identityHashCode()`。
-- **VersionedValue 序列化格式变更**：序列化从"先写 operationId varLong"改为"先写 flags 字节"——根据 flags 决定后续字段的存在。已持久化的旧版本（v2.4.240）数据文件不兼容此格式。**架构影响**：此变更意味着 v2.4.249-SNAPSHOT 无法直接读取 v2.4.240 创建的 MVStore 数据文件，需通过数据迁移或 DDL 重新导入。
-- **事务恢复排序**：非正常关闭后的残余事务按提交序列号（commitment order）排序注册，确保重放顺序正确。
-- **死锁修复**：`saveChunkMetadataChanges()` 去除忙等轮询；`acceptChunkOccupancyChanges()` 将未分配 chunk 的 `RemovedPageInfo` 压回队列。`Transaction.waitForThisToEnd()` 新增 `STATUS_COMMITTED` 检查。
+| 变更点 | 之前 → 现在（v2.4.240 → v2.4.249） | 读者需要知道的影响 |
+| --- | --- | --- |
+| `TransactionStore` 状态 | `boolean init` → 显式状态常量 `OPEN→INITIALIZING→READY→CLOSING→CLOSED`（0→4）+ `AtomicInteger`，`init()`/`close()` 用 CAS | 并发初始化与关闭不再靠标志位竞态 |
+| 提交决策 | 逐条处理 undo log → 新增 `CommitDecisionMaker` 按页批量决策，`haveSeenEntry(int)` 去重，`VersionedValueCommitted.getInstance(value, entryId)` 标记已提交 | 提交以页为单位，同一条目只处理一次 |
+| 等待事务唤醒 | `commit()` 在 undo log 回放前即调用 `notifyAllWaitingTransactions()` | 被阻塞事务更早被唤醒 |
+| `MAX_OPEN_TRANSACTIONS` | 65535 → 255，可经 `h2.maxOpenTransactions` 配置；`undoLogs` 数组长度为 `MAX_OPEN_TRANSACTIONS + 1` | 嵌入式默认上限收敛，需要更多并发时显式调高 |
+| 恢复工具上限 | `DirectRecover`/`Recover` 的 `main()` 设 `h2.maxOpenTransactions=65535` | 命令行恢复工具默认放宽，不影响嵌入式运行 |
+| `VersionedBitSet` | 继承 `java.util.BitSet` → 不可变 `long[]` 包装；`clone()` 全部移除，改由构造器 `VersionedBitSet(VersionedBitSet, int)` 翻转指定位 | 位集不可变，线程安全不再依赖外部约定 |
+| `BitSetHelper` | 新增：基于 `long[]` 的最小 BitSet（`get`/`flip`/`nextSetBit`/`nextClearBit`/`length`） | 不可变模式，替代继承式复用 |
+| `committingTransactions` 类型 | `BitSet` → `long[]`，波及 `TransactionMap`、`Snapshot`、`Transaction` 等 7 个文件；`Snapshot.hashCode()` 改用 `System.identityHashCode()` | 快照哈希不再按内容计算 |
+| `VersionedValue` 序列化 | 先写 `operationId` varLong → 先写 flags 字节，由 flags 决定后续字段 | **v2.4.249-SNAPSHOT 读不了 v2.4.240 的数据文件**：需数据迁移或 DDL 重新导入 |
+| 事务恢复排序 | 非正常关闭后的残余事务按提交序列号（commitment order）注册 | 重放顺序与提交顺序一致 |
+| 死锁修复 | `saveChunkMetadataChanges()` 去忙等轮询；`acceptChunkOccupancyChanges()` 将未分配 chunk 的 `RemovedPageInfo` 压回队列；`waitForThisToEnd()` 增加 `STATUS_COMMITTED` 检查 | 关闭与回收阶段的死锁窗口收窄 |
 
 ## 16.1 版本变更对照
 
