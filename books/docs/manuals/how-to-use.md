@@ -30,7 +30,7 @@
    python books/src/python/make.py build
    ```
 
-   打开 `books/dist/h2-source-code-analysis.html` 即可查看。
+   打开 `books/dist/<book>.html` 即可查看（`<book>` 是书名，见 `book.toml [book] slug`）。
 
 **做对的判据**：同一条门禁从失败变成通过，且没有引入新的失败项。
 
@@ -65,9 +65,22 @@
 
    顺序是固定的：渲染 PDF → 补印刷目录链接 → 校验 PDF → 生成 EPUB → 校验 EPUB。中间任一步失败会立刻停下。
 
-3. 到 `books/dist/` 取件：`h2-source-code-analysis.pdf`、`h2-source-code-analysis.epub`，以及可用于二次排版的 `h2-source-code-analysis.md` 与 `h2-source-code-analysis.html`。
+3. 到 `books/dist/` 取件：`<book>.pdf`、`<book>.epub`，以及可用于二次排版的 `<book>.md` 与 `<book>.html`。
 
-**做对的判据**：`deliver` 以 `OK` 结束；PDF 页数与体积在预算内；目录可点击且跳转落在正确章节。
+**做对的判据**：`deliver` 以 `OK` 结束；PDF 页数与体积在预算内；目录可点击且跳转落在正确章节；
+`verify_pdf` 的 `FONTS`（没有退化成 Type3 描边）与 `DENSITY`（行距÷字号、文字占可印高度）为 ok；
+`verify_epub` 的 `CHAPTERS` 为 ok（每个正文文件恰好一个一级标题）。
+
+**页面松紧不对时**，不要改代码，改配置后重新标定：
+
+```bash
+# 先量当前版式，与参照 PDF 或数字目标比
+python books/src/python/render/pdf_metrics.py --compare 参照.pdf dist/书.pdf
+python books/src/python/render/pdf_metrics.py --target pages=<目标页数>,chars_per_page=<目标字符数> dist/书.pdf
+
+# 标定结果写回 base.json 的 [toolchain]（只替换那一个数）
+python books/src/python/render/pdf_metrics.py --write-back layout_spacing_scale=0.7
+```
 
 ## 5. 提交之前
 

@@ -1,0 +1,35 @@
+{
+  "label": "2026-06-15",
+  "date": "2026-06-15",
+  "source_archive": "edition-2026-06-15",
+  "archive_sha256": "",
+  "edition": "",
+  "files": {
+    "20260615.epub": {
+      "sha256": "0c201417606afc3935e9e503fbe6434398673cdd84970bf2e9a561eb49a8f4f3",
+      "bytes": 639640
+    },
+    "20260615.html": {
+      "sha256": "8b6f8baf6bf080ce4b8208b3783a79dc87828c25bbd1aba010f78899477c16f7",
+      "bytes": 2845273
+    },
+    "20260615.md": {
+      "sha256": "10683d73f1836c034024e646c52b6f609c882af3f92ad89652ffa2e6e7e64dec",
+      "bytes": 2476695
+    },
+    "20260615.pdf": {
+      "sha256": "542de114b957c762d59034c265f088e961e82abedb61ae4ad9f59490845f961d",
+      "bytes": 7328408
+    },
+    "print20260615.pdf": {
+      "sha256": "a27dbc7b252401f164a51192267f9d8d215d59afeab129fc34a862cf23d21bab",
+      "bytes": 7169691
+    }
+  },
+  "totals": {
+    "files": 5,
+    "bytes": 20459707,
+    "lines": 0
+  },
+  "kind": "artifacts"
+}

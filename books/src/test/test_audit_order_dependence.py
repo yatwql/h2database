@@ -6,8 +6,8 @@ import io
 import json
 import os
 import unittest
-from unittest import mock
 from contextlib import redirect_stdout
+from unittest import mock
 
 import _fixture
 

@@ -93,7 +93,7 @@
 - 图注后空一行再放图片，且图片与图注必须落在同一小节（同一个 H2）内；前者让 GitHub 预览
   与渲染器一致，后者让图簇与桥接句的判据仍能就近认出它们。
 - **行数下降要处理体量基线**：一张 ASCII 图占几十行，换成图片后该章 md 行数会明显下降，
-  可能低于 `content_volume` 的逐章下限。因此替换与基线必须同一变更：按 `quality-model.md` §4
+  可能低于 `content_volume` 的逐章下限。因此替换与基线必须同一变更：按 `content-quality-policy.md` §4
   的流程重记基线（需具名评审人与提交），或补足同等信息量的文字；不得让其静默变红。
 - **路径基准以文件为原点**：`links.py` 把相对目标按“引用所在文件的目录”解析
   （`os.path.dirname(path)`），所以资产放在手稿目录内、引用写 `assets/diagrams/fig-<章>-<序号>.svg`；
@@ -267,7 +267,7 @@
 | 渲染链与门禁职责 | `technical.md` §4.4（渲染）、§4.5（门禁） |
 | 新增配置键 `[paths] diagrams` | `technical.md` §3.2（路径与阈值归属） |
 | 判据与门禁级别 | `testplan.md`（只说性质，不引用键名） |
-| 图注体例 | `style-guide.md` §14 |
+| 图注体例 | `how-to-write.md` §14 |
 | 目录与资产归属 | `folder.md`（新增文档目录与资产目录两项） |
 | 图资产本体 | 手稿目录下的 `assets/diagrams/`（含命名说明 `README.md`） |
 

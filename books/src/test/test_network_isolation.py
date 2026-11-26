@@ -30,6 +30,16 @@ class NetworkGuardTest(unittest.TestCase):
         with self.assertRaises(_netguard.BlockedNetwork):
             socket.getaddrinfo('api.openai.com', 443)
 
+    def test_a_raw_socket_cannot_reach_an_external_host(self):
+        sock = socket.socket()
+        self.addCleanup(sock.close)
+        with self.assertRaises(_netguard.BlockedNetwork):
+            sock.connect(("example.invalid", 80))
+
+    def test_only_loopback_addresses_are_allowed(self):
+        self.assertTrue(_netguard._allowed("127.0.0.1"))
+        self.assertTrue(_netguard._allowed("::1"))
+
     def test_loopback_is_allowed(self):
         server = socket.socket()
         server.bind(('127.0.0.1', 0))

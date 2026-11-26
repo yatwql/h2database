@@ -26,7 +26,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _baseline, _config, _fsutil
+from lib import _baseline, _config, _errors, _fsutil
 
 SETTINGS = dict(_config.STYLE_POLICY.get('content_depth') or {})
 MIN_USES = int(SETTINGS.get('glossary_min_uses', 3))
@@ -221,4 +221,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

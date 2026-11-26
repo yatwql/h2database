@@ -13,9 +13,11 @@ the shell wrappers only forward, and every run leaves a report behind.
   python check_runner.py --mode p2          # release gate (p1 + slow suite + deliver)
   python check_runner.py --mode p0 --json   # machine readable summary
 
-Reports land in books/logs/check-<mode>-<timestamp>.log (full output) and .json
-(the summary printed to stdout), so a failed tier can be inspected later without
-re-running it.
+Reports land in books/logs/, one pair per mode per day:
+check-<mode>-<YYYYMMDD>.log is the day's journal (every run appended, each with a
+header) and check-<mode>-<YYYYMMDD>.jsonl holds one summary line per run. A second
+granularity per-run file turned a working day into a pile of fragments, and the run
+someone wants to look at is never the newest one.
 
 Exit codes: 0 pass, 1 a step failed, 2 usage/environment error.
 """
@@ -27,6 +29,7 @@ import importlib.util
 import json
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -34,7 +37,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from lib import _config, _fsutil, _log
+from lib import _config, _errors, _fsutil, _log, status
 
 PY = sys.executable
 PY_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -90,29 +93,63 @@ MODE_DOMAINS = {
 # mapping is deliberately coarse: it narrows a run, it never narrows what counts
 # as correct (p0/p1 always run everything). Path prefixes come from the config so
 # a renamed directory cannot turn the mapping into a silent no-op.
-def domain_rows() -> tuple[tuple[str, str], ...]:
-    """(path fragment, domain) for the change classifier, config derived."""
+def path_scopes() -> tuple[tuple[str, str, str], ...]:
+    """(path fragment, domain, gates) for every book area a change can touch.
+
+    One table with two readers: the classifier asks which domain a path is in,
+    the scoped runner asks which gates that area can invalidate. Two tables would
+    drift the moment a directory moves.
+    """
     def rel(path: str) -> str:
         return os.path.relpath(path, repo_root()).replace(os.sep, '/') + '/'
 
     return (
-        (rel(os.path.join(book_root(), 'src', 'test')), 'tests'),
-        (rel(os.path.join(book_root(), 'src', 'python')), 'code'),
-        (rel(os.path.join(book_root(), 'docs')), 'docs'),
-        (rel(_config.MANUSCRIPT_DIR), 'docs'),
-        (rel(_config.CONFIG_DIR), 'docs'),
-        (rel(os.path.join(book_root(), 'data')), 'docs'),
-        (rel(os.path.join(book_root(), 'data', 'baselines')), 'docs'),
-        (rel(os.path.join(repo_root(), '.github')), 'infra'),
-        (rel(os.path.join(book_root(), 'scripts')), 'infra'),
+        (rel(os.path.join(book_root(), 'src', 'test')), 'tests', ''),
+        (rel(os.path.join(book_root(), 'src', 'python')), 'code',
+         'architecture,script_contract'),
+        (rel(_config.MANUSCRIPT_DIR), 'docs',
+         'structure,captions,content_volume,audit_exercises,content_depth,style_rules'),
+        (rel(_config.CONFIG_DIR), 'docs', 'style_schema,style_rules,content_volume'),
+        (rel(os.path.join(book_root(), 'data')), 'docs', 'structure,versions'),
+        (rel(os.path.join(book_root(), 'docs')), 'docs',
+         'doc_drift,doc_archive,plan_coverage,traces,audit_links'),
+        (rel(os.path.join(book_root(), 'data', 'baselines')), 'docs', 'content_volume'),
+        (rel(os.path.join(repo_root(), '.github')), 'infra', ''),
+        (rel(os.path.join(book_root(), 'scripts')), 'infra', ''),
     )
+
+
+def domain_rows() -> tuple[tuple[str, str], ...]:
+    """(path fragment, domain) for the change classifier."""
+    return tuple((fragment, domain) for fragment, domain, _gates in path_scopes())
 
 
 def domain_of(path: str) -> str:
     for fragment, domain in domain_rows():
         if path.startswith(fragment) or fragment.strip('/') in path:
             return domain
+    if _inside_another_book(path):
+        return 'other-book'
     return 'infra'
+
+
+def _inside_another_book(path: str) -> bool:
+    """Whether a path belongs to a neighbour book rather than to this one.
+
+    Books sit side by side. A commit that touches only the other book says
+    nothing about this book's toolchain, so it must not be classified as
+    infrastructure — that classification is what pulls every gate into a run.
+    """
+    target = os.path.realpath(path if os.path.isabs(path)
+                              else os.path.join(repo_root(), path))
+    active = os.path.realpath(book_root())
+    for root in _config.candidate_books(active):
+        real = os.path.realpath(root)
+        if real == active:
+            continue
+        if target == real or target.startswith(real + os.sep):
+            return True
+    return False
 
 
 def scoped_changes(domains: tuple[str, ...] | None = None) -> list[str]:
@@ -123,17 +160,9 @@ def scoped_changes(domains: tuple[str, ...] | None = None) -> list[str]:
 
 
 def gates_for_table() -> tuple[tuple[str, str], ...]:
-    def rel(path: str) -> str:
-        return os.path.relpath(path, repo_root()).replace(os.sep, '/') + '/'
+    """(path fragment, gates) for the scoped runner, from the same table."""
+    return tuple((fragment, gates) for fragment, _domain, gates in path_scopes() if gates)
 
-    return (
-        (rel(_config.MANUSCRIPT_DIR),
-         'structure,captions,content_volume,audit_exercises,content_depth,style_rules'),
-        (rel(_config.CONFIG_DIR), 'style_schema,style_rules,content_volume'),
-        (rel(os.path.join(book_root(), 'data')), 'structure,versions'),
-        (rel(os.path.join(book_root(), 'docs')), 'doc_drift,doc_archive,plan_coverage,traces,audit_links'),
-        (rel(os.path.join(book_root(), 'data', 'baselines')), 'content_volume'),
-    )
 
 # Marker expression per tier, the same idea as investor-review's runner modes:
 # the tier decides *which* tests run, not which assertions count.
@@ -198,9 +227,6 @@ def gates_for_change(changed: list[str]) -> str:
     wanted: list[str] = []
     table = gates_for_table()
     for path in changed:
-        if '/src/python/' in path:
-            wanted += [gate for gate in ('architecture', 'script_contract')
-                       if gate not in wanted]
         for fragment, gates in table:
             if fragment in path:
                 wanted += [gate for gate in gates.split(',') if gate not in wanted]
@@ -245,20 +271,24 @@ def _command(step: str, marker: str = '',
     if step == 'lint':
         # The pinned ruff in books/.venv is the authority; a ruff from PATH may be
         # a different version with different rules (same reason the toolchain runs
-        # on .venv only).
+        # on .venv only). The config is passed explicitly: ruff discovers it from the
+        # working directory, and this runs from the repository root, so without it
+        # the gate silently linted with ruff's defaults instead of the book's rules.
+        config = ['--config', os.path.join(book_root(), 'pyproject.toml')]
         if importlib.util.find_spec('ruff') is not None:
-            return [PY, '-m', 'ruff', 'check', src_rel(), test_rel()]
+            return [PY, '-m', 'ruff', 'check', *config, src_rel(), test_rel()]
         if shutil.which('ruff'):
-            return ['ruff', 'check', src_rel(), test_rel()]
+            return ['ruff', 'check', *config, src_rel(), test_rel()]
         if shutil.which('uvx'):
-            return ['uvx', 'ruff', 'check', src_rel(), test_rel()]
+            return ['uvx', 'ruff', 'check', *config, src_rel(), test_rel()]
         return None
     if step == 'lint-changed':
         files = [path for path in scoped_changes(domains) if path.endswith('.py')]
         if not files:
             return None
         if importlib.util.find_spec('ruff') is not None:
-            return [PY, '-m', 'ruff', 'check', *files]
+            config = ['--config', os.path.join(book_root(), 'pyproject.toml')]
+            return [PY, '-m', 'ruff', 'check', *config, *files]
         return None
     if step == 'gates-changed':
         gates = gates_for_change(scoped_changes(domains))
@@ -304,7 +334,8 @@ def run_step(step: str, log_path: str, timeout: float = 1800.0,
     command = _command(step, marker, domains)
     started = time.perf_counter()
     if command is None:
-        return {'step': step, 'code': 0, 'seconds': 0.0, 'skipped': 'tool not available'}
+        return {'step': step, 'code': 0, 'seconds': 0.0, 'argv': [],
+                'skipped': 'tool not available'}
     env = dict(os.environ)
     if step == 'slow':
         env['BOOK_SLOW'] = '1'
@@ -329,7 +360,45 @@ def run_step(step: str, log_path: str, timeout: float = 1800.0,
             print(f'    {line}')
     else:
         print(f'  ok   {step} ({elapsed}s)')
-    return {'step': step, 'code': proc.returncode, 'seconds': elapsed}
+    result = {'step': step, 'code': proc.returncode, 'seconds': elapsed,
+              'argv': command}
+    counts = pytest_counts(f'{proc.stdout or ""}{proc.stderr or ""}')
+    if counts:
+        result['counts'] = counts
+    return result
+
+
+def pytest_counts(output: str) -> dict:
+    """Passed/failed/skipped the suite reported, so a run is readable as numbers.
+
+    The summary says a step failed; how much of the suite ran is only in the log
+    text. These counts make "the gate caught one failure out of 1100" visible from
+    the record alone.
+    """
+    counts = {}
+    for name in ('passed', 'failed', 'skipped', 'errors', 'deselected'):
+        match = re.search(r'(\d+)\s+' + name + r'\b', output)
+        if match:
+            counts[name.rstrip('s')] = int(match.group(1))
+    return counts
+
+
+def git_state(root: str) -> dict:
+    """The revision the gate judged, and whether the tree was dirty.
+
+    A gate run answers "is this tree good"; without the revision the record cannot
+    say which tree it meant, and a later reader has no way to reproduce it.
+    """
+    def run(*args: str) -> str:
+        try:
+            proc = subprocess.run(['git', *args], cwd=root, capture_output=True,
+                                  text=True, encoding='utf-8', check=False, timeout=10)
+        except (OSError, subprocess.SubprocessError):  # pragma: no cover - no git
+            return ''
+        return proc.stdout.strip() if proc.returncode == 0 else ''
+
+    return {'commit': run('rev-parse', '--short', 'HEAD'),
+            'dirty': bool(run('status', '--porcelain'))}
 
 
 def _record_perf(summary: dict) -> None:
@@ -344,11 +413,55 @@ def _record_perf(summary: dict) -> None:
                  'steps': summary.get('steps', [])})
 
 
-def report_paths(mode: str, stamp: str) -> tuple[str, str]:
+# A day is the unit a person looks back at, so the day is the file: the run log is
+# appended to, and each run's summary is one line in the jsonl beside it. There is
+# nothing to delete when a run passes — and nothing to lose when one fails: the
+# failing run keeps its own section inside the same day's log.
+def _prune_logs(logs: str, now: datetime.datetime) -> None:
+    """Delete run reports and rollups older than the configured retention."""
+    # one retention governs every log: the rotating file and these reports
+    days = _log.retention_days()
+    cutoff = (now - datetime.timedelta(days=days)).date()
+    try:
+        names = os.listdir(logs)
+    except OSError:
+        return  # no directory, nothing to prune
+    for name in names:
+        # `check-<mode>-<date>.<ext>`: ISO today, the compact form from older runs
+        match = re.match(r'check-(?:[a-z0-9-]*?-)?(\d{4}-\d{2}-\d{2}|\d{8})(?:-|\.)', name)
+        if match is None:
+            continue
+        token, fmt = match.group(1), ('%Y-%m-%d' if '-' in match.group(1) else '%Y%m%d')
+        try:
+            stamp = datetime.datetime.strptime(token, fmt).date()
+        except ValueError:
+            continue
+        if stamp >= cutoff:
+            continue
+        try:
+            os.remove(os.path.join(logs, name))
+        except OSError as exc:  # pragma: no cover - already gone
+            LOG.debug('could not prune %s: %s', name, exc)
+
+
+def report_paths(mode: str, when: datetime.datetime) -> tuple[str, str]:
+    """The day's journal for this mode: one log and one jsonl, appended per run.
+
+    The date is ISO (`2026-11-24`), as in the archive and the snapshots: a filename a
+    person can read, and a lexicographic order that is still chronological.
+    """
     directory = os.path.join(book_root(), 'logs')
     _fsutil.ensure_dir(directory)
-    base = os.path.join(directory, f'check-{mode}-{stamp}')
-    return base + '.log', base + '.json'
+    base = os.path.join(directory, f'check-{mode}-{when:%Y-%m-%d}')
+    return base + '.log', base + '.jsonl'
+
+
+def _log_size(path: str) -> int:
+    """Bytes already in the journal; 0 when it does not exist yet."""
+    try:
+        return os.path.getsize(path)
+    except OSError:
+        return 0
 
 
 def _append_log(path: str, text: str) -> None:
@@ -374,10 +487,12 @@ def run(mode: str, *, archive: bool = True, as_json: bool = False,
     if key == 'quick':
         timeout = min(timeout, 300.0)
     steps = select_steps(all_steps, only, skip)
-    stamp = datetime.datetime.now().strftime('%Y-%m-%d_%H%M%S')
-    log_path, json_path = report_paths(key, stamp)
+    now = datetime.datetime.now()
+    log_path, jsonl_path = report_paths(key, now)
+    log_offset = _log_size(log_path) if archive else 0
     if archive:
-        _fsutil.write_text(log_path, f'# check mode={key} ({label}) {stamp}\n')
+        _append_log(log_path, f'\n# ===== {now:%Y-%m-%d %H:%M:%S} mode={key} ({label}) '
+                              f'{len(steps)} step(s) =====\n')
     print(f'=== check {key} ({label}): {len(steps)} step(s) ===')
     results = []
     started = time.perf_counter()
@@ -391,25 +506,34 @@ def run(mode: str, *, archive: bool = True, as_json: bool = False,
     elapsed = round(time.perf_counter() - started, 2)
     failed = [r for r in results if r['code'] != 0]
     summary = {'mode': key, 'label': label, 'ok': not failed,
+               'started_at': now.isoformat(timespec='seconds'),
                'seconds': elapsed, 'steps': results, 'marker': active_marker,
-               'machine': machine_info(),
-               'log': log_path if archive else '', 'json': json_path if archive else ''}
+               'machine': machine_info(), 'git': git_state(repo_root()),
+               'log': log_path if archive else '', 'json': jsonl_path if archive else ''}
+    report = ''
     if failed:
         summary['failed_step'] = failed[0]['step']
     if archive:
-        payload = json.dumps(summary, ensure_ascii=False, indent=2) + '\n'
+        summary['log_offset'] = log_offset
+        summary['log_len'] = max(0, _log_size(log_path) - log_offset)
         _record_perf(summary)
-        _fsutil.write_text(json_path, payload)
-        _fsutil.write_text(os.path.join(book_root(), 'logs', 'check-latest.json'), payload)
+        _append_log(jsonl_path, json.dumps(summary, ensure_ascii=False) + '\n')
+        _prune_logs(os.path.join(book_root(), 'logs'), now)
+        report = log_path
+    else:
+        report = ''
     LOG.info('check %s -> %s (%.2fs, %d steps)',
              key, 'pass' if not failed else 'fail', elapsed, len(results))
+    for line in status.render(not failed, f'check {key}（{label}）', elapsed,
+                              results[-1]['code'] if results else 0).splitlines():
+        LOG.info('  %s', line)
     if as_json:
         print(json.dumps(summary, ensure_ascii=False, indent=2))
     else:
         verdict = '✅ pass' if not failed else f"❌ fail at {failed[0]['step']}"
         print(f'{verdict}  ({elapsed}s)', end='')
-        if archive:
-            print(f'  → {os.path.relpath(json_path, repo_root())}')
+        if archive and report:
+            print(f'  → {os.path.relpath(report, repo_root())}')
         else:
             print()
     return summary
@@ -436,4 +560,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

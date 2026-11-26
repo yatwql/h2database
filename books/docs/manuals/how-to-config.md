@@ -28,10 +28,11 @@ merged_name = "code-analysis"      # 产物文件名前缀
 manuscript = "data/manuscript"     # 手稿目录
 dist = "dist"                      # 产物目录
 docs = "docs"
-tmp = "data/tmp"                   # 临时目录：HTML 片段缓存与 --force 备份（已 gitignore）
+tmp = "data/tmp"                   # 临时目录：一次性脚本、--force 备份（随时可清空）
+cache = "data/cache"               # 缓存：字体索引、HTML 分片（可重建但有成本）
 state = "data/state"               # 派生状态：ingest 每次重建（已 gitignore）
 templates = "data/tmpl"            # 叙述模板（templates.toml）
-book = "data/book"                 # 本书专属文件（book.toml / case-studies.toml）
+book = "data/book"                 # 本书专属文件（book.toml / case-studies.toml / glossary.toml）
 library = ".."                     # 其他书所在的目录（缺省＝本书的父目录）
 baselines = "data/baselines"       # 已评审存量的账本目录
 cover_image = ""                   # 可选：封面图，留空则不生成
@@ -62,7 +63,13 @@ src_main = "../h2/src/main"        # 单根；路径相对书根，可以指向�
 pom_root = "../h2/pom.xml"         # 可选：清单文件位置
 version = "2.5.259-SNAPSHOT"       # 可选：逐一解析不到时用
 # roots = [{ label = "h2", path = "../h2/src/main" }]   # 多根时用这个，label 必填且唯一
+repo = "https://github.com/owner/project"   # 可选：源码在 git 仓库里时，克隆到 data/srcref/
+ref = "main"                               # 可选：分支/标签/提交
 ```
+
+`repo` 声明后，`core/fetch_source.py` 把仓库克隆到 `books/data/srcref/<owner>__<name>/`
+（目录不入库），分析读那份副本；还未克隆时 `source_tree()` 直接报错并给出要执行的命令。
+`--update` 会 fetch + checkout 到 `ref`，已存在的目录不会被覆盖。
 
 分析口径（`languages`、`suffixes`、`package_prefix`）仍在 `data/config/base.json [sources]`，
 书级同名键覆盖它。
@@ -90,17 +97,42 @@ display = "删节版"
   "sources": {
     "src_main": "../h2/src/main",     // 源码树根
     "pom_root": "../h2/pom.xml",      // 版本来源（可缺省）
-    "languages": ["java"],            // 支持 java / python / rust / kotlin / go，可多选
+    "languages": ["java"],            // 支持 java / python / rust / kotlin / go / c，可多选
     "file_suffix": ".java",
-    "package_prefix": "org.h2"
+    "package_prefix": "<包前缀>"
   },
   "baselines": {"ascii": "data/baselines/ascii-baseline.json"},
-  "toolchain": {"coverage_fail_under": 88, "pdf_max_mb": 12, "epub_max_mb": 10},
+  "toolchain": {"coverage_fail_under": 90, "pdf_max_mb": 12, "epub_max_mb": 10},
   "logging": {"level": "INFO", "dir": "logs", "retention_days": 14}
 }
 ```
 
-多语言时 `languages` 写多个，inventory 的包键会加语言前缀（`java:org.h2`、`python:pkg`）。
+### 版式与字体（`toolchain.layout_*`、`font_stack_*`）
+
+密度只在一处配置，PDF、HTML、EPUB 共用同一套解析：
+
+| 键 | 作用 |
+| --- | --- |
+| `layout_chars_per_line` | 每行容纳的 `em` 数（阅读度量，默认 40）；栏宽由它 × 正文字号得出 |
+| `layout_chars_per_line_min` / `_max` | 阅读区间（默认 36–46）；栏宽或度量落在区间外，`verify_pdf` 的 `COLUMN` 项判失败 |
+| `layout_column_px` | 栏宽覆盖；写 `0`（默认）表示由度量推导，屏幕与纸面同一规则 |
+| `layout_body_px` | 正文字号；写 `0` 表示「按栏宽 ÷ 度量推导」 |
+| `layout_page_size` / `layout_page_margin` | 纸面尺寸与页边距：竖边距用于 `@page`，左右边距由栏宽反推 |
+| `layout_print_margin_min_mm` | 纸面最小左右边距（默认 16mm）；栏宽放不下时裁到它，不侵占页边 |
+| `layout_print_code_min_px` / `layout_print_mono_advance` | 代码可读下限与等宽字符步距（按 `ascii_max_cols` 反推印刷代码字号） |
+| `layout_print_wrap` | 超长代码行换行（默认 `0` 关）；开启后用换行而非继续缩字号 |
+| `layout_code_px` / `layout_code_line_height` | 代码块字号与行距；行距写 `0` 表示「与正文一致」 |
+| `layout_prose_line_height` | 正文行距系数（默认 1.65）；`DENSITY` 判的就是它：正文行距÷字号须在 1.15–1.75 |
+| `layout_lead_ratio` | 代码清单行距增量（`1 + ratio`，默认 0.23）；`CODE_LEAD` 只要求 ≥ 1.0 |
+| `layout_print_chars_per_line` | 纸面阅读度量（默认 44）；自适应印刷据此解算纸面正文字号 |
+| `layout_epub_code_em` / `layout_epub_line_height` | 重排版面的相对字号与行高（`em`，读者可缩放） |
+| `layout_spacing_scale` + `layout_*_gap_em` | 段距/标题距/表距等，全部相对行高，由一个倍数统一缩放 |
+| `font_stack_sans` / `font_stack_mono` | 候选字体族（逗号分隔或数组）；按本机可用性排序，缺字体时逐级回退 |
+
+`pdf_split_by_chapter`、`pdf_bytes_per_page`、`pdf_type3_max`、`pdf_leading_ratio_min/max`
+控制 PDF 侧判据：按章分页渲染、体积预算随页数增长、Type3 字体上限、行距松紧区间。
+
+多语言时 `languages` 写多个，inventory 的包键会加语言前缀（`java:<包前缀>`、`python:<包前缀>`）。
 `toolchain` 段里另有页面几何（`pdf_page_width`/`pdf_page_height`/`pdf_page_tolerance`），
 `verify_pdf.py` 按它判定 A4；换纸张尺寸改这里，不改代码。
 
@@ -108,7 +140,6 @@ display = "删节版"
 
 ```json
 {
-  "project": {"display_title_zh": "……", "author": "……", "running_head": "……"},
   "captions": {"leading_verbs": ["展示", "对比"], "vague_trailing": ["过程"],
                "presets": {"strict": {"min_chars": 8, "max_chars": 30, "fail_at": 0}}},
   "quality": {"min_coords_per_chapter": 15, "min_chapter_lines": 150, "max_table_rows": 20},
@@ -122,20 +153,20 @@ display = "删节版"
 
 ### style.json 键一览
 
+键名即参考；每个键的语义只有这一处说明，管理文档只写"归属哪个文件"。
+
 | 段 | 键 | 作用 |
 | ---- | ---- | ------ |
-| `project` | `display_title_*`、`author`、`running_head` | 渲染文案（HTML/PDF/EPUB） |
-| `captions` | `leading_verbs`、`vague_trailing`、`presets.{strict,normal,loose}` | 图注动宾词表与阈值预设（min_chars < max_chars、fail_at ≥ 0） |
-| `diagrams` | `markers` | ASCII 图的框线/箭头字符集 |
-| `clusters` | `min_figures`、`window_lines` | 图簇的张数下限与行距（`figure_clusters.py`、`structure.py` 共用） |
-| `quality` | 章节行数、表格行数、重复度、坐标密度、术语与练习下限、`min_figures_per_section`、`min_figure_coverage_pct` | 图书质量门禁阈值 |
-| `prose` | 句长/段落/列表/重复度的好与坏锚点、`min_composite`、`forbid_phrases` | 文风评分与禁用语 |
-| `generation` | 表格容量、练习数、清单条数 | 生成器的数值上限（文案见 `templates.toml`） |
-| `style_rules` | `terminology`（同义词组，检测混用）、`banned_link_text`、`heading`（尾标点/裸标签）、`cjk_latin_spacing`、`list_punctuation`、`max_paragraph_chars` | 术语一致性与排版规则（`style_rules.py`） |
-| `content_depth` | `glossary_min_uses`（高频类型须入术语表）、`glossary_ignore`（通用名白名单）、`excerpt_lines`（代码摘录比对行数） | 内容深度规则（`content_depth.py`） |
-| `limits` | `sources/tests/docs/manuscript` 的 `limit`/`warn` | 文件长度预算（四档都要显式声明） |
-| 可写配置项 | `bookctl settings` / TUI「配置项」逐项列出：书名、版本、手稿/产物目录、语言、日志级别、默认 provider、`llm.daily_cost_limit`、`llm.ingest_prose` | 改完立即写回并重载 |
-| `thresholds` | 练习、索引（总数与每章、主/子/see-also）、术语、每章跨章引用下限 | 内容完整性的下限；判据只写“不低于配置下限”，键名与取值归 `technical.md` §3.2 |
+| `captions` | `leading_verbs`、`vague_trailing`、`presets` | 图注动宾词表、含糊尾词、三档预设（`strict`/`normal`/`loose`，各含 `min_chars` < `max_chars`、`fail_at`） |
+| `clusters` | `min_figures`、`window_lines` | 图簇的张数下限与判定行距（`figure_clusters.py` 与 `structure.py` 共用） |
+| `quality` | `max_duplicate_ratio`、`max_avg_sentence`、`max_long_lines`、`min_coords_per_chapter`、`min_chapter_lines`、`max_chapter_lines`、`max_table_rows`、`min_terms_per_chapter`、`min_exercises_per_chapter`、`min_figures_per_section`、`min_figure_coverage_pct`、`perf_history_runs` | 质量门禁阈值；最后一项是耗时读数保留的窗口次数 |
+| `generation` | `max_packages_per_table`、`max_classes_per_package`、`max_api_rows`、`exercises_per_chapter`、`checklist_items` | 生成器的容量上限（文案见 `templates.toml`） |
+| `thresholds` | `exercises_min_total`、`index_total_min`、`index_per_chapter_min`、`index_main_min`、`index_sub_min`、`index_see_also_min`、`glossary_min_entries`、`exercises_min_per_chapter`、`ledger_growth` | 内容完整性下限；`ledger_growth` 是文件长度台账允许增长的行数 |
+| `prose` | `avg_sentence_good`/`avg_sentence_bad`、`long_ratio_good`/`long_ratio_bad`、`paragraph_good_min`/`paragraph_good_max`、`bullet_good`/`bullet_bad`、`coords_good`/`coords_bad`、`h3_good`/`h3_bad`、`dup_good`/`dup_bad`、`table_good`/`table_bad`、`min_composite`、`forbid_phrases`、`tone`、`audience`、`sections` | 文风评分的好/坏锚点（`good` 应不劣于 `bad`）、禁用语、语气与读者定位、分节覆盖（`sections.body`/`caption`/`exercise`） |
+| `style_rules` | `terminology`、`banned_link_text`、`heading`、`cjk_latin_spacing`、`list_punctuation`、`max_paragraph_chars` | 术语一致性、链接文字、标题尾标点、中英间距、列表标点、段落长度（`style_rules.py`） |
+| `content_depth` | `glossary_min_uses`、`glossary_ignore`、`excerpt_lines` | 术语覆盖下限与白名单、代码摘录比对行数（`content_depth.py`） |
+| `limits` | `sources`、`tests`、`docs`、`manuscript` 各自的 `limit`/`warn` | 文件长度预算（四档都要显式声明） |
+| `_schema` / `_note` | — | 结构版本与说明；`_schema` 由 `style_schema.py` 校验，未知键即失败 |
 
 改完运行 `python books/src/python/make.py check`：`style_schema.py` 会先校验结构
 （未知键、缺字段、区间不合理都会失败），再由各门禁按新阈值执行。
@@ -147,6 +178,8 @@ display = "删节版"
 | 判定规则与阈值（图注词表、质量/文风阈值、篇幅预算、必备段落名） | `data/config/style.json` | 配置 |
 | 文体文案（四段引言、深读要点等叙述模板） | `data/tmpl/templates.toml` | 文档 |
 | 名称与提示语（章节骨架名、练习提示/回顾前缀、术语行） | `data/language/zh.json` | 文档 |
+| 术语中英别名与「不算术语」词表 | `data/book/glossary.toml`（按书可选） | 文档 |
+| 案例流水线、附录标题/开篇、思考题 | `data/book/case-studies.toml`（按书可选，`[headers.<scenario>]` 可只给部分键） | 文档 |
 | 书籍身份与展示文案（书名、作者、页眉、产物名） | `data/book/book.toml [book]/[project]` | 文档 |
 
 `style_schema.py` 会拒绝把叙述模板塞回 `style.json`（`generation.templates`）

@@ -25,7 +25,7 @@ import sys
 _sys = sys
 _sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _fsutil  # noqa: E402
+from lib import _config, _errors, _fsutil  # noqa: E402
 
 REF_RE = re.compile(r'详见第(\d+)章《([^》]+)》')
 BARE_RE = re.compile(r'(第)(\d+)(章)')
@@ -87,8 +87,12 @@ def edition_files() -> list[str]:
     return _config.current().all_manuscript_files()
 
 
-def apply(dry_run: bool = False) -> dict:
-    """Write the mapping and rewrite references; returns what changed."""
+def apply(dry_run: bool = False, write_only: bool = False) -> dict:
+    """Store the mapping and rewrite references; returns what changed.
+
+    ``write_only`` keeps the mapping but leaves the text alone (``--write``);
+    ``dry_run`` changes nothing at all.
+    """
     cfg = _config.current()
     if not cfg.edition:
         raise SystemExit('error: 未选版本；先用 [editions] 声明并用 --edition 指定')
@@ -109,7 +113,7 @@ def apply(dry_run: bool = False) -> dict:
             continue
         report['files'] += 1
         report['refs'] += len(REF_RE.findall(text)) + len(BARE_RE.findall(text))
-        if not dry_run:
+        if not dry_run and not write_only:
             _fsutil.write_text(path, updated)
     return report
 
@@ -125,7 +129,7 @@ def main(argv: list[str] | None = None) -> int:
     if not (args.apply or args.write):
         parser.error('需要 --write 或 --apply')
     try:
-        report = apply(dry_run=args.dry_run or args.write and not args.apply)
+        report = apply(dry_run=args.dry_run, write_only=not args.apply)
     except SystemExit as exc:
         print(exc)
         return 2
@@ -139,4 +143,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(_errors.run(main))

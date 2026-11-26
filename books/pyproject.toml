@@ -6,12 +6,13 @@ build-backend = "setuptools.build_meta"
 name = "bookwright"
 version = "0.1.0"
 description = "Source-code analysis into a book: the toolchain behind books/."
-# No console scripts yet: an installed entry point would import the action layer,
-# which reads the configuration at import time. Those reads (lib/_log.py,
-# check_runner.py, make.py) must become call-time first — see
-# docs/plan/multi-book/plan.md step four.
 requires-python = ">=3.11"
 dependencies = []
+
+[project.scripts]
+# The configuration is read when an action runs, never at import, so the entry
+# point works from an installed copy: `bookwright check --book <book root>`.
+bookwright = "app.cli:main"
 
 [tool.setuptools]
 package-dir = { "" = "src/python" }
@@ -22,3 +23,17 @@ include = ["lib*", "audit*", "ingest*", "render*", "manuscript*", "core*", "app*
 
 [tool.setuptools.package-data]
 "lib" = ["*.json"]
+
+[tool.ruff]
+line-length = 100
+extend-exclude = ["data", "dist", "build"]
+
+[tool.ruff.lint]
+# The gate must not inherit ruff's defaults: they change between versions, and a
+# lint result that depends on which ruff is installed is not a gate. This set is
+# the historical default (E4/E7/E9/F) plus the rules that have caught real defects
+# here: import order (I), likely bugs (B), pyupgrade (UP), stale suppressions (RUF100).
+select = ["E4", "E7", "E9", "F", "I", "B", "UP", "RUF100"]
+# Rules that live in the editors/CI but not in this selection: a `# noqa` for them is
+# deliberate (late imports after the sys.path insert above all), not stale.
+external = ["PLC0415", "SIM105", "PLR0911", "PLR0912", "PLR0915"]

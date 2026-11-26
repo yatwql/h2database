@@ -72,7 +72,8 @@ class ScenarioMatrixTest(unittest.TestCase):
             with self.subTest(newline=newline, layout=layout):
                 root = self.build(newline, layout, 'normal')
                 code, out = _fixture.run_inproc(root, 'structure.py')
-                self.assertIn(code, (0, 1), out[-400:])
+                self.assertEqual(code, 1, out[-400:])
+                self.assertIn('FAIL:', out)
                 self.assertNotIn('Traceback', out)
 
 class LanguageMatrixTest(unittest.TestCase):
@@ -85,7 +86,8 @@ class LanguageMatrixTest(unittest.TestCase):
                 self.addCleanup(tmp.cleanup)
                 root = _fixture.build_book(tmp.name)
                 code, out = _fixture.run_inproc(root, 'digest.py')
-                self.assertIn(code, (0, 1, 2), out[-400:])
+                self.assertEqual(code, 0, out[-400:])
+                self.assertIn('languages', out)
                 self.assertNotIn('Traceback', out)
 
 if __name__ == '__main__':

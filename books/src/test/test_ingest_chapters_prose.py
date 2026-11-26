@@ -164,12 +164,15 @@ class LlmSkipNoticeTest(unittest.TestCase):
         with open(os.path.join(state, 'outline.json'), 'w', encoding='utf-8') as fh:
             json.dump({'chapters': [chapter]}, fh)
 
-    def test_a_skip_only_llm_run_explains_the_zero_calls(self):
+    def test_a_skip_only_llm_run_says_so_before_scanning(self):
         buffer = io.StringIO()
         with redirect_stdout(buffer):
             code = self.chapters.main(['--llm'])
+        text = buffer.getvalue()
         self.assertEqual(code, 0)
-        self.assertIn('LLM 未介入', buffer.getvalue())
+        # the answer arrives before the source scan, which is what took minutes
+        self.assertIn('本轮不会生成或重写任何章节', text)
+        self.assertIn('--force', text)
 
     def test_a_deterministic_run_stays_quiet_about_the_provider(self):
         buffer = io.StringIO()

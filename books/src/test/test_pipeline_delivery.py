@@ -13,10 +13,9 @@ gap stays visible instead of silently passing.
 import importlib.util
 import os
 import sys
-import tempfile
 import unittest
 
-import _fixture
+from _cases import ScriptTestBase
 
 TAGS = ('layer:pipeline', 'tier:slow')
 
@@ -35,47 +34,6 @@ HAS_PYPDF = importlib.util.find_spec('pypdf') is not None
 HAS_PLAYWRIGHT = importlib.util.find_spec('playwright') is not None
 HAS_PANDOC = bool(__import__('shutil').which('pandoc'))
 
-BUILD_SCRIPTS = ['cover.py', 'merge.py', 'to_html.py']
-
-ALL_SCRIPTS = [
-    'cover.py', 'merge.py', 'to_html.py',
-    'pdf_toc_links.py', 'to_epub.py', 'pdf_from_html.py',
-    'structure.py',
-]
-
-AUDIT_SCRIPTS = [
-    'links.py',
-    'diagrams.py',
-    'captions.py',
-    'figures.py',
-    'crossrefs.py',
-    'exercises.py',
-    'figure_clusters.py',
-    'index_xrefs.py',
-    'smart.py',
-    'balance.py',
-    'style.py',
-    'readability.py',
-    'source_refs.py',
-    'glossary.py',
-    'index.py',
-]
-
-class ScriptTestBase(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.root = _fixture.build_book(self.tmp.name)
-
-    def run_script(self, script: str, *args: str) -> tuple[int, str]:
-        return _fixture.run_inproc(self.root, script, *args)
-
-    def path(self, *parts: str) -> str:
-        return os.path.join(self.root, *parts)
-
-    def read(self, *parts: str) -> str:
-        with open(self.path(*parts), encoding='utf-8') as fh:
-            return fh.read()
 
 class TestFullDeliveryPipeline(ScriptTestBase):
     """Build -> PDF (+TOC links) -> print PDF -> EPUB -> verify, all in-process."""
@@ -90,23 +48,28 @@ class TestFullDeliveryPipeline(ScriptTestBase):
         code, out = self.run_script('to_pdf.py')
         self.assertEqual(code, 0, out[-400:])
         code, out = self.run_script('verify_pdf.py')
-        self.assertIn(code, (0, 1), out[-400:])
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('PDF 交付校验通过', out)
         code, out = self.run_script('pdf_toc_links.py')
-        self.assertIn(code, (0, 1), out[-400:])
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('TOC links added', out)
         code, out = self.run_script('verify_pdf.py', '--require-toc-links')
-        self.assertIn(code, (0, 1), out[-400:])
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('PDF 交付校验通过', out)
 
     @unittest.skipUnless(SLOW and HAS_PLAYWRIGHT, 'slow suite: set BOOK_SLOW=1')
     def test_print_grade_pdf(self):
         self.run_script('to_pdf.py')
         code, out = self.run_script('print_pdf.py')
-        self.assertIn(code, (0, 1), out[-400:])
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('Print-grade PDF', out)
         self.assertNotIn('Traceback', out)
 
     @unittest.skipUnless(SLOW and HAS_PLAYWRIGHT, 'slow suite: set BOOK_SLOW=1')
     def test_pdf_from_html(self):
         code, out = self.run_script('pdf_from_html.py')
-        self.assertIn(code, (0, 1), out[-400:])
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('PDF saved', out)
         self.assertNotIn('Traceback', out)
 
     @unittest.skipUnless(SLOW and HAS_PANDOC, 'slow suite: set BOOK_SLOW=1')
@@ -116,8 +79,6 @@ class TestFullDeliveryPipeline(ScriptTestBase):
         code, out = self.run_script('verify_epub.py')
         self.assertEqual(code, 0, out[-400:])
 
-if __name__ == '__main__':
-    unittest.main()
 
 class TestDeliveryScripts(ScriptTestBase):
     def setUp(self):
@@ -140,11 +101,13 @@ class TestDeliveryScripts(ScriptTestBase):
     @unittest.skipUnless(SLOW and HAS_PANDOC, 'slow suite: set BOOK_SLOW=1')
     def test_to_epub_smoke(self):
         code, out = self.run_script('to_epub.py')
-        self.assertIn(code, (0, 1), out)
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('epubcheck', out)
         self.assertNotIn('Traceback', out)
 
-    @unittest.skipUnless(SLOW and HAS_PLAYWRIGHT, 'slow suite: set BOOK_SLOW=1')
-    def test_pdf_from_html_smoke(self):
-        code, out = self.run_script('pdf_from_html.py')
-        self.assertIn(code, (0, 1), out)
-        self.assertNotIn('Traceback', out)
+    # `pdf_from_html` is covered by TestFullDeliveryPipeline.test_pdf_from_html:
+    # the same script, the same two assertions after the full prelude.
+
+
+if __name__ == '__main__':
+    unittest.main()

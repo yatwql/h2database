@@ -59,19 +59,15 @@ class SourceRefsReportTest(unittest.TestCase):
         new, known = self.mod.split_drift([(claim, 'src/Widget.java')], baseline)
         self.assertEqual((len(new), len(known)), (0, 1))
 
-    def test_suggest_renames_returns_a_list(self):
-        suggestions = self.mod.suggest_renames(
-            self.Claim('ch1.md', 1, 'Widgets', 'run'), {'Widget': ['/src/Widget.java']})
-        self.assertIsInstance(suggestions, list)
-
     def test_json_summary_is_serialisable(self):
         buffer = io.StringIO()
         with redirect_stdout(buffer), \
                 mock.patch.object(self.mod, 'build_class_index',
                                   return_value={'Widget': ['/src/Widget.java']}):
             code = self.mod.main(['--json'])
-        self.assertIn(code, (0, 1))
         text = buffer.getvalue().strip()
+        self.assertEqual(code, 0, text[-300:])
+        self.assertRegex(text, r'[\s\S]')
         start = text.find('{')
         self.assertIsInstance(json.loads(text[start:]) if start >= 0 else {}, dict)
 

@@ -32,7 +32,7 @@ import sys
 _sys = sys
 _sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _fsutil  # noqa: E402
+from lib import _config, _errors, _fsutil  # noqa: E402
 
 ARCHIVE_REL = ('archive',)
 LEDGERS = ('changelog', 'plan', 'review-findings')
@@ -124,15 +124,6 @@ def ensure_index(text: str, entries: list[str]) -> str:
     return text.rstrip('\n') + '\n\n' + block
 
 
-def topic_dirs(path: str) -> list[str]:
-    """Iteration directories already inside a version archive."""
-    try:
-        names = os.listdir(path)
-    except OSError:
-        return []
-    return sorted(name for name in names if os.path.isdir(os.path.join(path, name)))
-
-
 # ---- actions ---------------------------------------------------------------
 
 
@@ -189,44 +180,30 @@ def build_plan(version: str, docs: str, topics: list[str], today: str) -> Archiv
     return plan
 
 
-def apply_plan(plan: ArchivePlan, topics: list[str]) -> None:
-    """Perform the moves. Every write is idempotent: running twice changes nothing."""
-    if plan.errors:
-        raise ArchiveError('; '.join(plan.errors))
-    _fsutil.ensure_dir(os.path.join(plan.target, plan.names['changelog']))
+def _move_section(plan: ArchivePlan, name: str, splitter) -> None:
+    """Move one ledger section into the archive and leave the rest live.
 
-    changelog_text = _fsutil.read_text(plan.live('changelog'))
+    Idempotent: a second run finds the section gone and keeps what is already
+    archived instead of failing.
+    """
+    live_text = _fsutil.read_text(plan.live(name))
     try:
-        rest, section = split_version_section(changelog_text, plan.version)
+        rest, section = splitter(live_text, plan.version)
     except ArchiveError:
         # second run: the section already moved, nothing left to take
-        if not os.path.isfile(plan.path('changelog')):
+        if not os.path.isfile(plan.path(name)):
             raise
-        rest, section = changelog_text, ''
-    section = re.sub(r'^## \[[^\]]+\]', f'## [{plan.version}]', section, count=1, flags=re.M)
-    existing = (_fsutil.read_text(plan.path('changelog'))
-                if os.path.isfile(plan.path('changelog')) else '')
+        rest, section = live_text, ''
+    section = re.sub(r'^## \[[^\]]+\]', f'## [{plan.version}]', section,
+                     count=1, flags=re.M)
+    existing = (_fsutil.read_text(plan.path(name))
+                if os.path.isfile(plan.path(name)) else '')
     body = existing if section.strip() in existing else existing + '\n' + section
-    _fsutil.write_text(plan.path('changelog'), apply_header(body, plan.version, plan.today))
-    _fsutil.write_text(plan.live('changelog'), rest)
+    _fsutil.write_text(plan.path(name), apply_header(body, plan.version, plan.today))
+    _fsutil.write_text(plan.live(name), rest)
 
-    rf_text = _fsutil.read_text(plan.live('review-findings'))
-    try:
-        rf_rest, rf_block = split_rf_block(rf_text, plan.version)
-    except ArchiveError:
-        if not os.path.isfile(plan.path('review-findings')):
-            raise
-        rf_rest, rf_block = rf_text, ''
-    rf_existing = (_fsutil.read_text(plan.path('review-findings'))
-                   if os.path.isfile(plan.path('review-findings')) else '')
-    rf_body = rf_existing if rf_block.strip() in rf_existing else rf_existing + '\n' + rf_block
-    _fsutil.write_text(plan.path('review-findings'),
-                       apply_header(rf_body, plan.version, plan.today))
-    _fsutil.write_text(plan.live('review-findings'), rf_rest)
 
-    snapshot = _fsutil.read_text(plan.live('plan'))
-    _fsutil.write_text(plan.path('plan'), apply_header(snapshot, plan.version, plan.today))
-
+def _move_topics(plan: ArchivePlan, topics: list[str]) -> None:
     for topic in topics:
         source = os.path.join(plan.docs, 'plan', topic)
         destination = os.path.join(plan.target, topic)
@@ -237,6 +214,9 @@ def apply_plan(plan: ArchivePlan, topics: list[str]) -> None:
         except OSError as exc:
             raise ArchiveError(f'无法移动 {topic}：{exc}') from exc
 
+
+def _refresh_indexes(plan: ArchivePlan) -> None:
+    """Every ledger's archive index lists the versions now under data/archive."""
     entries = []
     try:
         archived = sorted(os.listdir(os.path.join(plan.docs, 'archive')))
@@ -251,6 +231,23 @@ def apply_plan(plan: ArchivePlan, topics: list[str]) -> None:
     for ledger in LEDGERS:
         path = plan.live(ledger)
         _fsutil.write_text(path, ensure_index(_fsutil.read_text(path), entries))
+
+
+def apply_plan(plan: ArchivePlan, topics: list[str]) -> None:
+    """Perform the moves. Every write is idempotent: running twice changes nothing."""
+    if plan.errors:
+        raise ArchiveError('; '.join(plan.errors))
+    _fsutil.ensure_dir(os.path.join(plan.target, plan.names['changelog']))
+
+    _move_section(plan, 'changelog', split_version_section)
+    _move_section(plan, 'review-findings', split_rf_block)
+    # The plan is archived as a snapshot: it keeps describing what was in flight.
+    _fsutil.write_text(plan.path('plan'),
+                       apply_header(_fsutil.read_text(plan.live('plan')),
+                                    plan.version, plan.today))
+
+    _move_topics(plan, topics)
+    _refresh_indexes(plan)
 
 
 # ---- cli -------------------------------------------------------------------
@@ -292,4 +289,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(_errors.run(main))

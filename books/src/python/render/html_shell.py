@@ -5,17 +5,38 @@ The renderer is a flat script; its long literal blocks live here so the logic
 stays readable. Moving text out must not change a byte of the output — the
 build hash is the acceptance check.
 """
+import functools
 import os as _os
 import sys as _sys
 
 # importable from the renderer whether it runs as a script or as a module
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
+from lib import fonts
+from lib import layout as _layout_lib
+
+try:
+    from lib import _config
+except Exception:
+    _config = None
+
+# The printed column: the sheet decides its width, and a code line wider than the
+# book's width budget decides the code size. Wrapping is the alternative to
+# shrinking, and it is measured in pages -- so it is only used when the type would
+# otherwise fall below the readable minimum (see `Layout.print_wraps`).
+PRINT_WRAP_CSS = (
+    '  /* a code line wider than the printed column wraps: overflow-x would clip it,\n'
+    '     and paper cannot scroll. The wrap width is the column, so the two agree. */\n'
+    '  pre, pre code, .code-content { white-space: pre-wrap; '
+    'overflow-wrap: anywhere; overflow: visible; }\n'
+    '  .line-nums { display: none; }\n')
+
 STYLE = r"""
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { min-height: 100vh; }
 body {
-    font-family: -apple-system, 'Microsoft YaHei', sans-serif;
+    font-family: var(--font-sans);
+    font-synthesis: none;   /* fake bold cannot be embedded: Chromium writes Type3 glyphs */
     line-height: 1.8; color: #333; background: #fafafa;
     display: flex; flex-direction: column;
 }
@@ -187,7 +208,7 @@ body.sidebar-collapsed #sidebar-toggle .chev { transform: rotate(180deg); }
     #sidebar-toggle:hover { color: #eee; background: transparent; }
     #sidebar-toggle .chev { display: none; }
 }
-h1, h2, h3, h4 { color: #1565C0; margin-top: 1.5em; margin-bottom: 0.5em; font-family: 'Microsoft YaHei', SimSun, -apple-system, sans-serif; scroll-margin-left: 290px; scroll-margin-top: 20px; }
+h1, h2, h3, h4 { color: #1565C0; margin-top: 1.5em; margin-bottom: 0.5em; font-family: var(--font-sans); scroll-margin-left: 290px; scroll-margin-top: 20px; }
 #content h1 { font-size: 1.8em; border-bottom: 2px solid #1565C0; padding-bottom: 8px; position: relative; padding-top: 0.3em; page-break-before: always; }
 #content h1::before {
     content: ''; display: block; width: 60px; height: 4px;
@@ -200,13 +221,13 @@ h4 { font-size: 1.05em; color: #333; }
 p { margin: 0.8em 0; text-align: justify; }
 code {
     background: #f0f4f8; padding: 2px 6px; border-radius: 3px;
-    font-family: Consolas, 'Courier New', monospace; font-size: 0.9em;
+    font-family: var(--font-mono); font-size: 0.9em;
     color: #2d3748;
 }
 pre {
     background: #f4f5f7; padding: 12px; border-radius: 6px;
     overflow-x: auto; font-size: 12px; line-height: 1.0;
-    font-family: Consolas, 'DengXian', SimSun, monospace;
+    font-family: var(--font-mono);
     border: 1px solid #d0d5dd; border-left: 4px solid #1565C0;
     margin: 1em 0; color: #1a1a2e;
 }
@@ -290,10 +311,171 @@ li { margin: 0.3em 0; }
   #toc-page { page-break-after: always; }
   #cover { page-break-after: always; }
   #sidebar { display: none; }
-  #content { margin-left: 0; max-width: 100%; padding: 20px 36px; }
+  #content { margin-left: 0; max-width: 760px; width: auto; padding: 0; }
+  /* the printed TOC obeys the same column as the body: a 280px sidebar offset
+     would push its dot leaders past the sheet edge */
+  #toc-page { max-width: 760px; }
+  #toc-page > div { margin-left: 0 !important; }
   pre, table { page-break-inside: avoid; }
   h1, h2, h3, h4 { page-break-after: avoid; }
   pre { font-size: 10px; }
-  @page { margin: 15mm 10mm; }
+  @page { size: A4; margin: 24mm 20mm; }
 }
 """
+
+# The font stack is resolved from what this host actually has (see render/fonts):
+# naming a family that is missing, or one that only exists as a .ttc collection,
+# makes Chromium export the text as Type3 glyph procedures instead of embedding a
+# font program. Candidates come from configuration, so another book can differ.
+def _configured_families(key: str) -> list[str] | None:
+    raw = _config.THRESHOLDS.get(key) if _config else None
+    if isinstance(raw, str):
+        return [name.strip() for name in raw.split(',') if name.strip()]
+    if isinstance(raw, list):
+        return [str(name).strip() for name in raw if str(name).strip()]
+    return None
+
+
+@functools.lru_cache(maxsize=1)
+def sans_stack() -> str:
+    """The sans stack for this host, resolved once per process."""
+    return fonts.sans_stack(_configured_families('font_stack_sans'))
+
+
+@functools.lru_cache(maxsize=1)
+def mono_stack() -> str:
+    """The mono stack for this host, resolved once per process."""
+    return fonts.mono_stack(_configured_families('font_stack_mono'))
+
+
+def apply_font_stacks(css: str) -> str:
+    """Bind the two font roles to the stacks resolved for this machine.
+
+    The stylesheet names roles (`var(--font-sans)`, `var(--font-mono)`) instead of
+    families. Substituting by literal text meant a font-family added later kept its
+    Windows-only list and silently lost the cross-platform fallback; a role can only
+    be bound in one place.
+    """
+    root = f':root {{ --font-sans: {sans_stack()}; --font-mono: {mono_stack()}; }}'
+    return root + '\n' + css if ':root' not in css else css.replace(
+        ':root {', f':root {{ --font-sans: {sans_stack()}; --font-mono: {mono_stack()};', 1)
+
+
+
+# ── Layout knobs ────────────────────────────────────────────────────────────
+# Every dimension that decides density lives here, read from `[toolchain]`, so a
+# different book (or a different reference edition) changes numbers, not code.
+# one source of truth: a key added to the layout belongs to both sides
+LAYOUT_DEFAULTS = dict(_layout_lib.DEFAULTS)
+
+
+# numeric defaults, so a malformed config value still yields a usable number
+DEFAULT_NUMBERS = {k: float(v) if isinstance(v, (int, float)) else 0.0
+                   for k, v in LAYOUT_DEFAULTS.items()}
+
+
+def _layout_value(key):
+    raw = _config.THRESHOLDS.get(key) if _config else None
+    return LAYOUT_DEFAULTS[key] if raw in (None, '') else raw
+
+
+def _style_rules(*, print_code, lead, print_column, wrap_css, page_size, margin,
+                 column, body, para, head_before, head_after, list_gap,
+                 table_gap, prose_lead=1.65) -> dict[str, str]:
+    """Stylesheet literal -> its configured value, in one table.
+
+    Kept apart from `apply_layout` so the numbers are computed in one readable block
+    and the substitutions stay a table: a new dimension is one row, not one more link
+    in a method chain.
+    """
+    return {
+        '  pre { font-size: 10px; }':
+            f'  pre {{ font-size: {print_code:g}px; line-height: {lead}; }}',
+        '  #content { margin-left: 0; max-width: 760px; width: auto; padding: 0; }':
+            f'  #content {{ margin-left: 0; max-width: {print_column}px; '
+            'width: auto; padding: 0; }',
+        '  #toc-page { max-width: 760px; }': f'  #toc-page {{ max-width: {print_column}px; }}',
+        '  @page { size: A4; margin: 24mm 20mm; }':
+            wrap_css + f'  @page {{ size: {page_size}; margin: {margin}; }}',
+        'flex: 1; max-width: 960px;': f'flex: 1; max-width: {column}px;',
+        'body {\n    font-size: 16px;': f'body {{\n    font-size: {body}px;',
+        '    line-height: 1.8; color: #333;':
+            f'    line-height: {prose_lead}; color: #333;',
+        'p { margin: 0.8em 0; text-align: justify; }':
+            f'p {{ margin: {para} 0; text-align: justify; }}',
+        'margin-top: 1.5em; margin-bottom: 0.5em; font-family:':
+            f'margin-top: {head_before}; margin-bottom: {head_after}; font-family:',
+        'ul, ol { margin: 0.5em 0; padding-left: 2em; }':
+            f'ul, ol {{ margin: {list_gap} 0; padding-left: 2em; }}',
+        'table { border-collapse: collapse; width: 100%; margin: 1em 0; }':
+            f'table {{ border-collapse: collapse; width: 100%; margin: {table_gap} 0; }}',
+    }
+
+
+def apply_layout(css: str) -> str:
+    """Substitute the configured dimensions into the stylesheet.
+
+    Density is set by the column and the type size, not by the renderer's scale: the
+    printed column is the printable width, and the code size is whatever keeps a line
+    at the book's width budget inside it. Wrapping long lines (`pre-wrap`) keeps every
+    block inside the column too, but it turns one diagram row into three text rows —
+    measured at +164 pages on this book — so it is only used when the type would
+    otherwise fall below the readable minimum, or when `layout_print_wrap` asks for it.
+    """
+    # one source for the derived numbers: the layout object owns the rules, so the
+    # stylesheet cannot drift from what the PDF and EPUB renderers compute
+    layout, _problems = _layout_lib.Layout.from_mapping(
+        _config.THRESHOLDS if _config else {})
+    lead = layout.code_line_height_value()
+    prose_lead = layout.prose_line_height
+    body = layout.body_size_px()
+    column = layout.column()
+    page_size = _layout_value('layout_page_size')
+    margin = layout.print_page_margin()
+
+    def number(key: str, fallback: float) -> float:
+        """Threshold read from JSON may be a string or missing; never crash on it."""
+        raw = _config.THRESHOLDS.get(key) if _config else None
+        try:
+            return float(str(raw))
+        except (TypeError, ValueError):
+            return fallback
+
+    # print-only: the column cannot exceed the sheet, and the book's own width budget
+    # decides the printed code size. The widest line the build produced is
+    # not the right input: extraction joins table cells into one baseline, so a wide
+    # table would shrink every code block in the book.
+    columns = int(number('ascii_max_cols', 100))
+    print_column = layout.print_column()
+    print_code = layout.print_code_px(columns)
+    wrap_css = PRINT_WRAP_CSS if layout.print_wraps(columns) else ''
+
+    def gap(key: str) -> str:
+        """One spacing value, scaled by the global multiplier and printed in em."""
+        base = number(key, DEFAULT_NUMBERS[key])
+        scale = number('layout_spacing_scale', 1.0)
+        return f'{round(base * scale, 3)}em'
+
+    para = gap('layout_para_gap_em')
+    head_before = gap('layout_heading_gap_before_em')
+    head_after = gap('layout_heading_gap_after_em')
+    list_gap = gap('layout_list_gap_em')
+    table_gap = gap('layout_table_gap_em')
+    values = {'print_code': print_code, 'lead': lead, 'prose_lead': prose_lead, 'print_column': print_column,
+              'wrap_css': wrap_css, 'page_size': page_size, 'margin': margin,
+              'column': column, 'body': body, 'para': para, 'head_before': head_before,
+              'head_after': head_after, 'list_gap': list_gap, 'table_gap': table_gap}
+    for literal, replacement in _style_rules(**values).items():
+        css = css.replace(literal, replacement)
+    return css
+
+
+@functools.lru_cache(maxsize=1)
+def style() -> str:
+    """The finished stylesheet, built on first use.
+
+    Reading configuration and scanning font directories at import time made every
+    importer pay for it, including the ones that never build a page, and it froze the
+    settings of whichever process imported first.
+    """
+    return apply_layout(apply_font_stacks(STYLE))

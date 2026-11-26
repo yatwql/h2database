@@ -38,7 +38,7 @@ books/scripts/new-book.sh ../copy --from-manuscript   # 连章节一起复制
 
 ## 脚手架之后
 
-1. 改 `data/config/base.json`：`sources.src_main` 指向新源码树，`languages` 选 `java|python|rust|kotlin|go`。
+1. 改 `data/config/base.json`：`sources.src_main` 指向新源码树，`languages` 选 `java|python|rust|kotlin|go|c`。
 2. `bookctl analyze` 生成版图与章节；`bookctl check` 跑全部门禁。
 3. 手写正文仍是人最值钱的部分：`data/manuscript/ch*.md`。
 
@@ -47,3 +47,16 @@ books/scripts/new-book.sh ../copy --from-manuscript   # 连章节一起复制
 - 复制同一份 `book.toml` 结构，只翻译 `titles` 与 `[project]`；
 - `templates.toml` 与语言包整体翻译（占位符不动）；
 - 术语表与索引要跟着翻译，但**索引的 `§X.Y` 锚点不改**——它们指向章节编号。
+
+## 范例：本仓库里的那份分析
+
+工具链与内容没有绑定关系，本仓库自带的 H2 分析可以直接当模板对照着看：
+
+| 想看什么 | 看哪里 |
+| --- | --- |
+| 书的身份、章节顺序、包归属 | `data/book/book.toml`（`[book]`、`[chapters]`） |
+| 分析口径（源码树、包前缀、语言） | `data/config/base.json`（`[sources]`） |
+| 已写成的手稿：章节、附录、前件后件 | `data/manuscript/` |
+| 交付产物长什么样 | `books/dist/h2-source-code-analysis.{md,html,pdf,epub}` 与 `-print.pdf` |
+
+这一份是**示例**，不是工具链的依赖：删掉它、换一棵源码树，命令与检查都不变。

@@ -13,72 +13,81 @@ from unittest import mock
 
 import _fixture
 
-TAGS = ('layer:audit', 'tier:fast')
+TAGS = ("layer:audit", "tier:fast")
 
 _fixture.ensure_tools_path()
 
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
 
+
 class TracesUnitTest(unittest.TestCase):
     def setUp(self):
-        self.traces = _fixture.load_module(BOOK_ROOT, 'traces')
+        self.traces = _fixture.load_module(BOOK_ROOT, "traces")
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
 
     def doc(self, text: str) -> str:
-        path = os.path.join(self.tmp.name, 'doc.md')
-        with open(path, 'w', encoding='utf-8') as fh:
+        path = os.path.join(self.tmp.name, "doc.md")
+        with open(path, "w", encoding="utf-8") as fh:
             fh.write(text)
         return path
 
     def scan_docs(self, text: str) -> list[dict]:
         path = self.doc(text)
-        with mock.patch.object(self.traces, 'doc_files', return_value=[path]):
+        with mock.patch.object(self.traces, "doc_files", return_value=[path]):
             return self.traces.scan_docs()
 
     # -- documentation scope ---------------------------------------------
     def test_review_round_is_reported(self):
-        findings = self.scan_docs('本文经过第 3 轮评审。\n')
-        self.assertEqual(findings[0]['kind'], 'review-round')
+        findings = self.scan_docs("本文经过第 3 轮评审。\n")
+        self.assertEqual(findings[0]["kind"], "review-round")
 
     def test_batch_and_relative_time_are_reported(self):
-        kinds = {f['kind'] for f in self.scan_docs('第 2 批改动；本轮新增。\n')}
-        self.assertIn('batch', kinds)
-        self.assertIn('relative-time', kinds)
+        kinds = {f["kind"] for f in self.scan_docs("第 2 批改动；本轮新增。\n")}
+        self.assertIn("batch", kinds)
+        self.assertIn("relative-time", kinds)
 
     def test_changelog_is_exempt(self):
-        path = os.path.join(self.tmp.name, 'changelog.md')
-        with open(path, 'w', encoding='utf-8') as fh:
-            fh.write('第 3 轮\n')
-        with mock.patch.object(self.traces, 'doc_files', return_value=[path]):
+        path = os.path.join(self.tmp.name, "changelog.md")
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write("第 3 轮\n")
+        with mock.patch.object(self.traces, "doc_files", return_value=[path]):
             self.assertEqual(self.traces.scan_docs(), [])
 
     def test_clean_document_has_no_findings(self):
-        self.assertEqual(self.scan_docs('本文描述当前状态。\n'), [])
+        self.assertEqual(self.scan_docs("本文描述当前状态。\n"), [])
 
     # -- code scope -------------------------------------------------------
     def scan_code(self, text: str) -> list[dict]:
-        path = os.path.join(self.tmp.name, 'mod.py')
-        with open(path, 'w', encoding='utf-8') as fh:
+        path = os.path.join(self.tmp.name, "mod.py")
+        with open(path, "w", encoding="utf-8") as fh:
             fh.write(text)
-        with mock.patch.object(self.traces, 'code_files', return_value=[path]):
+        with mock.patch.object(self.traces, "code_files", return_value=[path]):
             return self.traces.scan_code()
 
     def test_code_comment_with_a_round_is_reported(self):
-        findings = self.scan_code('# 第 2 轮补的\nx = 1\n')
-        self.assertEqual(findings[0]['kind'], 'review-round')
+        findings = self.scan_code("# 第 2 轮补的\nx = 1\n")
+        self.assertEqual(findings[0]["kind"], "review-round")
 
     def test_migration_note_is_reported(self):
-        findings = self.scan_code('# 迁移自旧模块\nx = 1\n')
-        self.assertEqual(findings[0]['kind'], 'migration-note')
+        findings = self.scan_code("# 迁移自旧模块\nx = 1\n")
+        self.assertEqual(findings[0]["kind"], "migration-note")
 
     def test_docstring_lines_are_scanned(self):
-        trigger = '迁移' + '自'  # built at runtime: the literal must not appear in code
+        trigger = "迁移" + "自"  # built at runtime: the literal must not appear in code
         findings = self.scan_code('"""' + trigger + ' old_module"""\n')
         self.assertTrue(findings)
 
     def test_plain_code_is_clean(self):
-        self.assertEqual(self.scan_code('x = 1\ny = 2\n'), [])
+        self.assertEqual(self.scan_code("x = 1\ny = 2\n"), [])
+
+    def test_a_note_in_a_json_config_is_scanned_like_a_comment(self):
+        path = os.path.join(self.tmp.name, "config.json")
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write('{\n  "_note": "第 3 轮评审后改的",\n  "key": 1\n}\n')
+        with mock.patch.object(self.traces, "code_files", return_value=[path]):
+            findings = self.traces.scan_code()
+        self.assertEqual([f["kind"] for f in findings], ["review-round"])
 
     # -- helpers and CLI --------------------------------------------------
     def test_comment_lines_marks_comments_and_docstrings(self):
@@ -88,16 +97,32 @@ class TracesUnitTest(unittest.TestCase):
     def test_json_output_reports_the_scope(self):
         buffer = io.StringIO()
         with redirect_stdout(buffer):
-            code = self.traces.main(['--kind', 'docs', '--json'])
+            code = self.traces.main(["--kind", "docs", "--json"])
         payload = json.loads(buffer.getvalue())
         self.assertIn(code, (0, 1))
-        self.assertEqual(payload['kind'], 'docs')
+        self.assertEqual(payload["kind"], "docs")
 
     def test_human_output_names_the_scope(self):
         buffer = io.StringIO()
         with redirect_stdout(buffer):
-            self.traces.main(['--kind', 'code'])
-        self.assertIn('代码', buffer.getvalue())
+            self.traces.main(["--kind", "code"])
+        self.assertIn("代码", buffer.getvalue())
 
-if __name__ == '__main__':
+    def test_a_finding_is_named_with_its_file_and_line(self):
+        finding = {"file": "docs/x.md", "line": 7, "kind": "review-round", "text": "第 2 轮"}
+        buffer = io.StringIO()
+        with (
+            mock.patch.object(self.traces, "scan_docs", return_value=[finding]),
+            redirect_stdout(buffer),
+        ):
+            code = self.traces.main(["--kind", "docs"])
+        self.assertEqual(code, 1)
+        self.assertIn("docs/x.md:7  [review-round]", buffer.getvalue())
+
+    def test_the_script_entrypoint_reports_through_the_error_wrapper(self):
+        code, out = _fixture.run_inproc(BOOK_ROOT, "traces.py", "--kind", "docs")
+        self.assertEqual(code, 0, out[-300:])
+
+
+if __name__ == "__main__":
     unittest.main()

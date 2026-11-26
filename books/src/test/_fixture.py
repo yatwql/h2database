@@ -5,8 +5,10 @@ The fixture mirrors the real layout (book.toml + manuscript/ + dist/) so the
 delivery scripts can be exercised end-to-end without touching the real
 manuscript.
 """
+
 from __future__ import annotations
 
+import hashlib
 import importlib
 import importlib.util
 import json
@@ -20,9 +22,7 @@ import _netguard
 
 _netguard.install()
 
-TOOLS_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
-)
+TOOLS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "python")
 
 BOOK_ROOT = os.path.dirname(TOOLS_DIR)
 
@@ -37,9 +37,9 @@ def isolate() -> None:
     global _ISOLATION_DIR
     if _ISOLATION_DIR is not None:
         return
-    _ISOLATION_DIR = tempfile.mkdtemp(prefix='book-isolation-')
-    os.environ['BOOK_TEST_GUARD'] = os.path.dirname(BOOK_ROOT)
-    os.environ['BOOK_LLM_OFFLINE'] = '1'
+    _ISOLATION_DIR = tempfile.mkdtemp(prefix="book-isolation-")
+    os.environ["BOOK_TEST_GUARD"] = os.path.dirname(BOOK_ROOT)
+    os.environ["BOOK_LLM_OFFLINE"] = "1"
     # fixture books already log into their own root; the ledger of an LLM run
     # only ever lands there too, so no repo log is touched by a fixture test.
 
@@ -47,7 +47,7 @@ def isolate() -> None:
 _ISOLATION_DIR: str | None = None
 isolate()
 
-_LAYERS = ('lib', 'audit', 'manuscript', 'render', 'ingest')
+_LAYERS = ("lib", "audit", "manuscript", "render", "ingest")
 
 
 def ensure_tools_path() -> None:
@@ -60,6 +60,7 @@ def ensure_tools_path() -> None:
     for path in (TOOLS_DIR, *(os.path.join(TOOLS_DIR, sub) for sub in _LAYERS)):
         if path not in sys.path:
             sys.path.insert(0, path)
+
 
 BOOK_TOML = """[book]
 title = "测试之书"
@@ -224,15 +225,24 @@ INDEX_MD = """# 索引
 """
 
 BASE_JSON = {
-    "sources": {"src_main": "../h2/src/main", "pom_root": "../h2/pom.xml",
-                "file_suffix": ".java", "package_prefix": "org.h2", "language": "java"},
+    "sources": {
+        "src_main": "../h2/src/main",
+        "pom_root": "../h2/pom.xml",
+        "file_suffix": ".java",
+        "package_prefix": "org.h2",
+        "language": "java",
+    },
     "baselines": {
         "ascii": "data/baselines/ascii-baseline.json",
         "source_symbol": "data/baselines/source-symbol-baseline.json",
     },
-    "toolchain": {"coverage_fail_under": 0, "pdf_max_mb": 12,
-                  "epub_max_mb": 10, "ascii_max_cols": 100,
-                  "max_style_warnings": 99},
+    "toolchain": {
+        "coverage_fail_under": 0,
+        "pdf_max_mb": 12,
+        "epub_max_mb": 10,
+        "ascii_max_cols": 100,
+        "max_style_warnings": 99,
+    },
 }
 
 STYLE_JSON = {
@@ -246,18 +256,33 @@ STYLE_JSON = {
         },
     },
     "diagrams": {"markers": ["┌", "└", "├", "│", "▼", "▲", "→"]},
-    "thresholds": {"exercises_min_per_chapter": 1, "exercises_min_total": 2,
-                   "index_main_min": 2, "index_sub_min": 1,
-                   "index_see_also_min": 1, "glossary_min_entries": 2,
-                   "chapters_min_cross_refs": 1},
-    "quality": {"max_duplicate_ratio": 100, "max_avg_sentence": 80,
-                "max_long_lines": 200, "min_coords_per_chapter": 0,
-                "min_chapter_lines": 1, "max_chapter_lines": 5000,
-                "max_table_rows": 200, "min_terms_per_chapter": 0,
-                "min_exercises_per_chapter": 0},
-    "generation": {"max_packages_per_table": 12, "max_classes_per_package": 4,
-                   "max_api_rows": 20, "exercises_per_chapter": 4,
-                   "checklist_items": 5},
+    "thresholds": {
+        "exercises_min_per_chapter": 1,
+        "exercises_min_total": 2,
+        "index_main_min": 2,
+        "index_sub_min": 1,
+        "index_see_also_min": 1,
+        "glossary_min_entries": 2,
+        "chapters_min_cross_refs": 1,
+    },
+    "quality": {
+        "max_duplicate_ratio": 100,
+        "max_avg_sentence": 80,
+        "max_long_lines": 200,
+        "min_coords_per_chapter": 0,
+        "min_chapter_lines": 1,
+        "max_chapter_lines": 5000,
+        "max_table_rows": 200,
+        "min_terms_per_chapter": 0,
+        "min_exercises_per_chapter": 0,
+    },
+    "generation": {
+        "max_packages_per_table": 12,
+        "max_classes_per_package": 4,
+        "max_api_rows": 20,
+        "exercises_per_chapter": 4,
+        "checklist_items": 5,
+    },
 }
 
 LLM_PROVIDER = {
@@ -269,16 +294,24 @@ LLM_PROVIDER = {
 LLM_SETTINGS = {
     "defaults": {"temperature": 0.3, "max_tokens": 512, "timeout_s": 10, "retries": 0},
     "scenarios": {"summary": {"max_tokens": 256}},
-    "books": {}, "chapters": {},
+    "books": {},
+    "chapters": {},
 }
 
 LANGUAGE_JSON = {
     "code": "zh",
-    "sections": {"guide": "本章导读", "summary": "本章小结",
-                 "exercises": "延伸思考", "further": "延展阅读"},
+    "sections": {
+        "guide": "本章导读",
+        "summary": "本章小结",
+        "exercises": "延伸思考",
+        "further": "延展阅读",
+    },
     "exercise": {"hint_prefix": "提示", "review_prefix": "回顾"},
-    "terms": {"reference_line": "术语参考", "glossary_title": "术语表",
-              "glossary_link": "back/glossary.md"},
+    "terms": {
+        "reference_line": "术语参考",
+        "glossary_title": "术语表",
+        "glossary_link": "back/glossary.md",
+    },
     "style": {"sentence_endings": "。！？；", "fullwidth_punctuation": True},
 }
 
@@ -300,6 +333,31 @@ decision = "提交路径的选择"
 component = "恢复"
 anchor = "§2.1"
 decision = "崩溃后的恢复点"
+
+[headers.select]
+heading = "## A.1 案例 A：示例查询"
+opening = "示例查询经过的组件。"
+figure_prefix = "A"
+figure_start = 1
+
+[headers.commit]
+heading = "## A.2 案例 B：示例提交流程"
+opening = "示例提交流程经过的组件。"
+figure_prefix = "A"
+figure_start = 7
+
+[headers.recover]
+heading = "## A.3 案例 C：示例恢复"
+opening = "示例恢复经过的组件。"
+figure_prefix = "A"
+figure_start = 12
+"""
+
+GLOSSARY_TOML = """
+skip = ["核心文件", "延展阅读", "待补充"]
+
+[aliases]
+"写放大" = "Write Amplification"
 """
 
 CONFIG_JSON = {
@@ -334,81 +392,127 @@ CONFIG_JSON = {
     },
 }
 
+# A new book copies this file verbatim (`core/scaffold.scaffold`), so a fixture
+# that scaffolds needs one of its own.
+TEMPLATES_TOML = """# 文体模板：章节骨架的文案
+map_intro = "第{num}章覆盖 {pkgs} 个包（{sig}）、{lines} 行实现。"
+
+types_intro = "下表每包取前 {take} 个类型。"
+"""
+
 FILES = {
-    'data/manuscript/cover.md': COVER_MD,
-    'data/manuscript/front/reading-guide.md': FRONT_MD,
-    'data/manuscript/ch1-test.md': CHAPTER_1,
-    'data/manuscript/ch2-test.md': CHAPTER_2,
-    'data/manuscript/back/glossary.md': GLOSSARY_MD,
-    'data/manuscript/back/index.md': INDEX_MD,
+    "data/tmpl/templates.toml": TEMPLATES_TOML,
+    "data/manuscript/cover.md": COVER_MD,
+    "data/manuscript/front/reading-guide.md": FRONT_MD,
+    "data/manuscript/ch1-test.md": CHAPTER_1,
+    "data/manuscript/ch2-test.md": CHAPTER_2,
+    "data/manuscript/back/glossary.md": GLOSSARY_MD,
+    "data/manuscript/back/index.md": INDEX_MD,
 }
 
 
-SUBDIRS = ('', 'lib', 'audit', 'manuscript', 'render', 'ingest', 'app', 'core')
+SUBDIRS = ("", "lib", "audit", "manuscript", "render", "ingest", "app", "core")
 
 
 def resolve_script(script: str) -> str:
-    """Locate a delivery script by basename under books/src/python."""
+    """Locate a delivery script by basename under books/src/python.
+
+    An absolute path is taken as it is: a case that copies a script elsewhere
+    runs that copy, since the script resolves its own neighbours from
+    ``__file__`` and the copy must not reach back into the repository.
+    """
+    if os.path.isabs(script):
+        return script
     for sub in SUBDIRS:
         candidate = os.path.join(TOOLS_DIR, sub, script)
         if os.path.isfile(candidate):
             return candidate
-    raise FileNotFoundError(f'script not found: {script}')
-
+    raise FileNotFoundError(f"script not found: {script}")
 
 
 def refresh_config(root: str) -> None:
     """Point lib._config at ``root`` and drop every cached config module."""
-    os.environ['BOOK_ROOT'] = root
-    for key in ('_config', 'lib._config', 'lib._log', '_log',
-                'app', 'app.cli', 'app.tui', 'app.web', 'app.keys',
-                'core', 'core.actions', 'core.settings',
-                'html_cache', 'factblocks'):
+    os.environ["BOOK_ROOT"] = root
+    for key in (
+        "_config",
+        "lib._config",
+        "lib._baseline",
+        "lib._errors",
+        "lib._fsutil",
+        "lib._log",
+        "_log",
+        "app",
+        "app.cli",
+        "app.tui",
+        "app.web",
+        "app.keys",
+        "core",
+        "core.actions",
+        "core.settings",
+        "html_cache",
+        "factblocks",
+    ):
         sys.modules.pop(key, None)
-    lib = sys.modules.get('lib')
+    lib = sys.modules.get("lib")
     if lib is not None:
-        for attribute in ('_config', '_log'):
+        for attribute in ("_config", "_log"):
             if hasattr(lib, attribute):
                 delattr(lib, attribute)
 
+
 def build_book(root: str, *, extra: dict[str, str] | None = None) -> str:
     """Materialise the fixture book under ``root`` and return the root path."""
-    os.makedirs(os.path.join(root, 'dist'), exist_ok=True)
-    os.makedirs(os.path.join(root, 'docs', 'managements'), exist_ok=True)
-    os.makedirs(os.path.join(root, 'tools'), exist_ok=True)
-    config_dir = os.path.join(root, 'data', 'book')
+    os.makedirs(os.path.join(root, "dist"), exist_ok=True)
+    os.makedirs(os.path.join(root, "docs", "managements"), exist_ok=True)
+    os.makedirs(os.path.join(root, "tools"), exist_ok=True)
+    config_dir = os.path.join(root, "data", "book")
     os.makedirs(config_dir, exist_ok=True)
-    with open(os.path.join(config_dir, 'book.toml'), 'w', encoding='utf-8') as fh:
+    with open(os.path.join(config_dir, "book.toml"), "w", encoding="utf-8") as fh:
         fh.write(BOOK_TOML)
-    policy_dir = os.path.join(root, 'data', 'config')
+    policy_dir = os.path.join(root, "data", "config")
     os.makedirs(policy_dir, exist_ok=True)
-    for name, payload in (('base.json', BASE_JSON), ('style.json', STYLE_JSON)):
-        with open(os.path.join(policy_dir, name), 'w', encoding='utf-8') as fh:
+    for name, payload in (("base.json", BASE_JSON), ("style.json", STYLE_JSON)):
+        with open(os.path.join(policy_dir, name), "w", encoding="utf-8") as fh:
             json.dump(payload, fh, ensure_ascii=False, indent=2)
-    for name, payload in (('llm_provider.json', LLM_PROVIDER),
-                          ('llm_settings.json', LLM_SETTINGS)):
-        with open(os.path.join(policy_dir, name), 'w', encoding='utf-8') as fh:
+    for name, payload in (("llm_provider.json", LLM_PROVIDER), ("llm_settings.json", LLM_SETTINGS)):
+        with open(os.path.join(policy_dir, name), "w", encoding="utf-8") as fh:
             json.dump(payload, fh, ensure_ascii=False, indent=2)
-    language_dir = os.path.join(root, 'data', 'language')
+    language_dir = os.path.join(root, "data", "language")
     os.makedirs(language_dir, exist_ok=True)
-    with open(os.path.join(language_dir, 'zh.json'), 'w', encoding='utf-8') as fh:
+    with open(os.path.join(language_dir, "zh.json"), "w", encoding="utf-8") as fh:
         json.dump(LANGUAGE_JSON, fh, ensure_ascii=False, indent=2)
-    with open(os.path.join(config_dir, 'case-studies.toml'), 'w', encoding='utf-8') as fh:
+    with open(os.path.join(config_dir, "case-studies.toml"), "w", encoding="utf-8") as fh:
         fh.write(CASE_STUDIES_TOML)
+    with open(os.path.join(config_dir, "glossary.toml"), "w", encoding="utf-8") as fh:
+        fh.write(GLOSSARY_TOML)
     for rel, text in {**FILES, **(extra or {})}.items():
         path = os.path.join(root, rel)
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, 'w', encoding='utf-8') as fh:
+        with open(path, "w", encoding="utf-8") as fh:
             fh.write(text)
     return root
 
 
+def test_env(root: str) -> dict:
+    """Environment for a fixture run: its own book, its own log directory.
+
+    Tests exercise error paths, and those paths write to the log. Pointing the log at
+    the fixture book keeps the repository's log file to what production runs wrote,
+    while still letting a test assert that a line was written at all.
+    """
+    return {**os.environ, "BOOK_ROOT": root, "BOOK_LOG_DIR": os.path.join(root, "logs")}
+
+
 def run(root: str, script: str, *args: str) -> subprocess.CompletedProcess:
     """Run a delivery script against the fixture book."""
-    env = {**os.environ, 'BOOK_ROOT': root}
+    env = test_env(root)
     return subprocess.run(
         [sys.executable, resolve_script(script), *args],
-        capture_output=True, text=True, env=env, cwd=root, check=False,
+        capture_output=True,
+        text=True,
+        env=env,
+        cwd=root,
+        check=False,
     )
 
 
@@ -424,7 +528,11 @@ def run_inproc(root: str, script: str, *args: str) -> tuple[int, str]:
 
     ensure_tools_path()
 
-    previous_root = os.environ.get('BOOK_ROOT')
+    previous_root = os.environ.get("BOOK_ROOT")
+    previous_log = os.environ.get("BOOK_LOG_DIR")
+    # in-process runs share this process's log settings, so point them at the
+    # fixture book as well or the case writes into the repository's log
+    os.environ["BOOK_LOG_DIR"] = os.path.join(root, "logs")
     previous_argv = sys.argv[:]
     refresh_config(root)
     sys.argv = [script, *args]
@@ -432,46 +540,78 @@ def run_inproc(root: str, script: str, *args: str) -> tuple[int, str]:
     code = 0
     try:
         with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
-            runpy.run_path(resolve_script(script), run_name='__main__')
+            runpy.run_path(resolve_script(script), run_name="__main__")
     except SystemExit as exc:
+        # `sys.exit("error: ...")` carries its message in the code; a subprocess
+        # would have printed it to stderr, so print it here too — otherwise the
+        # message is lost and the case can only assert "non-zero".
+        if isinstance(exc.code, str):
+            buffer.write(exc.code + "\n")
         code = exc.code if isinstance(exc.code, int) else (0 if exc.code is None else 1)
     finally:
         sys.argv = previous_argv
         if previous_root is None:
-            os.environ.pop('BOOK_ROOT', None)
+            os.environ.pop("BOOK_ROOT", None)
         else:
-            os.environ['BOOK_ROOT'] = previous_root
-        for key in ('_config', 'lib._config', 'lib._log', '_log',
-                'app', 'app.cli', 'app.tui', 'app.web', 'app.keys',
-                'core', 'core.actions', 'core.settings'):
+            os.environ["BOOK_ROOT"] = previous_root
+        if previous_log is None:
+            os.environ.pop("BOOK_LOG_DIR", None)
+        else:
+            os.environ["BOOK_LOG_DIR"] = previous_log
+        for key in (
+            "_config",
+            "lib._config",
+            "lib._log",
+            "_log",
+            "app",
+            "app.cli",
+            "app.tui",
+            "app.web",
+            "app.keys",
+            "core",
+            "core.actions",
+            "core.settings",
+        ):
             sys.modules.pop(key, None)
-        lib_mod = sys.modules.get('lib')
-        if lib_mod is not None and hasattr(lib_mod, '_config'):
-            delattr(lib_mod, '_config')
+        lib_mod = sys.modules.get("lib")
+        if lib_mod is not None and hasattr(lib_mod, "_config"):
+            delattr(lib_mod, "_config")
     return code, buffer.getvalue()
 
 
 def load_module(root: str, name: str):
     """Import (or re-import) a delivery module with BOOK_ROOT pointed at root."""
     ensure_tools_path()
-    previous_root = os.environ.get('BOOK_ROOT')
+    previous_root = os.environ.get("BOOK_ROOT")
+    previous_log = os.environ.get("BOOK_LOG_DIR")
+    os.environ["BOOK_LOG_DIR"] = os.path.join(root, "logs")
     refresh_config(root)
     try:
         sys.modules.pop(name, None)
-        module_path = resolve_script(name + '.py')
+        module_path = resolve_script(name + ".py")
         spec = importlib.util.spec_from_file_location(name, module_path)
         if spec is None or spec.loader is None:  # pragma: no cover - unreadable file
-            raise ImportError(f'cannot load {name} from {module_path}')
+            raise ImportError(f"cannot load {name} from {module_path}")
         module = importlib.util.module_from_spec(spec)
         sys.modules[name] = module
         spec.loader.exec_module(module)
         return module
     finally:
         if previous_root is None:
-            os.environ.pop('BOOK_ROOT', None)
+            os.environ.pop("BOOK_ROOT", None)
         else:
-            os.environ['BOOK_ROOT'] = previous_root
+            os.environ["BOOK_ROOT"] = previous_root
+        if previous_log is None:
+            os.environ.pop("BOOK_LOG_DIR", None)
+        else:
+            os.environ["BOOK_LOG_DIR"] = previous_log
 
 
 def cleanup(root: str) -> None:
     shutil.rmtree(root, ignore_errors=True)
+
+
+def digest(path: str) -> str:
+    """sha256 of a file, for asserting a run left it byte-identical."""
+    with open(path, "rb") as fh:
+        return hashlib.sha256(fh.read()).hexdigest()

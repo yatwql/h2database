@@ -26,7 +26,7 @@ import sys
 _sys = sys
 _sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _fsutil  # noqa: E402
+from lib import _config, _errors, _fsutil  # noqa: E402
 
 ITEM_RE = re.compile(r'^#### `plan-(\d+)` ([^\n]+)$', re.M)
 BLOCKS = ('**现状**', '**动作**', '**验收**', '**事实位**')
@@ -39,10 +39,6 @@ PENDING_HEADING = '## 待归档'
 
 def plan_dir() -> str:
     return os.path.join(_config.DOCS_DIR, 'plan')
-
-
-def plan_path() -> str:
-    return os.path.join(_config.DOCS_DIR, 'managements', 'plan.md')
 
 
 def design_dirs(root: str | None = None) -> list[str]:
@@ -105,14 +101,9 @@ def tier_counts(text: str) -> dict[str, int]:
     return counts
 
 
-def check(docs: str | None = None) -> list[str]:
-    base: str = docs if docs else str(_config.DOCS_DIR)
-    text = _fsutil.read_text(os.path.join(base, 'managements', 'plan.md'))
+def _item_problems(items: dict, on_disk: list[str]):
+    """One entry per plan item: it points at a directory, and has the four blocks."""
     problems: list[str] = []
-    items = open_items(text)
-    pending = pending_dirs(text)
-    on_disk = design_dirs(os.path.join(base, 'plan'))
-
     claimed: dict[str, str] = {}
     for name, item in items.items():
         if not item['dirs']:
@@ -130,7 +121,12 @@ def check(docs: str | None = None) -> list[str]:
             problems.append(f'{name}：缺少 {"、".join(missing)}')
         elif positions != sorted(positions):
             problems.append(f'{name}：现状/动作/验收/事实位的顺序不规范')
+    return problems, claimed
 
+
+def _pending_problems(pending: list[str], claimed: dict[str, str], on_disk: list[str]) -> list[str]:
+    """The 待归档 table claims directories no plan item owns."""
+    problems: list[str] = []
     for directory in pending:
         topic = directory.rsplit('/', 1)[-1]
         if topic in claimed:
@@ -138,13 +134,23 @@ def check(docs: str | None = None) -> list[str]:
         claimed[topic] = PENDING_HEADING
         if topic not in on_disk:
             problems.append(f'待归档：指向不存在的目录 {directory}/')
+    return problems
 
-    for topic in on_disk:
-        if topic not in claimed:
-            problems.append(f'docs/plan/{topic}/：没有计划项认领，也不在待归档')
 
+def _unclaimed_problems(on_disk: list[str], claimed: dict[str, str]) -> list[str]:
+    return [f'docs/plan/{topic}/：没有计划项认领，也不在待归档'
+            for topic in on_disk if topic not in claimed]
+
+
+def _numbering_problems(text: str) -> list[str]:
+    """plan-N is unique and plan-next is the largest spent number plus one."""
     raw = own_section(text, '## 当前迭代待办')
     numbers = [as_int(number) for number, _title in ITEM_RE.findall(raw)]
+    # A completed item leaves the todo table but keeps its number: the identifier
+    # is never reused, so the 待归档 rows that cite it still count for the baseline.
+    numbers += [as_int(number) for number in
+                re.findall(r'plan-(\d+)', own_section(text, PENDING_HEADING))]
+    problems: list[str] = []
     if len(set(numbers)) != len(numbers):
         problems.append('plan-N 编号重复')
     nexts = NEXT_RE.search(text)
@@ -153,22 +159,41 @@ def check(docs: str | None = None) -> list[str]:
     elif numbers and as_int(nexts.group(1)) != max(numbers) + 1:
         problems.append(
             f'`plan-next = {nexts.group(1)}` 应为 {max(numbers) + 1}（最大编号 + 1）')
+    return problems
 
+
+def _count_problems(text: str, items: dict) -> list[str]:
+    """The tier totals and the 概述 line must match the items actually present."""
+    problems: list[str] = []
     counts = tier_counts(text)
     total = sum(counts.values())
     if total != len(items):
         problems.append(f'P1–P4 下的计划项共 {total} 项，与实际 {len(items)} 项不符')
     claim = COUNT_RE.search(text)
     if not claim:
-        problems.append('缺少「在办 N 项」概述行')
-    else:
-        if as_int(claim.group(1)) != len(items):
-            problems.append(f'概述写「在办 {claim.group(1)} 项」，实际 {len(items)} 项')
-        stated = {tier: as_int(count)
-                  for tier, count in re.findall(r'(P\d) (\d+) 项', claim.group(2))}
-        actual = {tier: count for tier, count in counts.items() if count}
-        if stated != actual:
-            problems.append(f'概述的分档数字 {stated} 与实际 {actual} 不符')
+        return problems + ['缺少「在办 N 项」概述行']
+    if as_int(claim.group(1)) != len(items):
+        problems.append(f'概述写「在办 {claim.group(1)} 项」，实际 {len(items)} 项')
+    stated = {tier: as_int(count)
+              for tier, count in re.findall(r'(P\d) (\d+) 项', claim.group(2))}
+    actual = {tier: count for tier, count in counts.items() if count}
+    if stated != actual:
+        problems.append(f'概述的分档数字 {stated} 与实际 {actual} 不符')
+    return problems
+
+
+def check(docs: str | None = None) -> list[str]:
+    base: str = docs if docs else str(_config.DOCS_DIR)
+    text = _fsutil.read_text(os.path.join(base, 'managements', 'plan.md'))
+    items = open_items(text)
+    pending = pending_dirs(text)
+    on_disk = design_dirs(os.path.join(base, 'plan'))
+
+    problems, claimed = _item_problems(items, on_disk)
+    problems += _pending_problems(pending, claimed, on_disk)
+    problems += _unclaimed_problems(on_disk, claimed)
+    problems += _numbering_problems(text)
+    problems += _count_problems(text, items)
     return problems
 
 
@@ -185,4 +210,4 @@ def main() -> int:
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(_errors.run(main))

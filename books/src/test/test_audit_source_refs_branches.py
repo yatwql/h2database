@@ -8,11 +8,10 @@ threshold violations, alternate CLI modes) that the happy-path tests skip.
 import io
 import os
 import sys
-import tempfile
 import unittest
 from contextlib import redirect_stdout
 
-import _fixture
+from _cases import FixtureCase
 
 SOURCE_PATH = os.path.join(os.sep, 'synthetic', 'A.java')
 
@@ -28,24 +27,6 @@ if TOOLS_DIR not in sys.path:
         if _path not in sys.path:
             sys.path.insert(0, _path)
 
-class FixtureCase(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.root = _fixture.build_book(self.tmp.name)
-
-    def module(self, name: str):
-        return _fixture.load_module(self.root, name)
-
-    def run_script(self, script: str, *args: str):
-        return _fixture.run_inproc(self.root, script, *args)
-
-    def write(self, rel: str, text: str) -> str:
-        path = os.path.join(self.root, rel)
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, 'w', encoding='utf-8') as fh:
-            fh.write(text)
-        return path
 
 class TestSourceFreshnessReport(FixtureCase):
     def test_print_report_branches(self):
@@ -65,15 +46,14 @@ class TestSourceFreshnessReport(FixtureCase):
         for status in ('OK', 'OFFSET', 'ERROR'):
             self.assertIn(status, report)
 
-if __name__ == '__main__':
-    unittest.main()
 
 class TestSourceFreshnessBranches(FixtureCase):
     def test_missing_reference_and_baseline_flow(self):
         self.write('data/manuscript/ch1-test.md',
                    '# 第1章 测试章节\n\n见 NoSuchClass.java:12 与 Page.java:3\n')
         code, out = self.run_script('source_refs.py')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('source tree not found', out)
         self.assertNotIn('Traceback', out)
 
     def test_update_baseline_then_clean(self):
@@ -82,4 +62,9 @@ class TestSourceFreshnessBranches(FixtureCase):
         code, _ = self.run_script('source_refs.py', '--update-baseline')
         self.assertEqual(code, 0)
         code, out = self.run_script('source_refs.py', '--suggest')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('source tree not found', out)
+
+
+if __name__ == '__main__':
+    unittest.main()

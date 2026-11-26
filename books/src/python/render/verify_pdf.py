@@ -32,7 +32,8 @@ import re
 import sys
 from typing import Any
 
-from lib import _config, _fsutil, _mdutil
+from lib import _config, _errors, _fsutil, _mdutil
+from lib import layout as _layout
 
 try:
     from pypdf import PdfReader
@@ -91,38 +92,41 @@ def toc_link_annotations(reader) -> list[tuple[int, int, Any]]:
     annots.sort(key=lambda item: item[0])
     return annots
 
+FONT_PROGRAM_KEYS = ('/FontFile', '/FontFile2', '/FontFile3')
+
+
+def _has_program(font) -> bool:
+    """True when this font dictionary declares an embedded program."""
+    descriptor = font.get('/FontDescriptor')
+    if descriptor and any(key in descriptor for key in FONT_PROGRAM_KEYS):
+        return True
+    for child in font.get('/DescendantFonts') or []:
+        # a composite face keeps its program on the descendant, not on the parent
+        child_obj = child.get_object() if hasattr(child, 'get_object') else child
+        child_descriptor = child_obj.get('/FontDescriptor')
+        if child_descriptor and any(key in child_descriptor for key in FONT_PROGRAM_KEYS):
+            return True
+    return False
+
+
+def font_is_embedded(font) -> bool | None:
+    """Whether one font dictionary carries its glyphs; None when unreadable.
+
+    Type3 glyphs are drawn as procedures, which *is* embedding; a dictionary that
+    cannot be read is unclassifiable, and the caller skips it rather than guessing.
+    """
+    try:
+        if str(font.get('/Subtype', '')) == '/Type3':
+            return True
+        return _has_program(font)
+    except (AttributeError, TypeError):
+        return None
+
+
 def non_embedded_fonts(reader) -> list[str]:
     """Names of fonts without an embedded font program."""
     seen: set[str] = set()
     missing: set[str] = set()
-
-    def inspect_font(font, inherited_name: str = '') -> None:
-        try:
-            name = str(font.get('/BaseFont', inherited_name))
-        except (AttributeError, TypeError):
-            return
-        if not name.strip() or name in seen:
-            return
-        seen.add(name)
-        if str(font.get('/Subtype', '')) == '/Type3':
-            return  # Type3 glyphs are embedded by definition
-        embedded = False
-        descriptor = font.get('/FontDescriptor')
-        if descriptor:
-            embedded = any(key in descriptor for key in
-                           ('/FontFile', '/FontFile2', '/FontFile3'))
-        descendants = font.get('/DescendantFonts')
-        if not embedded and descendants:
-            for child in descendants:
-                child_obj = child.get_object() if hasattr(child, 'get_object') else child
-                child_descriptor = child_obj.get('/FontDescriptor')
-                if child_descriptor and any(key in child_descriptor for key in
-                                            ('/FontFile', '/FontFile2', '/FontFile3')):
-                    embedded = True
-                    break
-        if not embedded:
-            missing.add(name)
-
     for page in reader.pages:
         resources = page.get('/Resources') or {}
         fonts = resources.get('/Font') or {}
@@ -131,39 +135,142 @@ def non_embedded_fonts(reader) -> list[str]:
         except AttributeError:
             items = []
         for font_ref in items:
-            inspect_font(font_ref.get_object() if hasattr(font_ref, 'get_object')
-                         else font_ref)
+            font = (font_ref.get_object() if hasattr(font_ref, 'get_object')
+                    else font_ref)
+            try:
+                name = str(font.get('/BaseFont', '')).strip()
+            except (AttributeError, TypeError):
+                continue
+            if not name or name in seen:
+                continue
+            seen.add(name)
+            if font_is_embedded(font) is False:
+                missing.add(name)
     return sorted(missing)
 
-def verify(pdf_path: str, html_path: str, require_toc_links: bool = False) -> Report:
-    report = Report()
 
+def _as_float(value, fallback: float) -> float:
+    """Threshold read from JSON might be a string or missing; fall back quietly."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return fallback
+
+
+def _type3_fonts(reader) -> set[int]:
+    """Object ids of Type3 fonts in use.
+
+    A Type3 font is a set of glyph procedures, not an embedded font program, and
+    Chromium only produces one when it cannot embed the face: a `.ttc` collection,
+    a synthesised bold, or a missing glyph. A handful is tolerable; thousands mean
+    the font stack resolved to something unembeddable and the file is bloated.
+    """
+    seen: set[int] = set()
+    for page in reader.pages:
+        resources = page.get('/Resources')
+        if not resources:
+            continue
+        fonts = resources.get_object().get('/Font')
+        if not fonts:
+            continue
+        for ref in fonts.get_object().values():
+            try:
+                if ref.get_object().get('/Subtype') == '/Type3':
+                    seen.add(getattr(ref, 'idnum', id(ref)))
+            except (AttributeError, KeyError, TypeError):
+                # a malformed font resource cannot be classified; skip it
+                continue
+    return seen
+
+
+def _size_budget(pages: int) -> float:
+    """Size budget that tracks page count.
+
+    The budget used to be a flat 12 MB, which was calibrated on a single print run
+    at 743 pages. Per-chapter rendering embeds font subsets once per part, so file
+    size follows page count rather than the renderer: allow the flat floor or
+    `pdf_bytes_per_page` per page, whichever is larger.
+    """
+    floor = _as_float(_config.THRESHOLDS.get('pdf_max_mb'), 12.0)
+    per_page = _as_float(_config.THRESHOLDS.get('pdf_bytes_per_page'), 16384.0) / (1024 * 1024)
+    return max(floor, pages * per_page)
+
+
+def _open_inputs(report: Report, pdf_path: str, html_path: str):
+    """(reader, html) once both inputs are readable, else None."""
     if PdfReader is None:
         report.add('PYPDF', False, 'pypdf not installed (pip install pypdf)')
-        return report
-
+        return None
     if not os.path.isfile(pdf_path):
         report.add('EXISTS', False, f'missing {pdf_path}')
-        return report
+        return None
     if not os.path.isfile(html_path):
         report.add('SOURCE_HTML', False, f'missing {html_path}')
-        return report
+        return None
     report.add('EXISTS', True)
 
-    size_mb = os.path.getsize(pdf_path) / (1024 * 1024)
-    budget = float(_config.THRESHOLDS.get('pdf_max_mb', 12))
-    report.add('SIZE', size_mb <= budget, f'{size_mb:.2f} MB (budget {budget} MB)')
-
     reader = PdfReader(pdf_path)
-    html = _fsutil.read_text(html_path)
+    type3 = _type3_fonts(reader)
+    limit = _as_float(_config.THRESHOLDS.get('pdf_type3_max'), 50.0)
+    report.add('FONTS', len(type3) <= limit,
+               f'{len(type3)} Type3 font(s) (limit {int(limit)}) — a high count means '
+               'the font stack resolved to something Chromium cannot embed')
+    size_mb = os.path.getsize(pdf_path) / (1024 * 1024)
+    budget = _size_budget(len(reader.pages))
+    report.add('SIZE', size_mb <= budget, f'{size_mb:.2f} MB (budget {budget:.1f} MB)')
+    return reader, _fsutil.read_text(html_path)
 
-    report.add('PAGES', len(reader.pages) > 0, f'{len(reader.pages)} pages')
 
-    headings = html_headings(html)
+def _check_density(report: Report, pdf_path: str) -> None:
+    """DENSITY: leading and page fill, judged against geometry, not a page count.
+
+    A page target belongs to one edition of one book. What transfers is the ratio
+    between line pitch and type size — text set at 1.0 is cramped on any page — and
+    the share of the printable height the text actually fills. Both are read off the
+    built document, so a different paper, font or book moves the numbers without
+    moving the criterion.
+    """
+    try:
+        from render import pdf_metrics  # noqa: PLC0415 - only needed for this check
+    except Exception:
+        report.add('DENSITY', True, 'pdf_metrics unavailable, skipped')
+        return
+    metrics = pdf_metrics.measure(pdf_path)
+    body = metrics.get('body_pt') or 0.0
+    pitch = metrics.get('pitch_pt') or 0.0
+    if not body or not pitch:
+        report.add('DENSITY', True, 'no text to measure')
+        return
+    # A page that holds less than a third of its printable height has no measured
+    # rhythm: the pitch median then comes from headings and captions, and a
+    # miniature document would be judged as if it were a book. Say so instead.
+    fill = pitch * metrics.get('lines_per_page', 0)
+    if fill < 300:
+        report.add('DENSITY', True,
+                   f'too little text to judge (fills {fill:.0f}pt of the page)')
+        return
+    # the criterion is about reading comfort in running text. A page-wide median
+    # mixes prose, headings and listings, and a listing's line height is a property of
+    # its column width, not of the prose leading the gate means to judge.
+    ratio = float(metrics.get('prose_pitch_ratio') or 0.0) or (pitch / body)
+    low = float(_config.THRESHOLDS.get('pdf_leading_ratio_min', 1.15) or 1.15)
+    high = float(_config.THRESHOLDS.get('pdf_leading_ratio_max', 1.75) or 1.75)
+    report.add('DENSITY', low <= ratio <= high,
+               f'prose leading {ratio:.2f}x body (want {low}-{high}), '
+               f'text fills {fill:.0f}pt of the page')
+    # listings get their own floor: cramped code is unreadable, but their line height
+    # follows the code size the column can carry, so it is not held to the prose band
+    code_ratio = float(metrics.get('code_pitch_ratio') or 0.0)
+    if code_ratio:
+        report.add('CODE_LEAD', code_ratio >= 1.0,
+                   f'listing leading {code_ratio:.2f}x (want >= 1.00)')
+
+
+def _check_outline(report: Report, reader, headings) -> list:
+    """PAGES, OUTLINE and OUTLINE_LEV against the HTML headings."""
     outline = outline_entries(reader)
     outline_titles = [title for title, _page, _depth in outline]
     heading_titles = [title for _level, title in headings]
-
     report.add('OUTLINE', outline_titles == heading_titles,
                f'{len(outline_titles)} outline entries vs {len(heading_titles)} headings')
 
@@ -176,22 +283,14 @@ def verify(pdf_path: str, html_path: str, require_toc_links: bool = False) -> Re
                'outline depth follows heading levels'
                if len(actual_depths) == len(expected_depths)
                else 'outline/heading count differ')
+    return outline
 
-    toc_match = re.search(r'<nav id="toc-page-nav">([\s\S]*?)</nav>', html)
-    toc_count = len(re.findall(r'<a\b', toc_match.group(1))) if toc_match else 0
-    report.add('TOC_COUNT', toc_count == len(heading_titles),
-               f'{toc_count} printed TOC entries vs {len(heading_titles)} headings')
 
-    annots = toc_link_annotations(reader)
-    if toc_count and not annots and not require_toc_links:
-        report.add('TOC_LINKS', True,
-                   'printed TOC not enhanced yet (run pdf_toc_links.py)')
-        annots = None
+def _check_toc_links(reader, annots, outline) -> list[str]:
+    """Problems with the printed-TOC link annotations, one per kind."""
     problems: list[str] = []
     outline_pages = [page for _t, page, _d in outline]
-    if annots is not None and len(annots) != toc_count:
-        problems.append(f'link annotations {len(annots)} vs TOC entries {toc_count}')
-    for expected_index, (index, page_index, annot) in enumerate(annots or []):
+    for expected_index, (index, page_index, annot) in enumerate(annots):
         if index != expected_index:
             problems.append(f'annotation order gap at {expected_index}')
             break
@@ -211,28 +310,85 @@ def verify(pdf_path: str, html_path: str, require_toc_links: bool = False) -> Re
             problems.append(f'annotation {index} targets page {target + 1}, '
                             f'expected {outline_pages[expected_index] + 1}')
             break
-    if annots is not None:
-        report.add('TOC_LINKS', not problems,
-                   'printed TOC links resolve to outline pages' if not problems
-                   else '; '.join(problems[:2]))
+    return problems
 
+
+def _check_column(report: Report) -> None:
+    """COLUMN: the reading measure and the sheet — two rules, neither book-specific.
+
+    `chars_per_line_min <= column / body <= chars_per_line_max` keeps a line inside the
+    legible range whatever font is installed (`em` is the face's own unit), and the
+    column must still fit what the margins leave, or the print clips it. Both are
+    properties of the text, so they are checked from the layout rather than the PDF:
+    text width can only be estimated from the content stream, and an estimate cannot
+    tell a wide column from a wide glyph.
+    """
+    layout, _problems = _layout.Layout.from_mapping(_config.THRESHOLDS)
+    problems = layout.measure_problems()
+    report.add('COLUMN', not problems,
+               f'{layout.measure_em():g}em/line, column {layout.print_column()}px, '
+               f'margins {layout.print_margins_mm()[1]:g}mm'
+               + (f' — {problems[0]}' if problems else ''))
+
+
+def _check_geometry(report: Report, reader, pdf_path: str = '') -> None:
+    """PAGE_SIZE and ROTATION: a delivery PDF is A4 and upright."""
     sizes = {(round(float(page.mediabox.width), 1), round(float(page.mediabox.height), 1))
              for page in reader.pages}
     width = float(_config.THRESHOLDS.get('pdf_page_width', 595))
     height = float(_config.THRESHOLDS.get('pdf_page_height', 842))
     tol = float(_config.THRESHOLDS.get('pdf_page_tolerance', 2))
     a4 = all(abs(w - width) <= tol and abs(h - height) <= tol for w, h in sizes)
+    _check_density(report, pdf_path)
+    _check_column(report)
     report.add('PAGE_SIZE', a4,
                f'{sorted(sizes)[:2]} (expect {width:.0f}x{height:.0f})')
     rotations = {int(page.get('/Rotate') or 0) for page in reader.pages}
     report.add('ROTATION', rotations <= {0}, f'rotations={sorted(rotations)}')
 
+
+def _check_fonts(report: Report, reader) -> None:
     missing_fonts = non_embedded_fonts(reader)
     report.add('FONTS', not missing_fonts,
                'all fonts embedded' if not missing_fonts
                else f'not embedded: {", ".join(missing_fonts[:5])}')
 
+
+def verify(pdf_path: str, html_path: str, require_toc_links: bool = False) -> Report:
+    report = Report()
+    opened = _open_inputs(report, pdf_path, html_path)
+    if opened is None:
+        return report
+    reader, html = opened
+
+    report.add('PAGES', len(reader.pages) > 0, f'{len(reader.pages)} pages')
+    headings = html_headings(html)
+    outline = _check_outline(report, reader, headings)  # its pages drive the TOC check
+    heading_titles = [title for _level, title in headings]
+
+    toc_match = re.search(r'<nav id="toc-page-nav">([\s\S]*?)</nav>', html)
+    toc_count = len(re.findall(r'<a\b', toc_match.group(1))) if toc_match else 0
+    report.add('TOC_COUNT', toc_count == len(heading_titles),
+               f'{toc_count} printed TOC entries vs {len(heading_titles)} headings')
+
+    annots = toc_link_annotations(reader)
+    if toc_count and not annots and not require_toc_links:
+        report.add('TOC_LINKS', True,
+                   'printed TOC not enhanced yet (run pdf_toc_links.py)')
+        annots = None
+    problems: list[str] = []
+    if annots is not None and len(annots) != toc_count:
+        problems.append(f'link annotations {len(annots)} vs TOC entries {toc_count}')
+    problems += _check_toc_links(reader, annots or [], outline)
+    if annots is not None:
+        report.add('TOC_LINKS', not problems,
+                   'printed TOC links resolve to outline pages' if not problems
+                   else '; '.join(problems[:2]))
+
+    _check_geometry(report, reader, pdf_path)
+    _check_fonts(report, reader)
     return report
+
 
 def _annotation_rect(annot) -> list[float]:
     """Return the annotation rectangle as floats (empty when absent/malformed)."""
@@ -267,9 +423,14 @@ def main(argv: list[str]) -> int:
     parser.add_argument('--json', action='store_true', help='machine-readable output')
     parser.add_argument('--require-toc-links', action='store_true',
                         help='fail when the printed TOC has no link annotations')
+    parser.add_argument('--print', dest='print_edition', action='store_true',
+                        help='verify the print edition (its own PDF, same HTML)')
     args = parser.parse_args(argv)
 
-    pdf_path = args.pdf or _config.merged_pdf()
+    # the print edition is the same markup set for paper: its own PDF, same HTML,
+    # so the density and TOC-link rules apply to it exactly as to the delivery one
+    default_pdf = _config.merged_print_pdf() if args.print_edition else _config.merged_pdf()
+    pdf_path = args.pdf or default_pdf
     html_path = args.html or _config.merged_html()
     report = verify(pdf_path, html_path, require_toc_links=args.require_toc_links)
 
@@ -289,4 +450,4 @@ def main(argv: list[str]) -> int:
     return 0
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

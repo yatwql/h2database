@@ -9,11 +9,10 @@ regressions in the audits — the class of bug unit tests cannot see.
 
 import os
 import sys
-import tempfile
 import unittest
 
 import _fixture
-from _cases import ScriptTestBase
+from _cases import FixtureCase, ScriptTestBase
 
 TAGS = ('layer:infra', 'tier:fast')
 
@@ -27,20 +26,8 @@ if TOOLS_DIR not in sys.path:
         if _path not in sys.path:
             sys.path.insert(0, _path)
 
-class FixtureTest(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.root = _fixture.build_book(self.tmp.name)
 
-    def dist(self, name: str) -> str:
-        return os.path.join(self.root, 'dist', name)
-
-    def read(self, path: str) -> str:
-        with open(path, encoding='utf-8') as fh:
-            return fh.read()
-
-class TestToolchainEntryPoint(FixtureTest):
+class TestToolchainEntryPoint(FixtureCase):
     def test_make_test_and_check_run(self):
         result = _fixture.run(self.root, 'make.py', 'check', '--only', 'audit_links,audit_ascii')
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -50,8 +37,6 @@ class TestToolchainEntryPoint(FixtureTest):
         result = _fixture.run(self.root, 'make.py', 'check', '--only', 'nope')
         self.assertNotEqual(result.returncode, 0)
 
-if __name__ == '__main__':
-    unittest.main()
 
 class TestMakeEntryPoint(ScriptTestBase):
     def test_make_doctor(self):
@@ -63,3 +48,7 @@ class TestMakeEntryPoint(ScriptTestBase):
         code, out = _fixture.run_inproc(
             self.root, 'make.py', 'build', '--only', 'cover_stats')
         self.assertEqual(code, 0, out)
+
+
+if __name__ == '__main__':
+    unittest.main()

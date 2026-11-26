@@ -7,14 +7,23 @@ item that disappears from the manuscript is reported as stale so the baseline
 shrinks instead of rotting.
 
 Keys are whatever identifies a finding locally (`file:figure-id`,
-`file:line:code`); the gate decides.
+`file:line:code`); the gate decides. A payload may carry more than the keys —
+the source-version a drift baseline was recorded against, for one — so
+`load_at`/`save_at` hand the whole object back and the gate reads the fields it
+knows. Recording is not the same as accepting: a coverage ratchet or a volume
+ledger is a measurement, not a reviewed backlog, and those gates keep their own
+files.
 """
+
 from __future__ import annotations
 
+import datetime
 import json
 import os
 
 from . import _config, _fsutil
+
+DEFAULT_NOTE = "Reviewed backlog: these findings are accepted, new ones fail."
 
 
 def baseline_dir() -> str:
@@ -28,38 +37,58 @@ def baseline_dir() -> str:
 
 
 def path_for(name: str) -> str:
-    """Baseline file for a gate.
+    """Baseline file for a gate, resolved through the active book.
 
-    `base.json [baselines]` is authoritative; a gate without an entry falls back
-    to `<name>-findings.json`, so adding a baseline stays a config decision
-    rather than a code one.
+    `base.json [baselines]` is authoritative and `Config.baseline_path` scopes the
+    answer to the current edition; a gate without an entry falls back to
+    `<name>-findings.json`, so adding a baseline stays a config decision rather
+    than a code one.
     """
-    configured = _config.BASE_POLICY.get('baselines', {}).get(name.replace('-', '_'))
-    if configured:
-        return os.path.join(_config.BOOK_ROOT, str(configured))
-    return os.path.join(baseline_dir(), f'{name}-findings.json')
+    key = name.replace("-", "_")
+    if key in (_config.BASE_POLICY.get("baselines") or {}):
+        return _config.current().baseline_path(key)
+    return os.path.join(baseline_dir(), f"{name}-findings.json")
 
 
 def load(name: str) -> set[str]:
     """Accepted keys for a gate; empty when no baseline was recorded yet."""
-    path = path_for(name)
+    return {str(key) for key in (load_raw(name).get("accepted") or [])}
+
+
+def load_at(path: str) -> dict:
+    """The recorded payload at ``path``, or `{}` when absent or unreadable."""
     if not os.path.exists(path):
-        return set()
+        return {}
     try:
         payload = json.loads(_fsutil.read_text(path))
     except (OSError, ValueError):
-        return set()  # a broken baseline must not crash the gate it protects
-    keys = payload.get('accepted', []) if isinstance(payload, dict) else []
-    return {str(key) for key in keys}
+        return {}  # a broken baseline must not crash the gate it protects
+    return payload if isinstance(payload, dict) else {}
 
 
-def save(name: str, keys: set[str], note: str = '') -> str:
-    path = path_for(name)
+def load_raw(name: str) -> dict:
+    """The recorded payload for a gate, whole: keys plus whatever else it carries."""
+    return load_at(path_for(name))
+
+
+def load_accepted(path: str) -> set[str]:
+    """Accepted keys recorded at ``path``; empty when none were recorded yet."""
+    return {str(key) for key in (load_at(path).get("accepted") or [])}
+
+
+def save(name: str, keys: set[str], note: str = "") -> str:
+    return save_at(path_for(name), {"accepted": sorted(keys)}, note)
+
+
+def save_at(path: str, payload: dict, note: str = "") -> str:
+    """Write the keys (and extras) with the review stamp this tree expects."""
     _fsutil.ensure_dir(path)
-    _fsutil.dump_json(path, {
-        'note': note or 'Reviewed backlog: these findings are accepted, new ones fail.',
-        'accepted': sorted(keys),
-    })
+    body = {
+        "updated": datetime.date.today().isoformat(),
+        "note": note or payload.get("note") or DEFAULT_NOTE,
+    }
+    body.update({key: value for key, value in payload.items() if key not in ("updated", "note")})
+    _fsutil.dump_json(path, body)
     return path
 
 

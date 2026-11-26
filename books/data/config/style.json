@@ -55,17 +55,6 @@
       }
     }
   },
-  "diagrams": {
-    "markers": [
-      "┌",
-      "└",
-      "├",
-      "│",
-      "▼",
-      "▲",
-      "→"
-    ]
-  },
   "clusters": {
     "min_figures": 3,
     "window_lines": 40
@@ -81,7 +70,8 @@
     "min_terms_per_chapter": 5,
     "min_exercises_per_chapter": 4,
     "min_figures_per_section": 2,
-    "min_figure_coverage_pct": 95
+    "min_figure_coverage_pct": 95,
+    "perf_history_runs": 200
   },
   "generation": {
     "max_packages_per_table": 12,
@@ -98,7 +88,8 @@
     "index_sub_min": 50,
     "index_see_also_min": 30,
     "glossary_min_entries": 60,
-    "exercises_min_per_chapter": 3
+    "exercises_min_per_chapter": 3,
+    "ledger_growth": 10
   },
   "prose": {
     "avg_sentence_good": 28,

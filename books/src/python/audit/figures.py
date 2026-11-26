@@ -23,7 +23,7 @@ import os
 import re
 import sys
 
-from lib import _config, _fsutil, _mdutil
+from lib import _config, _errors, _fsutil, _mdutil
 
 FIG_RE = re.compile(rf'\*\*{_mdutil.FIGURE_LABEL} ({_mdutil.FIGURE_ID}):')
 CITATION_RE = re.compile(rf'如图 ({_mdutil.FIGURE_ID}) 所示')
@@ -80,4 +80,4 @@ def main(argv: list[str] | None = None) -> int:
     return 1 if problems else 0
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

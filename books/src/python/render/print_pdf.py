@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-"""Print-grade PDF: chapter cover banners, TOC dot leaders, running header.
+"""The print edition: the delivery renderer plus `print_profile`'s typography.
 
-Steps, each independently callable (engine injectable, so tests need no browser):
+Why this is thin: the print edition and the delivery PDF must agree on the page
+box, the column, the code size and the pagination, so both go through
+`render.pdf_split`. What a printed page may add — chapter banners, TOC dot leaders —
+lives in `render.print_profile`, in `em` and behind `@media print`. Nothing here
+sets a scale or a margin: those belong to `lib.layout`, and a second copy of them is
+what let the print edition run its text 642pt wide on a 595pt sheet.
 
-  parse_headings(html)          H1-H4 with ids -> [{index, level, id, text}]
-  inject_css(html)              add the @media print block before </head>
-  render_pdf(html, pdf, engine) Chromium print with header/footer templates
-  page_texts(pdf)               per-page text with whitespace collapsed
-  add_outlines(pdf, headings)   write the PDF outline from the hdr markers
-  build(html, pdf, engine)      run the four steps in order
+Steps (each callable, engine injectable, so tests need no browser):
+
+  build(html_path, pdf_path, engine)   inject the profile, split-render, report
+  main(argv, engine)                   CLI: regenerate the HTML, then build
 """
-
 from __future__ import annotations
 
 import os as _os
@@ -22,178 +24,101 @@ _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)
 import argparse
 import contextlib
 import os
-import re
 import subprocess
 from typing import Any
 
-from lib import _config, _fsutil, _mdutil
+from lib import _config, _errors, _fsutil
+from render import pdf_split, print_profile
 
 _fsutil.pin_stdout_utf8()
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 repo_root = os.path.normpath(os.path.join(script_dir, '..', '..', '..', '..'))
-docs_dir = os.path.join(repo_root, 'books')
-dist_dir = os.path.join(docs_dir, 'dist')
 generate_script = os.path.join(script_dir, 'to_html.py')
 
-CSS = 'PRINT_GRADE_CSS = """\n<style id="print-grade-css">\n@media print {\n    /* === H1 chapter cover === */\n    /* Each H1 starts on a fresh page with a large decorative banner. */\n    #content h1 {\n        page-break-before: always;\n        margin-top: 0;\n        padding-top: 100px;\n        font-size: 2.4em;\n        text-align: center;\n        border: none;\n        position: relative;\n    }\n    #content h1::before {\n        content: \'\';\n        display: block;\n        width: 100px;\n        height: 4px;\n        margin: 0 auto 30px;\n        background: linear-gradient(90deg, #1565C0, #4fc3f7);\n        border-radius: 2px;\n    }\n    #content h1::after {\n        content: \'\';\n        display: block;\n        width: 60%;\n        height: 1px;\n        margin: 30px auto 0;\n        background: #ddd;\n    }\n    /* Avoid orphan headings at page bottom. */\n    h2, h3, h4 { page-break-after: avoid; }\n    h2 { page-break-before: auto; }\n\n    /* === TOC dot leaders === */\n    /* Wraps each TOC entry so title and page number sit at flex extremes\n       with a dotted leader filling the gap between them. The page number\n       span is appended by ``to_pdf.py`` step 3 already; here we\n       only restyle the link container. */\n    #toc-page-nav a {\n        display: flex !important;\n        align-items: baseline;\n        gap: 6px;\n        padding: 3px 8px !important;\n        text-decoration: none;\n    }\n    #toc-page-nav a > span:not([style*="font-size:11px"]) {\n        flex: 1 1 auto;\n    }\n    /* The dotted leader is the pseudo-element between title text and\n       page number. Title and page sit at flex extremes; the leader\n       fills the middle with a string of dots truncated by overflow. */\n    #toc-page-nav a::after {\n        content: \'..............................................................\'\n                 \'..............................................................\';\n        flex: 1 0 auto;\n        margin: 0 4px;\n        overflow: hidden;\n        font-size: 12px;\n        letter-spacing: 1px;\n        color: #ccc;\n        white-space: nowrap;\n        order: 2;\n    }\n    #toc-page-nav a > span:last-child {\n        order: 3;\n        flex: 0 0 auto;\n        font-variant-numeric: tabular-nums;\n    }\n    #toc-page-nav a > div,\n    #toc-page-nav a > span:first-child {\n        order: 1;\n    }\n}\n</style>\n"""'
+
+_DEFAULT_LINKER = object()
 
 
-def parse_headings(html: str) -> list[dict]:
-    """Heading records in document order (shared parser, see lib/_mdutil)."""
-    return _mdutil.html_headings(html)
+def reference_metrics(pdf_path: str | None = None) -> dict:
+    """Measure the delivery edition: same font, column and text as the print one.
+
+    The print edition is the same markup set the same way, so the delivery PDF is
+    the cheapest sample of "how many characters does a line hold with this face" —
+    no extra render, and the answer moves when the book's font changes.
+    """
+    from render import pdf_metrics  # noqa: PLC0415 - only needed for adaptation
+
+    source = pdf_path or _config.merged_pdf()
+    if not os.path.exists(source):
+        return {}
+    return pdf_metrics.measure(source)
 
 
-def inject_css(html: str) -> str:
-    """Add the print-grade stylesheet once, just before </head>."""
-    if 'id="print-grade-css"' in html:
-        return html
-    return html.replace('</head>', CSS + '</head>', 1)
+def adaptive_numbers(pdf_path: str | None = None) -> dict | None:
+    """Print type solved from the measurement, or None when there is nothing to read."""
+    from lib import layout as _layout  # noqa: PLC0415 - call-time resolution
 
-
-def header_template(running_head: str, label: str) -> str:
-    return (
-        '<div style="font-size:9px;color:#666;width:100%;'
-        'padding:4px 15mm;display:flex;justify-content:space-between;'
-        'border-bottom:0.5px solid #ddd;">'
-        f'<span>{running_head}</span>'
-        f'<span style="color:#999;">{label}</span>'
-        '</div>'
-    )
-
-
-def footer_template() -> str:
-    return (
-        '<div style="font-size:9px;color:#666;width:100%;'
-        'padding:6px 15mm;text-align:center;'
-        'border-top:0.5px solid #ddd;">'
-        '第 <span class="pageNumber"></span> 页 / 共 '
-        '<span class="totalPages"></span> 页'
-        '</div>'
-    )
-
-
-def render_pdf(html_path: str, pdf_path: str, engine: Any = None,
-               running_head: str = '', label: str = '') -> None:
-    """Print ``html_path`` to ``pdf_path`` with Chromium."""
-    if engine is None:
-        from playwright.sync_api import sync_playwright as engine
-    with engine() as p:
-        browser = p.chromium.launch(
-            headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
-        page = browser.new_page()
-        page.goto('file:///' + str(html_path).replace('\\', '/'),
-                  wait_until='networkidle', timeout=60000)
-        page.wait_for_timeout(2000)
-        page.evaluate("""() => {
-            const content = document.getElementById('content');
-            if (!content) return;
-            const m = document.createElement('span');
-            m.className = 'content-marker';
-            m.textContent = '__CONTENT__';
-            m.style.cssText = 'display:inline;font-size:0.1px;color:transparent;';
-            content.insertBefore(m, content.firstChild);
-        }""")
-        page.evaluate("""() => {
-            const content = document.getElementById('content');
-            if (!content) return;
-            const els = content.querySelectorAll('h1[id], h2[id], h3[id], h4[id]');
-            els.forEach((h, i) => {
-                const m = document.createElement('span');
-                m.className = 'hdr-marker';
-                m.textContent = '__hdr_' + i + '__';
-                m.style.cssText = 'display:inline;font-size:0.1px;color:transparent;';
-                h.parentNode.insertBefore(m, h);
-            });
-        }""")
-        page.pdf(
-            path=pdf_path,
-            format='A4',
-            margin={'top': '22mm', 'bottom': '22mm', 'left': '18mm', 'right': '18mm'},
-            print_background=True,
-            display_header_footer=True,
-            header_template=header_template(running_head, label),
-            footer_template=footer_template(),
-            prefer_css_page_size=False,
-        )
-        browser.close()
-
-
-def page_texts(pdf_path: str) -> list[str]:
-    from pypdf import PdfReader
-    return [re.sub(r'\s+', '', page.extract_text() or '')
-            for page in PdfReader(pdf_path).pages]
-
-
-def content_start(texts: list[str]) -> int:
-    """Page index of the __CONTENT__ marker (0 when absent)."""
-    for index, text in enumerate(texts):
-        if '__CONTENT__' in text:
-            return index
-    return 0
-
-
-def add_outlines(pdf_path: str, headings: list[dict]) -> tuple[int, list[str]]:
-    """Write the outline; returns (entries added, heading titles not found)."""
-    from pypdf import PdfReader, PdfWriter
-    reader = PdfReader(pdf_path)
-    writer = PdfWriter()
-    for page in reader.pages:
-        writer.add_page(page)
-    texts = [re.sub(r'\s+', '', page.extract_text() or '') for page in reader.pages]
-
-    stack: dict[int, Any] = {}
-    found = 0
-    missing: list[str] = []
-    cursor = content_start(texts)
-    for heading in headings:
-        marker = f"__hdr_{heading['index']}__"
-        page_number = None
-        for index in range(cursor, len(texts)):
-            if marker in texts[index]:
-                page_number = index
-                break
-        if page_number is None:
-            missing.append(heading['text'])
-            continue
-        cursor = page_number
-        parent: Any = None
-        for level in range(heading['level'] - 1, 0, -1):
-            if level in stack:
-                parent = stack[level]
-                break
-        stack[heading['level']] = writer.add_outline_item(
-            title=heading['text'], page_number=page_number, parent=parent)
-        found += 1
-    writer.write(pdf_path)
-    return found, missing
+    metrics = reference_metrics(pdf_path)
+    # solve against running text, not the whole page: a listing's size is set by the
+    # column width, so letting it into the average would move the prose type for a
+    # reason that has nothing to do with the prose
+    chars = metrics.get('prose_chars_per_line') or metrics.get('chars_per_line')
+    if not chars:
+        return None
+    metrics = dict(metrics, chars_per_line=chars)
+    layout, _problems = _layout.Layout.from_mapping(_config.THRESHOLDS or {})
+    target = float(_config.THRESHOLDS.get('layout_print_lead_target', 0.4) or 0.4)
+    lead_target = 1.0 + target
+    # the code size is width-driven (it must fit the widest listing), so it is passed
+    # in rather than derived from the body: shrinking or enlarging it would change the
+    # page count without improving legibility
+    metrics = dict(metrics)
+    metrics['code_px'] = layout.print_code_px(int(float(str(
+        _config.THRESHOLDS.get('ascii_max_cols', 100)))))
+    return print_profile.solve_print_type(
+        metrics, body_px=layout.body_size_px(),
+        chars_per_line=layout.print_chars_per_line,
+        lead_target=lead_target)
 
 
 def build(html_path: str | None = None, pdf_path: str | None = None,
-          engine: Any = None) -> tuple[int, list[str]]:
-    """Full print-grade pipeline over the given paths (book defaults)."""
-    html_source = html_path or _config.merged_html()
-    target = pdf_path or _config.merged_print_pdf()
-    html = _fsutil.read_text(html_source)
-    headings = parse_headings(html)
-    print(f'  Parsed {len(headings)} headings from HTML')
+          engine: Any = None, linker: Any = _DEFAULT_LINKER,
+          probe: Any = None) -> int:
+    """Render the print edition; returns the page count.
 
-    staging = _config.dist(f'_{ _config.MERGED_NAME }-print.html')
-    _fsutil.write_text(staging, inject_css(html))
+    The printed TOC needs its link targets stamped after rendering, exactly as the
+    delivery edition does (`pdf_toc_links`), otherwise Chromium's split render
+    leaves every TOC entry as a link annotation with no destination.
+    """
+    source = html_path or _config.merged_html()
+    target = pdf_path or _config.merged_print_pdf()
+    html = _fsutil.read_text(source)
+    print(f'  读取 {os.path.basename(source)}（{os.path.getsize(source) / 1048576:.2f} MB）',
+          flush=True)
+    print(f'  {print_profile.describe()}')
+
+    numbers = probe() if probe is not None else None
+    if numbers:
+        print(f'  自适应印刷参数：body={numbers["body_px"]}px '
+              f'lead={numbers["line_height"]} code={numbers["code_px"]}px '
+              f'(scale {numbers["scale"]})', flush=True)
+    staging = _config.dist(f'_{_config.MERGED_NAME}-print.html')
+    _fsutil.write_text(staging, print_profile.inject(html, numbers))
     try:
-        render_pdf(staging, target, engine=engine,
-                   running_head=_config.project('running_head', 'book'),
-                   label=f'印刷版 v{_config.VERSION}')
-        print(f'  Rendered: {target}')
+        print('  Chromium 分章渲染中（与标准版同一页框）…', flush=True)
+        count = pdf_split.render_html(staging, target, engine=engine)
+        if linker is _DEFAULT_LINKER:
+            from render import pdf_toc_links  # noqa: PLC0415 - playwright only here
+            linker = pdf_toc_links.add_links
+        if linker is not None:
+            print('  印刷目录链接写回 PDF 目标…', flush=True)
+            linker(pdf_path=target, html_path=staging)
     finally:
         with contextlib.suppress(OSError):
             os.remove(staging)
-
-    found, missing = add_outlines(target, headings)
-    print(f'  Created {found} / {len(headings)} PDF outline entries')
-    for title in missing[:5]:
-        print(f'    - {title[:60]}')
-    return found, missing
+    print(f'  Rendered: {target}（{count} 页）')
+    return count
 
 
 def main(argv: list[str] | None = None, engine: Any = None) -> int:
@@ -203,6 +128,10 @@ def main(argv: list[str] | None = None, engine: Any = None) -> int:
     parser.add_argument('--pdf', help='target PDF (default: print-grade PDF)')
     parser.add_argument('--skip-html', action='store_true',
                         help='do not regenerate the HTML before printing')
+    parser.add_argument('--adaptive', action='store_true',
+                        help='solve the printed type from the delivery PDF (font-aware)')
+    parser.add_argument('--no-adaptive', action='store_true',
+                        help='keep the screen type even when the config asks for adaptation')
     args = parser.parse_args(argv)
 
     if not args.skip_html and os.path.exists(generate_script):
@@ -213,9 +142,12 @@ def main(argv: list[str] | None = None, engine: Any = None) -> int:
         if result.returncode != 0:
             print('HTML generation FAILED:', result.stderr, file=_sys.stderr)
             return 1
+    wants = args.adaptive or (bool(_config.THRESHOLDS.get('layout_print_adaptive'))
+                              and not args.no_adaptive)
+    probe = adaptive_numbers if wants else None
     try:
-        build(args.html, args.pdf, engine)
-    except Exception as exc:  # noqa: BLE001 - report, do not dump a traceback
+        build(args.html, args.pdf, engine, probe=probe)
+    except Exception as exc:
         print(f'  print-grade PDF FAILED: {exc}', file=_sys.stderr)
         return 1
     print(f'Print-grade PDF: {args.pdf or _config.merged_print_pdf()}')
@@ -223,4 +155,4 @@ def main(argv: list[str] | None = None, engine: Any = None) -> int:
 
 
 if __name__ == '__main__':
-    _sys.exit(main(_sys.argv[1:]))
+    _sys.exit(_errors.run(main, _sys.argv[1:]))

@@ -17,6 +17,7 @@ import logging
 import logging.handlers
 import os
 import sys
+import tempfile
 
 from lib import _config
 
@@ -38,9 +39,75 @@ def _settings() -> dict:
     }
 
 
+def _is_test_process() -> bool:
+    """True inside a test run, including at import time.
+
+    `PYTEST_CURRENT_TEST` only exists *during* a test call, and a module that builds
+    its logger at import (the action layer does) is configured before that — those
+    lines went to the book's own log, which is how `unknown action 'nope'` from a
+    negative-path case ended up in a production log 232 times.
+    """
+    if os.environ.get('PYTEST_CURRENT_TEST') or os.environ.get('BOOK_TEST_MODE'):
+        return True
+    return bool(os.environ.get('PYTEST_VERSION')) or 'pytest' in sys.modules
+
+
+def _test_log_dir() -> str:
+    """Where a test run keeps its logs, so the book's own log stays untouched.
+
+    A test that exercises an error path writes words like `unknown action 'nope'` into
+    whatever log the process has — and for months those lines sat in the production
+    log next to the real failures. Tests get their own directory; production keeps the
+    file an operator reads.
+    """
+    try:
+        name = _config.app_name()
+    except _config.ConfigError:
+        name = 'tests'
+    return os.path.join(tempfile.gettempdir(), f'{name}-tests-{os.getpid()}', 'logs')
+
+
+def log_file() -> str:
+    """The rotating log file this process writes (empty when logging is off)."""
+    folder = log_dir()
+    return os.path.join(folder, f'{_config.app_name()}.log') if folder else ''
+
+
+def retention_days() -> int:
+    """How long any log survives; one policy for the rotating file and the reports."""
+    return _settings()['retention_days']
+
+
 def log_dir() -> str:
     """Absolute path of the log directory (created on demand)."""
     settings = _settings()
+    override = os.environ.get('BOOK_LOG_DIR')
+    if override:
+        path = override
+        try:
+            os.makedirs(path, exist_ok=True)
+        except OSError:
+            return ''  # console only
+        return path
+    if _is_test_process():
+        # a test pointed at a fixture book logs inside that book: it is already a
+        # throwaway directory, and the case can still assert what was written. A test
+        # that never selected a book must not touch the repository's log at all.
+        path = ''
+        try:
+            root = _config.current().root
+        except _config.ConfigError:
+            root = ''
+        if root and os.path.abspath(root).startswith(tempfile.gettempdir()):
+            path = os.path.join(root, settings['dir'])
+        else:
+            path = _test_log_dir()
+        try:
+            os.makedirs(path, exist_ok=True)
+        except OSError as exc:
+            sys.stderr.write(f'warning: cannot create log directory {path}: {exc}\n')
+            return ''
+        return path
     try:
         path = os.path.join(_config.current().root, settings['dir'])
     except _config.ConfigError:
@@ -105,5 +172,5 @@ def get_logger(name: str) -> logging.Logger:
 def describe() -> dict:
     """Non-secret summary for CLIs and the web console."""
     settings = _settings()
-    return {'level': settings['level'], 'dir': log_dir(),
+    return {'level': settings['level'], 'dir': log_dir(), 'file': log_file(),
             'retention_days': settings['retention_days']}

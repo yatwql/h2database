@@ -17,7 +17,6 @@ TAGS = ('layer:render', 'tier:fast')
 
 _fixture.ensure_tools_path()
 
-BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
 
 class EpubVerifyTest(unittest.TestCase):
     def setUp(self):
@@ -58,12 +57,14 @@ class FigureClusterTest(unittest.TestCase):
                      '**图 1-1: 展示组件的连接方式**\n\n'
                      '**图 1-2: 展示组件的调用顺序**\n')
         code, out = _fixture.run_inproc(self.root, 'figure_clusters.py')
-        self.assertIn(code, (0, 1), out[-400:])
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('图簇检测', out)
         self.assertNotIn('Traceback', out)
 
     def test_json_output_runs(self):
         code, out = _fixture.run_inproc(self.root, 'figure_clusters.py', '--json')
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 0, out[-300:])
+        self.assertIn('unbridged', out)
 
 class SourceRefsTest(unittest.TestCase):
     def setUp(self):
@@ -96,7 +97,8 @@ class SourceRefsTest(unittest.TestCase):
                 mock.patch.object(self.mod, 'build_class_index', return_value={}), \
                 mock.patch.object(self.mod, 'CHAPTER_FILES', ['ch1-test.md'], create=True):
             code = self.mod.main(['--suggest'])
-        self.assertIn(code, (0, 1))
+        self.assertEqual(code, 0, buffer.getvalue()[-300:])
+        self.assertRegex(buffer.getvalue(), r'[\s\S]')
 
 if __name__ == '__main__':
     unittest.main()

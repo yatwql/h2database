@@ -18,7 +18,7 @@ import re
 import sys
 from pathlib import Path
 
-from lib import _config, _mdutil
+from lib import _config, _errors, _mdutil
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[3]
@@ -119,81 +119,95 @@ def check_caption_quality(path, lines):
                     f'图 {fig_id}: {caption[:60]}'
                 )
 
-def main(argv: list[str] | None = None) -> int:
-    """Run the readability pass and print the report."""
-    args = list(argv) if argv else list(sys.argv[1:])
-    as_json = '--json' in args
-    # --- Main pass: fence, width, box closure ---
-    for path in DOCS:
-        lines = path.read_text(encoding='utf-8').splitlines()
-        in_fence = False
-        fence_start = 0
-        block_lines = []
-        for idx, line in enumerate(lines, 1):
-            if line.strip().startswith('```'):
-                if not in_fence:
-                    in_fence = True
-                    fence_start = idx
-                    block_lines = []
-                else:
-                    marker_lines = [line for line in block_lines
-                                if any(c in line for c in DIAGRAM_MARKERS)]
-                    if marker_lines:
-                        max_width = max(len(line) for line in block_lines) if block_lines else 0
-                        if max_width > 118:
-                            warnings.append(f'{path}:{fence_start} diagram width {max_width} > 118')
-                        if len(block_lines) > 80:
-                            warnings.append(f'{path}:{fence_start} diagram/code block length {len(block_lines)} > 80')
-                        # Box-drawing closure check (always run)
-                        check_box_closure(marker_lines, fence_start, path)
-                    in_fence = False
-                continue
-            if in_fence:
-                if CAPTION_RE.match(line.strip()):
-                    failures.append(f'{path}:{idx} caption inside fence')
-                block_lines.append(line)
-
-        if in_fence:
-            failures.append(f'{path}:{fence_start} unclosed fence')
-
-        # Caption quality check (--figures flag)
-        if RUN_FIGURE_CHECKS:
-            check_caption_quality(path, lines)
-
-    # --- HTML check ---
-    html_path = Path(_config.merged_html())
-    if html_path.exists():
-        html = html_path.read_text(encoding='utf-8')
-        body = re.sub(r'<pre[^>]*>.*?</pre>', '', html, flags=re.DOTALL)
-        lines = body.splitlines()
-        outside_lines = [line for line in lines if any(c in line for c in DIAGRAM_MARKERS)]
-        runs = []
-        streak = 0
-        for line in lines:
-            if any(c in line for c in DIAGRAM_MARKERS):
-                streak += 1
+def _scan_fences(path, lines) -> list[str]:
+    """Fence balance, diagram width/length and caption-inside-fence for one file."""
+    failures: list[str] = []
+    in_fence = False
+    fence_start = 0
+    block_lines: list[str] = []
+    for idx, line in enumerate(lines, 1):
+        if line.strip().startswith('```'):
+            if not in_fence:
+                in_fence = True
+                fence_start = idx
+                block_lines = []
             else:
-                if streak >= 3:
-                    runs.append(streak)
-                streak = 0
-        if streak >= 3:
-            runs.append(streak)
-        if runs:
-            failures.append(f'{html_path}: {len(outside_lines)} diagram-like lines outside <pre>, blocks: {runs}')
-        elif outside_lines:
-            warnings.append(f'{html_path}: {len(outside_lines)} inline visual-aid lines use box chars outside <pre> (non-block, acceptable)')
+                marker_lines = [row for row in block_lines
+                                if any(c in row for c in DIAGRAM_MARKERS)]
+                if marker_lines:
+                    max_width = max(len(row) for row in block_lines) if block_lines else 0
+                    if max_width > 118:
+                        warnings.append(f'{path}:{fence_start} diagram width {max_width} > 118')
+                    if len(block_lines) > 80:
+                        warnings.append(f'{path}:{fence_start} diagram/code block length '
+                                        f'{len(block_lines)} > 80')
+                    # Box-drawing closure check (always run)
+                    check_box_closure(marker_lines, fence_start, path)
+                in_fence = False
+            continue
+        if in_fence:
+            if CAPTION_RE.match(line.strip()):
+                failures.append(f'{path}:{idx} caption inside fence')
+            block_lines.append(line)
 
-    # --- Report ---
+    if in_fence:
+        failures.append(f'{path}:{fence_start} unclosed fence')
+    return failures
+
+
+def _check_html() -> None:
+    """Diagram-like lines that escaped their <pre> block in the rendered HTML."""
+    html_path = Path(_config.merged_html())
+    if not html_path.exists():
+        return
+    html = html_path.read_text(encoding='utf-8')
+    body = re.sub(r'<pre[^>]*>.*?</pre>', '', html, flags=re.DOTALL)
+    lines = body.splitlines()
+    outside_lines = [line for line in lines if any(c in line for c in DIAGRAM_MARKERS)]
+    runs = []
+    streak = 0
+    for line in lines:
+        if any(c in line for c in DIAGRAM_MARKERS):
+            streak += 1
+        else:
+            if streak >= 3:
+                runs.append(streak)
+            streak = 0
+    if streak >= 3:
+        runs.append(streak)
+    if runs:
+        failures.append(f'{html_path}: {len(outside_lines)} diagram-like lines outside '
+                        f'<pre>, blocks: {runs}')
+    elif outside_lines:
+        warnings.append(f'{html_path}: {len(outside_lines)} inline visual-aid lines use box '
+                        f'chars outside <pre> (non-block, acceptable)')
+
+
+def _report(failures: list[str], warnings: list[str], as_json: bool) -> int:
     print('READABILITY FAILURES:', len(failures))
     for item in failures[:80]:
         print('FAIL:', item)
     print('READABILITY WARNINGS:', len(warnings))
     for item in warnings[:120]:
         print('WARN:', item)
-
     if as_json:
         print(json.dumps({'failures': failures, 'warnings': warnings}, ensure_ascii=False))
     return 1 if failures else 0
 
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the readability pass and print the report."""
+    args = list(argv) if argv else list(sys.argv[1:])
+    as_json = '--json' in args
+    for path in DOCS:
+        lines = path.read_text(encoding='utf-8').splitlines()
+        failures.extend(_scan_fences(path, lines))
+        if RUN_FIGURE_CHECKS:
+            check_caption_quality(path, lines)
+
+    _check_html()
+    return _report(failures, warnings, as_json)
+
+
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

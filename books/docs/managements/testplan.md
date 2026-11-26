@@ -3,7 +3,7 @@
 > 软件：bookwright — 源码分析成书工具 v0.1
 > 版本：v0.1
 > 定位：**判据与验证命令的唯一权威**——每道门禁判什么、到什么级别、怎么跑；
-> 不写实现结构（看 `technical.md`），也不写写作规则（看 `style-guide.md`）。
+> 不写实现结构（看 `technical.md`），也不写写作规则（看 `../manuals/how-to-write.md`）。
 
 ## 1. 权威验证流程
 
@@ -22,6 +22,7 @@ python books/src/python/make.py doctor     # 可选依赖检查（pandoc / playw
 
 ```bash
 python books/src/python/make.py deliver    # to_pdf + pdf_toc_links + verify_pdf + to_epub + verify_epub + archive_release
+python books/src/python/make.py print      # print_pdf（渲染 + 写回目录链接目标）+ verify_print（同一套 PDF 判据）
 ```
 
 PDF 生成较慢；日常编辑只要求 `make.py check` + `make.py build` 通过。
@@ -97,18 +98,18 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 版本归档 | 已发布版本的台账与完成的迭代设计只在版本目录里：三份归档文件与头行齐备、主文档索引可打开、已归档版本不再留在主文档；迭代目录名不含追踪编号 | `doc_archive.py` | P1 |
 | 源码坐标 | `Class.java:行号` 可解析、行号在文件长度内、方法存在、摘录与源码一致；已知漂移进基线，仅"新增漂移"阻塞 | `source_refs.py`、`content_depth.py`、`books/data/baselines/source-symbol-baseline.json` | P1 |
 | PDF 渲染与 TOC 链接注入 | HTML → PDF 成功、页面数据可读；每个印刷 TOC 条目在对应页上加一条 link annotation，目标页按 outline 位置映射 | `render/to_pdf.py`、`render/pdf_toc_links.py` | P1 |
-| PDF 交付 | PDF 重新生成自当前 HTML；页面为 A4（尺寸与容差取配置）、无旋转；字体全部嵌入；outline 与 HTML 标题逐一对应；印刷 TOC 链接按序且在页内；体积不超过配置的 PDF 预算 | `render/verify_pdf.py`（`--require-toc-links`） | P1 |
-| EPUB 结构 | mimetype 首条且未压缩；container/OPF/manifest/spine/nav 全部可解析、导航链接全部命中；元数据齐备；体积不超过配置的 EPUB 预算 | `render/verify_epub.py` | P1 |
-| EPUB 生成 | pandoc 可用时生成 EPUB（在 `deliver` 组内，生成后由 `verify_epub.py` 校验） | `render/to_epub.py` | P1 |
+| PDF 交付 | PDF 重新生成自当前 HTML；页面为 A4（尺寸与容差取配置）、无旋转；字体全部嵌入且 Type3 不超过 `pdf_type3_max`（`FONTS`）；outline 与 HTML 标题逐一对应；印刷 TOC 链接按序且在页内；体积不超过配置的 PDF 预算（随页数增长）；正文行距÷字号落在配置区间（`DENSITY`，只判运行正文，判定用按字体分开的测量 `prose_pitch_ratio`）、清单行距不低于 1.0（`CODE_LEAD`，清单字号由栏宽决定，故不套用正文区间）、文字占可印高度达标 | `render/verify_pdf.py`（`--require-toc-links`） | P1 |
+| EPUB 结构 | mimetype 首条且未压缩；container/OPF/manifest/spine/nav 全部可解析、导航链接全部命中；元数据齐备；每个正文文件恰好一个 `h1`（`CHAPTERS`，图注被当成标题时当场报警）；体积不超过配置的 EPUB 预算 | `render/verify_epub.py` | P1 |
+| EPUB 生成 | pandoc 可用时由 `to_epub.py` 生成 EPUB（在 `deliver` 组内，生成后由 `verify_epub.py` 校验） | `render/to_epub.py` | P1 |
 | 可读性 | 长句、宽 ASCII 图、框线闭合、图注质量 | `readability.py` | P1 |
 | 术语与排版规则 | 同一概念不混用两种写法；标题无尾标点；链接文字可读；中英之间留空格；列表标点一致；段落 ≤ 上限（已知项走基线） | `style_rules.py` | P1 |
 | 内容深度 | 前向引用须点名主责章节；高频类型须入术语表；练习题须指向本章类型或 §锚点 | `content_depth.py` | P1 |
 | ASCII 图质量 | 图宽不超过配置的列数上限（CJK 记 2 列）；无行尾空格/制表符；单图不混用框线与 ASCII 边框；已知项走基线 | `diagrams.py`、`books/data/baselines/ascii-baseline.json` | P1 |
 | LLM 边界 | LLM 只用于散文生成/评审场景；门禁与事实链路不得调用；密钥文件不入库 | `llm_policy.py` | P1 |
-| 发布评分 | 六维评分（功能/稳定/交互/代码/文档风格/文档质量）作为整改视图 | `make.py report` | 报告类（不计级别） |
+| 发布评分 | 六维评分（功能/稳定/交互/代码/文档风格/文档质量）作为整改视图；测试与结构健康视图给出覆盖率读数、低于基线的文件、半分支 Top-N、松散断言数与超长函数清单 | `make.py report`、`make.py report health` | 报告类（不计级别） |
 | 历史快照完整性 | 快照文件与 manifest 记录的哈希一致；快照不参与构建、不被门禁扫描 | `manuscript/snapshot.py verify` | P1 |
 | 归档可用 | 每次构建与交付各存一份手稿与产物的日期副本；保留窗口取自配置（默认 45 天），过期目录被清理；归档只进不进、不被构建读取 | `manuscript/archive.py` | P2 |
-| 架构约束 | 分层依赖方向、门禁只读、不硬编码路径、命名不遮蔽标准库、入口脚本均接入 make.py 步骤 | `check_architecture.py` | P0 |
+| 架构约束 | 分层依赖方向、门禁只读、不硬编码路径、命名不遮蔽标准库、入口脚本均接入 make.py 步骤；控制台入口的导入闭包内不得有模块级配置读取（由架构层的用例钉住） | `check_architecture.py` | P0 |
 | 章节均衡 | 每章行数/图数/坐标分布 | `balance.py` | P2 |
 | 类型检查 | pyright 可用时检查工具链类型（缺失则跳过） | `typecheck.py` | P1 |
 | 门禁追溯 | make.py 的每个门禁都在 testplan 登记，反之亦然 | `gate_trace.py` | P0 |
@@ -116,9 +117,10 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 内容体积 | 每个章节的字节数与行数不低于基线比例、手稿总量不缩水、交付页数与 EPUB 体积不低于基线比例（比例取值见配置）；新增文件允许，删除须同步 `book.toml` 并重设基线；重设基线须稿子已提交、评审人具名、不得降低下限，收缩须显式接受并记理由 | `content_volume.py`、`books/data/baselines/content-volume.json` | P0 |
 | 文件长度 | 源码/测试/文档/手稿四档行数均不超过各自预算；四档预算须在配置里显式声明（不靠默认值）；手稿正文与附录同档 | `file_length.py` | P0 |
 | 脚本契约 | 每个入口脚本有模块说明、可执行入口、必要时说明退出码与 `--json` | `script_contract.py` | P0 |
-| 文档一致性 | 文档与配置的引用对象存在（路径、脚本、章节名、管理目录与索引/目录树、编号源）；同一事实只声明一次（章节键、门禁级别）；管理文档头部必须有一行 `> 定位：`；跨项目的内容标准只能指向 `style-guide.md`；引用的交付链路与脚本名前缀清单等于 `make.py` / `check_architecture.py` 里的声明 | `doc_drift.py` | P0 |
-| 测试隔离 | 全程零出站：`_netguard` 只允许回环，任何真实建连（含 LLM provider）立即失败；写入真实 `data/manuscript` 被守卫拒绝（`BOOK_TEST_GUARD`）；夹具书自建在临时目录，日志与用量账本只落在其中；LLM 用例一律 mock，Playwright 用假引擎 | `src/test/_netguard.py`、`src/test/test_no_network.py`、`src/test/test_isolation.py` | P0 |
-| 覆盖率 | 分支覆盖率不低于配置的红线 | `make.py cover` | P1 |
+| 文档一致性 | 文档与配置的引用对象存在（路径、脚本、章节名、管理目录与目录树、编号源）；同一事实只声明一次（章节键、门禁级别）；管理文档头部必须有一行 `> 定位：`；跨项目的内容标准只能指向 `../manuals/how-to-write.md`；引用的交付链路与脚本名前缀清单等于 `make.py` / `check_architecture.py` 里的声明 | `doc_drift.py` | P0 |
+| 测试隔离 | 全程零出站：`_netguard` 只允许回环，任何真实建连（含 LLM provider）立即失败；写入真实 `data/manuscript` 被守卫拒绝（`BOOK_TEST_GUARD`）；夹具书自建在临时目录，日志与用量账本只落在其中；LLM 用例一律 mock，Playwright 用假引擎 | `src/test/_netguard.py`、`src/test/test_network_isolation.py`、`src/test/test_isolation.py` | P0 |
+| 失败语义 | 工具层失败一律抛同一类异常并携带消息与退出码，入口只做一次转换；仓库内不存在“先打印再 `sys.exit(1)`”的失败路径，退出码与消息由用例成对断言 | `src/test/test_lib_errors.py`、`audit/script_contract.py` | P1 |
+| 覆盖率 | 分支覆盖率不低于配置的红线，且每个文件的覆盖率不低于自己的基线；每次提交量快档，带 chromium/pandoc 的完整档另量一次，避免“只有慢档才走到的路径”被当成无人可达 | `make.py cover`（快档）、`make.py cover --full`（含慢档） | P1 |
 | 历史痕迹 | 文档、代码注释、脚本/钩子/CI 注释与配置 `_note` 只描述当前状态 | `traces.py` | P0 |
 | 多入口一致 | CLI/TUI/Web 三个渠道共用 `core/actions.py`，`status` 与 `llm-ask` 均可运行 | `src/test/test_llm.py` | P1 |
 | LLM 配置 | provider 路由按 章节>书籍>场景 优先级解析；密钥只读环境变量；默认 mock 离线可跑 | `src/test/test_llm.py`、`data/config/llm_*.json` | P1 |
@@ -159,8 +161,8 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | `gate_trace.py` | 门禁表与实现的双向可追溯 | 只管登记一致性 |
 | `requirement_trace.py` | 每条需求是否有判据载体 | 只管追溯，不评判据本身是否够强 |
 | `portability.py` | 移植性：文本 `open()` 均显式 encoding；ASCII locale 下入口可运行 | 只管环境适配，不评判内容 |
-| `test_redundancy.py` | 测试套件卫生：重复用例体、无断言用例、非 TestCase 内的 test_*、同名遮蔽；松散断言（`assertIn(code, (0, 1))`）只登记存量、新增即失败 | 只管测试代码，不判业务 |
-| `perf_baseline.py` | 交付速度：各步骤耗时与历史中位数对比，超阈值提示（默认 advisory） | 只管速度退化，不判正确性 |
+| `test_redundancy.py` | 测试套件卫生：重复用例体、被别处完全覆盖的整个套件（同一模块的符号集是真子集且不少于四个）、无断言用例、非 TestCase 内的 test_*、同名遮蔽；松散断言（`assertIn(code, (0, 1))`）只登记存量、新增即失败 | 只管测试代码，不判业务 |
+| `perf_baseline.py` | 交付速度：各步骤耗时对比评审基线（`data/baselines/perf-baseline.json`；无基线时退回滚动窗口中位数），超阈值提示（默认 advisory） | 只管速度退化，不判正确性 |
 | 顺序依赖探测（order_dependence，人工触发） | 正序/逆序各跑一次，结果不同即报；不进 `check`，慢档执行 | 只管顺序敏感性，不判正确性 |
 | `typecheck.py` | pyright 静态类型检查 | 只管类型 |
 
@@ -198,15 +200,17 @@ report` / `eval-score.sh`）、`balance` 的计量输出（`--json`），以及�
 | FR-16 | 封面统计与正文实际内容一致 | `cover.py`、`structure.py` |
 | FR-17 | 术语与排版统一，无新增违规 | `style_rules.py` |
 | FR-18 | 代码摘录与源码当前版本一致 | `content_depth.py`、`source_refs.py` |
+| FR-19 | 换书、换系统、换字体只改配置：字号与行距由栏宽与每行字数推导；纸面字体须存在且可嵌入、屏幕字体只声明不嵌入；判据取 `DENSITY` 与 `CHAPTERS` | `verify_pdf.py`、`verify_epub.py` |
 | IR-01 | 单一入口跑完一次完整检查 | `make.py` |
 | IR-02 | 按改动域分档，编辑期单次检查 ≤ 5 秒 | `src/python/check_runner.py`、`perf_baseline.py` |
 | IR-10 | 换一本书只换书根：路径、派生状态、基线、产物随之改变，互不覆盖 | `src/test/test_lib_config_books.py` |
 | IR-11 | 源随书绑定：换源不会被静默忽略，基线指纹不符时要求复核 | `src/python/audit/content_volume.py` |
 | IR-12 | 已发布版本只在归档里：版本目录含三份台账、索引可打开、主文档不再留有已归档版本 | `src/python/audit/doc_archive.py` |
 | IR-13 | 多份手稿互不覆盖：状态、基线与产物名按版本分开，单版本行为不变 | `src/python/lib/_config.py` |
+| IR-14 | 分析语言由配置声明：新增语言＝适配器 + 注册表一行，后缀与坐标匹配取 `sources.suffixes` | `src/python/ingest/languages/__init__.py`、`src/test/test_languages.py` |
 | IR-03 | 分档不改判据，提交/发布跑全集 | `src/python/check_runner.py` |
 | IR-04 | 失败给出文件与行号，退出码非 0 即失败 | `script_contract.py` |
-| IR-05 | 检查与构建离线完成 | `src/test/_netguard.py`、`src/test/test_no_network.py` |
+| IR-05 | 检查与构建离线完成 | `src/test/_netguard.py`、`src/test/test_network_isolation.py` |
 | IR-06 | 三入口共享同一份动作与状态 | `src/test/test_llm.py`、`src/test/test_app_web.py` |
 | IR-07 | 状态摘要一屏，含阶段与最近一次结果 | `src/test/test_app_tui_interaction.py` |
 | IR-08 | 耗时步骤打印阶段，失败不吞掉已有结果 | `src/python/check_runner.py`、`src/test/test_logging.py` |
@@ -215,65 +219,40 @@ report` / `eval-score.sh`）、`balance` 的计量输出（`--json`），以及�
 | NFR-02 | 连续两次构建的 HTML 逐字节一致 | `.github/workflows/book.yml` |
 | NFR-03 | 依赖版本固定，交付只用项目解释器 | `make.py`、`bootstrap.sh` |
 | NFR-04 | 存量入基线，新增同类问题失败 | `src/python/lib/_baseline.py` |
-| NFR-05 | 四档耗时在预算内（性能门禁为 advisory：对比历史中位数给提示，硬预算由 CI 墙钟记录） | `perf_baseline.py` |
+| NFR-05 | 四档耗时在预算内（性能门禁为 advisory：对比评审基线给提示，硬预算由 CI 墙钟记录） | `perf_baseline.py` |
 | NFR-06 | PDF ≤ 12 MB、EPUB ≤ 10 MB | `verify_pdf.py`、`verify_epub.py` |
 | NFR-07 | 历史稿只读，不入构建与扫描 | `src/python/manuscript/snapshot.py` |
 | NFR-08 | 阈值与路径全部读配置，不内联 | `check_architecture.py`、`style_schema.py` |
 | NFR-09 | 三平台一致：显式编码、无绝对路径 | `portability.py` |
-| NFR-10 | 检查与构建阶段零出站连接 | `src/test/test_no_network.py` |
+| NFR-10 | 检查与构建阶段零出站连接 | `src/test/test_network_isolation.py` |
 | NFR-11 | 源文件与文档长度受预算约束 | `file_length.py` |
 | NFR-12 | 文档与注释只描述当前状态 | `traces.py` |
 
-## 3. 格式规范
+## 3. 格式的判法
 
-- 图注：体例与图号规则归 `style-guide.md` §14，本文不复述；门禁按该体例判定
-  （`structure.py` 判图号唯一连续，`captions.py` 判图注词表与长度）。
-- ASCII 图围栏：使用 ` ```text `。
-- Java 代码围栏：使用 ` ```java `；SQL 使用 ` ```sql `。
-- 源码路径：使用 `org/h2/...`，不使用 `h2/src/main/...` 前缀。
-- 源码引用：使用 `ClassName.java:行号`，但不得放入章节标题或 PDF Outline 标题。
-- 跨章引用：使用 `详见第X章《实际 H1 标题》`。
+体例（怎么写）只归 `../manuals/how-to-write.md`：图注 §6.2/§14、围栏与源码引用 §4.2/§4.3、跨章引用 §5。
+本节只登记「格式由谁判、判在什么级别」——级别与判据名称见 §2.2 的对应行：
+
+| 格式面 | 判据载体 |
+| --- | --- |
+| 图号唯一连续、图注体例与长度 | `structure.py`、`captions.py` |
+| 代码围栏成对、语言标注与内容一致 | `structure.py`、`diagrams.py` |
+| 源码路径与 `ClassName.java:行号` 可解析、摘录与源码一致 | `source_refs.py`、`content_depth.py` |
+| 跨章引用指向真实 H1 | `crossrefs.py` |
+| 术语与排版统一、无新增违规 | `style_rules.py` |
 
 ## 4. 交付形态专项验收
 
-日常交付只跑 §1 的命令；本节列出"非日常"形态的验收项与按需命令。版式与实现细节不在本文：
-成书排版规格见 `style-guide.md` §6，渲染实现见 `technical.md` §4.4。
+日常交付只跑 §1 的命令；本节只列「非日常形态」验收什么、谁判。**怎么做不在本文**：命令与流程见
+`scripts-and-reference.md`，成书排版规格见 `../manuals/how-to-write.md`，渲染实现见 `technical.md` §4.4。
 
-### 4.1 标准 PDF
+| 形态 | 验收项 | 载体 |
+| --- | --- | --- |
+| 标准 PDF | 判据同 §2.2「PDF 渲染与 TOC 链接注入」「PDF 交付」；重跑走同一套交付步骤，顺序由步骤表决定（压缩只发生在最后一个写入者身上一次） | `make.py deliver` 内的 `render/to_pdf.py`、`render/pdf_toc_links.py`、`render/verify_pdf.py` |
+| 印刷版 PDF | 与标准版同一页框与栏宽，只多印刷 profile（章首横幅、点线目录）；`COLUMN`、`PAGE_SIZE`、`FONTS`、`OUTLINE`、`DENSITY` 与 `TOC_LINKS` 的判据与标准版相同。生成与判定都是步骤表里的两步：`make.py print`（`print_pdf` 渲染 → `verify_print` 用 `verify_pdf.py --print` 判定），印刷版目录的链接目标由 `print_pdf` 在渲染后写回（Chromium 分章拼接会把跨部分目录写成无目标矩形） | `render/print_pdf.py`、`render/verify_pdf.py` |
+| EPUB | 判据同 §2.2「EPUB 结构」；分卷与目录深度的取值见 `technical.md` §4.4 | `make.py deliver` 内的 `render/to_epub.py`、`render/verify_epub.py` |
 
-判据同 §2.2「PDF 渲染与 TOC 链接注入」「PDF 交付」（P1）。本节只给按需重跑的顺序：
-
-```bash
-python books/src/python/render/to_pdf.py
-python books/src/python/render/pdf_toc_links.py
-python books/src/python/render/verify_pdf.py
-```
-
-### 4.2 印刷级 PDF（按需）
-
-- 与日常 PDF 文件分离、互不覆盖（`-print` 后缀）
-- 每个 H1 独占一页；目录、页眉页脚按 `style-guide.md` §6 的成书排版规则渲染
-- H1–H4 在 PDF Outline 中可点击跳转
-- 版式与体积没有自动门禁，交付前人工核对；该工具不在 `make.py` 的步骤表里
-
-```bash
-python books/src/python/render/print_pdf.py
-```
-
-人工验收：在 Chrome / Adobe Reader 里看章首页、目录对齐、页眉页脚是否一致。
-
-### 4.3 EPUB（按需）
-
-- 由 pandoc 从合并稿生成（依赖不进日常链路），输出 `dist/<book>.epub`
-- 元数据（标题/作者/日期/语言）来自封面，由渲染层回填
-- 判据同 §2.2「EPUB 结构」（P1，`verify_epub.py`）：容器与清单可解析、阅读顺序与导航可达、
-  元数据齐备、体积不超预算；分卷与目录深度的取值见 `technical.md` §4.4
-
-```bash
-python books/src/python/render/to_epub.py
-```
-
-人工验收：在 Apple Books / Calibre 里看一章正文、一个代码块、一张 ASCII 图、目录导航。
+不进 `make.py` 的形态，其验收就是「把同一个判据跑一遍」：没有自动门禁不等于人工看图。
 
 ## 5. 拒绝标准
 
@@ -286,4 +265,4 @@ python books/src/python/render/to_epub.py
 
 本文只在判据变化时更新：新增一道门禁补一行（§2.2）、改级别改一处（§2.1）、新增需求补 §2.4
 一行。日常与发布的运行节奏见 `docs/manuals/how-to-use.md`；基线的建立与收缩见
-`quality-model.md` §4。
+`content-quality-policy.md` §4。

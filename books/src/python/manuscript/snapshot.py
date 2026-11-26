@@ -33,7 +33,7 @@ import zipfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _fsutil
+from lib import _config, _errors, _fsutil
 
 SNAPSHOT_ROOT = os.path.join(
     _config.BOOK_ROOT,
@@ -109,6 +109,68 @@ def source_digest(path: str, members: list[str]) -> str:
     return digest.hexdigest()
 
 
+def _copy_directory(archive_path: str, manuscript_dir: str):
+    """(files, source name, source hash) for a directory tree, or None on error."""
+    members = directory_members(archive_path)
+    if not members:
+        print(f'error: no manuscript members in {archive_path}', file=sys.stderr)
+        return None
+    files: dict[str, dict] = {}
+    for member in members:
+        destination = os.path.join(manuscript_dir, member)
+        make_dir(os.path.dirname(destination))
+        try:
+            shutil.copyfile(os.path.join(archive_path, member), destination)
+        except OSError as exc:
+            print(f'error: cannot copy {member}: {exc}', file=sys.stderr)
+            return None
+        files[member.replace(os.sep, '/')] = facts(destination)
+    return (files, os.path.relpath(archive_path, _config.BOOK_ROOT),
+            source_digest(archive_path, members))
+
+
+def _extract_zip(archive_path: str, manuscript_dir: str):
+    """(files, source name, source hash) for a zip archive, or None on error."""
+    with zipfile.ZipFile(archive_path) as archive:
+        members = chapter_members(archive)
+        if not members:
+            print(f'error: no manuscript members in {archive_path}', file=sys.stderr)
+            return None
+        files: dict[str, dict] = {}
+        for member in members:
+            rel = os.path.basename(member)
+            parent = os.path.basename(os.path.dirname(member))
+            if parent in ('front', 'back'):
+                rel = os.path.join(parent, rel)
+            destination = os.path.join(manuscript_dir, rel)
+            make_dir(os.path.dirname(destination))
+            try:
+                with archive.open(member) as source, open(destination, 'wb') as out:
+                    shutil.copyfileobj(source, out)
+            except (OSError, zipfile.BadZipFile) as exc:
+                print(f'error: cannot extract {member}: {exc}', file=sys.stderr)
+                return None
+            files[rel.replace(os.sep, '/')] = facts(destination)
+    return files, os.path.basename(archive_path), sha256_file(archive_path)
+
+
+def _manifest(label: str, date: str, source_name: str, source_hash: str,
+              files: dict[str, dict]) -> dict:
+    return {
+        'label': label,
+        'date': date,
+        'source_archive': source_name,
+        'archive_sha256': source_hash,
+        'edition': _config.current().edition,
+        'files': files,
+        'totals': {
+            'files': len(files),
+            'bytes': sum(item['bytes'] for item in files.values()),
+            'lines': sum(item.get('lines', 0) for item in files.values()),
+        },
+    }
+
+
 def import_snapshot(archive_path: str, label: str, date: str) -> int:
     """Copy a manuscript in as a read-only snapshot.
 
@@ -123,63 +185,71 @@ def import_snapshot(archive_path: str, label: str, date: str) -> int:
     if os.path.exists(target):
         print(f'error: snapshot already exists: {target}', file=sys.stderr)
         return 2
+
     manuscript_dir = os.path.join(target, 'manuscript')
     make_dir(manuscript_dir)
-    files: dict[str, dict] = {}
-    if os.path.isdir(archive_path):
-        members = directory_members(archive_path)
-        if not members:
-            print(f'error: no manuscript members in {archive_path}', file=sys.stderr)
-            return 2
-        for member in members:
-            destination = os.path.join(manuscript_dir, member)
-            make_dir(os.path.dirname(destination))
-            try:
-                shutil.copyfile(os.path.join(archive_path, member), destination)
-            except OSError as exc:
-                print(f'error: cannot copy {member}: {exc}', file=sys.stderr)
-                return 2
-            files[member.replace(os.sep, '/')] = facts(destination)
-        source_name = os.path.relpath(archive_path, _config.BOOK_ROOT)
-        source_hash = source_digest(archive_path, members)
-    else:
-        with zipfile.ZipFile(archive_path) as archive:
-            members = chapter_members(archive)
-            if not members:
-                print(f'error: no manuscript members in {archive_path}', file=sys.stderr)
-                return 2
-            for member in members:
-                rel = os.path.basename(member)
-                parent = os.path.basename(os.path.dirname(member))
-                if parent in ('front', 'back'):
-                    rel = os.path.join(parent, rel)
-                destination = os.path.join(manuscript_dir, rel)
-                make_dir(os.path.dirname(destination))
-                try:
-                    with archive.open(member) as source, open(destination, 'wb') as out:
-                        shutil.copyfileobj(source, out)
-                except (OSError, zipfile.BadZipFile) as exc:
-                    print(f'error: cannot extract {member}: {exc}', file=sys.stderr)
-                    return 2
-                files[rel.replace(os.sep, '/')] = facts(destination)
-        source_name = os.path.basename(archive_path)
-        source_hash = sha256_file(archive_path)
-    manifest = {
-        'label': label,
-        'date': date,
-        'source_archive': source_name,
-        'archive_sha256': source_hash,
-        'edition': _config.current().edition,
-        'files': files,
-        'totals': {
-            'files': len(files),
-            'bytes': sum(item['bytes'] for item in files.values()),
-            'lines': sum(item['lines'] for item in files.values()),
-        },
-    }
+    copied = (_copy_directory(archive_path, manuscript_dir) if os.path.isdir(archive_path)
+              else _extract_zip(archive_path, manuscript_dir))
+    if copied is None:
+        return 2
+    files, source_name, source_hash = copied
+
+    manifest = _manifest(label, date, source_name, source_hash, files)
     _fsutil.dump_json(os.path.join(target, 'manifest.json'), manifest)
     print(f'snapshot imported: {os.path.relpath(target, _config.BOOK_ROOT)} '
           f'({manifest["totals"]["files"]} files, {manifest["totals"]["bytes"]} bytes)')
+    return 0
+
+
+def _artifact_files(root: str) -> dict[str, dict]:
+    """Hash every file under `root`, keeping the relative name as the key."""
+    files: dict[str, dict] = {}
+    for current, _dirs, names in os.walk(root):
+        for name in sorted(names):
+            path = os.path.join(current, name)
+            rel = os.path.relpath(path, root).replace(os.sep, '/')
+            files[rel] = {'sha256': sha256_file(path),
+                          'bytes': os.path.getsize(path)}
+    return files
+
+
+def import_artifacts(source: str, label: str, date: str) -> int:
+    """Freeze built artifacts as a reference edition.
+
+    A snapshot normally holds the manuscript, because a manuscript is what a later
+    build reproduces from. When only the *outputs* survive — an HTML, an EPUB, two
+    PDFs and the merged markdown of an edition — those are still worth keeping: they
+    are the only thing a new build can be compared against, and they are read-only
+    evidence rather than something to rebuild from.
+    """
+    if not os.path.isdir(source):
+        print(f'error: not a directory: {source}', file=sys.stderr)
+        return 2
+    target = os.path.join(SNAPSHOT_ROOT, f'{date}-{label}')
+    if os.path.exists(target):
+        print(f'error: snapshot already exists: {target}', file=sys.stderr)
+        return 2
+    artifacts_dir = os.path.join(target, 'artifacts')
+    make_dir(artifacts_dir)
+    try:
+        names = sorted(os.listdir(source))
+    except OSError as exc:
+        print(f'error: cannot read {source}: {exc}', file=sys.stderr)
+        return 2
+    for name in names:
+        src = os.path.join(source, name)
+        if os.path.isfile(src):
+            shutil.copy2(src, os.path.join(artifacts_dir, name))
+
+    files = _artifact_files(artifacts_dir)
+    manifest = _manifest(label, date, os.path.basename(source.rstrip(os.sep)), '', files)
+    manifest['kind'] = 'artifacts'
+    manifest['totals'] = {'files': len(files),
+                          'bytes': sum(item['bytes'] for item in files.values()),
+                          'lines': 0}
+    _fsutil.dump_json(os.path.join(target, 'manifest.json'), manifest)
+    print(f'artifact snapshot imported: {os.path.relpath(target, _config.BOOK_ROOT)} '
+          f'({len(files)} files, {manifest["totals"]["bytes"]} bytes)')
     return 0
 
 
@@ -215,9 +285,10 @@ def list_snapshots() -> int:
 def resolve(label: str) -> str | None:
     """Directory of a snapshot by label or by label suffix.
 
-    ``import`` stores ``<date>-<label>``, so the same snapshot answers to both
-    "june-2026" and "2026-06-11-june-2026"; requiring one spelling in the CLI and
-    the other in the human's head is how a working snapshot looks missing.
+    ``import`` stores ``<date>-<label>``; when the label adds nothing to the date the
+    directory is just the date, so the same snapshot answers to both. Requiring one
+    spelling in the CLI and another in the human's head is how a working snapshot
+    looks missing.
     """
     direct = os.path.join(SNAPSHOT_ROOT, label)
     if os.path.isdir(direct):
@@ -245,14 +316,19 @@ def verify(label: str) -> int:
         print(f'error: no manifest at {manifest_path}', file=sys.stderr)
         return 2
     manifest = _fsutil.load_json(manifest_path)
+    # an artifact snapshot has no manuscript: its evidence is the built files
+    kind = manifest.get('kind', 'manuscript')
+    base = 'artifacts' if kind == 'artifacts' else 'manuscript'
     problems: list[str] = []
     for rel, recorded in manifest.get('files', {}).items():
-        path = os.path.join(target, 'manuscript', rel)
+        path = os.path.join(target, base, rel)
         if not os.path.exists(path):
             problems.append(f'{rel}: missing')
             continue
-        current = facts(path)
-        if current['sha256'] != recorded['sha256']:
+        # artifacts include PDFs and EPUBs: hash them, never decode them
+        digest = (sha256_file(path) if kind == 'artifacts'
+                  else facts(path)['sha256'])
+        if digest != recorded['sha256']:
             problems.append(f'{rel}: content changed since the snapshot')
     if problems:
         print(f'snapshot {label} FAILED verification:')
@@ -301,6 +377,11 @@ def main(argv: list[str] | None = None) -> int:
     importer.add_argument('archive')
     importer.add_argument('label')
     importer.add_argument('--date', default=None)
+    artifacts = sub.add_parser('import-artifacts',
+                               help='freeze built artifacts as a reference edition')
+    artifacts.add_argument('source')
+    artifacts.add_argument('label')
+    artifacts.add_argument('--date', default=None)
     sub.add_parser('list', help='list snapshots')
     verifier = sub.add_parser('verify', help='check a snapshot against its manifest')
     verifier.add_argument('label')
@@ -311,6 +392,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == 'import':
         date = args.date or '0000-00-00'
         code = import_snapshot(args.archive, args.label, date)
+    elif args.command == 'import-artifacts':
+        date = args.date or '0000-00-00'
+        code = import_artifacts(args.source, args.label, date)
     elif args.command == 'list':
         code = list_snapshots()
     elif args.command == 'verify':
@@ -326,4 +410,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

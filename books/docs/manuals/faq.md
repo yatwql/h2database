@@ -75,6 +75,21 @@
 **Q：PDF 校验失败说 outline 数量不对？**
 PDF 是旧稿。重新 `make.py build` 后再 `to_pdf`（或 `make.py deliver`）。
 
+**Q：`verify_pdf` 报 `FONTS` 失败（Type3 字体过多）？**
+说明正文里用的字体没法被嵌入：常见是命中了 `.ttc` 字体集合，或配置里写了本机不存在的族名。
+`python books/src/python/audit/font_coverage.py` 会列出候选字体实际解析到哪个文件、能否嵌入、
+缺哪些字符；改 `font_stack_sans` / `font_stack_mono` 即可，不需要改代码。
+
+**Q：`DENSITY` 失败，或换机器后页数明显变了？**
+判据比的是「行距÷字号」和「文字占可印高度」，与具体页数无关。想调松紧改
+`layout_lead_ratio`（正文与代码行距）或 `layout_spacing_scale`（段距/标题距），
+再用 `render/pdf_metrics.py --compare` 与参照版比对确认。字号可写 `layout_body_px: 0`
+让它按「栏宽 ÷ 每行字数」推导，这样换纸张或换字体不会把版面撑开。
+
+**Q：`verify_epub` 报 `CHAPTERS` 失败？**
+说明某个正文文件里 `h1` 不是恰好一个：没有是丢了标题，有两个是按错误标题切开了
+（图注被当成标题是典型）。查 `to_epub.py` 输出的「Headings normalised」行，确认章节分隔是否符合预期。
+
 **Q：手稿与产物的历史副本在哪？**
 `books/data/archive/<书>/<日期>/{manuscript,dist}/`，由 `make.py build` 与 `deliver` 各存一份；
 保留窗口取 `base.json [archive] retention_days`（缺省 45 天），过期目录自动清理。

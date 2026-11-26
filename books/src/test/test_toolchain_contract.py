@@ -84,7 +84,12 @@ class InterpreterGuardCase(unittest.TestCase):
         self._saved = os.environ.pop('BOOK_ALLOW_SYSTEM_PYTHON', None)
 
     def tearDown(self):
-        if self._saved is not None:
+        # restore the *absence* too: a case below sets the override directly, and
+        # leaving it set leaks the permission into every later suite (that is what
+        # made test_make depend on the order the modules run in)
+        if self._saved is None:
+            os.environ.pop('BOOK_ALLOW_SYSTEM_PYTHON', None)
+        else:
             os.environ['BOOK_ALLOW_SYSTEM_PYTHON'] = self._saved
 
     def test_refuses_a_foreign_interpreter(self):
@@ -144,7 +149,9 @@ class WiringCase(unittest.TestCase):
         self.assertIn(STEPS_REL, set(steps.values()))
         dropped = {name: script for name, script in steps.items() if script != STEPS_REL}
         problems = tool('check_architecture').check_wiring(dropped, groups)
-        self.assertTrue(any(STEPS_REL in problem for problem in problems),
+        # the report names the step; the script path is what the wiring table holds
+        step = 'pdf_toc_links'
+        self.assertTrue(any(step in problem for problem in problems),
                         f'orphan not reported: {problems}')
 
     def test_unknown_group_member_is_reported(self):

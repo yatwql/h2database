@@ -12,6 +12,7 @@
 | `books/scripts/` | 动词前缀 + 对象：`check-*` 验证（退出码决定成败）、`eval-*` 度量（出报告）、`new-*` 生成 | `check-fast.sh`、`eval-score.sh`、`new-book.sh` |
 | `src/python/<层>/` | 目录定类别、文件名写对象，不加动词前缀 | `audit/links.py`、`render/to_pdf.py` |
 | `src/python/lib/` | 内部模块用下划线前缀 | `lib/_config.py` |
+| `src/python/mutation_smoke.py` | 变异抽查（评审用）：把工具链与测试复制到临时目录，逐条施加条件/布尔变异并跑该模块的用例，列出存活的变异 | `python src/python/mutation_smoke.py --module audit/content_volume.py --tests test_audit_content_volume_branches.py` |
 
 `books/scripts/` 的文件名由 `audit/check_architecture.py` 机检：只允许下列前缀：
 `bookctl`、`launch`、`bootstrap`、`check`、`eval`、`new`、`test`、`release`、`install`
@@ -59,8 +60,10 @@ python books/src/python/check_runner.py --mode p2 --only gates,tests
 python books/src/python/check_runner.py --mode p0 --skip slow --timeout 600
 ```
 
-- 每次运行写 `books/logs/check-<模式>-<时间戳>.log` 与同名 `.json`，并刷新
-  `books/logs/check-latest.json`（失败可直接回看，不必重跑）
+- 每次运行追加到当天的日记：`books/logs/check-<模式>-<YYYY-MM-DD>.log`（各步完整输出）
+  与同名的 `.jsonl`（每行一次运行）。摘要里除退出码与耗时外还有：`git{commit,dirty}`
+  （判的是哪棵树）、`started_at`、每步 `argv`、pytest 的 `counts`（passed/failed/skipped）、
+  以及 `log_offset/log_len`（直接跳到该次运行在日记里的那一段）
 - `.json` 里带 `machine` 段（python/平台/CPU/locale/仓库路径），排查"本机能过 CI 不能过"先看它
 - `--only` / `--skip` 选步骤，`--timeout` 是每步超时（默认 1800 秒，超时记为 124）
 - 测试步骤按档位自动带 marker：P0=`tier_fast`、P1=`not tier_slow`、P2=全量；
@@ -190,8 +193,8 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `gate_trace.py` | 质量计划登记与 `make.py` 步骤双向可追溯 | ● |
 | `typecheck.py` | pyright 静态检查（可选依赖，缺失时跳过） | ● |
 | `portability.py` | 移植性：`open()` 必须显式 encoding；`LC_ALL=C` + ASCII 输出下入口不得崩 | ● |
-| `test_redundancy.py` | 测试卫生：重复用例体 / 无断言 / 非 TestCase 的 test_* / 同名遮蔽 | ● |
-| `perf_baseline.py` | 交付速度：每步耗时对比历史中位数，超阈值提示；`--strict` 变成失败 | ● |
+| `test_redundancy.py` | 测试卫生：重复用例体 / 整份被子集覆盖的套件 / 无断言 / 非 TestCase 的 test_* / 同名遮蔽 | ● |
+| `perf_baseline.py` | 交付速度：每步耗时对比评审基线，超阈值提示；`--update-baseline --reviewed-by --reason` 固化基线，`--strict` 变成失败 | ● |
 | `order_dependence.py` | 顺序依赖：正序/逆序两跑对比（P2 档自动执行，也可用 `test-eval-order.sh` 单独跑） | ● |
 
 报告类不是门禁，不进 `make.py check`：`scorecard.py`（六维评分汇总）、
@@ -206,16 +209,21 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `to_html.py` | 合并 Markdown → HTML（侧边栏 TOC、锚点、样式） |
 | `to_pdf.py` | HTML → 标准 PDF（Chromium 打印 + 大纲 + 页内目录页码） |
 | `pdf_toc_links.py` | 给印刷版 TOC 加可点击链接（按位置映射，重名标题安全） |
-| `print_pdf.py` | 印刷级 PDF：章封面横幅、点线目录、页眉页脚；`--html`、`--pdf`、`--skip-html` |
+| `print_pdf.py` | 印刷版 PDF：与标准版同一分章渲染（同一页框/栏宽/字号），只额外注入 `print_profile` 的章首横幅与点线目录；渲染后写回目录链接目标（`pdf_toc_links`），否则分章拼接的目录只剩无目标矩形；`--html`、`--pdf`、`--skip-html`、`--adaptive`（按交付 PDF 的实测解算更密的纸面字号，实验性） |
+| `verify_pdf.py --print` | 判定印刷版 PDF：与标准版同一套规则（`DENSITY`、`TOC_LINKS`、字体、页框），`make.py print` 的第二步 |
 | `pdf_from_html.py` | 不重建 HTML，直接出 PDF；`--html`、`--pdf` |
 | `to_epub.py` | HTML → EPUB（pandoc） |
-| `verify_pdf.py` | PDF 交付校验：页数、大纲、目录链接、A4、旋转、字体嵌入（`--json`） |
-| `verify_epub.py` | EPUB 结构校验（`--json`） |
+| `pdf_metrics.py` | 版式测量与比对：`--compare 参照.pdf 构建.pdf` 逐项列差异；`--target pages=<目标页数>,chars_per_page=<目标字符数>` 与数字比；`--write-back knob=value` 把标定结果写回 `base.json` |
+| `verify_pdf.py` | PDF 交付校验：页数、大纲、目录链接、A4、旋转、字体嵌入（`FONTS`，Type3 上限）、密度（`DENSITY`：行距÷字号、文字占可印高度）（`--json`） |
+| `verify_epub.py` | EPUB 结构校验，含 `CHAPTERS`（每个正文文件恰好一个 `h1`）（`--json`） |
 
 ## 10. 公共库 `src/python/lib/`（不是入口）
 
 `_config`（配置与路径）、`_fsutil`（读写原语）、`_mdutil`（Markdown/HTML 工具）、
-`_llm`（provider 路由与客户端）、`_log`（日志）、`_version`（产品名与版本）。
+`_llm`（provider 路由与客户端）、`_log`（日志）、`_version`（产品名与版本）、
+`fonts`（字体解析：纸面用 `resolve()`，必须本机存在且可嵌入；屏幕用 `portable_stack()`，只声明不嵌入）、
+`layout`（版式参数：`TypeScale` 共用字号/行距，`PageGeometry` 只属于纸面）、
+`frontmatter`（封面块与正文的切分，渲染器与大纲审计共用）。
 脚本一律经 `_config` 取路径，不写死仓库路径。
 
 ## 11. 该用哪个
@@ -238,6 +246,11 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | 脚本 | 何时用 |
 | --- | --- |
 | `core/docs_archive.py --version X.Y [--topic <迭代目录>] [--dry-run]` | 发布一个版本后，把该版本台账与已完成的迭代设计移入 `docs/archive/` 下以版本命名的目录；`--dry-run` 先看动作，重复执行无副作用 |
+| `manuscript/snapshot.py import <zip或目录> <标签> --date YYYY-MM-DD` | 把历史手稿冻结为只读快照，供体量基线与对照使用 |
+| `manuscript/snapshot.py import-artifacts <目录> <标签> --date YYYY-MM-DD` | 手稿已丢失时冻结**成品**（HTML/Markdown/EPUB/PDF）；只按哈希校验，不解码二进制 |
 | `manuscript/renumber.py --write/--apply` | 声明了 `[editions]` 且章号有变化时，算映射并改写 `详见第X章《…》` 一类引用 |
 | `audit/doc_archive.py`、`audit/plan_coverage.py` | 归档布局与计划覆盖的门禁，已包含在 `make.py check` 里，可单独运行排查 |
+| `audit/pdf_invariants.py --pdf <文件> --merged <合并稿>` | 不依赖参照版本的 PDF 不变量：文字越界、Type3 超限、大纲条目与前 N 级标题数是否相等（`--json`） |
+| `audit/epub_diff.py --compare 旧.epub 新.epub` / `--check 新.epub --merged 合并稿` | EPUB 比对与自检：体积、章节文件数、字符数、位图、字体栈/字号/行高；只比「首位字体族」，回退候选增加不算漂移 |
+| `audit/font_coverage.py` | 候选字体是否覆盖本书字符（缺哪些字），换字体前先问它 |
 

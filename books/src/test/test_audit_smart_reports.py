@@ -35,7 +35,8 @@ class TestSmartAuditDeep(FixtureCase):
     def test_full_report_path(self):
         self.write('data/manuscript/ch1-test.md', self.RICH)
         code, out = self.run_script('smart.py')
-        self.assertIn(code, (0, 1), out[-400:])
+        self.assertEqual(code, 0, out[-400:])
+        self.assertIn('TOTAL sections needing additional diagrams', out)
         self.assertTrue(out.strip(), 'smart report was silent')
 
 if __name__ == '__main__':

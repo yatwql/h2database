@@ -9,10 +9,10 @@ regressions in the audits — the class of bug unit tests cannot see.
 
 import os
 import sys
-import tempfile
 import unittest
 
 import _fixture
+from _cases import FixtureCase
 
 TAGS = ('layer:pipeline', 'tier:fast')
 
@@ -26,20 +26,8 @@ if TOOLS_DIR not in sys.path:
         if _path not in sys.path:
             sys.path.insert(0, _path)
 
-class FixtureTest(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.root = _fixture.build_book(self.tmp.name)
 
-    def dist(self, name: str) -> str:
-        return os.path.join(self.root, 'dist', name)
-
-    def read(self, path: str) -> str:
-        with open(path, encoding='utf-8') as fh:
-            return fh.read()
-
-class TestBuildPipeline(FixtureTest):
+class TestBuildPipeline(FixtureCase):
     def test_cover_stats_updates_cover(self):
         result = _fixture.run(self.root, 'cover.py')
         self.assertEqual(result.returncode, 0, result.stderr)

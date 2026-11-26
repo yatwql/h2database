@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 """Branches of the delivery scripts: the paths a healthy build never takes.
 
-Chromium and pandoc are real here, so the expensive branches are driven through
-the seams the scripts already expose (an injectable engine, a missing input
-file) rather than by rendering anything.
+Only seams are exercised here (an injected engine, a missing input file), so no
+browser and no pandoc runs: what does need a real tool is `tier:slow` and lives
+next door.
 """
 
 from __future__ import annotations
 
 import importlib.util
 import os
-import shutil
 import sys
 import tempfile
 import unittest
@@ -30,7 +29,6 @@ if TOOLS_DIR not in sys.path:
             sys.path.insert(0, _path)
 
 HAS_PYPDF = importlib.util.find_spec('pypdf') is not None
-HAS_PANDOC = bool(shutil.which('pandoc'))
 
 
 class FakePage:
@@ -121,13 +119,6 @@ class ToEpubTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.root = _fixture.build_book(self.tmp.name)
-
-    @unittest.skipUnless(HAS_PANDOC, 'pandoc not on PATH')
-    def test_the_epub_is_built_from_the_merged_manuscript(self):
-        code, out = _fixture.run_inproc(self.root, 'to_epub.py')
-        self.assertEqual(code, 0, out[-600:])
-        produced = os.path.join(self.root, 'dist', 'test-book.epub')
-        self.assertTrue(os.path.isfile(produced), out[-300:])
 
     def test_without_pandoc_the_script_explains_the_install(self):
         saved = os.environ.get('PATH', '')
@@ -220,9 +211,23 @@ class VerifyPdfHelpersTest(unittest.TestCase):
 
     def test_a_pdf_over_the_size_budget_fails(self):
         html = self.html()
-        with unittest.mock.patch.dict(self.mod._config.THRESHOLDS, {'pdf_max_mb': 0.000001}):
+        # the budget is page-aware now, so both the floor and the per-page
+        # allowance have to be squeezed for the synthetic PDF to exceed it
+        tiny = {'pdf_max_mb': 0.000001, 'pdf_bytes_per_page': 0.000001}
+        with unittest.mock.patch.dict(self.mod._config.THRESHOLDS, tiny):
             report = self.mod.verify(self.build(), html)
         self.assertIn('SIZE', [name for name, _d in report.failures])
+
+    def test_the_size_budget_grows_with_page_count(self):
+        # split rendering embeds font subsets once per part, so a 900-page book
+        # is legitimately larger than the 12 MB floor calibrated at 743 pages
+        self.assertAlmostEqual(self.mod._size_budget(100), 12.0, places=6)
+        self.assertGreater(self.mod._size_budget(2000), 12.0)
+
+    def test_a_non_numeric_threshold_falls_back(self):
+        with unittest.mock.patch.dict(self.mod._config.THRESHOLDS,
+                                      {'pdf_max_mb': 'n/a', 'pdf_bytes_per_page': 'n/a'}):
+            self.assertAlmostEqual(self.mod._size_budget(100), 12.0, places=6)
 
     def test_a_page_without_a_printed_toc_fails_the_count(self):
         report = self.mod.verify(self.build(), self.html())

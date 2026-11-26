@@ -6,6 +6,7 @@ regardless of how the toolchain is started.
 """
 from __future__ import annotations
 
+import contextlib
 import os
 import sys
 
@@ -13,10 +14,16 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import json
 import subprocess
+import threading
+import time
 
 from lib import _config, _llm, _log
 
 PY_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# How often a silent child reports that it is still working. Ten seconds is short
+# enough to feel alive and long enough not to flood a two-minute render.
+HEARTBEAT_S = 10.0
 
 
 def repo_root() -> str:
@@ -38,6 +45,8 @@ ACTIONS = {
     'check': '运行全部质量门禁',
     'test': '运行测试套件',
     'deliver': '构建 PDF 与 EPUB（按需）',
+    'deliver-all': '手稿 → Markdown + HTML + EPUB + 标准版与印刷版 PDF',
+    'print': '生成印刷版 PDF（章封面、点线目录、页眉页脚）',
     'llm-ask': '用配置的 provider 回答一个问题',
     'doctor': '依赖与环境自检',
     'settings': '查看可修改的配置项',
@@ -66,17 +75,87 @@ def child_env() -> dict[str, str]:
     return env
 
 
-def _run(script: str, *args: str) -> tuple[int, str]:
-    proc = subprocess.run([sys.executable, os.path.join(PY_ROOT, script), *args],
-                          capture_output=True, text=True, cwd=repo_root(), check=False,
-                          env=child_env())
-    return proc.returncode, (proc.stdout or '') + (proc.stderr or '')
+def _unbuffered(command: list[str], env: dict) -> list[str]:
+    """Put `-u` on the child and ask it for unbuffered output.
+
+    A pipe makes the child block-buffer its own prints, so a three-minute render
+    arrives in one lump at the end; both halves of the fix are needed.
+    """
+    env['PYTHONUNBUFFERED'] = '1'
+    if len(command) > 1 and command[1] != '-u':
+        return command[:1] + ['-u'] + command[1:]
+    return command
 
 
-def _make(*args: str) -> tuple[int, str]:
-    proc = subprocess.run([sys.executable, MAKE, *args], capture_output=True, text=True,
-                          cwd=repo_root(), check=False, env=child_env())
-    return proc.returncode, (proc.stdout or '') + (proc.stderr or '')
+def _stream(stream, on_line, clock=None) -> list[str]:
+    """Forward the child's lines as they arrive; returns them all.
+
+    A UI callback must never break the run it is reporting on, so a raising callback
+    is suppressed instead of aborting the child.
+    """
+    chunks: list[str] = []
+    for line in stream:
+        chunks.append(line)
+        if on_line is not None:
+            with contextlib.suppress(Exception):
+                on_line(line.rstrip())
+    return chunks
+
+
+def _heartbeat(on_line, started: float) -> tuple[threading.Event, threading.Thread]:
+    """Start a thread that says 'still working' while the child is silent."""
+    finished = threading.Event()
+
+    def beat() -> None:
+        while not finished.wait(HEARTBEAT_S):
+            with contextlib.suppress(Exception):
+                on_line(f'… 已用 {_clock(time.perf_counter() - started)}，仍在执行')
+
+    thread = threading.Thread(target=beat, daemon=True)
+    thread.start()
+    return finished, thread
+
+
+def _invoke(command: list[str], on_line=None) -> tuple[int, str]:
+    """Run a child process, optionally reporting its output as it arrives.
+
+    A build or a delivery can take minutes; a UI that only learns the outcome at the
+    end can show nothing but a spinner. Streaming the child's own lines is the one
+    honest progress signal — it is the same text that ends up in the report.
+    """
+    if on_line is None:
+        proc = subprocess.run(command, capture_output=True, text=True,
+                              cwd=repo_root(), check=False, env=child_env())
+        return proc.returncode, (proc.stdout or '') + (proc.stderr or '')
+    env = child_env()
+    command = _unbuffered(command, env)
+    process = subprocess.Popen(command, stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT, text=True,
+                               cwd=repo_root(), env=env)
+    stream = process.stdout
+    if stream is None:  # pragma: no cover - PIPE was requested just above
+        return process.wait(), ''
+    finished, _beater = _heartbeat(on_line, time.perf_counter())
+    try:
+        chunks = _stream(stream, on_line)
+        return process.wait(), ''.join(chunks)
+    finally:
+        finished.set()
+
+
+def _clock(seconds: float) -> str:
+    """`m:ss` for the progress lines."""
+    total = int(seconds)
+    return f'{total // 60}:{total % 60:02d}'
+
+
+def _run(script: str, *args: str, on_line=None) -> tuple[int, str]:
+    command = [sys.executable, os.path.join(PY_ROOT, script), *args]
+    return _invoke(command, on_line)
+
+
+def _make(*args: str, on_line=None) -> tuple[int, str]:
+    return _invoke([sys.executable, MAKE, *args], on_line)
 
 
 def status() -> tuple[int, str]:
@@ -174,20 +253,45 @@ def analyze(use_llm: bool = False, force: bool = False,
     return volume_code, '\n'.join(out)
 
 
-def build() -> tuple[int, str]:
-    return _make('build')
+def build(on_line=None) -> tuple[int, str]:
+    return _make('build', on_line=on_line)
 
 
-def check() -> tuple[int, str]:
-    return _make('check')
+def check(on_line=None) -> tuple[int, str]:
+    return _make('check', on_line=on_line)
 
 
-def test() -> tuple[int, str]:
-    return _make('test')
+def test(on_line=None) -> tuple[int, str]:
+    return _make('test', on_line=on_line)
 
 
-def deliver() -> tuple[int, str]:
-    return _make('deliver')
+def deliver(on_line=None) -> tuple[int, str]:
+    return _make('deliver', on_line=on_line)
+
+
+def print_edition(on_line=None) -> tuple[int, str]:
+    """The print-grade PDF: render it, then judge it by the same rules as delivery.
+
+    This is `make.py print` — one definition of the pipeline, so the TUI cannot
+    produce a paper artifact that the step table would reject.
+    """
+    return _make('print', on_line=on_line)
+
+
+def deliver_all(on_line=None) -> tuple[int, str]:
+    """Every artifact in one run: Markdown + HTML, EPUB + PDF, then the print edition.
+
+    Three steps in the order the dependencies force (a PDF renders from the HTML,
+    the print edition renders from the same HTML), stopping at the first failure so
+    a broken build cannot leave a half-updated `dist/` looking complete.
+    """
+    output = []
+    for step in (build, deliver, print_edition):
+        code, text = step(on_line=on_line)
+        output.append(text)
+        if code != 0:
+            return code, ''.join(output)
+    return 0, ''.join(output)
 
 
 def estimate_line(prompt: str, scenario: str = 'summary') -> str:
@@ -242,6 +346,8 @@ DISPATCH = {
     'check': check,
     'test': test,
     'deliver': deliver,
+    'deliver-all': deliver_all,
+    'print': print_edition,
 }
 
 # Actions whose renderer step takes switches; forwarded to `analyze` as-is.
@@ -263,21 +369,38 @@ def run(action: str, **kwargs) -> tuple[int, str]:
     return _dispatch(action, **kwargs)
 
 
+def _dispatch_build(action: str, on_line) -> tuple[int, str]:
+    """The four report-producing actions, run so a caller can follow along."""
+    if action == 'build':
+        return build(on_line)
+    if action == 'check':
+        return check(on_line)
+    if action == 'test':
+        return test(on_line)
+    if action == 'print':
+        return print_edition(on_line)
+    return deliver(on_line)
+
+
 def _dispatch(action: str, **kwargs) -> tuple[int, str]:
     if action == 'llm-ask':
         return llm_ask(kwargs.get('prompt', ''), kwargs.get('scenario', 'summary'))
+    if action in ('build', 'check', 'test', 'deliver', 'print'):
+        return _dispatch_build(action, kwargs.get('on_progress'))
     if action in ANALYZE_ACTIONS:
         LOG.info('action %s start', action)
         code, text = analyze(use_llm=action == 'analyze-llm' or bool(kwargs.get('use_llm')),
                              refresh=action == 'analyze-refresh' or bool(kwargs.get('refresh')),
                              force=bool(kwargs.get('force')))
-        LOG.info('action %s done rc=%s (%d chars)', action, code, len(text))
+        LOG.info('action %s done rc=%s (%d chars, pid=%d)', action, code, len(text),
+                 os.getpid())
         return code, text
     handler = DISPATCH.get(action)
     if handler is None:
         LOG.warning('unknown action %r', action)
         return 2, f'error: unknown action {action!r}; known: {", ".join(sorted(DISPATCH))}\n'
-    LOG.info('action %s start', action)
+    LOG.info('action %s start (pid=%d, parent=%d)', action, os.getpid(), os.getppid())
     code, text = handler()
-    LOG.info('action %s done rc=%s (%d chars)', action, code, len(text))
+    LOG.info('action %s done rc=%s (%d chars, pid=%d)', action, code, len(text),
+             os.getpid())
     return code, text

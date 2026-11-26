@@ -62,7 +62,7 @@ class TestEpubVerification(unittest.TestCase):
                         else 'application/epub+zip', zipfile.ZIP_STORED)
             zf.writestr('META-INF/container.xml', container)
             zf.writestr('EPUB/content.opf', opf)
-            zf.writestr('EPUB/ch1.xhtml', '<html><body>正文</body></html>')
+            zf.writestr('EPUB/ch1.xhtml', '<html><body><h1>第一章</h1></body></html>')
             if not omit_nav:
                 zf.writestr('EPUB/nav.xhtml', nav)
         return path

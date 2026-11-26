@@ -10,8 +10,9 @@ _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)
 import re
 
 import html_cache
-from html_shell import STYLE
+import html_shell
 from lib import _config, _fsutil, _mdutil
+from lib import frontmatter as _frontmatter
 
 _fsutil.pin_stdout_utf8()
 
@@ -19,28 +20,26 @@ docs_dir = _config.BOOK_ROOT
 src_dir = _config.MANUSCRIPT_DIR
 dist_dir = _config.DIST_DIR
 
-INPUT = _config.merged_md()
-OUTPUT = _config.merged_html()
 
-_fsutil.ensure_dir(OUTPUT)
+_fsutil.ensure_dir(_config.merged_html())
 
-lines = _fsutil.read_lines(INPUT)
+lines = _fsutil.read_lines(_config.merged_md())
 
-# Find where main content starts (first # 第N章 heading)
-main_start = 0
-cover_text = ''
-for i, line in enumerate(lines):
-    if re.match(r'^# 第\d+章', line):
-        main_start = i
-        break
-    cover_text += line
+# Where the body starts: the first level-one heading. It used to be the first
+# `# 第N章`, which silently swallowed everything the front matter holds besides the
+# title — the reading guide and the preface never reached the document, and no gate
+# noticed because the outline simply had fewer entries than the manuscript.
+cover_text, content_lines = _frontmatter.split(
+    lines, [_config.TITLE,
+            _config.project('display_title_en', _config.TITLE),
+            _config.project('display_title_zh', _config.TITLE)])
 
 # Build TOC from main content only, tracking fence state
 toc_entries = []
 in_pre_toc = False
 pre_toc_lang = ''
-for i in range(main_start, len(lines)):
-    raw_line = lines[i]
+for i in range(len(content_lines)):
+    raw_line = content_lines[i]
     stripped = raw_line.strip()
     if stripped.startswith('```'):
         if stripped.startswith('```mermaid'):
@@ -116,8 +115,43 @@ toc_page_html += '    </nav>\n'
 toc_page_html += '  </div>\n'
 toc_page_html += '</section>\n'
 
+HEADING_LINE_RE = re.compile(r'^(#{1,4})\s+(.+)$')
+
+
+def _heading_html(stripped: str) -> str | None:
+    """HTML for a markdown heading line, or None when the line is not one."""
+    match = HEADING_LINE_RE.match(stripped)
+    if not match:
+        return None
+    level = len(match.group(1))
+    title = match.group(2).strip()
+    anchor = _mdutil.slugify(title)
+    return f'<h{level} id="{anchor}">{md_to_html(title)}</h{level}>\n'
+
+
+def _escaped_code_line(stripped: str) -> str:
+    """One line inside a code block, escaped for HTML."""
+    return (stripped.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;') + '\n')
+
+
+def _inline_html(stripped: str) -> str:
+    """A prose line: blank, rule, figure caption, or a paragraph."""
+    if stripped == '':
+        return '\n'
+    if stripped == '---':
+        return '<hr>\n'
+    if stripped.startswith('**图 ') and stripped.endswith('**'):
+        inner = stripped[2:-2]
+        return f'<strong class="fig-caption">{md_to_html(inner)}</strong>\n'
+    return f'<p>{md_to_html(stripped)}</p>\n'
+
+
 def render_body(body_lines):
-    """Render body markdown to HTML; returns (html, fence count, unclosed-pre)."""
+    """Render body markdown to HTML; returns (html, fence count, unclosed-pre).
+
+    The fence state machine stays here because it is the one thing the output
+    depends on; heading, escaped line and inline markup are helpers.
+    """
     content_parts: list[str] = []
     in_pre = False
     pre_lang = ''
@@ -125,9 +159,8 @@ def render_body(body_lines):
     fence_lines_found = 0
     for line in body_lines:
         stripped = line.rstrip('\n')
-        is_fence = stripped.startswith('```')
 
-        if is_fence:
+        if stripped.startswith('```'):
             fence_lines_found += 1
             lang = stripped[3:].strip()
             if not in_pre:
@@ -146,37 +179,20 @@ def render_body(body_lines):
             continue
 
         if in_pre:
-            hm = re.match(r'^(#{1,4})\s+(.+)$', stripped)
-            if hm and pre_lang in ('', 'text'):
+            heading = HEADING_LINE_RE.match(stripped)
+            if heading and pre_lang in ('', 'text'):
                 in_pre = False
                 auto_exited = True
                 content_parts.append('</code></pre>\n')
             else:
-                escaped = stripped.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-                content_parts.append(escaped + '\n')
+                content_parts.append(_escaped_code_line(stripped))
                 continue
 
-        m = re.match(r'^(#{1,4})\s+(.+)$', stripped)
-        if m:
-            level = len(m.group(1))
-            title = m.group(2).strip()
-            anchor = _mdutil.slugify(title)
-            content_parts.append(f'<h{level} id="{anchor}">{md_to_html(title)}</h{level}>\n')
+        heading_html = _heading_html(stripped)
+        if heading_html is not None:
+            content_parts.append(heading_html)
             continue
-
-        if stripped == '':
-            content_parts.append('\n')
-            continue
-        if stripped == '---':
-            content_parts.append('<hr>\n')
-            continue
-
-        # Figure caption: detect **图 X-Y: Title** pattern
-        if stripped.startswith('**图 ') and stripped.endswith('**'):
-            inner = stripped[2:-2]
-            content_parts.append(f'<strong class="fig-caption">{md_to_html(inner)}</strong>\n')
-        else:
-            content_parts.append(f'<p>{md_to_html(stripped)}</p>\n')
+        content_parts.append(_inline_html(stripped))
 
     if in_pre:
         content_parts.append('</code></pre>\n')
@@ -193,7 +209,7 @@ fence_lines_found = 0
 in_pre = False
 reused = rendered = 0
 chunk_keys: set[str] = set()
-for chunk in html_cache.chunk_lines(lines[main_start:]):
+for chunk in html_cache.chunk_lines(content_lines):
     key = html_cache.key_for(chunk, renderer_fingerprint)
     chunk_keys.add(key)
     entry = None if FULL_REBUILD else html_cache.load(key)
@@ -304,7 +320,7 @@ HTML = f"""<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{_config.project('display_title_en', _config.TITLE)}</title>
-<style>{STYLE}</style>
+<style>{html_shell.style()}</style>
 </head>
 <body>
 <section id="cover">
@@ -548,9 +564,9 @@ content.appendChild(nav);
 </body>
 </html>"""
 
-_fsutil.write_text(OUTPUT, HTML)
+_fsutil.write_text(_config.merged_html(), HTML)
 
-print(f"Generated: {OUTPUT}")
+print(f"Generated: {_config.merged_html()}")
 print(f"TOC entries: {len(toc_entries)}")
 print(f"Fence lines: {fence_lines_found}")
 print(f"Unclosed pre at EOF: {in_pre}")

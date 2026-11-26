@@ -30,9 +30,10 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from lib import _config, _log
+from lib import _config, _errors, _fsutil, _log
 
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
+COVERAGE_BASELINE_REL = os.path.join('data', 'baselines', 'coverage.json')
 
 
 def book_root() -> str:
@@ -211,6 +212,8 @@ STEPS: list[Step] = [
     ('to_epub', 'render/to_epub.py', (), 'deliver'),
     ('verify_epub', 'render/verify_epub.py', (), 'deliver'),
     ('archive_release', 'manuscript/archive.py', ('--kind', 'all'), 'deliver'),
+    ('print_pdf', 'render/print_pdf.py', ('--skip-html',), 'print'),
+    ('verify_print', 'render/verify_pdf.py', ('--print', '--require-toc-links'), 'print'),
 ]
 
 GROUPS = {
@@ -218,6 +221,9 @@ GROUPS = {
     'verify': tuple(n for n, _s, _a, g in STEPS if g == 'verify'),
     'deliver': ('to_pdf', 'pdf_toc_links', 'verify_pdf', 'to_epub', 'verify_epub',
                 'archive_release'),
+    # the print edition has its own PDF and its own typography: build it, then judge
+    # it with the same rules (density, TOC links) the delivery edition is judged by
+    'print': ('print_pdf', 'verify_print'),
 }
 GROUPS['check'] = GROUPS['verify']
 GROUPS['test'] = ('unittest',)
@@ -228,7 +234,7 @@ OPTIONAL_TOOLS = {
     'pandoc': 'render/to_epub.py',
     'playwright': 'render/to_pdf.py',
     'pypdf': 'to_pdf.py, pdf_toc_links.py, verify_pdf.py',
-    'defusedxml': 'verify_epub.py (optional XML hardening)',
+    'defusedxml': 'verify_epub.py (XML parsing; required)',
 }
 
 
@@ -265,6 +271,9 @@ def run_step(step: Step) -> tuple[str, int, float]:
     else:
         cmd = [PY, os.path.join(TOOLS_DIR, script), *extra]
     LOG.debug('run step %s: %s', name, ' '.join(cmd))
+    # a streamed start line is the difference between "nothing is happening" and
+    # "to_pdf is running": the step's own output may only come at the end
+    print(f'  .. {name}', flush=True)
     # A gate that deadlocks must fail the run, not hang it: without a bound the
     # whole command waits forever and no step ever reports.
     limit = step_timeout(name)
@@ -284,6 +293,27 @@ def run_step(step: Step) -> tuple[str, int, float]:
             print(f'    {line}')
         print(f'  FAIL {name} (rc={proc.returncode})')
     return name, proc.returncode, elapsed
+
+
+def mutation(limit: int = 6, strict: bool = False) -> int:
+    """Assertion-strength check: mutate a few rules, expect the tests to notice.
+
+    Advisory by default, like the perf gate: a survivor may be an equivalent mutant
+    (a default argument, a boundary the fixtures cannot express), and a gate that is
+    red for reasons nobody must fix stops being read. `--mutation-strict` makes any
+    survivor beyond the per-target tolerance a failure.
+    """
+    script = os.path.join(TOOLS_DIR, 'mutation_smoke.py')
+    proc = subprocess.run([PY, script, '--all', '--limit', str(limit)],
+                          cwd=os.path.dirname(TOOLS_DIR), capture_output=True,
+                          text=True, check=False)
+    print(proc.stdout)
+    if proc.returncode != 0:
+        print(proc.stderr, file=sys.stderr)
+        if not strict:
+            print('  (advisory: inspect the survivors, or pass --mutation-strict)')
+            return 0
+    return proc.returncode
 
 
 def doctor() -> int:
@@ -321,24 +351,35 @@ def doctor() -> int:
 
 
 def report(extra: list[str] | None = None) -> int:
-    """Six-dimension release scorecard (book quality, code, docs, interaction)."""
+    """Six-dimension release scorecard; `report health` shows the debt readings."""
     extra = extra or []
-    proc = subprocess.run([PY, os.path.join(TOOLS_DIR, 'audit', 'scorecard.py'), *extra],
+    script = 'test_health.py' if extra[:1] == ['health'] else 'scorecard.py'
+    if script == 'test_health.py':
+        extra = extra[1:]
+    proc = subprocess.run([PY, os.path.join(TOOLS_DIR, 'audit', script), *extra],
                           cwd=os.path.dirname(book_root()), check=False)
     return proc.returncode
 
 
-def coverage() -> int:
-    """Run the test suite under coverage and enforce the ratchet."""
+def coverage(*, full: bool = False, update_baseline: bool = False) -> int:
+    """Run the test suite under coverage and enforce the ratchet.
+
+    The default measures the **fast** tier: that is the per-commit gate and the
+    number the ratchet compares. ``full`` (``make cover --full``, or
+    ``BOOK_SLOW=1``) also runs the slow tier, so the paths that need chromium or
+    pandoc are measured for real instead of being reported as nobody's.
+    """
     if importlib.util.find_spec('coverage') is None:
         print('coverage is not installed: pip install coverage')
         return 2
     threshold = _config.THRESHOLDS.get('coverage_fail_under', 0)
+    slow = full or os.environ.get('BOOK_SLOW') == '1'
+    marker = [] if slow else ['-m', 'tier_fast']
     tests = os.path.normpath(os.path.join(TOOLS_DIR, '..', 'test'))
     # pytest runs the same suite the gates run (it finishes); unittest discover
     # under coverage deadlocks on the threaded fixtures, which is how this gate
     # sat silent instead of reporting a number.
-    inner = (['-m', 'pytest', '-q', '-m', 'tier_fast', tests]
+    inner = (['-m', 'pytest', '-q', *marker, tests]
              if importlib.util.find_spec('pytest') else
              ['-m', 'unittest', 'discover', '-s', tests, '-t', tests])
     try:
@@ -361,12 +402,22 @@ def coverage() -> int:
         cwd=os.path.dirname(book_root()), capture_output=True, text=True, check=False)
     print(report.stdout)
     print(report.stderr.strip())
-    print(f'coverage gate: threshold {threshold}% -> '
+    print(f'coverage gate: {"fast + slow" if slow else "fast"} tier, '
+          f'threshold {threshold}% -> '
           f'{"PASS" if report.returncode == 0 else "FAIL"}')
     thin = thin_files(_config.THRESHOLDS.get('coverage_min_per_file', 60))
     if thin:
         for path, percent in thin:
             print(f'  FAIL {path} ({percent}% < per-file floor)')
+        return 1
+    drops, baseline = coverage_ratchet(update=update_baseline)
+    if update_baseline:
+        print(f'coverage baseline written: {baseline}')
+    for path, before, now in drops:
+        print(f'  FAIL {path} ({now}% < baseline {before}%)')
+    if drops:
+        print('  per-file coverage dropped: restore the paths, or re-record with '
+              '`make.py cover --update-baseline` after review')
         return 1
     return report.returncode
 
@@ -396,12 +447,93 @@ def thin_files(floor: float) -> list[tuple[str, int]]:
     return sorted(out, key=lambda item: item[1])
 
 
-def main(argv: list[str] | None = None) -> int:
+def _coverage_json() -> dict:
+    """The coverage data of the last run, as the same JSON the gates read."""
+    raw = subprocess.run([PY, '-m', 'coverage', 'json', '-o', '-'],
+                         cwd=os.path.dirname(book_root()), capture_output=True,
+                         text=True, check=False)
+    try:
+        return json.loads(raw.stdout or '{}')
+    except ValueError:
+        return {}
+
+
+def _percentages(payload: dict) -> dict[str, float]:
+    """Per-file branch coverage, rounded the way the report prints it."""
+    out: dict[str, float] = {}
+    for path, data in (payload.get('files') or {}).items():
+        summary = data.get('summary') or {}
+        if int(summary.get('num_statements') or 0) < 5:
+            continue
+        out[path] = round(float(summary.get('percent_covered') or 0.0), 1)
+    return out
+
+
+def coverage_ratchet(*, update: bool = False) -> tuple[list[tuple[str, float, float]], str]:
+    """Per-file coverage may not drop, whatever the global total says.
+
+    A single global threshold lets a 200-statement module sit at 73% forever: the
+    gap it leaves is invisible next to a well-covered neighbour. Recording every
+    file's number makes each one ratchet on its own. Files below five statements
+    are left out (a two-line module swings the percentage by tens of points).
+    """
+    path = os.path.join(book_root(), COVERAGE_BASELINE_REL)
+    current = _percentages(_coverage_json())
+    if update:
+        _fsutil.ensure_dir(path)
+        _fsutil.dump_json(path, {
+            'note': 'Per-file branch coverage of the fast tier. Only review raises '
+                    'these numbers; a drop fails `make.py cover`.',
+            'files': dict(sorted(current.items())),
+        })
+        return [], path
+    if not os.path.exists(path):
+        return [], path
+    try:
+        recorded = (_fsutil.load_json(path) or {}).get('files') or {}
+    except (OSError, ValueError):
+        return [], path
+    drops = [(name, float(before), current[name]) for name, before in sorted(recorded.items())
+             if name in current and current[name] < float(before)]
+    return drops, path
+
+
+def _missing_book_toml() -> str:
+    """The selected book root when it holds no ``data/book/book.toml``.
+
+    An explicit book has to fail before a single step runs: the steps are child
+    processes, and each would otherwise report the same missing file as its own
+    traceback. One message and status 2 is the contract every entry follows.
+    """
+    if not os.environ.get('BOOK_ROOT'):
+        return ''
+    root = os.path.abspath(os.environ['BOOK_ROOT'])
+    expected = os.path.join(root, 'data', 'book', 'book.toml')
+    return '' if os.path.isfile(expected) else root
+
+
+def _edition_error() -> str:
+    """The message when ``--edition`` names a version the book does not declare.
+
+    Same contract as a missing book.toml: one message and status 2 before any step
+    runs, rather than the same complaint repeated by every child process.
+    """
+    edition = os.environ.get('BOOK_EDITION')
+    if not edition:
+        return ''
+    try:
+        _config.Config(os.environ.get('BOOK_ROOT') or None, edition)
+    except _config.ConfigError as exc:
+        return str(exc)
+    return ''
+
+
+def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('command',
                         choices=['check', 'build', 'verify', 'test', 'cover',
-                                 'report', 'deliver', 'doctor'])
+                                 'report', 'deliver', 'print', 'doctor', 'mutation'])
     parser.add_argument('--only', help='comma-separated step names')
     parser.add_argument('--skip', help='comma-separated step names to skip')
     parser.add_argument('--timings', action='store_true', help='print per-step wall time')
@@ -409,32 +541,47 @@ def main(argv: list[str] | None = None) -> int:
                         help='run every step even after a failure')
     parser.add_argument('--full', action='store_true',
                         help='also run the slow suite (chromium/pandoc)')
+    parser.add_argument('--update-baseline', action='store_true',
+                        help='re-record the per-file coverage baseline (review first)')
     parser.add_argument('--book', default='',
                         help='book root for every step (default: BOOK_ROOT, then the '
                              'nearest ancestor holding data/book/book.toml)')
     parser.add_argument('--edition', default='', help='manuscript edition for every step')
+    parser.add_argument('--mutation-limit', type=int, default=6,
+                        help='mutations per module for `make.py mutation`')
+    parser.add_argument('--mutation-strict', action='store_true',
+                        help='let `make.py mutation` fail on an unexpected survivor')
+    return parser
 
-    report_extras: list[str] = []
-    if argv and len(argv) > 0 and argv[0] == 'report':
-        args, report_extras = parser.parse_known_args(argv)
-    else:
-        args = parser.parse_args(argv)
 
-    if args.book or args.edition:
-        # the steps are separate processes; they read the selection from the env
-        if args.book:
-            os.environ['BOOK_ROOT'] = os.path.abspath(args.book)
-        if args.edition:
-            os.environ['BOOK_EDITION'] = args.edition
-    if args.command == 'doctor':
-        return doctor()
+def _apply_selection(args) -> None:
+    """Put the selection in the environment: the steps are separate processes."""
+    if args.book:
+        os.environ['BOOK_ROOT'] = os.path.abspath(args.book)
+    if args.edition:
+        os.environ['BOOK_EDITION'] = args.edition
 
-    if args.command == 'cover':
-        return coverage()
 
-    if args.command == 'report':
-        return report(report_extras)
+def _selection_errors(args) -> int:
+    """Validate an explicit selection; 0 when it is fine, else the exit status."""
+    missing = _missing_book_toml()
+    if missing:
+        print(f'error: 没找到 book.toml，试过 {missing}', file=sys.stderr)
+        return 2
+    edition_error = _edition_error()
+    if edition_error:
+        print(f'error: {edition_error}', file=sys.stderr)
+        return 2
+    if args.book:
+        # this module bound a book at import; an explicit --book rebinds it so the
+        # parent reads the same book its child steps do
+        _config.reset(_config.Config(os.environ['BOOK_ROOT'],
+                                     os.environ.get('BOOK_EDITION') or None))
+    return 0
 
+
+def _run_steps(args) -> int:
+    """Walk the selected steps, honouring --keep-going and --timings."""
     if args.full:
         os.environ['BOOK_SLOW'] = '1'
     steps = _select(args)
@@ -444,7 +591,7 @@ def main(argv: list[str] | None = None) -> int:
 
     failures: list[str] = []
     total = 0.0
-    LOG.info('make %s start (%d step(s))', args.command, len(steps))
+    LOG.info('make %s start (%d step(s), pid=%d)', args.command, len(steps), os.getpid())
     print(f'=== make {args.command}: {len(steps)} step(s) ===')
     for step in steps:
         name, code, elapsed = run_step(step)
@@ -469,6 +616,31 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
+def main(argv: list[str] | None = None) -> int:
+    parser = _parser()
+    # `report` forwards its own flags, so it is parsed leniently
+    report_extras: list[str] = []
+    if argv and argv[0] == 'report':
+        args, report_extras = parser.parse_known_args(argv)
+    else:
+        args = parser.parse_args(argv)
+
+    _apply_selection(args)
+    if args.command == 'doctor':
+        return doctor()
+    invalid = _selection_errors(args)
+    if invalid:
+        return invalid
+
+    if args.command == 'cover':
+        return coverage(full=args.full, update_baseline=args.update_baseline)
+    if args.command == 'mutation':
+        return mutation(limit=args.mutation_limit, strict=args.mutation_strict)
+    if args.command == 'report':
+        return report(report_extras)
+    return _run_steps(args)
+
+
 if __name__ == '__main__':
     enforce_venv()
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

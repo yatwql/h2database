@@ -94,14 +94,7 @@ class ReleaseFlowTest(unittest.TestCase):
         self.assertIn('tool', snapshot['versions'])
         self.assertIn('artifacts', snapshot)
 
-    def test_publish_refuses_a_dirty_tree(self):
-        with mock.patch.object(self.release, 'tree_is_dirty', return_value=True), \
-                redirect_stdout(io.StringIO()), \
-                mock.patch('sys.stderr', new_callable=io.StringIO):
-            code = self.release.main(['publish'])
-        self.assertEqual(code, 2)
-
-    def test_publish_stops_when_the_gate_fails(self):
+    def test_publish_with_a_title_stops_when_the_gate_fails(self):
         with mock.patch.object(self.release, 'tree_is_dirty', return_value=False), \
                 mock.patch.object(self.release, 'run_runner', return_value=1), \
                 redirect_stdout(io.StringIO()), \

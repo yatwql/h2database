@@ -165,3 +165,38 @@ decision = "恢复完成的标志：FileStore.openComplete"
 component = "异常分支：Chunk 校验失败"
 anchor = "§9.7"
 decision = "Recover 工具与 simulateCrash 的可重入路径"
+
+# 附录里每个案例的标题与开篇：属于这本书，属于这份文件。
+
+[headers.select]
+heading = "## A.1 案例 A：一条 SELECT 从 JDBC 到磁盘"
+opening = "当用户在应用代码中执行 `stmt.executeQuery(\"SELECT * FROM users WHERE id = 42\")`，\n从 JDBC 入口到磁盘上的一行字节、再回到 ResultSet，全过程穿过 H2 的几乎\n所有核心子系统。本节以这条最基础的查询为线索，把分散在第3-9章的关键论述\n串接成一条单线叙事，每个步骤都给出 §X.Y 回指，便于读者按需深入。"
+figure_prefix = "A"
+figure_start = 1
+questions = [
+    "上述链路中，哪个环节的失败会被 H2 自动恢复？哪些会向调用方抛出异常？",
+    "如果绕过 JDBC 直接调用引擎层 API，能省掉哪些步骤？为什么不建议这样做？",
+    "在调试器里打哪些断点能完整复现这条链路？",
+]
+
+[headers.commit]
+heading = "## A.2 案例 B：一次 INSERT+UPDATE+COMMIT 事务的全链路"
+opening = "当用户在一个事务中执行 INSERT、紧接着 UPDATE、再 COMMIT，H2 在内存与磁盘\n上发生的事件比表面看起来要丰富得多——TransactionStore 状态迁移、Undo Log\n累积、MVCC 版本切换、CAS 提交点、后台 Chunk 落盘、Checkpoint 同步——\n每一环都有明确的不变量与失败可恢复点。本节把这条链路的关键决策点串起来。"
+figure_prefix = "A"
+figure_start = 7
+questions = [
+    "这条事务链路里，哪个环节的失败会被 H2 自动恢复？哪些会向调用方抛出异常？",
+    "如果把自动提交改成显式提交，哪些步骤的顺序会被打乱？",
+    "在调试器里打哪些断点能完整复现这条链路？",
+]
+
+[headers.recover]
+heading = "## A.3 案例 C：一次崩溃后的恢复启动"
+opening = "进程崩溃发生在最不方便的时刻——某个 Chunk 写到一半、File Header 还指向旧位置——\n此时 H2 重新启动，必须在不丢已提交事务、不放过未提交事务的前提下，把存储\n状态恢复到一致点。本节按\"打开文件 → 找到最新 Chunk → 重建可见性 → 决定哪些事务\n需要回滚 → 重新对外开放\"的顺序展开，并在收尾处描述异常分支：Chunk 校验失败时\nH2 如何安全地降级。"
+figure_prefix = "A"
+figure_start = 12
+questions = [
+    "崩溃恢复时，H2 如何区分已提交与未提交事务？",
+    "Chunk 校验失败时有哪些降级路径？各自的代价是什么？",
+    "在调试器里打哪些断点能完整复现这条恢复链路？",
+]

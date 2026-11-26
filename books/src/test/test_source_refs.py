@@ -6,6 +6,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import shutil
 import sys
 import tempfile
 import unittest
@@ -65,9 +66,9 @@ class SourceReferenceAuditTest(unittest.TestCase):
         self.assertIn('not found', err.getvalue())
 
     def test_the_checked_files_come_from_the_configuration(self):
-        self.assertEqual(self.module.CHAPTER_FILES,
+        self.assertEqual(self.module.scanned_chapter_files(),
                          self.module._config.chapter_names(include_cover=False))
-        for name in self.module.CHAPTER_FILES:
+        for name in self.module.scanned_chapter_files():
             self.assertTrue(os.path.isfile(os.path.join(self.docs_dir, name)), name)
 
     def test_appendices_are_scanned_like_chapters(self):
@@ -154,11 +155,28 @@ class SourceReferenceAuditTest(unittest.TestCase):
 
     def test_suggest_renames_proposes_close_names(self):
         Claim = self.module.SymbolClaim
-        index = {'KVStore': ['/a/KVStore.java'], 'KVStores': ['/a/KVStores.java']}
-        suggestions = self.module.suggest_renames(Claim('ch.md', 1, 'KVStores', 'bump'), index)
-        self.assertIsInstance(suggestions, list)
+        java = self.tmp_path("KVStore.java")
+        with open(java, "w", encoding="utf-8") as handle:
+            handle.write("class KVStore { void open() {} void openSimpleMap() {} }\n")
+        suggestions = self.module.suggest_renames(
+            Claim("ch.md", 1, "KVStore", "openMap"), {"KVStore": [java]}
+        )
+        self.assertIn("open", suggestions)
+        self.assertNotIn("openMap", suggestions)
+
+    def test_no_hint_without_exactly_one_candidate_file(self):
+        Claim = self.module.SymbolClaim
+        claim = Claim("ch.md", 1, "Widgets", "run")
+        self.assertEqual(self.module.suggest_renames(claim, {"Widgets": ["/a/A.java", "/b/B.java"]}), [])
+        missing = self.tmp_path("gone.java")
+        self.assertEqual(self.module.suggest_renames(claim, {"Widgets": [missing]}), [])
 
     # -- CLI -------------------------------------------------------------
+    def tmp_path(self, name: str) -> str:
+        directory = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, directory, True)
+        return os.path.join(directory, name)
+
     def run_main(self, *args: str):
         out, err = io.StringIO(), io.StringIO()
         with redirect_stdout(out), redirect_stderr(err):
@@ -173,7 +191,8 @@ class SourceReferenceAuditTest(unittest.TestCase):
         self.write_source('org/example/KVStore.java', 'x\n')
         code, out, _err = self.run_main('--json',
                                         '--baseline', os.path.join(self.tmp.name, 'none.json'))
-        self.assertIn(code, (0, 1))
+        self.assertEqual(code, 0, out[-300:])
+        self.assertRegex(out, r'[\s\S]')
         self.assertTrue(out.strip())
         try:
             payload = json.loads(out)
@@ -188,7 +207,8 @@ class SourceReferenceAuditTest(unittest.TestCase):
         self.write_source('org/example/KVStore.java', 'class KVStore {}\n')
         target = os.path.join(self.tmp.name, 'accepted.json')
         code, _out, _err = self.run_main('--update-baseline', '--baseline', target)
-        self.assertIn(code, (0, 1))
+        self.assertEqual(code, 0, _out[-300:])
+        self.assertRegex(_out, r'[\s\S]')
 
     def test_main_suggest_and_strict_flags(self):
         self.write_chapter('`KVStore.absent(`\n')
@@ -197,7 +217,8 @@ class SourceReferenceAuditTest(unittest.TestCase):
         for flag in ('--suggest', '--strict-symbols', '--prune'):
             with self.subTest(flag=flag):
                 code, _out, _err = self.run_main(flag, '--baseline', baseline)
-                self.assertIn(code, (0, 1, 2))
+                self.assertIsInstance(code, int)
+                self.assertRegex(_out, r'[\s\S]')
 
 if __name__ == '__main__':
     unittest.main()

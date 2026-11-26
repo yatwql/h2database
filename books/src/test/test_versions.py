@@ -37,7 +37,7 @@ class VersionsCase(unittest.TestCase):
 
 class TestVersions(VersionsCase):
     def test_tool_version_defaults_to_package_constant(self):
-        self.assertRegex(self.config().tool_version(), r'^\d+\.\d+(\.\d+)?$')
+        self.assertRegex(self.config().tool_version(), r'^\d+\.\d+(\.\d+)?(-dev)?$')
 
     def test_doc_version_comes_from_book_toml(self):
         self.assertEqual(self.config().doc_version(), self.config().VERSION)
@@ -80,9 +80,12 @@ class TestVersionGate(VersionsCase):
         docs = os.path.join(self.root, 'docs', 'managements')
         os.makedirs(docs, exist_ok=True)
         with open(os.path.join(docs, 'plan.md'), 'w', encoding='utf-8') as fh:
-            fh.write('# Plan\n\n> 版本：v0.1\n')
+            # a version the software is not: the case must not depend on which
+            # version the tree happens to carry today
+            fh.write('# Plan\n\n> 版本：v9.9\n')
         code, out = self.run_gate()
-        self.assertIn(code, (0, 1), out[-300:])
+        self.assertEqual(code, 1, out[-300:])
+        self.assertIn('is not the software version', out)
 
     def test_gate_reports_tool_version(self):
         _code, out = self.run_gate()

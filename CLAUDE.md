@@ -19,7 +19,7 @@
 | 按顺序完成一件事（动笔 → 交付） | `books/docs/manuals/how-to-use.md` |
 | 门禁判据与级别 | `books/docs/managements/testplan.md` §2 |
 | 目录结构与文件归属 | `books/docs/managements/folder.md` |
-| 写作与格式约定 | `books/docs/managements/style-guide.md` |
+| 写作与格式约定 | `books/docs/manuals/how-to-write.md` |
 | 内容组织（章节、图号、包映射） | `books/data/book/book.toml` |
 | 工具链策略（阈值、预算、基线） | `books/data/config/base.json`、`style.json` |
 | 单项迭代的设计与计划 | `books/docs/plan/<topic>/`（`design.md`、`plan.md`） |
@@ -47,3 +47,10 @@
   `changelog.md`。追踪编号（`rf-N`、`plan-N`）只属于 `review-findings.md` 与 `plan.md`：
   其他文档与注释不得引用，标识符与文件名不得编码这些编号。`audit/traces.py` 与
   `audit/doc_drift.py` 共同保证这条，以及路径、脚本、章节、版本的漂移检查。
+
+## 分支与版本
+
+- `dev` 是开发分支：日常提交都落在这里，版本号带 `-dev` 后缀（当前 `0.1-dev`）。
+- `master` 只接收发布合并：发布时把 `dev` 合并进 `master`，去掉 `-dev`，打标签。
+- 版本号的唯一定义处是 `books/src/python/lib/_version.py`；变更日志的当前段写在
+  `## [<版本>] - 开发中（未发布）`，发布时由 `books/src/python/core/docs_archive.py` 迁出。

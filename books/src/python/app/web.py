@@ -13,24 +13,27 @@ Binds to 127.0.0.1 by default: the actions write to the repository.
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import os
 import sys
+import threading
+import time
 from http import server
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core import actions
-from lib import _config, _fsutil
+from lib import _config, _errors, _fsutil, status
 
 _fsutil.pin_stdout_utf8()
 
 PAGE = """<!DOCTYPE html>
-<html lang="zh-CN"><head><meta charset="utf-8"><title>__APP__</title>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>__APP__ · __BOOK__</title>
 <style>body{font-family:system-ui;margin:2rem;max-width:52rem}
 button{margin:.2rem;padding:.4rem .8rem}pre{background:#f5f5f5;padding:1rem;
 white-space:pre-wrap}</style></head>
-<body><h1>__APP__</h1>
+<body><h1>__APP__ · __BOOK__</h1>
 <p><label>书 <select id="book"></select></label>
 <label>版本 <select id="edition"><option value="">main</option></select></label>
 <span id="where"></span></p>
@@ -68,6 +71,23 @@ async function run(action) {
 """
 
 
+# One action at a time: `core.actions` binds the chosen book on a module global,
+# so concurrent requests that name different books would otherwise cross.
+ACTION_LOCK = threading.Lock()
+
+
+def _book_banner() -> str:
+    """The book this console serves, for the page title.
+
+    Two consoles can be open on two books; the title is what tells them apart
+    before any action runs.
+    """
+    cfg = _config.current()
+    title = html.escape(cfg.title or os.path.basename(cfg.root))
+    version = html.escape(cfg.version or '')
+    return f'{title}（v{version}）' if version else title
+
+
 def book_choices() -> dict:
     """Books this console can work on, plus the one it started with."""
     active = _config.current().root
@@ -101,7 +121,8 @@ class Handler(server.BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         if self.path in ('/', '/index.html'):
             page = (PAGE.replace('__ACTIONS__', json.dumps(actions.ACTIONS, ensure_ascii=False))
-                    .replace('__APP__', _config.app_title()))
+                    .replace('__APP__', _config.app_title())
+                    .replace('__BOOK__', _book_banner()))
             self._send(200, page, 'text/html; charset=utf-8')
         elif self.path == '/api/books':
             self._send(200, json.dumps(book_choices(), ensure_ascii=False),
@@ -138,11 +159,20 @@ class Handler(server.BaseHTTPRequestHandler):
                       'force': bool(payload.get('force'))}
         else:
             kwargs = {}
+        # The active book is process state, so two requests that pick different
+        # books must not interleave: one action runs to completion first.
+        started = time.perf_counter()
         try:
-            code, text = actions.run(action, book=book,
-                                     edition=str(payload.get('edition', '') or ''), **kwargs)
-        except Exception as exc:  # noqa: BLE001 - the page relays failures, it does not raise
+            with ACTION_LOCK:
+                code, text = actions.run(
+                    action, book=book,
+                    edition=str(payload.get('edition', '') or ''), **kwargs)
+        except Exception as exc:
             code, text = 1, f'{type(exc).__name__}: {exc}'
+        # the same block the log and the TUI show: what was read, what came out
+        elapsed = time.perf_counter() - started
+        block = status.render(code == 0, action, elapsed, code)
+        text = f'{text}\n{block}' if text.strip() else block
         self._send(200, json.dumps({'code': code, 'output': text}, ensure_ascii=False),
                    'application/json; charset=utf-8')
 
@@ -171,4 +201,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

@@ -13,33 +13,36 @@ import re
 
 from lib import _config, _fsutil
 
-docs_dir = _config.MANUSCRIPT_DIR
-chapter_files = sorted(glob.glob(os.path.join(docs_dir, 'ch[0-9]*.md')))
+
+def chapter_files() -> list[str]:
+    """Chapter files of the book being audited, read when the audit runs."""
+    return sorted(glob.glob(os.path.join(_config.MANUSCRIPT_DIR, "ch[0-9]*.md")))
+
 
 # Extract all H1 titles
 h1_map = {}
-for f in chapter_files:
+for f in chapter_files():
     for line in _fsutil.read_lines(f):
-            m = re.match(r'^# 第(\d+)章\s+(.+)$', line.strip())
-            if m:
-                ch_num = int(m.group(1))
-                title = m.group(2).strip()
-                h1_map[ch_num] = (title, os.path.basename(f))
+        m = re.match(r"^# 第(\d+)章\s+(.+)$", line.strip())
+        if m:
+            ch_num = int(m.group(1))
+            title = m.group(2).strip()
+            h1_map[ch_num] = (title, os.path.basename(f))
 
-print('=== Chapter H1 Titles ===')
+print("=== Chapter H1 Titles ===")
 for ch in sorted(h1_map):
     title, fname = h1_map[ch]
     print(f'  ch{ch}: "{title}" ({fname})')
 
 # Extract all `详见第X章《...》` references
 cross_refs = []
-for f in sorted(glob.glob(os.path.join(docs_dir, 'ch*.md'))):
+for f in sorted(glob.glob(os.path.join(_config.MANUSCRIPT_DIR, "ch*.md"))):
     fname = os.path.basename(f)
     content = _fsutil.read_text(f)
-    for m in re.finditer(r'详见第(\d+)章《([^》]+)》', content):
+    for m in re.finditer(r"详见第(\d+)章《([^》]+)》", content):
         cross_refs.append((fname, m.group(1), m.group(2), m.start()))
 
-print(f'\n=== Cross-References Found: {len(cross_refs)} ===')
+print(f"\n=== Cross-References Found: {len(cross_refs)} ===")
 errors = []
 ok_count = 0
 for fname, ref_ch, ref_title, pos in cross_refs:
@@ -51,13 +54,13 @@ for fname, ref_ch, ref_title, pos in cross_refs:
         else:
             errors.append((fname, ref_ch, ref_title, actual_title, pos))
     else:
-        errors.append((fname, ref_ch, ref_title, 'CHAPTER_NOT_FOUND', pos))
+        errors.append((fname, ref_ch, ref_title, "CHAPTER_NOT_FOUND", pos))
 
 if errors:
-    print(f'\n=== MISMATCHES: {len(errors)} ===')
-    for fname, ref_ch, ref_title, actual_title, pos in errors:
+    print(f"\n=== MISMATCHES: {len(errors)} ===")
+    for fname, ref_ch, ref_title, actual_title, _pos in errors:
         print(f'  {fname}: ch{ref_ch} ref "{ref_title}" -> actual "{actual_title}"')
 else:
-    print('\n=== All cross-references match! ===')
+    print("\n=== All cross-references match! ===")
 
-print(f'\nOK: {ok_count}, Errors: {len(errors)}')
+print(f"\nOK: {ok_count}, Errors: {len(errors)}")

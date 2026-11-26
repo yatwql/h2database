@@ -14,8 +14,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from lib import _errors
 
 FAIL_RE = re.compile(r'^(?:FAIL|ERROR):\s+(\S+)\s+\(([^)]+)\)')
 ASSERT_RE = re.compile(r'^(AssertionError|Assertion|ModuleNotFoundError|ImportError|'
@@ -89,4 +94,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

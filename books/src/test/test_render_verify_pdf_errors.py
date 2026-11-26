@@ -9,12 +9,12 @@ use — and they are where a toolchain silently misbehaves instead of reporting.
 import importlib.util
 import os
 import sys
-import tempfile
 import unittest
 
 import _fixture
+from _cases import Base
 
-TAGS = ('layer:render', 'tier:slow')
+TAGS = ('layer:render', 'tier:fast')  # pypdf only; heavy deps stay skipped
 
 TOOLS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python'
@@ -26,39 +26,11 @@ if TOOLS_DIR not in sys.path:
         if _path not in sys.path:
             sys.path.insert(0, _path)
 
-SLOW = os.environ.get('BOOK_SLOW') == '1'
-HAS_PANDOC = bool(__import__('shutil').which('pandoc'))
 HAS_PYPDF = importlib.util.find_spec('pypdf') is not None
 
-class Base(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.root = _fixture.build_book(self.tmp.name)
-
-    def run_script(self, script: str, *args: str, env: dict | None = None):
-        if env is None:
-            return _fixture.run_inproc(self.root, script, *args)
-        previous = {k: os.environ.get(k) for k in env}
-        os.environ.update(env)
-        try:
-            return _fixture.run_inproc(self.root, script, *args)
-        finally:
-            for key, value in previous.items():
-                if value is None:
-                    os.environ.pop(key, None)
-                else:
-                    os.environ[key] = value
-
-    def write(self, rel: str, text: str) -> str:
-        path = os.path.join(self.root, rel)
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, 'w', encoding='utf-8') as fh:
-            fh.write(text)
-        return path
 
 class TestVerifyPdfErrorPaths(Base):
-    @unittest.skipUnless(SLOW and HAS_PYPDF, 'slow suite: set BOOK_SLOW=1')
+    @unittest.skipUnless(HAS_PYPDF, 'pypdf not installed')
     def test_require_toc_links_without_annotations(self):
         from pypdf import PdfWriter
         writer = PdfWriter()
@@ -85,11 +57,9 @@ class TestVerifyPdfErrorPaths(Base):
         _code, out = self.run_script('verify_epub.py', '--json')
         self.assertIn('"ok"', out)
 
-if __name__ == '__main__':
-    unittest.main()
 
 class TestVerifyPdfTocLinkSuccess(Base):
-    @unittest.skipUnless(SLOW and HAS_PYPDF, 'slow suite: set BOOK_SLOW=1')
+    @unittest.skipUnless(HAS_PYPDF, 'pypdf not installed')
     def test_valid_toc_annotation_targets_outline_page(self):
         from pypdf import PdfWriter
         from pypdf.annotations import Link
@@ -119,3 +89,7 @@ class TestVerifyPdfTocLinkSuccess(Base):
         verify_pdf = _fixture.load_module(self.root, 'verify_pdf')
         self.assertEqual(verify_pdf._annotation_rect(object()), [])
         self.assertIsNone(verify_pdf._annotation_target_page(None, {'/A': {'/S': '/URI'}}))
+
+
+if __name__ == '__main__':
+    unittest.main()

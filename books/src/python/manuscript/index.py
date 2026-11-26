@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Index builder for H2 documentation.
+Index builder: scans the book's chapter files for index entries.
 
 Scans all chapter files and extracts:
 1. H3/H4 headings as potential index entries
@@ -28,26 +28,26 @@ import os
 import re
 import sys
 
-from lib import _config, _fsutil
+from lib import _config, _errors, _fsutil
 
 _fsutil.pin_stdout_utf8()
 
-docs_dir = _config.BOOK_ROOT
-src_dir = _config.MANUSCRIPT_DIR
-dist_dir = _config.DIST_DIR
-chapter_files = sorted(glob.glob(os.path.join(src_dir, 'ch[0-9]*.md')))
+
+def chapter_files() -> list[str]:
+    """Chapter files of the book being indexed, read when the build runs."""
+    return sorted(glob.glob(os.path.join(_config.MANUSCRIPT_DIR, "ch[0-9]*.md")))
+
 
 # Check for --coverage flag
-show_coverage = '--coverage' in sys.argv
-hierarchy_check = '--hierarchy-check' in sys.argv
+show_coverage = "--coverage" in sys.argv
+hierarchy_check = "--hierarchy-check" in sys.argv
 
 # ---- Hierarchy check mode: inspect the existing index.md ----
 
 if hierarchy_check:
-    index_path = os.path.join(src_dir, 'back', 'index.md')
+    index_path = os.path.join(_config.MANUSCRIPT_DIR, "back", "index.md")
     if not os.path.exists(index_path):
-        print(f'ERROR: index not found at {index_path}')
-        sys.exit(1)
+        raise _errors.ToolError(f"ERROR: index not found at {index_path}")
 
     main_count = 0
     sub_count = 0
@@ -56,52 +56,52 @@ if hierarchy_check:
     main_with_subs = 0
     last_main_had_sub = False
 
-    with open(index_path, 'r', encoding='utf-8') as fh:
-        for raw in fh:
-            if raw.startswith('## '):
-                section_count += 1
-                continue
-            if raw.startswith('  see also:'):
-                see_also_count += 1
-                continue
-            if raw.startswith('  - '):
-                sub_count += 1
-                if not last_main_had_sub:
-                    main_with_subs += 1
-                    last_main_had_sub = True
-                continue
-            if raw.startswith('- '):
-                main_count += 1
-                last_main_had_sub = False
-                continue
+    for raw in _fsutil.read_lines(index_path):
+        if raw.startswith("## "):
+            section_count += 1
+            continue
+        if raw.startswith("  see also:"):
+            see_also_count += 1
+            continue
+        if raw.startswith("  - "):
+            sub_count += 1
+            if not last_main_had_sub:
+                main_with_subs += 1
+                last_main_had_sub = True
+            continue
+        if raw.startswith("- "):
+            main_count += 1
+            last_main_had_sub = False
+            continue
 
-    print('=== Index Hierarchy Report ===')
-    print(f'  sections (## headings):  {section_count}')
-    print(f'  main entries:            {main_count}')
-    print(f'  sub-entries:             {sub_count}')
-    print(f'  see-also lines:          {see_also_count}')
-    print(f'  main entries w/ subs:    {main_with_subs}')
-    print(f'  total entries:           {main_count + sub_count}')
+    print("=== Index Hierarchy Report ===")
+    print(f"  sections (## headings):  {section_count}")
+    print(f"  main entries:            {main_count}")
+    print(f"  sub-entries:             {sub_count}")
+    print(f"  see-also lines:          {see_also_count}")
+    print(f"  main entries w/ subs:    {main_with_subs}")
+    print(f"  total entries:           {main_count + sub_count}")
 
     # Floor values (set below the live numbers on purpose)
     # that flag accidental regressions if someone bulk-deletes entries).
-    floors = {'main': 150, 'sub': 50, 'see_also': 30, 'total': 250}
+    floors = {"main": 150, "sub": 50, "see_also": 30, "total": 250}
     fails: list[str] = []
-    if main_count < floors['main']:
+    if main_count < floors["main"]:
         fails.append(f"main {main_count} < {floors['main']}")
-    if sub_count < floors['sub']:
+    if sub_count < floors["sub"]:
         fails.append(f"sub-entries {sub_count} < {floors['sub']}")
-    if see_also_count < floors['see_also']:
+    if see_also_count < floors["see_also"]:
         fails.append(f"see-also {see_also_count} < {floors['see_also']}")
-    if (main_count + sub_count) < floors['total']:
+    if (main_count + sub_count) < floors["total"]:
         fails.append(f"total {main_count + sub_count} < {floors['total']}")
 
     if fails:
-        print(f'\nFAIL: hierarchy below the configured floor ({"; ".join(fails)})')
-        sys.exit(1)
-    print('\nOK: hierarchy meets the configured floor '
-          f'(main>={floors["main"]}, sub>={floors["sub"]}, '
-          f'see_also>={floors["see_also"]}, total>={floors["total"]})')
+        raise _errors.ToolError(f"FAIL: hierarchy below the configured floor ({'; '.join(fails)})")
+    print(
+        "\nOK: hierarchy meets the configured floor "
+        f"(main>={floors['main']}, sub>={floors['sub']}, "
+        f"see_also>={floors['see_also']}, total>={floors['total']})"
+    )
     sys.exit(0)
 
 # Track section numbering across files
@@ -110,27 +110,26 @@ current_sections = []  # stack of (level, number, title)
 
 entries = []  # (term, chapter, section_ref, type)
 
-for fpath in chapter_files:
+for fpath in chapter_files():
     fname = os.path.basename(fpath)
-    with open(fpath, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
+    lines = _fsutil.read_lines(fpath)
 
     # Track section numbers per file
     section_counters = [0, 0, 0, 0]  # H1, H2, H3, H4
 
     for line in lines:
         # Track chapter change
-        cm = re.match(r'^# 第(\d+)章\s+(.*)', line)
+        cm = re.match(r"^# 第(\d+)章\s+(.*)", line)
         if cm:
             current_ch = int(cm.group(1))
             section_counters = [current_ch, 0, 0, 0]
             # Add chapter as index entry
             ch_title = cm.group(2).strip()
-            entries.append((ch_title, current_ch, f'第{current_ch}章', 'heading'))
+            entries.append((ch_title, current_ch, f"第{current_ch}章", "heading"))
             continue
 
         # Track H2/H3/H4 headings
-        hm = re.match(r'^(#{2,4})\s+(.+)', line)
+        hm = re.match(r"^(#{2,4})\s+(.+)", line)
         if hm:
             level = len(hm.group(1))
             title = hm.group(2).strip()
@@ -141,36 +140,34 @@ for fpath in chapter_files:
 
             # Build section reference like "§2.3"
             if level == 2:
-                section_ref = f'§{current_ch}.{section_counters[1]}'
+                section_ref = f"§{current_ch}.{section_counters[1]}"
             elif level == 3:
-                section_ref = f'§{current_ch}.{section_counters[1]}.{section_counters[2]}'
-            elif level == 4:
-                section_ref = f'§{current_ch}.{section_counters[1]}.{section_counters[2]}.{section_counters[3]}'
-            else:
-                section_ref = f'第{current_ch}章'
+                section_ref = f"§{current_ch}.{section_counters[1]}.{section_counters[2]}"
+            else:  # the heading regex only admits #{2,4}, so level 4 is the last case
+                section_ref = f"§{current_ch}.{section_counters[1]}.{section_counters[2]}.{section_counters[3]}"
 
-            entries.append((title, current_ch, section_ref, 'heading'))
+            entries.append((title, current_ch, section_ref, "heading"))
             continue
 
         # Extract bold terms as index candidates
-        for m in re.finditer(r'\*\*([^*]+)\*\*', line):
+        for m in re.finditer(r"\*\*([^*]+)\*\*", line):
             term = m.group(1).strip()
             if len(term) < 3:
                 continue
             # Skip figure captions
-            if term.startswith('图 ') and ':' in term:
+            if term.startswith("图 ") and ":" in term:
                 continue
             # Skip metadata markers
-            if term in ('注意', '说明', '提示', '警告', '参考', '核心文件', '源码位置'):
+            if term in ("注意", "说明", "提示", "警告", "参考", "核心文件", "源码位置"):
                 continue
             # Build current section number
             if section_counters[1] > 0:
-                sec = f'§{current_ch}.{section_counters[1]}'
+                sec = f"§{current_ch}.{section_counters[1]}"
                 if section_counters[2] > 0:
-                    sec += f'.{section_counters[2]}'
+                    sec += f".{section_counters[2]}"
             else:
-                sec = f'第{current_ch}章'
-            entries.append((term, current_ch, sec, 'term'))
+                sec = f"第{current_ch}章"
+            entries.append((term, current_ch, sec, "term"))
 
 # Deduplicate and sort entries
 seen = set()
@@ -190,48 +187,48 @@ if show_coverage:
     for term, ch, sec, etype in sorted_entries:
         per_chapter.setdefault(ch, []).append((term, sec, etype))
 
-    print('# 索引覆盖率报告')
+    print("# 索引覆盖率报告")
     print()
     total = len(sorted_entries)
     all_ok = True
     for ch in sorted(per_chapter):
         cnt = len(per_chapter[ch])
-        status = 'OK' if cnt >= 5 else 'LOW'
+        status = "OK" if cnt >= 5 else "LOW"
         if cnt < 5:
             all_ok = False
-        print(f'| 第{ch}章 | {cnt:2d} 条 | {status} |')
+        print(f"| 第{ch}章 | {cnt:2d} 条 | {status} |")
         for term, sec, etype in sorted(per_chapter[ch], key=lambda x: x[0].lower()):
-            marker = '#' if etype == 'heading' else '*'
-            print(f'|   | {marker} {term} ({sec}) |')
+            marker = "#" if etype == "heading" else "*"
+            print(f"|   | {marker} {term} ({sec}) |")
         print()
 
-    print('---')
-    print(f'总计: {total} 条候选条目')
-    print(f'零覆盖率章节: {"无" if all_ok else "存在"}')
+    print("---")
+    print(f"总计: {total} 条候选条目")
+    print(f"零覆盖率章节: {'无' if all_ok else '存在'}")
     print()
     if all_ok:
-        print('**结论**: 所有章节均有≥5条候选条目，覆盖率合格。')
+        print("**结论**: 所有章节均有≥5条候选条目，覆盖率合格。")
     else:
-        print('**警告**: 存在低于5条候选项的章节，建议补充。')
+        print("**警告**: 存在低于5条候选项的章节，建议补充。")
     sys.exit(0)
 
 # Normal mode: output the index draft
-print('# 概念索引（自动生成草稿）')
+print("# 概念索引（自动生成草稿）")
 print()
-print('> 关键概念和术语的章节位置索引。条目按字母顺序排列。')
-print('> **注意**: 本文件由 index.py 自动生成，需要人工审核和精简。')
+print("> 关键概念和术语的章节位置索引。条目按字母顺序排列。")
+print("> **注意**: 本文件由 index.py 自动生成，需要人工审核和精简。")
 print()
 
-current_letter = ''
-for term, ch, sec, etype in sorted_entries:
+current_letter = ""
+for term, _ch, sec, etype in sorted_entries:
     first_letter = term[0].upper()
     if first_letter != current_letter:
         current_letter = first_letter
-        print(f'## {current_letter}')
+        print(f"## {current_letter}")
         print()
 
-    if etype == 'heading':
-        print(f'- **{term}** — {sec}')
+    if etype == "heading":
+        print(f"- **{term}** — {sec}")
     else:
-        print(f'- **{term}** — {sec}')
+        print(f"- **{term}** — {sec}")
     print()

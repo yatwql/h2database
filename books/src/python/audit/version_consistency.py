@@ -36,9 +36,9 @@ import zipfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _fsutil
+from lib import _config, _errors, _fsutil
 
-DOC_HEAD_RE = re.compile(r'^\s*>?\s*版本\s*[:：]\s*v?([\d.]+)', re.MULTILINE)
+DOC_HEAD_RE = re.compile(r'^\s*>?\s*版本\s*[:：]\s*v?([\d.]+(?:-dev)?)', re.MULTILINE)
 MANIFEST_RE = re.compile(r'<!-- versions: tool=(\S+) source=(\S+) doc=(\S+) -->')
 
 
@@ -126,7 +126,7 @@ def title_problems() -> list[str]:
     return problems
 
 
-COVER_VERSION_RE = re.compile(r'版本\s+v([\d.]+)')
+COVER_VERSION_RE = re.compile(r'版本\s+v([\d.]+(?:-dev)?)')
 
 
 def cover_problems() -> list[str]:
@@ -159,7 +159,7 @@ def artifact_text(path: str) -> str | None:
             from pypdf import PdfReader
 
             reader = PdfReader(path)
-        except Exception:  # noqa: BLE001 - unreadable PDF is verify_pdf's finding
+        except Exception:
             return None
         return ''.join((page.extract_text() or '') for page in reader.pages[:5])
     try:
@@ -265,4 +265,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))

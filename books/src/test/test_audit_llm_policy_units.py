@@ -37,7 +37,7 @@ class LlmPolicyUnitTest(unittest.TestCase):
     def test_example_key_file_must_stay_empty(self):
         self.assertEqual(self.policy.secret_files(), [])
 
-    def test_a_tracked_key_file_is_reported(self):
+    def test_a_tracked_key_file_under_the_book_prefix_is_reported(self):
         tracked = mock.Mock(returncode=0, stdout='books/data/config/llm_key.json\n', stderr='')
         with mock.patch.object(self.policy.subprocess, 'run', return_value=tracked):
             problems = self.policy.secret_files()

@@ -22,13 +22,12 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from api_sections import api_section
 from appendix import APPENDIX_SPEC, TYPE_EMOJI, render_appendix
 from factblocks import backup_existing, line_delta, refresh_blocks
 from factblocks import mark_block as _gen
-from lib import _config, _fsutil, _log, _mdutil
+from lib import _config, _errors, _fsutil, _log, _mdutil
 
-OUTLINE = _config.state_path('outline.json')
-SOURCE_ROOT = _config.source_tree('src_main')
 
 def _spec_table() -> dict[str, list[tuple[int, str]]]:
     """Chapter file -> [(H1 number, title)] derived from book.toml."""
@@ -55,9 +54,24 @@ PUBLIC_METHOD_LINE = re.compile(
     r'[\w<>\[\],.?\s]+\s+(\w+)\s*\(')
 
 
-PKG_PREFIX = _config.SOURCES.get('package_prefix') or 'unknown'
-GEN = _config.POLICY.get('generation', {})
-TPL = _config.templates()
+def _outline_path() -> str:
+    """Where this book keeps its outline, resolved when used."""
+    return _config.state_path('outline.json')
+
+
+def _pkg_prefix() -> str:
+    """The source package prefix this book declares."""
+    return _config.SOURCES.get('package_prefix') or 'unknown'
+
+
+def _generation() -> dict:
+    """Generation limits from the policy, read when asked."""
+    return _config.POLICY.get('generation', {})
+
+
+def _templates() -> dict:
+    """Prose templates, read when asked."""
+    return _config.templates()
 
 
 # Set by main(): whether the lead-in and summary may be written by the LLM.
@@ -89,7 +103,7 @@ def prose(kind: str, fallback: str, enabled: bool | None = None, **facts) -> str
         from lib import _llm  # lazy: the offline path stays stdlib-only
         scenario = 'chapter-draft' if kind == 'lead' else 'summary'
         text = _llm.complete(_prose_prompt(kind, facts), scenario=scenario)
-    except Exception as exc:  # noqa: BLE001 - a provider hiccup must not break ingest
+    except Exception as exc:
         print(f'  [warn] LLM prose unavailable ({exc}); using deterministic text',
               file=sys.stderr)
         return fallback
@@ -125,14 +139,14 @@ def _prose_prompt(kind: str, facts: dict) -> str:
 
 def tpl(key: str, fallback: str, **facts) -> str:
     """Render a config-provided string template; falls back to the default."""
-    pattern = TPL.get(key)
+    pattern = _templates().get(key)
     if not isinstance(pattern, str):
         pattern = fallback
     try:
         return pattern.format(**facts)
     except (KeyError, IndexError):
         return fallback.format(**facts)
-MAX_TABLE_ROWS = int(GEN.get('max_api_rows', 20))
+MAX_TABLE_ROWS = int(_generation().get('max_api_rows', 20))
 
 
 def _table(headers: list[str], rows: list[list[str]]) -> list[str]:
@@ -141,11 +155,35 @@ def _table(headers: list[str], rows: list[list[str]]) -> list[str]:
 
 
 def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> list[str]:
-    """Render the body sections for one chapter number."""
+    """Render the body sections for one chapter number.
+
+    The numbers every section quotes are computed once in `_chapter_context`;
+    the body is then assembled section group by section group, so each helper
+    reads the same facts the previous group printed instead of deriving them
+    again.
+    """
     pkgs_sorted = sorted(packages.items(), key=lambda kv: -kv[1]['lines'])
     total_lines = sum(p['lines'] for p in packages.values()) or 1
     cross_num, cross_name = cross
-    L: list[str] = []
+    ctx = _chapter_context(cn, packages, pkgs_sorted, total_lines)
+    ctx['cross'] = cross
+    out = _map_sections(cn, packages, ctx)
+    out += _api_sections(cn, ctx)
+    reading, cn_tradeoff = _reading_sections(cn, cross_num, cross_name, ctx)
+    out += reading
+    out += _tradeoff_sections(cn, ctx, cn_tradeoff)
+    out += _deep_dive_sections(cn, ctx, cn_tradeoff)
+    terms, cn_summary = _term_sections(cn, packages, ctx, cn_tradeoff)
+    out += terms
+    out += _summary_sections(cn, packages, ctx, cn_summary)
+    out += _aspect_sections(cn, ctx, cn_summary)
+    out += _checklist_sections(cn, packages, ctx, cn_summary)
+    return out
+
+
+def _chapter_context(cn: int, packages: dict, pkgs_sorted: list[tuple[str, dict]],
+                     total_lines: int) -> dict:
+    """The facts every section of this chapter body quotes."""
     top_pkg, top_info = pkgs_sorted[0] if pkgs_sorted else (
         '—', {'lines': 0, 'files': 0, 'key_classes': [], 'depends_on': {}})
     second_pkg, second_info = pkgs_sorted[1] if len(pkgs_sorted) > 1 else (top_pkg, top_info)
@@ -157,16 +195,29 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
              'top': top_pkg, 'toplines': f'{top_info.get("lines", 0):,}',
              'sig': '、'.join(list(packages)[:3]) or '—',
              'pkgcount': len(packages), 'rows': min(len(packages) * 3, 20),
-             'take': int(GEN.get('max_classes_per_package', 4)),
+             'take': int(_generation().get('max_classes_per_package', 4)),
              'others': max(0, len(packages) - 1),
              'files': top_info.get('files', 0), 'dep': dep_head}
     facts_intro = {'num': cn, 'pkgs': len(packages), 'lines': f'{total_lines:,}',
                    'sig': '、'.join(list(packages)[:3]) or '—',
                    'top': next(iter(packages), '—')}
+    return {'cn': cn, 'pkgs_sorted': pkgs_sorted, 'total_lines': total_lines,
+            'top_pkg': top_pkg, 'top_info': top_info,
+            'second_pkg': second_pkg, 'second_info': second_info,
+            'big': big, 'dep_head': dep_head,
+            'facts': facts, 'facts_intro': facts_intro}
+
+
+def _map_sections(cn: int, packages: dict, ctx: dict) -> list[str]:
+    """§1 module map and §2 core types: what the chapter is made of."""
+    facts = ctx['facts']
+    facts_intro = ctx['facts_intro']
+    pkgs_sorted = ctx['pkgs_sorted']
+    L: list[str] = []
     L += [f'## {cn}.1 模块版图', '',
           tpl('map_intro', '本章覆盖 {pkgs} 个包、{lines} 行实现。',
               **facts_intro), '']
-    keep = int(GEN.get('max_packages_per_table', 12))
+    keep = int(_generation().get('max_packages_per_table', 12))
     map_lines = _table(['包', '文件数', '行数', '职责'],
                        [[f'`{p}`', f"{i['files']}", f"{i['lines']:,}",
                          i['summary'] or '（无包注释，按主类型归纳）']
@@ -188,78 +239,28 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
             ['类型', '行数', '公开方法', '职责'],
             [[f"`{c['name']}`", f"{c['lines']:,}", f"{c['public_methods']}",
               c['summary'] or '（无类注释，按方法名归纳）']
-             for c in info['key_classes'][:int(GEN.get('max_classes_per_package', 4))]]))
+             for c in info['key_classes'][:int(_generation().get('max_classes_per_package', 4))]]))
+    return L
 
-    L += [f'## {cn}.3 关键 API 与源码坐标', '']
-    rows = []
-    for _pkg, info in pkgs_sorted:
-        for cls in info['key_classes'][:3]:
-            rel = cls.get('rel') or ''
-            api_lines = cls.get('api_lines') or {}
-            if not rel:
-                continue
-            for api in cls.get('api', [])[:2]:
-                lineno = api_lines.get(api)
-                rows.append([f"`{cls['name']}.{api}()`",
-                             f'`{rel}:{lineno}`' if lineno else f'`{rel}`'])
-    L += _gen('api', [
-        tpl('api_intro',
-            '下表把公开入口与源码位置对应起来，共 {rows} 条坐标。', **facts), '',
-        *_table(['入口', '源码坐标'], rows[:20] or [['`—`', '`org/h2/...`']])])
 
-    type_rows = []
-    for pkg, info in pkgs_sorted:
-        for cls in (info.get('key_classes') or [])[:5]:
-            type_rows.append([f'`{cls["name"]}`', f'`{pkg}`',
-                              f'{cls["lines"]:,}', f'{cls["public_methods"]}'])
-    if type_rows:
-        L += [f'## {cn}.3.1 公共类型清单', '']
-        L += _gen('type-list', [
-            (f'本章抽样类型按包分组，共 {len(type_rows)} 行；'
-             '规模与公开方法数是阅读优先级的第一信号。'), '',
-            *_table(['类型', '包', '行数', '公开方法'], type_rows)])
+def _api_sections(cn: int, ctx: dict) -> list[str]:
+    """§3 entries and coordinates; the assembly lives in `ingest/api_sections`."""
+    return api_section(cn, ctx, tpl=tpl, table=_table, mark=_gen, dep_count=info_dep_count)
 
-    take = 8 if len(pkgs_sorted) <= 2 else 4
-    guide = []
-    for pkg, info in pkgs_sorted:
-        for cls in (info.get('key_classes') or [])[:take]:
-            guide.append((pkg, cls))
-    if guide:
-        L += [f'## {cn}.3.2 逐类导读', '',
-              ('按本章主责包的类型规模顺序，给出每类"职责—规模—入口"三件事，'
-              '便于按需下钻。'), '']
-        for n, (pkg, cls) in enumerate(guide, start=1):
-            info = dict(pkgs_sorted)[pkg]
-            share = round(100 * cls["lines"] / max(1, info["lines"]))
-            L += [f'### {cn}.3.2.{n} `{cls["name"]}`', '',
-                  (f'`{cls["name"]}` 位于 `{pkg}`，{cls["lines"]:,} 行、'
-                   f'{cls["public_methods"]} 个公开方法。'
-                   f'它占该包实现的 {share}%，包内排名第 {n}。'),
-                  '',
-                  (f'职责一句话：{cls["summary"] or "按方法名与调用点归纳"}。'
-                   f'读它之前先看包级依赖（{info_dep_count(info)} 个），'
-                   '再决定是否顺带读同包的相邻类型。'),
-                  '',
-                  ]
 
-    coord_rows = []
-    for _pkg, info in pkgs_sorted:
-        for cls in (info.get('key_classes') or [])[:6]:
-            rel = cls.get('rel') or ''
-            api_lines = cls.get('api_lines') or {}
-            if not rel:
-                continue
-            for api in cls.get('api', [])[:6]:
-                lineno = api_lines.get(api)
-                if lineno:
-                    coord_rows.append([f'`{cls["name"]}.{api}()`', f'`{rel}:{lineno}`'])
-    if coord_rows:
-        L += [f'## {cn}.3.2 源码坐标明细', '']
-        L += _gen('coords', [
-            (f'本章主责包中 {len(coord_rows)} 个公开入口的行号，'
-             '按类聚簇，可直接跳转阅读。'), '',
-            *_table(['入口', '源码坐标'], coord_rows)])
+def _reading_sections(cn: int, cross_num: str, cross_name: str,
+                      ctx: dict) -> tuple[list[str], int]:
+    """§4 reading path and §5 dependency direction; also picks the trade-off number.
 
+    The trade-off heading number depends on whether a dependency table was
+    printed, so it leaves here as the second return value.
+    """
+    facts = ctx['facts']
+    top_pkg = ctx['top_pkg']
+    big = ctx['big']
+    dep_head = ctx['dep_head']
+    pkgs_sorted = ctx['pkgs_sorted']
+    L: list[str] = []
     # A chapter can map to no package at all (an empty or front-matter-only
     # outline); the reading path then falls back to the placeholders instead of
     # indexing an empty list.
@@ -294,6 +295,18 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         cn_tradeoff = 6
     else:
         cn_tradeoff = 5
+    return L, cn_tradeoff
+
+
+def _tradeoff_sections(cn: int, ctx: dict, cn_tradeoff: int) -> list[str]:
+    """Design trade-offs and the misreading they invite."""
+    top_pkg = ctx['top_pkg']
+    top_info = ctx['top_info']
+    second_pkg = ctx['second_pkg']
+    second_info = ctx['second_info']
+    big = ctx['big']
+    dep_head = ctx['dep_head']
+    L: list[str] = []
     L += [
         f'## {cn}.{cn_tradeoff} 设计权衡', '',
         (f'`{top_pkg}` 有 {top_info["files"]} 个文件、{top_info["lines"]:,} 行。'
@@ -302,7 +315,7 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         (f'其中 `{big["name"]}` 独占 {big["lines"]:,} 行，'
          f'{big["public_methods"]} 个公开方法。规模集中，风险也集中。'),
         '',
-        (f'它对外声明 {info_dep_count(top_info)} 个 `{PKG_PREFIX}` 依赖，'
+        (f'它对外声明 {info_dep_count(top_info)} 个 `{_pkg_prefix()}` 依赖，'
          f'最重的是 `{dep_head}`。依赖越集中，越说明它是被复用的底座。'),
         '',
         (f'与 `{second_pkg}`（{second_info["lines"]:,} 行）的分工是本章最该记住的边界。'
@@ -321,13 +334,23 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
          '扩展点分布完全不同。'),
         '',
     ]
+    return L
 
+
+def _deep_dive_sections(cn: int, ctx: dict, cn_tradeoff: int) -> list[str]:
+    """§N deep reading: the numbers a reader should carry into the chapter."""
+    facts = ctx['facts']
+    top_info = ctx['top_info']
+    big = ctx['big']
+    dep_head = ctx['dep_head']
+    total_lines = ctx['total_lines']
+    L: list[str] = []
     share = round(100 * top_info.get('lines', 0) / max(1, total_lines))
     L += [f'## {cn}.{cn_tradeoff + 2} 深读要点', '']
-    deep_items = TPL.get('deep_dive')
+    deep_items = _templates().get('deep_dive')
     if not isinstance(deep_items, list):
         deep_items = ['- `{top}` 占本章 {share}% 的实现行数。',
-                      f'- `{{top}}` 依赖 {{deps}} 个 `{PKG_PREFIX}` 包，`{{dep}}` 最频繁。',
+                      f'- `{{top}}` 依赖 {{deps}} 个 `{_pkg_prefix()}` 包，`{{dep}}` 最频繁。',
                       '- `{big}` 有 {methods} 个公开方法，是本章主干。']
     for item in deep_items:
         deep = {'top': facts['top'], 'share': share,
@@ -338,7 +361,17 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
             line = line.format(**deep)   # a template naming a fact it was not given stays literal
         L += [line]
     L += ['']
+    return L
 
+
+def _term_sections(cn: int, packages: dict, ctx: dict,
+                   cn_tradeoff: int) -> tuple[list[str], int]:
+    """Terminology block; returns the number the summary heading uses.
+
+    Chapters without a term hit skip the block, which shifts every following
+    heading number by one, so the caller gets the number back.
+    """
+    L: list[str] = []
     hit_terms = _glossary_hits(packages)
     cited_terms = glossary_terms_for_chapter(cn)
     for term in cited_terms:
@@ -351,7 +384,15 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         cn_summary = cn_tradeoff + 3
     else:
         cn_summary = cn_tradeoff + 2
+    return L, cn_summary
 
+
+def _summary_sections(cn: int, packages: dict, ctx: dict, cn_summary: int) -> list[str]:
+    """Knowledge block, chapter summary and exercise block."""
+    top_pkg = ctx['top_pkg']
+    total_lines = ctx['total_lines']
+    pkgs_sorted = ctx['pkgs_sorted']
+    L: list[str] = []
     L += knowledge_block(cn, pkgs_sorted)
     summary_line = prose('summary',
                          f'- 本章覆盖 {len(packages)} 个包、{total_lines:,} 行。',
@@ -363,7 +404,19 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
 
     L += [f'## {cn}.{cn_summary + 1} 延伸思考', '']
     L += exercise_block(cn, pkgs_sorted)
+    return L
 
+
+def _aspect_sections(cn: int, ctx: dict, cn_summary: int) -> list[str]:
+    """§N the per-chapter angle, plus the dependency detail behind it."""
+    top_pkg = ctx['top_pkg']
+    top_info = ctx['top_info']
+    second_pkg = ctx['second_pkg']
+    second_info = ctx['second_info']
+    big = ctx['big']
+    dep_head = ctx['dep_head']
+    pkgs_sorted = ctx['pkgs_sorted']
+    L: list[str] = []
     aspect = ASPECTS[cn % len(ASPECTS)]
     L += [f'## {cn}.{cn_summary + 2} 本章视角：{aspect}', '',
           (f'- 以「{aspect}」看 `{top_pkg}`：{top_info.get("files", 0)} 个文件、'
@@ -383,8 +436,18 @@ def _sections(cn: int, title: str, packages: dict, cross: tuple[str, str]) -> li
         L += _gen('dep-detail', [
             '按 `import` 出现次数排序，数值越大耦合越深，重构窗口越窄。', '',
             *_table(['来源包', '目标包', '次数'], dep_detail)])
+    return L
 
-    checklist_items = int(GEN.get('checklist_items', 5))
+
+def _checklist_sections(cn: int, packages: dict, ctx: dict,
+                        cn_summary: int) -> list[str]:
+    """The reading checklist, the cross-index and the further-reading line."""
+    top_pkg = ctx['top_pkg']
+    second_pkg = ctx['second_pkg']
+    big = ctx['big']
+    cross_num, cross_name = ctx['cross']
+    L: list[str] = []
+    checklist_items = int(_generation().get('checklist_items', 5))
     L += [f'## {cn}.{cn_summary + 2}.2 阅读检查清单', '',
           (f'本章给出 {checklist_items} 条自查项，逐条确认后再进入下一章。'), '',
           (f'读完本章，先自问三个问题。能否不看正文画出 `{top_pkg}` 与 '
@@ -414,7 +477,7 @@ def exercise_block(cn: int, pkgs_sorted: list[tuple[str, dict]]) -> list[str]:
         '以 {cls} 为入口，画出一次完整调用经过的包。',
         '只保留一个类型时，你留 {cls} 还是 {cls2}？说明代价。',
     )
-    for index in range(int(GEN.get('exercises_per_chapter', 4))):
+    for index in range(int(_generation().get('exercises_per_chapter', 4))):
         pkg, info = picks[index % len(picks)]
         classes = [c['name'] for c in info.get('key_classes') or []]
         cls = classes[0] if classes else '主入口'
@@ -677,7 +740,7 @@ def _source_change_line() -> str:
     return '源码清单：已变化（源码树有新内容，事实块会随之刷新）'
 
 
-def main(argv: list[str] | None = None) -> int:
+def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--only', help='single chapter file name')
@@ -688,11 +751,91 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument('--refresh-facts', action='store_true',
                         help='replace only the marked generated blocks; '
                              'files without markers are skipped and reported')
+    parser.add_argument('--plan', action='store_true',
+                        help='只报告 --llm 会写哪些章、大约花多少调用，不写文件')
     parser.add_argument('--llm', action='store_true',
                         help='let the LLM draft the lead-in and summary prose '
                              '(facts, tables and coordinates stay deterministic)')
-    args = parser.parse_args(argv)
+    return parser
 
+
+def _load_state():
+    """(inventory, outline) from the derived state, or None when unreadable."""
+    global _INVENTORY
+    try:
+        inventory = json.loads(_fsutil.read_text(
+            _config.state_path('source-inventory.json')))
+        outline = json.loads(_fsutil.read_text(_outline_path()))
+    except json.JSONDecodeError as exc:
+        print(f'error: state files are not valid JSON: {exc}', file=sys.stderr)
+        return None
+    _INVENTORY = inventory
+    return inventory, outline
+
+
+def _emit_all(outline: dict, args, stamp: str) -> dict[str, int]:
+    """Render or refresh every chapter the outline lists; returns the counters."""
+    counters = {'written': 0, 'skipped': 0, 'refreshed': 0, 'unchanged': 0, 'unmarked': 0}
+    for chapter in outline['chapters']:
+        if args.only and chapter['file'] != args.only:
+            continue
+        if chapter['file'] in APPENDIX_SPEC:
+            counters['written'] += _append_appendix(chapter, args.dry_run) == 'written'
+            continue
+        if chapter['file'] not in CHAPTER_SPEC:
+            continue
+        status = _emit_chapter(chapter, args, stamp)
+        counters['written'] += status == 'written'
+        counters['refreshed'] += status == 'refresh'
+        counters['unchanged'] += status == 'unchanged'
+        counters['skipped'] += status == 'skip'
+        counters['unmarked'] += status == 'skip' and args.refresh_facts
+    return counters
+
+
+def _report(counters: dict[str, int], args) -> None:
+    if args.refresh_facts:
+        print(f"刷新 {counters['refreshed']} 章 / 跳过 {counters['unmarked']} 章（无标记块）")
+        return
+    print(f"chapters written: {counters['written']}")
+    if counters['refreshed']:
+        print(f"事实块已刷新: {counters['refreshed']} 章（正文未动）")
+    if counters['unchanged']:
+        print(f"事实块无变化: {counters['unchanged']} 章")
+    if counters['skipped']:
+        print(f"chapters skipped: {counters['skipped']}"
+              '（正文无标记块或需整篇重生成；--force 可重写）')
+    if _USE_LLM and not counters['written']:
+        print('LLM 未介入：本轮没有生成或重写的章节，导读/小结没有可润色的对象；'
+              '要对已有正文润色请加 --force（旧文件先备份）或按章用 --only。')
+
+
+# Two calls per chapter (lead-in, summary). The estimate is deliberately crude: it
+# exists so an operator can decide before spending, not to bill anyone.
+CALLS_PER_CHAPTER = 2
+CHARS_PER_CALL = 1200
+
+
+def _print_llm_plan(args) -> int:
+    """What `--llm` would write, and roughly what it costs, without writing anything."""
+    targets = list(CHAPTER_SPEC) + list(APPENDIX_SPEC)
+    if args.only:
+        targets = [name for name in targets if name == args.only]
+    missing = [name for name in targets if not os.path.isfile(_config.manuscript(name))]
+    planned = missing if not (args.force or args.only) else targets
+    calls = len(planned) * CALLS_PER_CHAPTER
+    print(f'计划：{"整篇重写" if args.force or args.only else "补缺"} {len(planned)} 章')
+    print(f'  LLM 作用范围：每章的导读与小结点各一次调用（共 {calls} 次，'
+          f'约 {calls * CHARS_PER_CALL // 1000}k 字符输入量级）；'
+          '事实块、结构、代码摘录不走 LLM。')
+    print(f'  本轮跳过：{len(targets) - len(planned)} 章（正文已在且未要求重写）')
+    if not planned:
+        print('  结论：没有需要 LLM 起草的内容，可以不加 --llm 直接构建。')
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parser().parse_args(argv)
     if args.refresh_facts and args.force:
         print('error: --refresh-facts 与 --force 是两条路径，不能同时使用',
               file=sys.stderr)
@@ -703,53 +846,36 @@ def main(argv: list[str] | None = None) -> int:
                     or os.environ.get('BOOK_LLM_INGEST') == '1'
                     or _config.llm_ingest_prose())
 
-    global _INVENTORY
-    try:
-        _INVENTORY = json.loads(_fsutil.read_text(
-            _config.state_path('source-inventory.json')))
-        outline = json.loads(_fsutil.read_text(OUTLINE))
-    except json.JSONDecodeError as exc:
-        print(f'error: state files are not valid JSON: {exc}', file=sys.stderr)
+    # Nothing to polish is knowable before the source scan, which is what makes the
+    # wait long. Saying it up front costs milliseconds; saying it after two minutes
+    # of scanning is how a run feels like it did nothing.
+    if _USE_LLM and args.plan:
+        return _print_llm_plan(args)
+    if _USE_LLM and not (args.force or args.refresh_facts or args.only):
+        targets = list(CHAPTER_SPEC) + list(APPENDIX_SPEC)
+        missing = [name for name in targets if not os.path.isfile(_config.manuscript(name))]
+        if not missing:
+            print('本轮不会生成或重写任何章节：正文文件都在，没有需要润色的新正文。')
+            print('LLM 不介入：导读/小结只在新生成或整篇重写的章节上润色。')
+            print('要润色已有正文：加 --force（整篇重写，旧文件先备份），'
+                  '或用 --only <章文件名> 只重写一章。')
+            return 0
+        # a first build is what the LLM is actually for: every chapter is new, so
+        # every lead-in and summary is drafted, while facts and structure stay
+        # deterministic -- say so before the scan, not after it
+        print(f'本轮将生成 {len(missing)} 章；LLM 只为这些章的导读/小结起草文字，'
+              '事实、结构、代码摘录仍由确定性流程生成。')
+
+    state = _load_state()
+    if state is None:
         return 2
+    _inventory, outline = state
 
     print(_source_change_line())
-
-    written = 0
-    skipped = 0
-    refreshed = 0
-    unchanged = 0
-    unmarked = 0
-    stamp = time.strftime('%Y-%m-%d_%H%M%S')
-    for ch in outline['chapters']:
-        if args.only and ch['file'] != args.only:
-            continue
-        if ch['file'] in APPENDIX_SPEC:
-            status = _append_appendix(ch, args.dry_run)
-            written += status == 'written'
-            continue
-        if ch['file'] not in CHAPTER_SPEC:
-            continue
-        status = _emit_chapter(ch, args, stamp)
-        written += status == 'written'
-        refreshed += status == 'refresh'
-        unchanged += status == 'unchanged'
-        skipped += status == 'skip'
-        unmarked += status == 'skip' and args.refresh_facts
-    if args.refresh_facts:
-        print(f'刷新 {refreshed} 章 / 跳过 {unmarked} 章（无标记块）')
-        return 0
-    print(f'chapters written: {written}')
-    if refreshed:
-        print(f'事实块已刷新: {refreshed} 章（正文未动）')
-    if unchanged:
-        print(f'事实块无变化: {unchanged} 章')
-    if skipped:
-        print(f'chapters skipped: {skipped}（正文无标记块或需整篇重生成；--force 可重写）')
-    if _USE_LLM and not written:
-        print('LLM 未介入：本轮没有生成或重写的章节，导读/小结没有可润色的对象；'
-              '要对已有正文润色请加 --force（旧文件先备份）或按章用 --only。')
+    counters = _emit_all(outline, args, time.strftime('%Y-%m-%d_%H%M%S'))
+    _report(counters, args)
     return 0
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(_errors.run(main, sys.argv[1:]))
