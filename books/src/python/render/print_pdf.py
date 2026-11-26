@@ -40,8 +40,39 @@ generate_script = os.path.join(script_dir, 'to_html.py')
 _DEFAULT_LINKER = object()
 
 
+def reference_metrics(pdf_path: str | None = None) -> dict:
+    """Measure the delivery edition: same font, column and text as the print one.
+
+    The print edition is the same markup set the same way, so the delivery PDF is
+    the cheapest sample of "how many characters does a line hold with this face" —
+    no extra render, and the answer moves when the book's font changes.
+    """
+    from render import pdf_metrics  # noqa: PLC0415 - only needed for adaptation
+
+    source = pdf_path or _config.merged_pdf()
+    if not os.path.exists(source):
+        return {}
+    return pdf_metrics.measure(source)
+
+
+def adaptive_numbers(pdf_path: str | None = None) -> dict | None:
+    """Print type solved from the measurement, or None when there is nothing to read."""
+    from lib import layout as _layout  # noqa: PLC0415 - call-time resolution
+
+    metrics = reference_metrics(pdf_path)
+    if not metrics.get('chars_per_line'):
+        return None
+    layout, _problems = _layout.Layout.from_mapping(_config.THRESHOLDS or {})
+    target = float(_config.THRESHOLDS.get('layout_print_lead_target', 1.0) or 1.0)
+    lead_target = 1.0 + target
+    return print_profile.solve_print_type(
+        metrics, body_px=layout.body_size_px(), chars_per_line=layout.chars_per_line,
+        lead_target=lead_target)
+
+
 def build(html_path: str | None = None, pdf_path: str | None = None,
-          engine: Any = None, linker: Any = _DEFAULT_LINKER) -> int:
+          engine: Any = None, linker: Any = _DEFAULT_LINKER,
+          probe: Any = None) -> int:
     """Render the print edition; returns the page count.
 
     The printed TOC needs its link targets stamped after rendering, exactly as the
@@ -55,8 +86,13 @@ def build(html_path: str | None = None, pdf_path: str | None = None,
           flush=True)
     print(f'  {print_profile.describe()}')
 
+    numbers = probe() if probe is not None else None
+    if numbers:
+        print(f'  自适应印刷参数：body={numbers["body_px"]}px '
+              f'lead={numbers["line_height"]} code={numbers["code_px"]}px '
+              f'(scale {numbers["scale"]})', flush=True)
     staging = _config.dist(f'_{_config.MERGED_NAME}-print.html')
-    _fsutil.write_text(staging, print_profile.inject(html))
+    _fsutil.write_text(staging, print_profile.inject(html, numbers))
     try:
         print('  Chromium 分章渲染中（与标准版同一页框）…', flush=True)
         count = pdf_split.render_html(staging, target, engine=engine)
@@ -80,6 +116,8 @@ def main(argv: list[str] | None = None, engine: Any = None) -> int:
     parser.add_argument('--pdf', help='target PDF (default: print-grade PDF)')
     parser.add_argument('--skip-html', action='store_true',
                         help='do not regenerate the HTML before printing')
+    parser.add_argument('--adaptive', action='store_true',
+                        help='solve the printed type from the delivery PDF (font-aware)')
     args = parser.parse_args(argv)
 
     if not args.skip_html and os.path.exists(generate_script):
@@ -90,8 +128,9 @@ def main(argv: list[str] | None = None, engine: Any = None) -> int:
         if result.returncode != 0:
             print('HTML generation FAILED:', result.stderr, file=_sys.stderr)
             return 1
+    probe = adaptive_numbers if args.adaptive else None
     try:
-        build(args.html, args.pdf, engine)
+        build(args.html, args.pdf, engine, probe=probe)
     except Exception as exc:
         print(f'  print-grade PDF FAILED: {exc}', file=_sys.stderr)
         return 1

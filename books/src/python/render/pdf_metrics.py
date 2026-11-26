@@ -85,6 +85,12 @@ def measure(path: str) -> dict:
         'heading_pt': max(sizes) if sizes else 0.0,
         'body_share': round(sizes.get(body, 0) * 100 / total),
         'lines_per_page': round(statistics.median(baselines)) if baselines else 0,
+        # what the adaptive print step solves against: how many characters a line
+        # actually holds (moves when the font changes) and the set leading ratio
+        'chars_per_line': round(sample_chars / max(1, round(statistics.median(baselines))))
+        if baselines and sample else 0,
+        'pitch_ratio': round(statistics.median(pitches) / body, 3)
+        if pitches and body else 0.0,
         'pitch_pt': round(statistics.median(pitches), 1) if pitches else 0.0,
         'text_width_pt': round(statistics.median(widths), 1) if widths else 0.0,
     }

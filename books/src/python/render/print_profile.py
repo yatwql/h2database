@@ -103,6 +103,46 @@ PRINT_CSS = '''<style id="__STYLE_ID__">
 </style>'''
 
 
+def solve_print_type(metrics: dict, *, body_px: int, chars_per_line: int,
+                     lead_target: float, scale_min: float = 0.8) -> dict[str, float]:
+    """Printed type solved from a *measured* sample, not from this book.
+
+    The only inputs are properties of the set type: how many characters a line
+    actually holds in the reference document (that number moves when the font
+    changes) and the leading ratio the page should have. A wider face therefore
+    shrinks the body more, a narrower one less, and no page count of any particular
+    book is baked in.
+
+    `metrics` comes from `render.pdf_metrics.measure`; a missing `chars_per_line`
+    means "no adaptation" and the scale stays 1.0.
+    """
+    measured = float(metrics.get('chars_per_line') or 0)
+    # characters per line is inversely proportional to the type size in a fixed
+    # column, so a line that holds *fewer* characters than the reading measure wants
+    # means the type is too big: scale the body by measured/target, never upwards
+    scale = measured / float(chars_per_line) if measured > 0 and chars_per_line else 1.0
+    scale = max(float(scale_min), min(1.0, scale))
+    code_px = metrics.get('code_px') or body_px * 0.75
+    return {
+        'body_px': max(1, int(round(body_px * scale))),
+        'line_height': round(float(lead_target), 3),
+        'code_px': round(float(code_px), 1),
+        'scale': round(scale, 3),
+    }
+
+
+def density_css(numbers: dict) -> str:
+    """The `@media print` rule that makes paper denser than the screen."""
+    return (
+        '@media print {\n'
+        f'    #content {{ font-size: {numbers["body_px"]}px; '
+        f'line-height: {numbers["line_height"]}; }}\n'
+        f'    #content pre, #content code {{ font-size: {numbers["code_px"]}px; '
+        f'line-height: {numbers["line_height"]}; }}\n'
+        '}\n'
+    )
+
+
 def style_block() -> str:
     """The print-only rules, sized in `em` so they follow the layout's type scale.
 
@@ -112,11 +152,18 @@ def style_block() -> str:
     return PRINT_CSS.replace('__ACCENT__', accent()).replace('__STYLE_ID__', STYLE_ID)
 
 
-def inject(html: str) -> str:
-    """Add the print stylesheet once, just before `</head>`."""
+def inject(html: str, numbers: dict | None = None) -> str:
+    """Add the print stylesheet once, just before `</head>`.
+
+    `numbers` (from `solve_print_type`) adds the measured, print-only density rule;
+    without it the edition keeps the screen's type size.
+    """
     if f'id="{STYLE_ID}"' in html:
         return html
-    return html.replace('</head>', style_block() + '</head>', 1)
+    block = style_block()
+    if numbers:
+        block = block.replace('</style>', density_css(numbers) + '</style>', 1)
+    return html.replace('</head>', block + '</head>', 1)
 
 
 def describe() -> str:

@@ -155,6 +155,41 @@ class PrintEditionTest(unittest.TestCase):
         self.assertIn("@media print", once)
         self.assertEqual(self.profile.inject(once), once)
 
+    def test_a_wider_face_solves_to_a_smaller_body(self):
+        """Chars per line come from the set type, so the font decides the scale."""
+        # a face whose line holds fewer characters than the reading measure wants is
+        # set too large for the column, so the printed body shrinks; a narrower face
+        # that already fits is left at the screen size (never enlarged)
+        wide = self.profile.solve_print_type({"chars_per_line": 30}, body_px=16,
+                                             chars_per_line=40, lead_target=1.4)
+        narrow = self.profile.solve_print_type({"chars_per_line": 55}, body_px=16,
+                                               chars_per_line=40, lead_target=1.4)
+        self.assertEqual(wide["scale"], 0.8)       # floored: 30/40 would be 0.75
+        self.assertEqual(wide["body_px"], 13)
+        mid = self.profile.solve_print_type({"chars_per_line": 34}, body_px=16,
+                                            chars_per_line=40, lead_target=1.4)
+        self.assertEqual(mid["scale"], 0.85)
+        self.assertEqual(mid["body_px"], 14)
+        self.assertEqual(narrow["body_px"], 16)
+        self.assertEqual(narrow["scale"], 1.0)
+        self.assertEqual(narrow["line_height"], 1.4)
+
+    def test_a_measurement_that_says_nothing_keeps_the_screen_type(self):
+        numbers = self.profile.solve_print_type({}, body_px=16, chars_per_line=40,
+                                                lead_target=1.4)
+        self.assertEqual(numbers["body_px"], 16)
+        self.assertEqual(numbers["scale"], 1.0)
+
+    def test_the_density_rule_only_applies_to_paper(self):
+        numbers = self.profile.solve_print_type({"chars_per_line": 50, "code_px": 9.5},
+                                                body_px=16, chars_per_line=40,
+                                                lead_target=1.4)
+        block = self.profile.inject("<head></head>", numbers)
+        self.assertIn("@media print", block)
+        self.assertIn(f'font-size: {numbers["body_px"]}px', block)
+        self.assertIn(f'line-height: {numbers["line_height"]}', block)
+        self.assertIn('font-size: 9.5px', block)
+
     def test_the_profile_does_not_fix_type_in_pixels(self):
         block = self.profile.style_block()
         self.assertNotRegex(block, r"font-size:\s*[\d.]+px")
@@ -165,6 +200,47 @@ class PrintEditionTest(unittest.TestCase):
         # accent() resolves the config at call time, so patch the module it imports
         with mock.patch("lib._config.project", return_value="#123456"):
             self.assertIn("#123456", self.profile.style_block())
+
+    def test_the_reference_measurement_reads_the_delivery_pdf(self):
+        from pypdf import PdfWriter
+
+        writer = PdfWriter()
+        writer.add_blank_page(width=595, height=842)
+        with open(self.pdf, "wb") as handle:
+            writer.write(handle)
+        metrics = self.module.reference_metrics(self.pdf)
+        self.assertIn("pages", metrics)
+        self.assertEqual(self.module.reference_metrics(os.path.join(self.tmp.name, "nope.pdf")), {})
+
+    def test_adaptation_needs_a_measurement_to_solve_from(self):
+        from pypdf import PdfWriter
+
+        writer = PdfWriter()
+        writer.add_blank_page(width=595, height=842)
+        with open(self.pdf, "wb") as handle:
+            writer.write(handle)
+        # a blank page has no text, so there is nothing to adapt to
+        self.assertIsNone(self.module.adaptive_numbers(self.pdf))
+        real = {"chars_per_line": 34, "code_px": 9.0}
+        with mock.patch.object(self.module, "reference_metrics", lambda _p=None: real):
+            numbers = self.module.adaptive_numbers(self.pdf)
+        self.assertIsNotNone(numbers)
+        self.assertLess(numbers["body_px"], 16)
+
+    def test_the_adaptive_flag_hands_the_solver_to_build(self):
+        page = SplitPage(self.pdf, self.parts, self.headings)
+        numbers = {"body_px": 13, "line_height": 1.4, "code_px": 9.0, "scale": 0.8}
+        out = io.StringIO()
+        with (
+            mock.patch.object(self.module, "adaptive_numbers", return_value=numbers),
+            redirect_stdout(out),
+        ):
+            code = self.module.main(
+                ["--skip-html", "--html", self.html, "--pdf", self.pdf, "--adaptive"],
+                engine=fake_engine(page),
+            )
+        self.assertEqual(code, 0)
+        self.assertIn("自适应印刷参数", out.getvalue())
 
     def test_build_renders_through_the_splitter(self):
         page = SplitPage(self.pdf, self.parts, self.headings)
