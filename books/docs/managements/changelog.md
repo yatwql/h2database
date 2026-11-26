@@ -13,6 +13,12 @@
 
 ### 变更
 
+- **把最后几处「这本书的内容」从代码里清掉**：`manuscript/case_studies.py` 的思考小结原本写死三条 H2/JDBC
+  问题，现改为 `data/book/case-studies.toml [headers.<scenario>].questions`，缺省用与书无关的三问；
+  同一函数对 `heading`/`opening` 缺省也不再抛 `KeyError`（只配标题的书也能渲染）。`glossary.py`、
+  `index.py`、`case_studies.py` 的文档字符串去掉 H2 字样。核查结果：工具链代码里已无 `org.h2`、
+  具体源码树路径、具体书专有词；语言分析全部走注册表 + `sources.suffixes`（java/python/rust/kotlin/go/c
+  六个适配器，`detect()` 由后缀反推），换书只改 `data/book/book.toml` 与 `data/config/*.json`。
 - **C 语言分析器落地（plan-12 阶段 1–4）**：新增 `ingest/languages/<lang>.py`（`name = 'c'`、
   `suffixes = ('.c', '.h')`），注册表与 `data/config/base.json [sources].suffixes` 都补上 `c`，
   脚手架模板同步。C 没有包声明，所以包按目录切；`.h` 与同名 `.c` 同包；**引号形式**

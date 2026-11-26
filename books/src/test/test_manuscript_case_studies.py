@@ -138,6 +138,31 @@ class MissingConfigTest(unittest.TestCase):
         with mock.patch.object(case_studies, "case_study_config", lambda: target):
             self.assertEqual(case_studies.scenario_headers(), {})
 
+    def test_the_books_questions_replace_the_neutral_default(self):
+        case_studies = importlib.import_module("case_studies")
+        target = os.path.join(self.tmp, "case-studies.toml")
+        with open(target, "w", encoding="utf-8") as fh:
+            fh.write('[headers.select]\nheading = "## A.1 示例"\n'
+                     'questions = ["这道题属于本书"]\n'
+                     '[scenarios.select]\n[[scenarios.select.steps]]\n'
+                     'component = "入口"\nanchor = "§1.1"\ndecision = "进入"\n')
+        with mock.patch.object(case_studies, "case_study_config", lambda: target):
+            rendered = case_studies.render("select")
+        self.assertIn("1. 这道题属于本书", rendered)
+        self.assertNotIn(case_studies.DEFAULT_QUESTIONS[0], rendered)
+
+    def test_a_book_without_questions_gets_the_neutral_ones(self):
+        case_studies = importlib.import_module("case_studies")
+        target = os.path.join(self.tmp, "case-studies.toml")
+        with open(target, "w", encoding="utf-8") as fh:
+            fh.write('[headers.select]\nheading = "## A.1 示例"\n'
+                     '[scenarios.select]\n[[scenarios.select.steps]]\n'
+                     'component = "入口"\nanchor = "§1.1"\ndecision = "进入"\n')
+        with mock.patch.object(case_studies, "case_study_config", lambda: target):
+            rendered = case_studies.render("select")
+        self.assertIn(case_studies.DEFAULT_QUESTIONS[0], rendered)
+        self.assertIn("1. ", rendered)
+
     def test_a_broken_file_stops_the_scenario_loader(self):
         case_studies = importlib.import_module("case_studies")
         target = os.path.join(self.tmp, "broken.toml")

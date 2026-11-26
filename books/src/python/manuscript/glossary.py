@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Glossary builder for H2 documentation.
+Glossary builder: scans the book's chapter files for bold terms.
 
 Scans all chapter files and extracts:
 1. Bold terms (**TERM**) that appear to be glossary-worthy

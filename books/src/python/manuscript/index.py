@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Index builder for H2 documentation.
+Index builder: scans the book's chapter files for index entries.
 
 Scans all chapter files and extracts:
 1. H3/H4 headings as potential index entries

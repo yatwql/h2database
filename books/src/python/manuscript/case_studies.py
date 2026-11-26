@@ -3,7 +3,7 @@
 Case-study outline generator.
 
 Emits a narrative skeleton for one of three end-to-end appendix case studies,
-chaining curated section anchors from the published H2 source-code analysis
+chaining curated section anchors from a book's own manuscript
 chapters. Authors of U10 / U11 / U12 use the output as scaffolding before
 fleshing out figures, code excerpts, and decision-point commentary.
 
@@ -13,7 +13,7 @@ Usage:
     python case_studies.py --scenario recover
 
 Each scenario is a curated pipeline of (component, anchor, decision_point)
-tuples. The anchors are real H2/§X.Y sub-sections that exist in the published
+tuples. The anchors are real §X.Y sub-sections that exist in the book's
 chapter files; running the script merely linearises them into a writing
 template — it does NOT verify anchor freshness. The pipeline is responsible
 for that via structure.py cross-reference checks.
@@ -69,6 +69,13 @@ def load_scenarios() -> dict[str, list[tuple[str, str, str]]]:
     return out
 
 
+DEFAULT_QUESTIONS = (
+    '这条链路里哪些步骤是不可回退的？失败时调用方看到什么？',
+    '哪些步骤在缓存或批量路径下可以省略？省略的代价是什么？',
+    '在调试器里打哪些断点能完整复现这条链路？',
+)
+
+
 def scenarios() -> dict[str, list[tuple[str, str, str]]]:
     """The book's case-study pipelines, read when used (never at import)."""
     return load_scenarios()
@@ -95,9 +102,11 @@ def render(scenario: str) -> str:
     header = scenario_headers()[scenario]
 
     out = []
-    out.append(header['heading'])
+    out.append(header.get('heading') or f'## {scenario.upper()}')
     out.append('')
-    out.append(header['opening'])
+    opening = header.get('opening')
+    if opening:
+        out.append(opening)
     out.append('')
     out.append(f"> 本案例共 {len(steps)} 个流水线步骤，每步给出触发组件、关键决策点与原文回指。")
     out.append('')
@@ -116,9 +125,9 @@ def render(scenario: str) -> str:
 
     out.append('### 思考小结')
     out.append('')
-    out.append('1. 上述链路中，哪个环节的失败会被 H2 自动恢复？哪些会向调用方抛出异常？')
-    out.append('2. 如果绕过 JDBC 直接调用引擎层 API，能省掉哪些步骤？为什么不建议这样做？')
-    out.append('3. 在调试器里打哪些断点能完整复现这条链路？')
+    questions = header.get('questions') or DEFAULT_QUESTIONS
+    for index, question in enumerate(questions, start=1):
+        out.append(f'{index}. {question}')
     out.append('')
     return '\n'.join(out)
 
