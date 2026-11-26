@@ -221,8 +221,9 @@ class PrintEditionTest(unittest.TestCase):
             writer.write(handle)
         # a blank page has no text, so there is nothing to adapt to
         self.assertIsNone(self.module.adaptive_numbers(self.pdf))
-        real = {"chars_per_line": 34, "code_px": 9.0}
-        with mock.patch.object(self.module, "reference_metrics", lambda _p=None: real):
+        measured = {"chars_per_line": 34, "code_px": 9.0}
+        with mock.patch.object(self.module, "reference_metrics",
+                               lambda _path=None, m=measured: m):
             numbers = self.module.adaptive_numbers(self.pdf)
         self.assertIsNotNone(numbers)
         self.assertLess(numbers["body_px"], 16)

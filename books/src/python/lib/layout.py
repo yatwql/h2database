@@ -44,6 +44,9 @@ DEFAULTS = {
     'layout_print_wrap': 0,
     # the smallest margin paper gets; the column gives way if it would go below
     'layout_print_margin_min_mm': 16.0,
+    # the reading measure on paper: roomier than the screen's, because a printed
+    # line is followed by a reader who can see the whole page at once
+    'layout_print_chars_per_line': 44,
     # the band the reading measure must land in, in em; outside it the gate fails
     'layout_chars_per_line_min': 36,
     'layout_chars_per_line_max': 46,
@@ -75,6 +78,7 @@ RANGES = {
     'print_code_min_px': (4, 14),
     'print_wrap': (0, 1),
     'print_margin_min_mm': (5.0, 40.0),
+    'print_chars_per_line': (30, 80),
 }
 
 # sheet sizes in millimetres; an unknown name falls back to A4 rather than guessing
@@ -223,6 +227,7 @@ class Layout:
     # wrap instead of shrinking: one diagram row becomes several text rows
     print_wrap: int = DEFAULTS['layout_print_wrap']
     print_margin_min_mm: float = DEFAULTS['layout_print_margin_min_mm']
+    print_chars_per_line: int = DEFAULTS['layout_print_chars_per_line']
     chars_per_line_min: int = DEFAULTS['layout_chars_per_line_min']
     chars_per_line_max: int = DEFAULTS['layout_chars_per_line_max']
 

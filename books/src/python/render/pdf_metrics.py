@@ -87,7 +87,9 @@ def measure(path: str) -> dict:
         'lines_per_page': round(statistics.median(baselines)) if baselines else 0,
         # what the adaptive print step solves against: how many characters a line
         # actually holds (moves when the font changes) and the set leading ratio
-        'chars_per_line': round(sample_chars / max(1, round(statistics.median(baselines))))
+        # characters per line: the sampled characters over the sampled *lines*
+        # (median baselines is lines per page, so it cannot divide a multi-page count)
+        'chars_per_line': round(sample_chars / max(1, sum(baselines)))
         if baselines and sample else 0,
         'pitch_ratio': round(statistics.median(pitches) / body, 3)
         if pitches and body else 0.0,

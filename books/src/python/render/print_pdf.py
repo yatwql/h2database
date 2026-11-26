@@ -63,10 +63,11 @@ def adaptive_numbers(pdf_path: str | None = None) -> dict | None:
     if not metrics.get('chars_per_line'):
         return None
     layout, _problems = _layout.Layout.from_mapping(_config.THRESHOLDS or {})
-    target = float(_config.THRESHOLDS.get('layout_print_lead_target', 1.0) or 1.0)
+    target = float(_config.THRESHOLDS.get('layout_print_lead_target', 0.4) or 0.4)
     lead_target = 1.0 + target
     return print_profile.solve_print_type(
-        metrics, body_px=layout.body_size_px(), chars_per_line=layout.chars_per_line,
+        metrics, body_px=layout.body_size_px(),
+        chars_per_line=layout.print_chars_per_line,
         lead_target=lead_target)
 
 
