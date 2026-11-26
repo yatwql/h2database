@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate the **EPUB** delivery for the H2 documentation.
+Generate the **EPUB** delivery from the merged HTML.
 
 EPUB sits alongside the standard PDF and the print-grade PDF as
 an *on-demand* delivery format: it is produced only at the final

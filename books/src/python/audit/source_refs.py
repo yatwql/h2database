@@ -507,7 +507,7 @@ def _index_or_skip():
     class_index = build_class_index()
     if not class_index:
         print(
-            f"  [skip] H2 source tree not found at {source_root()}; "
+            f"  [skip] source tree not found at {source_root()}; "
             f"set [sources].src_main in data/config/config.json",
             file=sys.stderr,
         )

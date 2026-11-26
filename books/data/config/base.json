@@ -59,7 +59,9 @@
       "TransactionStore",
       "JdbcStatement",
       "SessionLocal",
-      "H2 Console"
+      "H2 Console",
+      "H2 source",
+      "H2 数据库引擎"
     ]
   },
   "logging": {

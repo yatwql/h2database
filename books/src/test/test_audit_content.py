@@ -138,8 +138,6 @@ class TestFigureCitations(FixtureCase):
         self.assertIn("Files with uncited figures: 0", out)
 
 
-
-
 class CrossrefsDensityTest(unittest.TestCase):
     """The density rule counts chapters, and a title that drifted is an error."""
 
@@ -168,8 +166,7 @@ class CrossrefsDensityTest(unittest.TestCase):
         with open(book, encoding="utf-8") as fh:
             text = fh.read()
         text = text.replace('    "ch2-test.md",\n]', '    "ch2-test.md",\n    "ch3-test.md",\n]', 1)
-        text = text.replace('[chapters.coverage]',
-                            '[chapters.coverage]\n"ch3-test.md" = [2, 3]', 1)
+        text = text.replace("[chapters.coverage]", '[chapters.coverage]\n"ch3-test.md" = [2, 3]', 1)
         with open(book, "w", encoding="utf-8") as fh:
             fh.write(text)
         code, out = _fixture.run_inproc(self.root, "crossrefs.py")
@@ -184,10 +181,12 @@ class CrossrefsDensityTest(unittest.TestCase):
         book = os.path.join(self.root, "data", "book", "book.toml")
         with open(book, encoding="utf-8") as fh:
             text = fh.read()
-        text = text.replace('    "ch2-test.md",\n]',
-                            '    "ch2-test.md",\n    "ch4-test.md",\n    "ch5-test.md",\n]', 1)
-        text = text.replace('[chapters.coverage]',
-                            '[chapters.coverage]\n"ch5-test.md" = [2]', 1)
+        text = text.replace(
+            '    "ch2-test.md",\n]',
+            '    "ch2-test.md",\n    "ch4-test.md",\n    "ch5-test.md",\n]',
+            1,
+        )
+        text = text.replace("[chapters.coverage]", '[chapters.coverage]\n"ch5-test.md" = [2]', 1)
         with open(book, "w", encoding="utf-8") as fh:
             fh.write(text)
         code, out = _fixture.run_inproc(self.root, "crossrefs.py")

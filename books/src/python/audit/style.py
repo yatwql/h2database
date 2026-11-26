@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Writing style checker for H2 documentation.
+Writing style checker for the manuscript in this book.
 
 Scans all chapter files for patterns that may indicate:
 1. Colloquial or informal expressions

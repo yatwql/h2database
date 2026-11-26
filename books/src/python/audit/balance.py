@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Balance metrics for the H2 source-code analysis book.
+"""Balance metrics for the manuscript: how evenly the body files divide.
 
 Outputs per-chapter file metrics and an aggregate balance report:
   - Lines (raw line count of each source file)
@@ -54,13 +54,15 @@ CHAPTER_FILES: list[tuple[str, list[int]]] = [
     for path in _config.chapter_files(include_cover=False)
 ]
 
-# A file that declares content coverage is a chapter competing for the reader's
-# budget; front matter, appendices and other reference matter are listed but do
-# not enter the ratio, whose whole point is how evenly the chapters divide.
+# The ratio is measured per manuscript file, not per chapter: one chapter may run
+# across several files (this book keeps chapter 6 in three), so a per-chapter sum
+# would need the coverage table to be complete, which it need not be. The metric is
+# therefore 章节文件篇幅比. Front matter, appendices and other reference matter are
+# listed but stay out of the ratio, whose point is how evenly the body divides.
 BODY_FILES = [name for name, chapters in CHAPTER_FILES if chapters]
 
 # The ratio the chapters should stay inside, from base.json [toolchain].
-TARGET_RATIO = _config.THRESHOLDS.get("balance_max_min_ratio", 2.5)
+TARGET_RATIO = _config.THRESHOLDS.get("balance_max_min_ratio", 3.0)
 
 GLOSSARY_REL = "back/glossary.md"
 INDEX_REL = "back/index.md"
@@ -216,7 +218,7 @@ def collect_metrics() -> dict[str, Any]:
 
 def render_markdown(metrics: dict[str, Any]) -> str:
     out: list[str] = []
-    out.append("# 章节均衡度量报告")
+    out.append("# 章节均衡度量报告（按章节文件）")
     out.append("")
     out.append("## 各章节文件")
     out.append("")
@@ -246,7 +248,7 @@ def render_markdown(metrics: dict[str, Any]) -> str:
     out.append(f"- 最大行数：{b['max_lines']:,}")
     out.append(f"- 最小行数：{b['min_lines']:,}")
     out.append(
-        f"- max_min_ratio：**{b['max_min_ratio']}**（目标 ≤ {TARGET_RATIO}，计量范围为正文各章）"
+        f"- max_min_ratio：**{b['max_min_ratio']}**（目标 ≤ {TARGET_RATIO}，按正文各章节文件计）"
     )
     out.append(f"- 平均行数：{b['mean_lines']}")
     out.append(f"- 标准差：{b['stddev_lines']}")
@@ -339,6 +341,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     print(render_markdown(metrics))
+    ratio = metrics["balance"]["max_min_ratio"]
+    if metrics["balance"]["min_lines"] and ratio > TARGET_RATIO:
+        print(f"FAIL: max/min {ratio} exceeds the configured target {TARGET_RATIO}")
+        return 1
+    print(f"OK: max/min {ratio} within the configured target {TARGET_RATIO}")
     return 0
 
 

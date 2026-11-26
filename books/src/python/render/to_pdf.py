@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate PDF from the H2 documentation HTML using Playwright/Chromium.
+Generate the PDF delivery from the merged HTML using Playwright/Chromium.
 
 This script:
 1) Regenerates the HTML from markdown

@@ -124,7 +124,7 @@ display = "删节版"
 | `layout_code_px` / `layout_code_line_height` | 代码块字号与行距；行距写 `0` 表示「与正文一致」 |
 | `layout_prose_line_height` | 正文行距系数（默认 1.6）；`DENSITY` 判的就是它：正文行距÷字号须在 1.15–1.75 |
 | `layout_lead_ratio` | 代码清单行距增量（`1 + ratio`，默认 0.23）；`CODE_LEAD` 只要求 ≥ 1.0 |
-| `layout_print_chars_per_line` | 纸面阅读度量（默认 22），单位是**正文每行字符数**（中文算 1 个，实测约 18–19）；自适应印刷据此解算纸面正文字号，写 44 只会撞到 0.8 的字号下限 |
+| `layout_print_chars_per_line` | 纸面阅读度量（默认 22），单位是**正文每行字符数**（中文算 1 个，实测约 18–19）；自适应印刷据此解算纸面正文字号；合理区间 10–40，越界时保留默认 22 并记为配置问题 |
 | `layout_print_adaptive` | 印刷版默认开启自适应（默认关，也可用 `print_pdf.py --adaptive` 临时开）：按 `layout_print_chars_per_line` 解算纸面字号 |
 | `layout_print_lead_target` / `layout_print_code_lead_target` | 纸面正文与代码清单的行距增量（`1 + target`）；正文默认 0.4，代码默认跟随正文。两者分开是因为清单占页面大部分，`DENSITY` 与 `CODE_LEAD` 分别判它们 |
 | `layout_epub_code_em` / `layout_epub_line_height` | 重排版面的相对字号与行高（`em`，读者可缩放） |
@@ -163,6 +163,7 @@ display = "删节版"
 | `clusters` | `min_figures`、`window_lines` | 图簇的张数下限与判定行距（`figure_clusters.py` 与 `structure.py` 共用） |
 | `quality` | `max_duplicate_ratio`、`max_avg_sentence`、`max_long_lines`、`min_coords_per_chapter`、`min_chapter_lines`、`max_chapter_lines`、`max_table_rows`、`min_terms_per_chapter`、`min_exercises_per_chapter`、`min_figures_per_section`、`min_figure_coverage_pct`、`perf_history_runs` | 质量门禁阈值；最后一项是耗时读数保留的窗口次数 |
 | `generation` | `max_packages_per_table`、`max_classes_per_package`、`max_api_rows`、`exercises_per_chapter`、`checklist_items` | 生成器的容量上限（文案见 `templates.toml`） |
+| `toolchain` | `balance_max_min_ratio`、`book_vocabulary`、`layout_print_chars_per_line` 等 | `balance_max_min_ratio` 是正文各章节文件篇幅比上限（`audit/balance.py`，超限即失败）；`book_vocabulary` 是本书专有词表，工具链代码里出现即失败（`audit/check_architecture.py`）；`layout_*` 见上一节 |
 | `thresholds` | `exercises_min_total`、`index_total_min`、`index_per_chapter_min`、`index_main_min`、`index_sub_min`、`index_see_also_min`、`chapters_min_cross_refs`、`glossary_min_entries`、`exercises_min_per_chapter`、`ledger_growth` | 内容完整性下限；`index_*` 是索引各层条目数下限（`manuscript/index.py` 与 `structure.py` 读同一组键），`chapters_min_cross_refs` 是每章「详见第X章《…》」引用数下限（`audit/crossrefs.py`），`ledger_growth` 是文件长度台账允许增长的行数 |
 | `prose` | `avg_sentence_good`/`avg_sentence_bad`、`long_ratio_good`/`long_ratio_bad`、`paragraph_good_min`/`paragraph_good_max`、`bullet_good`/`bullet_bad`、`coords_good`/`coords_bad`、`h3_good`/`h3_bad`、`dup_good`/`dup_bad`、`table_good`/`table_bad`、`min_composite`、`forbid_phrases`、`tone`、`audience`、`sections` | 文风评分的好/坏锚点（`good` 应不劣于 `bad`）、禁用语、语气与读者定位、分节覆盖（`sections.body`/`caption`/`exercise`） |
 | `style_rules` | `terminology`、`banned_link_text`、`heading`、`cjk_latin_spacing`、`list_punctuation`、`max_paragraph_chars` | 术语一致性、链接文字、标题尾标点、中英间距、列表标点、段落长度（`style_rules.py`） |

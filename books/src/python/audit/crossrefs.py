@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Audit cross-references: every `详见第X章《...》` resolves, and no chapter is thin.
 
-Two rules, both taken from the book's configuration:
+Two rules; the density minimum comes from the book's configuration, the reference
+syntax does not (it is the manuscript convention, and moving it into the language
+pack is the packaging work plan-4 tracks):
 
   RESOLVES   the chapter exists and the title inside 《》 is that chapter's H1 title —
              otherwise the reader follows a pointer to nothing
-  DENSITY    each chapter carries at least `chapters_min_cross_refs` references, so a
-             chapter cannot be an island the rest of the book never sends the reader to
+  DENSITY    each chapter carries at least `chapters_min_cross_refs` outbound references,
+             so a chapter is not a dead end: the reader it holds is never sent onward
 
 A reference count belongs to the chapter that carries it, not to the file: a chapter
 may be one file, or a first file plus continuation files that declare no H1 of their

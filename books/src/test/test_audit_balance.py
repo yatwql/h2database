@@ -126,6 +126,14 @@ class TestBalanceCheckHelpers(FixtureCase):
         self.assertIn("`retired.md` ❌", diff)
         self.assertIn("🆕", diff)
 
+    def test_the_ratio_over_the_configured_target_fails_the_gate(self):
+        """The report is a gate: a book that lets one file run away goes red."""
+        long_body = "# 第2章 核心模块\n\n" + "一段正文。\n" * 200
+        self.write("data/manuscript/ch2-test.md", long_body)
+        bc = self.module("balance")
+        code = bc.main([])
+        self.assertEqual(code, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

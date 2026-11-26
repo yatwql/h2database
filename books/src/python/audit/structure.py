@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Comprehensive final delivery check for H2 documentation.
+"""Comprehensive final delivery check for the manuscript in this book.
 
 Gate levels:
 

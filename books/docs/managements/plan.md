@@ -37,14 +37,14 @@
 5 处 ASCII 框线角字符不配对、索引 209 条与跨章引用 30 处偏薄。
 **动作**：按 `docs/plan/book-quality-closeout/plan.md` 分四项独立推进（拆章并重编号 → 调纸面阅读度量 →
 修框线 → 补索引与交叉引用），每项独立提交。
-**验收**：`balance.py` 比值降到 ≤2.5；`make.py print` 全绿且印刷版比标准版少 5% 页数以上；
+**验收**：`balance.py` 的正文各章节文件篇幅比降到配置目标（经决策为 3.0）；`make.py print` 全绿且印刷版比标准版少 5% 页数以上；
 `readability.py` 无框线告警；索引与交叉引用密度达标且可达性判据绿。
 
 **事实位**：设计与计划在 `docs/plan/book-quality-closeout/design.md` 与 `docs/plan/book-quality-closeout/plan.md`；
 章节映射在 `data/book/book.toml`，重编号在 `src/python/manuscript/renumber.py`，判据在 `src/python/audit/`。
 
 **分项状态**：①图示闭合——已提交，`readability.py` 改为按文件存量记账（存量与改动见 `changelog.md`）；
-②章节均衡——拆章后正文 max/min 2.993，目标经决策调整为 3.0（再拆一章 ch4-5 要重编号 105 张图，收益不抵代价），判据随配置转绿；③印刷密度——完成，标准版 920 页、
+②章节均衡——拆章后正文各**章节文件** max/min 2.991（原 120.4 的最小值来自附录 B，附录已不进比值），目标经决策调整为 3.0（再拆一章 ch4-5 要重编号 105 张图，收益不抵代价），判据随配置转绿且超限即失败；③印刷密度——完成，标准版 920 页、
 印刷版 829 页（−9.9%，目标 ≤874 页），`DENSITY`/`CODE_LEAD`/`TOC_LINKS` 全绿；④索引与交叉引用——完成，
 索引下限按实测收到 185/112/145/300、每章引用下限 2，实测跨章引用 37 处且逐条解析。
 
