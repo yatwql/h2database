@@ -55,6 +55,43 @@ def measured(**overrides) -> dict:
     return base
 
 
+class FontClassTest(unittest.TestCase):
+    def test_a_monospace_face_is_not_running_text(self):
+        self.assertTrue(_metrics._is_mono_font({"/BaseFont": "/ABCDEF+DejaVuSansMono"}))
+        self.assertTrue(_metrics._is_mono_font({"/BaseFont": "/Courier"}))
+        self.assertFalse(_metrics._is_mono_font({"/BaseFont": "/ABCDEF+DejaVuSans"}))
+
+    def test_a_font_entry_that_cannot_be_read_does_not_raise(self):
+        class Broken:
+            def get(self, *_args):
+                raise ValueError("malformed font")
+
+        self.assertFalse(_metrics._is_mono_font(Broken()))
+        self.assertFalse(_metrics._is_mono_font(None))
+
+
+    def test_a_listing_stays_out_of_the_prose_measurement(self):
+        """A monospace line is not running text, so it must not move the prose ratio."""
+
+        class Page:
+            def extract_text(self, visitor_text=None):
+                if visitor_text:
+                    visitor_text("int x;", [1, 0, 0, 1, 0, 0], [1, 0, 0, 1, 0, 500],
+                                 {"/BaseFont": "/XX+DejaVuSansMono"}, 10)
+
+        class Reader:
+            pages = [Page()]
+
+        with (
+            mock.patch.object(_metrics, "PdfReader", lambda _path: Reader()),
+            mock.patch.object(_metrics, "_sample", lambda _reader: list(_reader.pages)),
+            mock.patch.object(_metrics.os.path, "getsize", lambda _path: 1),
+        ):
+            metrics = _metrics.measure("mem.pdf")
+        self.assertEqual(metrics["prose_chars_per_line"], 0)
+        self.assertGreater(metrics["body_pt"], 0)
+
+
 class DescribeTest(unittest.TestCase):
     def test_every_number_reaches_the_line(self):
         text = _metrics.describe(measured())

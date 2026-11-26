@@ -60,8 +60,13 @@ def adaptive_numbers(pdf_path: str | None = None) -> dict | None:
     from lib import layout as _layout  # noqa: PLC0415 - call-time resolution
 
     metrics = reference_metrics(pdf_path)
-    if not metrics.get('chars_per_line'):
+    # solve against running text, not the whole page: a listing's size is set by the
+    # column width, so letting it into the average would move the prose type for a
+    # reason that has nothing to do with the prose
+    chars = metrics.get('prose_chars_per_line') or metrics.get('chars_per_line')
+    if not chars:
         return None
+    metrics = dict(metrics, chars_per_line=chars)
     layout, _problems = _layout.Layout.from_mapping(_config.THRESHOLDS or {})
     target = float(_config.THRESHOLDS.get('layout_print_lead_target', 0.4) or 0.4)
     lead_target = 1.0 + target
@@ -125,6 +130,8 @@ def main(argv: list[str] | None = None, engine: Any = None) -> int:
                         help='do not regenerate the HTML before printing')
     parser.add_argument('--adaptive', action='store_true',
                         help='solve the printed type from the delivery PDF (font-aware)')
+    parser.add_argument('--no-adaptive', action='store_true',
+                        help='keep the screen type even when the config asks for adaptation')
     args = parser.parse_args(argv)
 
     if not args.skip_html and os.path.exists(generate_script):
@@ -135,7 +142,9 @@ def main(argv: list[str] | None = None, engine: Any = None) -> int:
         if result.returncode != 0:
             print('HTML generation FAILED:', result.stderr, file=_sys.stderr)
             return 1
-    probe = adaptive_numbers if args.adaptive else None
+    wants = args.adaptive or (bool(_config.THRESHOLDS.get('layout_print_adaptive'))
+                              and not args.no_adaptive)
+    probe = adaptive_numbers if wants else None
     try:
         build(args.html, args.pdf, engine, probe=probe)
     except Exception as exc:

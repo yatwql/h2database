@@ -42,6 +42,15 @@ def _sample(reader: PdfReader, first: int = 40) -> list:
     return list(pages[start:start + SAMPLE_PAGES])
 
 
+def _is_mono_font(font_dict) -> bool:
+    """True when the font is a monospace face (listings, not running text)."""
+    try:
+        name = str((font_dict or {}).get('/BaseFont') or '')
+    except Exception:
+        return False
+    return 'Mono' in name or 'Courier' in name
+
+
 def measure(path: str) -> dict:
     """Layout metrics for one PDF; empty dict when the file cannot be read."""
     reader = PdfReader(path)
@@ -50,23 +59,42 @@ def measure(path: str) -> dict:
     pitches: list[float] = []
     widths: list[float] = []
 
+    prose_baselines: list[int] = []
+    prose_pitches: list[float] = []
+    prose_sizes: Counter = Counter()
+    prose_chars = 0
+
     for page in _sample(reader):
         ys: set[float] = set()
         xs: list[float] = []
+        prose_ys: set[float] = set()
 
-        def visit(text, cm, tm, _font_dict, font_size, ys=ys, xs=xs):
+        def visit(text, cm, tm, font_dict, font_size, ys=ys, xs=xs, prose_ys=prose_ys):
+            nonlocal prose_chars
             if not text.strip():
                 return
             scale = abs(cm[0] or 1) * abs(tm[0] or 1)
-            sizes[round(font_size * scale, 1)] += len(text)
+            size = round(font_size * scale, 1)
+            sizes[size] += len(text)
             ys.add(round(tm[5], 1))
             xs.append(tm[4] + tm[0] * len(text) * font_size)
+            # the printed body size only governs running text: a listing is sized by
+            # its column width, so its leading must not decide the prose judgement
+            if not _is_mono_font(font_dict):
+                prose_ys.add(round(tm[5], 1))
+                prose_sizes[size] += len(text)
+                prose_chars += len(text)
 
         page.extract_text(visitor_text=visit)
         ordered = sorted(ys, reverse=True)
         baselines.append(len(ordered))
         pitches.extend(ordered[i - 1] - ordered[i] for i in range(1, len(ordered))
                        if 4 < ordered[i - 1] - ordered[i] < 40)
+        prose_ordered = sorted(prose_ys, reverse=True)
+        prose_baselines.append(len(prose_ordered))
+        prose_pitches.extend(
+            prose_ordered[i - 1] - prose_ordered[i] for i in range(1, len(prose_ordered))
+            if 4 < prose_ordered[i - 1] - prose_ordered[i] < 40)
         if xs:
             widths.append(max(xs) - min(xs))
 
@@ -93,6 +121,13 @@ def measure(path: str) -> dict:
         if baselines and sample else 0,
         'pitch_ratio': round(statistics.median(pitches) / body, 3)
         if pitches and body else 0.0,
+        # running text only: what a change to the printed body size actually moves
+        'prose_body_pt': prose_sizes.most_common(1)[0][0] if prose_sizes else 0.0,
+        'prose_chars_per_line': round(prose_chars / max(1, sum(prose_baselines)))
+        if prose_baselines and prose_chars else 0,
+        'prose_pitch_ratio': round(statistics.median(prose_pitches)
+                                   / (prose_sizes.most_common(1)[0][0] or 1), 3)
+        if prose_pitches and prose_sizes else 0.0,
         'pitch_pt': round(statistics.median(pitches), 1) if pitches else 0.0,
         'text_width_pt': round(statistics.median(widths), 1) if widths else 0.0,
     }
