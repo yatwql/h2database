@@ -149,6 +149,13 @@
 `ConfigError` 并指明文件，不允许静默降级。
 
 配置按书解析成对象：`_config.Config(root)` 读的是那一本书自己的四个文件与
+配置在**动作运行时**读取，不在导入期读取：模块级的 `X = _config.Y` 会把第一本书的值
+钉死，破坏 `use(cfg)` 与安装形态。这条只对控制台入口的导入闭包强制——`app/`、`core/`
+与它们传递依赖的模块不得有模块级配置读取，由
+`test_audit_check_architecture.py::ImportTimeConfigReadTest` 判定；以子进程执行的脚本
+模块不在闭包内，按需再逐个收敛（台账在 `review-findings.md`）。唯一例外是 `core/scaffold.py`：建书时必须先报
+自己那份 `invalid base config`，早于 `_config` 可能抛出的 `ConfigError`。
+
 `data/language/`，`root` 缺省取 `BOOK_ROOT` 或工具链所在 checkout。模块级名字
 （`_config.BOOK_ROOT`、`_config.state_path(...)`、`_config.POLICY`）不再是一次算
 死的常量，而是转发到当前活动书的属性与方法——`with _config.use(cfg):` 期间切换，

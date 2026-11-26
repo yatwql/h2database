@@ -112,6 +112,8 @@ books/docs/managements/        # 管理文档；总索引在 books/README.md「�
   书级覆盖共享合并。源码本身仍在书根之外，仓库里不需要它。
 - **工具链只在 `src/python/`**：正式交付脚本；临时脚本不得入库。
 - **测试只在 `src/test/`**：`make.py test` 跑全部；`make.py cover` 带覆盖率棘轮。
+  共享的 fixture 基类（`Base`、`ScriptTestBase`、`FixtureCase`、`TempFile`）只在 `_cases.py`，
+  夹具书与进程内脚本运行器在 `_fixture.py`——各 suite 不再自带副本。
 - **管理文档只在 `docs/managements/`**：要求、判定、做法各一份，互不重复；总索引在
   `books/README.md` 的「文档总索引」，本文只管位置。
 - **怎么用、怎么写只在 `docs/manuals/`**：每份手册声明自己的「维度」，不引用管理文档；
