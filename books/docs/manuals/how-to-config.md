@@ -151,6 +151,10 @@ display = "删节版"
 }
 ```
 
+base.json 的 `[toolchain]` 段另有两类键：`balance_max_min_ratio`（正文各章节文件篇幅比上限，
+`audit/balance.py` 超限即失败）与 `book_vocabulary`（本书专有词表，工具链代码里出现即失败，
+`audit/check_architecture.py`）；`layout_*` 一族见上一节。
+
 阈值只在这里改；`min_composite`、`max_duplicate_ratio` 等是棘轮，收紧前先清账。
 
 ### style.json 键一览
@@ -163,7 +167,6 @@ display = "删节版"
 | `clusters` | `min_figures`、`window_lines` | 图簇的张数下限与判定行距（`figure_clusters.py` 与 `structure.py` 共用） |
 | `quality` | `max_duplicate_ratio`、`max_avg_sentence`、`max_long_lines`、`min_coords_per_chapter`、`min_chapter_lines`、`max_chapter_lines`、`max_table_rows`、`min_terms_per_chapter`、`min_exercises_per_chapter`、`min_figures_per_section`、`min_figure_coverage_pct`、`perf_history_runs` | 质量门禁阈值；最后一项是耗时读数保留的窗口次数 |
 | `generation` | `max_packages_per_table`、`max_classes_per_package`、`max_api_rows`、`exercises_per_chapter`、`checklist_items` | 生成器的容量上限（文案见 `templates.toml`） |
-| `toolchain` | `balance_max_min_ratio`、`book_vocabulary`、`layout_print_chars_per_line` 等 | `balance_max_min_ratio` 是正文各章节文件篇幅比上限（`audit/balance.py`，超限即失败）；`book_vocabulary` 是本书专有词表，工具链代码里出现即失败（`audit/check_architecture.py`）；`layout_*` 见上一节 |
 | `thresholds` | `exercises_min_total`、`index_total_min`、`index_per_chapter_min`、`index_main_min`、`index_sub_min`、`index_see_also_min`、`chapters_min_cross_refs`、`glossary_min_entries`、`exercises_min_per_chapter`、`ledger_growth` | 内容完整性下限；`index_*` 是索引各层条目数下限（`manuscript/index.py` 与 `structure.py` 读同一组键），`chapters_min_cross_refs` 是每章「详见第X章《…》」引用数下限（`audit/crossrefs.py`），`ledger_growth` 是文件长度台账允许增长的行数 |
 | `prose` | `avg_sentence_good`/`avg_sentence_bad`、`long_ratio_good`/`long_ratio_bad`、`paragraph_good_min`/`paragraph_good_max`、`bullet_good`/`bullet_bad`、`coords_good`/`coords_bad`、`h3_good`/`h3_bad`、`dup_good`/`dup_bad`、`table_good`/`table_bad`、`min_composite`、`forbid_phrases`、`tone`、`audience`、`sections` | 文风评分的好/坏锚点（`good` 应不劣于 `bad`）、禁用语、语气与读者定位、分节覆盖（`sections.body`/`caption`/`exercise`） |
 | `style_rules` | `terminology`、`banned_link_text`、`heading`、`cjk_latin_spacing`、`list_punctuation`、`max_paragraph_chars` | 术语一致性、链接文字、标题尾标点、中英间距、列表标点、段落长度（`style_rules.py`） |

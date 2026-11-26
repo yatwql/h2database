@@ -255,7 +255,7 @@ def render_markdown(metrics: dict[str, Any]) -> str:
     out.append(
         "- 计量范围："
         + "、".join(f"`{name}`" for name in sorted(BODY_FILES))
-        + "；附录与前件只列表，不进比值"
+        + "；附录等参考件只列表，不进比值"
     )
     return "\n".join(out) + "\n"
 
@@ -342,7 +342,10 @@ def main(argv: list[str] | None = None) -> int:
 
     print(render_markdown(metrics))
     ratio = metrics["balance"]["max_min_ratio"]
-    if metrics["balance"]["min_lines"] and ratio > TARGET_RATIO:
+    if not BODY_FILES:
+        print("FAIL: no body file declares [chapters.coverage]; the ratio cannot be measured")
+        return 1
+    if ratio > TARGET_RATIO:
         print(f"FAIL: max/min {ratio} exceeds the configured target {TARGET_RATIO}")
         return 1
     print(f"OK: max/min {ratio} within the configured target {TARGET_RATIO}")

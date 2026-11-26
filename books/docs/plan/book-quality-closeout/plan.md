@@ -19,7 +19,7 @@
 ### 2.1 章节均衡
 
 1. 在 `book.toml` 里把过长的一章拆成两章（只改章节清单与编号映射），跑 `renumber.py` 迁移章号引用。
-2. 拆后重跑 `balance.py`，比值逐次降低；目标先 ≤3.0，再 ≤2.5。
+2. 拆后重跑 `balance.py`，比值逐次降低；目标取配置值（经决策为 3.0，不再追 2.5）。
 
 **验收**：`balance.py` 绿；`structure.py`、`index_xrefs.py`、`source_refs.py` 不变红。
 

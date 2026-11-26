@@ -6,7 +6,7 @@ manuscript reads like a technical book: boilerplate duplication across
 chapters, fact density, the four-layer information ladder, table size, sentence
 length, terminology linkage, cross references and exercise spread.
 
-Thresholds live in books/data/config/config.json -> [quality].
+Thresholds live in books/data/config/base.json -> [quality].
 
 Usage:
   python book_quality.py            # report + exit code

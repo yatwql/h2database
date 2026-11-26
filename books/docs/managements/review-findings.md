@@ -14,7 +14,7 @@
 | # | 问题 | 修复方向 |
 | --- | --- | --- |
 | rf-73 | **已修（导入期读配置部分）**：`audit/captions.py`、`audit/exercises.py`、`audit/balance.py`、`release.py` 的模块级配置读取改为调用时读取（`exercises` 的槽位标题与提示/回顾正则改为 `language_shapes()`）。剩下的一半——「`manuscript/`、`audit/` 不得出现本书专有词」的门禁规则——转记 rf-74 | — |
-| rf-74 | 本书专有词写进工具链没有门禁拦 | **已解决**：`check_architecture.py` 新增 `book_vocabulary` 检查，词表由书在 `base.json [toolchain]` 声明（当前 `MVStore`/`TransactionStore`/`JdbcStatement`/`SessionLocal`/`H2 Console`），按整词匹配 `src/python/` 全文，命中即报；配套用例覆盖「命中」「子串不算」「未声明词表不报」。同一条 `technical.md` §2.4 写明「不绑定某一本书、也不绑定某一棵源码树」的两条通用性约束 |
+| rf-74 | 本书专有词写进工具链没有门禁拦 | **已解决**：`check_architecture.py` 新增 `book_vocabulary` 检查，词表由书在 `base.json [toolchain]` 声明（词表见 `data/config/base.json [toolchain]`），按整词匹配 `src/python/` 全文，命中即报；配套用例覆盖「命中」「子串不算」「未声明词表不报」。同一条 `technical.md` §2.4 写明「不绑定某一本书、也不绑定某一棵源码树」的两条通用性约束 |
 
 ## 分档口径
 

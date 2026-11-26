@@ -134,6 +134,18 @@ class TestBalanceCheckHelpers(FixtureCase):
         code = bc.main([])
         self.assertEqual(code, 1)
 
+    def test_a_book_with_no_coverage_table_is_not_reported_as_balanced(self):
+        """An unmeasurable book must not print OK: the ratio would be 0.0 by accident."""
+        toml_path = os.path.join(self.root, "data", "book", "book.toml")
+        with open(toml_path, encoding="utf-8") as fh:
+            config = fh.read()
+        head, _, _tail = config.partition("[chapters.coverage]")
+        with open(toml_path, "w", encoding="utf-8") as fh:
+            fh.write(head)
+        bc = self.module("balance")
+        self.assertEqual(bc.BODY_FILES, [])
+        self.assertEqual(bc.main([]), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

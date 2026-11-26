@@ -53,7 +53,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Verb dictionary — heuristic recognition. A caption "passes the verb gate" if
 # its leading two characters match any of these. Keep this list close to the
-# Vocabulary and presets come from books/data/config/config.json (policy).
+# Vocabulary and presets come from books/data/config/base.json (policy).
 LEADING_VERBS = tuple(
     _config.CAPTIONS.get(
         "leading_verbs",

@@ -300,6 +300,15 @@ class BookVocabularyTest(unittest.TestCase):
             config.THRESHOLDS = {}
             self.assertEqual(self.arch._book_literal_problems("x.py", "x", "MVStore"), [])
 
+    def test_a_cjk_term_is_found_inside_ordinary_prose(self):
+        """`\w` is Unicode-aware, so a word boundary would miss CJK terms in a sentence."""
+        with mock.patch.object(self.arch, "_config") as config:
+            config.THRESHOLDS = {"book_vocabulary": ["数据库引擎"]}
+            problems = self.arch._book_literal_problems(
+                "x.py", "widgets", "# 数据库引擎的实现要点\n"
+            )
+        self.assertTrue(any("数据库引擎" in problem for problem in problems), problems)
+
 
 class ImportTimeConfigReadTest(unittest.TestCase):
     """Modules the console entry imports must read configuration when they run.

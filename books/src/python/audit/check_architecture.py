@@ -242,13 +242,29 @@ def book_vocabulary() -> tuple[str, ...]:
     return tuple(str(item) for item in (_config.THRESHOLDS.get('book_vocabulary') or ()))
 
 
+CJK_RE = re.compile(r'[\u3400-\u9fff]')
+
+
+def vocabulary_pattern(word: str) -> re.Pattern[str]:
+    """A whole-word match for Latin terms, a plain substring for CJK ones.
+
+    `\w` is Unicode-aware, so a word boundary would demand punctuation around a CJK
+    term and miss it in ordinary prose ("数据库引擎的实现"). CJK terms are therefore
+    matched literally, Latin identifiers keep their boundaries so `Store` does not hit
+    `StoreHouse`.
+    """
+    if CJK_RE.search(word):
+        return re.compile(re.escape(word))
+    return re.compile(rf'(?<![\w]){re.escape(word)}(?![\w])')
+
+
 def _book_literal_problems(rel: str, name: str, source: str) -> list[str]:
     if name == "check_architecture":
         return []
     return [
         f'{rel}: hardcodes this book\'s vocabulary "{word}"'
         for word in book_vocabulary()
-        if word and re.search(rf'(?<![\w]){re.escape(word)}(?![\w])', source)
+        if word and vocabulary_pattern(word).search(source)
     ]
 
 

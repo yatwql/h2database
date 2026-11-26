@@ -110,7 +110,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 历史快照完整性 | 快照文件与 manifest 记录的哈希一致；快照不参与构建、不被门禁扫描 | `manuscript/snapshot.py verify` | P1 |
 | 归档可用 | 每次构建与交付各存一份手稿与产物的日期副本；保留窗口取自配置（默认 45 天），过期目录被清理；归档只进不进、不被构建读取 | `manuscript/archive.py` | P2 |
 | 架构约束 | 分层依赖方向、门禁只读、不硬编码路径、命名不遮蔽标准库、入口脚本均接入 make.py 步骤；控制台入口的导入闭包内不得有模块级配置读取（由架构层的用例钉住）；代码里不得出现本书专有词（词表由 `base.json [toolchain] book_vocabulary` 声明） | `check_architecture.py` | P0 |
-| 章节均衡 | 每章行数/图数/坐标分布 | `balance.py` | P2 |
+| 章节均衡 | 正文各章节文件的行数/图数/坐标分布（比值超目标即失败） | `balance.py` | P2 |
 | 类型检查 | pyright 可用时检查工具链类型（缺失则跳过） | `typecheck.py` | P1 |
 | 门禁追溯 | make.py 的每个门禁都在 testplan 登记，反之亦然 | `gate_trace.py` | P0 |
 | 需求追溯 | `requirements.md` 的每条 FR/IR/NFR 在 §2.4 有且只有一条判据行，判据点名的载体在仓库里存在 | `requirement_trace.py` | P0 |
