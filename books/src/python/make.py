@@ -212,6 +212,8 @@ STEPS: list[Step] = [
     ('to_epub', 'render/to_epub.py', (), 'deliver'),
     ('verify_epub', 'render/verify_epub.py', (), 'deliver'),
     ('archive_release', 'manuscript/archive.py', ('--kind', 'all'), 'deliver'),
+    ('print_pdf', 'render/print_pdf.py', ('--skip-html',), 'print'),
+    ('verify_print', 'render/verify_pdf.py', ('--print', '--require-toc-links'), 'print'),
 ]
 
 GROUPS = {
@@ -219,6 +221,9 @@ GROUPS = {
     'verify': tuple(n for n, _s, _a, g in STEPS if g == 'verify'),
     'deliver': ('to_pdf', 'pdf_toc_links', 'verify_pdf', 'to_epub', 'verify_epub',
                 'archive_release'),
+    # the print edition has its own PDF and its own typography: build it, then judge
+    # it with the same rules (density, TOC links) the delivery edition is judged by
+    'print': ('print_pdf', 'verify_print'),
 }
 GROUPS['check'] = GROUPS['verify']
 GROUPS['test'] = ('unittest',)
@@ -528,7 +533,7 @@ def _parser() -> argparse.ArgumentParser:
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('command',
                         choices=['check', 'build', 'verify', 'test', 'cover',
-                                 'report', 'deliver', 'doctor', 'mutation'])
+                                 'report', 'deliver', 'print', 'doctor', 'mutation'])
     parser.add_argument('--only', help='comma-separated step names')
     parser.add_argument('--skip', help='comma-separated step names to skip')
     parser.add_argument('--timings', action='store_true', help='print per-step wall time')

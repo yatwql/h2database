@@ -65,6 +65,12 @@ def adaptive_numbers(pdf_path: str | None = None) -> dict | None:
     layout, _problems = _layout.Layout.from_mapping(_config.THRESHOLDS or {})
     target = float(_config.THRESHOLDS.get('layout_print_lead_target', 0.4) or 0.4)
     lead_target = 1.0 + target
+    # the code size is width-driven (it must fit the widest listing), so it is passed
+    # in rather than derived from the body: shrinking or enlarging it would change the
+    # page count without improving legibility
+    metrics = dict(metrics)
+    metrics['code_px'] = layout.print_code_px(int(float(str(
+        _config.THRESHOLDS.get('ascii_max_cols', 100)))))
     return print_profile.solve_print_type(
         metrics, body_px=layout.body_size_px(),
         chars_per_line=layout.print_chars_per_line,

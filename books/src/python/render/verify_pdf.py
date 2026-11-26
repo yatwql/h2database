@@ -414,9 +414,14 @@ def main(argv: list[str]) -> int:
     parser.add_argument('--json', action='store_true', help='machine-readable output')
     parser.add_argument('--require-toc-links', action='store_true',
                         help='fail when the printed TOC has no link annotations')
+    parser.add_argument('--print', dest='print_edition', action='store_true',
+                        help='verify the print edition (its own PDF, same HTML)')
     args = parser.parse_args(argv)
 
-    pdf_path = args.pdf or _config.merged_pdf()
+    # the print edition is the same markup set for paper: its own PDF, same HTML,
+    # so the density and TOC-link rules apply to it exactly as to the delivery one
+    default_pdf = _config.merged_print_pdf() if args.print_edition else _config.merged_pdf()
+    pdf_path = args.pdf or default_pdf
     html_path = args.html or _config.merged_html()
     report = verify(pdf_path, html_path, require_toc_links=args.require_toc_links)
 

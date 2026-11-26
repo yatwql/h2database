@@ -209,7 +209,8 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `to_html.py` | 合并 Markdown → HTML（侧边栏 TOC、锚点、样式） |
 | `to_pdf.py` | HTML → 标准 PDF（Chromium 打印 + 大纲 + 页内目录页码） |
 | `pdf_toc_links.py` | 给印刷版 TOC 加可点击链接（按位置映射，重名标题安全） |
-| `print_pdf.py` | 印刷版 PDF：与标准版同一分章渲染（同一页框/栏宽/字号），只额外注入 `print_profile` 的章首横幅与点线目录；`--html`、`--pdf`、`--skip-html` |
+| `print_pdf.py` | 印刷版 PDF：与标准版同一分章渲染（同一页框/栏宽/字号），只额外注入 `print_profile` 的章首横幅与点线目录；渲染后写回目录链接目标（`pdf_toc_links`），否则分章拼接的目录只剩无目标矩形；`--html`、`--pdf`、`--skip-html`、`--adaptive`（按交付 PDF 的实测解算更密的纸面字号，实验性） |
+| `verify_pdf.py --print` | 判定印刷版 PDF：与标准版同一套规则（`DENSITY`、`TOC_LINKS`、字体、页框），`make.py print` 的第二步 |
 | `pdf_from_html.py` | 不重建 HTML，直接出 PDF；`--html`、`--pdf` |
 | `to_epub.py` | HTML → EPUB（pandoc） |
 | `pdf_metrics.py` | 版式测量与比对：`--compare 参照.pdf 构建.pdf` 逐项列差异；`--target pages=<目标页数>,chars_per_page=<目标字符数>` 与数字比；`--write-back knob=value` 把标定结果写回 `base.json` |

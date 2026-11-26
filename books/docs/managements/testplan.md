@@ -22,6 +22,7 @@ python books/src/python/make.py doctor     # 可选依赖检查（pandoc / playw
 
 ```bash
 python books/src/python/make.py deliver    # to_pdf + pdf_toc_links + verify_pdf + to_epub + verify_epub + archive_release
+python books/src/python/make.py print      # print_pdf（渲染 + 写回目录链接目标）+ verify_print（同一套 PDF 判据）
 ```
 
 PDF 生成较慢；日常编辑只要求 `make.py check` + `make.py build` 通过。
@@ -248,7 +249,7 @@ report` / `eval-score.sh`）、`balance` 的计量输出（`--json`），以及�
 | 形态 | 验收项 | 载体 |
 | --- | --- | --- |
 | 标准 PDF | 判据同 §2.2「PDF 渲染与 TOC 链接注入」「PDF 交付」；重跑走同一套交付步骤，顺序由步骤表决定（压缩只发生在最后一个写入者身上一次） | `make.py deliver` 内的 `render/to_pdf.py`、`render/pdf_toc_links.py`、`render/verify_pdf.py` |
-| 印刷版 PDF | 与标准版同一页框、同一栏宽与字号，只多印刷 profile（章首横幅、点线目录）；`COLUMN`、`PAGE_SIZE`、`FONTS`、`OUTLINE` 的判据与标准版相同。该形态不在 `make.py` 步骤表里，按需重跑后仍需跑一次 `render/verify_pdf.py` | `render/verify_pdf.py`；印刷版入口见 `scripts-and-reference.md` |
+| 印刷版 PDF | 与标准版同一页框与栏宽，只多印刷 profile（章首横幅、点线目录）；`COLUMN`、`PAGE_SIZE`、`FONTS`、`OUTLINE`、`DENSITY` 与 `TOC_LINKS` 的判据与标准版相同。生成与判定都是步骤表里的两步：`make.py print`（`print_pdf` 渲染 → `verify_print` 用 `verify_pdf.py --print` 判定），印刷版目录的链接目标由 `print_pdf` 在渲染后写回（Chromium 分章拼接会把跨部分目录写成无目标矩形） | `render/print_pdf.py`、`render/verify_pdf.py` |
 | EPUB | 判据同 §2.2「EPUB 结构」；分卷与目录深度的取值见 `technical.md` §4.4 | `make.py deliver` 内的 `render/to_epub.py`、`render/verify_epub.py` |
 
 不进 `make.py` 的形态，其验收就是「把同一个判据跑一遍」：没有自动门禁不等于人工看图。
