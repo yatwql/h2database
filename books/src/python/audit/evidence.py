@@ -18,6 +18,7 @@ Modes:
 
 Exit codes: 0 ok (or report-only), 1 a chapter is below a positive threshold.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -85,9 +86,13 @@ def measured(path: str) -> dict:
     coords = len(_mdutil.source_ref_re(tuple(_config.source_suffixes())).findall(text))
     symbols = len(SYMBOL_RE.findall(text))
     bodies = paragraphs(text)
-    backed = [body for body in bodies
-              if _mdutil.source_ref_re(tuple(_config.source_suffixes())).search(body)
-              or SYMBOL_RE.search(body) or CLASS_RE.search(body)]
+    backed = [
+        body
+        for body in bodies
+        if _mdutil.source_ref_re(tuple(_config.source_suffixes())).search(body)
+        or SYMBOL_RE.search(body)
+        or CLASS_RE.search(body)
+    ]
     coverage = round(len(backed) * 100 / len(bodies)) if bodies else 0
     return {
         "lines": lines,
@@ -102,8 +107,10 @@ def measured(path: str) -> dict:
 
 def measure() -> dict[str, dict]:
     """Per manuscript file, in reading order."""
-    return {os.path.basename(path): measured(path)
-            for path in _config.chapter_files(include_cover=False)}
+    return {
+        os.path.basename(path): measured(path)
+        for path in _config.chapter_files(include_cover=False)
+    }
 
 
 def shortfalls(numbers: dict[str, dict], floors: dict) -> list[str]:
@@ -111,14 +118,18 @@ def shortfalls(numbers: dict[str, dict], floors: dict) -> list[str]:
     out: list[str] = []
     for name, row in numbers.items():
         if floors["coords"] and row["coords_per_1000"] < floors["coords"]:
-            out.append(f"{name}: {row['coords_per_1000']} coords/1000 lines "
-                       f"(floor {floors['coords']})")
+            out.append(
+                f"{name}: {row['coords_per_1000']} coords/1000 lines (floor {floors['coords']})"
+            )
         if floors["symbols"] and row["symbols_per_1000"] < floors["symbols"]:
-            out.append(f"{name}: {row['symbols_per_1000']} symbols/1000 lines "
-                       f"(floor {floors['symbols']})")
+            out.append(
+                f"{name}: {row['symbols_per_1000']} symbols/1000 lines (floor {floors['symbols']})"
+            )
         if floors["coverage"] and row["coverage_pct"] < floors["coverage"]:
-            out.append(f"{name}: {row['coverage_pct']}% paragraphs backed "
-                       f"(floor {floors['coverage']:.0f}%)")
+            out.append(
+                f"{name}: {row['coverage_pct']}% paragraphs backed "
+                f"(floor {floors['coverage']:.0f}%)"
+            )
     return out
 
 
@@ -128,29 +139,43 @@ def render(numbers: dict[str, dict], floors: dict, below: list[str]) -> str:
     lines.append("| 文件 | 行数 | 坐标 | 坐标/千行 | 符号/千行 | 段落依据率 |")
     lines.append("| --- | --- | --- | --- | --- | --- |")
     for name, row in numbers.items():
-        lines.append(f"| `{name}` | {row['lines']} | {row['coords']} | "
-                     f"{row['coords_per_1000']} | {row['symbols_per_1000']} | "
-                     f"{row['coverage_pct']}% |")
+        lines.append(
+            f"| `{name}` | {row['lines']} | {row['coords']} | "
+            f"{row['coords_per_1000']} | {row['symbols_per_1000']} | "
+            f"{row['coverage_pct']}% |"
+        )
     lines.append("")
-    lines.append("阈值：" + ("未启用（只报数）" if not active else
-                             f"坐标 {floors['coords']}/千行、符号 {floors['symbols']}/千行、"
-                             f"段落依据率 {floors['coverage']:.0f}%"))
+    lines.append(
+        "阈值："
+        + (
+            "未启用（只报数）"
+            if not active
+            else f"坐标 {floors['coords']}/千行、符号 {floors['symbols']}/千行、"
+            f"段落依据率 {floors['coverage']:.0f}%"
+        )
+    )
     for problem in below:
         lines.append(f"  FAIL {problem}")
     return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     numbers = measure()
     floors = thresholds()
     below = shortfalls(numbers, floors)
     if args.json:
-        print(json.dumps({"files": numbers, "thresholds": floors, "below": below},
-                         ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {"files": numbers, "thresholds": floors, "below": below},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 1 if below else 0
     print(render(numbers, floors, below))
     return 1 if below else 0

@@ -4,14 +4,14 @@
 > 版本：v0.2
 > 定位：在办事项的**时机档与逐项验收**——每项现状 / 动作 / 验收 / 事实位只在这里；
 > 不记设计细节（看 `technical.md`），也不存问题台账（看 `review-findings.md`）。
-> **编号源**：`plan-next = 20`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-19，
+> **编号源**：`plan-next = 21`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-20，
 > 递增保证唯一，归档不回收。编号与 `review-findings.md` 的 `rf-*` 是两套，互不占用）
 
 ---
 
 ## 概述
 
-在办 9 项：P2 5 项（**plan-13**、**plan-14**、**plan-16**、**plan-18**、**plan-19**）、P3 3 项（**plan-6**、**plan-12**、**plan-15**）、P4 1 项（**plan-4**）。
+在办 10 项：P2 6 项（**plan-13**、**plan-14**、**plan-16**、**plan-18**、**plan-19**、**plan-20**）、P3 3 项（**plan-6**、**plan-12**、**plan-15**）、P4 1 项（**plan-4**）。
 单项的范围、验收与事实位只在本文维护；系统怎么搭见 `technical.md`，怎么验证见
 `testplan.md`。
 
@@ -98,6 +98,17 @@
 **事实位**：设计与计划在 `docs/plan/coordinate-density/design.md` 与 `docs/plan/coordinate-density/plan.md`；
 密度判据尚待实现（届时落在 `audit/` 下），坐标解析沿用 `audit/source_refs.py`，
 阈值 `data/config/style.json [evidence]`。
+
+#### `plan-20` 源码摘录优先（可核验的实现论述）
+
+**现状**：阶段 1 已落地——摘录头行接受 `文件:起-止`，无省略逐行相等、有 `// ...` 按顺序子序列校验；
+一次暴露 16 处引用错行或省略未标注的存量，已记账。本书 72.8% 的行是围栏块，其中真源码只有 111 块。
+**动作**：按 `docs/plan/excerpts/plan.md` 推进阶段 2（生成器 `manuscript/excerpt.py`）与阶段 3
+（修 16 处存量、把 ch6-2/ch6-3 的叙述补成摘录）。
+**验收**：生成器产出直接过判据且可复现；改一行代码即红；`text` 围栏降到 600 以下、坐标增到 600 以上。
+
+**事实位**：设计与计划在 `docs/plan/excerpts/design.md` 与 `docs/plan/excerpts/plan.md`；
+判据 `src/python/audit/content_depth.py`，源码定位 `[sources].src_main`，存量基线 `data/baselines/content-depth.json`。
 
 ### P3 — 预期实施，有空时安排
 

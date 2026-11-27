@@ -200,6 +200,22 @@
 
 双章文件（如 ch1-2）两章各有独立的引导块与必备段落。
 
+### 7.1 源码摘录的写法
+
+讲实现时先给摘录，摘录第一行写清出处，正文取自那个范围：
+
+```java
+// TransactionMap.java:527-533
+Snapshot<K,VersionedValue<V>> getSnapshot() {
+    return snapshot == null ? createSnapshot() : snapshot;
+}
+// ...
+```
+
+- 出处写成 `文件:起-止`。判据按「顺序子序列」核对：跳过的行必须用 `// ...` 标出来，没标就算漂移。
+- 行尾可以追加 `// 说明`（这是本书的解释方式），但代码本身不能改——改一个标识符就会被判红。
+- 不用手抄：生成器会按范围打印整块（见 `scripts-and-reference.md`）。
+
 ### 7.1 要素的条数与形态
 
 书的「编辑风格档」（`book.toml [editing]`）会给几处要素定下限，写法上对应这些形态：

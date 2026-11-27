@@ -33,7 +33,8 @@ MIN_USES = int(SETTINGS.get('glossary_min_uses', 3))
 IGNORE = set(SETTINGS.get('glossary_ignore') or [])
 EXCERPT_LINES = int(SETTINGS.get('excerpt_lines', 6))
 FENCE_RE = re.compile(r'^\s*```(\w*)\s*$')
-EXCERPT_HEAD_RE = re.compile(r'^\s*(?://|#|--)\s*([\w.]+?\.(?:java|py|rs)):(\d+)\s*$')
+EXCERPT_HEAD_RE = re.compile(
+    r'^\s*(?://|#|--)\s*([\w.]+?\.(?:java|py|rs|c|kt|go)):(\d+)(?:-(\d+))?\s*$')
 EXERCISE_RE = re.compile(r'^\*\*\d+\.\s*[🟢🔵🟠]', re.MULTILINE)
 ANCHOR_RE = re.compile(r'§\d+(?:\.\d+)*')
 
@@ -110,6 +111,67 @@ def check_glossary(files: list[str], min_uses: int | None = None,
             for name, count in sorted(missing, key=lambda item: -item[1])[:20]]
 
 
+ELISION_RE = re.compile(r"^(?://|#|--)?\s*(\.\.\.|…)$")
+
+
+def _is_elision(line: str) -> bool:
+    """Whether a body line marks skipped source: `...`, `// ...`, `# …`."""
+    return bool(ELISION_RE.match(line.strip()))
+
+
+def _span_matches(body: list[str], source: list[str]) -> bool:
+    """Whether an excerpt honestly shows the span it cites.
+
+    Without an elision the body is the whole span, line for line. With `...` the body is a
+    subsequence: every shown line must exist, in order, inside the cited range, and anything
+    skipped must be marked — which is what lets an excerpt show eight fields of a class
+    without pasting its javadoc.
+    """
+    elided = any(_is_elision(line) for line in body)
+    if not elided:
+        return len(body) == len(source) and all(
+            _same_line(shown, real) for shown, real in zip(body, source, strict=False))
+    index = 0
+    for shown in body:
+        if _is_elision(shown):
+            continue
+        while index < len(source) and not _same_line(shown, source[index]):
+            index += 1
+        if index == len(source):
+            return False
+        index += 1
+    return True
+
+
+def _same_line(body: str, source: str) -> bool:
+    """Whether an excerpt line is the source line, possibly with an annotation appended.
+
+    The house style explains a line by adding a comment to it (`private long size;  // 页数`),
+    and an elision is written as `...`; neither is drift. A changed identifier, literal or
+    statement order still is.
+    """
+    if body == source:
+        return True
+    if _is_elision(body):
+        return True
+    code = body.split("//", 1)[0].rstrip()
+    return code == source
+
+
+def _excerpt_body(lines: list[str], index: int) -> list[str]:
+    """The body of the fence that starts after an excerpt header, stripped per line."""
+    body: list[str] = []
+    for row in lines[index + 1:]:
+        if FENCE_RE.match(row):
+            if body:
+                break  # the fence that closes the block
+            continue   # an opening fence: the header was written above the block
+        body.append(row.strip())
+    while body and not body[-1]:
+        body.pop()  # the blank line before the closing fence is layout, not source
+    return body
+
+
 def check_excerpts(files: list[str]) -> list[dict]:
     source_root = _config.source_tree('src_main')
     out = []
@@ -120,6 +182,7 @@ def check_excerpts(files: list[str]) -> list[dict]:
             if not head:
                 continue
             rel, start = head.group(1), int(head.group(2))
+            declared_end = int(head.group(3)) if head.group(3) else None
             candidate = os.path.join(source_root, rel)
             if not os.path.isfile(candidate):
                 matches = glob.glob(os.path.join(source_root, '**', os.path.basename(rel)),
@@ -129,14 +192,26 @@ def check_excerpts(files: list[str]) -> list[dict]:
                                 'kind': 'EXCERPT', 'detail': f'{rel} not found in source tree'})
                     continue
                 candidate = matches[0]
-            body = [row.strip() for row in lines[index + 1:index + 1 + EXCERPT_LINES]
-                    if row.strip() and not FENCE_RE.match(row)]
-            source_lines = [row.strip() for row in
-                            _fsutil.read_lines(candidate)[start - 1:start - 1 + len(body)]]
-            if body and source_lines and body[0] != source_lines[0]:
+            body = _excerpt_body(lines, index)
+            if declared_end is None:
+                # the short form promises a starting line only: the first code line must be
+                # the line it names (a blank line before it is layout, not source)
+                shown = [row for row in body if row]
+                source_lines = [row.strip() for row in
+                                _fsutil.read_lines(candidate)[start - 1:start - 1 + len(shown)]]
+                drifted = bool(shown and source_lines and shown[0] != source_lines[0])
+            else:
+                # a range promises the whole span: same number of lines, each either the
+                # source line or the source line with an annotation appended after `//`
+                source_lines = [row.strip() for row in
+                                _fsutil.read_lines(candidate)[start - 1:declared_end]]
+                drifted = not _span_matches(body, source_lines)
+            if drifted:
                 out.append({'file': os.path.basename(path), 'line': index + 1,
                             'kind': 'EXCERPT',
-                            'detail': f'{rel}:{start} excerpt drifted from source'})
+                            'detail': f'{rel}:{start}'
+                                      + (f'-{declared_end}' if declared_end else '')
+                                      + ' excerpt drifted from source'})
     return out
 
 

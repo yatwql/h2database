@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "gate": "content_depth",
+  "gate": "content-depth",
   "kind": "accepted",
-  "keyed_by": "manuscript-path::code::descriptor",
-  "updated": "2026-11-26",
+  "keyed_by": "free-form key",
+  "updated": "2026-11-27",
   "note": "Reviewed depth backlog: forward references that predate the gate.",
   "accepted": [
     "(manuscript):GLOSSARY:FROM used 156x, no glossary entry",
@@ -57,6 +57,7 @@
     "ch3-packages.md:PREREQ:ValueLob is owned by chapter 6, no signpost",
     "ch3-packages.md:PREREQ:VersionedValue is owned by chapter 6, no signpost",
     "ch4-5-modules-processes.md:EXCERPT:RandomAccessStore.java:720 excerpt drifted from source",
+    "ch4-5-modules-processes.md:EXCERPT:RollbackDecisionMaker.java:34-48 excerpt drifted from source",
     "ch4-5-modules-processes.md:PREREQ:DataHandler is owned by chapter 11, no signpost",
     "ch4-5-modules-processes.md:PREREQ:LocalResult is owned by chapter 6, no signpost",
     "ch4-5-modules-processes.md:PREREQ:RootReference is owned by chapter 7, no signpost",
@@ -64,12 +65,26 @@
     "ch6-1-data-structures.md:PREREQ:Page is owned by chapter 7, no signpost",
     "ch6-1-data-structures.md:PREREQ:RootReference is owned by chapter 7, no signpost",
     "ch6-3-query-algorithms.md:PREREQ:Permutations is owned by chapter 11, no signpost",
+    "ch7-sql-execution.md:EXCERPT:SessionLocal.java:628-642 excerpt drifted from source",
     "ch7-sql-execution.md:PREREQ:JdbcPreparedStatement is owned by chapter 13, no signpost",
     "ch7-sql-execution.md:PREREQ:SmallLRUCache is owned by chapter 11, no signpost",
     "ch7-sql-execution.md:PREREQ:TableFilter is owned by chapter 10, no signpost",
     "ch8-query-optimizer.md:EXCERPT:Select.java:1359 excerpt drifted from source",
     "ch8-query-optimizer.md:PREREQ:JdbcStatement is owned by chapter 13, no signpost",
     "ch8-query-optimizer.md:PREREQ:Permutations is owned by chapter 11, no signpost",
-    "ch8-query-optimizer.md:PREREQ:SmallLRUCache is owned by chapter 11, no signpost"
+    "ch8-query-optimizer.md:PREREQ:SmallLRUCache is owned by chapter 11, no signpost",
+    "ch9-10-persistence-locking.md:EXCERPT:MVStore.java:1418-1424 excerpt drifted from source",
+    "ch9-10-persistence-locking.md:EXCERPT:MVStore.java:288-303 excerpt drifted from source",
+    "ch9-10-persistence-locking.md:EXCERPT:MVTable.java:167-201 excerpt drifted from source",
+    "ch9-10-persistence-locking.md:EXCERPT:MVTable.java:216-220 excerpt drifted from source",
+    "ch9-10-persistence-locking.md:EXCERPT:MVTable.java:295-324 excerpt drifted from source",
+    "ch9-10-persistence-locking.md:EXCERPT:MVTable.java:57-67 excerpt drifted from source",
+    "ch9-10-persistence-locking.md:EXCERPT:Page.java:742-775 excerpt drifted from source",
+    "ch9-10-persistence-locking.md:EXCERPT:RootReference.java:16-51 excerpt drifted from source",
+    "ch9-10-persistence-locking.md:EXCERPT:TransactionMap.java:523-529 excerpt drifted from source",
+    "ch9-10-persistence-locking.md:EXCERPT:TransactionMap.java:535-539 excerpt drifted from source",
+    "ch9-10-persistence-locking.md:EXCERPT:TransactionMap.java:61-66 excerpt drifted from source",
+    "ch9-10-persistence-locking.md:EXCERPT:TransactionStore.java:579-629 excerpt drifted from source",
+    "ch9-10-persistence-locking.md:EXCERPT:TxDecisionMaker.java:162-166 excerpt drifted from source"
   ]
 }

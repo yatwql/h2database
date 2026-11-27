@@ -36,8 +36,10 @@ THIN = """# 第1章 测试章节
 class DensityNumbersTest(FixtureCase):
     def test_paragraphs_skip_listings_tables_and_headings(self):
         evidence = self.module("evidence")
-        text = ("# 标题\n\n" + "甲" * 90 + "\n\n"
-                "```java\nclass A {}\n```\n\n| 列 | 值 |\n| --- | --- |\n| 1 | 2 |\n")
+        text = (
+            "# 标题\n\n" + "甲" * 90 + "\n\n"
+            "```java\nclass A {}\n```\n\n| 列 | 值 |\n| --- | --- |\n| 1 | 2 |\n"
+        )
         self.assertEqual(len(evidence.paragraphs(text)), 1)
 
     def test_a_backed_chapter_scores_higher_than_a_bare_one(self):
@@ -56,8 +58,9 @@ class DensityNumbersTest(FixtureCase):
         self.write("data/manuscript/ch2-test.md", THIN)
         numbers = evidence.measure()
         self.assertEqual(set(numbers), {"ch1-test.md", "ch2-test.md"})
-        self.assertGreater(numbers["ch1-test.md"]["coverage_pct"],
-                           numbers["ch2-test.md"]["coverage_pct"])
+        self.assertGreater(
+            numbers["ch1-test.md"]["coverage_pct"], numbers["ch2-test.md"]["coverage_pct"]
+        )
 
 
 class DensityFloorTest(FixtureCase):
@@ -66,14 +69,12 @@ class DensityFloorTest(FixtureCase):
 
     def test_a_zero_floor_reports_and_never_fails(self):
         evidence = self.module("evidence")
-        numbers = {"a.md": {"coords_per_1000": 0.0, "symbols_per_1000": 0.0,
-                            "coverage_pct": 0}}
+        numbers = {"a.md": {"coords_per_1000": 0.0, "symbols_per_1000": 0.0, "coverage_pct": 0}}
         self.assertEqual(evidence.shortfalls(numbers, self.floors()), [])
 
     def test_a_positive_floor_names_the_chapter_and_the_number(self):
         evidence = self.module("evidence")
-        numbers = {"a.md": {"coords_per_1000": 1.0, "symbols_per_1000": 9.0,
-                            "coverage_pct": 10}}
+        numbers = {"a.md": {"coords_per_1000": 1.0, "symbols_per_1000": 9.0, "coverage_pct": 10}}
         problems = evidence.shortfalls(numbers, self.floors(coords=5, symbols=20, coverage=40))
         self.assertEqual(len(problems), 3)
         self.assertIn("a.md", problems[0])

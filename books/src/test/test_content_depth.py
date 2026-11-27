@@ -211,5 +211,86 @@ class DepthSurfacesTest(DepthCase):
         self.assertNotIn("已不再出现", text)
 
 
+class ExcerptSpanTest(unittest.TestCase):
+    """A ranged excerpt promises a span; elisions must be marked, code must match."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = _fixture.build_book(self.tmp.name)
+        self.source = os.path.join(self.tmp.name, "src")
+        os.makedirs(os.path.join(self.source, "org", "demo"), exist_ok=True)
+        self.java = os.path.join(self.source, "org", "demo", "Thing.java")
+        with open(self.java, "w", encoding="utf-8") as fh:
+            fh.write("class Thing {\n"
+                     "    int size;\n"
+                     "    /** doc */\n"
+                     "    int count;\n"
+                     "    void run() {\n"
+                     "        size++;\n"
+                     "    }\n"
+                     "}\n")
+        self.chapter = os.path.join(self.root, "data", "manuscript", "ch1-test.md")
+
+    def depth(self):
+        module = _fixture.load_module(self.root, "content_depth")
+        module._config.source_tree = lambda *_args: self.source
+        return module
+
+    def check(self, body: str):
+        with open(self.chapter, "w", encoding="utf-8") as fh:
+            fh.write("```java\n" + body + "```\n")
+        return self.depth().check_excerpts([self.chapter])
+
+    def test_a_span_that_matches_line_for_line_passes(self):
+        body = ("// Thing.java:5-7\n"
+                "void run() {\n        size++;\n    }\n")
+        self.assertEqual(self.check(body), [])
+
+    def test_a_changed_line_in_the_span_is_drift(self):
+        body = ("// Thing.java:5-7\n"
+                "void run() {\n        size += 2;\n    }\n")
+        self.assertTrue(self.check(body))
+
+    def test_an_elision_makes_the_body_a_subsequence(self):
+        body = ("// Thing.java:1-8\n"
+                "class Thing {\n    int size;\n// ...\n    int count;\n// ...\n"
+                "    void run() {\n    }\n")
+        self.assertEqual(self.check(body), [])
+
+    def test_skipping_lines_without_an_elision_is_drift(self):
+        body = ("// Thing.java:1-8\n"
+                "class Thing {\n    int size;\n    int count;\n")
+        self.assertTrue(self.check(body))
+
+    def test_an_appended_annotation_does_not_count_as_a_change(self):
+        body = ("// Thing.java:5-7\n"
+                "void run() {   // 入口\n        size++;  // 自增\n    }\n")
+        self.assertEqual(self.check(body), [])
+
+    def test_a_line_outside_the_span_is_drift(self):
+        body = ("// Thing.java:1-2\n"
+                "class Thing {\n    int size;\n    void run() {\n")
+        self.assertTrue(self.check(body))
+
+
+    def test_an_elided_body_with_a_line_outside_the_span_is_drift(self):
+        body = ("// Thing.java:1-8\n"
+                "class Thing {\n// ...\n    void stop() {}\n")
+        self.assertTrue(self.check(body))
+
+    def test_a_line_that_carries_only_an_elision_matches_anything(self):
+        module = _fixture.load_module(self.root, "content_depth")
+        self.assertTrue(module._same_line("// ...", "    int count;"))
+
+    def test_a_trailing_blank_line_is_layout_not_source(self):
+        body = ("// Thing.java:1-2\n"
+                "class Thing {\n    int size;\n\n")
+        self.assertEqual(self.check(body), [])
+
+    def test_a_header_without_a_body_yields_no_excerpt(self):
+        module = _fixture.load_module(self.root, "content_depth")
+        self.assertEqual(module._excerpt_body(["// Thing.java:1"], 0), [])
+
 if __name__ == "__main__":
     unittest.main()
