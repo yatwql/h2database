@@ -3,7 +3,7 @@
   "gate": "content-depth",
   "kind": "accepted",
   "keyed_by": "free-form key",
-  "updated": "2026-11-27",
+  "updated": "2026-11-28",
   "note": "Reviewed depth backlog: forward references that predate the gate.",
   "accepted": [
     "(manuscript):GLOSSARY:FROM used 156x, no glossary entry",
@@ -13,7 +13,6 @@
     "(manuscript):GLOSSARY:Stack used 67x, no glossary entry",
     "(manuscript):GLOSSARY:Step used 72x, no glossary entry",
     "(manuscript):GLOSSARY:Store used 80x, no glossary entry",
-    "(manuscript):GLOSSARY:String used 65x, no glossary entry",
     "(manuscript):GLOSSARY:Token used 122x, no glossary entry",
     "ch1-2-architecture.md:PREREQ:ColumnResolver is owned by chapter 10, no signpost",
     "ch1-2-architecture.md:PREREQ:CommandInterface is owned by chapter 4, no signpost",
@@ -69,14 +68,6 @@
     "ch8-query-optimizer.md:PREREQ:JdbcStatement is owned by chapter 13, no signpost",
     "ch8-query-optimizer.md:PREREQ:Permutations is owned by chapter 11, no signpost",
     "ch8-query-optimizer.md:PREREQ:SmallLRUCache is owned by chapter 11, no signpost",
-    "ch9-10-persistence-locking.md:EXCERPT:MVTable.java:167-201 excerpt drifted from source",
-    "ch9-10-persistence-locking.md:EXCERPT:MVTable.java:216-220 excerpt drifted from source",
-    "ch9-10-persistence-locking.md:EXCERPT:MVTable.java:295-324 excerpt drifted from source",
-    "ch9-10-persistence-locking.md:EXCERPT:MVTable.java:57-67 excerpt drifted from source",
-    "ch9-10-persistence-locking.md:EXCERPT:RootReference.java:16-51 excerpt drifted from source",
-    "ch9-10-persistence-locking.md:EXCERPT:TransactionMap.java:523-529 excerpt drifted from source",
-    "ch9-10-persistence-locking.md:EXCERPT:TransactionMap.java:61-66 excerpt drifted from source",
-    "ch9-10-persistence-locking.md:EXCERPT:TransactionStore.java:579-629 excerpt drifted from source",
-    "ch9-10-persistence-locking.md:EXCERPT:TxDecisionMaker.java:162-166 excerpt drifted from source"
+    "ch9-10-persistence-locking.md:EXCERPT:MVTable.java:167-201 excerpt drifted from source"
   ]
 }
