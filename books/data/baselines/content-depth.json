@@ -65,7 +65,6 @@
     "ch6-1-data-structures.md:PREREQ:Page is owned by chapter 7, no signpost",
     "ch6-1-data-structures.md:PREREQ:RootReference is owned by chapter 7, no signpost",
     "ch6-3-query-algorithms.md:PREREQ:Permutations is owned by chapter 11, no signpost",
-    "ch7-sql-execution.md:EXCERPT:SessionLocal.java:628-642 excerpt drifted from source",
     "ch7-sql-execution.md:PREREQ:JdbcPreparedStatement is owned by chapter 13, no signpost",
     "ch7-sql-execution.md:PREREQ:SmallLRUCache is owned by chapter 11, no signpost",
     "ch7-sql-execution.md:PREREQ:TableFilter is owned by chapter 10, no signpost",
@@ -82,7 +81,6 @@
     "ch9-10-persistence-locking.md:EXCERPT:Page.java:742-775 excerpt drifted from source",
     "ch9-10-persistence-locking.md:EXCERPT:RootReference.java:16-51 excerpt drifted from source",
     "ch9-10-persistence-locking.md:EXCERPT:TransactionMap.java:523-529 excerpt drifted from source",
-    "ch9-10-persistence-locking.md:EXCERPT:TransactionMap.java:535-539 excerpt drifted from source",
     "ch9-10-persistence-locking.md:EXCERPT:TransactionMap.java:61-66 excerpt drifted from source",
     "ch9-10-persistence-locking.md:EXCERPT:TransactionStore.java:579-629 excerpt drifted from source",
     "ch9-10-persistence-locking.md:EXCERPT:TxDecisionMaker.java:162-166 excerpt drifted from source"
