@@ -232,7 +232,7 @@
   },
   "evidence": {
     "_note": "Per-chapter evidence floors, set at today's weakest chapter (a ratchet). Paragraph coverage stays advisory (0) until appendices are classified: a reference appendix legitimately has no running prose.",
-    "min_coords_per_1000_lines": 0.3,
+    "min_coords_per_1000_lines": 0.4,
     "min_symbols_per_1000_lines": 8,
     "min_paragraph_coverage_pct": 0
   }
