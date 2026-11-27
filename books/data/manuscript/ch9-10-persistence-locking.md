@@ -2933,6 +2933,7 @@ XTS 模式是存储加密的标准模式（IEEE 1619），它将数据划分为�
 ```java
 // MVStore.java:288-303
 char[] encryptionKey = (char[]) config.remove("encryptionKey");
+    // ...
 try {
     if (fileStoreShallBeOpen) {
         boolean readOnly = config.containsKey("readOnly");
@@ -2940,6 +2941,7 @@ try {
     }
     fileStore.bind(this);
     metaMap = fileStore.start();
+    // ...
 } finally {
     if (encryptionKey != null) {
         Arrays.fill(encryptionKey, (char) 0);  // 立即清除密钥
