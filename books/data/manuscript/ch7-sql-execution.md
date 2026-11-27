@@ -3655,7 +3655,18 @@ DataType.compareWithConversion() 类型转换矩阵
 
 这条链路是第 8 章的前提：先看清 SQL 如何被解析和执行，才谈得上理解优化器如何选择计划。
 
-## 7.8 延伸思考
+## 7.8 常见误区
+
+- **误区**：`PreparedStatement` 比 `Statement` 快，是因为两者走不同的协议或不同的执行路径。
+  **为什么**：两条路径最终都落到 `CommandContainer`（`CommandContainer.java:40`），差别只在编译结果是否被复用——
+  `SessionLocal.prepareLocal()`（`SessionLocal.java:652`）查的是会话级缓存 `queryCache`（初始化见 `:660`），
+  命中就跳过解析与优化。走的是同一套引擎，省下的是编译开销。
+
+- **误区**：`queryCache` 缓存的是查询结果，所以同一个查询第二次执行会直接返回旧数据。
+  **为什么**：缓存的是已编译的 `Command`（`prepareLocal` 返回它），行数据每次重新迭代计算；
+  结果集层面的缓存不在这一层，别把编译缓存当成结果缓存。
+
+## 7.9 延伸思考
 
 **1. 🟢★ JDBC 入口层有 Statement 与 PreparedStatement 两种执行方式，性能差异来自缓存命中而非协议差异。请说明 Prepared 的编译结果被缓存在哪一层，以及缓存键由什么构成。**
 
@@ -3681,7 +3692,7 @@ DataType.compareWithConversion() 类型转换矩阵
 >
 > 回顾：§7.3 缓存机制 + §7.5 全链路 ASCII 序列图。
 
-## 7.9 延展阅读
+## 7.10 延展阅读
 
 - H2 官方文档《SQL Grammar》(`h2/src/docsrc/html/grammar.html`) — H2 SQL 语法完整参考
 - H2 官方文档《Functions》(`h2/src/docsrc/html/functions.html`) — 内置函数列表与说明
