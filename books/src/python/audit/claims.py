@@ -21,6 +21,7 @@ Modes:
 
 Exit codes: 0 ok, 1 a count rose (or the baseline is missing and there are findings), 2 usage.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -42,8 +43,20 @@ COORDINATE_RE = re.compile(r"[\w/.-]+\.(?:java|py|rs|kt|go|c):\d+")
 SYMBOL_RE = re.compile(r"\b[A-Z]\w{2,}\.\w{2,}\s*\(")
 CLASS_RE = re.compile(r"`([A-Z]\w{2,})`")
 # Defaults; a book may replace them through `style.json [claims]`.
-DEFAULT_MARKERS = ("总是", "从不", "绝不", "必然", "一定", "唯一", "保证了", "避免了",
-                   "杜绝", "根本原因", "不可能", "永远")
+DEFAULT_MARKERS = (
+    "总是",
+    "从不",
+    "绝不",
+    "必然",
+    "一定",
+    "唯一",
+    "保证了",
+    "避免了",
+    "杜绝",
+    "根本原因",
+    "不可能",
+    "永远",
+)
 # A sentence whose subject is a figure is evidence by pointing at the figure; judging the
 # lead-in as an unsupported claim would report every caption in the book.
 FIGURE_LEADINS = ("如图", "下图", "上图", "该图", "此图")
@@ -64,7 +77,7 @@ def baseline_path() -> str:
     the active book can change after the import — the file would then be written to the
     previous book's directory.
     """
-    declared = ((_config.BASE_POLICY.get("baselines") or {}).get(BASELINE_KEY) or "")
+    declared = (_config.BASE_POLICY.get("baselines") or {}).get(BASELINE_KEY) or ""
     if declared:
         return os.path.join(_config.BOOK_ROOT, declared)
     return os.path.join(_config.baseline_dir(), f"{BASELINE_KEY}.json")
@@ -107,8 +120,9 @@ def prose_sentences(text: str) -> list[tuple[int, str]]:
 
 def has_evidence(sentence: str) -> bool:
     """Whether a sentence points at something the reader can look up."""
-    return bool(COORDINATE_RE.search(sentence) or SYMBOL_RE.search(sentence)
-                or CLASS_RE.search(sentence))
+    return bool(
+        COORDINATE_RE.search(sentence) or SYMBOL_RE.search(sentence) or CLASS_RE.search(sentence)
+    )
 
 
 def findings() -> dict[str, list[dict]]:
@@ -156,7 +170,9 @@ def regressions(current: dict, baseline: dict) -> list[str]:
 
 def render(current: dict, rose: list[str]) -> str:
     lines = [f"# 强断言依据检查（{len(markers())} 个断言词）", ""]
-    lines.append(f"- 未带依据的强断言：**{current['total']}** 条，分布在 {len(current['files'])} 个文件")
+    lines.append(
+        f"- 未带依据的强断言：**{current['total']}** 条，分布在 {len(current['files'])} 个文件"
+    )
     for name, count in sorted(current["files"].items(), key=lambda item: -item[1])[:10]:
         lines.append(f"  - `{name}`：{count} 条")
     if rose:
@@ -167,8 +183,9 @@ def render(current: dict, rose: list[str]) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--list", action="store_true", help="print the findings")
     parser.add_argument("--update-baseline", action="store_true")
@@ -181,7 +198,10 @@ def main(argv: list[str] | None = None) -> int:
             baseline_path(),
             {"files": current["files"], "total": current["total"]},
             note="Unevidenced strong claims per file; may only fall.",
-            gate=BASELINE_KEY, kind="counts", keyed_by="manuscript-path")
+            gate=BASELINE_KEY,
+            kind="counts",
+            keyed_by="manuscript-path",
+        )
         print(f"baseline written: {path}")
         return 0
     baseline = load_baseline()
@@ -190,8 +210,13 @@ def main(argv: list[str] | None = None) -> int:
     # findings and asks for the baseline rather than calling every finding a regression
     rose = regressions(current, baseline) if recorded else []
     if args.json:
-        print(json.dumps({"counts": current, "regressions": rose,
-                          "findings": found}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {"counts": current, "regressions": rose, "findings": found},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 1 if rose else 0
     print(render(current, rose))
     if args.list:

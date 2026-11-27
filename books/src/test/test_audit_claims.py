@@ -30,16 +30,20 @@ class ClaimDetectionTest(FixtureCase):
 
     def test_a_strong_claim_without_evidence_is_reported(self):
         claims = self.module("claims")
-        self.write("data/manuscript/ch1-test.md",
-                   "# 第1章 测试章节\n\n这里总是先加锁再写入，读者不必怀疑。\n")
+        self.write(
+            "data/manuscript/ch1-test.md",
+            "# 第1章 测试章节\n\n这里总是先加锁再写入，读者不必怀疑。\n",
+        )
         found = claims.findings()
         texts = [hit["text"] for hits in found.values() for hit in hits]
         self.assertTrue(any("总是" in text for text in texts), texts)
 
     def test_the_same_claim_with_its_coordinate_is_not_reported(self):
         claims = self.module("claims")
-        self.write("data/manuscript/ch1-test.md",
-                   "# 第1章 测试章节\n\n这里总是先加锁再写入（`SessionLocal.java:88`）。\n")
+        self.write(
+            "data/manuscript/ch1-test.md",
+            "# 第1章 测试章节\n\n这里总是先加锁再写入（`SessionLocal.java:88`）。\n",
+        )
         self.assertNotIn("ch1-test.md", claims.findings())
 
     def test_figure_leadins_tables_and_listings_are_not_prose(self):
@@ -66,8 +70,10 @@ class ClaimsRatchetTest(FixtureCase):
         return code, out.getvalue()
 
     def test_the_first_run_asks_for_a_baseline(self):
-        self.write("data/manuscript/ch1-test.md",
-                   "# 第1章 测试章节\n\n这里总要加锁。\n\n这条断言永远成立。\n")
+        self.write(
+            "data/manuscript/ch1-test.md",
+            "# 第1章 测试章节\n\n这里总要加锁。\n\n这条断言永远成立。\n",
+        )
         code, out = self.run_gate()
         self.assertEqual(code, 1)
         self.assertIn("record today's count", out)
@@ -76,8 +82,10 @@ class ClaimsRatchetTest(FixtureCase):
         self.write("data/manuscript/ch1-test.md", "# 第1章 测试章节\n\n这条断言永远成立。\n")
         self.assertEqual(self.run_gate("--update-baseline")[0], 0)
         self.assertEqual(self.run_gate()[0], 0)
-        self.write("data/manuscript/ch1-test.md",
-                   "# 第1章 测试章节\n\n这条断言永远成立。\n\n另一条也必然成立。\n")
+        self.write(
+            "data/manuscript/ch1-test.md",
+            "# 第1章 测试章节\n\n这条断言永远成立。\n\n另一条也必然成立。\n",
+        )
         code, out = self.run_gate()
         self.assertEqual(code, 1)
         self.assertIn("baseline", out)

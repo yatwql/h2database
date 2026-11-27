@@ -228,5 +228,11 @@
       "不可能",
       "永远"
     ]
+  },
+  "evidence": {
+    "_note": "Per-chapter evidence floors. 0 means report only, which is where this starts.",
+    "min_coords_per_1000_lines": 0,
+    "min_symbols_per_1000_lines": 0,
+    "min_paragraph_coverage_pct": 0
   }
 }

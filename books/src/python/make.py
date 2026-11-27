@@ -201,6 +201,7 @@ STEPS: list[Step] = [
     ('audit_index_xrefs', 'audit/index_xrefs.py', (), 'verify'),
     ('balance_check', 'audit/balance.py', (), 'verify'),
     ('claims', 'audit/claims.py', (), 'verify'),
+    ('evidence', 'audit/evidence.py', (), 'verify'),
     ('baselines', 'manuscript/baselines.py', (), 'report'),
     ('editorial', 'audit/editorial.py', (), 'verify'),
     ('source_refs', 'audit/source_refs.py', (), 'verify'),
