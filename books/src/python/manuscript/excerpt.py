@@ -88,10 +88,15 @@ def bodies(lines: list[str], index: int) -> tuple[list[str], int]:
 
 
 def _same_line(shown: str, source: str) -> bool:
-    """The source line, or that line with an annotation appended after `//`."""
-    if shown == source or is_elision(shown):
+    """Whether the line shown is the source line, ignoring appended annotations.
+
+    Both sides are reduced to their code: the book appends `// 说明` to explain a line, and
+    the source itself may carry a comment, so a raw string comparison would call either one
+    a change.
+    """
+    if is_elision(shown):
         return True
-    return shown.split("//", 1)[0].rstrip() == source
+    return code_of(shown) == code_of(source) and code_of(shown) != ""
 
 
 def drift_of(name: str, start: int, end: int | None, body: list[str]) -> str:

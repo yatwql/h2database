@@ -150,12 +150,11 @@ def _same_line(body: str, source: str) -> bool:
     and an elision is written as `...`; neither is drift. A changed identifier, literal or
     statement order still is.
     """
-    if body == source:
+    if body == source or _is_elision(body):
         return True
-    if _is_elision(body):
-        return True
-    code = body.split("//", 1)[0].rstrip()
-    return code == source
+    shown = body.split("//", 1)[0].rstrip()
+    real = source.split("//", 1)[0].rstrip()
+    return shown == real and shown != ""
 
 
 def _excerpt_body(lines: list[str], index: int) -> list[str]:
