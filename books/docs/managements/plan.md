@@ -4,14 +4,14 @@
 > 版本：v0.2
 > 定位：在办事项的**时机档与逐项验收**——每项现状 / 动作 / 验收 / 事实位只在这里；
 > 不记设计细节（看 `technical.md`），也不存问题台账（看 `review-findings.md`）。
-> **编号源**：`plan-next = 19`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-18，
+> **编号源**：`plan-next = 20`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-19，
 > 递增保证唯一，归档不回收。编号与 `review-findings.md` 的 `rf-*` 是两套，互不占用）
 
 ---
 
 ## 概述
 
-在办 8 项：P2 4 项（**plan-13**、**plan-14**、**plan-16**、**plan-18**）、P3 3 项（**plan-6**、**plan-12**、**plan-15**）、P4 1 项（**plan-4**）。
+在办 9 项：P2 5 项（**plan-13**、**plan-14**、**plan-16**、**plan-18**、**plan-19**）、P3 3 项（**plan-6**、**plan-12**、**plan-15**）、P4 1 项（**plan-4**）。
 单项的范围、验收与事实位只在本文维护；系统怎么搭见 `technical.md`，怎么验证见
 `testplan.md`。
 
@@ -86,6 +86,18 @@
 **事实位**：设计与计划在 `docs/plan/snapshot-identity/design.md` 与 `docs/plan/snapshot-identity/plan.md`；
 读取方 `src/python/lib/_snapshot.py`，写入与命令 `src/python/manuscript/snapshot.py`，
 体积门禁 `src/python/audit/content_volume.py`，目录归属见 `docs/managements/folder.md`。
+
+#### `plan-19` 坐标密度底线（每章可核验依据的下限）
+
+**现状**：`claims` 已能逐句报告「强断言无依据」（本书 35 条已记账），但整体稀薄量不出来——
+本书每千行仅 5 处坐标、25 处 `Class.method(`，2,893 个实质段落中 84% 不含可回溯引用。
+**动作**：按 `docs/plan/coordinate-density/plan.md` 分三阶段：先加只读判据按章算三项密度并记录现状，
+再按 `claims` 清单补依据，最后把阈值写成实测的 80% 进门禁。
+**验收**：三项密度按章可复现；补证据阶段 `claims` 计数不升；开判后构造一章无坐标正文即失败，本书全绿。
+
+**事实位**：设计与计划在 `docs/plan/coordinate-density/design.md` 与 `docs/plan/coordinate-density/plan.md`；
+密度判据尚待实现（届时落在 `audit/` 下），坐标解析沿用 `audit/source_refs.py`，
+阈值 `data/config/style.json [evidence]`。
 
 ### P3 — 预期实施，有空时安排
 

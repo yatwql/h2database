@@ -29,7 +29,8 @@
     "perf": "data/baselines/perf.json",
     "readability_box": "data/baselines/readability.json",
     "source_symbol": "data/baselines/source-symbols.json",
-    "style_rules": "data/baselines/style-rules.json"
+    "style_rules": "data/baselines/style-rules.json",
+    "claims": "data/baselines/claims.json"
   },
   "toolchain": {
     "coverage_fail_under": 90,

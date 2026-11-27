@@ -211,5 +211,22 @@
       "TypeInfo",
       "Undo"
     ]
+  },
+  "claims": {
+    "_note": "Strong assertions need evidence (a coordinate, a Class.method call, or a backticked class).",
+    "markers": [
+      "总是",
+      "从不",
+      "绝不",
+      "必然",
+      "一定",
+      "唯一",
+      "保证了",
+      "避免了",
+      "杜绝",
+      "根本原因",
+      "不可能",
+      "永远"
+    ]
   }
 }

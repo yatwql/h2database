@@ -112,6 +112,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 架构约束 | 分层依赖方向、门禁只读、不硬编码路径、命名不遮蔽标准库、入口脚本均接入 make.py 步骤；控制台入口的导入闭包内不得有模块级配置读取（由架构层的用例钉住）；代码里不得出现本书专有词（词表由 `base.json [toolchain] book_vocabulary` 声明） | `check_architecture.py` | P0 |
 | 章节均衡 | 正文各章节文件的行数/图数/坐标分布（比值超目标即失败） | `balance.py` | P2 |
 | 基线清单 | `data/baselines/` 每个文件的形态、条数、更新时间、归属门禁；`--check` 报空账本、无法读取、无门禁认领 | `manuscript/baselines.py` | P3 |
+| 断言依据 | 强断言（总是/绝不/唯一…）句内必须带依据：`path:行号`、`Class.method(` 或反引号类名；按章计数走基线棘轮，新增即失败 | `audit/claims.py` | P1 |
 | 编辑要素 | 学习目标、要点回顾、常见误区、表格密度按风格档判定：必选元素低于下限、或任一计数低于记录基线即失败 | `audit/editorial.py` | P2 |
 | 类型检查 | pyright 可用时检查工具链类型（缺失则跳过） | `typecheck.py` | P1 |
 | 门禁追溯 | make.py 的每个门禁都在 testplan 登记，反之亦然 | `gate_trace.py` | P0 |

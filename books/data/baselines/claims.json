@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "gate": "claims",
+  "kind": "counts",
+  "keyed_by": "manuscript-path",
+  "updated": "2026-11-27",
+  "note": "Unevidenced strong claims per file; may only fall.",
+  "files": {
+    "appendix-a-case-studies.md": 4,
+    "ch1-2-architecture.md": 1,
+    "ch11-12-guide-summary.md": 3,
+    "ch3-packages.md": 1,
+    "ch4-5-modules-processes.md": 1,
+    "ch6-1-data-structures.md": 3,
+    "ch6-2-storage-algorithms.md": 3,
+    "ch6-3-query-algorithms.md": 2,
+    "ch7-sql-execution.md": 3,
+    "ch8-query-optimizer.md": 5,
+    "ch9-10-persistence-locking.md": 9
+  },
+  "total": 35
+}
