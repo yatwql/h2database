@@ -189,6 +189,29 @@ for each filter in plan:
 
 ### 6.8.2 策略选择决策树
 
+策略的选择只取决于表数量，`calculateBestPlan()` 是这一判断的入口：
+
+```java
+// Optimizer.java:78-92
+    private void calculateBestPlan(boolean isSelectCommand) {
+        cost = -1;
+        if (filters.length == 1) {
+            testPlan(filters, isSelectCommand);
+        } else {
+            startNs = System.nanoTime();
+            if (filters.length <= MAX_BRUTE_FORCE_FILTERS) {
+                calculateBruteForceAll(isSelectCommand);
+            } else {
+                calculateBruteForceSome(isSelectCommand);
+                random = new Random(0);
+                calculateGenetic(isSelectCommand);
+            }
+        }
+    }
+```
+
+`MAX_BRUTE_FORCE_FILTERS` 以下是全排列，以上先暴力部分再贪心补全，最后再用遗传算法搜一轮。
+
 **图 6-69: 策略选择决策树**
 
 ```text
@@ -329,6 +352,19 @@ Optimizer.calculateBestPlan() 决策树：
 ```
 
 ### 6.8.3 暴力枚举排列
+
+全排列部分没有技巧：生成器逐个给出排列，`testPlan()` 为每个排列算出代价，`canStop()` 决定是否提前收敛：
+
+```java
+// Optimizer.java:107-113
+    private void calculateBruteForceAll(boolean isSelectCommand) {
+        TableFilter[] list = new TableFilter[filters.length];
+        Permutations<TableFilter> p = Permutations.create(filters, list);
+        for (int x = 0; !canStop(x) && p.next(); x++) {
+            testPlan(list, isSelectCommand);
+        }
+    }
+```
 
 **图 6-71: 暴力枚举排列示意图**
 
@@ -555,6 +591,24 @@ Hybrid 策略的贪心填充阶段（以 N=10, m=2 为例）：
 ```
 
 ### 6.8.5 遗传算法突变操作
+
+遗传搜索从当前最优出发做两两交换，每 128 轮掺一次全随机重启：
+
+```java
+// Optimizer.java:153-171
+    private void calculateGenetic(boolean isSelectCommand) {
+        TableFilter[] best = new TableFilter[filters.length];
+        TableFilter[] list = new TableFilter[filters.length];
+        for (int x = 0; x < MAX_GENETIC; x++) {
+            if (canStop(x)) {
+                break;
+            }
+            boolean generateRandom = (x & 127) == 0;
+                // ...
+                System.arraycopy(filters, 0, best, 0, filters.length);
+                shuffleAll(best);
+                System.arraycopy(best, 0, list, 0, filters.length);
+```
 
 **图 6-73: 遗传算法突变操作**
 
@@ -2178,6 +2232,25 @@ R-Tree vs. Grid Index 对比:
 ## 6.10 SQL 解析 (Recursive Descent)
 
 ### 6.10.1 核心描述
+
+语法分析的入口按当前 token 分派，`switch` 的每个分支对应一类语句：
+
+```java
+// Parser.java:591-603
+    private Prepared parsePrepared() {
+        int start = tokenIndex;
+        Prepared c = null;
+        switch (currentTokenType) {
+        case END_OF_INPUT:
+        case SEMICOLON:
+            c = new NoOperation(session);
+            setSQL(c, start);
+            return c;
+        case PARAMETER:
+            // read the ? as a parameter
+            // this is an 'out' parameter - set a dummy value
+            readParameter().setValue(ValueNull.INSTANCE);
+```
 
 ```text
 H2 的 SQL 解析器采用经典的两阶段架构：**Tokenizer（词法分析）→ Parser（递归下降语法分析）**。这种分离使解析器的实现更清晰——Tokenizer 处理字符级细节，Parser 专注于 Token 级别的语法结构。解析器在 SQL 执行全链路中的位置详见第7章《SQL 执行全流程》。

@@ -362,6 +362,19 @@ Phase 2 压缩过程：
 
 ### 6.4.5 FreeSpaceBitSet 状态转换
 
+释放一段空间就是把对应位清零，并用断言挡住重复释放：
+
+```java
+// FreeSpaceBitSet.java:196-202
+    public void free(long pos, int length) {
+        int start = getBlock(pos);
+        int blocks = getBlockCount(length);
+        assert set.nextClearBit(start) >= start + blocks :
+                "Double free: " + Integer.toHexString(start) + "/" + Integer.toHexString(blocks) + " " + this;
+        set.clear(start, start + blocks);
+    }
+```
+
 **图 6-27: FreeSpaceBitSet 状态转换**
 
 ```text
