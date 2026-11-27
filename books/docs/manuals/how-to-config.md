@@ -210,6 +210,7 @@ base.json 的 `[toolchain]` 段另有两类键：`balance_max_min_ratio`（正�
 | 术语中英别名与「不算术语」词表 | `data/book/glossary.toml`（按书可选） | 文档 |
 | 案例流水线、附录标题/开篇、思考题 | `data/book/case-studies.toml`（按书可选，`[headers.<scenario>]` 可只给部分键） | 文档 |
 | 编辑风格档（哪些要素必选、下限多少） | `book.toml [editing]`（可缺省；`[editing.profile].name` 三选一：`manual`/`tutorial`/`hands-on`，`[editing.elements.<名>]` 逐项覆盖） | 文档 |
+| LLM 提示语 | `book.toml [llm.prompts]`（`lead`／`summary`，占位符 `{pkgs}` `{lines}` `{title}` `{top}`）；不写则用语言包的 `prompts`，语言包也没有时用内置英文兜底 |
 | LLM 起草契约 | `book.toml [llm_tasks]`（可缺省；`[llm_tasks.default]` 与 `[llm_tasks.tasks.<名>]` 给 `min_chars`/`max_chars`/`single_paragraph`/`allow_unknown_digits`，判据在 `lib/_llm_contract.py`） | 文档 |
 | 书籍身份与展示文案（书名、作者、页眉、产物名） | `data/book/book.toml [book]/[project]` | 文档 |
 

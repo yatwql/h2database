@@ -126,16 +126,10 @@ def prose(kind: str, fallback: str, enabled: bool | None = None, **facts) -> str
 
 
 def _prose_prompt(kind: str, facts: dict) -> str:
-    """Prompt for one prose paragraph, facts supplied by the caller."""
-    if kind == 'lead':
-        return ('用一到两句中文写本章导读：本章由源码清单汇总而成，覆盖 '
-                f'{facts.get("pkgs", 0)} 个包、{facts.get("lines", "0")} 行实现，'
-                f'章节标题为《{facts.get("title", "")}》。'
-                '只输出连贯句子，不要列表、标题或代码。')
-    return ('用一到两句中文写本章小结：本章覆盖 '
-            f'{facts.get("pkgs", 0)} 个包、{facts.get("lines", "0")} 行，'
-            f'主要包是 {facts.get("top", "")}。'
-            '只输出连贯句子，不要列表、标题或代码。')
+    """Prompt for one prose paragraph; where it comes from is `lib._llm_prompts`."""
+    from lib import _llm_prompts  # noqa: PLC0415 - keeps the offline path stdlib-only
+
+    return _llm_prompts.render(kind, facts)
 
 
 def tpl(key: str, fallback: str, **facts) -> str:

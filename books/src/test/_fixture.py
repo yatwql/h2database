@@ -306,6 +306,12 @@ LANGUAGE_JSON = {
         "exercises": "延伸思考",
         "further": "延展阅读",
     },
+    "prompts": {
+        "lead": ("用一到两句中文写本章导读：本章由源码清单汇总而成，覆盖 {pkgs} 个包、"
+                 "{lines} 行实现，章节标题为《{title}》。只输出连贯句子，不要列表、标题或代码。"),
+        "summary": ("用一到两句中文写本章小结：本章覆盖 {pkgs} 个包、{lines} 行，"
+                    "主要包是 {top}。只输出连贯句子，不要列表、标题或代码。"),
+    },
     "exercise": {"hint_prefix": "提示", "review_prefix": "回顾"},
     "terms": {
         "reference_line": "术语参考",

@@ -300,7 +300,12 @@ def _identity_summary(manifest: dict) -> tuple[str, str, str, str]:
     return book, source, tool, config
 
 
-def list_snapshots() -> int:
+def list_snapshots(book: str = '', source: str = '') -> int:
+    """List snapshots, optionally narrowed to one book slug or one source version.
+
+    A single `data/snapshots/` can hold several books; the filters answer "which of these
+    belong to the book I am in" without reading manifests by hand.
+    """
     found = snapshot_paths()
     if not found:
         print('no snapshots')
@@ -314,9 +319,18 @@ def list_snapshots() -> int:
             continue
         manifest = _fsutil.load_json(manifest_path)
         totals = manifest.get('totals', {})
-        book, source, tool, config = _identity_summary(manifest)
-        rows.append((name, book, source, tool, config,
+        book_name, source_version, tool, config = _identity_summary(manifest)
+        if book and book_name != book:
+            continue
+        if source and source_version != source:
+            continue
+        rows.append((name, book_name, source_version, tool, config,
                      str(totals.get('files', 0)), str(totals.get('bytes', 0))))
+    if not rows:
+        narrowing = ', '.join(part for part in (
+            f'book={book}' if book else '', f'source={source}' if source else '') if part)
+        print(f'no snapshot matches {narrowing}')
+        return 0
     widths = [max(len(str(row[i])) for row in [header, *rows]) for i in range(len(header))]
     print('  ' + '  '.join(text.ljust(widths[i]) for i, text in enumerate(header)))
     for row in rows:
@@ -469,7 +483,9 @@ def main(argv: list[str] | None = None) -> int:
     artifacts.add_argument('source')
     artifacts.add_argument('label')
     artifacts.add_argument('--date', default=None)
-    sub.add_parser('list', help='list snapshots')
+    lister = sub.add_parser('list', help='list snapshots')
+    lister.add_argument('--book', default='', help='only this book slug')
+    lister.add_argument('--source', default='', help='only this source version')
     verifier = sub.add_parser('verify', help='check a snapshot against its manifest')
     verifier.add_argument('label')
     adopter = sub.add_parser('adopt', help='give a pre-identity snapshot its identity')
@@ -488,7 +504,7 @@ def main(argv: list[str] | None = None) -> int:
         date = args.date or '0000-00-00'
         code = import_artifacts(args.source, args.label, date)
     elif args.command == 'list':
-        code = list_snapshots()
+        code = list_snapshots(book=args.book, source=args.source)
     elif args.command == 'verify':
         code = verify(args.label)
     elif args.command == 'adopt':

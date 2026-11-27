@@ -287,5 +287,33 @@ class SnapshotIdentityTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(path))
 
 
+    def test_list_can_be_narrowed_to_one_book_or_source(self):
+        self._write_manifest("book-a/2026-01-01-x",
+                             {"book": {"slug": "book-a"}, "source": {"version": "1"}})
+        self._write_manifest("book-b/2026-01-02-y",
+                             {"book": {"slug": "book-b"}, "source": {"version": "1"}})
+        out = io.StringIO()
+        with redirect_stdout(out):
+            self.assertEqual(self.mod.list_snapshots(book="book-b"), 0)
+        text = out.getvalue()
+        self.assertIn("2026-01-02-y", text)
+        self.assertNotIn("2026-01-01-x", text)
+
+    def test_a_filter_that_matches_nothing_says_so(self):
+        self._write_manifest("book-a/2026-01-01-x",
+                             {"book": {"slug": "book-a"}, "source": {"version": "1"}})
+        out = io.StringIO()
+        with redirect_stdout(out):
+            self.assertEqual(self.mod.list_snapshots(book="nope"), 0)
+        self.assertIn("no snapshot matches book=nope", out.getvalue())
+
+    def test_a_source_filter_alone_names_what_it_looked_for(self):
+        self._write_manifest("book-a/2026-01-01-x",
+                             {"book": {"slug": "book-a"}, "source": {"version": "7"}})
+        out = io.StringIO()
+        with redirect_stdout(out):
+            self.assertEqual(self.mod.list_snapshots(source="9"), 0)
+        self.assertIn("source=9", out.getvalue())
+
 if __name__ == "__main__":
     unittest.main()
