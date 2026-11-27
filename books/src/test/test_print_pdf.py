@@ -9,6 +9,7 @@ removed afterwards, and nothing in the pipeline decides a margin or a size on it
 from __future__ import annotations
 
 import importlib
+import importlib.util
 import io
 import os
 import sys
@@ -338,26 +339,23 @@ class PrintEditionTest(unittest.TestCase):
     def test_a_missing_browser_engine_only_skips_the_link_step(self):
         """A plain environment renders the PDF; the TOC links are the only casualty.
 
-        Hiding the submodule means hiding it twice: `sys.modules` alone is not enough once
-        an earlier case has imported it, because the package keeps the attribute and
-        `from render import pdf_toc_links` answers from there.
+        The engine probe answers, so the case does not depend on whether an earlier case
+        already imported the linker (an import that has succeeded cannot be made to fail).
         """
-        # resolved at runtime: the test path is set up per case, so a static import
-        # here would be a lie about what this file can see
-        package = importlib.import_module("render")
-
         page = SplitPage(self.pdf, self.parts, self.headings)
         out = io.StringIO()
-        saved = getattr(package, "pdf_toc_links", _MISSING)
-        try:
-            with (
-                mock.patch.dict(sys.modules, {"render.pdf_toc_links": None}),
-                redirect_stdout(out),
-            ):
-                count = self.module.build(self.html, self.pdf, fake_engine(page))
-        finally:
-            if saved is not _MISSING:
-                package.pdf_toc_links = saved
+        real_find_spec = importlib.util.find_spec
+
+        def find_spec(name, *args, **kwargs):
+            if name == "playwright":
+                return None
+            return real_find_spec(name, *args, **kwargs)
+
+        with (
+            mock.patch.object(importlib.util, "find_spec", find_spec),
+            redirect_stdout(out),
+        ):
+            count = self.module.build(self.html, self.pdf, fake_engine(page))
         self.assertEqual(count, 3)
         self.assertIn("playwright 未安装", out.getvalue())
 

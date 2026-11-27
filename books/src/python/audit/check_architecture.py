@@ -246,7 +246,7 @@ CJK_RE = re.compile(r'[\u3400-\u9fff]')
 
 
 def vocabulary_pattern(word: str) -> re.Pattern[str]:
-    """A whole-word match for Latin terms, a plain substring for CJK ones.
+    r"""A whole-word match for Latin terms, a plain substring for CJK ones.
 
     `\w` is Unicode-aware, so a word boundary would demand punctuation around a CJK
     term and miss it in ordinary prose ("数据库引擎的实现"). CJK terms are therefore

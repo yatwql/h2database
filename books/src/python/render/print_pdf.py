@@ -24,6 +24,7 @@ _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)
 
 import argparse
 import contextlib
+import importlib.util
 import os
 import subprocess
 from typing import Any
@@ -128,15 +129,18 @@ def build(
         print("  Chromium 分章渲染中（与标准版同一页框）…", flush=True)
         count = pdf_split.render_html(staging, target, engine=engine)
         if linker is _DEFAULT_LINKER:
-            try:
-                from render import pdf_toc_links  # noqa: PLC0415 - playwright only here
-
-                linker = pdf_toc_links.add_links
-            except ImportError:
+            # Availability is asked of the environment, not inferred from an import
+            # failing: once anything imported the submodule, the import answers from
+            # sys.modules and a plain environment would look equipped.
+            if importlib.util.find_spec("playwright") is None:
                 # a plain environment has no browser engine; the PDF is still usable,
                 # the printed TOC just keeps clickable rectangles without targets
                 print("  [WARN] 目录链接未写回（playwright 未安装）", flush=True)
                 linker = None
+            else:
+                from render import pdf_toc_links  # noqa: PLC0415 - playwright only here
+
+                linker = pdf_toc_links.add_links
         if linker is not None:
             print("  印刷目录链接写回 PDF 目标…", flush=True)
             linker(pdf_path=target, html_path=staging)
