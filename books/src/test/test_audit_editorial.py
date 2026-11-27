@@ -94,6 +94,14 @@ class EditorialCountingTest(FixtureCase):
             self.assertIn("files", json.load(fh))
         self.assertEqual(editorial.main([]), 0)  # recorded shortfall is tolerated
 
+    def test_learning_goals_are_counted_from_their_blockquote_block(self):
+        """This book keeps them as `> - …` under the lead, not as a heading section."""
+        editorial = self.module("editorial")
+        text = ("> **本章导读**: 一句。\n> **章节要点**:\n"
+                "> - 目标一\n> - 目标二\n> - 目标三\n\n正文。\n")
+        self.assertEqual(editorial.blockquote_items(text, "章节要点"), 3)
+        self.assertEqual(editorial.blockquote_items(text, "学习目标"), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
