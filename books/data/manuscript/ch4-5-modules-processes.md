@@ -3098,22 +3098,18 @@ ROLLBACK 流程与 COMMIT 对称但方向相反，其核心逻辑是从 undo log
 ### 5.6.3 关键代码引用
 #### 5.6.3.1 RollbackDecisionMaker 关键代码
 ```java
-// RollbackDecisionMaker.java:34-48
-public MVMap.Decision decide(Record existingValue, Record providedValue) {
-    if (existingValue == null) {
-        decision = MVMap.Decision.ABORT; // 保护性中止
-    } else {
-        VersionedValue<Object> valueToRestore = existingValue.oldValue;
-        long operationId;
-        if (valueToRestore == null ||
-                (operationId = valueToRestore.getOperationId()) == NO_OPERATION_ID ||
-                TransactionStore.getTransactionId(operationId) == transactionId
-                        && TransactionStore.getLogId(operationId) < toLogId) {
-            int mapId = existingValue.mapId;
-            // 执行实际恢复: PUT oldValue 或 REMOVE
-        }
+// RollbackDecisionMaker.java:34-60
+    @Override
+    public MVMap.Decision decide(Record existingValue, Record providedValue) {
+        assert decision == null;
+        if (existingValue == null) {
+            // normally existingValue will always be there except of db initialization
+            // where some undo log entry was captured on disk but actual map entry was not
+            decision = MVMap.Decision.ABORT;
+        } else {
+    // ...
+        return decision;
     }
-}
 ```
 ```text
   如图 5-27 所示，RollbackDecisionMaker.decide(existingValue)
@@ -3507,20 +3503,16 @@ Chunk 压缩整理是 MVStore 在 Chunk 层面执行的碎片回收流程，与 
 ### 5.8.3 关键代码引用
 #### 5.8.3.1 后台自动整理 (doHousekeeping)
 ```java
-// RandomAccessStore.java:720
-protected void doHousekeeping(MVStore mvStore) throws InterruptedException {
-    int fileFillRate = getFillRate();
-    int chunksFillRate = getChunksFillRate();
-    // 文件碎片化且填充率低 → 移动 chunk
-    if (isFragmented() && fileFillRate < getAutoCompactFillRate()) {
-        compactMoveChunks(101, moveSize, mvStore);
+// RandomAccessStore.java:761-804
+    protected void doHousekeeping(MVStore mvStore) throws InterruptedException {
+        boolean idle = isIdle();
+        int rewritableChunksFillRate = getRewritableChunksFillRate();
+        if (idle && stopIdleHousekeeping) {
+            return;
+        }
+    // ...
+        }
     }
-    // chunk 填充率低 → 重写 chunk
-    if (fillRateToCompare < getTargetFillRate(idle)) {
-        rewriteChunks(writeLimit, targetFillRate);
-        dropUnusedChunks();
-    }
-}
 ```
 ```text
   如图 5-35 所示，doHousekeeping()

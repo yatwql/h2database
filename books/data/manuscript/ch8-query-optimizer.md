@@ -112,10 +112,10 @@ Optimizer(TableFilter[] filters, Expression condition, SessionLocal session)
 如图 8-1 所示，在 `Select.preparePlan()` 中创建并调用：
 
 ```java
-// Select.java:1359
-Optimizer optimizer = new Optimizer(topArray, condition, session);
-optimizer.optimize(parse, isSelectCommand);
-topTableFilter = optimizer.getTopFilter();
+// Select.java:1392-1394
+        Optimizer optimizer = new Optimizer(topArray, condition, session);
+        optimizer.optimize(parse, /*isSelectCommand*/true);
+        topTableFilter = optimizer.getTopFilter();
 ```
 
 Optimizer 对象从创建到产出最优计划的完整生命周期：
