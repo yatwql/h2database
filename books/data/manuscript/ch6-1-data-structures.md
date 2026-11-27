@@ -2838,7 +2838,21 @@ undo log vs. 多版本存储 (MVTO) 对比：
 - 理解这三者，才能读懂后续章节里「为什么读不需要锁」和「旧版本什么时候清」这类设计。
 - 三者是分层的：B-Tree 管结构、COW 管写入与版本、MVCC 管事务可见性，后续章节按这个分工展开。
 
-## 6.5 延伸思考
+## 6.5 常见误区
+
+- **误区**：页面只在键数超过 `keysPerPage`（默认 48）时分裂，所以把 `keysPerPage` 调大就能压住分裂频率。
+  **为什么**：分裂条件是两个而不是一个——键数超限，或页面字节数超过 `pageSplitSize` 且键数大于 1，任一成立即分裂（`MVMap.java:1786`）；长字符串与大值先撞字节上限。
+  这个字节上限的缺省值分两种：有页缓存时取 `Constants.DEFAULT_PAGE_SIZE`（16 KB），无缓存时取 `Integer.MAX_VALUE`（`FileStore.java:260`）；内存库没有 fileStore，字节条件退化成 `Long.MAX_VALUE`（`MVStore.java:1193`）。
+
+- **误区**：COW 的复制代价等于树高，所以备份与压缩这类「复制整棵树」的操作也按 O(log N) 估算。
+  **为什么**：按路径复制只属于单键写入那一类；`MVStore.copy` 调 `MVMap.copyFrom` 逐层复制全部页面（`MVMap.java:1171`），耗时随数据量走。
+  它还依赖「incomplete 页面不落盘」的取巧：复制过程中产生的 chunk 一个都回收不得，否则目标库会引用到已删的页（`MVStore.java:419`）。
+
+- **误区**：快照读不占资源，拿到根引用之后放多久都能继续读。
+  **为什么**：MVStore 对版本记帐——`MVStore.registerVersionUsage()` 给当前版本挂一个使用者计数（`MVStore.java:1814`），计数归零之后该版本的页面才会被判为可丢。
+  绕开它直接长期持有页面引用，等压缩推进到该版本，读到的就是已经不再被任何 chunk 引用的页。
+
+## 6.6 延伸思考
 
 **1. 🟢★ B-Tree 的多路分支与平衡策略决定了查找复杂度。请说明 H2 的 MVMap 在什么条件下触发分裂，分裂时根引用是如何被更新的。**
 
@@ -2864,7 +2878,7 @@ undo log vs. 多版本存储 (MVTO) 对比：
 >
 > 回顾：§6.2 Copy-on-Write 版本管理 + §10.5 RootReference CAS 无锁读。
 
-## 6.6 延展阅读
+## 6.7 延展阅读
 
 - H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#versions`) — MVStore 版本管理机制
 - 本书第6.4-6.7节《存储算法》 — Chunk/LIRS/FreeSpace/MVStore 平衡算法
