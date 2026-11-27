@@ -1,0 +1,102 @@
+{
+  "note": "Recorded editorial element counts. A count may rise, never fall.",
+  "profile": "tutorial",
+  "files": [
+    {
+      "file": "ch1-2-architecture.md",
+      "lines": 2214,
+      "learning_goals": 0,
+      "key_points": 0,
+      "pitfalls": 0,
+      "table_density": 0.45
+    },
+    {
+      "file": "ch3-packages.md",
+      "lines": 2303,
+      "learning_goals": 0,
+      "key_points": 0,
+      "pitfalls": 0,
+      "table_density": 9.55
+    },
+    {
+      "file": "ch4-5-modules-processes.md",
+      "lines": 3978,
+      "learning_goals": 0,
+      "key_points": 0,
+      "pitfalls": 0,
+      "table_density": 2.01
+    },
+    {
+      "file": "ch6-1-data-structures.md",
+      "lines": 2867,
+      "learning_goals": 0,
+      "key_points": 0,
+      "pitfalls": 0,
+      "table_density": 1.74
+    },
+    {
+      "file": "ch6-2-storage-algorithms.md",
+      "lines": 4649,
+      "learning_goals": 0,
+      "key_points": 0,
+      "pitfalls": 0,
+      "table_density": 1.72
+    },
+    {
+      "file": "ch6-3-query-algorithms.md",
+      "lines": 3531,
+      "learning_goals": 0,
+      "key_points": 0,
+      "pitfalls": 0,
+      "table_density": 1.42
+    },
+    {
+      "file": "ch7-sql-execution.md",
+      "lines": 3688,
+      "learning_goals": 0,
+      "key_points": 0,
+      "pitfalls": 0,
+      "table_density": 0.27
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "lines": 4499,
+      "learning_goals": 0,
+      "key_points": 0,
+      "pitfalls": 0,
+      "table_density": 0.67
+    },
+    {
+      "file": "ch9-10-persistence-locking.md",
+      "lines": 6631,
+      "learning_goals": 0,
+      "key_points": 0,
+      "pitfalls": 0,
+      "table_density": 0.75
+    },
+    {
+      "file": "ch11-12-guide-summary.md",
+      "lines": 2444,
+      "learning_goals": 0,
+      "key_points": 0,
+      "pitfalls": 0,
+      "table_density": 5.73
+    },
+    {
+      "file": "appendix-a-case-studies.md",
+      "lines": 1445,
+      "learning_goals": 0,
+      "key_points": 0,
+      "pitfalls": 0,
+      "table_density": 2.77
+    },
+    {
+      "file": "appendix-b-version-changes.md",
+      "lines": 68,
+      "learning_goals": 0,
+      "key_points": 0,
+      "pitfalls": 0,
+      "table_density": 44.12
+    }
+  ]
+}

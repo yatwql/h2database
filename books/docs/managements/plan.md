@@ -68,8 +68,9 @@
 **现状**：优秀技术书的要素（学习目标、前置知识、要点回顾、常见误区、代码清单编号、术语中英对照、
 提示类区块、图表并重）只有四项被 `[sections]` 强制，其余靠自觉；本书实测提示类 2 条、代码标注 0 处、
 表格 3 处、学习目标 3/14 章。
-**动作**：按 `docs/plan/editorial-profile/plan.md` 分阶段推进（配置与量化 → 补内容 → 其余元素）；
-新增书级编辑配置声明「哪些元素必选、标签叫什么、下限多少」，判据只读配置，三档预设（手册 / 教程 / 实战）。
+**动作**：按 `docs/plan/editorial-profile/plan.md` 分阶段推进；阶段 1 已落地——`data/book/editing.toml`
+声明风格档与逐项覆盖，三档预设写在 `lib/_editorial.py`，`audit/editorial.py` 量出学习目标、要点回顾、
+常见误区、表格密度四项并按基线棘轮判定；剩余阶段 2 是补内容。
 **验收**：每个元素都有能红的判据；本书三档判据全绿；换档只改配置即可通过。
 
 **事实位**：设计与计划在 `docs/plan/editorial-profile/design.md` 与 `docs/plan/editorial-profile/plan.md`；

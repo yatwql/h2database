@@ -198,6 +198,7 @@ STEPS: list[Step] = [
     ('figure_clusters', 'audit/figure_clusters.py', (), 'verify'),
     ('audit_index_xrefs', 'audit/index_xrefs.py', (), 'verify'),
     ('balance_check', 'audit/balance.py', (), 'verify'),
+    ('editorial', 'audit/editorial.py', (), 'verify'),
     ('source_refs', 'audit/source_refs.py', (), 'verify'),
     ('readability', 'audit/readability.py', (), 'verify'),
     ('style', 'audit/style.py', (), 'verify'),

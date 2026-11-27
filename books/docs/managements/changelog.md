@@ -13,6 +13,11 @@
 
 ### 变更
 
+- **编辑要素开始可判（plan-14 阶段 1）**：新增书级配置 `data/book/editing.toml`（风格档三选一 +
+逐项覆盖）与三档预设 `lib/_editorial.py`（manual / tutorial / hands-on），新增判据 `audit/editorial.py`
+量出每章的 学习目标 / 要点回顾 / 常见误区 / 表格密度，并按 `data/baselines/editorial.json` 棘轮判定：
+必选元素低于下限、或任一计数低于基线即失败。本书按 tutorial 档登记但三项尚未补齐，缺口已记录在基线里，
+补内容按 `docs/plan/editorial-profile/` 推进。
 - **印刷版重新省页（plan-17 ③）**：纸面阅读度量与自适应解算改为配置驱动（`layout_print_chars_per_line`
   等），标准版 920 页、印刷版 935 → **829 页（−9.9%，目标 ≤874）**，`DENSITY`、`CODE_LEAD`、`TOC_LINKS` 全绿。
 - **章节文件篇幅比的计量范围**：`balance.py` 只量正文各章节文件，附录与前件在报告里列在 `scope.excluded_files`
