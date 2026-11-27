@@ -1282,6 +1282,18 @@ H2 在架构层面做出了一系列关键权衡，理解这些取舍有助于�
 如图 12-1 所示，### 12.1.1 权衡一：COW B-Tree vs In-place B-Tree
 MVStore 采用写时复制（Copy-on-Write）B-Tree。每次写入创建新的根节点路径，旧版本数据仍然可读，从而天然支持无锁读取和 MVCC。代价是写放大（Write Amplification）较高，每次写入都需要重写从叶子到根的一条完整路径。
 
+写时复制的实现就落在这几行——复制一份可写页面，旧页面原样留在版本链上：
+
+```java
+// Page.java:382-387
+    public final Page<K,V> copy() {
+        Page<K,V> newPage = clone();
+        newPage.pos = 0;
+        newPage.pageNo = -1;
+        return newPage;
+    }
+```
+
 **图 12-1: COW B-Tree vs In-place B-Tree 对比**
 
 ```text
