@@ -476,7 +476,17 @@ H2 在极小的体积内提供了完整的关系数据库能力：全面 SQL 支
 - **核心设计哲学**：围绕"小而全""零管理""多模式运行""兼容模式""纯 Java 可嵌入"五大理念展开。其中"小而全"通过手写 Parser（9300 行）、自定义序列化、自实现网络栈等零依赖策略实现；"零管理"通过自动创建、自动恢复、自动调优的设计达成。
 - **设计决策关联网络**：纯 Java 零依赖是最根本的顶层决策，驱动了手写 Parser、自定义序列化、自实现网络栈等一系列技术选择。分层接口隔离使 MVCC 存储引擎替换成为可能，而 MVCC 的无锁读取 + CAS（Compare-And-Swap，比较并交换原子操作）根引用设计是 OLTP 高并发性能的基础。
 
-## 1.5 延伸思考
+## 1.5 常见误区
+
+- **误区**：嵌入式模式与服务器模式跑的是两套引擎，并发与性能的差别来自内核实现不同。
+  **为什么**：服务端收到连接后同样建一个本地会话——`TcpServerThread` 调 `Engine.createSession`（`TcpServerThread.java:177`），拿到的就是 `SessionLocal`（`Engine.java:229`）。
+  差别全在客户端一侧：多一层 `SessionRemote` 与 `CommandRemote` 的传输代理（命令封装见第 4 章），加上网络往返与序列化。
+
+- **误区**：看到 `FileStore` 就按包名认定它是持久化那一层，把 `org.h2.store.FileStore` 当成 MVStore 的文件层。
+  **为什么**：树里有两个同名类：`org.h2.store.FileStore`（`store/FileStore.java:26`）是 H2 自己的文件抽象，服务文件锁、备份流与 LOB；MVStore 的文件层是 `org.h2.mvstore.FileStore`（`mvstore/FileStore.java:60`）。
+  第 9 章讲持久化的坐标基本都在 `mvstore/` 下，混用一个会读到错的实现。
+
+## 1.6 延伸思考
 
 **1. 🟢★ H2 同时给出六组架构视图和八层分层模型，为什么需要两套视图而不是一套？分别对应哪类分析任务？**
 
@@ -502,7 +512,7 @@ H2 在极小的体积内提供了完整的关系数据库能力：全面 SQL 支
 >
 > 回顾：§1.1 的兼容模式说明 + §1.3 的分层接口隔离。
 
-## 1.6 延展阅读
+## 1.7 延展阅读
 
 - H2 官方文档《Architecture》(`h2/src/docsrc/html/architecture.html`) — 官方架构分层说明与六组架构视图
 - H2 官方文档《Features》(`h2/src/docsrc/html/features.html`) — 完整特性列表与连接模式说明
@@ -2179,7 +2189,17 @@ MVStore 的引入不仅仅是性能的提升，更重要的是它为 H2 未来�
 
 以上八层架构和模块划分构成了第3章《核心包结构详解》逐层深入的基础。第3章将沿着本章定义的层次结构，逐层分析每个 `org.h2` 子包的核心类、接口设计和依赖关系。
 
-## 2.6 延伸思考
+## 2.6 常见误区
+
+- **误区**：`Database` 初始化时会在 MVStore 与 PageStore 之间选一个，旧引擎只是默认关掉了。
+  **为什么**：`if (dbSettings.mvStore)` 的另一半没有实现，直接抛 `UnsupportedOperationException`（`Database.java:333`）；这棵树里也没有 PageStore 类，只剩注释里的历史提及（`IsolationLevel.java:47`）。
+  所以 2.4 的对照要读成「已经完成的迁移」，不能当成一个可切换的开关。
+
+- **误区**：依赖矩阵是编译器保证的，越层调用根本写不出来。
+  **为什么**：没有 `module-info`，所有包在同一个 jar 里互相可见，矩阵是梳理出来的约定。反例就在存储引擎层：`MVDelegateIndex` 直接 import 了 SQL 层的 `AllColumnsForPlan`（`MVDelegateIndex.java:10`）。
+  所以发现越层引用靠评审与检查脚本，不靠编译失败。
+
+## 2.7 延伸思考
 
 **1. 🟢★ Server 层用 Service 接口统一管理三种协议，JDBC 层却是薄封装。这两种接入方式在「共享同一条执行路径」上是如何做到的？**
 
@@ -2205,7 +2225,7 @@ MVStore 的引入不仅仅是性能的提升，更重要的是它为 H2 未来�
 
 > 回顾：§2.4 MVStore 替换 PageStore 的分层意义 + §2.3 各层关键接口中 Table/Index 的策略模式。
 
-## 2.7 延展阅读
+## 2.8 延展阅读
 
 - H2 官方文档《Architecture》(`h2/src/docsrc/html/architecture.html`) — 官方架构分层说明
 - H2 官方文档《Features》(`h2/src/docsrc/html/features.html`) — 完整特性列表与连接模式说明
