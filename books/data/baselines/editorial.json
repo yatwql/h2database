@@ -5,7 +5,7 @@
     {
       "file": "ch1-2-architecture.md",
       "lines": 2214,
-      "learning_goals": 0,
+      "learning_goals": 4,
       "key_points": 13,
       "pitfalls": 0,
       "tables": 1,
@@ -14,7 +14,7 @@
     {
       "file": "ch3-packages.md",
       "lines": 2303,
-      "learning_goals": 0,
+      "learning_goals": 4,
       "key_points": 5,
       "pitfalls": 0,
       "tables": 22,
@@ -23,7 +23,7 @@
     {
       "file": "ch4-5-modules-processes.md",
       "lines": 3994,
-      "learning_goals": 0,
+      "learning_goals": 4,
       "key_points": 10,
       "pitfalls": 0,
       "tables": 8,
@@ -32,7 +32,7 @@
     {
       "file": "ch6-1-data-structures.md",
       "lines": 2873,
-      "learning_goals": 0,
+      "learning_goals": 4,
       "key_points": 5,
       "pitfalls": 0,
       "tables": 5,
@@ -40,8 +40,8 @@
     },
     {
       "file": "ch6-2-storage-algorithms.md",
-      "lines": 4657,
-      "learning_goals": 0,
+      "lines": 4663,
+      "learning_goals": 4,
       "key_points": 4,
       "pitfalls": 0,
       "tables": 8,
@@ -49,8 +49,8 @@
     },
     {
       "file": "ch6-3-query-algorithms.md",
-      "lines": 3538,
-      "learning_goals": 0,
+      "lines": 3544,
+      "learning_goals": 4,
       "key_points": 4,
       "pitfalls": 0,
       "tables": 5,
@@ -59,7 +59,7 @@
     {
       "file": "ch7-sql-execution.md",
       "lines": 3697,
-      "learning_goals": 0,
+      "learning_goals": 4,
       "key_points": 5,
       "pitfalls": 0,
       "tables": 1,
@@ -68,7 +68,7 @@
     {
       "file": "ch8-query-optimizer.md",
       "lines": 4499,
-      "learning_goals": 0,
+      "learning_goals": 4,
       "key_points": 6,
       "pitfalls": 0,
       "tables": 3,
@@ -77,7 +77,7 @@
     {
       "file": "ch9-10-persistence-locking.md",
       "lines": 6631,
-      "learning_goals": 0,
+      "learning_goals": 5,
       "key_points": 14,
       "pitfalls": 0,
       "tables": 5,
@@ -86,7 +86,7 @@
     {
       "file": "ch11-12-guide-summary.md",
       "lines": 2453,
-      "learning_goals": 0,
+      "learning_goals": 4,
       "key_points": 7,
       "pitfalls": 0,
       "tables": 14,

@@ -67,6 +67,28 @@ def section_items(text: str, heading: str) -> int:
     return total
 
 
+def blockquote_items(text: str, marker: str) -> int:
+    """Bullet items in the blockquote block introduced by `marker`.
+
+    Learning goals are a blockquote in this book's manuscript convention
+    (`> **章节要点**:` followed by `> - …` lines), not a heading section, so they are
+    counted where they actually live rather than demanding a second, duplicate section.
+    """
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if marker not in line:
+            continue
+        found = 0
+        for following in lines[index + 1:]:
+            stripped = following.lstrip()
+            if not stripped.startswith(">"):
+                break
+            if re.match(r">\s*[-*]\s+\S", stripped):
+                found += 1
+        return found
+    return 0
+
+
 def table_count(text: str) -> int:
     """Markdown tables: a header row followed by a separator row."""
     lines = text.splitlines()
@@ -103,7 +125,9 @@ def measure() -> dict:
             {
                 "file": name,
                 "lines": len(text.splitlines()),
-                "learning_goals": section_items(text, rules["learning_goals"]["heading"]),
+                "learning_goals": blockquote_items(
+                    text, rules["learning_goals"]["heading"]
+                ),
                 "key_points": section_items(text, rules["key_points"]["heading"]),
                 "pitfalls": section_items(text, rules["pitfalls"]["heading"]),
                 "tables": table_count(text),

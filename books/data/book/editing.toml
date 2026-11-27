@@ -13,7 +13,9 @@ name = "tutorial"
 enabled = true
 
 [elements.learning_goals]
-enabled = false
+# 本书的学习目标写在章首引用的「章节要点」块里（`> - …`），不是独立小节。
+heading = "章节要点"
+enabled = true
 
 [elements.pitfalls]
 enabled = false
