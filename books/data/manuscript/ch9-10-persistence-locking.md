@@ -2541,26 +2541,20 @@ MVStore 恢复机制利用了两个冗余副本的 store header（Block 0/1）�
 - 对于 COMMITTED 状态的 undo log：事务已提交但尚未清理，需要完成提交流程
 
 ```java
-// TransactionStore.java:579-629
-void commit(Transaction t, boolean recovery) {
-    int transactionId = t.transactionId;
-    // 原子操作：将 transactionId 标记为 "committing"
-    VersionedBitSet commitingTx = flipCommittingTransactionsBit(transactionId, true);
-    t.notifyAllWaitingTransactions();
+// TransactionStore.java:589-643
+    void commit(Transaction t, boolean recovery) {
+        if (!store.isClosed()) {
+            int transactionId = t.transactionId;
 
-    // 遍历 undo log，逐条应用 commit
-    Cursor<Long,Record<?,?>> cursor = undoLog.cursor(null);
-    CommitDecisionMaker<Object> commitDecisionMaker = new CommitDecisionMaker<>(t, ...);
-    while (cursor.hasNext()) {
-        long undoKey = cursor.next();
-        Record<?, ?> record = cursor.getValue();
-        int mapId = record.mapId;
-        // 使用 map.operate() 将 VersionedValueUncommitted → VersionedValueCommitted
-        map.operate(key, null, commitDecisionMaker);
+            // this is an atomic action that causes all changes
+            // made by this transaction, to be considered as "committed"
+            VersionedBitSet committingTx = flipCommittingTransactionsBit(transactionId, true);
+
+        // ...
+                }
+            }
+        }
     }
-    undoLog.clear();
-    flipCommittingTransactionsBit(transactionId, false);
-}
 ```
 
 `committingTransactions` BitSet 是并发控制的关键：当另一个事务读取数据时，如果发现某条记录的操作 ID 属于 `committingTransactions` 中的事务，就会认为该记录已提交，读取 `getCurrentValue()`；否则视为未提交，读取 `getCommittedValue()`。
@@ -3545,20 +3539,19 @@ wait(sleep);
 ```
 
 ```java
-// MVTable.java:295-324
-public void unlock(SessionLocal s) {
-    if (lockExclusiveSession == s) {
-        lockExclusiveSession = null;
-        // 清理 debug 信息
-    } else {
-        lockSharedSessions.remove(s);
-    }
-    if (lockType != Table.READ_LOCK && !waitingSessions.isEmpty()) {
-        synchronized (this) {
-            notifyAll();  // 唤醒等待者
-        }
-    }
-}
+// MVTable.java:295-306
+    public void unlock(SessionLocal s) {
+        if (database != null) {
+            int lockType;
+            if (lockExclusiveSession == s) {
+                lockType = Table.EXCLUSIVE_LOCK;
+                lockSharedSessions.remove(s);
+                lockExclusiveSession = null;
+                if (SysProperties.THREAD_DEADLOCK_DETECTOR) {
+                    ArrayList<String> exclusiveLocks = EXCLUSIVE_LOCKS.get();
+                    if (exclusiveLocks != null) {
+                        exclusiveLocks.remove(getName());
+                    }
 ```
 
 解锁时如果还有等待者，调用 `notifyAll()` 唤醒所有等待线程，而不是 `notify()`，因为可能同时有读锁和写锁等待者需要竞争。
@@ -3590,10 +3583,10 @@ public void unlock(SessionLocal s) {
 当 `SysProperties.THREAD_DEADLOCK_DETECTOR` 启用时，MVTable 使用 `DebuggingThreadLocal` 跟踪锁状态：
 
 ```java
-// MVTable.java:57-67
-public static final DebuggingThreadLocal<String> WAITING_FOR_LOCK;
-public static final DebuggingThreadLocal<ArrayList<String>> EXCLUSIVE_LOCKS;
-public static final DebuggingThreadLocal<ArrayList<String>> SHARED_LOCKS;
+// MVTable.java:57-59
+    public static final DebuggingThreadLocal<String> WAITING_FOR_LOCK;
+
+    /**
 ```
 
 这些 ThreadLocal 变量使得在死锁发生时可以打印出每个线程的锁等待链，方便调试。
@@ -4224,11 +4217,11 @@ private V set(Object key, TxDecisionMaker<K,V> decisionMaker, int timeoutMillis)
 
 ```java
 // TxDecisionMaker.java:162-166
-Decision logAndDecideToPut(VersionedValue<V> valueToLog, V lastValue) {
-    undoKey = transaction.log(mapId, key, valueToLog);  // 先写 undo log
-    this.lastValue = lastValue;
-    return setDecision(Decision.PUT);                     // 再决定 PUT
-}
+    MVMap.Decision logAndDecideToPut(VersionedValue<V> valueToLog, V lastValue) {
+        undoKey = transaction.log(mapId, key, valueToLog);
+        this.lastValue = lastValue;
+        return setDecision(MVMap.Decision.PUT);
+    }
 ```
 
 这使得 `TransactionStore` 能够在回滚时恢复每个键的旧值。
@@ -4567,14 +4560,14 @@ ASCII 死锁链:
 当检测到死锁时，当前等待的 session 会抛出 `DbException.get(ErrorCode.DEADLOCK_1)`：
 
 ```java
-// MVTable.java:216-220
-if (checkDeadlock) {
-    ArrayList<SessionLocal> sessions = checkDeadlock(session, null, null);
-    if (sessions != null) {
-        throw DbException.get(ErrorCode.DEADLOCK_1,
-                getDeadlockDetails(sessions, lockType));
-    }
-}
+// MVTable.java:215-221
+            if (checkDeadlock) {
+                ArrayList<SessionLocal> sessions = checkDeadlock(session, null, null);
+                if (sessions != null) {
+                    throw DbException.get(ErrorCode.DEADLOCK_1,
+                            getDeadlockDetails(sessions, lockType));
+                }
+            } else {
 ```
 
 如图 10-11 所示，选为牺牲的 session 会释放它已持有的所有锁（通过异常传播，最终由上层事务管理代码回滚），使得线程死锁链得以解除，等待中的 session 可以继续执行。
@@ -4903,22 +4896,22 @@ void promoteSnapshot() {
 
 ```java
 // TransactionMap.java:61-66
-private Snapshot<K,VersionedValue<V>> snapshot;           // 事务快照
-private Snapshot<K,VersionedValue<V>> statementSnapshot;  // 语句快照
+    private Snapshot<K,VersionedValue<V>> snapshot;
+    // ...
+    private Snapshot<K,VersionedValue<V>> statementSnapshot;
 ```
 
 - **statementSnapshot**：在每个语句开始时创建（或重置）
 - **snapshot**：在事务中首次写入或显式设置时创建
 
 ```java
-// TransactionMap.java:523-529
-Snapshot<K,VersionedValue<V>> getSnapshot() {
-    return snapshot == null ? createSnapshot() : snapshot;
-}
+// TransactionMap.java:527-532
+    Snapshot<K,VersionedValue<V>> getSnapshot() {
+        return snapshot == null ? createSnapshot() : snapshot;
+    }
 
-Snapshot<K,VersionedValue<V>> getStatementSnapshot() {
-    return statementSnapshot == null ? createSnapshot() : statementSnapshot;
-}
+    Snapshot<K,VersionedValue<V>> getStatementSnapshot() {
+        return statementSnapshot == null ? createSnapshot() : statementSnapshot;
 ```
 
 对于 REPEATABLE_READ 及更高隔离级别，`snapshot` 一旦创建就不会改变，保证了可重复读。
@@ -5166,16 +5159,19 @@ MVMap 的根节点使用 `AtomicReference<RootReference>` 管理，这是 MVStor
 `RootReference` 是一个不可变对象（`final` 字段），包含：
 
 ```java
-// RootReference.java:16-51
+// RootReference.java:16-256
 public final class RootReference<K,V> {
-    public final Page<K,V> root;        // B-Tree 根页面
-    public final long version;          // 版本号
-    private final byte holdCount;       // 可重入锁计数
-    private final long ownerId;         // 锁持有者线程 ID
-    volatile RootReference<K,V> previous; // 前一个版本链
-    final long updateCounter;           // 成功更新计数
-    final long updateAttemptCounter;    // 尝试更新计数
-    private final byte appendCounter;   // append buffer 占用量
+
+    /**
+     * The root page.
+     */
+    public final Page<K,V> root;
+    /**
+     * The version used for writing.
+        // ...
+                ", append=" + getAppendCounter() +
+                ")";
+    }
 }
 ```
 ```text
