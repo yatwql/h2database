@@ -292,5 +292,13 @@ class ExcerptSpanTest(unittest.TestCase):
         module = _fixture.load_module(self.root, "content_depth")
         self.assertEqual(module._excerpt_body(["// Thing.java:1"], 0), [])
 
+    def test_a_blank_line_inside_the_span_is_not_drift(self):
+        with open(self.java, "w", encoding="utf-8") as fh:
+            fh.write("class Thing {\n    int size;\n\n    void run() {\n"
+                     "        size++;\n    }\n}\n")
+        body = ("// Thing.java:1-7\nclass Thing {\n    int size;\n\n"
+                "    void run() {\n        size++;\n    }\n}\n")
+        self.assertEqual(self.check(body), [])
+
 if __name__ == "__main__":
     unittest.main()

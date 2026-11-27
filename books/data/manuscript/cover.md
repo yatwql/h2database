@@ -2,7 +2,7 @@
 
 ## H2 数据库引擎源码剖析
 
-版本 v6.6 · 2026-11-27 · 40,115 行 · 12 章 + 5 附录
+版本 v6.6 · 2026-11-27 · 40,118 行 · 12 章 + 5 附录
 
 **作者：其·龙（Stallman Wang）**
 **联系邮箱：[stallman.wang@foxmail.com](mailto:stallman.wang@foxmail.com)**

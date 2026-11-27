@@ -101,6 +101,12 @@ class ExcerptToolTest(FixtureCase):
         self.assertTrue(self.tool.check(path))
 
 
+    def test_a_blank_line_inside_the_span_compares_equal(self):
+        """Two methods separated by a blank line are one honest block."""
+        path = self.manuscript("```java\n// Thing.java:5-9\n    /** doc */\n"
+                               "    int count;\n    void run() {\n        size++;\n    }\n```\n")
+        self.assertEqual(self.tool.check(path), [])
+
 class ExcerptEdgeTest(FixtureCase):
     def setUp(self):
         super().setUp()

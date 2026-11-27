@@ -103,6 +103,8 @@ def _same_line(shown: str, source: str) -> bool:
     """
     if is_elision(shown):
         return True
+    if not code_of(shown) and not code_of(source):
+        return True  # a blank line is part of the span
     return code_of(shown) == code_of(source) and code_of(shown) != ""
 
 

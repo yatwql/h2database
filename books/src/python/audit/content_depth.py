@@ -152,9 +152,9 @@ def _same_line(body: str, source: str) -> bool:
     """
     if body == source or _is_elision(body):
         return True
-    shown = body.split("//", 1)[0].rstrip()
-    real = source.split("//", 1)[0].rstrip()
-    return shown == real and shown != ""
+    # reduce both sides to their code: an annotation is not a change, and a blank line
+    # inside the span is a blank line on both sides
+    return body.split("//", 1)[0].rstrip() == source.split("//", 1)[0].rstrip()
 
 
 def _excerpt_body(lines: list[str], index: int) -> list[str]:

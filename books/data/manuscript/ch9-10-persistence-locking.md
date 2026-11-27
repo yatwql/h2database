@@ -580,20 +580,19 @@ private int diskSpaceUsed;            // 磁盘空间占用
 `Page.write()` 方法（第 723-793 行）在序列化到 buffer 后，会尝试压缩：
 
 ```java
-// Page.java:742-775
-int expLen = buff.position() - compressStart;
-if (expLen > 16) {
-    int compressionLevel = store.getCompressionLevel();
-    if (compressionLevel > 0) {
-        // 尝试压缩，如果压缩后 + 头部长度 < 原始长度，则使用压缩版本
-        int compLen = compressor.compress(exp, pos, expLen, comp, 0);
-        int plus = DataUtils.getVarIntLen(expLen - compLen);
-        if (compLen + plus < expLen) {
-            buff.position(typePos).put((byte) (type | compressType));
-            // ... 写入压缩数据
+// Page.java:744-782
+        int expLen = buff.position() - compressStart;
+        if (expLen > 16) {
+            int compressionLevel = store.getCompressionLevel();
+            if (compressionLevel > 0) {
+                Compressor compressor;
+                int compressType;
+                // ...
         }
-    }
-}
+        int pageLength = buff.position() - start;
+        long pagePos = pageSerializationManager.getPagePosition(getMapId(), start, pageLength, type);
+        if (isSaved()) {
+            throw DataUtils.newMVStoreException(
 ```
 
 只有当压缩后的数据确实比原始数据小时才会使用压缩版本。压缩等级分为：
@@ -1678,13 +1677,17 @@ MVStore 的崩溃安全机制体现在以下方面：
 
 ```
 
-`MVStore.java` 第 1418-1424 行决定了是否需要自动保存：
+`MVStore.java` 第 1419-1425 行决定了是否需要自动保存：
 
 ```java
-// MVStore.java:1418-1424
-boolean isSaveNeeded() {
-    return 3 * unsavedMemory > 4 * autoCommitMemory;
-}
+// MVStore.java:1419-1425
+    private boolean requireStore() {
+        return 3 * unsavedMemory > 4 * autoCommitMemory;
+    }
+
+    private boolean needStore() {
+        return autoCommitMemory > 0 && fileStore.shouldSaveNow(unsavedMemory, autoCommitMemory);
+    }
 ```
 
 当预估的未保存内存超过 autoCommitMemory 的约 133% 时，触发自动保存。此外，`saveNeeded` 标志也会在某些操作（如 map 写入回调）中被设置。
