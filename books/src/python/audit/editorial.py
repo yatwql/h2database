@@ -126,10 +126,10 @@ def measure() -> dict:
                 "file": name,
                 "lines": len(text.splitlines()),
                 "learning_goals": blockquote_items(
-                    text, rules["learning_goals"]["heading"]
+                    text, _editorial.label(rules["learning_goals"])
                 ),
-                "key_points": section_items(text, rules["key_points"]["heading"]),
-                "pitfalls": section_items(text, rules["pitfalls"]["heading"]),
+                "key_points": section_items(text, _editorial.label(rules["key_points"])),
+                "pitfalls": section_items(text, _editorial.label(rules["pitfalls"])),
                 "tables": table_count(text),
             "table_density": table_density(text),
             }

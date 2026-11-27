@@ -40,6 +40,21 @@ class EditorialProfileTest(FixtureCase):
         self.assertFalse(rules["pitfalls"]["enabled"])
         self.assertTrue(rules["learning_goals"]["enabled"])
 
+    def test_the_label_comes_from_the_book_then_the_language_pack(self):
+        """Presets carry a section key; the wording is the manuscript language's."""
+        editorial = self.module("_editorial")
+        self.assertEqual(editorial.label({"heading": "章节要点"}), "章节要点")
+        self.assertEqual(editorial.label({"section": "summary"}), "本章小结")
+        # the fixture pack has `summary` but no `goals`, so the key is the fallback
+        self.assertEqual(editorial.label({"section": "goals"}), "goals")
+        self.assertEqual(editorial.label({}), "")
+
+    def test_an_invalid_profile_file_is_reported(self):
+        self.write("data/book/editing.toml", "[profile\nbroken\n")
+        with self.assertRaises(SystemExit) as caught:
+            self.module("_editorial").load_profile()
+        self.assertIn("invalid TOML", str(caught.exception))
+
 
 class EditorialCountingTest(FixtureCase):
     TEXT = (

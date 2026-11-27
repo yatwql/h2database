@@ -44,6 +44,20 @@ PRESETS: dict[str, dict[str, dict]] = {
 DEFAULT_PROFILE = "manual"
 
 
+def label(rule: dict) -> str:
+    """The section label for one element: the book's own wording, else the language pack.
+
+    Presets carry a section *key*, never a label: the wording of a recap heading is the
+    manuscript language's business, and a book that keeps its goals in a different block
+    says so through its own `heading` override.
+    """
+    if rule.get('heading'):
+        return str(rule['heading'])
+    key = str(rule.get('section') or '')
+    sections = _config.language().get('sections') or {}
+    return str(sections.get(key) or key)
+
+
 def profile_config() -> str:
     """Where this book keeps its editorial profile, resolved when it is used."""
     return _config.book_path("editing.toml")

@@ -23,6 +23,7 @@ books/dist/*.pdf
 books/dist/*.html
 books/dist/*.epub
 books/dist/*.log
+books/dist/*.md
 books/dist/_epub*
 *.zip
 mdpdf.log

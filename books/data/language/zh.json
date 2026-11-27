@@ -5,7 +5,9 @@
     "guide": "本章导读",
     "summary": "本章小结",
     "exercises": "延伸思考",
-    "further": "延展阅读"
+    "further": "延展阅读",
+    "goals": "学习目标",
+    "pitfalls": "常见误区"
   },
   "exercise": {
     "hint_prefix": "提示",

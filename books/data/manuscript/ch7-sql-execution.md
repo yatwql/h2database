@@ -458,7 +458,7 @@ PreparedStatement 模式:
 **图 7-9: H2 的 session 级锁竞争机制**
 
 ```text
-如图 7-67 所示，线程 A (持有 Session 1)             线程 B (持有 Session 2)        线程 C (共享 Session 1)
+线程 A (持有 Session 1)             线程 B (持有 Session 2)        线程 C (共享 Session 1)
       │                                    │                            │
       │                                    │                            │
       │  session.lock()                    │                            │
@@ -1164,9 +1164,7 @@ Token 生成示例: 输入 SQL → Token 流
 ```
 **图 7-20: Token 生成示例 — 从 SQL 文本到 Token 流**
 
-```text
-如图 7-20 所示，该图以逐字符方式展示了词法分析器如何处理一条具体的 SQL 语句。位置指针从 0 开始顺序扫描字符，对每个字符判断其类型（字母→标识符/关键字、数字→数值、运算符→运算符等），然后累积字符直到无法继续匹配为止。关键字识别的关键步骤是查表：累积的字符串先与关键字表比较，匹配则返回关键字类型，不匹配则作为普通标识符。这种设计使得 `SELECT` 作为关键字返回 `KEYWORD_SELECT`，而 `test` 这样的表名则返回 `IDENTIFIER`。整个扫描过程是 O(n) 的，每个字符只被读取一次。
-```
+该图以逐字符方式展示了词法分析器如何处理一条具体的 SQL 语句。位置指针从 0 开始顺序扫描字符，对每个字符判断其类型（字母→标识符/关键字、数字→数值、运算符→运算符等），然后累积字符直到无法继续匹配为止。关键字识别的关键步骤是查表：累积的字符串先与关键字表比较，匹配则返回关键字类型，不匹配则作为普通标识符。这种设计使得 `SELECT` 作为关键字返回 `KEYWORD_SELECT`，而 `test` 这样的表名则返回 `IDENTIFIER`。整个扫描过程是 O(n) 的，每个字符只被读取一次。
 
 ### 7.2.7 抽象语法树构建过程
 **图 7-21: 从 SQL 文本到 AST 的完整构建过程**
@@ -2589,10 +2587,8 @@ JdbcStatement    SessionLocal     Parser         Select        Optimizer     Tab
 
 图中的核心调用顺序说明：
 
-```text
-如图 7-46 所示，1. **准备阶段**: JDBC → `prepareLocal` → Parser 解析 → `Select.init()` 扩展列 → `Select.prepare()` → `preparePlan()` → `Optimizer.optimize()` → 选取最优 TableFilter 链
+1. **准备阶段**: JDBC → `prepareLocal` → Parser 解析 → `Select.init()` 扩展列 → `Select.prepare()` → `preparePlan()` → `Optimizer.optimize()` → 选取最优 TableFilter 链
 2. **执行阶段**: JDBC → `CommandContainer.query()` → `Select.queryWithoutCache()` → `TableFilter.next()` 循环读取 → 表达式求值 → 输出结果行
-```
 
 ### 7.5.1 全链路执行阶段泳道图
 

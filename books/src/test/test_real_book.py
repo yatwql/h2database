@@ -57,7 +57,9 @@ MODES = [
 REAL_EXIT_CODES = {
     'links.py': 0,
     'diagrams.py': 0,
-    'captions.py': 1,
+    # the manuscript's caption findings are recorded in the baseline, so the
+    # gate passes here and still fails on any new finding
+    'captions.py': 0,
     'figures.py': 0,
     'crossrefs.py': 0,
     'exercises.py': 0,
@@ -86,13 +88,17 @@ REAL_MODE_CODES = {
     ('links.py', ('--json',)): 0,
 }
 
-@unittest.skipUnless(os.path.isdir(os.path.join(BOOK_ROOT, 'manuscript')),
+@unittest.skipUnless(os.path.isdir(os.path.join(BOOK_ROOT, 'data', 'manuscript')),
                      'real manuscript not available')
 class TestRealBook(unittest.TestCase):
     def test_audits_run_on_real_book(self):
         for script in AUDITS:
             with self.subTest(script=script):
-                code, out = _fixture.run_inproc(BOOK_ROOT, script)
+                # a subprocess, not run_inproc: these audits resolve their own
+                # baselines, and an in-process run inherits the module state of
+                # whatever fixture ran before it
+                result = _fixture.run(BOOK_ROOT, script)
+                code, out = result.returncode, result.stdout + result.stderr
                 self.assertIn(script, REAL_EXIT_CODES, 'every audit needs a recorded verdict')
                 self.assertEqual(code, REAL_EXIT_CODES[script],
                                  f'{script} -> {code}\n{out[-800:]}')
@@ -101,7 +107,8 @@ class TestRealBook(unittest.TestCase):
     def test_alternate_modes_on_real_book(self):
         for script, args in MODES:
             with self.subTest(script=script, args=args):
-                code, out = _fixture.run_inproc(BOOK_ROOT, script, *args)
+                result = _fixture.run(BOOK_ROOT, script, *args)
+                code, out = result.returncode, result.stdout + result.stderr
                 self.assertIn((script, args), REAL_MODE_CODES, 'every mode needs a recorded verdict')
                 self.assertEqual(code, REAL_MODE_CODES[(script, args)],
                                  f'{script} {args} -> {code}\n{out[-800:]}')
