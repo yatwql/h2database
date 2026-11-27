@@ -4642,7 +4642,21 @@ Chunk 压缩整理、LIRS 缓存替换、Free Space 分配回收与 MVStore 平�
 
 这四项都不直接出现在 SQL 语义里，却决定了数据库跑久之后是否还快。
 
-## 6.9 延伸思考
+## 6.9 常见误区
+
+- **误区**：跑一次 `MVStore.compact(...)` 就能把文件缩回去，回收量等于重写掉的死页总量。
+  **为什么**：这个方法的约定只是「提高填充率」：填充率已经高于目标值就什么都不做（`MVStore.java:1118`），空 chunk 不被覆盖，所以不保证文件变小（`MVStore.java:1125`）。
+  另一半限制同样写在方法说明里：只有已打开的 map 的页能搬，未打开的 map 仍引用旧 chunk，搬了会让引用悬空（`MVStore.java:1128`）——这就是压缩前要先把所有 map 打开的原因。
+
+- **误区**：一个块一旦被 LIRS 判为 hot，就有了保护，除非冷数据被清空否则不会被淘汰。
+  **为什么**：`CacheLongKeyLIRS.evictBlock` 每次回收之前先看冷热比例，冷条目不足 1/32 时把最老的 hot 条目降回 cold（`CacheLongKeyLIRS.java:901`），随后照常驱逐。
+  hot 不是一个保护级别，而是「在 stack 上」这个位置；降级就是把条目从 stack 挪到 queue。
+
+- **误区**：被驱逐的块留在 non-resident 队列里，访问历史会一直保存，扫描之后再访问热键仍算二次访问。
+  **为什么**：non-resident 队列（queue2）有上限——`trimNonResidentQueue` 用常驻条目数乘比例算出允许的长度，超出的条目直接从 map 删掉（`CacheLongKeyLIRS.java:917`）。
+  隔得够久再访问同一个键，缓存已经不认识它了。
+
+## 6.10 延伸思考
 
 **1. 🟢★ Chunk 采用 append-only 写入并周期性 compact。请说明一次 compact 之后旧 Chunk 的页面为什么仍可能被读取，以及读取方依靠什么区分有效页面与废弃页面。**
 
@@ -4668,7 +4682,7 @@ Chunk 压缩整理、LIRS 缓存替换、Free Space 分配回收与 MVStore 平�
 >
 > 回顾：§6.7 MVStore 平衡（分裂与合并）+ §6.1 B-Tree 索引。
 
-## 6.10 延展阅读
+## 6.11 延展阅读
 
 - H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#logStructured`) — Log Structured 存储设计
 - H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#caching`) — LIRS 缓存机制
