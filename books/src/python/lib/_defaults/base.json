@@ -21,12 +21,16 @@
     }
   },
   "baselines": {
-    "ascii": "data/baselines/ascii-baseline.json",
-    "source_symbol": "data/baselines/source-symbol-baseline.json",
+    "ascii": "data/baselines/diagrams.json",
+    "captions": "data/baselines/captions.json",
+    "content_depth": "data/baselines/content-depth.json",
     "content_volume": "data/baselines/content-volume.json",
-    "captions": "data/baselines/captions-findings.json",
-    "content_depth": "data/baselines/content-depth-findings.json",
-    "style_rules": "data/baselines/style-rules-baseline.json"
+    "coverage": "data/baselines/coverage.json",
+    "editorial": "data/baselines/editorial.json",
+    "perf": "data/baselines/perf.json",
+    "readability_box": "data/baselines/readability.json",
+    "source_symbol": "data/baselines/source-symbols.json",
+    "style_rules": "data/baselines/style-rules.json"
   },
   "toolchain": {
     "coverage_fail_under": 88,

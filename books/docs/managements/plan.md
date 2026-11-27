@@ -91,7 +91,7 @@
 
 **现状**：`data/baselines/` 十个文件有四套后缀、三种信封、两种键写法；`source_symbol` 记了 `source_version`
 却不校验。看目录说不出谁在读它，手稿目录一挪基线会部分失效。
-**动作**：按 `docs/plan/baselines-unify/plan.md` 推进：统一信封（`schema/gate/kind/keyed_by`）与
+**动作**：阶段 1 已落地——信封、命名、键形态、源版本提示与工具链默认配置一并统一；剩余阶段 2 是发布前清理旧名回退。按 `docs/plan/baselines-unify/plan.md` 推进：统一信封（`schema/gate/kind/keyed_by`）与
 `<gate>.json` 命名（`base.json [baselines]` 声明，旧名只读兼容）；`captions` 键去掉 `data/manuscript/` 前缀；
 `source_symbol` 增源版本复核提示；`manuscript/baselines.py --check` 增「旧名残留」一项。
 **验收**：迁移前后每个文件条数一致；`make.py check --keep-going` 与 `cover` 全绿；`baselines.py --check` 零问题；
