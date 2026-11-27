@@ -191,7 +191,8 @@ class UndeclaredEditionTest(EditionCase):
         self.assertIn('未声明版本', err)
         self.assertIn('abridged', err)
 
-    def test_a_declared_edition_passes_the_guard(self):
+    def test_a_declared_edition_is_not_rejected_by_the_usage_guard(self):
+        """The guard accepts it; whatever else `check` finds is the fixture's content."""
         code, err = self.run_make('check', '--book', self.root, '--edition', 'abridged')
         self.assertNotEqual(code, 2, err)
         self.assertNotIn('未声明版本', err)

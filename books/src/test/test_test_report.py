@@ -481,7 +481,7 @@ class ReportEdgePathTest(unittest.TestCase):
         )
         self.write(
             "tests/test_classy.py",
-            'TAGS = ("tier:slow",)\n\nclass TestThing:\n    def test_a(self): pass\n',
+            'TAGS = ("tier:fast",)\n\nclass TestThing:\n    def test_a(self): pass\n',
         )
         with mock.patch.object(self.mod, "TESTS_DIR", tests):
             payload = self.mod.collect()

@@ -15,7 +15,7 @@ _fixture.ensure_tools_path()
 
 BOOK_ROOT = os.path.dirname(os.path.dirname(_fixture.TOOLS_DIR))
 
-TAGS = ('layer:audit', 'tier:slow', 'stability:order')
+TAGS = ('layer:audit', 'tier:fast', 'stability:order')
 
 
 class OrderComparisonTest(unittest.TestCase):
