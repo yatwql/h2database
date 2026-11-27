@@ -1,6 +1,6 @@
 # 内容质量方针
 
-> 软件：bookwright — 源码分析成书工具 v0.1
+> 软件：bookwright — 源码分析成书工具 v0.2-dev
 > 版本：v0.2-dev
 > 定位：**成书内容的方针**——内容质量由谁判、什么时候判、基线怎么记、代价多少。它不管"内容必须有什么"
 > （那是 `content-standard.md`），也不管"某道门禁判什么、几级、怎么跑"（那是 `testplan.md`），
@@ -72,7 +72,7 @@
 | 基线 | 守护什么 | 新增问题 | 收缩方式 |
 | --- | --- | --- | --- |
 | 存量问题（`data/baselines/<gate>.json` 里 `kind=accepted` 的那些） | 已知且已评审的缺陷清单 | 同类问题一律失败 | 修复后报告 `stale`，重新固化 |
-| 体量（`content-volume.json`、`snapshot-<标签>.json`） | 内容不得静默塌陷 | 低于下限即失败 | 见下文的单调性 |
+| 体量（`content-volume.json`，历史稿取各快照的 `manifest.json`） | 内容不得静默塌陷 | 低于下限即失败 | 见下文的单调性 |
 | 测量（`perf.json`、`coverage.json`） | 耗时与覆盖率的可接受下限 | 超阈值只提示（advisory）或直接失败 | `--update-baseline` 重记 |
 
 测量类基线只记「评审过的数」，读数本身进滚动窗口：`logs/perf-history.jsonl` 保留最近若干次
@@ -105,13 +105,13 @@ python books/src/python/audit/content_volume.py --update-baseline \
 ```
 
 **把某一版历史稿提为基线**（例如认定 6 月那版更好）：历史稿是只读快照，不能直接量，
-所以先导入、再记体积账本、最后提为基线，三步都有记录：
+所以先导入（manifest 即体积账本）、再把它提为下限，两步都有记录：
 
 ```bash
 python books/src/python/manuscript/snapshot.py import ../docs-stm.zip june-2026 --date 2026-06-11
 # 或直接取某天的归档目录（两者职责见 folder.md §3.1，无需先打包）：
 # python books/src/python/manuscript/snapshot.py import data/archive/<书>/<日期>/manuscript <标签> --date <日期>
-python books/src/python/manuscript/snapshot.py baseline 2026-06-11-june-2026
+# 快照自带的 manifest 就是体积账本，无需再生成基线文件
 python books/src/python/audit/content_volume.py --update-baseline \
     --from-snapshot 2026-06-11-june-2026 --reviewed-by "阿龙" \
     --reason "该版结构与文风已定稿，作为下限" [--accept-shrink]
@@ -124,9 +124,8 @@ python books/src/python/audit/content_volume.py --update-baseline \
 **比哪一份？只比一份。** 一次只有一条下限：当前 `content-volume.json` 里记的那份，
 即最近一次经评审接受的稿子。不做加权、不做「组合概率」——基线是评审结论，不是统计量；
 一旦变成平均值，就无法回答「这次转换有没有让稿子变薄」。
-历史稿各自保留自己的体量账本（`data/snapshots/<日期>-<标签>/` 与
-`data/baselines/snapshot-<标签>.json`）；要用某一份旧稿当参照，就显式指定：
-`content_volume.py --baseline data/baselines/snapshot-2026-06-30.json`。
+历史稿各自保留自己的体量事实（`data/snapshots/<书 slug>/<日期>-<标签>/manifest.json`）；
+要用某一份旧稿当参照，就显式指定：`content_volume.py --from-snapshot <标签>`。
 不指定时永远比当前基线。
 
 基线只接住「已知且已评审的存量」，不接住结构缺项。章节数、章节体量、交付完整性

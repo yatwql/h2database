@@ -2,7 +2,7 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/)。
 
-> 软件：bookwright — 源码分析成书工具 v0.1
+> 软件：bookwright — 源码分析成书工具 v0.2-dev
 > 版本：v0.2-dev
 > 定位：**版本变更记录，只留当前开发段**——写“变了什么”；问题编号与修复细节见
 > `review-findings.md`，设计理由见 `technical.md`。已发布版本由 git 标签保留。
@@ -13,6 +13,12 @@
 
 ### 变更
 
+- **管理文档与用户文档对齐当前实现**：全部文档头改为 `v0.2-dev`（原为 v0.1）；`folder.md` 的基线清单改为
+　「门禁命名 + 统一信封」并指向 `manuscript/baselines.py`，快照小节改述身份段与 `list`/`diff`；
+　`technical.md` 补 `_snapshot` 模块与日志行为（动作信封、行缓冲），删掉已不存在的快照体积账本行；
+　`content-quality-policy.md` 去掉 `snapshot.py baseline` 与 `snapshot-<标签>.json`；`scripts-and-reference.md` 补齐 `adopt`/`diff`；
+　`how-to-use-tui.md` 写明「产物：开始／完成」与每 10 秒的存活提示、日志位置与保留期；`plan.md`/`review-findings.md`
+　收敛重复小节（rf-72 已解决，台账当前无在办项）。
 - **基线目录归一完成（plan-19 阶段 2）**：移除旧名回退（`_baseline.LEGACY` / `legacy_path`）——此后只认
 　`base.json [baselines]` 声明的门禁命名；`manuscript/baselines.py --check` 把「旧文件名」列为问题，提示重记而非静默读取。
 - **基线目录归一收尾**：`lib/_defaults/base.json` 的 `[baselines]` 也改到门禁命名（此前只改了本书的 `base.json`，　新建书的脚手架仍会拿到旧文件名）；`manuscript/baselines.py --check` 现零告警，`cover` 与 `check` 全绿。

@@ -1,7 +1,7 @@
 # 配置指南
 
 > 维度：**配置——改哪个文件、改了生效在哪里、改错会怎样**
-> 软件：bookwright — 源码分析成书工具 v0.1
+> 软件：bookwright — 源码分析成书工具 v0.2-dev
 
 所有可调项都来自 `books/data/`，程序只通过配置文件取值，改配置不需要改代码。
 三个主文件各有分工：`book.toml` 决定这本书**是什么、怎么组织**，`base.json` 决定
@@ -101,7 +101,7 @@ display = "删节版"
     "file_suffix": ".java",
     "package_prefix": "<包前缀>"
   },
-  "baselines": {"ascii": "data/baselines/ascii-baseline.json"},
+  "baselines": {"ascii": "data/baselines/diagrams.json"},
   "toolchain": {"coverage_fail_under": 90, "pdf_max_mb": 12, "epub_max_mb": 10},
   "logging": {"level": "INFO", "dir": "logs", "retention_days": 14}
 }

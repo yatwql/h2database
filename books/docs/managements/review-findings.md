@@ -1,6 +1,6 @@
 # 自我审查问题记录
 
-> 软件：bookwright — 源码分析成书工具 v0.1
+> 软件：bookwright — 源码分析成书工具 v0.2-dev
 > 版本：v0.2-dev
 > 定位：**问题台账**——发现了什么、怎么修、修到哪；不记设计决策（看
 > `technical.md`），不复述变更清单（看 `changelog.md`）。
@@ -13,8 +13,8 @@
 
 | # | 问题 | 修复方向 |
 | --- | --- | --- |
-| rf-73 | **已修（导入期读配置部分）**：`audit/captions.py`、`audit/exercises.py`、`audit/balance.py`、`release.py` 的模块级配置读取改为调用时读取（`exercises` 的槽位标题与提示/回顾正则改为 `language_shapes()`）。剩下的一半——「`manuscript/`、`audit/` 不得出现本书专有词」的门禁规则——转记 rf-74 | — |
-| rf-74 | 本书专有词写进工具链没有门禁拦 | **已解决**：`check_architecture.py` 新增 `book_vocabulary` 检查，词表由书在 `base.json [toolchain]` 声明（词表见 `data/config/base.json [toolchain]`），按整词匹配 `src/python/` 全文，命中即报；配套用例覆盖「命中」「子串不算」「未声明词表不报」。同一条 `technical.md` §2.4 写明「不绑定某一本书、也不绑定某一棵源码树」的两条通用性约束 |
+
+当前无在办条目：最近三条（rf-72、rf-73、rf-74）已解决，记录在下面的分档表里。
 
 ## 分档口径
 
@@ -27,26 +27,17 @@
 
 | # | 问题 | 修复方向 |
 | --- | --- | --- |
+| rf-73 | **已修（导入期读配置部分）**：`audit/captions.py`、`audit/exercises.py`、`audit/balance.py`、`release.py` 的模块级配置读取改为调用时读取（`exercises` 的槽位标题与提示/回顾正则改为 `language_shapes()`）。剩下的一半——「`manuscript/`、`audit/` 不得出现本书专有词」的门禁规则——转记 rf-74 | — |
+| rf-74 | 本书专有词写进工具链没有门禁拦 | **已解决**：`check_architecture.py` 新增 `book_vocabulary` 检查，词表由书在 `base.json [toolchain]` 声明（词表见 `data/config/base.json [toolchain]`），按整词匹配 `src/python/` 全文，命中即报；配套用例覆盖「命中」「子串不算」「未声明词表不报」。同一条 `technical.md` §2.4 写明「不绑定某一本书、也不绑定某一棵源码树」的两条通用性约束 |
 
 ### H2 — 价值明确、成本可控（下批排期）
 
-
-
-
-
 入选标准：收益明确、影响面可圈定，不涉及结构改动。
 
 | # | 问题 | 修复方向 |
 | --- | --- | --- |
+| rf-72 | 慢档（`make.py cover --full`）有一处低于单文件地板 | **已解决**：`audit/order_dependence.py` 原只在 p2 顺序依赖探测里被驱动，快档不测量它。新增 `test_audit_order_dependence_units.py`（tier:fast）覆盖 `compare`、`bisect`、`run_prefix`、`collect`、worker IPC 与 CLI 分支，模块在快档回到地板之上；慢档端到端用例保留 |
 
-
-
-入选标准：收益明确、影响面可圈定，不涉及结构改动。
-
-| # | 问题 | 修复方向 |
-| --- | --- | --- |
-
-| rf-72 | 慢档（`make.py cover --full`）有一处低于单文件地板 | **待做**：`audit/order_dependence.py` 在 slow 档实测 61%（168 语句，未覆盖 59 行/13 半分支），低于 90 的地板。该模块只在 p2 顺序依赖探测里被驱动，快档完全不测量它，因此这一条只会在 `cover --full` 里显形；地板为 86 时同样是红的（61 < 86），与地板的数值无关。补齐需要给「顺序对照/结果比较」两条纯函数路径写用例，并让 subprocess 驱动的入口可注入 |
 
 ### H3 — 持续监控：兼容残留
 

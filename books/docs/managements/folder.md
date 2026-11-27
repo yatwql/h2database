@@ -1,6 +1,6 @@
 # 目录结构（books/）
 
-> 软件：bookwright — 源码分析成书工具 v0.1
+> 软件：bookwright — 源码分析成书工具 v0.2-dev
 > 版本：v0.2-dev
 > 定位：**目录与文件归属的唯一说明**——哪里放什么、什么不入库；不重复命令清单（看
 > `testplan.md` §1）、不重复配置合并规则（看 `technical.md` §3.1）。`CLAUDE.md` 只保留指向本文的链接，
@@ -32,8 +32,9 @@ books/
       <gate>.json              # 已评审存量与读数，文件名即门禁名（见下）
       coverage.json            # 逐文件覆盖率下限（只升不降，除非评审后重记）
       perf.json                # 已评审的耗时下限：逐步/总计中位数 + review{by,at,commit,reason}
-      loose-assertions.json    # 松散断言存量（目标为零，残留即登记）
-      snapshot-<快照>.json     # 历史快照的体积基线（比对用）
+      editorial.json           # 编辑要素计数（学习目标/要点回顾/误区/表格）
+      # 全部文件共用同一信封（schema/gate/kind/keyed_by），清单与体检用
+      # `manuscript/baselines.py`（`--check` 报空账本、无法读取、无门禁认领、旧文件名）
     state/                     # 机器维护的派生状态：ingest 重建，人别手改
       source-inventory.json    # 被分析源码的快照事实；事实类门禁与渲染都读它
       outline.json             # 章节与主题的派生大纲；只有渲染器读它
@@ -172,5 +173,7 @@ books/docs/managements/        # 管理文档；总索引在 books/README.md「�
 只读检出也能构建。
 
 历史手稿不进 `data/manuscript/`：用 `src/python/manuscript/snapshot.py` 导入到
-`data/snapshots/<日期>-<标签>/`，生成 manifest 后即可用
-`snapshot.py baseline` 出体积基线。快照只读，门禁不扫描它。
+`data/snapshots/<书 slug>/<日期>-<标签>/`。每份快照的 `manifest.json` 自带身份段（书 slug 与版本、
+源树根与源版本、工具版本、配置指纹、语种）与逐文件 bytes/lines/hash，体积下限直接读它：
+`content_volume.py --from-snapshot <标签>`。`snapshot.py list` 一行给出「名称／书／源版本／工具／配置／文件／字节」，
+`snapshot.py diff A B` 跨书或跨源默认拒绝（`--cross` 才比，并声明不是退化）。快照只读，门禁不扫描它。

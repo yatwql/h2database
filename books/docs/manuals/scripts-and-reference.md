@@ -1,7 +1,7 @@
 # 脚本与命令参考
 
 > 维度：**参考——全部可执行入口与参数的唯一清单**
-> 软件：bookwright — 源码分析成书工具 v0.1
+> 软件：bookwright — 源码分析成书工具 v0.2-dev
 > 全部可执行入口的唯一清单。日常优先用 `books/scripts/` 下的封装脚本，不必直接
 > 和 Python 解释器打交道；需要细粒度控制时再用 `make.py` 或分层脚本。
 
@@ -156,7 +156,7 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `index.py` | 索引：生成与层级检查 |
 | `terms.py` | 给每章导读块补术语表引用；`--check` 只报告 |
 | `case_studies.py` | 案例研究章节大纲 |
-| `snapshot.py` | 历史稿只读快照：`import <zip 或目录> <label> --date`（目录来源无需重新打包）、`list`、`verify <label>`、`baseline <label>`（写 `data/baselines/snapshot-<label>.json`，供 `content_volume.py --from-snapshot` 提为基线） |
+| `snapshot.py` | 历史稿只读快照：`import <zip 或目录> <label> --date`（目录来源无需重新打包）、`list`、`verify <label>`、`adopt <label>`（给旧快照补身份并归位）、`diff <a> <b> [--cross]`。快照落在 `data/snapshots/<书 slug>/<日期>-<标签>/`，`manifest.json` 自带身份段与逐文件 bytes/lines/hash，体积下限由 `content_volume.py --from-snapshot` 直接读它 |
 
 ## 8. 质量门禁 `src/python/audit/`
 

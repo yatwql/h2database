@@ -1,7 +1,7 @@
 # Web 使用
 
 > 维度：**网页控制台——页面操作与 JSON 接口**
-> 软件：bookwright — 源码分析成书工具 v0.1
+> 软件：bookwright — 源码分析成书工具 v0.2-dev
 
 Web 渠道提供单页控制台与 JSON API，适合演示或远程机器上操作。
 

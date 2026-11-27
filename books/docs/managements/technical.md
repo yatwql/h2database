@@ -1,6 +1,6 @@
 # 技术设计
 
-> 软件：bookwright — 源码分析成书工具 v0.1
+> 软件：bookwright — 源码分析成书工具 v0.2-dev
 > 版本：v0.2-dev
 > 定位：**系统怎么划分与约束**——分层、依赖矩阵、配置合并、关键决策、扩展点；
 > 不写使用步骤（看 `docs/manuals/`），也不写写作规则（看 `../manuals/how-to-write.md`）。
@@ -218,7 +218,7 @@
 | `_config` | 每本书一个 `Config`：TOML/JSON 三层配置、路径解析、章节清单、语言与模板读取 | `Config(root)` 解析一本书；模块属性转发到活动书（`use()` 切换）；`excluded_dirs()` 给出产物与快照目录 |
 | `_fsutil` | 读写原语：`read_text`、`read_lines`、`write_text`、`load_json`、`ensure_dir`、`pin_stdout_utf8` | 统一 UTF-8；失败抛 `ToolError`（消息与退出码同源） |
 | `_errors` | 失败的唯一载体：`ToolError`（派生 `SystemExit`，`str(exc)` 是消息、`exit_code` 是状态）与入口处的 `run()` | 内层只管抛，转换只在入口发生一次；`raise … from` 保留原始异常 |
-| `_log` | 按天滚动的文件日志 + 控制台摘要 | 级别取 `BOOK_LOG_LEVEL` > 配置 > INFO |
+| `_log` | 按天滚动的文件日志 + 控制台摘要 | 级别取 `BOOK_LOG_LEVEL` > 配置 > INFO；每个动作记 `action … start` / `done rc=… (in 1 分 40 秒)`，步骤行行缓冲（管道下也即时可见） |
 | `_mdutil` | Markdown 结构解析：标题、围栏、图注 | 围栏内的内容不参与结构判定 |
 | `core/docs_archive.py` | 把已发布版本的台账与完成的迭代设计移入 `docs/archive/` | 纯文本变换 + 目录搬迁；幂等，`--dry-run` 只打印动作 |
 | `audit/doc_archive.py` | 归档布局门禁 | 版本目录名、三份台账与头行、索引可打开、已归档版本不得留在主文档 |
@@ -226,7 +226,8 @@
 | `manuscript/renumber.py` | 版本重编号与引用改写 | 由书级/版本 `[chapters.numbering]` 之差算映射，写 `state/<edition>/renumber.json` |
 | `_version` | 工具链语义化版本（唯一定义处） | 与书籍版本（`book.toml`）、被分析源码版本三向分离 |
 | `_llm` | LLM 客户端：provider 路由、密钥只读环境变量 | 只有 `app` 与 ingest 散文场景可导入 |
-| `_baseline` | 已评审问题清单的读写与差集 | 键由调用方定义；新增即失败，消失即提示收缩 |
+| `_baseline` | 已评审问题清单的读写与差集；统一信封（`schema/gate/kind/keyed_by`） | 键由调用方定义；新增即失败，消失即提示收缩；文件按门禁命名，由 `base.json [baselines]` 声明 |
+| `_snapshot` | 快照目录、manifest 与体积累计的唯一读取方 | 平铺旧目录与按书分层两种布局都认 |
 | `_source_state` | 被分析树的两次清单比对：新增/移除的包、包/文件/行增减、上次分析日期 | 路径由调用方传入，模块自己不绑定配置（否则换书后读到上一本的状态） |
 | `_browser` | 渲染用的无头浏览器启动点 | core 上限归零、`TMPDIR` 指到书内临时目录；Playwright 不接受 `cwd`/`preexec_fn`，只能用这两条 |
 
@@ -484,8 +485,7 @@ lint 的规则集只在书的 `pyproject.toml` 声明（`line-length`、`select`
 | `data/state/outline.json` | 章节与主题的派生大纲 | 每次 ingest 重建 |
 | `data/baselines/*.json` | 已评审问题清单：`accepted` 数组、生成方式、备注 | 只在评审后重设，收缩优先 |
 | `data/baselines/content-volume.json` | 逐章字节/行数、手稿总量、交付页数与体积；`reviewed` 记评审人 / 提交 / 时间 / 理由，`source.snapshot` 记它取自哪份历史快照，`accepted_shrinks` 记每次经批准的收缩 | 定稿评审后重设；要求稿子已提交、有人具名、不降低下限 |
-| `data/baselines/snapshot-<标签>.json` | 某个历史快照的体积事实 | 导入快照时生成 |
-| `data/snapshots/<日期>-<标签>/` | `manifest.json`（压缩包哈希、逐文件字节/行数/哈希）+ 只读正文 | 只读；`snapshot.py verify` 校验 |
+| `data/snapshots/<书 slug>/<日期>-<标签>/` | `manifest.json`（身份段：书/源树/工具/语种 + 逐文件字节/行数/哈希）+ 只读正文；体积事实直接从它读，不再另存账本 | 只读；`snapshot.py verify` 校验，`diff` 跨书默认拒绝 |
 | `logs/check-<档位>-<YYYY-MM-DD>.{log,jsonl}` | 当天的运行日记（每次追加一段带表头的输出）与同名摘要行（`git{commit,dirty}`、每步 `argv`、pytest 计数、`log_offset/log_len`） | 按 `logging.retention_days` 整日清理 |
 | `data/baselines/perf.json` | 评审过的耗时下限：逐步与总计中位数 + `reviewed{by,at,commit,reason,runs}`；`logs/perf-history.jsonl` 只做滚动窗口（`style.json [quality].perf_history_runs`，默认 200） | `perf_baseline.py --update-baseline` 固化 |
 

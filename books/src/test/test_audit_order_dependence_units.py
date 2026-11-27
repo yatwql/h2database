@@ -31,8 +31,9 @@ class CompareTest(FixtureCase):
         module = self.module("order_dependence")
         report = module.compare({"a": "ok", "b": "fail"}, {"a": "fail", "b": "fail"})
         self.assertFalse(report["ok"])
-        self.assertEqual(report["order_dependent"],
-                         [{"test": "a", "normal": "ok", "reverse": "fail"}])
+        self.assertEqual(
+            report["order_dependent"], [{"test": "a", "normal": "ok", "reverse": "fail"}]
+        )
         self.assertEqual(report["normal_failures"], 1)
 
     def test_a_skip_on_either_side_is_not_counted(self):
@@ -98,11 +99,14 @@ class ModuleDiscoveryTest(FixtureCase):
         with tempfile.TemporaryDirectory() as folder:
             for name in ("test_one.py", "test_two.py"):
                 with open(os.path.join(folder, name), "w", encoding="utf-8") as fh:
-                    fh.write("import unittest\n\n"
-                             "class T(unittest.TestCase):\n"
-                             "    def test_ok(self):\n        pass\n")
+                    fh.write(
+                        "import unittest\n\n"
+                        "class T(unittest.TestCase):\n"
+                        "    def test_ok(self):\n        pass\n"
+                    )
             sys.path.insert(0, folder)
             self.addCleanup(sys.path.remove, folder)
+
             def ids(suite):
                 """Flatten the loaded suites: a loader nests them per module."""
                 found = []
@@ -111,9 +115,12 @@ class ModuleDiscoveryTest(FixtureCase):
                 return found
 
             with mock.patch.object(module, "TEST_DIR", folder):
-                self.assertTrue(all("test_two" in case_id
-                                    for case_id in ids(module._load_modules(False,
-                                                                            only=["test_two"]))))
+                self.assertTrue(
+                    all(
+                        "test_two" in case_id
+                        for case_id in ids(module._load_modules(False, only=["test_two"]))
+                    )
+                )
                 self.assertTrue(ids(module._load_modules(True))[0].startswith("test_two"))
 
 
@@ -129,9 +136,11 @@ class CollectorTest(FixtureCase):
         collector.outcomes = {}
         collector.addSuccess(FakeTest())
         self.assertEqual(collector.outcomes["mod.Test.test_x"], "ok")
-        with mock.patch.object(module.unittest.TestResult, "addFailure"), \
-                mock.patch.object(module.unittest.TestResult, "addError"), \
-                mock.patch.object(module.unittest.TestResult, "addSkip"):
+        with (
+            mock.patch.object(module.unittest.TestResult, "addFailure"),
+            mock.patch.object(module.unittest.TestResult, "addError"),
+            mock.patch.object(module.unittest.TestResult, "addSkip"),
+        ):
             collector.addFailure(FakeTest(), None)
             collector.addError(FakeTest(), None)
             collector.addSkip(FakeTest(), "reason")
@@ -144,8 +153,8 @@ class WorkerRunsTest(FixtureCase):
     def test_two_workers_are_compared(self):
         module = self.module("order_dependence")
         replies = [
-            mock.Mock(returncode=0, stdout='{"outcomes": {"a": "ok"}}', stderr=''),
-            mock.Mock(returncode=0, stdout='{"outcomes": {"a": "fail"}}', stderr=''),
+            mock.Mock(returncode=0, stdout='{"outcomes": {"a": "ok"}}', stderr=""),
+            mock.Mock(returncode=0, stdout='{"outcomes": {"a": "fail"}}', stderr=""),
         ]
         with mock.patch.object(module.subprocess, "run", side_effect=replies):
             report = module.run_both(only="test_a")
@@ -154,7 +163,7 @@ class WorkerRunsTest(FixtureCase):
 
     def test_a_failing_worker_stops_the_run_with_its_message(self):
         module = self.module("order_dependence")
-        reply = mock.Mock(returncode=3, stdout='', stderr='boom')
+        reply = mock.Mock(returncode=3, stdout="", stderr="boom")
         with mock.patch.object(module.subprocess, "run", return_value=reply):
             with self.assertRaises(SystemExit) as caught:
                 module.run_both()
@@ -162,7 +171,7 @@ class WorkerRunsTest(FixtureCase):
 
     def test_a_worker_that_prints_no_json_stops_the_run(self):
         module = self.module("order_dependence")
-        reply = mock.Mock(returncode=0, stdout='not json', stderr='')
+        reply = mock.Mock(returncode=0, stdout="not json", stderr="")
         with mock.patch.object(module.subprocess, "run", return_value=reply):
             with self.assertRaises(SystemExit) as caught:
                 module.run_both()
@@ -205,10 +214,12 @@ class RealSuiteRunTest(FixtureCase):
         folder = tempfile.TemporaryDirectory()
         self.addCleanup(folder.cleanup)
         with open(os.path.join(folder.name, "test_probe.py"), "w", encoding="utf-8") as fh:
-            fh.write("import unittest\n\n"
-                     "class Probe(unittest.TestCase):\n"
-                     "    def test_ok(self):\n        pass\n"
-                     "    def test_bad(self):\n        self.fail('deliberate')\n")
+            fh.write(
+                "import unittest\n\n"
+                "class Probe(unittest.TestCase):\n"
+                "    def test_ok(self):\n        pass\n"
+                "    def test_bad(self):\n        self.fail('deliberate')\n"
+            )
         return folder.name
 
     def test_collect_reports_each_case_outcome(self):
@@ -230,9 +241,16 @@ class RealSuiteRunTest(FixtureCase):
         module = self.module("order_dependence")
         out = io.StringIO()
         with (
-            mock.patch.object(module, "run_both",
-                              return_value={"ok": True, "order_dependent": [],
-                                            "normal_failures": 0, "reverse_failures": 0}),
+            mock.patch.object(
+                module,
+                "run_both",
+                return_value={
+                    "ok": True,
+                    "order_dependent": [],
+                    "normal_failures": 0,
+                    "reverse_failures": 0,
+                },
+            ),
             mock.patch("sys.stdout", new=out),
         ):
             self.assertEqual(module.main([]), 0)
@@ -266,9 +284,12 @@ class RemainingPathsTest(FixtureCase):
 
     def test_json_report_exits_one_when_a_case_is_order_dependent(self):
         module = self.module("order_dependence")
-        report = {"ok": False,
-                  "order_dependent": [{"test": "a", "normal": "ok", "reverse": "fail"}],
-                  "normal_failures": 0, "reverse_failures": 0}
+        report = {
+            "ok": False,
+            "order_dependent": [{"test": "a", "normal": "ok", "reverse": "fail"}],
+            "normal_failures": 0,
+            "reverse_failures": 0,
+        }
         out = io.StringIO()
         with (
             mock.patch.object(module, "run_both", return_value=report),
