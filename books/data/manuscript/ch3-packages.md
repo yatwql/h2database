@@ -2269,7 +2269,13 @@ org.h2.tools            │ ~20   │ Server, Shell, Recover
 
 各包之间严格的单向依赖关系是 H2 架构设计的核心约束，也是理解整个代码库的导航地图。本章对每个核心包的结构分析为后续第4-5章《核心模块与流程》的深度源码解读奠定了基础——第4-5章将在本章包级分析的基础上，深入追踪 Command/Expression 模块的运行时行为和核心数据流。
 
-## 3.14 延伸思考
+## 3.14 常见误区
+
+- **误区**：`org.h2.jdbcx` 与 `org.h2.jdbc` 是两套独立的驱动实现，行为可能不同。
+  **为什么**：`JdbcDataSource.getConnection()` 只负责把 URL 与属性组装好（`jdbcx/JdbcDataSource.java:153`），
+  然后返回 `new JdbcConnection(...)`（`:155`）——与 `DriverManager` 拿到的是同一个引擎侧实现，差别只在入口。
+
+## 3.15 延伸思考
 
 **1. 🟢★ 包全景图中 engine / command / expression / table / index 承担了 SQL 从解析到执行的完整链路，为什么 Parser 被单独放在 command 包而不是按语法单元拆到 expression 包？**
 
@@ -2295,7 +2301,7 @@ org.h2.tools            │ ~20   │ Server, Shell, Recover
 
 > 回顾：§3.8 FileSystem 层 + §3.11 安全与工具中 FilePath 装饰器的位置。
 
-## 3.15 延展阅读
+## 3.16 延展阅读
 
 - H2 官方文档《Architecture》(`h2/src/docsrc/html/architecture.html`) — 各层组件概述
 - 本书第2章《分层模块划分》 — 各层的抽象职责与交互关系

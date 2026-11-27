@@ -1831,7 +1831,13 @@ public void removeRow(SessionLocal session, Row row) {
 
 六层之间是单向依赖：上层调用下层，下层不认识上层，这也是后续流程分析与源码追踪的定位依据。
 
-## 4.8 延伸思考
+## 4.8 常见误区
+
+- **误区**：MVStore 的每次写入都会立即落到磁盘，所以写完就断电也不会丢。
+  **为什么**：写入先进内存映射，未保存内存累计到阈值才触发写盘——判断入口是 `MVStore.requireStore()`
+  （`MVStore.java:1419`）；阈值以下的数据只在内存里，落盘发生在后台或显式 `commit()`。
+
+## 4.9 延伸思考
 
 **1. 🟢★ Database 实例是全局中枢，SessionLocal 是每个连接的状态容器。请说明一次查询中「全局状态」与「会话状态」各自承担什么，为什么事务与锁必须挂在会话上而不是实例上？**
 
@@ -1857,7 +1863,7 @@ public void removeRow(SessionLocal session, Row row) {
 >
 > 回顾：§4.3 至 §4.6 的模块职责对照。
 
-## 4.9 延展阅读
+## 4.10 延展阅读
 
 - H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html`) — MVStore 体系结构与 B-Tree 实现参考
 - H2 官方文档《Advanced》(`h2/src/docsrc/html/advanced.html#transaction_isolation`) — 事务隔离级别与 MVCC 行为说明
@@ -3945,7 +3951,13 @@ MVSecondaryIndex.find(session, searchRow)
 
 这些流程用到的算法——B-Tree 查找插入、Copy-on-Write 版本管理、MVCC 可见性判断——在第 6 章展开；先看流程再看算法，能带着具体场景读原理。
 
-## 5.11 延伸思考
+## 5.11 常见误区
+
+- **误区**：回滚就是把被改过的行「改回原值」，所以回滚代价与更新了多少行成正比。
+  **为什么**：回滚是逆序回放 Undo Log 恢复旧版本，而不是原地覆盖；已提交的部分不会因一次回滚被撤掉，
+  长事务的回滚代价高，是因为 undo 链更长。
+
+## 5.12 延伸思考
 
 **1. 🟢★ SELECT 流程与 INSERT 流程在「是否触发 B-Tree 结构变更」上的差别，决定了它们对锁的需求不同。请说明 SELECT 为什么可以只走无锁读路径，而 INSERT 必须拿到写锁与事务提交。**
 
@@ -3971,7 +3983,7 @@ MVSecondaryIndex.find(session, searchRow)
 >
 > 回顾：§5.7 空间整理 (Compaction) + §5.8 Chunk 压缩整理流程 + §6.4 Chunk 压缩整理。
 
-## 5.12 延展阅读
+## 5.13 延展阅读
 
 - H2 官方文档《Advanced》(`h2/src/docsrc/html/advanced.html`) — 事务隔离级别与 MVCC 行为详细说明
 - H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#transactions`) — MVStore 事务机制

@@ -1,101 +1,96 @@
 {
-  "schema": 1,
-  "gate": "editorial",
-  "kind": "counts",
-  "keyed_by": "manuscript-path",
-  "updated": "",
   "note": "Recorded editorial element counts. A count may rise, never fall.",
   "profile": "tutorial",
   "files": [
     {
       "file": "ch1-2-architecture.md",
-      "lines": 2214,
+      "lines": 2234,
       "learning_goals": 4,
       "key_points": 13,
-      "pitfalls": 0,
+      "pitfalls": 4,
       "tables": 1,
       "table_density": 0.45
     },
     {
       "file": "ch3-packages.md",
-      "lines": 2303,
+      "lines": 2309,
       "learning_goals": 4,
       "key_points": 5,
-      "pitfalls": 0,
+      "pitfalls": 1,
       "tables": 22,
-      "table_density": 9.55
+      "table_density": 9.53
     },
     {
       "file": "ch4-5-modules-processes.md",
-      "lines": 3994,
+      "lines": 3998,
       "learning_goals": 4,
       "key_points": 10,
-      "pitfalls": 0,
+      "pitfalls": 2,
       "tables": 8,
       "table_density": 2.0
     },
     {
       "file": "ch6-1-data-structures.md",
-      "lines": 2873,
+      "lines": 2887,
       "learning_goals": 4,
       "key_points": 5,
-      "pitfalls": 0,
+      "pitfalls": 3,
       "tables": 5,
-      "table_density": 1.74
+      "table_density": 1.73
     },
     {
       "file": "ch6-2-storage-algorithms.md",
-      "lines": 4663,
+      "lines": 4690,
       "learning_goals": 4,
       "key_points": 4,
-      "pitfalls": 0,
+      "pitfalls": 3,
       "tables": 8,
-      "table_density": 1.72
+      "table_density": 1.71
     },
     {
       "file": "ch6-3-query-algorithms.md",
-      "lines": 3544,
+      "lines": 3627,
       "learning_goals": 4,
       "key_points": 4,
-      "pitfalls": 0,
+      "pitfalls": 2,
       "tables": 5,
-      "table_density": 1.41
+      "table_density": 1.38
     },
     {
       "file": "ch7-sql-execution.md",
-      "lines": 3697,
+      "lines": 3704,
       "learning_goals": 4,
       "key_points": 5,
-      "pitfalls": 0,
+      "pitfalls": 2,
       "tables": 1,
       "table_density": 0.27
     },
     {
       "file": "ch8-query-optimizer.md",
-      "lines": 4499,
+      "lines": 4510,
       "learning_goals": 4,
       "key_points": 6,
-      "pitfalls": 0,
+      "pitfalls": 2,
       "tables": 3,
       "table_density": 0.67
     },
     {
       "file": "ch9-10-persistence-locking.md",
-      "lines": 6631,
+      "lines": 6653,
       "learning_goals": 5,
       "key_points": 14,
-      "pitfalls": 0,
+      "pitfalls": 4,
       "tables": 5,
       "table_density": 0.75
     },
     {
       "file": "ch11-12-guide-summary.md",
-      "lines": 2453,
+      "lines": 2478,
       "learning_goals": 4,
       "key_points": 7,
-      "pitfalls": 0,
+      "pitfalls": 2,
       "tables": 14,
-      "table_density": 5.71
+      "table_density": 5.65
     }
   ]
 }

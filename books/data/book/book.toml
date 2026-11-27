@@ -138,7 +138,8 @@ heading = "章节要点"
 enabled = true
 
 [editing.elements.pitfalls]
-enabled = false
+# 每章一节，条目化「误区 + 为什么」，并给出可核验的坐标或符号。
+enabled = true
 
 [editing.elements.table_density]
 enabled = false
