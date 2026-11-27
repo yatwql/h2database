@@ -38,11 +38,6 @@ class BaselineTest(unittest.TestCase):
     def test_an_unconfigured_gate_is_named_after_the_gate(self):
         self.assertTrue(self.mod.path_for('whatever').endswith('whatever.json'))
 
-    def test_the_old_findings_name_is_still_readable_but_not_written(self):
-        """A gate renamed after its file reads the old one until it is re-recorded."""
-        self.assertTrue(self.mod.legacy_path('whatever').endswith('whatever-findings.json'))
-        self.assertIsNotNone(self.mod.legacy_path('captions'))
-
     def test_the_envelope_says_the_shape_and_falls_back_when_it_does_not(self):
         self.assertEqual(self.mod.kind_of({"kind": "records"}), "records")
         self.assertEqual(self.mod.kind_of({"accepted": []}), "accepted")

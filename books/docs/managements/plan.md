@@ -87,19 +87,16 @@
 读取方 `src/python/lib/_snapshot.py`，写入与命令 `src/python/manuscript/snapshot.py`，
 体积门禁 `src/python/audit/content_volume.py`，目录归属见 `docs/managements/folder.md`。
 
-#### `plan-19` 基线目录归一（信封、命名、键形态、源版本）
+#### `plan-19` 基线目录归一（信封、命名、键形态、源版本）——已交付
 
-**现状**：`data/baselines/` 十个文件有四套后缀、三种信封、两种键写法；`source_symbol` 记了 `source_version`
-却不校验。看目录说不出谁在读它，手稿目录一挪基线会部分失效。
-**动作**：阶段 1 已落地——信封、命名、键形态、源版本提示与工具链默认配置一并统一；剩余阶段 2 是发布前清理旧名回退。按 `docs/plan/baselines-unify/plan.md` 推进：统一信封（`schema/gate/kind/keyed_by`）与
-`<gate>.json` 命名（`base.json [baselines]` 声明，旧名只读兼容）；`captions` 键去掉 `data/manuscript/` 前缀；
-`source_symbol` 增源版本复核提示；`manuscript/baselines.py --check` 增「旧名残留」一项。
-**验收**：迁移前后每个文件条数一致；`make.py check --keep-going` 与 `cover` 全绿；`baselines.py --check` 零问题；
-`src/` 内除历史文档外不再出现旧文件名。
-
-**事实位**：设计与计划在 `docs/plan/baselines-unify/design.md` 与 `docs/plan/baselines-unify/plan.md`；
-写入方 `src/python/lib/_baseline.py`，清单命令 `src/python/manuscript/baselines.py`，
-路径声明 `data/config/base.json [baselines]`。
+**现状**：两个阶段均已落地——`data/baselines/` 十个文件统一为门禁命名 + 统一信封
+（`schema/gate/kind/keyed_by`），`base.json` 与 `lib/_defaults/base.json` 同步声明，旧名回退已删除。
+**动作**：按 `docs/plan/baselines-unify/plan.md` 完成阶段 1（信封、命名、键形态、源版本提示）与阶段 2
+（移除 `_baseline.LEGACY`/`legacy_path`，清单命令把旧文件名列为待重记项）。
+**验收**：迁移前后每个文件条数一致；`make.py check --keep-going`、`test`、`cover` 全绿；
+`manuscript/baselines.py --check` 零告警。
+**事实位**：设计与计划在 `docs/plan/baselines-unify/`；写入方 `lib/_baseline.py`，清单命令
+`manuscript/baselines.py`，迁移记录见 `changelog.md` 0.2-dev 段。
 
 ### P3 — 预期实施，有空时安排
 

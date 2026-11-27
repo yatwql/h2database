@@ -33,18 +33,19 @@ from lib import _baseline, _config, _errors, _fsutil
 # filename -> (shape, gate that owns it, what it records). The shape decides how the
 # entries are counted; the owner is the script whose `--update-baseline` rewrites it.
 KNOWN = {
-    'diagrams.json': ('audit/diagrams.py', 'ASCII 图存量违规（超宽行等），键含内容哈希'),
-    'captions.json': ('audit/captions.py', '图注质量存量：缺动词、过长、含糊尾词'),
-    'content-depth.json': ('audit/content_depth.py',
-                           '内容深度存量：术语未入表、摘录漂移、前置知识无指路'),
-    'content-volume.json': ('audit/content_volume.py',
-                            '篇幅与交付体积下限，以及经批准的下调记录'),
-    'coverage.json': ('make.py cover', '每文件覆盖率下限（百分比）'),
-    'editorial.json': ('audit/editorial.py', '编辑要素计数：学习目标、要点回顾、误区、表格张数'),
-    'perf.json': ('audit/perf_baseline.py', '门禁耗时读数，用于发现变慢'),
-    'readability.json': ('audit/readability.py', '框线闭合告警的每文件计数'),
-    'source-symbols.json': ('audit/source_refs.py', '承认的符号漂移（Class.method 断言）'),
-    'style-rules.json': ('audit/style_rules.py', '文风规则存量违规（术语、间距、标点）'),
+    "diagrams.json": ("audit/diagrams.py", "ASCII 图存量违规（超宽行等），键含内容哈希"),
+    "captions.json": ("audit/captions.py", "图注质量存量：缺动词、过长、含糊尾词"),
+    "content-depth.json": (
+        "audit/content_depth.py",
+        "内容深度存量：术语未入表、摘录漂移、前置知识无指路",
+    ),
+    "content-volume.json": ("audit/content_volume.py", "篇幅与交付体积下限，以及经批准的下调记录"),
+    "coverage.json": ("make.py cover", "每文件覆盖率下限（百分比）"),
+    "editorial.json": ("audit/editorial.py", "编辑要素计数：学习目标、要点回顾、误区、表格张数"),
+    "perf.json": ("audit/perf_baseline.py", "门禁耗时读数，用于发现变慢"),
+    "readability.json": ("audit/readability.py", "框线闭合告警的每文件计数"),
+    "source-symbols.json": ("audit/source_refs.py", "承认的符号漂移（Class.method 断言）"),
+    "style-rules.json": ("audit/style_rules.py", "文风规则存量违规（术语、间距、标点）"),
 }
 
 
@@ -79,16 +80,29 @@ def _row(name: str, folder: str) -> dict:
     """One file's row, whether it loads or not: a broken baseline is reported, not fatal."""
     owner, purpose = KNOWN.get(name, ("?", "未登记的基线文件"))
     legacy = name.endswith("-findings.json") or name.endswith("-baseline.json")
-    row = {"file": name, "owner": owner, "purpose": purpose, "legacy": legacy,
-           "shape": "unknown", "count": None, "updated": "?", "problem": ""}
+    row = {
+        "file": name,
+        "owner": owner,
+        "purpose": purpose,
+        "legacy": legacy,
+        "shape": "unknown",
+        "count": None,
+        "updated": "?",
+        "problem": "",
+    }
     try:
         payload = _fsutil.load_json(os.path.join(folder, name))
     except (_errors.ToolError, OSError, ValueError) as exc:
         row["problem"] = f"无法读取：{exc}"
         return row
     shape = _baseline.kind_of(payload) if name in KNOWN else "unknown"
-    row.update({"shape": shape, "count": _count(payload, shape),
-                "updated": _stamp(payload.get("updated") or payload.get("review"))})
+    row.update(
+        {
+            "shape": shape,
+            "count": _count(payload, shape),
+            "updated": _stamp(payload.get("updated") or payload.get("review")),
+        }
+    )
     return row
 
 
@@ -107,7 +121,7 @@ def problems(rows_: list[dict]) -> list[str]:
     found: list[str] = []
     for row in rows_:
         if row.get("legacy"):
-            found.append(f"{row['file']}: old filename; re-record it to migrate")
+            found.append(f"{row['file']}: old filename; no gate reads it any more")
         elif row["problem"]:
             found.append(f"{row['file']}: {row['problem']}")
         elif row["shape"] == "unknown":

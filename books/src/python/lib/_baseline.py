@@ -32,15 +32,6 @@ DEFAULT_NOTE = "Reviewed backlog: these findings are accepted, new ones fail."
 SCHEMA = 1
 KINDS = ("accepted", "counts", "records")
 
-# Names used before the files were named after their gate. Reads fall back to them so a
-# migration can be "re-record once", never "one big migration commit that must be perfect".
-LEGACY = {
-    "ascii": "ascii-baseline.json",
-    "captions": "captions-findings.json",
-    "content_depth": "content-depth-findings.json",
-    "source_symbol": "source-symbol-baseline.json",
-    "style_rules": "style-rules-baseline.json",
-}
 
 
 def baseline_dir() -> str:
@@ -67,17 +58,6 @@ def path_for(name: str) -> str:
     return os.path.join(baseline_dir(), f"{name}.json")
 
 
-def legacy_path(name: str) -> str | None:
-    """Where this gate's baseline used to live, when it has not been re-recorded yet."""
-    key = name.replace("-", "_")
-    declared = _config.BASE_POLICY.get("baselines") or {}
-    if key in LEGACY and key not in declared:
-        return os.path.join(baseline_dir(), LEGACY[key])
-    if key not in declared:
-        return os.path.join(baseline_dir(), f"{name}-findings.json")
-    return None
-
-
 def load(name: str) -> set[str]:
     """Accepted keys for a gate; empty when no baseline was recorded yet."""
     return {str(key) for key in (load_raw(name).get("accepted") or [])}
@@ -97,14 +77,8 @@ def load_at(path: str) -> dict:
 def load_raw(name: str) -> dict:
     """The recorded payload for a gate, whole: keys plus whatever else it carries.
 
-    A gate renamed after its file keeps working: the declared path wins, and the old
-    spelling is read only when the declared file is absent and the old one still exists.
-    """
-    payload = load_at(path_for(name))
-    if payload:
-        return payload
-    stale = legacy_path(name)
-    return load_at(stale) if stale else {}
+"""
+    return load_at(path_for(name))
 
 
 def load_accepted(path: str) -> set[str]:
