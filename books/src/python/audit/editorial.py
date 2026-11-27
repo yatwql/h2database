@@ -75,18 +75,19 @@ def blockquote_items(text: str, marker: str) -> int:
     counted where they actually live rather than demanding a second, duplicate section.
     """
     lines = text.splitlines()
+    total = 0
     for index, line in enumerate(lines):
         if marker not in line:
             continue
-        found = 0
+        # a file may hold several chapters, each with its own goals block: sum them all,
+        # the same way `section_items` sums every matching section
         for following in lines[index + 1:]:
             stripped = following.lstrip()
             if not stripped.startswith(">"):
                 break
             if re.match(r">\s*[-*]\s+\S", stripped):
-                found += 1
-        return found
-    return 0
+                total += 1
+    return total
 
 
 def table_count(text: str) -> int:
@@ -108,22 +109,18 @@ def table_density(text: str) -> float:
     return round(table_count(text) * 1000 / max(len(text.splitlines()), 1), 2)
 
 
-def measure() -> dict:
-    """Per chapter-file counts, plus the profile that decides what is judged."""
-    profile = _editorial.load_profile()
-    rules = cast(dict[str, dict[str, Any]], profile["rules"])
+def measure_files(paths: list[str], rules: dict[str, dict[str, Any]]) -> list[dict]:
+    """Per chapter-file counts for the given files, under the given rules.
+
+    Kept separate from `measure` so a case can count a fixture file without binding the
+    active book: the profile and the file list are inputs, not ambient state.
+    """
     rows: list[dict] = []
-    # Reference matter (appendices) is listed but not judged: a publisher asks a chapter
-    # for learning goals and a recap, not an appendix.
-    coverage = _config.chapter_coverage()
-    for path in _config.chapter_files(include_cover=False):
-        name = os.path.basename(path)
-        if not coverage.get(name):
-            continue
+    for path in paths:
         text = _fsutil.read_text(path)
         rows.append(
             {
-                "file": name,
+                "file": os.path.basename(path),
                 "lines": len(text.splitlines()),
                 "learning_goals": blockquote_items(
                     text, _editorial.label(rules["learning_goals"])
@@ -131,15 +128,26 @@ def measure() -> dict:
                 "key_points": section_items(text, _editorial.label(rules["key_points"])),
                 "pitfalls": section_items(text, _editorial.label(rules["pitfalls"])),
                 "tables": table_count(text),
-            "table_density": table_density(text),
+                "table_density": table_density(text),
             }
         )
-    return {
-        "profile": profile["profile"],
-        "rules": rules,
-        "files": rows,
-        "problems": list(cast(list[str], profile["problems"])),
-    }
+    return rows
+
+
+def measure() -> dict:
+    """Per chapter-file counts, plus the profile that decides what is judged.
+
+    Reference matter (appendices) is listed but not judged: a publisher asks a chapter for
+    learning goals and a recap, not an appendix.
+    """
+    profile = _editorial.load_profile()
+    rules = cast(dict[str, dict[str, Any]], profile["rules"])
+    coverage = _config.chapter_coverage()
+    paths = [path for path in _config.chapter_files(include_cover=False)
+             if coverage.get(os.path.basename(path))]
+    return {"profile": profile["profile"], "rules": rules,
+            "files": measure_files(paths, rules),
+            "problems": list(cast(list[str], profile["problems"]))}
 
 
 def shortfalls(metrics: dict) -> list[str]:
@@ -163,18 +171,28 @@ def shortfalls(metrics: dict) -> list[str]:
     return problems
 
 
+# The row field and the profile key are not always spelled the same: `table_density` is the
+# element, `tables` is what was measured and recorded.
+RULE_FOR_FIELD = {"tables": "table_density"}
+
+
 def regressions(metrics: dict, baseline: dict) -> list[str]:
     """Chapters whose count fell below the recorded baseline."""
     recorded = {row["file"]: row for row in baseline.get("files", [])}
     problems: list[str] = []
+    rules = metrics.get("rules") or {}
     for row in metrics["files"]:
         before = recorded.get(row["file"])
         if before is None:
             continue
         for element in ("learning_goals", "key_points", "pitfalls", "tables"):
-            if row[element] < before[element]:
+            rule = rules.get(RULE_FOR_FIELD.get(element, element)) or {}
+            if not rule.get("enabled", True):
+                continue  # an element the profile does not require is reported, not judged
+            now, was = row.get(element, 0), before.get(element, 0)
+            if now < was:
                 problems.append(
-                    f"{row['file']}: {element} fell from {before[element]} to {row[element]}"
+                    f"{row['file']}: {element} fell from {was} to {now}"
                 )
     return problems
 

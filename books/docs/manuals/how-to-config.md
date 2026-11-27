@@ -116,7 +116,7 @@ display = "删节版"
 | --- | --- | --- |
 | `learning_goals` | 每章开头「章节要点」块的条目数 | `enabled`、`heading`（本书用 `章节要点`）、`min_items` |
 | `key_points` | 每处「本章小结」小节的条目数 | `enabled`、`heading`、`min_items` |
-| `pitfalls` | 「常见误区」小节条目数 | `enabled`、`heading`、`min_items` |
+| `pitfalls` | 每个手稿文件的「常见误区」条目合计（多章文件累加） | `enabled`、`heading`、`min_items` |
 | `table_density` | 每千行表格张数 | `enabled`、`min_per_1000_lines` |
 
 未启用的元素只报数、不判红——没约定下限就不该凭空失败。改动后看结果：

@@ -2845,7 +2845,7 @@ undo log vs. 多版本存储 (MVTO) 对比：
   这个字节上限的缺省值分两种：有页缓存时取 `Constants.DEFAULT_PAGE_SIZE`（16 KB），无缓存时取 `Integer.MAX_VALUE`（`FileStore.java:260`）；内存库没有 fileStore，字节条件退化成 `Long.MAX_VALUE`（`MVStore.java:1193`）。
 
 - **误区**：COW 的复制代价等于树高，所以备份与压缩这类「复制整棵树」的操作也按 O(log N) 估算。
-  **为什么**：按路径复制只属于单键写入那一类；`MVStore.copy` 调 `MVMap.copyFrom` 逐层复制全部页面（`MVMap.java:1171`），耗时随数据量走。
+  **为什么**：按路径复制只属于单键写入那一类；`MVStore.compact` 调 `MVMap.copyFrom` 逐层复制全部页面（`MVMap.java:1171`），耗时随数据量走。
   它还依赖「incomplete 页面不落盘」的取巧：复制过程中产生的 chunk 一个都回收不得，否则目标库会引用到已删的页（`MVStore.java:419`）。
 
 - **误区**：快照读不占资源，拿到根引用之后放多久都能继续读。

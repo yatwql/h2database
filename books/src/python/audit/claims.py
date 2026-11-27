@@ -9,6 +9,9 @@ does not say. This gate asks one question per sentence:
     does this strong claim point at something a reader could check —
     a `path.ext:line` coordinate, a `Class.method(` symbol, or a backticked class?
 
+A quoted misconception (`**误区**：…`) is exempt: it is written to be refuted by the sentence
+that follows, not asserted by the book.
+
 It is a ratchet, not a target. The first measurement records today's count (mostly
 unevidenced), and the gate fails only when a file's count *rises*: new prose must bring its
 evidence, old prose is a recorded debt.
@@ -134,6 +137,10 @@ def findings() -> dict[str, list[dict]]:
         hits: list[dict] = []
         for line, sentence in prose_sentences(_fsutil.read_text(path)):
             if sentence.lstrip().startswith(FIGURE_LEADINS):
+                continue
+            # a 误区 line quotes a belief in order to refute it: it is the false claim the
+            # next line corrects, so it is not the book asserting anything
+            if "**误区**" in sentence:
                 continue
             if not any(word in sentence for word in words):
                 continue

@@ -5,7 +5,7 @@
     {
       "file": "ch1-2-architecture.md",
       "lines": 2234,
-      "learning_goals": 4,
+      "learning_goals": 8,
       "key_points": 13,
       "pitfalls": 4,
       "tables": 1,
@@ -22,8 +22,8 @@
     },
     {
       "file": "ch4-5-modules-processes.md",
-      "lines": 3998,
-      "learning_goals": 4,
+      "lines": 4000,
+      "learning_goals": 8,
       "key_points": 10,
       "pitfalls": 2,
       "tables": 8,
@@ -77,7 +77,7 @@
     {
       "file": "ch9-10-persistence-locking.md",
       "lines": 6653,
-      "learning_goals": 5,
+      "learning_goals": 9,
       "key_points": 14,
       "pitfalls": 4,
       "tables": 5,
@@ -86,7 +86,7 @@
     {
       "file": "ch11-12-guide-summary.md",
       "lines": 2478,
-      "learning_goals": 4,
+      "learning_goals": 8,
       "key_points": 7,
       "pitfalls": 2,
       "tables": 14,

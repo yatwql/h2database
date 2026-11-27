@@ -53,8 +53,7 @@
 表格 3 处、学习目标 3/14 章。
 **动作**：按 `docs/plan/editorial-profile/plan.md` 分阶段推进；阶段 1 已落地——`book.toml [editing]`
 声明风格档与逐项覆盖，三档预设写在 `lib/_editorial.py`，`audit/editorial.py` 量出学习目标、要点回顾、
-常见误区、表格密度四项并按基线棘轮判定。阶段 2 已起步：八处「本章小结」条目化、`key_points` 打开；
-剩余是学习目标与常见误区两项内容。
+常见误区、表格密度四项并按基线棘轮判定。阶段 2 已落地：八处「本章小结」条目化、`key_points` 打开，十四个章末各有一节「常见误区」（共 25 条，均带坐标或符号），`pitfalls` 已启用并重记基线。
 **验收**：每个元素都有能红的判据；本书三档判据全绿；换档只改配置即可通过。
 
 **事实位**：设计与计划在 `docs/plan/editorial-profile/design.md` 与 `docs/plan/editorial-profile/plan.md`；

@@ -483,7 +483,7 @@ H2 在极小的体积内提供了完整的关系数据库能力：全面 SQL 支
   差别全在客户端一侧：多一层 `SessionRemote` 与 `CommandRemote` 的传输代理（命令封装见第 4 章），加上网络往返与序列化。
 
 - **误区**：看到 `FileStore` 就按包名认定它是持久化那一层，把 `org.h2.store.FileStore` 当成 MVStore 的文件层。
-  **为什么**：树里有两个同名类：`org.h2.store.FileStore`（`store/FileStore.java:26`）是 H2 自己的文件抽象，服务文件锁、备份流与 LOB；MVStore 的文件层是 `org.h2.mvstore.FileStore`（`mvstore/FileStore.java:60`）。
+  **为什么**：树里有两个同名类：`org.h2.store.FileStore`（`store/FileStore.java:26`）是 H2 自己的文件抽象，服务 LOB 与脚本/恢复的输出流（`value/lob/LobDataFile.java:14`、`tools/Recover.java:47`）；MVStore 的文件层是 `org.h2.mvstore.FileStore`（`mvstore/FileStore.java:60`），文件锁另在 `store/FileLock.java`。
   第 9 章讲持久化的坐标基本都在 `mvstore/` 下，混用一个会读到错的实现。
 
 ## 1.6 延伸思考
