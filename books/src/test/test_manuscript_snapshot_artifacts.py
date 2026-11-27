@@ -44,7 +44,7 @@ class ArtifactSnapshotTest(unittest.TestCase):
 
     def test_artifacts_are_frozen_and_verified_by_hash(self):
         self.assertEqual(import_artifacts(self.source, "ref", "2026-06-15"), 0)
-        manifest_path = os.path.join(_snapshot.SNAPSHOT_ROOT, "2026-06-15-ref", "manifest.json")
+        manifest_path = os.path.join(_snapshot.snapshot_dir("2026-06-15", "ref"), "manifest.json")
         with open(manifest_path, encoding="utf-8") as handle:
             manifest = json.load(handle)
         self.assertEqual(manifest["kind"], "artifacts")
@@ -53,7 +53,7 @@ class ArtifactSnapshotTest(unittest.TestCase):
 
     def test_a_changed_artifact_fails_verification(self):
         self.assertEqual(import_artifacts(self.source, "ref2", "2026-06-15"), 0)
-        path = os.path.join(_snapshot.SNAPSHOT_ROOT, "2026-06-15-ref2", "artifacts", "book.md")
+        path = os.path.join(_snapshot.snapshot_dir("2026-06-15", "ref2"), "artifacts", "book.md")
         with open(path, "w", encoding="utf-8") as handle:
             handle.write("# 改过\n")
         self.assertEqual(verify("2026-06-15-ref2"), 1)
@@ -71,7 +71,7 @@ class ArtifactSnapshotTest(unittest.TestCase):
         os.makedirs(os.path.join(self.source, "images"))
         self.assertEqual(import_artifacts(self.source, "ref5", "2026-06-15"), 0)
         with open(
-            os.path.join(_snapshot.SNAPSHOT_ROOT, "2026-06-15-ref5", "manifest.json"),
+            os.path.join(_snapshot.snapshot_dir("2026-06-15", "ref5"), "manifest.json"),
             encoding="utf-8",
         ) as handle:
             manifest = json.load(handle)

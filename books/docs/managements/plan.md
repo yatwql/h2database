@@ -4,14 +4,14 @@
 > 版本：v0.2-dev
 > 定位：在办事项的**时机档与逐项验收**——每项现状 / 动作 / 验收 / 事实位只在这里；
 > 不记设计细节（看 `technical.md`），也不存问题台账（看 `review-findings.md`）。
-> **编号源**：`plan-next = 18`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-17，
+> **编号源**：`plan-next = 19`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-18，
 > 递增保证唯一，归档不回收。编号与 `review-findings.md` 的 `rf-*` 是两套，互不占用）
 
 ---
 
 ## 概述
 
-在办 8 项：P1 1 项（**plan-17**）、P2 3 项（**plan-13**、**plan-14**、**plan-16**）、P3 3 项（**plan-6**、**plan-12**、**plan-15**）、P4 1 项（**plan-4**）。
+在办 8 项：P2 4 项（**plan-13**、**plan-14**、**plan-16**、**plan-18**）、P3 3 项（**plan-6**、**plan-12**、**plan-15**）、P4 1 项（**plan-4**）。
 单项的范围、验收与事实位只在本文维护；系统怎么搭见 `technical.md`，怎么验证见
 `testplan.md`。
 
@@ -29,24 +29,7 @@
 
 ### P1 — 当前待办（立即执行）
 
-入选标准：不做就让门禁或文档事实失去意义。
-
-#### `plan-17` 出炉收口（均衡、印刷密度、图示、索引）
-
-**现状**：四个已量出的具体缺口——章节文件 max/min 127.8（当时目标 ≤2.5），附录 B 以 68 行决定最小值、印刷版 944 页反而多于标准版 920 页、
-5 处 ASCII 框线角字符不配对、索引 209 条与跨章引用 30 处偏薄。
-**动作**：按 `docs/plan/book-quality-closeout/plan.md` 分四项独立推进（拆章并重编号 → 调纸面阅读度量 →
-修框线 → 补索引与交叉引用），每项独立提交。
-**验收**：`balance.py` 的正文各章节文件篇幅比降到配置目标（经决策为 3.0）；`make.py print` 全绿且印刷版比标准版少 5% 页数以上；
-`readability.py` 无框线告警；索引与交叉引用密度达标且可达性判据绿。
-
-**事实位**：设计与计划在 `docs/plan/book-quality-closeout/design.md` 与 `docs/plan/book-quality-closeout/plan.md`；
-章节映射在 `data/book/book.toml`，重编号在 `src/python/manuscript/renumber.py`，判据在 `src/python/audit/`。
-
-**分项状态**：①图示闭合——已提交，`readability.py` 改为按文件存量记账（存量与改动见 `changelog.md`）；
-②章节均衡——拆章后正文各**章节文件** max/min 2.991（原 120.4 的最小值来自附录 B，附录已不进比值），目标经决策调整为 3.0（再拆一章 ch4-5 要重编号 105 张图，收益不抵代价），判据随配置转绿且超限即失败；③印刷密度——完成，标准版 920 页、
-印刷版 829 页（−9.9%，目标 ≤874 页），`DENSITY`/`CODE_LEAD`/`TOC_LINKS` 全绿；④索引与交叉引用——完成，
-索引下限按实测收到 185/112/145/300、每章引用下限 2，实测跨章引用 37 处且逐条解析。
+入选标准：不做就让门禁或文档事实失去意义。当前无待办项。
 
 ### P2 — 下一阶段就绪（条件满足即开工）
 
@@ -87,6 +70,22 @@
 
 **事实位**：设计与计划在 `docs/plan/llm-contract-drafting/design.md` 与 `docs/plan/llm-contract-drafting/plan.md`；
 调用面在 `src/python/ingest/chapters.py`，provider 配置在 `data/config/`。
+
+#### `plan-18` 快照身份（换书、换源树之后仍可安全比对）
+
+**现状**：阶段 1 已落地——`manifest.json` 增 `identity` 段（书 slug/版本、源树根与版本、工具版本、配置指纹、语种），
+新快照写入 `data/snapshots/<book-slug>/<date>-<label>`，`list` 输出「名称／书／源版本／工具／配置／文件／字节」，
+`diff A B` 先比身份：不同书或不同源树默认拒绝，`--cross` 才放行并声明「不是退化」；旧平铺目录只读兼容并显示为 `legacy`。
+同一次改动里把原来 `data/baselines/` 下的快照体积账本并入 manifest（`lib/_snapshot.py` 成为唯一读取方，
+`snapshot.py baseline` 与那份 json 一并删除）。
+**动作**：按 `docs/plan/snapshot-identity/plan.md` 推进阶段 2：`snapshot.py adopt` 给旧快照补身份并归位；
+`diff --cross` 输出固定的身份差异摘要；`list --book/--source` 过滤。
+**验收**：同日两本书的快照互不覆盖；`list` 一眼可辨书与源版本；跨书 `diff` 返回 2 并提示 `--cross`；
+旧快照补身份后能与新快照正常比对；体积门禁从 manifest 取数，`data/baselines/` 不再有快照副本。
+
+**事实位**：设计与计划在 `docs/plan/snapshot-identity/design.md` 与 `docs/plan/snapshot-identity/plan.md`；
+读取方 `src/python/lib/_snapshot.py`，写入与命令 `src/python/manuscript/snapshot.py`，
+体积门禁 `src/python/audit/content_volume.py`，目录归属见 `docs/managements/folder.md`。
 
 ### P3 — 预期实施，有空时安排
 
@@ -150,8 +149,9 @@ API/依赖/坐标，失败路径、不变量、调用链没有产出。
 
 | 迭代目录 | 结论出处 |
 | --- | --- |
+| `docs/plan/book-quality-closeout/` | 四项（存量基线、拆章、印刷密度、引用与索引下限）见 `changelog.md` 0.2-dev 段 |
 
-当前无待归档项：已完成的迭代已随 `docs/archive/v0.1/` 归档。
+其余已完成的迭代已随 `docs/archive/v0.1/` 归档。
 
 ## 归档
 

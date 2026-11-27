@@ -113,6 +113,28 @@ class VolumeGateTest(unittest.TestCase):
         self.assertEqual(payload['manuscript']['total'], {'bytes': 10, 'lines': 2})
         self.assertEqual(payload['source']['snapshot'], 'x')
 
+    def test_snapshot_lookup_accepts_a_dated_legacy_ledger(self):
+        """A snapshot with no manifest still has its old per-label copy to fall back on."""
+        folder = os.path.join(self.root, 'data', 'baselines')
+        os.makedirs(folder, exist_ok=True)
+        with open(os.path.join(folder, 'snapshot-2026-06-11-june.json'), 'w',
+                  encoding='utf-8') as fh:
+            json.dump({'files': {'ch1.md': {'bytes': 8, 'lines': 3}}}, fh)
+        payload = self.gate.from_snapshot('june')
+        self.assertEqual(payload['manuscript']['total'], {'bytes': 8, 'lines': 3})
+
+    def test_snapshot_lookup_prefers_the_manifest(self):
+        """The manifest is the record now; the per-label copy is only a fallback."""
+        base = os.path.join(self.tmp.name, 'snapshots')
+        snap = os.path.join(base, 'book', '2026-01-01-x')
+        os.makedirs(snap, exist_ok=True)
+        with open(os.path.join(snap, 'manifest.json'), 'w', encoding='utf-8') as fh:
+            json.dump({'files': {'a.md': {'bytes': 20, 'lines': 5}},
+                       'identity': {'book': {'slug': 'book'}}}, fh)
+        with mock.patch.object(self.gate._snapshot, 'root', return_value=base):
+            payload = self.gate.from_snapshot('2026-01-01-x')
+        self.assertEqual(payload['manuscript']['total'], {'bytes': 20, 'lines': 5})
+
     def test_the_cli_explains_a_missing_baseline(self):
         buffer = io.StringIO()
         with redirect_stdout(buffer):

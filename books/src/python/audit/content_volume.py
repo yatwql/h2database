@@ -35,7 +35,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _errors, _fsutil, _log
+from lib import _config, _errors, _fsutil, _log, _snapshot
 
 LOG = _log.get_logger('content_volume')
 # Ratios come from data/config/base.json [toolchain]: policy is configuration,
@@ -233,15 +233,21 @@ def from_snapshot(label: str) -> dict | None:
     manuscript on disk is today's, so the numbers have to come from somewhere
     else, and that somewhere must be a recorded import (manifest + label).
     """
-    folder = os.path.join(_config.BOOK_ROOT, 'data', 'baselines')
-    path = os.path.join(folder, f'snapshot-{label}.json')
-    if not os.path.isfile(path):
-        # the ledger is named after the dated snapshot dir; a bare label is fine
-        matches = sorted(glob.glob(os.path.join(folder, f'snapshot-*{label}.json')))
-        if len(matches) != 1:
-            return None
-        path = matches[0]
-    payload = _fsutil.load_json(path)
+    # the snapshot's own manifest is the record; the older per-label copy under
+    # data/baselines is read only when a snapshot predates the manifest reading
+    facts = _snapshot.volume(label)
+    if facts is not None:
+        payload = facts
+    else:
+        folder = os.path.join(_config.BOOK_ROOT, 'data', 'baselines')
+        path = os.path.join(folder, f'snapshot-{label}.json')
+        if not os.path.isfile(path):
+            # the ledger is named after the dated snapshot dir; a bare label is fine
+            matches = sorted(glob.glob(os.path.join(folder, f'snapshot-*{label}.json')))
+            if len(matches) != 1:
+                return None
+            path = matches[0]
+        payload = _fsutil.load_json(path)
     files = {name: {'bytes': stats['bytes'], 'lines': stats['lines']}
              for name, stats in (payload.get('files') or {}).items()}
     total = {'bytes': sum(item['bytes'] for item in files.values()),
@@ -351,7 +357,7 @@ def main(argv: list[str] | None = None) -> int:
             payload = from_snapshot(args.from_snapshot)
             if payload is None:
                 print(f'error: 没有 {args.from_snapshot} 的快照体积账本；'
-                      f'先 import 该快照并运行 snapshot.py baseline', file=sys.stderr)
+                      f'先 import 该快照', file=sys.stderr)
                 return 2
         return update_baseline(payload, args.accept_shrink, args.reason, args.reviewed_by)
 

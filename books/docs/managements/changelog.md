@@ -13,6 +13,12 @@
 
 ### 变更
 
+- **快照带身份、按书归目录（plan-18 阶段 1，含体积账本合并）**：`manifest.json` 增 `identity` 段（书 slug/版本、
+　源树根与源版本、工具版本、配置指纹、语种），新快照写入 `data/snapshots/<book-slug>/<date>-<label>`；
+　`list` 输出「名称／书／源版本／工具／配置／文件／字节」，`diff A B` 先比身份、跨书默认拒绝（`--cross` 放行并声明不是退化）；
+　`snapshot.py adopt` 给旧快照补身份并归位，`data/snapshots/` 现存两份已就地迁移为 `h2-source-code-analysis/…`。
+　同一次改动把 `data/baselines/` 下的快照体积账本并入 manifest：`lib/_snapshot.py` 成为唯一读取方，
+　`audit/content_volume.py --from-snapshot` 直接读 manifest（旧账本仅作回退），`snapshot.py baseline` 子命令与其产物一并删除。
 - **126 小时变更回顾：四处技术债已清**。①`lib/_editorial.py` 的三档预设曾内置中文小节名，属「书的内容写进工具链」——
 　改为小节键，标签由语言包给（`zh.json` 补 `goals`/`pitfalls`），书仍可用 `heading` 覆盖；②`audit/exercises.py`
 　的示例提示把书名写进了工具链，改为中立表述；③`test_real_book.py` 的守卫指向不存在的 `manuscript` 路径，

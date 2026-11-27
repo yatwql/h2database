@@ -62,7 +62,7 @@
 
 **盘点结论**：`book.toml` 缺表即视为未配置（不回落默认值）；`base.json` / `style.json`
 缺文件时回落单文件 `config.json` 是显式声明的兼容形态，不是残留；`data/snapshots/`
-与 `data/baselines/snapshot-*.json` 只读、不参与构建；`data/state/` 每次 ingest 重建，
+与 `data/snapshots/` 只读、不参与构建（体积账本已并入各快照的 `manifest.json`）；`data/state/` 每次 ingest 重建，
 无兼容面。
 
 | # | 问题 | 修复方向 |

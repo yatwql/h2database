@@ -13,16 +13,16 @@ has to trust the archive file still being around.
 
 Usage:
   python snapshot.py import <archive.zip> <label> [--date YYYYMMDD]
+  python snapshot.py adopt <label>
   python snapshot.py list
+  python snapshot.py diff <a> <b> [--cross]
   python snapshot.py verify <date>-<label>
-  python snapshot.py baseline <date>-<label>
 
 Exit codes: 0 ok, 1 verification failure, 2 bad usage or missing input.
 """
 from __future__ import annotations
 
 import argparse
-import glob
 import hashlib
 import json
 import os
@@ -33,11 +33,38 @@ import zipfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _errors, _fsutil
+from lib import _config, _errors, _fsutil, _snapshot
+
+MANIFEST = 'manifest.json'
 
 SNAPSHOT_ROOT = os.path.join(
     _config.BOOK_ROOT,
     str(_config.BASE_POLICY.get('paths', {}).get('snapshots', 'data/snapshots')))
+
+
+def identity() -> dict:
+    """Who a snapshot belongs to: this book, the source trees it analyses, the tool.
+
+    Two books can take a snapshot on the same day, and the same book can be rebuilt
+    against a different source tree. Without this block the manifest answers neither
+    question, and a comparison cannot tell an improvement from a different subject.
+    """
+    cfg = _config.current()
+    versions = cfg.versions()
+    roots = [{'label': str(root.get('label', '')), 'path': str(root.get('path', '')),
+              'version': str(root.get('version', ''))} for root in cfg.source_roots()]
+    return {
+        'book': {'slug': cfg.merged_name, 'version': versions.get('doc', ''),
+                 'edition': cfg.edition},
+        'source': {'roots': roots, 'version': versions.get('source', '')},
+        'tool': {'version': versions.get('tool', ''), 'config': cfg.fingerprint()},
+        'language': cfg.language_code,
+    }
+
+
+def snapshot_dir(date: str, label: str) -> str:
+    """Where a new snapshot goes: under this book's slug, so days never collide."""
+    return os.path.join(SNAPSHOT_ROOT, identity()['book']['slug'], f'{date}-{label}')
 
 
 def sha256_file(path: str) -> str:
@@ -162,6 +189,7 @@ def _manifest(label: str, date: str, source_name: str, source_hash: str,
         'source_archive': source_name,
         'archive_sha256': source_hash,
         'edition': _config.current().edition,
+        'identity': identity(),
         'files': files,
         'totals': {
             'files': len(files),
@@ -181,7 +209,7 @@ def import_snapshot(archive_path: str, label: str, date: str) -> int:
     if not os.path.exists(archive_path):
         print(f'error: archive not found: {archive_path}', file=sys.stderr)
         return 2
-    target = os.path.join(SNAPSHOT_ROOT, f'{date}-{label}')
+    target = snapshot_dir(date, label)
     if os.path.exists(target):
         print(f'error: snapshot already exists: {target}', file=sys.stderr)
         return 2
@@ -225,7 +253,7 @@ def import_artifacts(source: str, label: str, date: str) -> int:
     if not os.path.isdir(source):
         print(f'error: not a directory: {source}', file=sys.stderr)
         return 2
-    target = os.path.join(SNAPSHOT_ROOT, f'{date}-{label}')
+    target = snapshot_dir(date, label)
     if os.path.exists(target):
         print(f'error: snapshot already exists: {target}', file=sys.stderr)
         return 2
@@ -253,49 +281,95 @@ def import_artifacts(source: str, label: str, date: str) -> int:
     return 0
 
 
+def snapshot_paths() -> dict[str, str]:
+    """Snapshot name -> directory, both layouts; the reading lives in `lib/_snapshot.py`."""
+    return _snapshot.paths(SNAPSHOT_ROOT)
+
+
 def snapshots() -> list[str]:
-    if not os.path.isdir(SNAPSHOT_ROOT):
-        return []
-    try:
-        entries = os.listdir(SNAPSHOT_ROOT)
-    except OSError as exc:
-        print(f'error: cannot list {SNAPSHOT_ROOT}: {exc}', file=sys.stderr)
-        return []
-    return sorted(name for name in entries
-                  if os.path.isdir(os.path.join(SNAPSHOT_ROOT, name)))
+    return sorted(snapshot_paths())
+
+
+def _identity_summary(manifest: dict) -> tuple[str, str, str, str]:
+    """(book, source version, tool version, config fingerprint) for display and diff."""
+    identity = manifest.get('identity') or {}
+    book = (identity.get('book') or {}).get('slug') or 'legacy'
+    source = (identity.get('source') or {}).get('version') or '?'
+    tool = (identity.get('tool') or {}).get('version') or '?'
+    config = (identity.get('tool') or {}).get('config') or '?'
+    return book, source, tool, config
 
 
 def list_snapshots() -> int:
-    found = snapshots()
+    found = snapshot_paths()
     if not found:
         print('no snapshots')
         return 0
-    for name in found:
-        manifest_path = os.path.join(SNAPSHOT_ROOT, name, 'manifest.json')
+    header = ('名称', '书', '源版本', '工具', '配置', '文件', '字节')
+    rows = []
+    for name, path in sorted(found.items()):
+        manifest_path = os.path.join(path, 'manifest.json')
         if not os.path.exists(manifest_path):
-            print(f'  {name}  (manifest missing)')
+            rows.append((name, '(manifest missing)', '?', '?', '?', '0', '0'))
             continue
         manifest = _fsutil.load_json(manifest_path)
         totals = manifest.get('totals', {})
-        print(f'  {name}  {totals.get("files", 0)} files / '
-              f'{totals.get("bytes", 0)} bytes / from {manifest.get("source_archive", "?")}')
+        book, source, tool, config = _identity_summary(manifest)
+        rows.append((name, book, source, tool, config,
+                     str(totals.get('files', 0)), str(totals.get('bytes', 0))))
+    widths = [max(len(str(row[i])) for row in [header, *rows]) for i in range(len(header))]
+    print('  ' + '  '.join(text.ljust(widths[i]) for i, text in enumerate(header)))
+    for row in rows:
+        print('  ' + '  '.join(str(text).ljust(widths[i]) for i, text in enumerate(row)))
+    return 0
+
+
+def diff(first: str, second: str, cross: bool = False) -> int:
+    """Compare two snapshots' manifests, refusing to compare different subjects."""
+    paths: list[str] = []
+    for label in (first, second):
+        path, code = require(label)
+        if code:
+            return code
+        paths.append(path)
+    manifests = [_fsutil.load_json(os.path.join(path, 'manifest.json')) for path in paths]
+    left = _identity_summary(manifests[0])
+    right = _identity_summary(manifests[1])
+    unknown = 'legacy' in (left[0], right[0]) or '?' in (left[1], right[1])
+    if (left[:2] != right[:2] or unknown) and not cross:
+        reason = ('a snapshot has no identity block, so its subject is unknown' if unknown
+                  else 'different book or source tree')
+        print(f'refusing to compare {first} with {second}: {reason}', file=sys.stderr)
+        print(f'  {first}: book={left[0]} source={left[1]}', file=sys.stderr)
+        print(f'  {second}: book={right[0]} source={right[1]}', file=sys.stderr)
+        print('  pass --cross to see the comparison anyway', file=sys.stderr)
+        return 2
+    for label, summary in ((first, left), (second, right)):
+        print(f'  {label}: book={summary[0]} source={summary[1]} '
+              f'tool={summary[2]} config={summary[3]}')
+    if left[:2] != right[:2]:
+        print('  NOTE: cross-book or cross-source comparison; a delta is not a regression')
+    left_files = manifests[0].get('files', {})
+    right_files = manifests[1].get('files', {})
+    changed = added = removed = 0
+    for name in sorted(set(left_files) | set(right_files)):
+        before, after = left_files.get(name), right_files.get(name)
+        if before is None:
+            print(f'  + {name}')
+            added += 1
+        elif after is None:
+            print(f'  - {name}')
+            removed += 1
+        elif before.get('sha256') != after.get('sha256'):
+            print(f'  ~ {name}  {before.get("bytes", 0)} -> {after.get("bytes", 0)} bytes')
+            changed += 1
+    print(f'  added {added}, removed {removed}, changed {changed}')
     return 0
 
 
 def resolve(label: str) -> str | None:
-    """Directory of a snapshot by label or by label suffix.
-
-    ``import`` stores ``<date>-<label>``; when the label adds nothing to the date the
-    directory is just the date, so the same snapshot answers to both. Requiring one
-    spelling in the CLI and another in the human's head is how a working snapshot
-    looks missing.
-    """
-    direct = os.path.join(SNAPSHOT_ROOT, label)
-    if os.path.isdir(direct):
-        return direct
-    matches = sorted(p for p in glob.glob(os.path.join(SNAPSHOT_ROOT, f'*{label}'))
-                     if os.path.isdir(p))
-    return matches[0] if len(matches) == 1 else None
+    """Directory of a snapshot by label or by label suffix (`lib/_snapshot.resolve`)."""
+    return _snapshot.resolve(label, SNAPSHOT_ROOT)
 
 
 def require(label: str) -> tuple[str, int]:
@@ -303,14 +377,15 @@ def require(label: str) -> tuple[str, int]:
     path = resolve(label)
     if path is not None:
         return path, 0
-    known = ', '.join(sorted(os.path.basename(p) for p in
-                             glob.glob(os.path.join(SNAPSHOT_ROOT, '*')))) or '(none)'
+    known = ', '.join(snapshots()) or '(none)'
     print(f'error: no snapshot matches {label!r}; known: {known}', file=sys.stderr)
     return '', 2
 
 
 def verify(label: str) -> int:
-    target = os.path.join(SNAPSHOT_ROOT, label)
+    target, code = require(label)
+    if code:
+        return code
     manifest_path = os.path.join(target, 'manifest.json')
     if not os.path.exists(manifest_path):
         print(f'error: no manifest at {manifest_path}', file=sys.stderr)
@@ -339,32 +414,44 @@ def verify(label: str) -> int:
     return 0
 
 
-def baseline(label: str) -> int:
-    """Volume baseline for the snapshot, for comparing an old draft to the current one."""
-    root, code = require(label)
+def adopt(label: str) -> int:
+    """Give a snapshot taken before the identity block its identity, and move it home.
+
+    An old snapshot sits flat in the root and its manifest says nothing about which book
+    or source tree it came from. The only evidence left is the archive name and the
+    manuscript itself, so adoption assumes *this* book and records that assumption
+    (`identity.adopted_from` + `adopted_as`), which keeps the result auditable instead of
+    silently claiming knowledge the snapshot never had.
+    """
+    path, code = require(label)
     if code:
         return code
-    target = os.path.join(root, 'manuscript')
-    if not os.path.isdir(target):
-        print(f'error: no snapshot manuscript at {target}', file=sys.stderr)
+    manifest_path = os.path.join(path, MANIFEST)
+    if not os.path.exists(manifest_path):
+        print(f'error: no manifest at {manifest_path}', file=sys.stderr)
         return 2
-    files: dict[str, dict] = {}
-    for root, _dirs, names in os.walk(target):
-        for name in sorted(names):
-            if not name.endswith('.md'):
-                continue
-            path = os.path.join(root, name)
-            rel = os.path.relpath(path, target).replace(os.sep, '/')
-            stats = facts(path)
-            files[rel] = {'bytes': stats['bytes'], 'lines': stats['lines']}
-    payload = {'snapshot': label, 'files': files,
-               'totals': {'files': len(files),
-                          'bytes': sum(item['bytes'] for item in files.values()),
-                          'lines': sum(item['lines'] for item in files.values())}}
-    out = os.path.join(_config.BOOK_ROOT, 'data', 'baselines', f'snapshot-{label}.json')
-    _fsutil.dump_json(out, payload)
-    print(f'baseline written: {os.path.relpath(out, _config.BOOK_ROOT)} '
-          f'({payload["totals"]["files"]} files, {payload["totals"]["bytes"]} bytes)')
+    manifest = _fsutil.load_json(manifest_path)
+    if (manifest.get('identity') or {}).get('book', {}).get('slug'):
+        print(f'snapshot {label} already carries an identity; nothing to adopt')
+        return 0
+    current = identity()
+    current['adopted_from'] = os.path.relpath(path, SNAPSHOT_ROOT)
+    current['adopted_as'] = current['book']['slug']
+    manifest['identity'] = current
+    target = os.path.join(SNAPSHOT_ROOT, current['book']['slug'], os.path.basename(path))
+    if os.path.abspath(target) != os.path.abspath(path):
+        if os.path.exists(target):
+            print(f'error: target already exists: {target}', file=sys.stderr)
+            return 2
+        make_dir(os.path.dirname(target))
+        try:
+            shutil.move(path, target)
+        except OSError as exc:
+            print(f'error: cannot move {path} to {target}: {exc}', file=sys.stderr)
+            return 2
+    _fsutil.dump_json(os.path.join(target, MANIFEST), manifest)
+    print(f'adopted {label} as {current["book"]["slug"]} '
+          f'({os.path.relpath(target, SNAPSHOT_ROOT)})')
     return 0
 
 
@@ -385,8 +472,13 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser('list', help='list snapshots')
     verifier = sub.add_parser('verify', help='check a snapshot against its manifest')
     verifier.add_argument('label')
-    baseliner = sub.add_parser('baseline', help='write a volume baseline for a snapshot')
-    baseliner.add_argument('label')
+    adopter = sub.add_parser('adopt', help='give a pre-identity snapshot its identity')
+    adopter.add_argument('label')
+    differ = sub.add_parser('diff', help='compare two snapshots manifest to manifest')
+    differ.add_argument('first')
+    differ.add_argument('second')
+    differ.add_argument('--cross', action='store_true',
+                        help='compare even when the book or source tree differs')
     args = parser.parse_args(argv)
 
     if args.command == 'import':
@@ -399,8 +491,10 @@ def main(argv: list[str] | None = None) -> int:
         code = list_snapshots()
     elif args.command == 'verify':
         code = verify(args.label)
-    elif args.command == 'baseline':
-        code = baseline(args.label)
+    elif args.command == 'adopt':
+        code = adopt(args.label)
+    elif args.command == 'diff':
+        code = diff(args.first, args.second, cross=args.cross)
     else:
         parser.print_help()
         return 2

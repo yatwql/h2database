@@ -89,5 +89,29 @@
     "files": 16,
     "bytes": 2247217,
     "lines": 36893
+  },
+  "identity": {
+    "book": {
+      "slug": "h2-source-code-analysis",
+      "version": "6.6",
+      "edition": ""
+    },
+    "source": {
+      "roots": [
+        {
+          "label": "main",
+          "path": "../h2/src/main",
+          "version": "2.5.259-SNAPSHOT"
+        }
+      ],
+      "version": "2.5.259-SNAPSHOT"
+    },
+    "tool": {
+      "version": "0.2-dev",
+      "config": "51f3b40b7b15"
+    },
+    "language": "zh",
+    "adopted_from": "2026-06-11",
+    "adopted_as": "h2-source-code-analysis"
   }
 }

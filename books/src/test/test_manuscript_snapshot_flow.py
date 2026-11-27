@@ -34,9 +34,7 @@ class SnapshotFlowTest(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.mod = _fixture.load_module(BOOK_ROOT, "snapshot")
         self.snapshots = os.path.join(self.tmp.name, "snapshots")
-        self.baselines = os.path.join(self.tmp.name, "data", "baselines")
         os.makedirs(self.snapshots)
-        os.makedirs(self.baselines)
         # every path the module derives comes from BOOK_ROOT; point it at the
         # temp tree so a test can never write into the checked-out book
         self.root_patch = mock.patch.object(self.mod._config, "BOOK_ROOT", self.tmp.name)
@@ -58,7 +56,7 @@ class SnapshotFlowTest(unittest.TestCase):
         with redirect_stdout(io.StringIO()):
             code = self.mod.import_snapshot(source, "june", "2026-06-11")
         self.assertEqual(code, 0)
-        root = os.path.join(self.snapshots, "2026-06-11-june")
+        root = self.mod.snapshot_dir("2026-06-11", "june")
         self.assertTrue(os.path.isfile(os.path.join(root, "manuscript", "ch1.md")))
         with open(os.path.join(root, "manifest.json"), encoding="utf-8") as fh:
             manifest = json.load(fh)
@@ -76,23 +74,12 @@ class SnapshotFlowTest(unittest.TestCase):
         source = self.archive({"manuscript/ch1.md": "# 第1章\n"})
         with redirect_stdout(io.StringIO()):
             self.mod.import_snapshot(source, "june", "2026-06-11")
-        target = os.path.join(self.snapshots, "2026-06-11-june", "manuscript", "ch1.md")
+        target = os.path.join(self.mod.snapshot_dir("2026-06-11", "june"), "manuscript", "ch1.md")
         with open(target, "w", encoding="utf-8") as fh:
             fh.write("# 改过了\n")
         with redirect_stdout(io.StringIO()), mock.patch("sys.stderr", new=io.StringIO()):
             code = self.mod.verify("2026-06-11-june")
         self.assertEqual(code, 1)
-
-    def test_baseline_writes_the_volume_ledger(self):
-        source = self.archive({"manuscript/ch1.md": "# 第1章\n正文。\n"})
-        with redirect_stdout(io.StringIO()):
-            self.mod.import_snapshot(source, "june", "2026-06-11")
-            code = self.mod.baseline("june")
-        self.assertEqual(code, 0)
-        with open(os.path.join(self.baselines, "snapshot-june.json"), encoding="utf-8") as fh:
-            ledger = json.load(fh)
-        self.assertEqual(ledger["totals"]["files"], 1)
-        self.assertGreater(ledger["totals"]["lines"], 0)
 
     def test_list_reports_the_imported_snapshots(self):
         source = self.archive({"manuscript/ch1.md": "# 第1章\n"})
@@ -148,7 +135,7 @@ class SnapshotFlowTest(unittest.TestCase):
             fh.write("# 术语表\n")
         with redirect_stdout(io.StringIO()):
             self.assertEqual(self.mod.import_snapshot(source, "from-archive", "2026-11-22"), 0)
-        target = os.path.join(self.snapshots, "2026-11-22-from-archive")
+        target = self.mod.snapshot_dir("2026-11-22", "from-archive")
         with open(os.path.join(target, "manifest.json"), encoding="utf-8") as fh:
             manifest = json.load(fh)
         self.assertEqual(manifest["totals"]["files"], 2)
@@ -170,12 +157,11 @@ class SnapshotFlowTest(unittest.TestCase):
         with redirect_stdout(io.StringIO()):
             self.assertEqual(self.mod.main([]), 2)
 
-    def test_the_cli_verify_and_baseline_run_by_label(self):
+    def test_the_cli_verify_runs_by_label(self):
         source = self.archive({"manuscript/ch1.md": "# 第1章\n\n正文。\n"})
         with redirect_stdout(io.StringIO()):
             self.mod.import_snapshot(source, "june", "2026-06-11")
             self.assertEqual(self.mod.main(["verify", "2026-06-11-june"]), 0)
-            self.assertEqual(self.mod.main(["baseline", "june"]), 0)
 
     def test_the_cli_json_summary_names_the_command(self):
         buffer = io.StringIO()
@@ -187,22 +173,6 @@ class SnapshotFlowTest(unittest.TestCase):
     def test_the_cli_refuses_an_unknown_label(self):
         with redirect_stdout(io.StringIO()):
             self.assertNotEqual(self.mod.main(["verify", "nope"]), 0)
-
-    def test_baseline_refuses_a_label_that_resolves_to_nothing(self):
-        with redirect_stdout(io.StringIO()), mock.patch("sys.stderr", new=io.StringIO()):
-            self.assertEqual(self.mod.baseline("nope"), 2)
-
-    def test_baseline_ignores_files_that_are_not_markdown(self):
-        source = self.archive({"manuscript/ch1.md": "# 第1章\n正文。\n"})
-        with redirect_stdout(io.StringIO()):
-            self.mod.import_snapshot(source, "june", "2026-06-11")
-            extra = os.path.join(self.snapshots, "2026-06-11-june", "manuscript", "notes.txt")
-            with open(extra, "w", encoding="utf-8") as fh:
-                fh.write("scratch\n")
-            self.assertEqual(self.mod.baseline("june"), 0)
-        with open(os.path.join(self.baselines, "snapshot-june.json"), encoding="utf-8") as fh:
-            self.assertEqual(list(json.load(fh)["files"]), ["ch1.md"])
-
 
 class SnapshotEdgeTest(unittest.TestCase):
     """The error paths: unwritable targets, foreign members, missing manifests."""
@@ -240,7 +210,7 @@ class SnapshotEdgeTest(unittest.TestCase):
         source = self.archive({"manuscript/ch1.md": "# 第1章\n", "manuscript/notes.txt": "notes\n"})
         with redirect_stdout(io.StringIO()):
             self.assertEqual(self.mod.import_snapshot(source, "june", "2026-06-11"), 0)
-        root = os.path.join(self.snapshots, "2026-06-11-june", "manuscript")
+        root = os.path.join(self.mod.snapshot_dir("2026-06-11", "june"), "manuscript")
         self.assertEqual(sorted(os.listdir(root)), ["ch1.md"])
 
     def test_a_zip_member_that_is_markdown_but_not_manuscript_is_ignored(self):
@@ -249,7 +219,7 @@ class SnapshotEdgeTest(unittest.TestCase):
         )
         with redirect_stdout(io.StringIO()):
             self.assertEqual(self.mod.import_snapshot(source, "june", "2026-06-11"), 0)
-        root = os.path.join(self.snapshots, "2026-06-11-june", "manuscript")
+        root = os.path.join(self.mod.snapshot_dir("2026-06-11", "june"), "manuscript")
         self.assertEqual(sorted(os.listdir(root)), ["ch1.md"])
 
     def test_a_directory_without_markdown_is_refused(self):
@@ -269,7 +239,7 @@ class SnapshotEdgeTest(unittest.TestCase):
             handle.write("# 不是正文\n")
         with redirect_stdout(io.StringIO()):
             self.assertEqual(self.mod.import_snapshot(source, "june", "2026-06-11"), 0)
-        root = os.path.join(self.snapshots, "2026-06-11-june", "manuscript")
+        root = os.path.join(self.mod.snapshot_dir("2026-06-11", "june"), "manuscript")
         self.assertEqual(sorted(os.listdir(root)), ["ch1.md"])
 
     def test_a_directory_file_that_cannot_be_copied_is_refused(self):
@@ -290,7 +260,7 @@ class SnapshotEdgeTest(unittest.TestCase):
             self.assertEqual(self.mod.import_snapshot(source, "june", "2026-06-11"), 0)
         self.assertTrue(
             os.path.isfile(
-                os.path.join(self.snapshots, "2026-06-11-june", "manuscript", "back", "index.md")
+                os.path.join(self.mod.snapshot_dir("2026-06-11", "june"), "manuscript", "back", "index.md")
             )
         )
 
@@ -325,7 +295,8 @@ class SnapshotEdgeTest(unittest.TestCase):
             self.assertEqual(self.mod.snapshots(), [])
 
     def test_a_snapshot_without_a_manifest_is_named_in_the_listing(self):
-        os.makedirs(os.path.join(self.snapshots, "2026-06-11-june"))
+        # the manuscript tree is what makes it a snapshot; the manifest is what it lost
+        os.makedirs(os.path.join(self.mod.snapshot_dir("2026-06-11", "june"), "manuscript"))
         buffer = io.StringIO()
         with redirect_stdout(buffer):
             self.assertEqual(self.mod.list_snapshots(), 0)
@@ -335,27 +306,11 @@ class SnapshotEdgeTest(unittest.TestCase):
         source = self.archive({"manuscript/ch1.md": "# 第1章\n"})
         with redirect_stdout(io.StringIO()):
             self.mod.import_snapshot(source, "june", "2026-06-11")
-        os.remove(os.path.join(self.snapshots, "2026-06-11-june", "manuscript", "ch1.md"))
+        os.remove(os.path.join(self.mod.snapshot_dir("2026-06-11", "june"), "manuscript", "ch1.md"))
         buffer = io.StringIO()
         with redirect_stdout(buffer), mock.patch("sys.stderr", new=io.StringIO()):
             self.assertEqual(self.mod.verify("2026-06-11-june"), 1)
         self.assertIn("missing", buffer.getvalue())
-
-    def test_a_baseline_needs_a_snapshot_manuscript(self):
-        os.makedirs(os.path.join(self.snapshots, "2026-06-11-june"))
-        with redirect_stdout(io.StringIO()), mock.patch("sys.stderr", new=io.StringIO()):
-            self.assertEqual(self.mod.baseline("june"), 2)
-
-    def test_a_baseline_counts_only_markdown(self):
-        source = self.archive({"manuscript/ch1.md": "# 第1章\n", "manuscript/notes.txt": "notes\n"})
-        os.makedirs(os.path.join(self.tmp.name, "data", "baselines"), exist_ok=True)
-        with redirect_stdout(io.StringIO()):
-            self.mod.import_snapshot(source, "june", "2026-06-11")
-            self.assertEqual(self.mod.baseline("june"), 0)
-        path = os.path.join(self.tmp.name, "data", "baselines", "snapshot-june.json")
-        with open(path, encoding="utf-8") as handle:
-            payload = json.load(handle)
-        self.assertEqual(list(payload["files"]), ["ch1.md"])
 
     def test_the_cli_imports_a_manuscript_and_artifacts(self):
         source = self.archive({"manuscript/ch1.md": "# 第1章\n"})
