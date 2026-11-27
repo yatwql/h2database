@@ -17,16 +17,16 @@ from _cases import FixtureCase
 TAGS = ("layer:manuscript", "tier:fast")
 
 SOURCE = (
-    "package org.demo;\n"          # 1
-    "\n"                            # 2
-    "class Thing {\n"               # 3
-    "    int size;\n"               # 4
-    "    /** doc */\n"              # 5
-    "    int count;\n"              # 6
-    "    void run() {\n"            # 7
-    "        size++;\n"             # 8
-    "    }\n"                       # 9
-    "}\n"                           # 10
+    "package org.demo;\n"  # 1
+    "\n"  # 2
+    "class Thing {\n"  # 3
+    "    int size;\n"  # 4
+    "    /** doc */\n"  # 5
+    "    int count;\n"  # 6
+    "    void run() {\n"  # 7
+    "        size++;\n"  # 8
+    "    }\n"  # 9
+    "}\n"  # 10
 )
 
 
@@ -38,8 +38,7 @@ class ExcerptToolTest(FixtureCase):
         with open(os.path.join(self.source, "Thing.java"), "w", encoding="utf-8") as fh:
             fh.write(SOURCE)
         self.tool = self.module("excerpt")
-        self.tool._config.source_tree = lambda *_args: os.path.dirname(
-            os.path.dirname(self.source))
+        self.tool._config.source_tree = lambda *_args: os.path.dirname(os.path.dirname(self.source))
 
     def manuscript(self, text: str) -> str:
         path = os.path.join(self.root, "data", "manuscript", "ch1-test.md")
@@ -50,8 +49,7 @@ class ExcerptToolTest(FixtureCase):
     def test_a_printed_block_is_ready_to_paste(self):
         out = io.StringIO()
         with redirect_stdout(out):
-            self.assertEqual(self.tool.main(["--file", "org/demo/Thing.java",
-                                             "--lines", "7-9"]), 0)
+            self.assertEqual(self.tool.main(["--file", "org/demo/Thing.java", "--lines", "7-9"]), 0)
         block = out.getvalue()
         self.assertIn("// Thing.java:7-9", block)
         self.assertIn("```java", block)
@@ -73,17 +71,22 @@ class ExcerptToolTest(FixtureCase):
     def test_an_elision_makes_the_body_a_subsequence(self):
         path = self.manuscript(
             "```java\n// Thing.java:3-9\nclass Thing {\n// ...\n    void run() {\n"
-            "        size++;\n    }\n```\n")
+            "        size++;\n    }\n```\n"
+        )
         self.assertEqual(self.tool.check(path), [])
 
     def test_an_annotation_does_not_count_as_a_change(self):
-        path = self.manuscript("```java\n// Thing.java:7-9\nvoid run() {  // 入口\n"
-                               "        size++;  // 自增\n    }\n```\n")
+        path = self.manuscript(
+            "```java\n// Thing.java:7-9\nvoid run() {  // 入口\n"
+            "        size++;  // 自增\n    }\n```\n"
+        )
         self.assertEqual(self.tool.check(path), [])
 
     def test_repair_retargets_the_citation_and_marks_the_gap(self):
-        path = self.manuscript("```java\n// Thing.java:7-9\nclass Thing {\n"
-                               "    void run() {\n        size++;\n    }\n```\n")
+        path = self.manuscript(
+            "```java\n// Thing.java:7-9\nclass Thing {\n"
+            "    void run() {\n        size++;\n    }\n```\n"
+        )
         self.assertEqual(len(self.tool.check(path)), 1)
         self.assertEqual(self.tool.repair(path), 1)
         self.assertEqual(self.tool.check(path), [])
@@ -98,14 +101,12 @@ class ExcerptToolTest(FixtureCase):
         self.assertTrue(self.tool.check(path))
 
 
-
 class ExcerptEdgeTest(FixtureCase):
     def setUp(self):
         super().setUp()
         self.source = os.path.join(self.tmp.name, "src")
         os.makedirs(os.path.join(self.source, "a", "b"), exist_ok=True)
-        with open(os.path.join(self.source, "a", "b", "Thing.java"), "w",
-                  encoding="utf-8") as fh:
+        with open(os.path.join(self.source, "a", "b", "Thing.java"), "w", encoding="utf-8") as fh:
             fh.write(SOURCE)
         self.tool = self.module("excerpt")
         self.tool._config.source_tree = lambda *_args: self.source
@@ -148,13 +149,16 @@ class ExcerptEdgeTest(FixtureCase):
         self.assertIn("outside the file", self.tool.check(path)[0])
 
     def test_a_clean_manuscript_repairs_nothing(self):
-        path = self.manuscript("```java\n// Thing.java:7-9\nvoid run() {\n"
-                               "        size++;\n    }\n```\n")
+        path = self.manuscript(
+            "```java\n// Thing.java:7-9\nvoid run() {\n        size++;\n    }\n```\n"
+        )
         self.assertEqual(self.tool.repair(path), 0)
 
     def test_repair_marks_a_gap_between_shown_lines(self):
-        path = self.manuscript("```java\n// Thing.java:3-9\nclass Thing {\n"
-                               "    void run() {\n        size++;\n    }\n```\n")
+        path = self.manuscript(
+            "```java\n// Thing.java:3-9\nclass Thing {\n"
+            "    void run() {\n        size++;\n    }\n```\n"
+        )
         self.assertEqual(len(self.tool.check(path)), 1)
         self.assertEqual(self.tool.repair(path), 1)
         with open(path, encoding="utf-8") as fh:
@@ -166,14 +170,16 @@ class ExcerptEdgeTest(FixtureCase):
         bad = self.manuscript("```java\n// Thing.java:7-9\nvoid stop() {}\n```\n")
         with redirect_stdout(io.StringIO()):
             self.assertEqual(self.tool.main(["--check", bad]), 1)
-        good = self.manuscript("```java\n// Thing.java:7-9\nvoid run() {\n"
-                               "        size++;\n    }\n```\n")
+        good = self.manuscript(
+            "```java\n// Thing.java:7-9\nvoid run() {\n        size++;\n    }\n```\n"
+        )
         with redirect_stdout(io.StringIO()):
             self.assertEqual(self.tool.main(["--check", good]), 0)
 
     def test_repair_mode_reports_what_it_changed(self):
-        path = self.manuscript("```java\n// Thing.java:3-9\nclass Thing {\n"
-                               "    void run() {\n    }\n```\n")
+        path = self.manuscript(
+            "```java\n// Thing.java:3-9\nclass Thing {\n    void run() {\n    }\n```\n"
+        )
         out = io.StringIO()
         with redirect_stdout(out):
             self.assertEqual(self.tool.main(["--repair", path]), 0)
@@ -183,6 +189,7 @@ class ExcerptEdgeTest(FixtureCase):
         with self.assertRaises(SystemExit):
             with redirect_stdout(io.StringIO()):
                 self.tool.main([])
+
 
 if __name__ == "__main__":
     unittest.main()

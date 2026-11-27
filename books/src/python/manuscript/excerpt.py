@@ -18,6 +18,7 @@ containing what is shown. This command makes both mechanical:
 The verification rules are the ones `audit/content_depth.py` enforces, so a repaired block
 cannot disagree with the gate that judges it.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -31,8 +32,14 @@ from lib import _config, _errors, _fsutil
 
 HEAD_RE = re.compile(r"^(\s*)//\s*([\w.]+\.(?:java|py|rs|kt|go|c)):(\d+)(?:-(\d+))?\s*$")
 FENCE_RE = re.compile(r"^\s*```(\w*)\s*$")
-LANG_BY_SUFFIX = {".java": "java", ".py": "python", ".rs": "rust", ".kt": "kotlin",
-                  ".go": "go", ".c": "c"}
+LANG_BY_SUFFIX = {
+    ".java": "java",
+    ".py": "python",
+    ".rs": "rust",
+    ".kt": "kotlin",
+    ".go": "go",
+    ".c": "c",
+}
 ELISION = "// ..."
 
 
@@ -65,7 +72,7 @@ def block(name: str, start: int, end: int | None = None) -> str:
     if last < start or last > len(lines):
         raise SystemExit(f"error: {name} has {len(lines)} lines; cannot quote {start}-{last}")
     language = LANG_BY_SUFFIX.get(os.path.splitext(name)[1], "")
-    body = [line.rstrip() for line in lines[start - 1:last]]
+    body = [line.rstrip() for line in lines[start - 1 : last]]
     head = f"// {os.path.basename(name)}:{start}-{last}"
     return "\n".join([f"```{language}", head, *body, "```"])
 
@@ -108,14 +115,15 @@ def drift_of(name: str, start: int, end: int | None, body: list[str]) -> str:
         if shown and (start - 1 >= len(source) or shown[0] != source[start - 1]):
             return "head line does not match the cited start"
         return ""
-    span = source[start - 1:end]
+    span = source[start - 1 : end]
     if not span or len(span) != end - start + 1:
         return "the cited span is outside the file"
     if not elided:
         # blanks inside the block are part of the span, so compare the body as it stands
         whole = [row.strip() for row in body]
         if len(whole) != len(span) or any(
-                not _same_line(a, b) for a, b in zip(whole, span, strict=False)):
+            not _same_line(a, b) for a, b in zip(whole, span, strict=False)
+        ):
             return "the body is not the cited span"
         return ""
     cursor = 0
@@ -141,8 +149,10 @@ def check(path: str) -> list[str]:
         body, _last = bodies(lines, index)
         reason = drift_of(name, start, end, body)
         if reason:
-            problems.append(f"{os.path.basename(path)}:{index + 1} {name}:{start}"
-                            f"{'-' + str(end) if end else ''} — {reason}")
+            problems.append(
+                f"{os.path.basename(path)}:{index + 1} {name}:{start}"
+                f"{'-' + str(end) if end else ''} — {reason}"
+            )
     return problems
 
 
@@ -192,7 +202,7 @@ def repair(path: str) -> int:
             rebuilt.append(row)
         indent = head.group(1)
         new_head = f"{indent}// {os.path.basename(name)}:{positions[0] + 1}-{positions[-1] + 1}"
-        lines[index:last + 1] = [new_head, *rebuilt]
+        lines[index : last + 1] = [new_head, *rebuilt]
         changed += 1
     if changed:
         _fsutil.write_text(path, "\n".join(lines) + "\n")
@@ -200,8 +210,9 @@ def repair(path: str) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--file", help="source file, relative to the analysed tree")
     parser.add_argument("--lines", help="line or span, e.g. 382 or 382-401")
     parser.add_argument("--check", metavar="MANUSCRIPT", help="verify a manuscript file")

@@ -41,8 +41,11 @@ class PromptResolutionTest(FixtureCase):
     def test_facts_are_filled_in_and_an_unknown_one_is_kept(self):
         module = self.module("_llm_prompts")
         book = types.SimpleNamespace(
-            book_section=lambda name: {"prompts": {"lead": "覆盖 {pkgs} 个包，标题《{missing}》"}}
-            if name == "llm" else {},
+            book_section=lambda name: (
+                {"prompts": {"lead": "覆盖 {pkgs} 个包，标题《{missing}》"}}
+                if name == "llm"
+                else {}
+            ),
             language=lambda: {"prompts": {}},
         )
         with mock.patch("lib._config.current", return_value=book):
