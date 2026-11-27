@@ -122,3 +122,50 @@ ingest_prose = false
 src_main = "../h2/src/main"
 pom_root = "../h2/pom.xml"
 version = "2.5.259-SNAPSHOT"
+
+# ---- 编辑风格档（原 data/book/editing.toml）----------------------------------
+# 三档预设写在 lib/_editorial.py；这里只写本书的选择与逐项覆盖。
+# 编辑风格档：这本书选择哪一档「优秀技术书要素」，以及逐项覆盖。
+# 三档预设（manual / tutorial / hands-on）写在 lib/_editorial.py；这里只写差异。
+# 判据是 audit/editorial.py：必选元素低于下限、或任一计数低于基线即失败。
+#
+# 当前状态：本书按 tutorial 档登记，但学习目标、要点回顾、常见误区三项尚未补齐，
+# 缺口记录在 data/baselines/editorial.json；补内容按 docs/plan/editorial-profile/ 推进。
+
+[editing.profile]
+name = "tutorial"
+
+[editing.elements.key_points]
+# 各章小结已条目化（每章 3–14 条），下限按 tutorial 档的 4 条判。
+enabled = true
+
+[editing.elements.learning_goals]
+# 本书的学习目标写在章首引用的「章节要点」块里（`> - …`），不是独立小节。
+heading = "章节要点"
+enabled = true
+
+[editing.elements.pitfalls]
+enabled = false
+
+[editing.elements.table_density]
+enabled = false
+
+# ---- LLM 起草契约（原 data/book/llm-tasks.toml）------------------------------
+# 每次调用（无论采用与否）落 data/state/llm-ledger.jsonl；判据在 lib/_llm_contract.py。
+# LLM 起草契约：每个任务允许写多长、允不允许出现事实之外的数字。
+# 判据在 lib/_llm_contract.py；每次调用（无论采用与否）落 data/state/llm-ledger.jsonl。
+# 未写本文件时用工具链默认值（20–220 字、单段、禁止事实外数字），书可按任务覆盖。
+
+[llm_tasks.default]
+min_chars = 20
+max_chars = 220
+single_paragraph = true
+allow_unknown_digits = false
+
+[llm_tasks.tasks.lead]
+# 本章导读：一到两句，覆盖包数与行数，这两个数字由调用方作为事实传入。
+max_chars = 200
+
+[llm_tasks.tasks.summary]
+# 小节小结：同上，允许略长一句。
+max_chars = 220

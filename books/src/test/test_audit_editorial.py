@@ -17,24 +17,22 @@ TAGS = ("layer:audit", "tier:fast")
 
 class EditorialProfileTest(FixtureCase):
     def test_an_unknown_profile_falls_back_loudly(self):
-        self.write("data/book/editing.toml", '[profile]\nname = "no-such-profile"\n')
+        self.append_book_toml('[editing.profile]\nname = "no-such-profile"\n')
         profile = self.module("_editorial").load_profile()
         self.assertEqual(profile["profile"], "manual")
         self.assertTrue(any("no-such-profile" in problem for problem in profile["problems"]))
 
     def test_an_unknown_element_is_reported_and_ignored(self):
-        self.write(
-            "data/book/editing.toml",
-            '[profile]\nname = "manual"\n\n[elements.nonsense]\nenabled = true\n',
+        self.append_book_toml(
+            '[editing.profile]\nname = "manual"\n\n[editing.elements.nonsense]\nenabled = true\n'
         )
         profile = self.module("_editorial").load_profile()
         self.assertIn("nonsense", " ".join(profile["problems"]))
         self.assertNotIn("nonsense", profile["rules"])
 
     def test_an_override_reaches_only_the_element_it_names(self):
-        self.write(
-            "data/book/editing.toml",
-            '[profile]\nname = "tutorial"\n\n[elements.pitfalls]\nenabled = false\n',
+        self.append_book_toml(
+            '[editing.profile]\nname = "tutorial"\n\n[editing.elements.pitfalls]\nenabled = false\n'
         )
         rules = self.module("_editorial").load_profile()["rules"]
         self.assertFalse(rules["pitfalls"]["enabled"])
@@ -49,9 +47,12 @@ class EditorialProfileTest(FixtureCase):
         self.assertEqual(editorial.label({"section": "goals"}), "goals")
         self.assertEqual(editorial.label({}), "")
 
-    def test_an_invalid_profile_file_is_reported(self):
-        self.write("data/book/editing.toml", "[profile\nbroken\n")
-        with self.assertRaises(SystemExit) as caught:
+    def test_an_invalid_book_is_reported_when_the_table_is_read(self):
+        """A broken `[editing]` table is a broken book: the config layer names the file."""
+        self.append_book_toml("[editing.profile\nbroken\n")
+        # the exception class is per module instance (the fixture reloads them), so the
+        # contract asserted here is the message, not the identity of the class
+        with self.assertRaises(Exception) as caught:
             self.module("_editorial").load_profile()
         self.assertIn("invalid TOML", str(caught.exception))
 

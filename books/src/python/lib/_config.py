@@ -418,6 +418,16 @@ class Config(BookVersions):
                 parts.append('missing')
         return hashlib.sha256(''.join(parts).encode('utf-8')).hexdigest()[:12]
 
+    def book_section(self, name: str) -> dict:
+        """One optional table from this book's `book.toml`; absent reads as empty.
+
+        Policy that belongs to one book but is not structure lives there as a table:
+        `[editing]` for the editorial profile, `[llm_tasks]` for the drafting contract.
+        A book without the table gets the toolchain defaults, so absence is not an error.
+        """
+        table = self.cfg.get(name)
+        return dict(table) if isinstance(table, dict) else {}
+
     def book_path(self, name: str) -> str:
         """One book-specific file (book.toml, case-studies.toml, ...)."""
         return os.path.join(self.book_dir(), name)

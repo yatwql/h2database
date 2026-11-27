@@ -25,18 +25,19 @@ class ContractTest(FixtureCase):
         self.assertFalse(rules["allow_unknown_digits"])
 
     def test_a_book_override_wins_over_the_defaults(self):
-        self.write(
-            "data/book/llm-tasks.toml", "[default]\nmin_chars = 5\n\n[tasks.lead]\nmax_chars = 40\n"
+        self.append_book_toml(
+            "[llm_tasks.default]\nmin_chars = 5\n\n[llm_tasks.tasks.lead]\nmax_chars = 40\n"
         )
         contract = self.module("_llm_contract")
         self.assertEqual(contract.contract("lead")["max_chars"], 40)
         self.assertEqual(contract.contract("lead")["min_chars"], 5)
         self.assertEqual(contract.contract("summary")["max_chars"], 220)
 
-    def test_an_invalid_contract_file_is_reported_rather_than_ignored(self):
-        self.write("data/book/llm-tasks.toml", "[default\nbroken\n")
+    def test_an_invalid_contract_is_reported_rather_than_ignored(self):
+        self.append_book_toml("[llm_tasks.default\nbroken\n")
         contract = self.module("_llm_contract")
-        with self.assertRaises(SystemExit) as caught:
+        # the class lives in a reloaded module, so the message is the contract
+        with self.assertRaises(Exception) as caught:
             contract.contract("lead")
         self.assertIn("invalid TOML", str(caught.exception))
 
@@ -52,7 +53,7 @@ class ContractTest(FixtureCase):
         self.assertIn("9999", problems[0])
 
     def test_a_task_may_allow_unknown_digits_explicitly(self):
-        self.write("data/book/llm-tasks.toml", "[tasks.lead]\nallow_unknown_digits = true\n")
+        self.append_book_toml("[llm_tasks.tasks.lead]\nallow_unknown_digits = true\n")
         contract = self.module("_llm_contract")
         self.assertEqual(contract.check("lead", "覆盖 9999 行，导读先给出整体规模。", {}), [])
 

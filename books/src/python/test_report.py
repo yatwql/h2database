@@ -253,7 +253,10 @@ def run(marker: str = "tier_fast", timeout: int = 1800, tests: str | None = None
         "dir": target,
         "log": log,
         "junit": junit,
-        "machine": f"{platform.python_version()} on {platform.platform()}",
+        # composed, not platform.platform(): that one shells out to `uname` for the
+        # processor string, and the probe then runs inside the caller's timeout budget
+        "machine": (f"{platform.python_version()} on {platform.system()} "
+                    f"{platform.release()} ({platform.machine()})"),
     }
     _write_reports(target, summary, cases)
     _write(latest_pointer(), json.dumps({"dir": stamp}, ensure_ascii=False) + "\n")

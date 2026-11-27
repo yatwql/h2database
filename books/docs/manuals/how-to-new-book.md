@@ -41,8 +41,8 @@ books/scripts/new-book.sh ../copy --from-manuscript   # 连章节一起复制
 1. 改 `data/config/base.json`：`sources.src_main` 指向新源码树，`languages` 选 `java|python|rust|kotlin|go|c`。
 2. `bookctl analyze` 生成版图与章节；`bookctl check` 跑全部门禁。
 3. 手写正文仍是人最值钱的部分：`data/manuscript/ch*.md`。
-4. 可选的书级文件按需添加：`data/book/glossary.toml`（术语别名）、`case-studies.toml`（案例流水线）、
-   `editing.toml`（编辑风格档，不写则按 `manual` 档）、`llm-tasks.toml`（LLM 起草契约）。
+4. 可选的书级文件按需添加：`data/book/glossary.toml`（术语别名）、`case-studies.toml`（案例流水线）；
+   编辑风格档与 LLM 起草契约是 `book.toml` 里的 `[editing]` / `[llm_tasks]` 表，缺表即按默认档。
 5. 第一次 `bookctl check` 若报 `editorial` 或体量/基线类问题，按[使用手册](how-to-use.md) §6.1 判断
    「先改内容还是先记账」。
 

@@ -3,7 +3,7 @@
 A model may draft prose for chapter leads and section recaps; it may not add facts. Two
 mechanisms keep that honest:
 
-    contract   `data/book/llm-tasks.toml` declares, per task, the length window and whether
+    contract   `book.toml [llm_tasks]` declares, per task, the length window and whether
                digits from outside the supplied facts are allowed. A draft that breaks the
                contract is rejected, and the deterministic text stands in for it.
     ledger     every attempt — accepted or rejected — appends one line to
@@ -11,7 +11,7 @@ mechanisms keep that honest:
                the model and a fingerprint of the resolved configuration. Same inputs give
                the same digests, so a run can be reproduced or explained later.
 
-Both are configuration-driven: a book with no `llm-tasks.toml` gets the defaults below,
+Both are configuration-driven: a book with no `[llm_tasks]` table gets the defaults below,
 which are the toolchain's idea of a safe draft, not any particular book's style.
 """
 
@@ -34,9 +34,9 @@ DIGITS_RE = re.compile(r"\d+")
 LEDGER_NAME = "llm-ledger.jsonl"
 
 
-def task_config() -> str:
-    """Where this book declares its drafting contracts, resolved when it is used."""
-    return _config.book_path("llm-tasks.toml")
+def task_table() -> dict:
+    """The `[llm_tasks]` table of this book; empty when the book declares none."""
+    return _config.current().book_section("llm_tasks")
 
 
 def ledger_path() -> str:
@@ -46,16 +46,8 @@ def ledger_path() -> str:
 
 def contract(task: str) -> dict:
     """The rule set in force for one drafting task."""
-    import tomllib
-
     rules = dict(DEFAULT_TASK)
-    try:
-        with open(task_config(), "rb") as fh:
-            data = tomllib.load(fh)
-    except FileNotFoundError:
-        return rules
-    except tomllib.TOMLDecodeError as exc:
-        raise SystemExit(f"error: invalid TOML in {task_config()}: {exc}") from exc
+    data = task_table()
     defaults = data.get("default") or {}
     rules.update({key: defaults[key] for key in DEFAULT_TASK if key in defaults})
     overrides = (data.get("tasks") or {}).get(task) or {}

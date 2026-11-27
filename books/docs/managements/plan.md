@@ -51,7 +51,7 @@
 **现状**：优秀技术书的要素（学习目标、前置知识、要点回顾、常见误区、代码清单编号、术语中英对照、
 提示类区块、图表并重）只有四项被 `[sections]` 强制，其余靠自觉；本书实测提示类 2 条、代码标注 0 处、
 表格 3 处、学习目标 3/14 章。
-**动作**：按 `docs/plan/editorial-profile/plan.md` 分阶段推进；阶段 1 已落地——`data/book/editing.toml`
+**动作**：按 `docs/plan/editorial-profile/plan.md` 分阶段推进；阶段 1 已落地——`book.toml [editing]`
 声明风格档与逐项覆盖，三档预设写在 `lib/_editorial.py`，`audit/editorial.py` 量出学习目标、要点回顾、
 常见误区、表格密度四项并按基线棘轮判定。阶段 2 已起步：八处「本章小结」条目化、`key_points` 打开；
 剩余是学习目标与常见误区两项内容。
@@ -63,7 +63,7 @@
 #### `plan-16` LLM 契约起草与自评审
 
 **现状**：LLM 只起草导读与小节小结，输入是包摘要，输出没有任何可核验约束，写多了风险就大。
-**动作**：按 `docs/plan/llm-contract-drafting/plan.md` 分阶段推进；阶段 1 已落地——`data/book/llm-tasks.toml`
+**动作**：按 `docs/plan/llm-contract-drafting/plan.md` 分阶段推进；阶段 1 已落地——`book.toml [llm_tasks]`
 声明每个任务的长度与取数规则，`lib/_llm_contract.py` 校验并把每次调用（含被拒）写进
 `data/state/llm-ledger.jsonl`（prompt/响应摘要 + 模型 + 配置指纹），违约草稿回退到确定性文本。
 **验收**：模型不得引入事实块之外的数字、不得增删标注编号；每个任务产出全部过判据；人工抽查无编造。

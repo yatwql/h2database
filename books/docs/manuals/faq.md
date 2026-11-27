@@ -59,7 +59,7 @@
 `--update-baseline` 记账（基线在 `data/baselines/`）。
 
 **Q：`editorial` 报某章学习目标/要点不够？**
-它按 `data/book/editing.toml` 的风格档判：必选元素低于下限、或计数比 `data/baselines/editorial.json`
+它按 `book.toml [editing]` 的风格档判：必选元素低于下限、或计数比 `data/baselines/editorial.json`
 记的少都会红。先补内容（条目化小结、加「常见误区」），确属本档不该要求的元素就关掉它
 （`[elements.<名>].enabled = false`），理由写进提交信息——「本档未启用」不报错。
 

@@ -6,7 +6,7 @@ but publishers trade them off differently: a manual is sparse, a tutorial leans 
 learning goals, a hands-on book on pitfalls and worked paths. The trade-off therefore
 belongs to the book, not to the toolchain:
 
-    data/book/editing.toml     the book's own profile and any per-element override
+    book.toml [editing]        the book's own profile and any per-element override
     PRESETS (below)            the three shapes a book can start from
 
 An element that a profile leaves out is *not* a defect — the audit reports the measured
@@ -58,27 +58,15 @@ def label(rule: dict) -> str:
     return str(sections.get(key) or key)
 
 
-def profile_config() -> str:
-    """Where this book keeps its editorial profile, resolved when it is used."""
-    return _config.book_path("editing.toml")
-
-
 def _read() -> dict:
-    import tomllib  # stdlib from 3.11 on; imported where it is used
-
-    try:
-        with open(profile_config(), "rb") as fh:
-            return tomllib.load(fh)
-    except FileNotFoundError:
-        return {}
-    except tomllib.TOMLDecodeError as exc:
-        raise SystemExit(f"error: invalid TOML in {profile_config()}: {exc}") from exc
+    """The `[editing]` table of this book; empty when the book declares none."""
+    return _config.current().book_section("editing")
 
 
 def load_profile() -> dict[str, object]:
     """The element rules in force for this book: preset first, overrides on top.
 
-    A book with no editing.toml gets the default preset, so the toolchain works out of
+    A book with no `[editing]` table gets the default preset, so the toolchain works out of
     the box; a book that names an unknown profile gets the default plus a problem,
     because silently substituting a different shape would be worse than a loud fallback.
     """
@@ -91,7 +79,7 @@ def load_profile() -> dict[str, object]:
     rules = {name: dict(rule) for name, rule in PRESETS[chosen].items()}
     for name, override in (data.get("elements") or {}).items():
         if name not in rules:
-            problems.append(f'unknown element "{name}" in {profile_config()}')
+            problems.append(f'unknown element "{name}" in [editing]')
             continue
         rules[name].update(override)
     return {"profile": chosen, "rules": rules, "problems": problems}

@@ -32,6 +32,16 @@ class Base(unittest.TestCase):
                 else:
                     os.environ[key] = value
 
+    def append_book_toml(self, text: str) -> None:
+        """Add a table to the fixture book.
+
+        Book-level policy (`[editing]`, `[llm_tasks]`) lives in `book.toml`, so a case
+        that wants a non-default policy extends that file rather than inventing a new one.
+        """
+        path = os.path.join(self.root, "data", "book", "book.toml")
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write("\n" + text.strip("\n") + "\n")
+
     def declare(self, name: str) -> None:
         """List a probe chapter in book.toml: `[chapters].files` is the contract."""
         path = os.path.join(self.root, "data", "book", "book.toml")
