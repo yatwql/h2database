@@ -1,6 +1,4 @@
-# Single source of truth for the H2 source-code-analysis book.
-# Every tool under tools/ resolves paths, chapter order and quality
-# thresholds from this file — do not hard-code them in scripts.
+# 本书的身份、章节结构与书级策略。换一本书就换这一份。
 
 [book]
 title = "H2 数据库引擎源码剖析"
@@ -19,8 +17,8 @@ running_head = "H2 数据库引擎源码剖析"
 breadcrumb_root = "H2 源码剖析"
 
 [paths]
-cover_image = ""       # optional: books/data/assets/cover.png
-# All paths are relative to the books/ root (the parent of data/).
+cover_image = ""       # 可选：书根下的 assets/cover.png
+# 以下路径相对书根（data/ 的上一级目录）。
 manuscript = "data/manuscript"
 dist = "dist"
 docs = "docs"
@@ -123,20 +121,15 @@ src_main = "../h2/src/main"
 pom_root = "../h2/pom.xml"
 version = "2.5.259-SNAPSHOT"
 
-# ---- 编辑风格档（原 data/book/editing.toml）----------------------------------
-# 三档预设写在 lib/_editorial.py；这里只写本书的选择与逐项覆盖。
-# 编辑风格档：这本书选择哪一档「优秀技术书要素」，以及逐项覆盖。
-# 三档预设（manual / tutorial / hands-on）写在 lib/_editorial.py；这里只写差异。
-# 判据是 audit/editorial.py：必选元素低于下限、或任一计数低于基线即失败。
-#
-# 当前状态：本书按 tutorial 档登记，但学习目标、要点回顾、常见误区三项尚未补齐，
-# 缺口记录在 data/baselines/editorial.json；补内容按 docs/plan/editorial-profile/ 推进。
+# 编辑风格档：这本书按哪一档「优秀技术书要素」来写，以及逐项覆盖。
+# 档位三选一：manual（手册型）、tutorial（教程型）、hands-on（实战型）。
+# 不写的元素按档位默认值；写了 enabled = false 表示本档不要求它。
 
 [editing.profile]
 name = "tutorial"
 
 [editing.elements.key_points]
-# 各章小结已条目化（每章 3–14 条），下限按 tutorial 档的 4 条判。
+# 小结写成条目，不写整段。
 enabled = true
 
 [editing.elements.learning_goals]
@@ -150,11 +143,8 @@ enabled = false
 [editing.elements.table_density]
 enabled = false
 
-# ---- LLM 起草契约（原 data/book/llm-tasks.toml）------------------------------
-# 每次调用（无论采用与否）落 data/state/llm-ledger.jsonl；判据在 lib/_llm_contract.py。
-# LLM 起草契约：每个任务允许写多长、允不允许出现事实之外的数字。
-# 判据在 lib/_llm_contract.py；每次调用（无论采用与否）落 data/state/llm-ledger.jsonl。
-# 未写本文件时用工具链默认值（20–220 字、单段、禁止事实外数字），书可按任务覆盖。
+# LLM 起草契约：每个任务允许写多长，以及是否允许出现事实之外的数字。
+# 不写的任务按默认值（20–220 字、单段、不得出现事实外的数字）；这里的值是上限，不是目标。
 
 [llm_tasks.default]
 min_chars = 20
