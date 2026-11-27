@@ -44,6 +44,26 @@ class ActionDispatchTest(unittest.TestCase):
         self.assertEqual((code, text), (0, "ok"))
         handler.assert_called_once()
 
+    def test_a_duration_is_spelled_with_units(self):
+        """The log and the screen share one spelling: 42 秒, 1 分 40 秒."""
+        actions = self.actions
+        self.assertEqual(actions._duration(42), "42 秒")
+        self.assertEqual(actions._duration(100), "1 分 40 秒")
+
+    def test_deliver_all_stops_at_the_first_failure_and_says_so(self):
+        actions = self.actions
+        calls = []
+
+        def build(on_line=None):
+            calls.append("build")
+            return 1, "build failed\n"
+
+        with mock.patch.object(actions, "build", build):
+            code, text = actions.deliver_all()
+        self.assertEqual(code, 1)
+        self.assertIn("build failed", text)
+        self.assertEqual(calls, ["build"])
+
     def test_llm_ask_routes_through_the_llm_layer(self):
         with mock.patch.object(self.actions._llm, "complete", return_value="回答") as complete:
             code, text = self.actions.run("llm-ask", prompt="问", scenario="summary")

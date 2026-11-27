@@ -7,6 +7,7 @@ import importlib
 import io
 import os
 import tempfile
+import threading
 import unittest
 from contextlib import redirect_stdout
 from unittest import mock
@@ -470,6 +471,27 @@ class TuiInteractionTest(unittest.TestCase):
             text = self.tui.run_entry("build", "手稿 → Markdown + HTML")
         self.assertIn("正在重建 Markdown 与 HTML", buffer.getvalue())
         self.assertIn("已重建：合并 Markdown 与 HTML", text)
+
+    def test_a_long_run_says_it_is_still_alive_every_tick(self):
+        """The header promises progress every ten seconds; a slow step must deliver it."""
+        outcome = self.menu.Outcome(
+            action="deliver-all", label="交付", code=0, output_lines=1, tail="done",
+            elapsed=0.2,
+        )
+
+        def slow(*_args, **_kwargs):
+            threading.Event().wait(0.12)
+            return outcome
+
+        buffer = io.StringIO()
+        with (
+            mock.patch.object(self.tui, "TICK_SECONDS", 0.02),
+            mock.patch.object(self.tui.menu, "run_report", side_effect=slow),
+            mock.patch.object(self.tui, "confirm", return_value=True),
+            redirect_stdout(buffer),
+        ):
+            self.tui.run_entry("deliver-all", "全部产物")
+        self.assertIn("仍在进行", buffer.getvalue())
 
     def test_a_failed_run_says_the_artifacts_were_not_updated(self):
         outcome = self.menu.Outcome(

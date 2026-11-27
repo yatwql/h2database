@@ -322,6 +322,14 @@ def print_edition(on_line=None) -> tuple[int, str]:
     return _make('print', on_line=on_line)
 
 
+def _duration(seconds: float) -> str:
+    """A duration with units: `1 分 40 秒` reads the same to an operator as to a log reader."""
+    whole = int(round(seconds))
+    if whole < 60:
+        return f'{whole} 秒'
+    return f'{whole // 60} 分 {whole % 60} 秒'
+
+
 def deliver_all(on_line=None) -> tuple[int, str]:
     """Every artifact in one run: Markdown + HTML, EPUB + PDF, then the print edition.
 
@@ -329,12 +337,18 @@ def deliver_all(on_line=None) -> tuple[int, str]:
     the print edition renders from the same HTML), stopping at the first failure so
     a broken build cannot leave a half-updated `dist/` looking complete.
     """
+    started = time.perf_counter()
+    LOG.info('action deliver-all start (pid=%d)', os.getpid())
     output = []
     for step in (build, deliver, print_edition):
         code, text = step(on_line=on_line)
         output.append(text)
         if code != 0:
+            LOG.info('action deliver-all done rc=%s (in %s)', code,
+                     _duration(time.perf_counter() - started))
             return code, ''.join(output)
+    LOG.info('action deliver-all done rc=0 (in %s)',
+             _duration(time.perf_counter() - started))
     return 0, ''.join(output)
 
 
@@ -414,7 +428,21 @@ def run(action: str, **kwargs) -> tuple[int, str]:
 
 
 def _dispatch_build(action: str, on_line) -> tuple[int, str]:
-    """The four report-producing actions, run so a caller can follow along."""
+    """The four report-producing actions, run so a caller can follow along.
+
+    Each is wrapped in the same `action … start` / `done` pair the analysis actions use.
+    Without it the log showed three `make` runs and no sentence saying they were one
+    menu action, and there was nowhere to read the verdict or the wall-clock total.
+    """
+    started = time.perf_counter()
+    LOG.info('action %s start (pid=%d, parent=%d)', action, os.getpid(), os.getppid())
+    code, text = _run_build_action(action, on_line)
+    LOG.info('action %s done rc=%s (in %s)', action, code,
+             _duration(time.perf_counter() - started))
+    return code, text
+
+
+def _run_build_action(action: str, on_line) -> tuple[int, str]:
     if action == 'build':
         return build(on_line)
     if action == 'check':

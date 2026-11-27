@@ -2168,7 +2168,7 @@
       "source_lines": 4105
     },
     {
-      "file": "ch7-8-sql-optimizer.md",
+      "file": "ch7-sql-execution.md",
       "packages": {
         "org.h2.expression": {
           "lines": 5843,
@@ -3051,7 +3051,14 @@
               }
             }
           ]
-        },
+        }
+      },
+      "missing_packages": [],
+      "source_lines": 28400
+    },
+    {
+      "file": "ch8-query-optimizer.md",
+      "packages": {
         "org.h2.table": {
           "lines": 13407,
           "files": 32,
@@ -3529,7 +3536,7 @@
         }
       },
       "missing_packages": [],
-      "source_lines": 44685
+      "source_lines": 16285
     },
     {
       "file": "ch9-10-persistence-locking.md",

@@ -621,6 +621,12 @@ def _run_steps(args) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Line-buffered stdout even when piped: a caller (the TUI, CI) reads these lines as
+    # progress, and a block-buffered pipe delivered every `ok` line at exit — which read
+    # as "HTML never finished" while the HTML had finished in 0.14s.
+    reconfigure = getattr(sys.stdout, 'reconfigure', None)
+    if callable(reconfigure):
+        reconfigure(line_buffering=True)
     parser = _parser()
     # `report` forwards its own flags, so it is parsed leniently
     report_extras: list[str] = []

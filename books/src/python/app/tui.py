@@ -15,6 +15,7 @@ import argparse
 import os
 import re
 import sys
+import threading
 import time
 import unicodedata
 
@@ -328,6 +329,10 @@ def run_entry(action: str, label: str, force: bool = False) -> str:
             f'{_c("详情见 " + menu.log_location() + "/", PALETTE["hint"])}')
 
 
+# How often a run says it is still alive. The header promises ten seconds, so the
+# ticker uses the same number rather than one the message does not know about.
+TICK_SECONDS = 10
+
 # A stage line in the log is the only honest progress an action can report; showing
 # it beats a spinner that says nothing for two minutes.
 LOG_LINE = re.compile(r'^\S+ \S+ \w+\s+[\w.]+\s+(.*)$')
@@ -393,6 +398,7 @@ def _run_with_progress(action: str, label: str, force: bool) -> menu.Outcome:
     seen: set[str] = set()
     last = ['']
     began = [time.perf_counter()]
+    stop = threading.Event()
 
     def show(line: str) -> None:
         text = _stage_text(line)
@@ -404,7 +410,21 @@ def _run_with_progress(action: str, label: str, force: bool) -> menu.Outcome:
         sys.stdout.write(f'   [{stamp:>5}] {_c(text[:100], PALETTE["hint"])}\n')
         sys.stdout.flush()
 
-    outcome = menu.run_report(action, label, force=force, on_progress=show)
+    def heartbeat() -> None:
+        """Say the run is alive every ten seconds — a step can legitimately take a minute."""
+        while not stop.wait(TICK_SECONDS):
+            stamp = _duration(time.perf_counter() - began[0])
+            where = last[0] or '准备中'
+            sys.stdout.write(
+                f'   [{stamp:>5}] {_c(f"仍在进行：{where}", PALETTE["hint"])}\n')
+            sys.stdout.flush()
+
+    ticker = threading.Thread(target=heartbeat, daemon=True)
+    ticker.start()
+    try:
+        outcome = menu.run_report(action, label, force=force, on_progress=show)
+    finally:
+        stop.set()
     count = len(menu.ORDERED_ARTIFACTS.get(action, ()))
     if outcome.code == 0:
         summary = f'完成 {count} 份产物' if count else '完成'
