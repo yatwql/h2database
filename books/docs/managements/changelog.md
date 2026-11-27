@@ -13,6 +13,10 @@
 
 ### 变更
 
+- **LLM 起草先过契约、再进正文（plan-16 阶段 1）**：新增 `data/book/llm-tasks.toml`（每任务的
+`min_chars`/`max_chars`/`single_paragraph`/`allow_unknown_digits`）与 `lib/_llm_contract.py`；
+草稿若出现事实之外的数字、超长或分段，直接判违约并回退到确定性文本，不写进手稿。每次调用无论采用与否
+都落 `data/state/llm-ledger.jsonl`（prompt 与响应摘要、模型、配置指纹），同一输入重跑摘要一致。
 - **编辑要素开始可判（plan-14 阶段 1）**：新增书级配置 `data/book/editing.toml`（风格档三选一 +
 逐项覆盖）与三档预设 `lib/_editorial.py`（manual / tutorial / hands-on），新增判据 `audit/editorial.py`
 量出每章的 学习目标 / 要点回顾 / 常见误区 / 表格密度，并按 `data/baselines/editorial.json` 棘轮判定：

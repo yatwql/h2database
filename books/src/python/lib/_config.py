@@ -399,6 +399,25 @@ class Config(BookVersions):
         """One policy file inside the configuration directory."""
         return os.path.join(self.config_dir, name)
 
+    def fingerprint(self) -> str:
+        """Short digest of the policy files in force, for reproducing a run.
+
+        The three files that decide what the toolchain does are hashed together: the
+        thresholds, the style and content policy, and this book's own wiring. Two runs
+        with the same fingerprint saw the same configuration; a different one explains
+        why a draft or a metric moved.
+        """
+        import hashlib
+        parts = []
+        for path in (self.config_path('base.json'), self.config_path('style.json'),
+                     self.book_toml):
+            try:
+                with open(path, 'rb') as fh:
+                    parts.append(hashlib.sha256(fh.read()).hexdigest())
+            except OSError:
+                parts.append('missing')
+        return hashlib.sha256(''.join(parts).encode('utf-8')).hexdigest()[:12]
+
     def book_path(self, name: str) -> str:
         """One book-specific file (book.toml, case-studies.toml, ...)."""
         return os.path.join(self.book_dir(), name)

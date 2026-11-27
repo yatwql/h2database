@@ -1,0 +1,17 @@
+# LLM 起草契约：每个任务允许写多长、允不允许出现事实之外的数字。
+# 判据在 lib/_llm_contract.py；每次调用（无论采用与否）落 data/state/llm-ledger.jsonl。
+# 未写本文件时用工具链默认值（20–220 字、单段、禁止事实外数字），书可按任务覆盖。
+
+[default]
+min_chars = 20
+max_chars = 220
+single_paragraph = true
+allow_unknown_digits = false
+
+[tasks.lead]
+# 本章导读：一到两句，覆盖包数与行数，这两个数字由调用方作为事实传入。
+max_chars = 200
+
+[tasks.summary]
+# 小节小结：同上，允许略长一句。
+max_chars = 220

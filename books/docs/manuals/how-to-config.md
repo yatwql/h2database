@@ -32,7 +32,7 @@ tmp = "data/tmp"                   # 临时目录：一次性脚本、--force �
 cache = "data/cache"               # 缓存：字体索引、HTML 分片（可重建但有成本）
 state = "data/state"               # 派生状态：ingest 每次重建（已 gitignore）
 templates = "data/tmpl"            # 叙述模板（templates.toml）
-book = "data/book"                 # 本书专属文件（book.toml / case-studies.toml / glossary.toml / editing.toml）
+book = "data/book"                 # 本书专属文件（book.toml / case-studies.toml / glossary.toml / editing.toml / llm-tasks.toml）
 library = ".."                     # 其他书所在的目录（缺省＝本书的父目录）
 baselines = "data/baselines"       # 已评审存量的账本目录
 cover_image = ""                   # 可选：封面图，留空则不生成
@@ -187,6 +187,7 @@ base.json 的 `[toolchain]` 段另有两类键：`balance_max_min_ratio`（正�
 | 术语中英别名与「不算术语」词表 | `data/book/glossary.toml`（按书可选） | 文档 |
 | 案例流水线、附录标题/开篇、思考题 | `data/book/case-studies.toml`（按书可选，`[headers.<scenario>]` 可只给部分键） | 文档 |
 | 编辑风格档（哪些要素必选、下限多少） | `data/book/editing.toml`（按书可选；`[profile].name` 三选一：`manual`/`tutorial`/`hands-on`，`[elements.<名>]` 逐项覆盖） | 文档 |
+| LLM 起草契约 | `data/book/llm-tasks.toml`（按书可选；`[default]` 与 `[tasks.<名>]` 给 `min_chars`/`max_chars`/`single_paragraph`/`allow_unknown_digits`，判据在 `lib/_llm_contract.py`） | 文档 |
 | 书籍身份与展示文案（书名、作者、页眉、产物名） | `data/book/book.toml [book]/[project]` | 文档 |
 
 `style_schema.py` 会拒绝把叙述模板塞回 `style.json`（`generation.templates`）

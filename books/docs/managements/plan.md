@@ -79,8 +79,9 @@
 #### `plan-16` LLM 契约起草与自评审
 
 **现状**：LLM 只起草导读与小节小结，输入是包摘要，输出没有任何可核验约束，写多了风险就大。
-**动作**：按 `docs/plan/llm-contract-drafting/plan.md` 分阶段推进（台账与契约骨架 → 学习目标/要点回顾/
-代码标注解释 → 常见误区与自评审）；每次调用记录 prompt 摘要、响应哈希与配置指纹。
+**动作**：按 `docs/plan/llm-contract-drafting/plan.md` 分阶段推进；阶段 1 已落地——`data/book/llm-tasks.toml`
+声明每个任务的长度与取数规则，`lib/_llm_contract.py` 校验并把每次调用（含被拒）写进
+`data/state/llm-ledger.jsonl`（prompt/响应摘要 + 模型 + 配置指纹），违约草稿回退到确定性文本。
 **验收**：模型不得引入事实块之外的数字、不得增删标注编号；每个任务产出全部过判据；人工抽查无编造。
 
 **事实位**：设计与计划在 `docs/plan/llm-contract-drafting/design.md` 与 `docs/plan/llm-contract-drafting/plan.md`；

@@ -101,9 +101,11 @@ def prose(kind: str, fallback: str, enabled: bool | None = None, **facts) -> str
     if not enabled:
         return fallback
     try:
-        from lib import _llm  # lazy: the offline path stays stdlib-only
+        # lazy: the offline path stays stdlib-only
+        from lib import _llm, _llm_contract
         scenario = 'chapter-draft' if kind == 'lead' else 'summary'
-        text = _llm.complete(_prose_prompt(kind, facts), scenario=scenario)
+        prompt = _prose_prompt(kind, facts)
+        text = _llm.complete(prompt, scenario=scenario)
     except Exception as exc:
         print(f'  [warn] LLM prose unavailable ({exc}); using deterministic text',
               file=sys.stderr)
@@ -119,10 +121,8 @@ def prose(kind: str, fallback: str, enabled: bool | None = None, **facts) -> str
         stripped = line.strip(' #>*-\t')
         if stripped:
             body.append(stripped)
-    cleaned = ' '.join(body).replace('`', '')
-    if len(cleaned) < PROSE_MIN_CHARS:
-        return fallback
-    return cleaned[:PROSE_LIMIT]
+    cleaned = ' '.join(body).replace('`', '')[:PROSE_LIMIT]
+    return _llm_contract.enforce(kind, prompt, cleaned, facts) or fallback
 
 
 def _prose_prompt(kind: str, facts: dict) -> str:
