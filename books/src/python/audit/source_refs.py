@@ -56,7 +56,22 @@ def pom_path() -> str:
 
 def baseline_file() -> str:
     """Known (accepted) symbol drift; refresh with `--update-baseline`."""
-    return _config.baseline_path("source_symbol")
+    return _baseline.path_for("source_symbol")
+
+
+def drift_version_notice() -> str:
+    """A note when the accepted drift was recorded against another source version.
+
+    Accepted drift is a statement about a specific source tree: after an upstream bump the
+    same symbols may exist, may be renamed, or may have moved. The gate still passes — the
+    baseline is a review record, not a threshold — but it says out loud that the record
+    predates the tree being judged.
+    """
+    recorded = str(_baseline.load_raw("source_symbol").get("source_version") or "")
+    current = str(_config.current().versions().get("source", ""))
+    if recorded and current and recorded != current:
+        return f'  [note] accepted symbol drift was recorded against {recorded}, tree is {current}'
+    return ""
 
 
 # Scanned files come from book.toml, so a renamed or merged chapter can never
@@ -595,12 +610,20 @@ def _json_summary(results, new_drift, known_drift, failures: int) -> int:
                 "missing": sum(1 for r in results if r.status == "MISSING"),
                 "symbol_new": len(new_drift),
                 "symbol_known": len(known_drift),
+                "symbol_version_notice": drift_version_notice(),
             },
             ensure_ascii=False,
             indent=2,
         )
     )
     return 1 if failures else 0
+
+
+def report_notice(as_json: bool) -> None:
+    """Say the drift-version notice in human mode; the JSON summary carries it too."""
+    notice = "" if as_json else drift_version_notice()
+    if notice:
+        print(notice)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -619,6 +642,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.update_baseline:
             return _record_baseline(baseline_path, claims, version)
         _print_drift(claims, new_drift, known_drift, args, class_index)
+        report_notice(args.json)
 
         failures = len(new_drift) + (len(known_drift) if args.strict_symbols else 0)
         if args.json:

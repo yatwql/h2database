@@ -1,4 +1,8 @@
 {
+  "schema": 1,
+  "gate": "readability_box",
+  "kind": "counts",
+  "keyed_by": "manuscript-path",
   "updated": "2026-11-26",
   "note": "Accepted box-drawing warnings per file. A count may fall, never rise.",
   "files": {

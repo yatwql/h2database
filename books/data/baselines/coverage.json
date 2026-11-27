@@ -1,4 +1,9 @@
 {
+  "schema": 1,
+  "gate": "coverage",
+  "kind": "counts",
+  "keyed_by": "source-path",
+  "updated": "",
   "note": "Per-file branch coverage of the fast tier. Only review raises these numbers; a drop fails `make.py cover`.",
   "files": {
     "books/src/python/app/cli.py": 100.0,

@@ -35,13 +35,14 @@ class PerfBaselineTest(unittest.TestCase):
         self.history = os.path.join(self.tmp.name, "perf.jsonl")
         self.mod = _fixture.load_module(BOOK_ROOT, "perf_baseline")
         # no reviewed floor: this class is about the window-median fallback
-        for name, value in (
-            ("HISTORY", self.history),
-            ("BASELINE", os.path.join(self.tmp.name, "absent.json")),
-        ):
-            patcher = mock.patch.object(self.mod, name, value)
-            patcher.start()
-            self.addCleanup(patcher.stop)
+        patcher = mock.patch.object(self.mod, "HISTORY", self.history)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        # the path now comes from the declaration, so the test replaces the resolver
+        absent = os.path.join(self.tmp.name, "absent.json")
+        patcher = mock.patch.object(self.mod, "baseline_path", return_value=absent)
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def write_history(self, *runs: dict) -> None:
         lines = [json.dumps(item) + "\n" for item in runs]
@@ -121,10 +122,12 @@ class WindowAndBaselineTest(unittest.TestCase):
         self.history = os.path.join(self.tmp.name, "perf.jsonl")
         self.baseline = os.path.join(self.tmp.name, "perf-baseline.json")
         self.mod = _fixture.load_module(BOOK_ROOT, "perf_baseline")
-        for name, value in (("HISTORY", self.history), ("BASELINE", self.baseline)):
-            patcher = mock.patch.object(self.mod, name, value)
-            patcher.start()
-            self.addCleanup(patcher.stop)
+        patcher = mock.patch.object(self.mod, "HISTORY", self.history)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        patcher = mock.patch.object(self.mod, "baseline_path", return_value=self.baseline)
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def write_history(self, *runs: dict) -> None:
         with open(self.history, "w", encoding="utf-8") as handle:

@@ -1,4 +1,9 @@
 {
+  "schema": 1,
+  "gate": "editorial",
+  "kind": "counts",
+  "keyed_by": "manuscript-path",
+  "updated": "",
   "note": "Recorded editorial element counts. A count may rise, never fall.",
   "profile": "tutorial",
   "files": [

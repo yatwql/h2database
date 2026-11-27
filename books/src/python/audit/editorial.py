@@ -34,11 +34,11 @@ _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)
 
 from typing import Any, cast
 
-from lib import _config, _editorial, _errors, _fsutil
+from lib import _baseline, _config, _editorial, _errors, _fsutil
 
 _fsutil.pin_stdout_utf8()
 
-BASELINE_REL = "editorial.json"
+BASELINE_KEY = "editorial"
 LIST_ITEM_RE = re.compile(r"(?m)^\s*(?:[-*+]|\d+\.)\s+\S")
 TABLE_ROW_RE = re.compile(r"(?m)^\s*\|.*\|\s*$")
 HEADING_RE = re.compile(r"(?m)^(#{2,4})\s+(.+?)\s*$")
@@ -46,7 +46,7 @@ HEADING_RE = re.compile(r"(?m)^(#{2,4})\s+(.+?)\s*$")
 
 def baseline_path() -> str:
     """The recorded counts, resolved when the audit runs (never at import time)."""
-    return os.path.join(_config.baseline_dir(), BASELINE_REL)
+    return _baseline.path_for(BASELINE_KEY)
 
 
 def section_items(text: str, heading: str) -> int:

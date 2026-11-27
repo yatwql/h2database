@@ -25,6 +25,23 @@ from . import _config, _fsutil
 
 DEFAULT_NOTE = "Reviewed backlog: these findings are accepted, new ones fail."
 
+# Every baseline carries the same envelope, so one inventory command can describe all of
+# them and one validator can check them: which gate owns the file, what shape it has, and
+# what a key means. `accepted` lists reviewed findings; `counts` records per-file numbers;
+# `records` keeps a measured series (timings, volume floors).
+SCHEMA = 1
+KINDS = ("accepted", "counts", "records")
+
+# Names used before the files were named after their gate. Reads fall back to them so a
+# migration can be "re-record once", never "one big migration commit that must be perfect".
+LEGACY = {
+    "ascii": "ascii-baseline.json",
+    "captions": "captions-findings.json",
+    "content_depth": "content-depth-findings.json",
+    "source_symbol": "source-symbol-baseline.json",
+    "style_rules": "style-rules-baseline.json",
+}
+
 
 def baseline_dir() -> str:
     """Directory holding this book's baseline files.
@@ -47,7 +64,18 @@ def path_for(name: str) -> str:
     key = name.replace("-", "_")
     if key in (_config.BASE_POLICY.get("baselines") or {}):
         return _config.current().baseline_path(key)
-    return os.path.join(baseline_dir(), f"{name}-findings.json")
+    return os.path.join(baseline_dir(), f"{name}.json")
+
+
+def legacy_path(name: str) -> str | None:
+    """Where this gate's baseline used to live, when it has not been re-recorded yet."""
+    key = name.replace("-", "_")
+    declared = _config.BASE_POLICY.get("baselines") or {}
+    if key in LEGACY and key not in declared:
+        return os.path.join(baseline_dir(), LEGACY[key])
+    if key not in declared:
+        return os.path.join(baseline_dir(), f"{name}-findings.json")
+    return None
 
 
 def load(name: str) -> set[str]:
@@ -67,8 +95,16 @@ def load_at(path: str) -> dict:
 
 
 def load_raw(name: str) -> dict:
-    """The recorded payload for a gate, whole: keys plus whatever else it carries."""
-    return load_at(path_for(name))
+    """The recorded payload for a gate, whole: keys plus whatever else it carries.
+
+    A gate renamed after its file keeps working: the declared path wins, and the old
+    spelling is read only when the declared file is absent and the old one still exists.
+    """
+    payload = load_at(path_for(name))
+    if payload:
+        return payload
+    stale = legacy_path(name)
+    return load_at(stale) if stale else {}
 
 
 def load_accepted(path: str) -> set[str]:
@@ -77,19 +113,43 @@ def load_accepted(path: str) -> set[str]:
 
 
 def save(name: str, keys: set[str], note: str = "") -> str:
-    return save_at(path_for(name), {"accepted": sorted(keys)}, note)
+    return save_at(path_for(name), {"accepted": sorted(keys)}, note,
+                   gate=name, kind="accepted", keyed_by="free-form key")
 
 
-def save_at(path: str, payload: dict, note: str = "") -> str:
-    """Write the keys (and extras) with the review stamp this tree expects."""
+def save_at(path: str, payload: dict, note: str = "", gate: str = "",
+            kind: str = "accepted", keyed_by: str = "") -> str:
+    """Write a baseline under the shared envelope.
+
+    `gate`/`kind`/`keyed_by` describe the file rather than the findings: which gate owns
+    it, what shape it stores, and what a key means. A counts or records baseline passes
+    its own body through the same writer, so the directory has one format to read.
+    """
     _fsutil.ensure_dir(path)
     body = {
+        "schema": SCHEMA,
+        "gate": gate or str(payload.get("gate") or ""),
+        "kind": kind if kind in KINDS else "accepted",
+        "keyed_by": keyed_by or str(payload.get("keyed_by") or ""),
         "updated": datetime.date.today().isoformat(),
         "note": note or payload.get("note") or DEFAULT_NOTE,
     }
-    body.update({key: value for key, value in payload.items() if key not in ("updated", "note")})
+    skip = ("schema", "gate", "kind", "keyed_by", "updated", "note")
+    body.update({key: value for key, value in payload.items() if key not in skip})
     _fsutil.dump_json(path, body)
     return path
+
+
+def kind_of(payload: dict) -> str:
+    """The shape of a baseline, including files written before the envelope existed."""
+    kind = str(payload.get("kind") or "")
+    if kind in KINDS:
+        return kind
+    if "accepted" in payload:
+        return "accepted"
+    if "files" in payload:
+        return "counts"
+    return "records"
 
 
 def split(name: str, keys: set[str]) -> tuple[set[str], set[str]]:

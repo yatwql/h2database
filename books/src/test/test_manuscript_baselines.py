@@ -28,37 +28,38 @@ class BaselineInventoryTest(FixtureCase):
             json.dump(payload, fh)
 
     def test_each_shape_is_counted_the_way_it_is_stored(self):
-        self.put("captions-findings.json", {"updated": "2026-01-01", "accepted": ["a", "b"]})
+        self.put("captions.json", {"updated": "2026-01-01", "accepted": ["a", "b"]})
         self.put("coverage.json", {"files": {"x.py": 100.0}})
-        self.put("perf-baseline.json", {"reviewed": {"at": "2026-01-02T10:00:00"},
-                                        "steps": {"tests": 70.0}})
+        self.put(
+            "perf.json",
+            {"review": {"at": "2026-01-02T10:00:00"}, "steps": {"tests": 70.0}},
+        )
         module = self.module("baselines")
         rows = {row["file"]: row for row in module.rows()}
-        self.assertEqual(rows["captions-findings.json"]["count"], 2)
+        self.assertEqual(rows["captions.json"]["count"], 2)
         self.assertEqual(rows["coverage.json"]["count"], 1)
-        self.assertEqual(rows["perf-baseline.json"]["count"], 1)
-        self.assertEqual(rows["perf-baseline.json"]["updated"], "2026-01-02")
+        self.assertEqual(rows["perf.json"]["count"], 1)
+        self.assertEqual(rows["perf.json"]["updated"], "2026-01-02")
 
     def test_an_unregistered_file_is_reported_not_hidden(self):
         self.put("mystery.json", {"accepted": ["x"]})
         module = self.module("baselines")
         rows = module.rows()
         self.assertEqual(rows[0]["shape"], "unknown")
-        self.assertTrue(any("no gate claims it" in problem
-                            for problem in module.problems(rows)))
+        self.assertTrue(any("no gate claims it" in problem for problem in module.problems(rows)))
 
     def test_an_empty_baseline_is_reported(self):
-        self.put("loose-assertions.json", {"accepted": []})
+        self.put("captions.json", {"accepted": []})
         module = self.module("baselines")
         self.assertTrue(any("empty" in problem for problem in module.problems(module.rows())))
 
     def test_check_exits_non_zero_only_when_something_is_wrong(self):
-        self.put("captions-findings.json", {"accepted": ["a"]})
+        self.put("captions.json", {"accepted": ["a"]})
         module = self.module("baselines")
         with redirect_stdout(io.StringIO()):
             self.assertEqual(module.main([]), 0)
             self.assertEqual(module.main(["--check"]), 0)
-        self.put("loose-assertions.json", {"accepted": []})
+        self.put("captions.json", {"accepted": []})
         with redirect_stdout(io.StringIO()):
             self.assertEqual(module.main(["--check"]), 1)
 
@@ -80,8 +81,7 @@ class BaselineInventoryTest(FixtureCase):
         self.assertIn("no baselines", buffer.getvalue())
 
     def test_a_broken_file_is_named_with_its_error(self):
-        with open(os.path.join(self.baselines(), "coverage.json"), "w",
-                  encoding="utf-8") as fh:
+        with open(os.path.join(self.baselines(), "coverage.json"), "w", encoding="utf-8") as fh:
             fh.write("{ not json")
         module = self.module("baselines")
         rows = module.rows()

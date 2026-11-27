@@ -1,7 +1,11 @@
 {
+  "schema": 1,
+  "gate": "source_symbol",
+  "kind": "accepted",
+  "keyed_by": "manuscript-path::class::method",
   "updated": "2026-11-21",
-  "source_version": "2.5.259-SNAPSHOT",
   "note": "Accepted symbol drift. Refresh after an upstream update.",
+  "source_version": "2.5.259-SNAPSHOT",
   "accepted": [
     "appendix-a-case-studies.md::MVStore::openComplete",
     "appendix-a-case-studies.md::MVStore::openInternal",

@@ -247,8 +247,17 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _manuscript_rel(path: str) -> str:
+    """Key fragment for a manuscript file: relative to the manuscript, forward slashes.
+
+    Every accepted list keys by the manuscript-relative path, so moving the manuscript
+    inside the book does not invalidate the backlog it was recorded against.
+    """
+    return os.path.relpath(path, _config.MANUSCRIPT_DIR).replace(os.sep, "/")
+
+
 def _violation_keys(violations) -> set[str]:
-    return {f"{os.path.relpath(v.file, _config.BOOK_ROOT)}:{v.fig_id}" for v in violations}
+    return {f"{_manuscript_rel(v.file)}:{v.fig_id}" for v in violations}
 
 
 def _json_report(args, threshold: dict, violations) -> int:
@@ -307,7 +316,7 @@ def main(argv: list[str]) -> int:
 
     new, stale = _baseline.split("captions", keys)
     violations = [
-        v for v in violations if f"{os.path.relpath(v.file, _config.BOOK_ROOT)}:{v.fig_id}" in new
+        v for v in violations if f"{_manuscript_rel(v.file)}:{v.fig_id}" in new
     ]
     total = render_report(violations, threshold)
     if stale:

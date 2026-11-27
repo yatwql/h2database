@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "gate": "perf",
+  "kind": "records",
+  "keyed_by": "step-name",
+  "updated": "2026-11-24",
+  "note": "",
+  "steps": {
+    "lint": 0.0,
+    "fast-gates": 1.61,
+    "gates": 10.62,
+    "tests": 0.0
+  },
+  "total": 0.0,
+  "review": {
+    "by": "Stallman WANG ",
+    "at": "2026-11-24T14:07:49",
+    "commit": "9922af3a5",
+    "reason": "拆分窗口/基线后的首次固化",
+    "runs": 20
+  }
+}

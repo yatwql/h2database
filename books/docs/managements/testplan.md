@@ -96,15 +96,15 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | 版本一致 | 工具/源码/书籍三版本可解析且各有唯一事实位；管理文档头齐全且取软件版本；封面版本回写自 `book.toml`；合并稿 manifest 与三者一致 | `version_consistency.py`、`manuscript/cover.py` | P0 |
 | 计划覆盖 | 每个 `docs/plan/<主题>/` 恰好被一个计划项或待归档行认领；计划项齐备现状/动作/验收/事实位；`plan-N` 唯一且 `plan-next` 递增；概述的在办项数与分档数字与实际一致 | `plan_coverage.py` | P1 |
 | 版本归档 | 已发布版本的台账与完成的迭代设计只在版本目录里：三份归档文件与头行齐备、主文档索引可打开、已归档版本不再留在主文档；迭代目录名不含追踪编号 | `doc_archive.py` | P1 |
-| 源码坐标 | `Class.java:行号` 可解析、行号在文件长度内、方法存在、摘录与源码一致；已知漂移进基线，仅"新增漂移"阻塞 | `source_refs.py`、`content_depth.py`、`books/data/baselines/source-symbol-baseline.json` | P1 |
+| 源码坐标 | `Class.java:行号` 可解析、行号在文件长度内、方法存在、摘录与源码一致；已知漂移进基线，仅"新增漂移"阻塞 | `source_refs.py`、`content_depth.py`、`books/data/baselines/source-symbols.json` | P1 |
 | PDF 渲染与 TOC 链接注入 | HTML → PDF 成功、页面数据可读；每个印刷 TOC 条目在对应页上加一条 link annotation，目标页按 outline 位置映射 | `render/to_pdf.py`、`render/pdf_toc_links.py` | P1 |
 | PDF 交付 | PDF 重新生成自当前 HTML；页面为 A4（尺寸与容差取配置）、无旋转；字体全部嵌入且 Type3 不超过 `pdf_type3_max`（`FONTS`）；outline 与 HTML 标题逐一对应；印刷 TOC 链接按序且在页内；体积不超过配置的 PDF 预算（随页数增长）；正文行距÷字号落在配置区间（`DENSITY`，只判运行正文，判定用按字体分开的测量 `prose_pitch_ratio`）、清单行距不低于 1.0（`CODE_LEAD`，清单字号由栏宽决定，故不套用正文区间）、文字占可印高度达标 | `render/verify_pdf.py`（`--require-toc-links`） | P1 |
 | EPUB 结构 | mimetype 首条且未压缩；container/OPF/manifest/spine/nav 全部可解析、导航链接全部命中；元数据齐备；每个正文文件恰好一个 `h1`（`CHAPTERS`，图注被当成标题时当场报警）；体积不超过配置的 EPUB 预算 | `render/verify_epub.py` | P1 |
 | EPUB 生成 | pandoc 可用时由 `to_epub.py` 生成 EPUB（在 `deliver` 组内，生成后由 `verify_epub.py` 校验） | `render/to_epub.py` | P1 |
-| 可读性 | 长句、宽 ASCII 图、图注质量；框线闭合按文件记账（`data/baselines/readability-box-drawing.json`）：某文件条数上涨或出现基线外的文件即失败，下降提示收紧记录 | `readability.py` | P1 |
+| 可读性 | 长句、宽 ASCII 图、图注质量；框线闭合按文件记账（`data/baselines/readability.json`）：某文件条数上涨或出现基线外的文件即失败，下降提示收紧记录 | `readability.py` | P1 |
 | 术语与排版规则 | 同一概念不混用两种写法；标题无尾标点；链接文字可读；中英之间留空格；列表标点一致；段落 ≤ 上限（已知项走基线） | `style_rules.py` | P1 |
 | 内容深度 | 前向引用须点名主责章节；高频类型须入术语表；练习题须指向本章类型或 §锚点 | `content_depth.py` | P1 |
-| ASCII 图质量 | 图宽不超过配置的列数上限（CJK 记 2 列）；无行尾空格/制表符；单图不混用框线与 ASCII 边框；已知项走基线 | `diagrams.py`、`books/data/baselines/ascii-baseline.json` | P1 |
+| ASCII 图质量 | 图宽不超过配置的列数上限（CJK 记 2 列）；无行尾空格/制表符；单图不混用框线与 ASCII 边框；已知项走基线 | `diagrams.py`、`books/data/baselines/diagrams.json` | P1 |
 | LLM 边界 | LLM 只用于散文生成/评审场景；门禁与事实链路不得调用；密钥文件不入库 | `llm_policy.py` | P1 |
 | 发布评分 | 六维评分（功能/稳定/交互/代码/文档风格/文档质量）作为整改视图；测试与结构健康视图给出覆盖率读数、低于基线的文件、半分支 Top-N、松散断言数与超长函数清单 | `make.py report`、`make.py report health` | 报告类（不计级别） |
 | 历史快照完整性 | 快照文件与 manifest 记录的哈希一致；快照不参与构建、不被门禁扫描 | `manuscript/snapshot.py verify` | P1 |
@@ -164,7 +164,7 @@ python books/src/python/audit/structure.py --gate-level p0  # 仅 p0
 | `requirement_trace.py` | 每条需求是否有判据载体 | 只管追溯，不评判据本身是否够强 |
 | `portability.py` | 移植性：文本 `open()` 均显式 encoding；ASCII locale 下入口可运行 | 只管环境适配，不评判内容 |
 | `test_redundancy.py` | 测试套件卫生：重复用例体、被别处完全覆盖的整个套件（同一模块的符号集是真子集且不少于四个）、无断言用例、非 TestCase 内的 test_*、同名遮蔽；松散断言（`assertIn(code, (0, 1))`）只登记存量、新增即失败 | 只管测试代码，不判业务 |
-| `perf_baseline.py` | 交付速度：各步骤耗时对比评审基线（`data/baselines/perf-baseline.json`；无基线时退回滚动窗口中位数），超阈值提示（默认 advisory） | 只管速度退化，不判正确性 |
+| `perf_baseline.py` | 交付速度：各步骤耗时对比评审基线（`data/baselines/perf.json`；无基线时退回滚动窗口中位数），超阈值提示（默认 advisory） | 只管速度退化，不判正确性 |
 | 顺序依赖探测（order_dependence，人工触发） | 正序/逆序各跑一次，结果不同即报；不进 `check`，慢档执行 | 只管顺序敏感性，不判正确性 |
 | `typecheck.py` | pyright 静态类型检查 | 只管类型 |
 

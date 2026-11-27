@@ -1,4 +1,8 @@
 {
+  "schema": 1,
+  "gate": "ascii",
+  "kind": "accepted",
+  "keyed_by": "file::rule::content-hash",
   "updated": "2026-11-26",
   "note": "Accepted ASCII diagram violations. Refresh with --update-baseline.",
   "accepted": [

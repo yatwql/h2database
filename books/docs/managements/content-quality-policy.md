@@ -71,9 +71,9 @@
 
 | 基线 | 守护什么 | 新增问题 | 收缩方式 |
 | --- | --- | --- | --- |
-| 存量问题（`*-baseline.json`、`*-findings.json`、`loose-assertions.json`） | 已知且已评审的缺陷清单 | 同类问题一律失败 | 修复后报告 `stale`，重新固化 |
+| 存量问题（`data/baselines/<gate>.json` 里 `kind=accepted` 的那些） | 已知且已评审的缺陷清单 | 同类问题一律失败 | 修复后报告 `stale`，重新固化 |
 | 体量（`content-volume.json`、`snapshot-<标签>.json`） | 内容不得静默塌陷 | 低于下限即失败 | 见下文的单调性 |
-| 测量（`perf-baseline.json`、`coverage.json`） | 耗时与覆盖率的可接受下限 | 超阈值只提示（advisory）或直接失败 | `--update-baseline` 重记 |
+| 测量（`perf.json`、`coverage.json`） | 耗时与覆盖率的可接受下限 | 超阈值只提示（advisory）或直接失败 | `--update-baseline` 重记 |
 
 测量类基线只记「评审过的数」，读数本身进滚动窗口：`logs/perf-history.jsonl` 保留最近若干次
 （`style.json [quality].perf_history_runs`），超过上限即原子重写保留最新段。窗口是样本，
@@ -143,7 +143,7 @@ python books/src/python/audit/content_volume.py --update-baseline \
 | 门禁的实现位置、依赖方向、可达性要求 | 技术设计（`technical.md`） |
 | 阈值、词表、预算取值的文件与键 | 技术设计 §3.2「阈值归属」 |
 | 已评审存量的清单与生成方式 | `data/baselines/`，路径映射在 `base.json [baselines]` |
-| 耗时基线与滚动窗口的取值 | `data/baselines/perf-baseline.json`、`style.json [quality]` |
+| 耗时基线与滚动窗口的取值 | `data/baselines/perf.json`、`style.json [quality]` |
 | 覆盖率棘轮与单文件下限 | `data/baselines/coverage.json`、`base.json [toolchain]` |
 
 ## 6. 反模式

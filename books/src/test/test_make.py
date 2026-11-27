@@ -515,8 +515,14 @@ class MakeEdgePathsTest(unittest.TestCase):
         }
         self.assertEqual(self.make._percentages(payload), {"b.py": 91.3})
 
+    def test_a_missing_baseline_file_is_not_a_drop(self):
+        """Nothing recorded yet: the first run records, it does not fail."""
+        absent = os.path.join(self.tmp.name, "no-such-baseline.json")
+        with mock.patch.object(self.make, "coverage_baseline_path", return_value=absent):
+            self.assertEqual(self.make.coverage_ratchet(), ([], absent))
+
     def test_an_unreadable_baseline_file_is_not_a_drop(self):
-        path = os.path.join(self.root, self.make.COVERAGE_BASELINE_REL)
+        path = self.make.coverage_baseline_path()
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w", encoding="utf-8") as handle:
             handle.write('{"files": {}}')

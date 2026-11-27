@@ -30,10 +30,12 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from lib import _config, _errors, _fsutil, _log
+from lib import _baseline, _config, _errors, _fsutil, _log
 
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
-COVERAGE_BASELINE_REL = os.path.join('data', 'baselines', 'coverage.json')
+def coverage_baseline_path() -> str:
+    """Where the per-file coverage floor lives, per `base.json [baselines]`."""
+    return _baseline.path_for('coverage')
 
 
 def book_root() -> str:
@@ -479,7 +481,7 @@ def coverage_ratchet(*, update: bool = False) -> tuple[list[tuple[str, float, fl
     file's number makes each one ratchet on its own. Files below five statements
     are left out (a two-line module swings the percentage by tens of points).
     """
-    path = os.path.join(book_root(), COVERAGE_BASELINE_REL)
+    path = coverage_baseline_path()
     current = _percentages(_coverage_json())
     if update:
         _fsutil.ensure_dir(path)

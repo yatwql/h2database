@@ -29,10 +29,9 @@ books/
     language/
       zh.json                # 文档·名词：章节骨架名、练习提示语、术语行
     baselines/                 # 机器维护的已知问题账本（非人写文档）
-      *-baseline.json          # 各类已评审存量：ASCII 图、符号漂移、风格、体积
-      *-findings.json          # 已评审的图注与深度存量
+      <gate>.json              # 已评审存量与读数，文件名即门禁名（见下）
       coverage.json            # 逐文件覆盖率下限（只升不降，除非评审后重记）
-      perf-baseline.json       # 已评审的耗时下限：逐步/总计中位数 + reviewed{by,at,commit,reason}
+      perf.json                # 已评审的耗时下限：逐步/总计中位数 + review{by,at,commit,reason}
       loose-assertions.json    # 松散断言存量（目标为零，残留即登记）
       snapshot-<快照>.json     # 历史快照的体积基线（比对用）
     state/                     # 机器维护的派生状态：ingest 重建，人别手改

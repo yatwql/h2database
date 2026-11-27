@@ -1,4 +1,8 @@
 {
+  "schema": 1,
+  "gate": "content_depth",
+  "kind": "accepted",
+  "keyed_by": "manuscript-path::code::descriptor",
   "updated": "2026-11-26",
   "note": "Reviewed depth backlog: forward references that predate the gate.",
   "accepted": [

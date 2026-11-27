@@ -78,7 +78,7 @@
   （`verify_pdf --print`）。实测 944 页 / 7.49 MB / 正文行距比 1.459，死链 0。
 - **框线闭合改成存量记账（plan-17 第 1 项）**：`readability.py` 按图统计角字符是否成对，表格底边合并列、
   树形分支（`├──`/`└──`）这类画法每图必中，全库 926 条告警里绝大部分不是可以改一个字符就消失的错。
-  判据因此从「零告警」改为按文件记账：`data/baselines/readability-box-drawing.json`（配置项
+  判据因此从「零告警」改为按文件记账：`data/baselines/readability.json`（配置项
   `base.json [baselines].readability_box`）记下每个手稿文件的存量条数，某文件条数上涨或出现基线外的文件即
   失败，条数下降则提示收紧记录；`--update-baseline` 写回。存量分布：ch7-8 276、ch9-10 186、ch4-5 137、
   ch6-3 76、ch3 52、ch6-2 52、ch1-2 50、ch11-12 38、ch6-1 38、附录 A 21。同时补齐 ch4-5 一段断开的框线

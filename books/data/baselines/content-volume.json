@@ -1,4 +1,10 @@
 {
+  "schema": 1,
+  "gate": "content_volume",
+  "kind": "records",
+  "keyed_by": "manuscript-path",
+  "updated": "2026-11-26",
+  "note": "",
   "manuscript": {
     "files": {
       "front/copyright.md": {
@@ -101,7 +107,7 @@
       ]
     }
   ],
-  "reviewed": {
+  "review": {
     "by": "Stallman WANG",
     "at": "2026-11-26T22:47:49+08:00",
     "commit": "946ea8577",

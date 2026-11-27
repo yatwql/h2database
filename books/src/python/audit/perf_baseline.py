@@ -27,13 +27,15 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _errors, _fsutil, _perfhistory
+from lib import _baseline, _config, _errors, _fsutil, _perfhistory
 
 HISTORY = os.path.join(_config.BOOK_ROOT, 'logs', 'perf-history.jsonl')
 # The reviewed floor lives with the other baselines and is versioned; the rolling
 # window is scratch. One file for both let an append-only log double as the reference
 # it is measured against, so pruning the log moved the target.
-BASELINE = os.path.join(_config.BOOK_ROOT, 'data', 'baselines', 'perf-baseline.json')
+def baseline_path() -> str:
+    """Where the timing readings live, resolved through `base.json [baselines]`."""
+    return _baseline.path_for("perf")
 DEFAULT_WINDOW = 20
 DEFAULT_RUNS = 200
 DEFAULT_FACTOR = 1.5
@@ -119,7 +121,7 @@ def _medians(runs: list[dict]) -> dict:
 def load_baseline() -> dict:
     """The reviewed floor, or {} when none has been taken yet."""
     try:
-        with open(BASELINE, encoding='utf-8') as handle:
+        with open(baseline_path(), encoding='utf-8') as handle:
             payload = json.load(handle)
     except (OSError, json.JSONDecodeError):
         return {}
@@ -142,9 +144,10 @@ def save_baseline(reviewed_by: str = '', reason: str = '',
                             'reason': reason,
                             'runs': len(runs)},
                **_medians(runs)}
-    _fsutil.ensure_dir(BASELINE)
-    _fsutil.write_text(BASELINE, json.dumps(payload, ensure_ascii=False, indent=2) + '\n')
-    return BASELINE
+    path = baseline_path()
+    _fsutil.ensure_dir(path)
+    _fsutil.write_text(path, json.dumps(payload, ensure_ascii=False, indent=2) + '\n')
+    return path
 
 
 def _git_commit() -> str:

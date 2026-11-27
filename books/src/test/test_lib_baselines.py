@@ -46,7 +46,7 @@ class BaselinePathTest(unittest.TestCase):
 
     def test_an_unconfigured_name_falls_back_beside_the_others(self):
         path = self.baselines.path_for("no-such-gate")
-        self.assertTrue(path.endswith("no-such-gate-findings.json"))
+        self.assertTrue(path.endswith("no-such-gate.json"))
         self.assertEqual(os.path.dirname(path), self.mod.baseline_dir())
 
     def test_the_edition_scopes_the_configured_path(self):

@@ -10,6 +10,7 @@ import os
 import sys
 import unittest
 from contextlib import redirect_stdout
+from unittest import mock
 
 from _cases import FixtureCase
 
@@ -64,6 +65,40 @@ class TestSourceFreshnessBranches(FixtureCase):
         code, out = self.run_script('source_refs.py', '--suggest')
         self.assertEqual(code, 0, out[-300:])
         self.assertIn('source tree not found', out)
+
+
+class DriftVersionNoticeTest(FixtureCase):
+    """Accepted symbol drift is a statement about one source tree, not about all of them."""
+
+    def notice(self, recorded, current):
+        module = self.module("source_refs")
+        with (
+            mock.patch.object(module._baseline, "load_raw", return_value=recorded),
+            mock.patch.object(module._config, "current") as config,
+        ):
+            config.return_value.versions.return_value = {"source": current}
+            return module.drift_version_notice()
+
+    def test_a_baseline_recorded_against_another_version_is_called_out(self):
+        notice = self.notice({"source_version": "1.0"}, "2.0")
+        self.assertIn("recorded against 1.0", notice)
+        self.assertIn("tree is 2.0", notice)
+
+    def test_matching_or_missing_versions_are_silent(self):
+        self.assertEqual(self.notice({"source_version": "2.0"}, "2.0"), "")
+        self.assertEqual(self.notice({}, "2.0"), "")
+        self.assertEqual(self.notice({"source_version": ""}, "2.0"), "")
+
+    def test_the_notice_is_printed_for_people_and_left_to_json_otherwise(self):
+        module = self.module("source_refs")
+        buffer = io.StringIO()
+        with (
+            mock.patch.object(module, "drift_version_notice", return_value="  [note] drift"),
+            redirect_stdout(buffer),
+        ):
+            module.report_notice(False)
+            module.report_notice(True)
+        self.assertEqual(buffer.getvalue(), "  [note] drift\n")
 
 
 if __name__ == '__main__':

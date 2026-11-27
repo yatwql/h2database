@@ -1,4 +1,8 @@
 {
+  "schema": 1,
+  "gate": "style_rules",
+  "kind": "accepted",
+  "keyed_by": "manuscript-path::rule::text",
   "updated": "2026-11-26",
   "note": "Accepted style-rule findings. Refresh with --update-baseline.",
   "accepted": [

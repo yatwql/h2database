@@ -487,7 +487,7 @@ lint 的规则集只在书的 `pyproject.toml` 声明（`line-length`、`select`
 | `data/baselines/snapshot-<标签>.json` | 某个历史快照的体积事实 | 导入快照时生成 |
 | `data/snapshots/<日期>-<标签>/` | `manifest.json`（压缩包哈希、逐文件字节/行数/哈希）+ 只读正文 | 只读；`snapshot.py verify` 校验 |
 | `logs/check-<档位>-<YYYY-MM-DD>.{log,jsonl}` | 当天的运行日记（每次追加一段带表头的输出）与同名摘要行（`git{commit,dirty}`、每步 `argv`、pytest 计数、`log_offset/log_len`） | 按 `logging.retention_days` 整日清理 |
-| `data/baselines/perf-baseline.json` | 评审过的耗时下限：逐步与总计中位数 + `reviewed{by,at,commit,reason,runs}`；`logs/perf-history.jsonl` 只做滚动窗口（`style.json [quality].perf_history_runs`，默认 200） | `perf_baseline.py --update-baseline` 固化 |
+| `data/baselines/perf.json` | 评审过的耗时下限：逐步与总计中位数 + `reviewed{by,at,commit,reason,runs}`；`logs/perf-history.jsonl` 只做滚动窗口（`style.json [quality].perf_history_runs`，默认 200） | `perf_baseline.py --update-baseline` 固化 |
 
 ```text
   可随时重建 ──► data/state/*、data/cache/*、dist/*、logs/*、test-reports/*

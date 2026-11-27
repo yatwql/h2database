@@ -35,8 +35,30 @@ class BaselineTest(unittest.TestCase):
         path = self.mod.path_for('source_symbol')
         self.assertIn('source-symbol-baseline.json', path.replace('_', '-'))
 
-    def test_an_unconfigured_gate_falls_back_to_findings_json(self):
-        self.assertTrue(self.mod.path_for('whatever').endswith('whatever-findings.json'))
+    def test_an_unconfigured_gate_is_named_after_the_gate(self):
+        self.assertTrue(self.mod.path_for('whatever').endswith('whatever.json'))
+
+    def test_the_old_findings_name_is_still_readable_but_not_written(self):
+        """A gate renamed after its file reads the old one until it is re-recorded."""
+        self.assertTrue(self.mod.legacy_path('whatever').endswith('whatever-findings.json'))
+        self.assertIsNotNone(self.mod.legacy_path('captions'))
+
+    def test_the_envelope_says_the_shape_and_falls_back_when_it_does_not(self):
+        self.assertEqual(self.mod.kind_of({"kind": "records"}), "records")
+        self.assertEqual(self.mod.kind_of({"accepted": []}), "accepted")
+        self.assertEqual(self.mod.kind_of({"files": {}}), "counts")
+        self.assertEqual(self.mod.kind_of({}), "records")
+
+    def test_saving_stamps_the_envelope(self):
+        target = os.path.join(self.tmp.name, "gate.json")
+        self.mod.save_at(target, {"accepted": ["a"]}, gate="gate", kind="accepted",
+                         keyed_by="path::rule")
+        payload = self.mod.load_at(target)
+        self.assertEqual(payload["schema"], 1)
+        self.assertEqual(payload["gate"], "gate")
+        self.assertEqual(payload["kind"], "accepted")
+        self.assertEqual(payload["keyed_by"], "path::rule")
+        self.assertEqual(payload["accepted"], ["a"])
 
     def test_a_missing_baseline_loads_as_empty(self):
         self.assertEqual(self.mod.load('whatever'), set())
