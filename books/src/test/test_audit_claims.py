@@ -111,5 +111,17 @@ class ClaimsRatchetTest(FixtureCase):
         self.assertIn("永远", out)
 
 
+    def test_a_quoted_misconception_is_exempt_and_plain_prose_is_not(self):
+        claims = self.module("claims")
+        self.write("data/manuscript/ch1-test.md",
+                   "# 第1章 测试章节\n\n- **误区**：这里永远不需要加锁。\n"
+                   "  **为什么**：见 `MVTable.java:167` 的互斥。\n\n"
+                   "这段正文则永远是错的，没有任何依据。\n")
+        found = claims.findings()
+        texts = [hit["text"] for hits in found.values() for hit in hits]
+        self.assertFalse(any("误区" in text for text in texts), texts)
+        self.assertTrue(any("这段正文" in text for text in texts), texts)
+
+
 if __name__ == "__main__":
     unittest.main()

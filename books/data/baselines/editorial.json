@@ -1,5 +1,5 @@
 {
-  "note": "Recorded editorial element counts. A count may rise, never fall.",
+  "note": "Recorded editorial element counts. A required element may rise, never fall; an element the profile does not require is reported only.",
   "profile": "tutorial",
   "files": [
     {

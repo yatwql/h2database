@@ -126,7 +126,7 @@ python books/src/python/audit/editorial.py            # 逐章计数 + 必选元
 python books/src/python/audit/editorial.py --update-baseline   # 审过之后记账（只许升）
 ```
 
-判据是双向的：必选元素低于下限、或任一计数低于 `data/baselines/editorial.json` 记的数，都会失败。
+判据是双向的：必选元素低于下限、或**必选元素**的计数低于 `data/baselines/editorial.json` 记的数，都会失败；未启用的元素只报数，不判红。
 
 ### 版式与字体（`toolchain.layout_*`、`font_stack_*`）
 

@@ -3955,8 +3955,9 @@ MVSecondaryIndex.find(session, searchRow)
 ## 5.11 常见误区
 
 - **误区**：回滚是在原处把旧值写回去，不产生新的写入，所以既不留版本也不影响并发读。
-  **为什么**：回滚沿 undo 日志逐条重放，每一步都通过 `TransactionStore` 的 `UndoLog.operate()`
-  （`TransactionStore.java:830`）写一个新版本，而不是原地覆盖；正在读旧快照的事务仍能看到回滚前的值。
+  **为什么**：回滚沿 undo 日志逐条重放：`TransactionStore.rollbackTo()`（`TransactionStore.java:834`）
+  对该日志 MVMap 逐条调用 `operate(undoKey, null, decisionMaker)`（`:840`），每一步都写一个新版本，
+  而不是原地覆盖；正在读旧快照的事务仍能看到回滚前的值。
   代价与改动行数成正比也正因为如此：撤销多少行，就要重放多少条 undo 记录。
 
 ## 5.12 延伸思考
