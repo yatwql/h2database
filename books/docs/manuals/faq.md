@@ -58,6 +58,25 @@
 上游源码变了。跑 `source_refs.py --suggest` 看改名建议，复核后用
 `--update-baseline` 记账（基线在 `data/baselines/`）。
 
+**Q：`editorial` 报某章学习目标/要点不够？**
+它按 `data/book/editing.toml` 的风格档判：必选元素低于下限、或计数比 `data/baselines/editorial.json`
+记的少都会红。先补内容（条目化小结、加「常见误区」），确属本档不该要求的元素就关掉它
+（`[elements.<名>].enabled = false`），理由写进提交信息——「本档未启用」不报错。
+
+**Q：怎么保留旧版稿、并和现在的稿子比？**
+用快照，不要塞回 `data/manuscript/`：`snapshot.py import <zip 或目录> <标签> --date <日期>` 冻结，
+`snapshot.py list` 看清每份属于哪本书、哪棵源树，`snapshot.py diff <a> <b>` 比对（跨书默认拒绝，
+`--cross` 才放行）。细节见[使用手册](how-to-use.md) §4.1。
+
+**Q：日志在哪、留多久？**
+`books/logs/bookwright.log` 按天滚动，保留 `logging.retention_days` 天（默认 14）；同目录还有
+`check-<档位>-<日期>.{log,jsonl}` 记载每次门禁的步骤、耗时与退出码，按同一保留期整日清理。
+TUI 里每步会实时打印「产物：开始／完成」，超过 10 秒补一行「仍在进行」，完整过程以日志为准。
+
+**Q：想做删节版/精简版？**
+在 `book.toml` 声明 edition 后用 `--edition <名>`：产物名带后缀、派生状态与基线按 edition 分目录，
+互不覆盖；`bookctl deliver --edition abridged` 出这一版的产物。指向未声明的版本会退出码 2 并列出可选值。
+
 ## 版本
 
 **Q：三个版本分别在哪改？**

@@ -107,6 +107,27 @@ display = "删节版"
 }
 ```
 
+### 编辑风格档（`data/book/editing.toml`）
+
+`[profile].name` 选一档（`manual` 手册型、`tutorial` 教程型、`hands-on` 实战型），预设写在
+`lib/_editorial.py`；`[elements.<名>]` 只写你要覆盖的键：
+
+| 元素 | 判什么 | 可覆盖的键 |
+| --- | --- | --- |
+| `learning_goals` | 每章开头「章节要点」块的条目数 | `enabled`、`heading`（本书用 `章节要点`）、`min_items` |
+| `key_points` | 每处「本章小结」小节的条目数 | `enabled`、`heading`、`min_items` |
+| `pitfalls` | 「常见误区」小节条目数 | `enabled`、`heading`、`min_items` |
+| `table_density` | 每千行表格张数 | `enabled`、`min_per_1000_lines` |
+
+未启用的元素只报数、不判红——没约定下限就不该凭空失败。改动后看结果：
+
+```bash
+python books/src/python/audit/editorial.py            # 逐章计数 + 必选元素是否达标
+python books/src/python/audit/editorial.py --update-baseline   # 审过之后记账（只许升）
+```
+
+判据是双向的：必选元素低于下限、或任一计数低于 `data/baselines/editorial.json` 记的数，都会失败。
+
 ### 版式与字体（`toolchain.layout_*`、`font_stack_*`）
 
 密度只在一处配置，PDF、HTML、EPUB 共用同一套解析：

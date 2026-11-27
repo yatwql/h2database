@@ -13,6 +13,11 @@
 
 ### 变更
 
+- **用户手册补齐用法覆盖**：`how-to-use.md` 增「保留并对比历史稿」（快照 import/list/diff/adopt 与提为体量下限）；
+　`how-to-use-cli.md` 增「只跑一部分/只看耗时」（`--only`、`--keep-going`、`--timings`、`cover --full`、`report`）；
+　`how-to-config.md` 增「编辑风格档」一节（四个元素判什么、可覆盖哪些键、怎么记账）；
+　`how-to-write.md` 增「要素的条数与形态」（要点 3–5 条、小结条目化、误区两段、并列用表）；
+　`how-to-new-book.md` 补可选书级文件与首次 `check` 的处置；`faq.md` 补编辑要素、历史稿对比、日志留存、删节版四问。
 - **管理文档与用户文档对齐当前实现**：全部文档头改为 `v0.2-dev`（原为 v0.1）；`folder.md` 的基线清单改为
 　「门禁命名 + 统一信封」并指向 `manuscript/baselines.py`，快照小节改述身份段与 `list`/`diff`；
 　`technical.md` 补 `_snapshot` 模块与日志行为（动作信封、行缓冲），删掉已不存在的快照体积账本行；

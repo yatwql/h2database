@@ -93,6 +93,25 @@ python books/src/python/render/pdf_metrics.py --target pages=<目标页数>,char
 python books/src/python/render/pdf_metrics.py --write-back layout_spacing_scale=0.7
 ```
 
+## 4.1 保留并对比一份历史稿
+
+旧稿不要塞回 `data/manuscript/`，用快照：
+
+```bash
+# 冻结：来自压缩包或某天的归档目录（目录无需再打包）
+python books/src/python/manuscript/snapshot.py import ../docs-stm.zip june --date 2026-06-11
+
+# 看清单：名称 / 书 / 源版本 / 工具 / 配置指纹 / 文件数 / 字节
+python books/src/python/manuscript/snapshot.py list
+
+# 与当前产物比对：跨书或跨源默认拒绝，确认要看才加 --cross
+python books/src/python/manuscript/snapshot.py diff 2026-06-11 <新的快照标签>
+```
+
+快照落在 `data/snapshots/<书 slug>/<日期>-<标签>/`，`manifest.json` 自带身份（书、源树版本、工具版本、
+配置指纹、语种），所以同一天两本书不会混。旧布局（平铺）快照用 `snapshot.py adopt <标签>` 补身份并归位。
+把某份历史稿提为体量下限：`content_volume.py --update-baseline --from-snapshot <标签>`。
+
 ## 5. 提交之前
 
 ```bash

@@ -70,6 +70,18 @@ books/scripts/bookctl make build --book ../other-book # 透传给 make.py
 指向未声明的版本会报错并列出已声明的版本。产物、手稿、派生状态、体量基线都跟着
 「书 + 版本」走，不同书之间互不覆盖。
 
+## 只跑一部分，或只看耗时
+
+```bash
+books/scripts/bookctl make check --only structure,doc_drift   # 只跑指定步骤
+books/scripts/bookctl make check --keep-going                 # 某步失败也继续，最后汇总
+books/scripts/bookctl make check --timings                    # 末尾给每步耗时
+books/scripts/bookctl make cover --full                       # 覆盖率含慢档（chromium/pandoc）
+books/scripts/bookctl make report                             # 六维评分（整改视图，不算门禁）
+```
+
+`--only` 接受 `make.py check --list` 里的步骤名；它适合改一处看一处，提交前仍要跑全量。
+
 ## 基线与 `--update-baseline`
 
 `data/baselines/` 是「已审现状」的账本：文件名即门禁名，内容是 `accepted` 列表、逐文件计数或
