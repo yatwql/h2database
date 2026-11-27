@@ -156,6 +156,7 @@ books/scripts/install-hooks.sh     # core.hooksPath=.githooks
 | `index.py` | 索引：生成与层级检查 |
 | `terms.py` | 给每章导读块补术语表引用；`--check` 只报告 |
 | `case_studies.py` | 案例研究章节大纲 |
+| `excerpt.py` | 源码摘录工具：`--file <路径> --lines <起>-<止>` 从源码打印可直接粘贴的摘录块（含出处头与围栏）；`--check <手稿>` 报告与出处不符的摘录；`--repair <手稿>` 按源码重定位出处并补 `// ...`（不改代码）。校验规则与 `audit/content_depth.py` 一致 |
 | `snapshot.py` | 历史稿只读快照：`import <zip 或目录> <label> --date`（目录来源无需重新打包）、`list`、`verify <label>`、`adopt <label>`（给旧快照补身份并归位）、`diff <a> <b> [--cross]`。快照落在 `data/snapshots/<书 slug>/<日期>-<标签>/`，`manifest.json` 自带身份段与逐文件 bytes/lines/hash，体积下限由 `content_volume.py --from-snapshot` 直接读它 |
 
 ## 8. 质量门禁 `src/python/audit/`

@@ -214,7 +214,7 @@ Snapshot<K,VersionedValue<V>> getSnapshot() {
 
 - 出处写成 `文件:起-止`。判据按「顺序子序列」核对：跳过的行必须用 `// ...` 标出来，没标就算漂移。
 - 行尾可以追加 `// 说明`（这是本书的解释方式），但代码本身不能改——改一个标识符就会被判红。
-- 不用手抄：生成器会按范围打印整块（见 `scripts-and-reference.md`）。
+- 不用手抄：`manuscript/excerpt.py --file … --lines 起-止` 直接从源码打印整块；`--check` 报告与出处不符的摘录，`--repair` 重定位出处（见 `scripts-and-reference.md`）。
 
 ### 7.1 要素的条数与形态
 

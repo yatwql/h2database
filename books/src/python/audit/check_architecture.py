@@ -65,6 +65,7 @@ WRITE_MODES = "wax+"
 # the runner or by another module instead of the step table.
 STANDALONE_ENTRY = frozenset(
     {
+        "manuscript/excerpt.py",  # authoring aid: print/check/repair source excerpts
         "render/print_pdf.py",  # ad-hoc: render a different document
         "render/pdf_from_html.py",  # ad-hoc: HTML -> PDF without the book pipeline
         "render/pdf_metrics.py",  # ad-hoc: compare the layout of two built PDFs
