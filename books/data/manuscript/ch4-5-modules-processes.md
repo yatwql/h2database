@@ -1819,7 +1819,17 @@ public void removeRow(SessionLocal session, Row row) {
 
 ## 4.7 本章小结
 
-本章深入分析了 H2 Database 的六个核心模块：Database 全局入口、Session 会话管理、MVStore 存储引擎、MVMap B-Tree 映射、TransactionStore 事务协调、MVTable 表操作封装。每层围绕核心数据结构和关键源码展开，从顶层入口到底层存储构成了完整的模块链路。
+
+本章深入分析了六个核心模块，每个模块围绕一个核心数据结构展开，从顶层入口到底层存储构成完整链路：
+
+- **Database**：全局入口，持有数据库实例、对象注册表与元数据，一切 `Session` 都由它创建和登记。
+- **Session**：每个连接一个会话，负责命令准备（`prepareCommand`）、查询缓存与连接级锁。
+- **MVStore**：多版本存储引擎本体，管理 chunk、page 与版本，写入路径最终落到它上面。
+- **MVMap**：建立在 MVStore 之上的 B-Tree 映射，把键值操作翻译成页面操作与根引用切换。
+- **TransactionStore**：事务协调层，维护 undo log、提交序列与版本可见性。
+- **MVTable**：表操作封装，把行列语义映射到索引与 MVMap 的组合上。
+
+六层之间是单向依赖：上层调用下层，下层不认识上层，这也是后续流程分析与源码追踪的定位依据。
 
 ## 4.8 延伸思考
 
@@ -3933,9 +3943,15 @@ MVSecondaryIndex.find(session, searchRow)
 
 ## 5.10 本章小结
 
-如图 5-46 所示，本章追踪了 H2 中九个核心流程：SELECT/INSERT/UPDATE/DELETE 四大 SQL 操作、COMMIT/ROLLBACK 事务控制、Compaction 空间回收、Chunk 压缩整理以及数据读取流程。每个流程均按照"流程图→核心逻辑阐述→关键代码引用"的标准化模板展开，展示了 SQL 语句从解析到存储层的完整生命周期。
 
-本章涉及的所有基础算法——B-Tree 查找插入、Copy-on-Write 版本管理、MVCC 可见性判断——将在第6章《H2 数据库核心算法分析》中深入展开。理解本章的流程有助于把握第6章各算法的应用场景。
+本章追踪了九个核心流程，每个流程按「流程图 → 核心逻辑 → 关键代码引用」的模板展开：
+
+- **四大 SQL 操作**：`SELECT`、`INSERT`、`UPDATE`、`DELETE` 从解析到存储层的完整生命周期。
+- **事务控制**：`COMMIT` 与 `ROLLBACK` 如何落成版本切换与 undo log 回放。
+- **空间维护**：Compaction 空间回收与 Chunk 压缩整理，决定了长期运行后的空间与性能表现。
+- **数据读取**：读取流程如何在 MVStore 之上组装出结果行。
+
+这些流程用到的算法——B-Tree 查找插入、Copy-on-Write 版本管理、MVCC 可见性判断——在第 6 章展开；先看流程再看算法，能带着具体场景读原理。
 
 ## 5.11 延伸思考
 

@@ -9,8 +9,8 @@
 name = "tutorial"
 
 [elements.key_points]
-# 本书小结目前是整段叙述，尚未条目化；条目化后把 enabled 打开即可开始判。
-enabled = false
+# 各章小结已条目化（每章 3–14 条），下限按 tutorial 档的 4 条判。
+enabled = true
 
 [elements.learning_goals]
 enabled = false

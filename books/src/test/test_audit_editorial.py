@@ -23,15 +23,19 @@ class EditorialProfileTest(FixtureCase):
         self.assertTrue(any("no-such-profile" in problem for problem in profile["problems"]))
 
     def test_an_unknown_element_is_reported_and_ignored(self):
-        self.write("data/book/editing.toml",
-                   '[profile]\nname = "manual"\n\n[elements.nonsense]\nenabled = true\n')
+        self.write(
+            "data/book/editing.toml",
+            '[profile]\nname = "manual"\n\n[elements.nonsense]\nenabled = true\n',
+        )
         profile = self.module("_editorial").load_profile()
         self.assertIn("nonsense", " ".join(profile["problems"]))
         self.assertNotIn("nonsense", profile["rules"])
 
     def test_an_override_reaches_only_the_element_it_names(self):
-        self.write("data/book/editing.toml",
-                   '[profile]\nname = "tutorial"\n\n[elements.pitfalls]\nenabled = false\n')
+        self.write(
+            "data/book/editing.toml",
+            '[profile]\nname = "tutorial"\n\n[elements.pitfalls]\nenabled = false\n',
+        )
         rules = self.module("_editorial").load_profile()["rules"]
         self.assertFalse(rules["pitfalls"]["enabled"])
         self.assertTrue(rules["learning_goals"]["enabled"])
@@ -54,13 +58,26 @@ class EditorialCountingTest(FixtureCase):
 
     def test_table_density_counts_header_plus_separator_only(self):
         editorial = self.module("editorial")
-        self.assertEqual(editorial.table_density("| a | b |\n| --- | --- |\n| 1 | 2 |\n"), 333.33)
+        text = "| a | b |\n| --- | --- |\n| 1 | 2 |\n"
+        self.assertEqual(editorial.table_count(text), 1)
+        self.assertEqual(editorial.table_density(text), 333.33)
 
     def test_the_baseline_ratchet_fails_only_when_a_count_falls(self):
         editorial = self.module("editorial")
-        metrics = {"rules": editorial._editorial.load_profile()["rules"],
-                   "files": [{"file": "ch1-test.md", "lines": 10, "learning_goals": 2,
-                              "key_points": 1, "pitfalls": 1, "table_density": 1.0}]}
+        metrics = {
+            "rules": editorial._editorial.load_profile()["rules"],
+            "files": [
+                {
+                    "file": "ch1-test.md",
+                    "lines": 10,
+                    "learning_goals": 2,
+                    "key_points": 1,
+                    "pitfalls": 1,
+                    "tables": 1,
+                    "table_density": 1.0,
+                }
+            ],
+        }
         baseline = {"files": [dict(metrics["files"][0], learning_goals=3)]}
         problems = editorial.regressions(metrics, baseline)
         self.assertEqual(len(problems), 1)

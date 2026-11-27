@@ -25,8 +25,9 @@ class ContractTest(FixtureCase):
         self.assertFalse(rules["allow_unknown_digits"])
 
     def test_a_book_override_wins_over_the_defaults(self):
-        self.write("data/book/llm-tasks.toml",
-                   "[default]\nmin_chars = 5\n\n[tasks.lead]\nmax_chars = 40\n")
+        self.write(
+            "data/book/llm-tasks.toml", "[default]\nmin_chars = 5\n\n[tasks.lead]\nmax_chars = 40\n"
+        )
         contract = self.module("_llm_contract")
         self.assertEqual(contract.contract("lead")["max_chars"], 40)
         self.assertEqual(contract.contract("lead")["min_chars"], 5)
@@ -44,7 +45,9 @@ class ContractTest(FixtureCase):
         facts = {"pkgs": 12, "lines": 3}
         problems = contract.check("lead", "本章覆盖 12 个包、3 行实现，导读先给出整体规模。", facts)
         self.assertEqual(problems, [])
-        problems = contract.check("lead", "本章覆盖 12 个包、9999 行实现，导读先给出整体规模。", facts)
+        problems = contract.check(
+            "lead", "本章覆盖 12 个包、9999 行实现，导读先给出整体规模。", facts
+        )
         self.assertEqual(len(problems), 1)
         self.assertIn("9999", problems[0])
 
@@ -58,11 +61,16 @@ class ContractTest(FixtureCase):
         short = contract.check("lead", "太短", {})
         self.assertTrue(any("shorter than" in problem for problem in short))
         long_text = "字" * 300
-        self.assertTrue(any("longer than" in problem
-                            for problem in contract.check("lead", long_text, {})))
+        self.assertTrue(
+            any("longer than" in problem for problem in contract.check("lead", long_text, {}))
+        )
         two_paragraphs = "一段话。" * 10 + "\n\n" + "另一段。" * 10
-        self.assertTrue(any("more than one paragraph" in problem
-                            for problem in contract.check("lead", two_paragraphs, {})))
+        self.assertTrue(
+            any(
+                "more than one paragraph" in problem
+                for problem in contract.check("lead", two_paragraphs, {})
+            )
+        )
 
 
 class LedgerTest(FixtureCase):

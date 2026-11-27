@@ -3648,7 +3648,16 @@ DataType.compareWithConversion() 类型转换矩阵
 
 ## 7.7 本章小结
 
-第 7 章完整追踪了一条 SQL 语句从 JDBC 接口到存储层的全链路执行流程。核心内容包括：JDBC 入口层的两种语句执行方式（Statement 与 PreparedStatement）及其性能差异、Session 层的缓存与锁机制、Parser 递归下降解析的三阶段管道（词法分析、语法分析、命令包装）、Command 框架的统一执行抽象、以及表达式求值的多态分发与短路求值策略。本章的流程分析为第 8 章深入查询优化器提供了执行层面的基础铺垫——理解 SQL 如何被解析和执行，是理解查询优化器如何选择最优执行计划的前提。
+
+本章完整追踪了一条 SQL 语句从 JDBC 接口到存储层的执行流程：
+
+- **JDBC 入口层**：`Statement` 与 `PreparedStatement` 两种执行方式，性能差异来自编译结果是否被缓存，而非协议差异。
+- **Session 层**：`queryCache` 缓存已编译命令，`modificationMetaID` 在 DDL 后让缓存失效，`ReentrantLock` 保证会话内线程安全。
+- **Parser**：递归下降的三阶段管道——词法分析、语法分析、命令包装。
+- **Command 框架**：统一的执行抽象，屏蔽 SELECT/INSERT/UPDATE/DELETE 的差异。
+- **表达式求值**：多态分发与短路求值决定每一行如何算出结果。
+
+这条链路是第 8 章的前提：先看清 SQL 如何被解析和执行，才谈得上理解优化器如何选择计划。
 
 ## 7.8 延伸思考
 

@@ -6,97 +6,91 @@
       "file": "ch1-2-architecture.md",
       "lines": 2214,
       "learning_goals": 0,
-      "key_points": 0,
+      "key_points": 13,
       "pitfalls": 0,
+      "tables": 1,
       "table_density": 0.45
     },
     {
       "file": "ch3-packages.md",
       "lines": 2303,
       "learning_goals": 0,
-      "key_points": 0,
+      "key_points": 5,
       "pitfalls": 0,
+      "tables": 22,
       "table_density": 9.55
     },
     {
       "file": "ch4-5-modules-processes.md",
-      "lines": 3978,
+      "lines": 3994,
       "learning_goals": 0,
-      "key_points": 0,
+      "key_points": 10,
       "pitfalls": 0,
-      "table_density": 2.01
+      "tables": 8,
+      "table_density": 2.0
     },
     {
       "file": "ch6-1-data-structures.md",
-      "lines": 2867,
+      "lines": 2873,
       "learning_goals": 0,
-      "key_points": 0,
+      "key_points": 5,
       "pitfalls": 0,
+      "tables": 5,
       "table_density": 1.74
     },
     {
       "file": "ch6-2-storage-algorithms.md",
-      "lines": 4649,
+      "lines": 4657,
       "learning_goals": 0,
-      "key_points": 0,
+      "key_points": 4,
       "pitfalls": 0,
+      "tables": 8,
       "table_density": 1.72
     },
     {
       "file": "ch6-3-query-algorithms.md",
-      "lines": 3531,
+      "lines": 3538,
       "learning_goals": 0,
-      "key_points": 0,
+      "key_points": 4,
       "pitfalls": 0,
-      "table_density": 1.42
+      "tables": 5,
+      "table_density": 1.41
     },
     {
       "file": "ch7-sql-execution.md",
-      "lines": 3688,
+      "lines": 3697,
       "learning_goals": 0,
-      "key_points": 0,
+      "key_points": 5,
       "pitfalls": 0,
+      "tables": 1,
       "table_density": 0.27
     },
     {
       "file": "ch8-query-optimizer.md",
       "lines": 4499,
       "learning_goals": 0,
-      "key_points": 0,
+      "key_points": 6,
       "pitfalls": 0,
+      "tables": 3,
       "table_density": 0.67
     },
     {
       "file": "ch9-10-persistence-locking.md",
       "lines": 6631,
       "learning_goals": 0,
-      "key_points": 0,
+      "key_points": 14,
       "pitfalls": 0,
+      "tables": 5,
       "table_density": 0.75
     },
     {
       "file": "ch11-12-guide-summary.md",
-      "lines": 2444,
+      "lines": 2453,
       "learning_goals": 0,
-      "key_points": 0,
+      "key_points": 7,
       "pitfalls": 0,
-      "table_density": 5.73
-    },
-    {
-      "file": "appendix-a-case-studies.md",
-      "lines": 1445,
-      "learning_goals": 0,
-      "key_points": 0,
-      "pitfalls": 0,
-      "table_density": 2.77
-    },
-    {
-      "file": "appendix-b-version-changes.md",
-      "lines": 68,
-      "learning_goals": 0,
-      "key_points": 0,
-      "pitfalls": 0,
-      "table_density": 44.12
+      "tables": 14,
+      "table_density": 5.71
     }
   ]
 }

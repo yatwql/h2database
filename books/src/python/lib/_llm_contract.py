@@ -24,19 +24,19 @@ import sys
 from lib import _config
 
 DEFAULT_TASK = {
-    'min_chars': 20,
-    'max_chars': 220,
-    'allow_unknown_digits': False,
-    'single_paragraph': True,
+    "min_chars": 20,
+    "max_chars": 220,
+    "allow_unknown_digits": False,
+    "single_paragraph": True,
 }
 
-DIGITS_RE = re.compile(r'\d+')
-LEDGER_NAME = 'llm-ledger.jsonl'
+DIGITS_RE = re.compile(r"\d+")
+LEDGER_NAME = "llm-ledger.jsonl"
 
 
 def task_config() -> str:
     """Where this book declares its drafting contracts, resolved when it is used."""
-    return _config.book_path('llm-tasks.toml')
+    return _config.book_path("llm-tasks.toml")
 
 
 def ledger_path() -> str:
@@ -50,15 +50,15 @@ def contract(task: str) -> dict:
 
     rules = dict(DEFAULT_TASK)
     try:
-        with open(task_config(), 'rb') as fh:
+        with open(task_config(), "rb") as fh:
             data = tomllib.load(fh)
     except FileNotFoundError:
         return rules
     except tomllib.TOMLDecodeError as exc:
-        raise SystemExit(f'error: invalid TOML in {task_config()}: {exc}') from exc
-    defaults = data.get('default') or {}
+        raise SystemExit(f"error: invalid TOML in {task_config()}: {exc}") from exc
+    defaults = data.get("default") or {}
     rules.update({key: defaults[key] for key in DEFAULT_TASK if key in defaults})
-    overrides = (data.get('tasks') or {}).get(task) or {}
+    overrides = (data.get("tasks") or {}).get(task) or {}
     rules.update({key: overrides[key] for key in DEFAULT_TASK if key in overrides})
     return rules
 
@@ -72,19 +72,19 @@ def check(task: str, text: str, facts: dict) -> list[str]:
     rules = contract(task)
     problems: list[str] = []
     body = text.strip()
-    if len(body) < int(rules['min_chars']):
-        problems.append(f'shorter than {rules["min_chars"]} characters')
-    if len(body) > int(rules['max_chars']):
-        problems.append(f'longer than {rules["max_chars"]} characters')
-    if rules['single_paragraph'] and '\n\n' in body:
-        problems.append('more than one paragraph')
-    if not rules['allow_unknown_digits']:
+    if len(body) < int(rules["min_chars"]):
+        problems.append(f"shorter than {rules['min_chars']} characters")
+    if len(body) > int(rules["max_chars"]):
+        problems.append(f"longer than {rules['max_chars']} characters")
+    if rules["single_paragraph"] and "\n\n" in body:
+        problems.append("more than one paragraph")
+    if not rules["allow_unknown_digits"]:
         known = set()
         for value in facts.values():
             known.update(DIGITS_RE.findall(str(value)))
         invented = sorted(set(DIGITS_RE.findall(body)) - known)
         if invented:
-            problems.append('numbers absent from the facts: ' + ', '.join(invented))
+            problems.append("numbers absent from the facts: " + ", ".join(invented))
     return problems
 
 
@@ -94,39 +94,41 @@ def enforce(task: str, prompt: str, cleaned: str, facts: dict) -> str:
     The ledger records both outcomes, so a rejected draft stays explainable: the digest
     of what the model actually wrote survives even though the prose does not.
     """
-    if len(cleaned) < int(contract(task)['min_chars']):
-        record(task, prompt, cleaned, 'provider', ['too short to use'])
-        return ''
+    if len(cleaned) < int(contract(task)["min_chars"]):
+        record(task, prompt, cleaned, "provider", ["too short to use"])
+        return ""
     problems = check(task, cleaned, facts)
-    record(task, prompt, cleaned, 'provider', problems)
+    record(task, prompt, cleaned, "provider", problems)
     if problems:
-        print(f'  [warn] drafted {task} violates its contract ({"; ".join(problems)}); '
-              'using deterministic text', file=sys.stderr)
-        return ''
+        print(
+            f"  [warn] drafted {task} violates its contract ({'; '.join(problems)}); "
+            "using deterministic text",
+            file=sys.stderr,
+        )
+        return ""
     return cleaned
 
 
 def digest(value: str) -> str:
     """Stable short digest, used for both sides of a call."""
-    return hashlib.sha256(value.encode('utf-8')).hexdigest()[:16]
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()[:16]
 
 
-def record(task: str, prompt: str, response: str, model: str,
-           problems: list[str]) -> None:
+def record(task: str, prompt: str, response: str, model: str, problems: list[str]) -> None:
     """Append one attempt to the ledger; a ledger failure never breaks the ingest."""
     entry = {
-        'task': task,
-        'prompt': digest(prompt),
-        'response': digest(response),
-        'model': model,
-        'accepted': not problems,
-        'problems': problems,
-        'config': _config.fingerprint(),
+        "task": task,
+        "prompt": digest(prompt),
+        "response": digest(response),
+        "model": model,
+        "accepted": not problems,
+        "problems": problems,
+        "config": _config.fingerprint(),
     }
     path = ledger_path()
     try:
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, 'a', encoding='utf-8') as fh:
-            fh.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + '\n')
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
     except OSError as exc:
-        print(f'  [warn] cannot write the LLM ledger ({exc})')
+        print(f"  [warn] cannot write the LLM ledger ({exc})")
