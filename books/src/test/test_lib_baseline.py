@@ -60,12 +60,16 @@ class BaselineTest(unittest.TestCase):
 
     def test_a_broken_baseline_does_not_crash_the_gate(self):
         path = self.mod.path_for('whatever')
+        # the path is resolved through the active book: if the fixture did not bind,
+        # this case would write junk into the repository's own baselines
+        self.assertTrue(path.startswith(self.root), path)
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w', encoding='utf-8') as fh:
             fh.write('{not json')
         self.assertEqual(self.mod.load('whatever'), set())
 
     def test_save_and_load_round_trip(self):
+        self.assertTrue(self.mod.path_for('whatever').startswith(self.root))
         saved = self.mod.save('whatever', {'b', 'a'}, note='reviewed')
         self.assertEqual(self.mod.load('whatever'), {'a', 'b'})
         with open(saved, encoding='utf-8') as fh:
