@@ -8,6 +8,7 @@ removed afterwards, and nothing in the pipeline decides a margin or a size on it
 
 from __future__ import annotations
 
+import importlib
 import io
 import os
 import sys
@@ -19,6 +20,8 @@ from unittest import mock
 import _fixture
 from pypdf import PdfWriter
 from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
+
+_MISSING = object()
 
 TAGS = ("layer:infra", "tier:fast")  # fake chromium engine: no browser
 
@@ -333,14 +336,28 @@ class PrintEditionTest(unittest.TestCase):
         self.assertTrue(seen["html_existed"])
 
     def test_a_missing_browser_engine_only_skips_the_link_step(self):
-        """A plain environment renders the PDF; the TOC links are the only casualty."""
+        """A plain environment renders the PDF; the TOC links are the only casualty.
+
+        Hiding the submodule means hiding it twice: `sys.modules` alone is not enough once
+        an earlier case has imported it, because the package keeps the attribute and
+        `from render import pdf_toc_links` answers from there.
+        """
+        # resolved at runtime: the test path is set up per case, so a static import
+        # here would be a lie about what this file can see
+        package = importlib.import_module("render")
+
         page = SplitPage(self.pdf, self.parts, self.headings)
         out = io.StringIO()
-        with (
-            mock.patch.dict(sys.modules, {"render.pdf_toc_links": None}),
-            redirect_stdout(out),
-        ):
-            count = self.module.build(self.html, self.pdf, fake_engine(page))
+        saved = getattr(package, "pdf_toc_links", _MISSING)
+        try:
+            with (
+                mock.patch.dict(sys.modules, {"render.pdf_toc_links": None}),
+                redirect_stdout(out),
+            ):
+                count = self.module.build(self.html, self.pdf, fake_engine(page))
+        finally:
+            if saved is not _MISSING:
+                package.pdf_toc_links = saved
         self.assertEqual(count, 3)
         self.assertIn("playwright 未安装", out.getvalue())
 

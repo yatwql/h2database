@@ -221,6 +221,10 @@ def _open_inputs(report: Report, pdf_path: str, html_path: str):
     return reader, _fsutil.read_text(html_path)
 
 
+MIN_PROSE_LINES_PER_PAGE = 8
+MIN_CODE_LINES_PER_PAGE = 2
+
+
 def _check_density(report: Report, pdf_path: str) -> None:
     """DENSITY: leading and page fill, judged against geometry, not a page count.
 
@@ -252,6 +256,15 @@ def _check_density(report: Report, pdf_path: str) -> None:
     # the criterion is about reading comfort in running text. A page-wide median
     # mixes prose, headings and listings, and a listing's line height is a property of
     # its column width, not of the prose leading the gate means to judge.
+    # judge only a document that is mostly prose: a two-page fixture has enough gaps to
+    # compute a ratio and not enough running text for the ratio to mean anything
+    pages = max(int(metrics.get('pages') or 1), 1)
+    prose_per_page = int(metrics.get('prose_lines') or 0) / pages
+    if prose_per_page < MIN_PROSE_LINES_PER_PAGE:
+        report.add('DENSITY', True,
+                   f'too little running text to judge ({prose_per_page:.1f} lines/page '
+                   f'< {MIN_PROSE_LINES_PER_PAGE})')
+        return
     ratio = float(metrics.get('prose_pitch_ratio') or 0.0) or (pitch / body)
     low = float(_config.THRESHOLDS.get('pdf_leading_ratio_min', 1.15) or 1.15)
     high = float(_config.THRESHOLDS.get('pdf_leading_ratio_max', 1.75) or 1.75)
@@ -261,7 +274,8 @@ def _check_density(report: Report, pdf_path: str) -> None:
     # listings get their own floor: cramped code is unreadable, but their line height
     # follows the code size the column can carry, so it is not held to the prose band
     code_ratio = float(metrics.get('code_pitch_ratio') or 0.0)
-    if code_ratio:
+    code_per_page = int(metrics.get('code_lines') or 0) / pages
+    if code_ratio and code_per_page >= MIN_CODE_LINES_PER_PAGE:
         report.add('CODE_LEAD', code_ratio >= 1.0,
                    f'listing leading {code_ratio:.2f}x (want >= 1.00)')
 

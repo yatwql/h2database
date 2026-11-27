@@ -51,6 +51,23 @@ def _is_mono_font(font_dict) -> bool:
     return 'Mono' in name or 'Courier' in name
 
 
+def _dominant(gaps: list[float]) -> float:
+    """The gap that repeats most often: the line pitch of a block of running text.
+
+    A median over every gap mixes three different spacings — lines inside a paragraph,
+    the blank line between paragraphs, and the drop from a heading to its first line — so
+    a page with little prose reports a pitch that belongs to none of them. The pitch a
+    reader actually experiences is the one that recurs, so that is the one measured.
+    """
+    if not gaps:
+        return 0.0
+    counts: dict[float, int] = {}
+    for gap in gaps:
+        key = round(gap * 2) / 2  # half a point is finer than any real leading change
+        counts[key] = counts.get(key, 0) + 1
+    return max(sorted(counts), key=lambda key: counts[key])
+
+
 def measure(path: str) -> dict:
     """Layout metrics for one PDF; empty dict when the file cannot be read."""
     reader = PdfReader(path)
@@ -142,6 +159,10 @@ def measure(path: str) -> dict:
         'code_pitch_ratio': round(statistics.median(code_pitches)
                                   / (code_sizes.most_common(1)[0][0] or 1), 3)
         if code_pitches and code_sizes else 0.0,
+        # how many gaps the two ratios were drawn from: a ratio over three gaps is
+        # noise, and a reader of this dict must be able to tell before judging it
+        'prose_lines': len(prose_pitches),
+        'code_lines': len(code_pitches),
         'pitch_pt': round(statistics.median(pitches), 1) if pitches else 0.0,
         'text_width_pt': round(statistics.median(widths), 1) if widths else 0.0,
     }

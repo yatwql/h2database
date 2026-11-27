@@ -390,6 +390,7 @@ class VerifyPdfSkipAndDensityTest(PdfFixtureCase):
         fake = types.SimpleNamespace(
             measure=lambda _path: {"body_pt": 6.8, "pitch_pt": 8.2, "lines_per_page": 50,
                                    "pages": 10, "prose_pitch_ratio": 1.81,
+                                   "prose_lines": 400, "code_lines": 40,
                                    "code_pitch_ratio": 1.10})
         report = self.verify_pdf.Report()
         with (
@@ -410,6 +411,7 @@ class VerifyPdfSkipAndDensityTest(PdfFixtureCase):
         fake = types.SimpleNamespace(
             measure=lambda _path: {"body_pt": 6.8, "pitch_pt": 8.2, "lines_per_page": 50,
                                    "pages": 10, "prose_pitch_ratio": 1.30,
+                                   "prose_lines": 400, "code_lines": 40,
                                    "code_pitch_ratio": 0.90})
         report = self.verify_pdf.Report()
         with (
@@ -422,12 +424,31 @@ class VerifyPdfSkipAndDensityTest(PdfFixtureCase):
         self.assertTrue(by_name["DENSITY"])
         self.assertFalse(by_name["CODE_LEAD"])
 
+    def test_a_document_with_too_little_running_text_is_not_judged(self):
+        """Two pages of prose produce a ratio that means nothing; say so, do not fail."""
+        fake = types.SimpleNamespace(
+            measure=lambda _path: {"body_pt": 10.0, "pitch_pt": 31.7, "lines_per_page": 10,
+                                   "pages": 4, "prose_lines": 6, "prose_pitch_ratio": 3.17}
+        )
+        render = importlib.import_module("render")
+        report = self.verify_pdf.Report()
+        with (
+            mock.patch.dict(sys.modules, {"render.pdf_metrics": fake}),
+            mock.patch.object(render, "pdf_metrics", fake, create=True),
+            redirect_stdout(io.StringIO()),
+        ):
+            self.verify_pdf._check_density(report, self.pdf)
+        self.assertEqual([name for name, _ok, _d in report.checks], ["DENSITY"])
+        self.assertTrue(report.checks[0][1])
+        self.assertIn("too little running text", report.checks[0][2])
+
     def test_the_density_ratio_is_judged_against_the_leading_window(self):
         self.build()
         render = importlib.import_module("render")
         fake = types.SimpleNamespace(
             measure=lambda _path: {"body_pt": 10.0, "pitch_pt": 14.0,
-                                   "lines_per_page": 50, "pages": 10}
+                                   "lines_per_page": 50, "pages": 10,
+                                   "prose_lines": 400}
         )
         report = self.verify_pdf.Report()
         with (
