@@ -1299,7 +1299,7 @@ SQL 到执行计划的对象变换链
 `SessionLocal` 内部维护一个 `SmallLRUCache`（LRU 策略），大小由 `queryCacheSize` 控制：
 
 ```java
-// SessionLocal.java:628-642
+// SessionLocal.java:658-674
 if (queryCacheSize > 0) {
     if (queryCache == null) {
         queryCache = SmallLRUCache.newInstance(queryCacheSize);

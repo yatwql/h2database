@@ -94,7 +94,7 @@ MVStore 的关键设计决策是：**使用 `ReentrantLock`（名为 `storeLock`
 // MVStore.java:163
 private final ReentrantLock storeLock = new ReentrantLock(true);
 
-// MVStore.java:169
+// MVStore.java:169-169
 private final AtomicBoolean storeOperationInProgress = new AtomicBoolean();
 ```
 
@@ -4809,7 +4809,7 @@ default:
 在事务首次读取时创建快照（`promoteSnapshot()`），此后所有读取基于同一快照：
 
 ```java
-// TransactionMap.java:535-539
+// TransactionMap.java:539-543
 void promoteSnapshot() {
     if (snapshot == null) {
         snapshot = statementSnapshot;  // 将语句快照提升为事务快照
@@ -5257,7 +5257,7 @@ public final class RootReference<K,V> {
 如图 10-20 所示，`MVMap` 的根引用声明为 `AtomicReference<RootReference>`，所有对 B-Tree 结构的修改都通过 CAS 操作完成：
 
 ```java
-// MVMap.java:45
+// MVMap.java:45-45
 private final AtomicReference<RootReference<K,V>> root;
 ```
 ```text
@@ -5400,7 +5400,7 @@ private RootReference(RootReference<K,V> r, int attempt) {
 `RootReference.previous` 指向同一 B-Tree 的上一个版本。这构成了一个版本链：
 
 ```java
-// RootReference.java:39
+// RootReference.java:39-39
 volatile RootReference<K,V> previous;
 ```
 ```text
