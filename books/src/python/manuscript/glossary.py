@@ -21,7 +21,6 @@ import sys as _sys
 # make the shared package importable when the script runs standalone
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
-import glob
 import os
 import re
 import sys
@@ -32,8 +31,13 @@ _fsutil.pin_stdout_utf8()
 
 
 def chapter_files() -> list[str]:
-    """Chapter files of the book being scanned, read when the scan runs."""
-    return sorted(glob.glob(os.path.join(_config.MANUSCRIPT_DIR, "ch[0-9]*.md")))
+    """Chapter files of the book being scanned, read when the scan runs.
+
+    The membership and the order come from `book.toml [chapters].files`: a book may name
+    its chapters anything, and deriving them from a filename pattern silently disagrees
+    with the book the rest of the gates are judging.
+    """
+    return _config.chapter_files(include_cover=False)
 
 
 def parse_glossary_v6() -> dict[str, dict]:

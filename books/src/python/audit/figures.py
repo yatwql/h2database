@@ -17,7 +17,6 @@ import sys as _sys
 # make the shared package importable when the script runs standalone
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
-import glob
 import json
 import os
 import re
@@ -29,8 +28,8 @@ FIG_RE = re.compile(rf'\*\*{_mdutil.FIGURE_LABEL} ({_mdutil.FIGURE_ID}):')
 CITATION_RE = re.compile(rf'如图 ({_mdutil.FIGURE_ID}) 所示')
 
 def chapter_files() -> list[str]:
-    pattern = os.path.join(_config.MANUSCRIPT_DIR, 'ch[0-9]*.md')
-    return sorted(glob.glob(pattern))
+    """Chapter files the book declares, in reading order (`book.toml [chapters]`)."""
+    return _config.chapter_files(include_cover=False)
 
 def audit(files: list[str]) -> dict:
     """Return figure/citation counts and the problems per file."""

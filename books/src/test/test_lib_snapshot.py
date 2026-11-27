@@ -46,8 +46,9 @@ class SnapshotReaderTest(unittest.TestCase):
         self.assertIsNone(self.mod.manifest("not-there"))
 
     def test_volume_counts_the_manifest_and_zeroes_artifact_lines(self):
-        self._write("ms", {"files": {"a.md": {"bytes": 40, "lines": 3},
-                                     "b.md": {"bytes": 10, "lines": 1}}})
+        self._write(
+            "ms", {"files": {"a.md": {"bytes": 40, "lines": 3}, "b.md": {"bytes": 10, "lines": 1}}}
+        )
         facts = self.mod.volume("ms")
         self.assertEqual(facts["totals"], {"files": 2, "bytes": 50, "lines": 4})
         self._write("art", {"files": {"x.pdf": {"bytes": 900}}})

@@ -18,14 +18,15 @@ import os
 
 from lib import _config, _fsutil
 
-MANIFEST = 'manifest.json'
+MANIFEST = "manifest.json"
 
 
 def root() -> str:
     """The snapshot root of the active book, read when it is used."""
-    return os.path.join(_config.BOOK_ROOT,
-                        str(_config.BASE_POLICY.get('paths', {}).get('snapshots',
-                                                                     'data/snapshots')))
+    return os.path.join(
+        _config.BOOK_ROOT,
+        str(_config.BASE_POLICY.get("paths", {}).get("snapshots", "data/snapshots")),
+    )
 
 
 def paths(base: str | None = None) -> dict[str, str]:
@@ -57,15 +58,17 @@ def paths(base: str | None = None) -> dict[str, str]:
         for child in children:
             child_path = os.path.join(path, child)
             if os.path.isdir(child_path) and looks_like_snapshot(child_path):
-                found[f'{name}/{child}'] = child_path
+                found[f"{name}/{child}"] = child_path
     return found
 
 
 def looks_like_snapshot(path: str) -> bool:
     """Whether a directory holds a snapshot rather than being a book namespace."""
-    return (os.path.exists(os.path.join(path, MANIFEST))
-            or os.path.isdir(os.path.join(path, 'manuscript'))
-            or os.path.isdir(os.path.join(path, 'artifacts')))
+    return (
+        os.path.exists(os.path.join(path, MANIFEST))
+        or os.path.isdir(os.path.join(path, "manuscript"))
+        or os.path.isdir(os.path.join(path, "artifacts"))
+    )
 
 
 def resolve(label: str, base: str | None = None) -> str | None:
@@ -79,8 +82,7 @@ def resolve(label: str, base: str | None = None) -> str | None:
     if os.path.isdir(direct):
         return direct
     found = paths(base)
-    exact = [path for name, path in found.items()
-             if name == label or name.endswith(f'/{label}')]
+    exact = [path for name, path in found.items() if name == label or name.endswith(f"/{label}")]
     if len(exact) == 1:
         return exact[0]
     partial = [path for name, path in found.items() if label in name]
@@ -107,11 +109,18 @@ def volume(label: str) -> dict | None:
     payload = manifest(label)
     if payload is None:
         return None
-    files = {name: {'bytes': int(stats.get('bytes', 0)),
-                    'lines': int(stats.get('lines', 0))}
-             for name, stats in (payload.get('files') or {}).items()}
-    total = {'files': len(files),
-             'bytes': sum(item['bytes'] for item in files.values()),
-             'lines': sum(item['lines'] for item in files.values())}
-    return {'label': label, 'files': files, 'totals': total,
-            'identity': payload.get('identity') or {}}
+    files = {
+        name: {"bytes": int(stats.get("bytes", 0)), "lines": int(stats.get("lines", 0))}
+        for name, stats in (payload.get("files") or {}).items()
+    }
+    total = {
+        "files": len(files),
+        "bytes": sum(item["bytes"] for item in files.values()),
+        "lines": sum(item["lines"] for item in files.values()),
+    }
+    return {
+        "label": label,
+        "files": files,
+        "totals": total,
+        "identity": payload.get("identity") or {},
+    }

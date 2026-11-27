@@ -106,6 +106,7 @@ class TestFigureCitations(FixtureCase):
             fh.write(text)
         return path
 
+
     def audit(self, text: str) -> dict:
         path = self.write_chapter("ch3-test.md", text)
         figures = _fixture.load_module(self.root, "figures")
@@ -122,6 +123,7 @@ class TestFigureCitations(FixtureCase):
 
     def test_strict_fails_on_a_dangling_citation_and_names_it(self):
         self.write_chapter("ch3-test.md", "如图 3-7 所示，这一幅并不存在。\n")
+        self.declare("ch3-test.md")
         code, out = _fixture.run_inproc(self.root, "figures.py", "--strict")
         self.assertEqual(code, 1, out)
         self.assertIn("dangling citations", out)
@@ -133,6 +135,7 @@ class TestFigureCitations(FixtureCase):
             with open(path, "a", encoding="utf-8") as fh:
                 fh.write(f"\n如图 {figure} 所示。\n")
         self.write_chapter("ch3-test.md", "**图 3-1: 结构**\n\n如图 3-1 所示。\n")
+        self.declare("ch3-test.md")
         code, out = _fixture.run_inproc(self.root, "figures.py", "--strict")
         self.assertEqual(code, 0, out)
         self.assertIn("Files with uncited figures: 0", out)

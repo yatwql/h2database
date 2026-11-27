@@ -29,6 +29,7 @@ class TestIndexBuilderBranches(FixtureCase):
         self.assertIn("below the configured floor", out)
 
     def test_heading_levels_metadata_markers_and_repeats(self):
+        self.declare("ch3-probe.md")
         self.write(
             "data/manuscript/ch3-probe.md",
             "# 第3章 探针\n\n"

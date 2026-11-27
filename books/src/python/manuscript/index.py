@@ -24,7 +24,6 @@ import sys as _sys
 # make the shared package importable when the script runs standalone
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
-import glob
 import os
 import re
 import sys
@@ -35,8 +34,13 @@ _fsutil.pin_stdout_utf8()
 
 
 def chapter_files() -> list[str]:
-    """Chapter files of the book being indexed, read when the build runs."""
-    return sorted(glob.glob(os.path.join(_config.MANUSCRIPT_DIR, "ch[0-9]*.md")))
+    """Chapter files of the book being indexed, read when the build runs.
+
+    Membership and order come from `book.toml [chapters].files`, not from a filename
+    pattern: an index entry belongs to a chapter the book declared, not to one whose name
+    happens to start with `ch`.
+    """
+    return _config.chapter_files(include_cover=False)
 
 
 # Check for --coverage flag

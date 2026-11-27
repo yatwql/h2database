@@ -41,8 +41,10 @@ class SnapshotIdentityTest(unittest.TestCase):
         self.mod = _fixture.load_module(self.root, "snapshot")
         self.snapshots = os.path.join(self.root, "data", "snapshots")
         os.makedirs(self.snapshots, exist_ok=True)
-        for patcher in (mock.patch.object(self.mod, "SNAPSHOT_ROOT", self.snapshots),
-                        mock.patch.object(self.mod._config, "BOOK_ROOT", self.root)):
+        for patcher in (
+            mock.patch.object(self.mod, "SNAPSHOT_ROOT", self.snapshots),
+            mock.patch.object(self.mod._config, "BOOK_ROOT", self.root),
+        ):
             patcher.start()
             self.addCleanup(patcher.stop)
 
@@ -88,10 +90,15 @@ class SnapshotIdentityTest(unittest.TestCase):
         with open(os.path.join(path, "manuscript", "ch1.md"), "w", encoding="utf-8") as fh:
             fh.write("# 第1章\n")
         with open(os.path.join(path, "manifest.json"), "w", encoding="utf-8") as fh:
-            json.dump({"label": name, "files": {"ch1.md": {"bytes": 6, "lines": 1,
-                                                           "sha256": "a"}},
-                       "totals": {"files": 1, "bytes": 6, "lines": 1},
-                       "identity": identity}, fh)
+            json.dump(
+                {
+                    "label": name,
+                    "files": {"ch1.md": {"bytes": 6, "lines": 1, "sha256": "a"}},
+                    "totals": {"files": 1, "bytes": 6, "lines": 1},
+                    "identity": identity,
+                },
+                fh,
+            )
 
     def test_diff_refuses_two_different_books(self):
         self._write_manifest("a", {"book": {"slug": "book-a"}, "source": {"version": "1"}})
@@ -147,8 +154,10 @@ class SnapshotIdentityTest(unittest.TestCase):
         path_b = os.path.join(self.snapshots, "b", "manifest.json")
         with open(path_b, encoding="utf-8") as fh:
             manifest = json.load(fh)
-        manifest["files"] = {"ch1.md": {"bytes": 9, "lines": 2, "sha256": "b"},
-                             "ch2.md": {"bytes": 3, "lines": 1, "sha256": "c"}}
+        manifest["files"] = {
+            "ch1.md": {"bytes": 9, "lines": 2, "sha256": "b"},
+            "ch2.md": {"bytes": 3, "lines": 1, "sha256": "c"},
+        }
         with open(path_b, "w", encoding="utf-8") as fh:
             json.dump(manifest, fh)
         buffer = io.StringIO()
@@ -211,8 +220,14 @@ class SnapshotIdentityTest(unittest.TestCase):
         path = self._legacy("2026-06-11", {})
         chapter = os.path.join(path, "manuscript", "ch1.md")
         with open(os.path.join(path, "manifest.json"), "w", encoding="utf-8") as fh:
-            json.dump({"files": {"ch1.md": {"bytes": 6, "lines": 1,
-                                            "sha256": self.mod.sha256_file(chapter)}}}, fh)
+            json.dump(
+                {
+                    "files": {
+                        "ch1.md": {"bytes": 6, "lines": 1, "sha256": self.mod.sha256_file(chapter)}
+                    }
+                },
+                fh,
+            )
         with redirect_stdout(io.StringIO()):
             self.assertEqual(self.mod.adopt("2026-06-11"), 0)
         slug = self.mod._config.current().merged_name
@@ -228,8 +243,7 @@ class SnapshotIdentityTest(unittest.TestCase):
             self.assertEqual(self.mod.verify("2026-06-11"), 0)
 
     def test_adopt_leaves_an_identified_snapshot_alone(self):
-        self._legacy("2026-06-12", {"files": {},
-                                    "identity": {"book": {"slug": "x"}}})
+        self._legacy("2026-06-12", {"files": {}, "identity": {"book": {"slug": "x"}}})
         buffer = io.StringIO()
         with redirect_stdout(buffer):
             self.assertEqual(self.mod.adopt("2026-06-12"), 0)

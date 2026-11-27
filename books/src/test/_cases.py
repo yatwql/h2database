@@ -32,6 +32,16 @@ class Base(unittest.TestCase):
                 else:
                     os.environ[key] = value
 
+    def declare(self, name: str) -> None:
+        """List a probe chapter in book.toml: `[chapters].files` is the contract."""
+        path = os.path.join(self.root, "data", "book", "book.toml")
+        with open(path, encoding="utf-8") as fh:
+            text = fh.read()
+        marker = '    "ch2-test.md",\n]'
+        assert marker in text, "fixture book.toml lost its chapter list"
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(text.replace(marker, f'    "ch2-test.md",\n    "{name}",\n]', 1))
+
     def write(self, rel: str, text: str) -> str:
         path = os.path.join(self.root, rel)
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -57,11 +67,12 @@ class ScriptTestBase(unittest.TestCase):
             return fh.read()
 
 
-class FixtureCase(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.root = _fixture.build_book(self.tmp.name)
+class FixtureCase(Base):
+    """A built fixture book plus the helpers a case needs to look inside it.
+
+    `setUp`, `write`, `run_script` and `declare` come from `Base`: the same fixture
+    contract whether a case needs a bare book or the module-loading helpers below.
+    """
 
     def dist(self, name: str) -> str:
         return os.path.join(self.root, "dist", name)
@@ -72,16 +83,6 @@ class FixtureCase(unittest.TestCase):
     def read(self, path: str) -> str:
         with open(path, encoding="utf-8") as fh:
             return fh.read()
-
-    def run_script(self, script: str, *args: str):
-        return _fixture.run_inproc(self.root, script, *args)
-
-    def write(self, rel: str, text: str) -> str:
-        path = os.path.join(self.root, rel)
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w", encoding="utf-8") as fh:
-            fh.write(text)
-        return path
 
 
 class TempFile:
