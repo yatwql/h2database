@@ -2,101 +2,12 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/)。
 
-> 软件：bookwright — 源码分析成书工具 v0.2-dev
-> 版本：v0.2-dev
+> 软件：bookwright — 源码分析成书工具 v0.2
+> 版本：v0.2
 > 定位：**版本变更记录，只留当前开发段**——写“变了什么”；问题编号与修复细节见
 > `review-findings.md`，设计理由见 `technical.md`。已发布版本由 git 标签保留。
 
 ---
-
-## [0.2] - 开发中（未发布）
-
-### 变更
-
-- **用户手册补齐用法覆盖**：`how-to-use.md` 增「保留并对比历史稿」（快照 import/list/diff/adopt 与提为体量下限）；
-　`how-to-use-cli.md` 增「只跑一部分/只看耗时」（`--only`、`--keep-going`、`--timings`、`cover --full`、`report`）；
-　`how-to-config.md` 增「编辑风格档」一节（四个元素判什么、可覆盖哪些键、怎么记账）；
-　`how-to-write.md` 增「要素的条数与形态」（要点 3–5 条、小结条目化、误区两段、并列用表）；
-　`how-to-new-book.md` 补可选书级文件与首次 `check` 的处置；`faq.md` 补编辑要素、历史稿对比、日志留存、删节版四问。
-- **管理文档与用户文档对齐当前实现**：全部文档头改为 `v0.2-dev`（原为 v0.1）；`folder.md` 的基线清单改为
-　「门禁命名 + 统一信封」并指向 `manuscript/baselines.py`，快照小节改述身份段与 `list`/`diff`；
-　`technical.md` 补 `_snapshot` 模块与日志行为（动作信封、行缓冲），删掉已不存在的快照体积账本行；
-　`content-quality-policy.md` 去掉 `snapshot.py baseline` 与 `snapshot-<标签>.json`；`scripts-and-reference.md` 补齐 `adopt`/`diff`；
-　`how-to-use-tui.md` 写明「产物：开始／完成」与每 10 秒的存活提示、日志位置与保留期；`plan.md`/`review-findings.md`
-　收敛重复小节（rf-72 已解决，台账当前无在办项）。
-- **基线目录归一完成（plan-19 阶段 2）**：移除旧名回退（`_baseline.LEGACY` / `legacy_path`）——此后只认
-　`base.json [baselines]` 声明的门禁命名；`manuscript/baselines.py --check` 把「旧文件名」列为问题，提示重记而非静默读取。
-- **基线目录归一收尾**：`lib/_defaults/base.json` 的 `[baselines]` 也改到门禁命名（此前只改了本书的 `base.json`，　新建书的脚手架仍会拿到旧文件名）；`manuscript/baselines.py --check` 现零告警，`cover` 与 `check` 全绿。
-- **基线目录有了清单命令**：`manuscript/baselines.py` 一条表给出 `data/baselines/` 每个文件的形态、条数、更新日期、归属门禁与用途；`--check` 报「空账本、无法读取、无门禁认领」三类问题（进入 `make.py` 的 report 组）。顺带删掉只剩空数组的 `loose-assertions.json`——无存量时不再留空账本。
-- **快照带身份、按书归目录（plan-18 阶段 1，含体积账本合并）**：`manifest.json` 增 `identity` 段（书 slug/版本、
-　源树根与源版本、工具版本、配置指纹、语种），新快照写入 `data/snapshots/<book-slug>/<date>-<label>`；
-　`list` 输出「名称／书／源版本／工具／配置／文件／字节」，`diff A B` 先比身份、跨书默认拒绝（`--cross` 放行并声明不是退化）；
-　`snapshot.py adopt` 给旧快照补身份并归位，`data/snapshots/` 现存两份已就地迁移为 `h2-source-code-analysis/…`。
-　同一次改动把 `data/baselines/` 下的快照体积账本并入 manifest：`lib/_snapshot.py` 成为唯一读取方，
-　`audit/content_volume.py --from-snapshot` 直接读 manifest（旧账本仅作回退），`snapshot.py baseline` 子命令与其产物一并删除。
-- **126 小时变更回顾：四处技术债已清**。①`lib/_editorial.py` 的三档预设曾内置中文小节名，属「书的内容写进工具链」——
-　改为小节键，标签由语言包给（`zh.json` 补 `goals`/`pitfalls`），书仍可用 `heading` 覆盖；②`audit/exercises.py`
-　的示例提示把书名写进了工具链，改为中立表述；③`test_real_book.py` 的守卫指向不存在的 `manuscript` 路径，
-　整个真实书测试集从未执行，改回 `data/manuscript` 后暴露 4 处过期期望（已按基线现状校正），并把审计改为子进程运行，
-　不再继承上一个 fixture 的模块状态；④`books/dist/*.md` 被跟踪但按仓库规则产物应被忽略，已加忽略并取消跟踪。
-　另有 ch7 三处「如图」导语误入代码围栏，造成行宽越界，已移出围栏。
-- **学习目标按它实际存在的位置度量**：本书的学习目标写在章首引用的「章节要点」块里，判据改为按该块的条目计数
-　（标记由 `data/book/editing.toml` 指定，别的书可以用小节标题），`learning_goals` 随之打开并按 tutorial 档下限 3 条判；
-　第 6.2、6.3 两篇补了缺的要点块，十个正文文件各 4–5 条。
-- **各章小结条目化（plan-14 阶段 2 起）**：8 处整段叙述的「本章小结」改成 4–6 条要点（第 4、5、6.4、6.8、6.11、7、11.4、12.5 节），
-　`[elements.key_points]` 随之打开，按 tutorial 档下限 4 条判定。判据同时修正两处口径：附录等参考件不再进入要素判定；
-　表格密度只报告、棘轮改看表格**张数**——正文加字会让密度下降，但那不是退化。
-- **LLM 起草先过契约、再进正文（plan-16 阶段 1）**：新增 `data/book/llm-tasks.toml`（每任务的
-`min_chars`/`max_chars`/`single_paragraph`/`allow_unknown_digits`）与 `lib/_llm_contract.py`；
-草稿若出现事实之外的数字、超长或分段，直接判违约并回退到确定性文本，不写进手稿。每次调用无论采用与否
-都落 `data/state/llm-ledger.jsonl`（prompt 与响应摘要、模型、配置指纹），同一输入重跑摘要一致。
-- **编辑要素开始可判（plan-14 阶段 1）**：新增书级配置 `data/book/editing.toml`（风格档三选一 +
-逐项覆盖）与三档预设 `lib/_editorial.py`（manual / tutorial / hands-on），新增判据 `audit/editorial.py`
-量出每章的 学习目标 / 要点回顾 / 常见误区 / 表格密度，并按 `data/baselines/editorial.json` 棘轮判定：
-必选元素低于下限、或任一计数低于基线即失败。本书按 tutorial 档登记但三项尚未补齐，缺口已记录在基线里，
-补内容按 `docs/plan/editorial-profile/` 推进。
-- **印刷版重新省页（plan-17 ③）**：纸面阅读度量与自适应解算改为配置驱动（`layout_print_chars_per_line`
-  等），标准版 920 页、印刷版 935 → **829 页（−9.9%，目标 ≤874）**，`DENSITY`、`CODE_LEAD`、`TOC_LINKS` 全绿。
-- **章节文件篇幅比的计量范围**：`balance.py` 只量正文各章节文件，附录与前件在报告里列在 `scope.excluded_files`
-  下明示不计入——原来的最小值来自附录 B（68 行），比值由参考件而非正文决定。ch7-8 拆成 ch7/ch8 后
-  该比值 120.4 → **2.991**，目标经决策定为 **3.0**（再拆 ch4-5 需重编号 105 张图，代价与收益不成比例）；
-  比值超目标时判据返回失败，不再只是打印一行。
-- **跨章引用有了密度判据（plan-17 ④）**：`crossrefs.py` 新增每章引用下限（`style.json chapters_min_cross_refs
-  = 2`），每条 `详见第X章《…》` 仍须解析到存在的章与 H1 标题；索引下限按实测收到 185/112/145/300。实测跨章引用
-  29 → **37 处**，索引 331 条全部可达，不留空格子内容。
-- **通用性写成约束并机检**：`technical.md` 新增 §2.4「不绑定某一本书，也不绑定某一棵源码树」——书的专有词
-  只能存在于 `data/`，仓库路径/语言/后缀只能从 `[sources]` 读。`check_architecture.py` 新增
-  `book_vocabulary` 检查：词表由书在 `base.json [toolchain]` 声明（当前为 `MVStore`、`TransactionStore`、
-  `JdbcStatement`、`SessionLocal`、`H2 Console`），整词匹配 `src/python/` 全文，命中即报，随架构层一起
-  是 P0 门禁（关闭了「书的内容写进工具链」这条长期无门禁的口子）。
-- **对比类论述开始表格化（plan-13 阶段 1–2）**：附录 B 的十二项 MVStore 变更与十一项事务子系统变更
-  改成两张 3 列表（变更点 / 之前 → 现在 / 读者影响），第 7 章补一张 Statement 与 PreparedStatement
-  的 5 行对照表（编译时机、N 次开销、参数传递、注入面、适用场景）。改写只换呈现：每条事实逐条对应，
-  图号、坐标与图注未变；`make.py build` 与全量门禁绿。
-- **源码变化报告到「变了什么」**：`lib/_source_state.py` 比对 `source-inventory.json` 与
-  `source-inventory.prev.json`，给出新增/移除的包与包/文件/行的增减、上次分析日期
-  （`已变化（新增包 x 等 4 个，包 +3 / 文件 +12 / 行 +1,204，上次分析 2026-11-24）`）。
-  `digest.py` 写完清单后打印、`chapters.py` 刷新事实块前打印、TUI 在按 1/2 前打印；模块自己不绑定
-  配置，路径由调用方传入。
-- **浏览器启动统一到 `lib/_browser.py`**：core 上限归零、`TMPDIR` 指向书内临时目录。此前一次渲染崩溃
-  在仓库根目录留下 36 MB 的 `core.3077190`；现在 `.gitignore` 忽略 `core.*`，已有的那份移到
-  `books/data/tmp/`。Playwright 的 `launch()` 既不接受 `cwd` 也不接受 `preexec_fn`，所以只有环境变量与
-  进程资源限制两条路（参数名写错曾让 `pdf_toc_links` 在 0.41 秒内失败）。
-- **PDF 的 Type3 归零**：练习类型 emoji 与圈号 ①–⑳ 没有可嵌入字体覆盖，浏览器只能描边
-  （六月版标准 43、印刷 6,684 个 Type3 对象）。`merge.py` 在投递稿里把 emoji 换成
-  `【理解】/【分析】/【动手】`、圈号换成 `(1)–(20)`，手稿不动；两版 PDF 现在均为 **0**。
-- **TUI 按产物汇报**：按 6 先给顺序 `Markdown → HTML → EPUB → 标准版 PDF → 印刷版 PDF`，随后
-  `Markdown：完成（1.2s）`、`标准版 PDF · 目录链接：完成（3.4s）`、`印刷版 PDF · 校验：完成（18.0s）`；
-  静默 10 秒仍有心跳，时长写成「1 分 40 秒」而不是易读错的 `1:40`。
-- **印刷版进入步骤表**：`make.py print` = `print_pdf`（渲染后写回目录链接目标）+ `verify_print`
-  （`verify_pdf --print`）。实测 944 页 / 7.49 MB / 正文行距比 1.459，死链 0。
-- **框线闭合改成存量记账（plan-17 第 1 项）**：`readability.py` 按图统计角字符是否成对，表格底边合并列、
-  树形分支（`├──`/`└──`）这类画法每图必中，全库 926 条告警里绝大部分不是可以改一个字符就消失的错。
-  判据因此从「零告警」改为按文件记账：`data/baselines/readability.json`（配置项
-  `base.json [baselines].readability_box`）记下每个手稿文件的存量条数，某文件条数上涨或出现基线外的文件即
-  失败，条数下降则提示收紧记录；`--update-baseline` 写回。存量分布：ch7-8 276、ch9-10 186、ch4-5 137、
-  ch6-3 76、ch3 52、ch6-2 52、ch1-2 50、ch11-12 38、ch6-1 38、附录 A 21。同时补齐 ch4-5 一段断开的框线
-  （`└─────` 缺 `┘`），该文件 138 → 137。
 
 ## 版本口径
 
@@ -104,7 +15,5 @@
 封面统计不由本文维护；两者的历史都在 git 中。
 
 ## 归档
-
-> 已发布版本只在上面的归档文件里；本文只留当前开发段。
-
-- [`archived_changelog.0.1.md`](../archive/v0.1/archived_changelog.0.1.md) — v0.1（2026-11-26 发布）
+- [`archived_changelog.0.1.md`](../archive/v0.1/archived_changelog.0.1.md) — 0.1
+- [`archived_changelog.0.2.md`](../archive/v0.2/archived_changelog.0.2.md) — 0.2

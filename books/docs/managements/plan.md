@@ -1,17 +1,17 @@
 # 实施与维护计划
 
-> 软件：bookwright — 源码分析成书工具 v0.2-dev
-> 版本：v0.2-dev
+> 软件：bookwright — 源码分析成书工具 v0.2
+> 版本：v0.2
 > 定位：在办事项的**时机档与逐项验收**——每项现状 / 动作 / 验收 / 事实位只在这里；
 > 不记设计细节（看 `technical.md`），也不存问题台账（看 `review-findings.md`）。
-> **编号源**：`plan-next = 20`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-19，
+> **编号源**：`plan-next = 19`（新增计划项取此编号，写入后更新为 +1；已用最大 plan-18，
 > 递增保证唯一，归档不回收。编号与 `review-findings.md` 的 `rf-*` 是两套，互不占用）
 
 ---
 
 ## 概述
 
-在办 9 项：P2 5 项（**plan-13**、**plan-14**、**plan-16**、**plan-18**、**plan-19**）、P3 3 项（**plan-6**、**plan-12**、**plan-15**）、P4 1 项（**plan-4**）。
+在办 8 项：P2 4 项（**plan-13**、**plan-14**、**plan-16**、**plan-18**）、P3 3 项（**plan-6**、**plan-12**、**plan-15**）、P4 1 项（**plan-4**）。
 单项的范围、验收与事实位只在本文维护；系统怎么搭见 `technical.md`，怎么验证见
 `testplan.md`。
 
@@ -87,17 +87,6 @@
 读取方 `src/python/lib/_snapshot.py`，写入与命令 `src/python/manuscript/snapshot.py`，
 体积门禁 `src/python/audit/content_volume.py`，目录归属见 `docs/managements/folder.md`。
 
-#### `plan-19` 基线目录归一（信封、命名、键形态、源版本）——已交付
-
-**现状**：两个阶段均已落地——`data/baselines/` 十个文件统一为门禁命名 + 统一信封
-（`schema/gate/kind/keyed_by`），`base.json` 与 `lib/_defaults/base.json` 同步声明，旧名回退已删除。
-**动作**：按 `docs/plan/baselines-unify/plan.md` 完成阶段 1（信封、命名、键形态、源版本提示）与阶段 2
-（移除 `_baseline.LEGACY`/`legacy_path`，清单命令把旧文件名列为待重记项）。
-**验收**：迁移前后每个文件条数一致；`make.py check --keep-going`、`test`、`cover` 全绿；
-`manuscript/baselines.py --check` 零告警。
-**事实位**：设计与计划在 `docs/plan/baselines-unify/`；写入方 `lib/_baseline.py`，清单命令
-`manuscript/baselines.py`，迁移记录见 `changelog.md` 0.2-dev 段。
-
 ### P3 — 预期实施，有空时安排
 
 入选标准：收益明确，但需要等时机或积累。
@@ -160,12 +149,9 @@ API/依赖/坐标，失败路径、不变量、调用链没有产出。
 
 | 迭代目录 | 结论出处 |
 | --- | --- |
-| `docs/plan/book-quality-closeout/` | 四项（存量基线、拆章、印刷密度、引用与索引下限）见 `changelog.md` 0.2-dev 段 |
 
 其余已完成的迭代已随 `docs/archive/v0.1/` 归档。
 
 ## 归档
-
-> 已发布版本的计划快照只在上面的归档文件里；本文只留在办与将来的计划项。
-
 - [`archived_plan.0.1.md`](../archive/v0.1/archived_plan.0.1.md) — v0.1（2026-11-26 发布）
+- [`archived_plan.0.2.md`](../archive/v0.2/archived_plan.0.2.md) — v0.2（2026-11-27 发布）

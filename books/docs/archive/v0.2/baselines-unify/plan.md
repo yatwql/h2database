@@ -2,8 +2,8 @@
 
 > **状态：已交付**——两个阶段都落地，成果见 `docs/managements/changelog.md`；本文保留为验收口径。
 >
-> 软件：bookwright — 源码分析成书工具 v0.2-dev
-> 版本：v0.2-dev
+> 软件：bookwright — 源码分析成书工具 v0.2
+> 版本：v0.2
 
 ---
 

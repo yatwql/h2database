@@ -1,7 +1,7 @@
 # CLI 使用
 
 > 维度：**命令行——入口、参数、退出码与组合用法**
-> 软件：bookwright — 源码分析成书工具 v0.2-dev
+> 软件：bookwright — 源码分析成书工具 v0.2
 
 命令行入口是 `books/src/python/app/cli.py`。日常请用薄封装 `books/scripts/bookctl`
 （Windows：`bookctl.ps1`），它会自己找解释器（`books/.venv` → `$PYTHON` → `python3`），
