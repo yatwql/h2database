@@ -70,6 +70,25 @@ books/scripts/bookctl make build --book ../other-book # 透传给 make.py
 指向未声明的版本会报错并列出已声明的版本。产物、手稿、派生状态、体量基线都跟着
 「书 + 版本」走，不同书之间互不覆盖。
 
+## 基线与 `--update-baseline`
+
+`data/baselines/` 是「已审现状」的账本：文件名即门禁名，内容是 `accepted` 列表、逐文件计数或
+读数记录，统一带 `schema/gate/kind/keyed_by` 信封，并由 `base.json [baselines]` 声明路径。
+
+```bash
+# 查账：形态、条数、更新日期、归属门禁；--check 报空账本/读不出/无门禁认领/旧文件名
+python books/src/python/manuscript/baselines.py [--check]
+
+# 记账：在那道门禁上加参数，并写明理由（不同门禁的参数名略有差异）
+python books/src/python/audit/captions.py --update-baseline
+python books/src/python/audit/readability.py --update-baseline
+python books/src/python/audit/source_refs.py --update-baseline
+python books/src/python/audit/content_volume.py --update-baseline --reviewed-by "…" --reason "…"
+```
+
+规则：条目只许减少；手工编辑 JSON 会被下一次记账覆盖，也无法在 diff 里解释「为什么接受」。
+`--check` 通过的判定是「每个账本都有门禁认领、都能读出、都不是空的」。
+
 ## 退出码
 
 | 码 | 含义 |
