@@ -368,7 +368,7 @@ class ConfigFallbackTest(unittest.TestCase):
         payload = json.loads(style.read_text(encoding="utf-8"))
         payload["generation"]["templates"] = {"map_intro": "来自样式表的旧书模板 {x}"}
         style.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
-        os.remove(os.path.join(self.root, "data", "tmpl", "templates.toml"))
+        os.remove(os.path.join(self.root, "data", "templates", "templates.toml"))
         self.assertEqual(self.config().templates(), {"map_intro": "来自样式表的旧书模板 {x}"})
 
     def test_defaults_without_a_shipped_template_file_fall_back_to_the_style_policy(self):
@@ -380,7 +380,7 @@ class ConfigFallbackTest(unittest.TestCase):
         payload = json.loads(style.read_text(encoding="utf-8"))
         payload["generation"]["templates"] = {"map_intro": "来自样式表的旧书模板 {x}"}
         style.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
-        os.remove(os.path.join(self.root, "data", "tmpl", "templates.toml"))
+        os.remove(os.path.join(self.root, "data", "templates", "templates.toml"))
         # opting into defaults with nothing shipped to merge leaves nothing to
         # return, so the plain read falls through to the legacy style table
         absent = pathlib.Path(self.tmp.name, "no-shipped-templates.json")
@@ -388,7 +388,7 @@ class ConfigFallbackTest(unittest.TestCase):
             self.assertEqual(self.config().templates(), {"map_intro": "来自样式表的旧书模板 {x}"})
 
     def test_a_broken_template_file_is_a_config_error(self):
-        path = pathlib.Path(self.root, "data", "tmpl", "templates.toml")
+        path = pathlib.Path(self.root, "data", "templates", "templates.toml")
         path.write_text("not = [valid", encoding="utf-8")
         with self.assertRaises(_config.ConfigError):
             self.config().templates()

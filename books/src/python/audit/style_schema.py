@@ -207,7 +207,7 @@ def _check_templates(style: dict) -> list[str]:
         problems.append("templates.deep_dive must be a list of strings")
     if (style.get("generation") or {}).get("templates"):
         problems.append(
-            "style.json must not carry prose templates (move to data/tmpl/templates.toml)"
+            "style.json must not carry prose templates (move to data/templates/templates.toml)"
         )
     if "project" in style:
         problems.append("style.json must not carry display copy (belongs to book.toml [project])")

@@ -207,7 +207,7 @@
 
 `data/language/zh.json` 提供章节骨架名与练习提示语，`_config.language()` 负责读取；
 语种由 `BOOK_LANGUAGE` 环境变量或配置决定。模板（章节引言、深读要点）放在
-`data/tmpl/templates.toml`，占位符由渲染层填充，模板本身不含判定逻辑。
+`data/templates/templates.toml`，占位符由渲染层填充，模板本身不含判定逻辑。
 
 ## 4. 分项设计
 

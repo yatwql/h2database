@@ -9,7 +9,7 @@ Scope is chosen per run, so one gate answers "where do we look?":
 
   --kind docs   docs/**/*.md, books/README.md, CLAUDE.md (changelog.md exempt)
   --kind code   every comment line under books/src/, books/scripts/, .githooks/,
-                .github/ and the comment blocks of data/tmpl and data/config — a
+                .github/ and the comment blocks of data/templates and data/config — a
                 repository narrates itself in shell hooks and YAML too
   --kind all    both scopes (default)
 

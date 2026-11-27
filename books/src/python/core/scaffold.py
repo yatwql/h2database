@@ -6,7 +6,7 @@ division of responsibility:
 
   data/book/book.toml   structure: identity, paths, chapter list, titles,
                      numbering, coverage, package mapping
-  data/tmpl/templates.toml     prose: narrative templates (placeholders kept)
+  data/templates/templates.toml   prose: narrative templates (placeholders kept)
   data/language/<code>.json    labels: section names, exercise hints, term line
   data/config/style.json       rules: thresholds and vocabulary (starting point)
   data/config/base.json        infrastructure: source tree, logging, budgets

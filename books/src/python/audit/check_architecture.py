@@ -49,7 +49,7 @@ DEPENDENCY_MATRIX: dict[str, frozenset[str]] = {
     "app": frozenset({"lib", "core", "app"}),
 }
 STDLIB_CLASH = {"types", "html", "json", "logging", "email", "code", "test", "binascii"}
-PATH_LITERALS = ("books/", "data/manuscript", "data/config", "data/tmpl")
+PATH_LITERALS = ("books/", "data/manuscript", "data/config", "data/templates")
 # The same rule, for the spelling that walked past the literal check: deriving the
 # book directory by name instead of asking _config for it.
 BOOK_DIR_DERIVATION = re.compile(

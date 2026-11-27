@@ -27,7 +27,7 @@ class ScaffoldGeneratorTest(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.root = _fixture.build_book(self.tmp.name)
         # scaffold copies these two documents into the new book
-        tmpl = os.path.join(self.root, 'data', 'tmpl', 'templates.toml')
+        tmpl = os.path.join(self.root, 'data', 'templates', 'templates.toml')
         os.makedirs(os.path.dirname(tmpl), exist_ok=True)
         if not os.path.exists(tmpl):
             with open(tmpl, 'w', encoding='utf-8') as fh:

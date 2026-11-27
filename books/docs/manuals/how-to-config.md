@@ -31,7 +31,7 @@ docs = "docs"
 tmp = "data/tmp"                   # 临时目录：一次性脚本、--force 备份（随时可清空）
 cache = "data/cache"               # 缓存：字体索引、HTML 分片（可重建但有成本）
 state = "data/state"               # 派生状态：ingest 每次重建（已 gitignore）
-templates = "data/tmpl"            # 叙述模板（templates.toml）
+templates = "data/templates"       # 叙述模板（templates.toml）
 book = "data/book"                 # 本书专属文件（book.toml / case-studies.toml / glossary.toml / editing.toml / llm-tasks.toml）
 library = ".."                     # 其他书所在的目录（缺省＝本书的父目录）
 baselines = "data/baselines"       # 已评审存量的账本目录
@@ -182,7 +182,7 @@ base.json 的 `[toolchain]` 段另有两类键：`balance_max_min_ratio`（正�
 | 关注点 | 文件 | 属于 |
 | -------- | ------ | ------ |
 | 判定规则与阈值（图注词表、质量/文风阈值、篇幅预算、必备段落名） | `data/config/style.json` | 配置 |
-| 文体文案（四段引言、深读要点等叙述模板） | `data/tmpl/templates.toml` | 文档 |
+| 文体文案（四段引言、深读要点等叙述模板） | `data/templates/templates.toml` | 文档 |
 | 名称与提示语（章节骨架名、练习提示/回顾前缀、术语行） | `data/language/zh.json` | 文档 |
 | 术语中英别名与「不算术语」词表 | `data/book/glossary.toml`（按书可选） | 文档 |
 | 案例流水线、附录标题/开篇、思考题 | `data/book/case-studies.toml`（按书可选，`[headers.<scenario>]` 可只给部分键） | 文档 |

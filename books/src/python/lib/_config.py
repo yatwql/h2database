@@ -384,7 +384,7 @@ class Config(BookVersions):
 
     def template_dir(self) -> str:
         """Directory holding the book's prose templates."""
-        return self._rel("templates", "data/tmpl")
+        return self._rel("templates", "data/templates")
 
     def baseline_dir(self) -> str:
         """Directory holding the reviewed-issue baselines."""

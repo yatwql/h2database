@@ -119,7 +119,7 @@ class EditionDeclarationTest(BookCase):
 class TemplatesTest(BookCase):
     def test_a_book_that_opted_into_the_defaults_merges_the_shipped_templates(self):
         self.edit_toml("[book]", "[book]\ndefaults = true")
-        os.remove(os.path.join(self.root, "data", "tmpl", "templates.toml"))
+        os.remove(os.path.join(self.root, "data", "templates", "templates.toml"))
         shipped = pathlib.Path(self.tmp.name, "defaults.json")
         shipped.write_text(json.dumps({"map_intro": "来自默认模板"}), encoding="utf-8")
         with mock.patch.object(_config, "default_path", return_value=str(shipped)):

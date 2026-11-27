@@ -70,7 +70,7 @@ class ScaffoldBranchesTest(unittest.TestCase):
         created = self.mod.scaffold(self.target(), "新书", "zh", False)
         for rel in (
             "data/book/book.toml",
-            "data/tmpl/templates.toml",
+            "data/templates/templates.toml",
             "data/language/zh.json",
             "data/config/base.json",
             "data/config/style.json",
