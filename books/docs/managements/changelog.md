@@ -13,6 +13,7 @@
 
 ### 变更
 
+- **基线目录有了清单命令**：`manuscript/baselines.py` 一条表给出 `data/baselines/` 每个文件的形态、条数、更新日期、归属门禁与用途；`--check` 报「空账本、无法读取、无门禁认领」三类问题（进入 `make.py` 的 report 组）。顺带删掉只剩空数组的 `loose-assertions.json`——无存量时不再留空账本。
 - **快照带身份、按书归目录（plan-18 阶段 1，含体积账本合并）**：`manifest.json` 增 `identity` 段（书 slug/版本、
 　源树根与源版本、工具版本、配置指纹、语种），新快照写入 `data/snapshots/<book-slug>/<date>-<label>`；
 　`list` 输出「名称／书／源版本／工具／配置／文件／字节」，`diff A B` 先比身份、跨书默认拒绝（`--cross` 放行并声明不是退化）；

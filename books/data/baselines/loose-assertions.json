@@ -1,5 +1,0 @@
-{
-  "updated": "2026-11-22",
-  "note": "Exit-code assertions that accept both success and failure. A case qualifies only when the code is its sole outcome check; the rest pin an exact code plus an output assertion.",
-  "accepted": []
-}
