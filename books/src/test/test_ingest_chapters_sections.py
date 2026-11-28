@@ -156,7 +156,7 @@ class ApiSectionTest(SectionsCase):
         packages["org.example"]["key_classes"][0]["rel"] = ""
         text = self.api_text(packages)
         self.assertNotIn("Widget0.run()", text)
-        self.assertIn("`org/h2/...`", text)
+        self.assertIn("`org/example/...`", text)
 
     def test_an_entry_without_a_line_number_keeps_the_file_coordinate(self):
         packages = {"org.example": package(80)}

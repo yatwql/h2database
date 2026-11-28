@@ -3,7 +3,7 @@
 
 The tree may be Java, Python or Rust (see ``ingest/languages/``). Languages come
 from ``data/config/base.json [sources].languages``; with more than one language
-the package keys are prefixed (``java:org.h2``) and ``by_language`` carries the
+the package keys are prefixed with the language (``java:<package>``) and ``by_language`` carries the
 per-language totals.
 
 Produces ``books/data/state/source-inventory.json`` for the later stages

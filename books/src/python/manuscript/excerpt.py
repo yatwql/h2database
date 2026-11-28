@@ -5,7 +5,7 @@ A book about a source tree explains code by quoting it. Quoting by hand is where
 failure modes live: the pasted lines drift from the tree, and the cited span stops
 containing what is shown. This command makes both mechanical:
 
-    excerpt.py --file org/h2/mvstore/Page.java --lines 382-401
+    excerpt.py --file org/example/Widget.java --lines 42-60
         print a ready-to-paste block: the citation head, the source lines, the fence
 
     excerpt.py --check <manuscript.md>

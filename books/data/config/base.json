@@ -65,7 +65,10 @@
       "SessionLocal",
       "H2 Console",
       "H2 source",
-      "H2 数据库引擎"
+      "H2 数据库引擎",
+      "h2-source-code-analysis",
+      "org.h2",
+      "org/h2"
     ]
   },
   "logging": {

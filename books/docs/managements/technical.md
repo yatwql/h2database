@@ -94,7 +94,7 @@
 
 | 约束 | 含义 | 机检 |
 | --- | --- | --- |
-| 不依赖具体书籍 | 书名、章节名、术语、案例、图注词表、提示词表一律只存在于 `data/book/`、`data/config/`、`data/language/`；代码里出现本书专有词即为违规 | `check_architecture.py` 的 `book_vocabulary` 检查：词表由书在 `base.json [toolchain]` 声明，命中即报 |
+| 不依赖具体书籍 | 书名、章节名、术语、案例、图注词表、提示词表一律只存在于 `data/book/`、`data/config/`、`data/language/`；代码里出现本书专有词即为违规。**测试不是代码**：`src/test` 里的夹具可以带书形状的值（模拟包名、类名、片段），那是 mock 数据，按 `test_` 前缀与 `TEST_` 常量命名、只在用例里使用；`check_architecture.py` 的 `book_vocabulary` 只扫 `src/python`，夹具不受此限 | 书名、章节名、术语、案例、图注词表、提示词表一律只存在于 `data/book/`、`data/config/`、`data/language/`；代码里出现本书专有词即为违规 | `check_architecture.py` 的 `book_vocabulary` 检查：词表由书在 `base.json [toolchain]` 声明，命中即报 |
 | 不依赖具体源码仓库 | 仓库路径、包前缀、语言与后缀只从 `[sources]` 读；新增一门语言＝一个适配器 + 注册表一行；坐标形状按 `sources.suffixes` 现建 | 路径字面量检查 + 依赖矩阵 + 坐标形状单一实现（`lib/_mdutil.source_ref_re`） |
 
 判据的取向是「换一本就换配置」：书级内容缺失时按「未配置」处理并报告，不静默套用另一本书的东西；

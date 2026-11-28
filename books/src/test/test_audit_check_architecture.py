@@ -38,17 +38,23 @@ class ArchitectureRulesTest(unittest.TestCase):
         self.assertTrue(any(needle in p for p in found), f"{needle!r} not in {found}")
 
     # -- book identity ----------------------------------------------------
-    def test_book_identity_literal_is_reported(self):
-        path = self.write("render/x.py", '"""d"""\nMERGED = "h2-source-code-analysis.md"\n')
-        with mock.patch.object(self.mod, "scripts", return_value=[path]):
-            problems = self.mod.check_book_identity()
+    def test_book_identity_literal_is_reported_by_the_vocabulary_rule(self):
+        """The identity strings live in the book's vocabulary; one rule covers them."""
+        with mock.patch.object(self.mod, "_config") as config:
+            config.THRESHOLDS = {"book_vocabulary": ["h2-source-code-analysis"]}
+            problems = self.mod._book_literal_problems(
+                "render/x.py", "x", 'MERGED = "h2-source-code-analysis.md"'
+            )
         self.assertEqual(len(problems), 1)
-        self.assertIn("book identity", problems[0])
+        self.assertIn("h2-source-code-analysis", problems[0])
 
     def test_a_generic_name_passes(self):
-        path = self.write("render/y.py", '"""d"""\nMERGED = _config.MERGED_NAME\n')
-        with mock.patch.object(self.mod, "scripts", return_value=[path]):
-            self.assertEqual(self.mod.check_book_identity(), [])
+        with mock.patch.object(self.mod, "_config") as config:
+            config.THRESHOLDS = {"book_vocabulary": ["h2-source-code-analysis"]}
+            self.assertEqual(
+                self.mod._book_literal_problems("render/y.py", "y",
+                                                "MERGED = _config.MERGED_NAME"), []
+            )
 
     # -- dependency matrix ------------------------------------------------
     def test_lib_may_not_import_an_engine(self):

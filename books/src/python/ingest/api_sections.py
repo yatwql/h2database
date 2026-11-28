@@ -69,7 +69,7 @@ def api_section(cn: int, ctx: dict, *, tpl: Callable, table: Callable,
     L += mark('api', [
         tpl('api_intro',
             '下表把公开入口与源码位置对应起来，共 {rows} 条坐标。', **facts), '',
-        *table(['入口', '源码坐标'], rows[:20] or [['`—`', '`org/h2/...`']])])
+        *table(['入口', '源码坐标'], rows[:20] or [['`—`', '`org/example/...`']])])
 
     type_rows = _type_rows(pkgs_sorted)
     if type_rows:

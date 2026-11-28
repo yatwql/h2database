@@ -59,10 +59,10 @@ back_glob = "back/*.md"            # 后件（术语表/索引/参考）
 
 ```toml
 [sources]
-src_main = "../h2/src/main"        # 单根；路径相对书根，可以指向书外
-pom_root = "../h2/pom.xml"         # 可选：清单文件位置
+src_main = "../src/main"           # 单根；路径相对书根，可以指向书外（示例）
+pom_root = "../pom.xml"            # 可选：清单文件位置（示例）
 version = "2.5.259-SNAPSHOT"       # 可选：逐一解析不到时用
-# roots = [{ label = "h2", path = "../h2/src/main" }]   # 多根时用这个，label 必填且唯一
+# roots = [{ label = "main", path = "../src/main" }]     # 多根时用这个，label 必填且唯一
 repo = "https://github.com/owner/project"   # 可选：源码在 git 仓库里时，克隆到 data/srcref/
 ref = "main"                               # 可选：分支/标签/提交
 ```
@@ -95,8 +95,8 @@ display = "删节版"
 ```json
 {
   "sources": {
-    "src_main": "../h2/src/main",     // 源码树根
-    "pom_root": "../h2/pom.xml",      // 版本来源（可缺省）
+    "src_main": "../src/main",        // 源码树根（示例）
+    "pom_root": "../pom.xml",         // 版本来源（可缺省，示例）
     "languages": ["java"],            // 支持 java / python / rust / kotlin / go / c，可多选
     "file_suffix": ".java",
     "package_prefix": "<包前缀>"
