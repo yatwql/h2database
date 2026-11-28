@@ -338,7 +338,7 @@ B-Tree 上至多触发三次 Page 解码（详见 §6.1.2）。
 缓存。`CacheLongKeyLIRS` 维护两条链表：Stack 记录"近期被访问且预计仍
 热"的页，Queue 记录"冷页候选"。命中分两类：在 Stack 上命中只把节点
 提升到栈顶；在 Queue 上命中则进一步看节点是否曾在 Stack 上出现过——
-若是，则提升为"重用热页"，挤出栈底冷页（详见 §6.5.3）。
+若是，则提升为"重用热页"，挤出栈底冷页（详见 §6.9.3）。
 
 ```java
 // org/h2/mvstore/cache/CacheLongKeyLIRS.java:get
@@ -351,7 +351,7 @@ return e.value;
 
 如图 A-6 所示，等值点查只触碰三个 Page，对扫描型负载常见的"短期高频
 访问无未来"模式天然抗污染——这正是 LIRS 相对 LRU 的核心优势
-（详见 §6.5.5）。
+（详见 §6.9.5）。
 
 **图 A-6: 归纳 LIRS 在等值点查下热/冷队列的状态转移**
 
@@ -422,7 +422,7 @@ TableFilter 把过滤条件下推给索引，B-Tree 的 Page Pointer 把逻辑�
 **2. 🔵★★ 若把 H2 的 LIRS 缓存替换为简单 LRU，本案例的三次 Page 访问延迟会如何变化？再设想一个并发的全表扫描线程同时运行，两种缓存策略在工作集保持上的差异会落在哪一步？**
 
 > 提示：抓住 LIRS 的"Stack + Queue 双队列"如何区分一次性访问与重用访问，并结合扫描型负载的污染模式。
-> 回顾：§6.5.3、§6.5.5
+> 回顾：§6.9.3、§6.9.5
 
 **3. 🟠★★★ 在 H2 测试目录下编写一段 JUnit 用例，对同一条 `SELECT * FROM users WHERE id = ?` 反复执行 1 万次并打印 `Command.canReuse()` 的命中次数；再在两次执行之间穿插一条 `ALTER TABLE users ADD COLUMN tag VARCHAR(8)`，观察缓存被作废的瞬间。**
 
@@ -431,7 +431,7 @@ TableFilter 把过滤条件下推给索引，B-Tree 的 Page Pointer 把逻辑�
 
 ---
 
-> **本案例的回指清单**：§4.2.4、§5.1.1、§6.1.2、§6.1.4、§6.5.3、§6.5.5、§7.1.1、
+> **本案例的回指清单**：§4.2.4、§5.1.1、§6.1.2、§6.1.4、§6.9.3、§6.9.5、§7.1.1、
 > §7.2.3、§7.2.7、§7.3.1、§7.3.6、§7.4.2、§7.4.4、§7.5.1、§7.6.3、§8.1.3、§8.3.2、
 > §8.4.2、§8.4.3、§8.4.4、§8.5.1、§9.2.6、§9.3.2、§9.6.4。读者可按这条索引在原章节
 > 中验证每一处源码引用。
@@ -810,7 +810,7 @@ BackgroundWriter 在 `t6` 才把新页写入磁盘，但**这与 R 的可见性�
 留下的所有"新 RootReference 链"。
 
 `store()` 的输出是一段连续的字节，写入到下一个空闲块，对应一个新的
-`Chunk` 对象（详见 §6.4 Chunk 压缩整理与 §9.3.4 Chunk 生命周期）。
+`Chunk` 对象（详见 §6.8 Chunk 压缩整理与 §9.3.4 Chunk 生命周期）。
 该 Chunk 中包含本事务两次 PUT 产生的全部新页，以及由其它并发事务在该
 间隔内产生的页。一个 Chunk 不专属于一个事务——这与传统 WAL "事务一
 段日志"的强耦合不同，这是 MVStore "页中心、版本链、批量落盘"设计的体
@@ -836,7 +836,7 @@ BackgroundWriter 在 `t6` 才把新页写入磁盘，但**这与 R 的可见性�
    │  store(syncWrite=false)                              │
    │     ├─ collectDirtyPages()       ── §9.5.6           │
    │     ├─ buildChunk(pages, version)                    │
-   │     ├─ allocateBlocks(FreeSpaceBitSet)  ── §6.6      │
+   │     ├─ allocateBlocks(FreeSpaceBitSet)  ── §6.10      │
    │     ├─ FileChannel.write(chunkBytes)                 │
    │     └─ updateChunkRegistry()                         │
    │             │                                        │
@@ -936,7 +936,7 @@ BackgroundWriter 写入，再到下一次显式 `sync()` 或关闭才进入持�
 | ④ commit 触发 | SessionLocal.commit | 委派至 TransactionStore.commit | 详见 §5.5 |
 | ⑤ CDM 扫描 | CommitDecisionMaker / MVMap.operate | committedValue 抬升 | 详见 §5.5.3.1 |
 | ⑥ root CAS | RootReference (AtomicReference) | 原子可见性翻转 | 详见 §10.5 |
-| ⑦ Chunk 落盘 | BackgroundWriter / store() | 新 Chunk + page 字节 | 详见 §9.5 与 §6.4 |
+| ⑦ Chunk 落盘 | BackgroundWriter / store() | 新 Chunk + page 字节 | 详见 §9.5 与 §6.8 |
 | ⑧ Header 同步 | Store Header 双写 | currentVersion 提升 | 详见 §9.6 |
 
 ⑥ 是"逻辑可见性"边界，⑧ 是"物理持久性"边界。两者在源码中由不同子系
@@ -1299,7 +1299,7 @@ B-Tree 根重建后，`TransactionStore.open()` 被调用。它在 metaMap 中�
 
 ### A.3.8 Free Space 重算与对外开放写入
 
-最后一步是把磁盘上的字节占用情况重新加载到内存中的 `FreeSpaceBitSet`（`org/h2/mvstore/FreeSpaceBitSet.java`，详见 §6.4）。BitSet 不持久化，必须在每次打开时根据 lastChunk 之前的所有"活 chunk"重新计算：
+最后一步是把磁盘上的字节占用情况重新加载到内存中的 `FreeSpaceBitSet`（`org/h2/mvstore/FreeSpaceBitSet.java`，详见 §6.8）。BitSet 不持久化，必须在每次打开时根据 lastChunk 之前的所有"活 chunk"重新计算：
 
 ```text
 ┌────────────────────────────────────────────────────────────┐
@@ -1324,7 +1324,7 @@ B-Tree 根重建后，`TransactionStore.open()` 被调用。它在 metaMap 中�
 
 完成 BitSet 重建后，`MVStore.openComplete()` 把状态机推进到 `STATE_OPEN`（详见 §9.1 状态机定义），背景写入线程（BackgroundWriterThread）启动，定时检查点开始运行。此时数据库才真正可以接受新的写入请求——任何新提交的事务会从下一个 chunk id（本例中是 4，注意 Chunk 4 的字节虽然存在但未被记录在 metaMap 里，它的 block 区间属于 free space，会被新 chunk 覆盖）开始递增（详见 §9.6.3 中"chunk id 单调递增"的说明）。
 
-值得详细说明的是 FreeSpaceBitSet 的"重算而非加载"策略。MVStore 没有把 BitSet 持久化到文件，原因有三：第一，BitSet 是高频更新的内存结构，每次 commit 都会变化，持久化会引入新的写放大；第二，从 metaMap 中的 chunk 列表出发，可以严格、确定地重算出 BitSet，不存在"持久化 BitSet 与磁盘真实占用不一致"的可能；第三，重算过程的复杂度是 O(C)，C 为 chunk 数，对常见数据库通常在 10⁴ 量级，恢复期内可以在毫秒级完成（详见 §6.4.5 状态转换图）。
+值得详细说明的是 FreeSpaceBitSet 的"重算而非加载"策略。MVStore 没有把 BitSet 持久化到文件，原因有三：第一，BitSet 是高频更新的内存结构，每次 commit 都会变化，持久化会引入新的写放大；第二，从 metaMap 中的 chunk 列表出发，可以严格、确定地重算出 BitSet，不存在"持久化 BitSet 与磁盘真实占用不一致"的可能；第三，重算过程的复杂度是 O(C)，C 为 chunk 数，对常见数据库通常在 10⁴ 量级，恢复期内可以在毫秒级完成（详见 §6.8.5 状态转换图）。
 
 另一个值得展开的设计细节是"Chunk 4 的字节并没有被物理覆盖"。在异常分支下，恢复流程把 Chunk 4 占用的 block 区间标记为 free，但并不会主动 zero-fill 这些字节。这意味着如果进一步发生第二次崩溃，磁盘上仍然存在三类数据：完整的 File Header 双副本、Chunk 1～3 的有效字节、Chunk 4 的"幽灵字节"。第二次重启时，next 链扫描会再次拒绝 Chunk 4，得到与本次相同的恢复结果——这种**确定性 + 幂等性**的组合是 H2 恢复机制最重要的工程性质（详见 §9.7.5 决策树）。
 

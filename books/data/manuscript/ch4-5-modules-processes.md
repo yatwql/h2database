@@ -3984,7 +3984,7 @@ MVSecondaryIndex.find(session, searchRow)
 
 > 提示：一个处理已失效页面在文件内的占比，另一个处理 Chunk 之间的碎片；指标可以从「有效字节 / 文件字节」的比值随时间的变化入手。
 >
-> 回顾：§5.7 空间整理 (Compaction) + §5.8 Chunk 压缩整理流程 + §6.4 Chunk 压缩整理。
+> 回顾：§5.7 空间整理 (Compaction) + §5.8 Chunk 压缩整理流程 + §6.8 Chunk 压缩整理。
 
 ## 5.13 延展阅读
 

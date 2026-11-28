@@ -1,7 +1,7 @@
 # 第9章 持久化引擎深度解析
 
 > **本章导读**: 本章深入分析 H2 的 MVStore 持久化引擎，从总体架构、Chunk 文件布局、Page 格式到检查点机制和文件格式（File Header、Chunk、Page 三级二进制布局）。MVStore 是 H2 v2.0 重构的核心，理解本章内容对于掌握 H2 的性能特性和存储原理至关重要。
-> **前置知识**: 第6章§6.1-6.3（B-Tree、Copy-on-Write、MVCC 基础）；第6章§6.4-6.7（Chunk/LIRS/FreeSpace/MVStore 平衡）；第5章§5.5-5.6（事务提交/回滚）
+> **前置知识**: 第6章§6.1-6.3（B-Tree、Copy-on-Write、MVCC 基础）；第6章§6.8-6.11（Chunk/LIRS/FreeSpace/MVStore 平衡）；第5章§5.5-5.6（事务提交/回滚）
 > **章节要点**:
 > - 理解 MVStore 的日志结构存储架构
 > - 掌握 Chunk 的格式、写入和回收生命周期
@@ -3264,7 +3264,7 @@ MVStore 的压缩发生在 Page 序列化的最后阶段。以下流程图展示
 - LIRS 缓存与压缩策略：H2 官方文档《MVStore》(`h2/src/docsrc/html/mvstore.html#caching`)
 - 持久性已知问题：H2 官方文档《Advanced》(`h2/src/docsrc/html/advanced.html#durability_problems`)
 - 本书第6章§6.1-6.3 — B-Tree/CoW/MVCC 算法基础
-- 本书第6章§6.4-6.7 — Chunk/LIRS/FreeSpace/MVStore 平衡算法
+- 本书第6章§6.8-6.11 — Chunk/LIRS/FreeSpace/MVStore 平衡算法
 - 本书第10章《锁实现与并发控制》 — 并发访问与事务隔离
 
 ---
@@ -6610,7 +6610,7 @@ H2 官方文档在《Advanced》一章中专门讨论了 ACID 的支持范围（
 - ACID 特性与持久性讨论：H2 官方文档《Advanced》(`h2/src/docsrc/html/advanced.html#acid`)
 - 持久性已知问题：H2 官方文档《Advanced》(`h2/src/docsrc/html/advanced.html#durability_problems`)
 - 本书第6章§6.1-6.3 — B-Tree/COW/MVCC 算法基础
-- 本书第6章§6.4-6.7 — Chunk/LIRS/FreeSpace/MVStore 平衡算法
+- 本书第6章§6.8-6.11 — Chunk/LIRS/FreeSpace/MVStore 平衡算法
 - 本书第7章§7.1.5 — Session 锁机制与线程模型
 
 ---
