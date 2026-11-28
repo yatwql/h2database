@@ -317,16 +317,16 @@ def _tradeoff_sections(cn: int, ctx: dict, cn_tradeoff: int) -> list[str]:
          '前者偏实现，后者偏编排。合并会打散扩展点。'),
         '',
         f'## {cn}.{cn_tradeoff + 1} 常见误区', '',
-        (f'把 `{top_pkg}` 的行数当作复杂度上限是误读。'
-         f'`{big["name"]}` 之外还有 {max(0, top_info["files"] - 1)} 个文件，'
-         '其中多为类型族与样板。'),
+        (f'- **误区**：把 `{top_pkg}` 的行数当作复杂度上限。\n'
+         f'  **为什么**：`{big["name"]}` 之外还有 {max(0, top_info["files"] - 1)} 个文件，'
+         '其中多为类型族与样板，行数与理解成本不是一回事。'),
         '',
-        (f'只读 `{big["name"]}` 的签名而不看调用点，也会踩坑。'
-         '真正的约束写在调用方的加锁顺序里。'),
+        (f'- **误区**：只读 `{big["name"]}` 的签名就能判断它的用法。\n'
+         '  **为什么**：真正的约束写在调用方的加锁顺序里，签名看不出先后。'),
         '',
-        (f'`{top_pkg}` 与 `{second_pkg}` 不能互换。'
-         f'前者 {top_info["files"]} 个文件，后者 {second_info["files"]} 个文件，'
-         '扩展点分布完全不同。'),
+        (f'- **误区**：`{top_pkg}` 与 `{second_pkg}` 可以互换。\n'
+         f'  **为什么**：前者 {top_info["files"]} 个文件、后者 {second_info["files"]} 个，'
+         '扩展点分布不同，替换会打散边界。'),
         '',
     ]
     return L

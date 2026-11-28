@@ -52,7 +52,7 @@ back_glob = "back/*.md"
 
 [sections]
 # Headings every chapter body must contain (H2 level).
-per_chapter = ["本章导读", "本章小结", "延伸思考", "延展阅读"]
+per_chapter = ["本章导读", "本章小结", "常见误区", "延伸思考", "延展阅读"]
 
 
 [chapters.packages]
