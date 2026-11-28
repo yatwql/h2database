@@ -26,7 +26,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _baseline, _config, _errors, _fsutil
+from lib import _baseline, _config, _errors, _fsutil, _mdutil
 
 SETTINGS = dict(_config.STYLE_POLICY.get('content_depth') or {})
 MIN_USES = int(SETTINGS.get('glossary_min_uses', 3))
@@ -111,50 +111,9 @@ def check_glossary(files: list[str], min_uses: int | None = None,
             for name, count in sorted(missing, key=lambda item: -item[1])[:20]]
 
 
-ELISION_RE = re.compile(r"^(?://|#|--)?\s*(\.\.\.|…)$")
-
-
-def _is_elision(line: str) -> bool:
-    """Whether a body line marks skipped source: `...`, `// ...`, `# …`."""
-    return bool(ELISION_RE.match(line.strip()))
-
-
 def _span_matches(body: list[str], source: list[str]) -> bool:
-    """Whether an excerpt honestly shows the span it cites.
-
-    Without an elision the body is the whole span, line for line. With `...` the body is a
-    subsequence: every shown line must exist, in order, inside the cited range, and anything
-    skipped must be marked — which is what lets an excerpt show eight fields of a class
-    without pasting its javadoc.
-    """
-    elided = any(_is_elision(line) for line in body)
-    if not elided:
-        return len(body) == len(source) and all(
-            _same_line(shown, real) for shown, real in zip(body, source, strict=False))
-    index = 0
-    for shown in body:
-        if _is_elision(shown):
-            continue
-        while index < len(source) and not _same_line(shown, source[index]):
-            index += 1
-        if index == len(source):
-            return False
-        index += 1
-    return True
-
-
-def _same_line(body: str, source: str) -> bool:
-    """Whether an excerpt line is the source line, possibly with an annotation appended.
-
-    The house style explains a line by adding a comment to it (`private long size;  // 页数`),
-    and an elision is written as `...`; neither is drift. A changed identifier, literal or
-    statement order still is.
-    """
-    if body == source or _is_elision(body):
-        return True
-    # reduce both sides to their code: an annotation is not a change, and a blank line
-    # inside the span is a blank line on both sides
-    return body.split("//", 1)[0].rstrip() == source.split("//", 1)[0].rstrip()
+    """Whether the body honestly shows the span it cites (`_mdutil.excerpt_span_matches`)."""
+    return _mdutil.excerpt_span_matches(body, source)
 
 
 def _excerpt_body(lines: list[str], index: int) -> list[str]:

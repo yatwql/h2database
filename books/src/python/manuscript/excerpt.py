@@ -28,7 +28,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib import _config, _errors, _fsutil
+from lib import _config, _errors, _fsutil, _mdutil
 
 HEAD_RE = re.compile(r"^(\s*)//\s*([\w.]+\.(?:java|py|rs|kt|go|c)):(\d+)(?:-(\d+))?\s*$")
 FENCE_RE = re.compile(r"^\s*```(\w*)\s*$")
@@ -58,11 +58,11 @@ def locate(name: str) -> str:
 
 def code_of(line: str) -> str:
     """The code part of an excerpt line, without the annotated comment."""
-    return line.split("//", 1)[0].strip()
+    return _mdutil.excerpt_code(line).strip()
 
 
 def is_elision(line: str) -> bool:
-    return line.strip().strip("/").strip() in ("...", "…")
+    return _mdutil.excerpt_is_elision(line)
 
 
 def block(name: str, start: int, end: int | None = None) -> str:
@@ -95,17 +95,8 @@ def bodies(lines: list[str], index: int) -> tuple[list[str], int]:
 
 
 def _same_line(shown: str, source: str) -> bool:
-    """Whether the line shown is the source line, ignoring appended annotations.
-
-    Both sides are reduced to their code: the book appends `// 说明` to explain a line, and
-    the source itself may carry a comment, so a raw string comparison would call either one
-    a change.
-    """
-    if is_elision(shown):
-        return True
-    if not code_of(shown) and not code_of(source):
-        return True  # a blank line is part of the span
-    return code_of(shown) == code_of(source) and code_of(shown) != ""
+    """Whether the line shown is the source line (see `_mdutil.excerpt_line_matches`)."""
+    return _mdutil.excerpt_line_matches(shown, source)
 
 
 def drift_of(name: str, start: int, end: int | None, body: list[str]) -> str:

@@ -51,6 +51,47 @@ def source_ref_re(suffixes: tuple[str, ...]) -> re.Pattern[str]:
     return re.compile(r"\b(\w+)(?:" + "|".join(re.escape(x) for x in suffixes) + r"):(\d+)")
 
 
+EXCERPT_ELISION_RE = re.compile(r"^(?://|#|--)?\s*(\.\.\.|…)$")
+
+
+def excerpt_is_elision(line: str) -> bool:
+    """Whether a line marks skipped source: `...`, `// ...`, `# …`."""
+    return bool(EXCERPT_ELISION_RE.match(line.strip()))
+
+
+def excerpt_code(line: str) -> str:
+    """The code part of a line: everything before an appended `//` annotation."""
+    return line.split("//", 1)[0].rstrip()
+
+
+def excerpt_line_matches(shown: str, source: str) -> bool:
+    """Equal as code; a blank line matches a blank line; an elision matches anything.
+
+    The book explains a line by appending a comment to it and marks omissions with `...`;
+    neither is a change. A different identifier, literal or statement is.
+    """
+    if excerpt_is_elision(shown) or shown.strip() == source.strip():
+        return True
+    return excerpt_code(shown).strip() == excerpt_code(source).strip()
+
+
+def excerpt_span_matches(body: list[str], source: list[str]) -> bool:
+    """Exact line-for-line, or an in-order subsequence when the body declares elisions."""
+    if any(excerpt_is_elision(line) for line in body):
+        cursor = 0
+        for shown in body:
+            if excerpt_is_elision(shown):
+                continue
+            while cursor < len(source) and not excerpt_line_matches(shown, source[cursor]):
+                cursor += 1
+            if cursor == len(source):
+                return False
+            cursor += 1
+        return True
+    return len(body) == len(source) and all(
+        excerpt_line_matches(shown, real) for shown, real in zip(body, source, strict=False))
+
+
 def coord_count(text: str) -> int:
     """Source coordinates in the text, for the suffixes this book declares."""
     return len(source_ref_re(tuple(_config.source_suffixes())).findall(text))

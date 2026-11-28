@@ -281,7 +281,8 @@ class ExcerptSpanTest(unittest.TestCase):
 
     def test_a_line_that_carries_only_an_elision_matches_anything(self):
         module = _fixture.load_module(self.root, "content_depth")
-        self.assertTrue(module._same_line("// ...", "    int count;"))
+        self.assertTrue(module._mdutil.excerpt_is_elision("// ..."))
+        self.assertTrue(module._mdutil.excerpt_line_matches("int count;", "    int count;"))
 
     def test_a_trailing_blank_line_is_layout_not_source(self):
         body = ("// Thing.java:1-2\n"
