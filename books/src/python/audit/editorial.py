@@ -264,6 +264,16 @@ def load_baseline() -> dict:
 def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
     metrics = measure()
+    if "--json" in args:
+        # the machine-readable view mirrors the human one: same verdict, same exit code
+        baseline = load_baseline()
+        short = shortfalls(metrics)
+        regress = regressions(metrics, baseline)
+        print(json.dumps({"profile": metrics["profile"], "files": metrics["files"],
+                          "problems": metrics["problems"], "shortfalls": short,
+                          "regressions": regress, "has_baseline": bool(baseline)},
+                         ensure_ascii=False, indent=2))
+        return 1 if regress or (not baseline and short) else 0
     print(render(metrics))
     for problem in metrics["problems"]:
         print(f"  configuration: {problem}")

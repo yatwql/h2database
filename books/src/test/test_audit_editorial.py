@@ -7,9 +7,11 @@ here can fail — that is the point of the element — so the assertions name th
 or message rather than merely checking the exit code.
 """
 
+import io as io_mod
 import json
 import os
 import unittest
+from contextlib import redirect_stdout
 from unittest import mock
 
 from _cases import FixtureCase
@@ -230,6 +232,28 @@ class EditorialCountingTest(FixtureCase):
             dropped = dict(short, files=[dict(short["files"][0], key_points=1)])
             with mock.patch.object(editorial, "measure", return_value=dropped):
                 self.assertEqual(editorial.main([]), 1)   # a fall below the record fails
+
+    def test_json_mode_answers_with_the_same_verdict(self):
+        editorial = self.module("editorial")
+        rules = {"learning_goals": {"enabled": True, "min_items": 3},
+                 "key_points": {"enabled": True, "min_items": 1},
+                 "pitfalls": {"enabled": True, "min_items": 1},
+                 "table_density": {"enabled": False}}
+        metrics = {"profile": "tutorial", "rules": rules, "problems": [],
+                   "files": [{"file": "a.md", "lines": 10, "learning_goals": 1,
+                              "key_points": 2, "pitfalls": 2, "tables": 1,
+                              "table_density": 1.0}]}
+        baseline = os.path.join(self.tmp.name, "ed.json")
+        buffer = io_mod.StringIO()
+        with (
+            mock.patch.object(editorial, "measure", return_value=metrics),
+            mock.patch.object(editorial, "baseline_path", return_value=baseline),
+            redirect_stdout(buffer),
+        ):
+            self.assertEqual(editorial.main(["--json"]), 1)
+            payload = json.loads(buffer.getvalue())
+        self.assertFalse(payload["has_baseline"])
+        self.assertEqual(len(payload["shortfalls"]), 1)
 
 if __name__ == "__main__":
     unittest.main()
