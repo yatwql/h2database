@@ -17,7 +17,7 @@
 
 | 需求 | 设计回应 |
 | --- | --- |
-| 12 章节槽 + 2 附录文件、固定章末结构 | 章节清单由配置给出（阅读顺序与内容覆盖两张表各司其职）；章末四段由 `audit/exercises.py`、`audit/structure.py` 判定 |
+| 12 章节槽 + 2 附录文件、固定章末结构 | 章节清单由配置给出（阅读顺序与内容覆盖两张表各司其职）；章末五段（导读、小结、常见误区、延伸思考、延展阅读）由 `audit/structure.py`、`audit/editorial.py` 判定 |
 | 图号、图注、图簇桥接 | 编号与形态由脚本判定；措辞由人或模型改写，改完仍需过脚本 |
 | 源码坐标可核对 | 手稿中的 `Class.method` 断言对到源码树，漂移进基线 |
 | 三种输出格式 | `render/` 三条独立管线，各有自己的校验器 |
@@ -219,7 +219,7 @@
 | `_fsutil` | 读写原语：`read_text`、`read_lines`、`write_text`、`load_json`、`ensure_dir`、`pin_stdout_utf8` | 统一 UTF-8；失败抛 `ToolError`（消息与退出码同源） |
 | `_errors` | 失败的唯一载体：`ToolError`（派生 `SystemExit`，`str(exc)` 是消息、`exit_code` 是状态）与入口处的 `run()` | 内层只管抛，转换只在入口发生一次；`raise … from` 保留原始异常 |
 | `_log` | 按天滚动的文件日志 + 控制台摘要 | 级别取 `BOOK_LOG_LEVEL` > 配置 > INFO；每个动作记 `action … start` / `done rc=… (in 1 分 40 秒)`，步骤行行缓冲（管道下也即时可见） |
-| `_mdutil` | Markdown 结构解析：标题、围栏、图注 | 围栏内的内容不参与结构判定 |
+| `_mdutil` | Markdown 结构解析：标题、围栏、图注、坐标形状；摘录行与范围的比对规则 | 围栏内的内容不参与结构判定；摘录规则只有这一份，`content_depth` 与 `excerpt.py` 都调它 |
 | `core/docs_archive.py` | 把已发布版本的台账与完成的迭代设计移入 `docs/archive/` | 纯文本变换 + 目录搬迁；幂等，`--dry-run` 只打印动作 |
 | `audit/doc_archive.py` | 归档布局门禁 | 版本目录名、三份台账与头行、索引可打开、已归档版本不得留在主文档 |
 | `audit/plan_coverage.py` | 计划覆盖门禁 | 每个 `docs/plan/<主题>/` 恰好一个所有者；计划项四段齐备；编号与概述一致 |
